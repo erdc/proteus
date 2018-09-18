@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.Quadrature module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.Quadrature module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,8 +127,8 @@
   <div class="section" id="module-proteus.Quadrature">
 <span id="proteus-quadrature-module"></span><h1>proteus.Quadrature module<a class="headerlink" href="#module-proteus.Quadrature" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for numerical integration on reference domains in 1,2, and 3D.</p>
-<object data="../_images/inheritance-b61c1e55d083901c1d9ad1754832a895553ab6ba.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.Quadrature</p></object>
+<div class="graphviz"><object data="../_images/inheritance-b61c1e55d083901c1d9ad1754832a895553ab6ba.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.Quadrature</p></object></div>
 <dl class="class">
 <dt id="proteus.Quadrature.Q_base">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">Q_base</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.Q_base" title="Permalink to this definition">¶</a></dt>
@@ -155,7 +143,7 @@
 <dl class="class">
 <dt id="proteus.Quadrature.GaussPoint">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">GaussPoint</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.GaussPoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>A dummy class for integrating the boundary of the unit interval (i.e. a point).</p>
 <dl class="method">
 <dt id="proteus.Quadrature.GaussPoint.setOrder">
@@ -167,13 +155,13 @@
 <dl class="attribute">
 <dt id="proteus.Quadrature.LobattoPoint">
 <code class="descclassname">proteus.Quadrature.</code><code class="descname">LobattoPoint</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.LobattoPoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#proteus.Quadrature.GaussPoint" title="proteus.Quadrature.GaussPoint"><code class="xref py py-class docutils literal"><span class="pre">GaussPoint</span></code></a></p>
+<dd><p>alias of <a class="reference internal" href="#proteus.Quadrature.GaussPoint" title="proteus.Quadrature.GaussPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.GaussPoint</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Quadrature.GaussEdge">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">GaussEdge</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.GaussEdge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Gaussian Quadrature on the unit interval.</p>
 <dl class="method">
 <dt id="proteus.Quadrature.GaussEdge.setOrder">
@@ -185,21 +173,21 @@
 <dl class="class">
 <dt id="proteus.Quadrature.LobattoEdge">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">LobattoEdge</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.LobattoEdge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Gauss-Lobatto quadrature on the unit interval.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Quadrature.LobattoEdgeAlt">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">LobattoEdgeAlt</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.LobattoEdgeAlt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Gauss-Lobatto quadrature on the [-1:1] interval.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Quadrature.CompositeTrapezoidalEdge">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">CompositeTrapezoidalEdge</code><span class="sig-paren">(</span><em>order=1</em>, <em>maxOrder=20</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.CompositeTrapezoidalEdge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Composite trapezoidal rule on the unit interval.
 order is number of intervals</p>
 <dl class="method">
@@ -212,7 +200,7 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.FaceBarycenterEdge">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">FaceBarycenterEdge</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.FaceBarycenterEdge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.Quadrature.FaceBarycenterEdge.setOrder">
 <code class="descname">setOrder</code><span class="sig-paren">(</span><em>k</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.FaceBarycenterEdge.setOrder" title="Permalink to this definition">¶</a></dt>
@@ -223,21 +211,21 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.GaussTriangle">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">GaussTriangle</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.GaussTriangle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Gauss quadrature on the unit triangle.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Quadrature.CompositeTriangle">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">CompositeTriangle</code><span class="sig-paren">(</span><em>quad_rule</em>, <em>hk</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.CompositeTriangle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Composite quadrature rule on the unit triangle.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Quadrature.CompositeTetrahedron">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">CompositeTetrahedron</code><span class="sig-paren">(</span><em>quad_rule</em>, <em>hk</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.CompositeTetrahedron" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>refine the reference tetrahedron until the largest edge &lt; hk</p>
 <dl class="method">
 <dt id="proteus.Quadrature.CompositeTetrahedron.get_detJ_and_J_from_ref">
@@ -271,7 +259,7 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.LobattoTriangle">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">LobattoTriangle</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.LobattoTriangle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Gauss-Lobatto quadrature on the unit triangle.</p>
 <dl class="method">
 <dt id="proteus.Quadrature.LobattoTriangle.setOrder">
@@ -283,7 +271,7 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.CompositeTrapezoidalTriangle">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">CompositeTrapezoidalTriangle</code><span class="sig-paren">(</span><em>order=1</em>, <em>maxOrder=20</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.CompositeTrapezoidalTriangle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Composite trapezoidal rule on the reference triangle
 order is number of intervals</p>
 <dl class="method">
@@ -296,7 +284,7 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.FaceBarycenterTriangle">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">FaceBarycenterTriangle</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.FaceBarycenterTriangle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.Quadrature.FaceBarycenterTriangle.setOrder">
 <code class="descname">setOrder</code><span class="sig-paren">(</span><em>k</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.FaceBarycenterTriangle.setOrder" title="Permalink to this definition">¶</a></dt>
@@ -307,14 +295,14 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.GaussTetrahedron">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">GaussTetrahedron</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.GaussTetrahedron" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Gauss-Legendre quadrature on the unit tetrahedron.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Quadrature.LobattoTetrahedron">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">LobattoTetrahedron</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.LobattoTetrahedron" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>Gauss-Lobatto quadrature on the unit tetrahedron.</p>
 <dl class="method">
 <dt id="proteus.Quadrature.LobattoTetrahedron.setOrder">
@@ -326,7 +314,7 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.FaceBarycenterTetrahedron">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">FaceBarycenterTetrahedron</code><span class="sig-paren">(</span><em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.FaceBarycenterTetrahedron" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.Quadrature.FaceBarycenterTetrahedron.setOrder">
 <code class="descname">setOrder</code><span class="sig-paren">(</span><em>k</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.FaceBarycenterTetrahedron.setOrder" title="Permalink to this definition">¶</a></dt>
@@ -337,15 +325,15 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.SimplexGaussQuadrature">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">SimplexGaussQuadrature</code><span class="sig-paren">(</span><em>nd=3</em>, <em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.SimplexGaussQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>A class which defines quadrature on unit simplices.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Dimension of the finite element problem.</li>
-<li><strong>order</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Polynomial order for which the integration is exact.</li>
+<li><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Dimension of the finite element problem.</li>
+<li><strong>order</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Polynomial order for which the integration is exact.</li>
 </ul>
 </td>
 </tr>
@@ -361,7 +349,7 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.CubeGaussQuadrature">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">CubeGaussQuadrature</code><span class="sig-paren">(</span><em>nd=3</em>, <em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.CubeGaussQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>A class for all quadrature on unit simplices.</p>
 <dl class="method">
 <dt id="proteus.Quadrature.CubeGaussQuadrature.setOrder">
@@ -373,7 +361,7 @@ order is number of intervals</p>
 <dl class="class">
 <dt id="proteus.Quadrature.SimplexLobattoQuadrature">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">SimplexLobattoQuadrature</code><span class="sig-paren">(</span><em>nd=3</em>, <em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.SimplexLobattoQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
 <p>A class for quadrature on unit simplices.</p>
 <dl class="method">
 <dt id="proteus.Quadrature.SimplexLobattoQuadrature.setOrder">
@@ -402,7 +390,7 @@ order is number of intervals</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

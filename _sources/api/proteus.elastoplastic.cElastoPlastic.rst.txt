@@ -1,0 +1,7 @@
+proteus.elastoplastic.cElastoPlastic module
+===========================================
+
+.. automodule:: proteus.elastoplastic.cElastoPlastic
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.TriangleUtils module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.TriangleUtils module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,11 +127,11 @@
   <div class="section" id="module-proteus.TriangleUtils">
 <span id="proteus-triangleutils-module"></span><h1>proteus.TriangleUtils module<a class="headerlink" href="#module-proteus.TriangleUtils" title="Permalink to this headline">¶</a></h1>
 <p>A collection of functions for manipulating triangleWrappers interface to
-Shewchuk&#8217;s Triangle package. There are a couple of different groups of
+Shewchuk’s Triangle package. There are a couple of different groups of
 functions.</p>
-<p>One is for writing out triangleWrappers data arrays in Triangle&#8217;s fileformat</p>
-<object data="../_images/inheritance-aff6ab546339ae99b047968c8e9cefb223b05d3e.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.TriangleUtils</p></object>
+<p>One is for writing out triangleWrappers data arrays in Triangle’s fileformat</p>
+<div class="graphviz"><object data="../_images/inheritance-aff6ab546339ae99b047968c8e9cefb223b05d3e.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.TriangleUtils</p></object></div>
 <dl class="function">
 <dt id="proteus.TriangleUtils.writeOutTriangulation">
 <code class="descclassname">proteus.TriangleUtils.</code><code class="descname">writeOutTriangulation</code><span class="sig-paren">(</span><em>tri</em>, <em>filebase='mesh'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.writeOutTriangulation" title="Permalink to this definition">¶</a></dt>
@@ -165,13 +153,13 @@ functions.</p>
 <dd><p>print out triangles/elements in the mesh</p>
 <p>file format that triangle is expecting
 First line: &lt;# of triangles&gt; &lt;nodes per triangle&gt;  &lt;# of attributes&gt;
-Remaining lines: &lt;triangle #&gt; &lt;node&gt; &lt;node&gt;  &lt;node&gt; ... [attributes]</p>
+Remaining lines: &lt;triangle #&gt; &lt;node&gt; &lt;node&gt;  &lt;node&gt; … [attributes]</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.TriangleUtils.printPolyFile">
 <code class="descclassname">proteus.TriangleUtils.</code><code class="descname">printPolyFile</code><span class="sig-paren">(</span><em>nodes</em>, <em>segments</em>, <em>filebase='mesh'</em>, <em>pattrib=None</em>, <em>pmarkers=None</em>, <em>smarkers=None</em>, <em>holes=None</em>, <em>regions=None</em>, <em>nbase=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.printPolyFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>print out mesh info in triangle&#8217;s poly format, nbase is the numbering base</p>
+<dd><p>print out mesh info in triangle’s poly format, nbase is the numbering base</p>
 <p>First line: &lt;# of vertices&gt; &lt;dimension (must be 2)&gt;  &lt;# of attributes&gt; &lt;# of boundary markers (0 or 1)&gt;
 Following lines: &lt;vertex #&gt; &lt;x&gt; &lt;y&gt; [attributes] [boundary marker]
 One line: &lt;# of segments&gt; &lt;# of boundary markers (0 or 1)&gt;
@@ -264,7 +252,7 @@ see recordFormatDoc for format info</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

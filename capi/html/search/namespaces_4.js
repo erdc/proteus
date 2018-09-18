@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['proteus',['proteus',['../namespaceproteus.html',1,'']]]
+  ['nearfrontinitialization',['NearFrontInitialization',['../namespace_near_front_initialization.html',1,'']]]
 ];

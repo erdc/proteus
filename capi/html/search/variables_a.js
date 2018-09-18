@@ -11,5 +11,6 @@ var searchData=
   ['left_5febn_5felement',['left_ebN_element',['../class_element_neighbors.html#ab6447ca674d902db1ba8a0a4b9f1e55b',1,'ElementNeighbors']]],
   ['line',['line',['../class_planar_straight_line_graph_domain.html#a2cfb694ad9edc008afd67750fc64ca64',1,'PlanarStraightLineGraphDomain']]],
   ['localsolvers',['localSolvers',['../class_f_m_m_eikonal_solver_base.html#a4285752bc15e9afe7f3430543eb71c89',1,'FMMEikonalSolverBase']]],
+  ['logging_5fconfig',['logging_config',['../class_mesh_adapt_p_u_m_i_drvr.html#aa97e3f5ebb00ff6620349fa6b3357a36',1,'MeshAdaptPUMIDrvr']]],
   ['lu',['lu',['../struct_dense_factor.html#aff835659c489174b07e921a3dbd15bf7',1,'DenseFactor']]]
 ];

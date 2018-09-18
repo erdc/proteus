@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.LatexReport module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.LatexReport module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,8 +127,8 @@
   <div class="section" id="module-proteus.LatexReport">
 <span id="proteus-latexreport-module"></span><h1>proteus.LatexReport module<a class="headerlink" href="#module-proteus.LatexReport" title="Permalink to this headline">¶</a></h1>
 <p>Class and script for generating a report from simulation data.</p>
-<object data="../_images/inheritance-4da20814bb18434b525ef4eb6be7658a9fca52bc.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.LatexReport</p></object>
+<div class="graphviz"><object data="../_images/inheritance-4da20814bb18434b525ef4eb6be7658a9fca52bc.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.LatexReport</p></object></div>
 <dl class="function">
 <dt id="proteus.LatexReport.openLatexReport">
 <code class="descclassname">proteus.LatexReport.</code><code class="descname">openLatexReport</code><span class="sig-paren">(</span><em>filename</em>, <em>reportname</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.openLatexReport" title="Permalink to this definition">¶</a></dt>
@@ -171,7 +159,7 @@ Table of results</p>
 <code class="descname">generateSpatialConvTable</code><span class="sig-paren">(</span><em>time='Last'</em>, <em>useRelativeError=False</em>, <em>relativeErrorEps=1e-10</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.generateSpatialConvTable" title="Permalink to this definition">¶</a></dt>
 <dd><p>produce table that has spatial error for different levels
 at a given time. If useRelativeError is true, the error values are normalized
-by the &#8220;exact&#8221; solution norm on the finest spatial mesh with a fudge factor
+by the “exact” solution norm on the finest spatial mesh with a fudge factor
 given by relativeErrorEps</p>
 <p>component &amp; level &amp; h &amp; error &amp; rate </p>
 </dd></dl>
@@ -198,7 +186,7 @@ given by relativeErrorEps</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

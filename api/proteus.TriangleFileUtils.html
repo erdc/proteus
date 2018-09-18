@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.TriangleFileUtils module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.TriangleFileUtils module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -161,10 +149,10 @@ should have been initialized before it was read</p>
 based on the variable types specified in recInfo</p>
 <dl class="docutils">
 <dt>This is in most cases a line that looks like</dt>
-<dd>Nentries NumEntriesInRec0 NumEntriesInRec1 ....</dd>
+<dd>Nentries NumEntriesInRec0 NumEntriesInRec1 ….</dd>
 </dl>
 <p>In some cases (e.g., segments) the number of entries in a segment
-is omitted so that the default format doesn&#8217;t follow</p>
+is omitted so that the default format doesn’t follow</p>
 </dd></dl>
 
 <dl class="function">
@@ -173,10 +161,10 @@ is omitted so that the default format doesn&#8217;t follow</p>
 <dd><p>find the line for the Triangle data files, specified in
 formatpattern.</p>
 <p>Generate dataInfo dictionary that should specify
-dataInfo[&#8216;nEntries&#8217;]    : number of entries in the file
-dataInfo[&#8216;recordSizes&#8217;] : size of each record per entry (can be 0)
-dataInfo[&#8216;dataStartLineNumber&#8217;]    : line where actual data entries may start
-dataInfo[&#8216;recordLocationsPerLine&#8217;] : array of indeces saying where
+dataInfo[‘nEntries’]    : number of entries in the file
+dataInfo[‘recordSizes’] : size of each record per entry (can be 0)
+dataInfo[‘dataStartLineNumber’]    : line where actual data entries may start
+dataInfo[‘recordLocationsPerLine’] : array of indeces saying where
 each record should start on a valid entry line record I is in
 entries recStart[I]:recStart[I+1]</p>
 </dd></dl>
@@ -188,15 +176,15 @@ entries recStart[I]:recStart[I+1]</p>
 stored in lines. The records are described in recInfo.
 The basic thing I need is the possible number of records
 per line and the type for each one.</p>
-<p>I&#8217;ll go ahead and assume the file looks like a series of blank
+<p>I’ll go ahead and assume the file looks like a series of blank
 lines or commented lines and then the first meaningful line which
-gives the file format that should be the same as what I&#8217;m
-expecting ...</p>
-<p>Nentries NumEntriesInRec0 NumEntriesInRec1 ....</p>
+gives the file format that should be the same as what I’m
+expecting …</p>
+<p>Nentries NumEntriesInRec0 NumEntriesInRec1 ….</p>
 <p>The regex format for this line is given in formatpattern.</p>
 <p>After that comes Nentry values with the basic format</p>
-<p>Entry Num. Rec0 Rec1 ...</p>
-<p>If NumEntriesInRecI is 0 then that record shouldn&#8217;t appear</p>
+<p>Entry Num. Rec0 Rec1 …</p>
+<p>If NumEntriesInRecI is 0 then that record shouldn’t appear</p>
 <dl class="docutils">
 <dt>returns</dt>
 <dd>data     : what was read
@@ -216,15 +204,15 @@ per line and the type for each one.</p>
 <dd>can read the regions list. I need to generalize to allow
 a given entry to not be found I guess</dd>
 </dl>
-<p>I&#8217;ll go ahead and assume the file looks like a series of blank
+<p>I’ll go ahead and assume the file looks like a series of blank
 lines or commented lines and then the first meaningful line which
-gives the file format that should be the same as what I&#8217;m
-expecting ...</p>
-<p>Nentries NumEntriesInRec0 NumEntriesInRec1 ....</p>
+gives the file format that should be the same as what I’m
+expecting …</p>
+<p>Nentries NumEntriesInRec0 NumEntriesInRec1 ….</p>
 <p>The regex format for this line is given in formatpattern.</p>
 <p>After that comes Nentry values with the basic format</p>
-<p>Entry Num. Rec0 Rec1 ...</p>
-<p>If NumEntriesInRecI is 0 then that record shouldn&#8217;t appear</p>
+<p>Entry Num. Rec0 Rec1 …</p>
+<p>If NumEntriesInRecI is 0 then that record shouldn’t appear</p>
 <dl class="docutils">
 <dt>returns</dt>
 <dd>data     : what was read
@@ -247,7 +235,7 @@ ilast    : index of last line read</dd>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

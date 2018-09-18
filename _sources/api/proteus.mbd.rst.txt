@@ -1,0 +1,16 @@
+proteus.mbd package
+===================
+
+.. automodule:: proteus.mbd
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   proteus.mbd.ChRigidBody
+   proteus.mbd.pyChronoCore
+

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>proteus.mbd.ChRigidBody module &#8212; Proteus 1.5.1 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="proteus.mbd.pyChronoCore module" href="proteus.mbd.pyChronoCore.html" />
+    <link rel="prev" title="proteus.mbd package" href="proteus.mbd.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.mbd.ChRigidBody module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.mbd.html" title="Previous Chapter: proteus.mbd package"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.mbd package</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.mbd.pyChronoCore.html" title="Next Chapter: proteus.mbd.pyChronoCore module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.mbd.p... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.mbd.ChRigidBody">
+<span id="proteus-mbd-chrigidbody-module"></span><h1>proteus.mbd.ChRigidBody module<a class="headerlink" href="#module-proteus.mbd.ChRigidBody" title="Permalink to this headline">¶</a></h1>
+<p>Coupling between Chrono and Proteus is done in this file.</p>
+<p>Objects (classes) starting with ‘ProtCh’ (e.g. ProtChBody) are objects that
+have logic specifically developed for communication between Proteus and Chrono.</p>
+<p>Objects starting with ‘Ch’ (e.g. ChBody) are objects that only have Chrono
+logic associated to them.</p>
+<p>Some ProtCh objects give access to the Chrono object:
+my_protchsystem = ProtChSystem(gravity=np.ndarray([0.,-9.81,0.]))
+my_protchbody = ProtChBody(system=my_protchsystem)
+my_chbody = ProtChBody.ChBody
+my_chbody.SetPos(…)</p>
+<dl class="function">
+<dt id="proteus.mbd.ChRigidBody.attachNodeToNode">
+<code class="descclassname">proteus.mbd.ChRigidBody.</code><code class="descname">attachNodeToNode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mbd/ChRigidBody.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mbd.ChRigidBody.attachNodeToNode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.mbd.ChRigidBody.linkBodies">
+<code class="descclassname">proteus.mbd.ChRigidBody.</code><code class="descname">linkBodies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mbd/ChRigidBody.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mbd.ChRigidBody.linkBodies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a link between 2 bodies.
+Master body is body2.</p>
+<dl class="docutils">
+<dt>body1: ProtChBody</dt>
+<dd>Instance of first body</dd>
+<dt>body2: ProtChBody</dt>
+<dd>Instance of second body</dd>
+<dt>body2: ProtChSystem</dt>
+<dd>Instance of system to add link</dd>
+<dt>coordsys: proteus.mbd.pyChronoCore.ChCoordsys</dt>
+<dd>Coordinate system of link</dd>
+<dt>limit_X: double</dt>
+<dd>Limit in x direction</dd>
+<dt>limit_Y: double</dt>
+<dd>Limit in y direction</dd>
+<dt>limit_Z: double</dt>
+<dd>Limit in z direction</dd>
+<dt>limit_Rx: double</dt>
+<dd>Limit rotation around x axis</dd>
+<dt>limit_Ry: double</dt>
+<dd>Limit rotation around y axis</dd>
+<dt>limit_Rz: double</dt>
+<dd>Limit rotation around z axis</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

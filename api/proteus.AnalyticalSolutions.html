@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.AnalyticalSolutions module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.AnalyticalSolutions module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,16 +127,16 @@
   <div class="section" id="module-proteus.AnalyticalSolutions">
 <span id="proteus-analyticalsolutions-module"></span><h1>proteus.AnalyticalSolutions module<a class="headerlink" href="#module-proteus.AnalyticalSolutions" title="Permalink to this headline">¶</a></h1>
 <p>Classes representing analytical solutions of differential and partial differential equations.</p>
-<object data="../_images/inheritance-76446f3a9ac3c1dbb6329b77eadac90fc3a3d416.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.AnalyticalSolutions</p></object>
+<div class="graphviz"><object data="../_images/inheritance-76446f3a9ac3c1dbb6329b77eadac90fc3a3d416.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.AnalyticalSolutions</p></object></div>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.AS_base">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">AS_base</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.AS_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>The base class for general analytical solutions, u(x,y,z,t)</p>
-<p>For basic error calculations only the <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base.uOfXT" title="proteus.AnalyticalSolutions.AS_base.uOfXT"><code class="xref py py-func docutils literal"><span class="pre">uOfXT()</span></code></a> member need be
+<p>For basic error calculations only the <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base.uOfXT" title="proteus.AnalyticalSolutions.AS_base.uOfXT"><code class="xref py py-func docutils literal notranslate"><span class="pre">uOfXT()</span></code></a> member need be
 overridden. The vectorized member functions such as
-<a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base.getUOfXT" title="proteus.AnalyticalSolutions.AS_base.getUOfXT"><code class="xref py py-func docutils literal"><span class="pre">getUOfXT()</span></code></a> are provided for future optimizations but are
-implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal"><span class="pre">AS_base</span></code></a> in a simple, inefficient way.</p>
+<a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base.getUOfXT" title="proteus.AnalyticalSolutions.AS_base.getUOfXT"><code class="xref py py-func docutils literal notranslate"><span class="pre">getUOfXT()</span></code></a> are provided for future optimizations but are
+implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">AS_base</span></code></a> in a simple, inefficient way.</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.AS_base.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>X</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.AS_base.uOfXT" title="Permalink to this definition">¶</a></dt>
@@ -244,9 +232,9 @@ implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.DAE_base">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">DAE_base</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.DAE_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
 <p>The base class for differential-algebraic equation solutions</p>
-<p>To use this class override <a class="reference internal" href="#proteus.AnalyticalSolutions.DAE_base.uOfT" title="proteus.AnalyticalSolutions.DAE_base.uOfT"><code class="xref py py-func docutils literal"><span class="pre">uOfT()</span></code></a></p>
+<p>To use this class override <a class="reference internal" href="#proteus.AnalyticalSolutions.DAE_base.uOfT" title="proteus.AnalyticalSolutions.DAE_base.uOfT"><code class="xref py py-func docutils literal notranslate"><span class="pre">uOfT()</span></code></a></p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.DAE_base.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>X</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.DAE_base.uOfXT" title="Permalink to this definition">¶</a></dt>
@@ -262,7 +250,7 @@ implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.NonlinearDAE">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">NonlinearDAE</code><span class="sig-paren">(</span><em>a</em>, <em>p</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.NonlinearDAE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.DAE_base" title="proteus.AnalyticalSolutions.DAE_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.DAE_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.DAE_base" title="proteus.AnalyticalSolutions.DAE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.DAE_base</span></code></a></p>
 <p>The exact solution of the simple nonlinear DAE</p>
 <p>Set the coefficients a and p</p>
 <dl class="method">
@@ -280,9 +268,9 @@ implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.SteadyState">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">SteadyState</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.SteadyState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
 <p>Based class for steady-state solutions u(x)</p>
-<p>Override <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState.uOfX" title="proteus.AnalyticalSolutions.SteadyState.uOfX"><code class="xref py py-func docutils literal"><span class="pre">uOfX()</span></code></a> to define steady state solutions.</p>
+<p>Override <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState.uOfX" title="proteus.AnalyticalSolutions.SteadyState.uOfX"><code class="xref py py-func docutils literal notranslate"><span class="pre">uOfX()</span></code></a> to define steady state solutions.</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.SteadyState.uOfX">
 <code class="descname">uOfX</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.SteadyState.uOfX" title="Permalink to this definition">¶</a></dt>
@@ -298,7 +286,7 @@ implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.LinearAD_SteadyState">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">LinearAD_SteadyState</code><span class="sig-paren">(</span><em>b=1.0</em>, <em>a=0.5</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearAD_SteadyState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <p>The solution of the steady linear advection-diffusion equation</p>
 <p>The boundary value problem is</p>
 <dl class="method">
@@ -311,10 +299,10 @@ implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.NonlinearAD_SteadyState">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">NonlinearAD_SteadyState</code><span class="sig-paren">(</span><em>b=1.0</em>, <em>q=2</em>, <em>a=0.5</em>, <em>r=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.NonlinearAD_SteadyState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.LinearAD_SteadyState" title="proteus.AnalyticalSolutions.LinearAD_SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.LinearAD_SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.LinearAD_SteadyState" title="proteus.AnalyticalSolutions.LinearAD_SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.LinearAD_SteadyState</span></code></a></p>
 <p>The solution of a steady nonlinear advection-diffusion equation</p>
 <p>The boundary value problem is</p>
-<p>Currently <span class="math">\(q=1,r=2\)</span>, and <span class="math">\(r=2,q=1\)</span> are implemented</p>
+<p>Currently <span class="math notranslate nohighlight">\(q=1,r=2\)</span>, and <span class="math notranslate nohighlight">\(r=2,q=1\)</span> are implemented</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.NonlinearAD_SteadyState.uOfX">
 <code class="descname">uOfX</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.NonlinearAD_SteadyState.uOfX" title="Permalink to this definition">¶</a></dt>
@@ -324,13 +312,13 @@ implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.
 
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Sine">
-<em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">LinearADR_Sine</code><span class="sig-paren">(</span><em>b=array([ 1.,  0.,  0.]), a=array([[ 0.01,  0.  ,  0.  ],        [ 0.  ,  0.01,  0.  ],        [ 0.  ,  0.  ,  0.01]]), c=1.0, omega=array([ 6.28318531,  0.        ,  0.        ]), omega0=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Sine" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">LinearADR_Sine</code><span class="sig-paren">(</span><em>b=array([1., 0., 0.]), a=array([[0.01, 0.  , 0.  ],        [0.  , 0.01, 0.  ],        [0.  , 0.  , 0.01]]), c=1.0, omega=array([6.28318531, 0.        , 0.        ]), omega0=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Sine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <p>An exact solution and source term for</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\nabla \cdot (\mathbf{b} u - \mathbf{a} \nabla u) + c u + d = 0\]</div>
 <p>The solution and source are</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \begin{eqnarray}
 u(x)   &amp;=&amp; \sin[\mathbf{\omega} \cdot \mathbf{x} + \omega_0) ] = \sin(Ax - b) \\
 r(u,x) &amp;=&amp; - ((\mathbf{a} \mathbf{\omega}) \cdot \mathbf{\omega}) u \\
@@ -379,12 +367,12 @@ r(u,x) &amp;=&amp; - ((\mathbf{a} \mathbf{\omega}) \cdot \mathbf{\omega}) u \\
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PoissonsEquation">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PoissonsEquation</code><span class="sig-paren">(</span><em>K=10.0</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PoissonsEquation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
-<p>Manufactured solution of Poisson&#8217;s equation</p>
-<div class="math">
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<p>Manufactured solution of Poisson’s equation</p>
+<div class="math notranslate nohighlight">
 \[- \Delta u - f = 0\]</div>
 <p>where u and f are given by</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \begin{eqnarray}
 u &amp;=&amp; K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2} \\
 f &amp;=&amp; -K\{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ \\
@@ -409,13 +397,13 @@ f &amp;=&amp; -K\{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ \\
 
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.LinearAD_DiracIC">
-<em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">LinearAD_DiracIC</code><span class="sig-paren">(</span><em>n=1.0</em>, <em>b=array([ 1.</em>, <em>0.</em>, <em>0.])</em>, <em>a=0.01</em>, <em>tStart=0.0</em>, <em>u0=0.1</em>, <em>x0=array([ 0.</em>, <em>0.</em>, <em>0.])</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearAD_DiracIC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">LinearAD_DiracIC</code><span class="sig-paren">(</span><em>n=1.0</em>, <em>b=array([1.</em>, <em>0.</em>, <em>0.])</em>, <em>a=0.01</em>, <em>tStart=0.0</em>, <em>u0=0.1</em>, <em>x0=array([0.</em>, <em>0.</em>, <em>0.])</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearAD_DiracIC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
 <p>The exact solution of</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[u_t + \nabla \cdot (b u - a \nabla u) = 0\]</div>
 <p>on an infinite domain with dirac initial data</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[u0 = \int u0 \delta(x - x0)\]</div>
 <p>also returns advective, diffusive, and total flux</p>
 <dl class="method">
@@ -447,10 +435,10 @@ f &amp;=&amp; -K\{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ \\
 
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC">
-<em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">LinearADR_Decay_DiracIC</code><span class="sig-paren">(</span><em>n=1.0</em>, <em>b=array([ 1.</em>, <em>0.</em>, <em>0.])</em>, <em>a=0.01</em>, <em>c=1.0</em>, <em>tStart=0.0</em>, <em>u0=0.1</em>, <em>x0=array([ 0.</em>, <em>0.</em>, <em>0.])</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.LinearAD_DiracIC" title="proteus.AnalyticalSolutions.LinearAD_DiracIC"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.LinearAD_DiracIC</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">LinearADR_Decay_DiracIC</code><span class="sig-paren">(</span><em>n=1.0</em>, <em>b=array([1.</em>, <em>0.</em>, <em>0.])</em>, <em>a=0.01</em>, <em>c=1.0</em>, <em>tStart=0.0</em>, <em>u0=0.1</em>, <em>x0=array([0.</em>, <em>0.</em>, <em>0.])</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.LinearAD_DiracIC" title="proteus.AnalyticalSolutions.LinearAD_DiracIC"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.LinearAD_DiracIC</span></code></a></p>
 <p>The exact solution of</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[u_t + \nabla \cdot (bu - a \nabla u) + cu= 0\]</div>
 <p>on an infinite domain with Dirac initial data.  Also
 returns the fluxes (by inheritance).</p>
@@ -473,10 +461,10 @@ returns the fluxes (by inheritance).</p>
 
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.NonlinearADR_Decay_DiracIC">
-<em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">NonlinearADR_Decay_DiracIC</code><span class="sig-paren">(</span><em>n=1.0</em>, <em>b=array([ 1.</em>, <em>0.</em>, <em>0.])</em>, <em>a=0.01</em>, <em>c=1.0</em>, <em>d=2.0</em>, <em>tStart=0.0</em>, <em>u0=0.1</em>, <em>x0=array([ 0.</em>, <em>0.</em>, <em>0.])</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.NonlinearADR_Decay_DiracIC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC" title="proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">NonlinearADR_Decay_DiracIC</code><span class="sig-paren">(</span><em>n=1.0</em>, <em>b=array([1.</em>, <em>0.</em>, <em>0.])</em>, <em>a=0.01</em>, <em>c=1.0</em>, <em>d=2.0</em>, <em>tStart=0.0</em>, <em>u0=0.1</em>, <em>x0=array([0.</em>, <em>0.</em>, <em>0.])</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.NonlinearADR_Decay_DiracIC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC" title="proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC</span></code></a></p>
 <p>The approximate analytical solution of</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[u_t + \nabla \cdot (bu - a \nabla u) + cu^d= 0\]</div>
 <p>on an infinite domain with Dirac initial data.
 Also returns the fluxes (by inheritance).</p>
@@ -500,7 +488,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlaneCouetteFlow_u">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlaneCouetteFlow_u</code><span class="sig-paren">(</span><em>plateSeperation=1.0, upperPlateVelocity=0.01, origin=[0.0, 0.0, 0.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlaneCouetteFlow_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <p>The exact solution for the u component of  velocity in plane Couette Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlaneCouetteFlow_u.uOfX">
@@ -518,7 +506,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlaneCouetteFlow_v">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlaneCouetteFlow_v</code><span class="sig-paren">(</span><em>plateSeperation=1.0, upperPlateVelocity=0.01, origin=[0.0, 0.0, 0.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlaneCouetteFlow_v" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <p>The exact solution for the v component of  velocity in plane Couette Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlaneCouetteFlow_v.uOfX">
@@ -530,7 +518,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlaneCouetteFlow_p">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlaneCouetteFlow_p</code><span class="sig-paren">(</span><em>plateSeperation=1.0, upperPlateVelocity=0.01, origin=[0.0, 0.0, 0.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlaneCouetteFlow_p" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <p>The exact solution for the v component of  velocity in plane Couette Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlaneCouetteFlow_p.uOfX">
@@ -542,7 +530,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlanePoiseuilleFlow_u</code><span class="sig-paren">(</span><em>plateSeperation=1.0, mu=1.0, grad_p=1.0, q=0.0, origin=[0.0, 0.0, 0.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u.uOfX">
 <code class="descname">uOfX</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u.uOfX" title="Permalink to this definition">¶</a></dt>
@@ -559,7 +547,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_v">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlanePoiseuilleFlow_v</code><span class="sig-paren">(</span><em>plateSeperation=1.0, mu=1.0, grad_p=1.0, q=0.0, origin=[0.0, 0.0, 0.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_v" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <p>The exact solution for the v component of  velocity in plane Poiseuille Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_v.uOfX">
@@ -571,7 +559,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_p">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlanePoiseuilleFlow_p</code><span class="sig-paren">(</span><em>plateSeperation=1.0, mu=1.0, grad_p=1.0, q=0.0, origin=[0.0, 0.0, 0.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_p" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <p>The exact solution for the v component of  velocity in plane Poiseuille Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_p.uOfX">
@@ -583,7 +571,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.Buckley_Leverett_RiemannSoln">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">Buckley_Leverett_RiemannSoln</code><span class="sig-paren">(</span><em>coefficients</em>, <em>uLeft=1.0</em>, <em>uRight=0.0</em>, <em>t0=0.0</em>, <em>x0=0.0</em>, <em>T=0.5</em>, <em>ftol=1e-08</em>, <em>useShallowCopyCoef=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.Buckley_Leverett_RiemannSoln" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.Buckley_Leverett_RiemannSoln.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.Buckley_Leverett_RiemannSoln.uOfXT" title="Permalink to this definition">¶</a></dt>
@@ -605,7 +593,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlaneBase">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlaneBase</code><span class="sig-paren">(</span><em>plane_theta=0.0, plane_phi=1.5707963267948966, v_theta=1.5707963267948966, v_phi=None, v_norm=1.0, mu=1.0, grad_p=1.0, L=[1.0, 1.0, 1.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlaneBase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.SteadyState" title="proteus.AnalyticalSolutions.SteadyState"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.SteadyState</span></code></a></p>
 <p>The exact solution for the u component of  velocity in plane Poiseuille Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlaneBase.Z">
@@ -627,7 +615,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u2">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlanePoiseuilleFlow_u2</code><span class="sig-paren">(</span><em>plane_theta=0.0, plane_phi=1.5707963267948966, v_theta=1.5707963267948966, v_phi=None, v_norm=1.0, mu=1.0, grad_p=1.0, L=[1.0, 1.0, 1.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.PlaneBase" title="proteus.AnalyticalSolutions.PlaneBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.PlaneBase</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.PlaneBase" title="proteus.AnalyticalSolutions.PlaneBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.PlaneBase</span></code></a></p>
 <p>The exact solution for the u component of  velocity in plane Poiseuille Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u2.uOfX">
@@ -639,7 +627,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_v2">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlanePoiseuilleFlow_v2</code><span class="sig-paren">(</span><em>plane_theta=0.0, plane_phi=1.5707963267948966, v_theta=1.5707963267948966, v_phi=None, v_norm=1.0, mu=1.0, grad_p=1.0, L=[1.0, 1.0, 1.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_v2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.PlaneBase" title="proteus.AnalyticalSolutions.PlaneBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.PlaneBase</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.PlaneBase" title="proteus.AnalyticalSolutions.PlaneBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.PlaneBase</span></code></a></p>
 <p>The exact solution for the v component of  velocity in plane Poiseuille Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_v2.uOfX">
@@ -651,7 +639,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_w2">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlanePoiseuilleFlow_w2</code><span class="sig-paren">(</span><em>plane_theta=0.0, plane_phi=1.5707963267948966, v_theta=1.5707963267948966, v_phi=None, v_norm=1.0, mu=1.0, grad_p=1.0, L=[1.0, 1.0, 1.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_w2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.PlaneBase" title="proteus.AnalyticalSolutions.PlaneBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.PlaneBase</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.PlaneBase" title="proteus.AnalyticalSolutions.PlaneBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.PlaneBase</span></code></a></p>
 <p>The exact solution for the v component of  velocity in plane Poiseuille Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_w2.uOfX">
@@ -663,7 +651,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_p2">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">PlanePoiseuilleFlow_p2</code><span class="sig-paren">(</span><em>plane_theta=0.0, plane_phi=1.5707963267948966, v_theta=1.5707963267948966, v_phi=None, v_norm=1.0, mu=1.0, grad_p=1.0, L=[1.0, 1.0, 1.0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_p2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.PlaneBase" title="proteus.AnalyticalSolutions.PlaneBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.PlaneBase</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.PlaneBase" title="proteus.AnalyticalSolutions.PlaneBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.PlaneBase</span></code></a></p>
 <p>The exact solution for the v component of  velocity in plane Poiseuille Flow</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_p2.uOfX">
@@ -675,7 +663,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_u">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">VortexDecay_u</code><span class="sig-paren">(</span><em>n=2</em>, <em>Re=100.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.VortexDecay_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
 <p>The exact solution for the u component of  velocity in the vortex  decay problem</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_u.uOfXT">
@@ -687,7 +675,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_v">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">VortexDecay_v</code><span class="sig-paren">(</span><em>n=2</em>, <em>Re=100.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.VortexDecay_v" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
 <p>The exact solution for the u component of  velocity in the vortex  decay problem</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_v.uOfXT">
@@ -699,7 +687,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_p">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">VortexDecay_p</code><span class="sig-paren">(</span><em>n=2</em>, <em>Re=100.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.VortexDecay_p" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base" title="proteus.AnalyticalSolutions.AS_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AnalyticalSolutions.AS_base</span></code></a></p>
 <p>The exact solution for the u component of  velocity in the vortex  decay problem</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_p.uOfXT">
@@ -723,7 +711,7 @@ Also returns the fluxes (by inheritance).</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

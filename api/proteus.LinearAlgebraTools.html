@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.LinearAlgebraTools module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.LinearAlgebraTools module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -142,8 +130,8 @@
 <p>Vectors are just numpy arrays, as are dense matrices. Sparse matrices
 are CSR matrices. Parallel vector and matrix are built on top of those
 representations using PETSc.</p>
-<object data="../_images/inheritance-5cbf6ada3623164cccee64adede68ccfa9e2d5ef.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.LinearAlgebraTools</p></object>
+<div class="graphviz"><object data="../_images/inheritance-de2e17bb86345331a94caa78bdd9b9f298be7503.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.LinearAlgebraTools</p></object></div>
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc_load_matrix">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">petsc_load_matrix</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_matrix" title="Permalink to this definition">¶</a></dt>
@@ -153,9 +141,9 @@ representations using PETSc.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; This is the name of the binary with the file stored.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – This is the name of the binary with the file stored.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix</strong> &#8211; The matrix that is stored in the binary file.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix</strong> – The matrix that is stored in the binary file.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">petsc4py matrix</td>
 </tr>
@@ -172,11 +160,30 @@ representations using PETSc.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; This is the name of the binary with the file stored.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – This is the name of the binary with the file stored.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix</strong> &#8211; The matrix that is stored in the binary file.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix</strong> – The matrix that is stored in the binary file.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">petsc4py vector</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.petsc_load_IS">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">petsc_load_IS</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_IS" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function loads a PETSc index-set from a binary format.
+(Eg. what is saved using the petsc_view function).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – This is the name of the binary with the file stored.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix</strong> – The index-set that is stored in the binary file.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">petsc4py IS</td>
 </tr>
 </tbody>
 </table>
@@ -187,12 +194,102 @@ representations using PETSc.</p>
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">csr_2_petsc</code><span class="sig-paren">(</span><em>size</em>, <em>csr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.csr_2_petsc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an petsc4py matrix from size and CSR information.</p>
 <dl class="docutils">
-<dt>size</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span><dd>A 2-tuple with the number of matrix rows and columns.</dd>
-<dt>csr</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span><dd>A 3-tuple with the sparse matrix csr information.</dd>
+<dt>size <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>A 2-tuple with the number of matrix rows and columns.</dd>
+<dt>csr <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>A 3-tuple with the sparse matrix csr information.</dd>
 </dl>
 <p>matrix : PETSc4py aij matrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.superlu_get_rank">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">superlu_get_rank</code><span class="sig-paren">(</span><em>sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_get_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rank of a superluWrapper sparse matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sparse_matrix</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix_rank</strong> – The rank of the sparse_matrix</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>This function is a tool for debugging and should only be used
+for small matrices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.petsc4py_get_rank">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">petsc4py_get_rank</code><span class="sig-paren">(</span><em>sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_get_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rank of a superluWrapper sparse matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sparse_matrix</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix_rank</strong> – The rank of the sparse_matrix</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>This function is a debugging tool and should only be used
+for small matrices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.superlu_has_pressure_null_space">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">superlu_has_pressure_null_space</code><span class="sig-paren">(</span><em>sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_has_pressure_null_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether a superluWrapper sparse matrix has a constant
+pressure null space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sparse_matrix</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>does</strong> – Boolean variable indicating whether the pressure term
+creates a null space.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Assumes interwoven dof.
+This function was written mainly for debugging purposes and may be
+slow for large matrices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.petsc4py_mat_has_pressure_null_space">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">petsc4py_mat_has_pressure_null_space</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_mat_has_pressure_null_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether a PETSc4Py sparse matrix has a constant
+pressure null space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>A</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>does</strong> – Boolean variable indicating whether the pressure term
+creates a null space.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Assumes interwoven dof.
+This function was written mainly for debugging purposes and may be
+slow for large matrices.</p>
 </dd></dl>
 
 <dl class="function">
@@ -204,12 +301,12 @@ representations using PETSc.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sparse_matrix</strong> &#8211; </li>
-<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Out file name to store the matrix.</li>
+<li><strong>sparse_matrix</strong> – </li>
+<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Out file name to store the matrix.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dense_matrix</strong> &#8211; A numpy array storing the dense matrix.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dense_matrix</strong> – A numpy array storing the dense matrix.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
@@ -230,12 +327,12 @@ representations using PETSc.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sparse_matrix</strong> (<em>PETSc4py matrix</em>) &#8211; </li>
-<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Output file name to store the matrix.</li>
+<li><strong>sparse_matrix</strong> (<em>PETSc4py matrix</em>) – </li>
+<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Output file name to store the matrix.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dense_matrix</strong> &#8211; A numpy array with the dense matrix.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dense_matrix</strong> – A numpy array with the dense matrix.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
@@ -255,7 +352,7 @@ representations using PETSc.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sparse_superlu</strong> (<code class="xref py py-class docutils literal"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code>) &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sparse_superlu</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code>) – </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>sparse_matrix</strong></td>
 </tr>
@@ -281,11 +378,11 @@ representations using PETSc.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sparse_petsc</strong> (<code class="xref py py-class docutils literal"><span class="pre">p4pyPETSc.Mat</span></code>) &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sparse_petsc</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code>) – </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>sparse_matrix</strong></td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">p4pyPETSc.Mat</span></code></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code></td>
 </tr>
 </tbody>
 </table>
@@ -302,8 +399,8 @@ It would be rare for this routine to be useful for most applications.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>dense_numpy</strong> &#8211; </li>
-<li><strong>eps</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Tolerance for non-zero values.</li>
+<li><strong>dense_numpy</strong> – </li>
+<li><strong>eps</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Tolerance for non-zero values.</li>
 </ul>
 </td>
 </tr>
@@ -322,18 +419,34 @@ It would be rare for this routine to be useful for most applications.</p>
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">csr_2_petsc_mpiaij</code><span class="sig-paren">(</span><em>size</em>, <em>csr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.csr_2_petsc_mpiaij" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an MPIaij petsc4py matrix from size and CSR information.</p>
 <dl class="docutils">
-<dt>size</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span><dd>Two entires: (num_rows, num_cols)</dd>
-<dt>csr</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span><dd>(row_idx, col_idx, vals)</dd>
+<dt>size <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>Two entires: (num_rows, num_cols)</dd>
+<dt>csr <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>(row_idx, col_idx, vals)</dd>
 </dl>
 <p>matrix : PETSc4py MPIaij matrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.split_PETSc_Mat">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">split_PETSc_Mat</code><span class="sig-paren">(</span><em>mat</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.split_PETSc_Mat" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Decompose a PETSc matrix into a symmetric and skew-symmetric</dt>
+<dd>matrix</dd>
+</dl>
+<p>mat : :class: <cite>PETSc4py Matrix</cite></p>
+<dl class="docutils">
+<dt>H <span class="classifier-delimiter">:</span> <span class="classifier">:class: <cite>PETSc4py Matrix</cite></span></dt>
+<dd>Symmetric (or Hermitian) component of mat</dd>
+<dt>S <span class="classifier-delimiter">:</span> <span class="classifier">:class: <cite>PETSc4py Matrix</cite></span></dt>
+<dd>Skew-Symmetric (or skew-Hermitian) component of mat</dd>
+</dl>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParVec">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParVec</code><span class="sig-paren">(</span><em>array</em>, <em>blockSize</em>, <em>n</em>, <em>N</em>, <em>nghosts=None</em>, <em>subdomain2global=None</em>, <em>blockVecType='simple'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec" title="Permalink to this definition">¶</a></dt>
-<dd><p>A parallel vector built on top of daetk&#8217;s wrappers for petsc</p>
+<dd><p>A parallel vector built on top of daetk’s wrappers for petsc</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.ParVec.scatter_forward_insert">
 <code class="descname">scatter_forward_insert</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec.scatter_forward_insert" title="Permalink to this definition">¶</a></dt>
@@ -349,27 +462,27 @@ It would be rare for this routine to be useful for most applications.</p>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParVec_petsc4py">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParVec_petsc4py</code><span class="sig-paren">(</span><em>array=None</em>, <em>bs=None</em>, <em>n=None</em>, <em>N=None</em>, <em>nghosts=None</em>, <em>subdomain2global=None</em>, <em>blockVecType='simple'</em>, <em>ghosts=None</em>, <em>proteus2petsc_subdomain=None</em>, <em>petsc2proteus_subdomain=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">petsc4py.PETSc.Vec</span></code></p>
-<p>Parallel vector using petsc4py&#8217;s wrappers for PETSc</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">petsc4py.PETSc.Vec</span></code></p>
+<p>Parallel vector using petsc4py’s wrappers for PETSc</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>array</strong> (<em>numpy_array</em>) &#8211; A numpy array with size equal to the number of locally
+<li><strong>array</strong> (<em>numpy_array</em>) – A numpy array with size equal to the number of locally
 owned unknowns plus the number of local ghost cells.</li>
-<li><strong>bs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Block size.</li>
-<li><strong>n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of locally owned unknowns</li>
-<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of unknowns in the global system</li>
-<li><strong>nghosts</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of ghost nodes for the process.</li>
-<li><strong>subdomain2global</strong> (<em>numpy array</em>) &#8211; Map from the process unknowns to the global
+<li><strong>bs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Block size.</li>
+<li><strong>n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The number of locally owned unknowns</li>
+<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The number of unknowns in the global system</li>
+<li><strong>nghosts</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The number of ghost nodes for the process.</li>
+<li><strong>subdomain2global</strong> (<em>numpy array</em>) – Map from the process unknowns to the global
 uknowns.</li>
-<li><strong>blockVecType</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; </li>
-<li><strong>ghosts</strong> (<em>numpy array</em>) &#8211; A numpy array with the local process uknowns that are
+<li><strong>blockVecType</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – </li>
+<li><strong>ghosts</strong> (<em>numpy array</em>) – A numpy array with the local process uknowns that are
 ghost nodes.</li>
-<li><strong>proteus2petsc_subdomain</strong> (<em>numpy array</em>) &#8211; A numpy array that serves as a map from the proteus
+<li><strong>proteus2petsc_subdomain</strong> (<em>numpy array</em>) – A numpy array that serves as a map from the proteus
 uknown ordering to the petsc uknown ordering</li>
-<li><strong>petsc2proteus_subdomain</strong> (<em>numpy array</em>) &#8211; A numpy array that serves as a map from the petsc uknown
+<li><strong>petsc2proteus_subdomain</strong> (<em>numpy array</em>) – A numpy array that serves as a map from the petsc uknown
 ordering to the proteus unknown ordering</li>
 </ul>
 </td>
@@ -411,35 +524,35 @@ use these values to create parallel objects later.</p>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParMat_petsc4py">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParMat_petsc4py</code><span class="sig-paren">(</span><em>ghosted_csr_mat=None</em>, <em>par_bs=None</em>, <em>par_n=None</em>, <em>par_N=None</em>, <em>par_nghost=None</em>, <em>subdomain2global=None</em>, <em>blockVecType='simple'</em>, <em>pde=None</em>, <em>par_nc=None</em>, <em>par_Nc=None</em>, <em>proteus_jacobian=None</em>, <em>nzval_proteus2petsc=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">petsc4py.PETSc.Mat</span></code></p>
-<p>Parallel matrix based on petsc4py&#8217;s wrappers for PETSc.
-ghosted_csr_mat : <code class="xref py py-class docutils literal"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">petsc4py.PETSc.Mat</span></code></p>
+<p>Parallel matrix based on petsc4py’s wrappers for PETSc.
+ghosted_csr_mat : <code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></p>
 <blockquote>
 <div>Primary CSR information for the ParMat.</div></blockquote>
 <dl class="docutils">
-<dt>par_bs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>The block size.</dd>
-<dt>par_n</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>The number of locally owned unknowns.</dd>
-<dt>par_N</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>The number of global unknowns.</dd>
-<dt>par_nghost</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>The number of locally owned ghost unknowns.</dd>
-<dt>subdomain2global</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier"><code class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></code></span><dd>A map from the local unknown to the global unknown.</dd>
+<dt>par_bs <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The block size.</dd>
+<dt>par_n <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of locally owned unknowns.</dd>
+<dt>par_N <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of global unknowns.</dd>
+<dt>par_nghost <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of locally owned ghost unknowns.</dd>
+<dt>subdomain2global <span class="classifier-delimiter">:</span> <span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></span></dt>
+<dd>A map from the local unknown to the global unknown.</dd>
 </dl>
 <p>blockVecType : str
-pde : <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
+pde : <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
 <blockquote>
 <div>The Transport class defining the problem.</div></blockquote>
 <p>par_nc : int
 par_Nc : int
-proteus_jacobian : <code class="xref py py-class docutils literal"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></p>
+proteus_jacobian : <code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></p>
 <blockquote>
-<div>Jacobian generated by Transport class&#8217;s initializeJacobian.</div></blockquote>
+<div>Jacobian generated by Transport class’s initializeJacobian.</div></blockquote>
 <dl class="docutils">
-<dt>nzval_proteus2petsc</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier"><code class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></code></span><dd>Array with index permutations for mapping between
+<dt>nzval_proteus2petsc <span class="classifier-delimiter">:</span> <span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></span></dt>
+<dd>Array with index permutations for mapping between
 proteus and petsc degrees of freedom.</dd>
 </dl>
 <dl class="classmethod">
@@ -451,7 +564,7 @@ constructor matrix.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>operator</strong> (<code class="xref py py-class docutils literal"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code>) &#8211; Matrix to be turned into a parallel petsc matrix.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>operator</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code>) – Matrix to be turned into a parallel petsc matrix.</td>
 </tr>
 </tbody>
 </table>
@@ -470,7 +583,7 @@ constructor matrix.</p>
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">Vec</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a vector of length n (using numpy)</p>
 <p>For example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Vec</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Vec</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="go">array([ 0.,  0.,  0.])</span>
 </pre></div>
 </div>
@@ -481,7 +594,7 @@ constructor matrix.</p>
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">Mat</code><span class="sig-paren">(</span><em>m</em>, <em>n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Mat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build an m x n matrix (using numpy)</p>
 <p>For example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Mat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Mat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
 <span class="go">array([[ 0.,  0.,  0.],</span>
 <span class="go">      [ 0.,  0.,  0.]])</span>
 </pre></div>
@@ -503,19 +616,19 @@ constructor matrix.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>nr</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of rows.</li>
-<li><strong>nc</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of columns.</li>
-<li><strong>nnz</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of non-zero matrix entries.</li>
-<li><strong>nzval</strong> (<em>numpy array</em>) &#8211; Array with non-zero matrix entries.</li>
-<li><strong>colind</strong> (<em>numpy array of 32bit integers</em>) &#8211; CSR column array.</li>
-<li><strong>rowptr</strong> (<em>numpy array of 32bit integers</em>) &#8211; CSR row pointer.</li>
+<li><strong>nr</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The number of rows.</li>
+<li><strong>nc</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The number of columns.</li>
+<li><strong>nnz</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The number of non-zero matrix entries.</li>
+<li><strong>nzval</strong> (<em>numpy array</em>) – Array with non-zero matrix entries.</li>
+<li><strong>colind</strong> (<em>numpy array of 32bit integers</em>) – CSR column array.</li>
+<li><strong>rowptr</strong> (<em>numpy array of 32bit integers</em>) – CSR row pointer.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sparse_matrix</strong> &#8211; superlu sparse matrix in CSR format.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sparse_matrix</strong> – superlu sparse matrix in CSR format.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref py py-class docutils literal"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></p>
 </td>
 </tr>
 </tbody>
@@ -535,7 +648,7 @@ constructor matrix.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ghosted_csr_mat</strong> &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ghosted_csr_mat</strong> – </td>
 </tr>
 </tbody>
 </table>
@@ -560,12 +673,18 @@ constructor matrix.</p>
 <code class="descname">create</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell.create" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.OperatorShell.getSize">
+<code class="descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell.getSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of degrees of freedom for the operator.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ProductOperatorShell">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ProductOperatorShell</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ProductOperatorShell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.OperatorShell" title="proteus.LinearAlgebraTools.OperatorShell"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearAlgebraTools.OperatorShell</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.OperatorShell" title="proteus.LinearAlgebraTools.OperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.OperatorShell</span></code></a></p>
 <p>A base class for shell operators that apply multiplcation.</p>
 <p>Operators derived from this class should have working multiplication
 functions.</p>
@@ -579,7 +698,7 @@ functions.</p>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.InvOperatorShell">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">InvOperatorShell</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.OperatorShell" title="proteus.LinearAlgebraTools.OperatorShell"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearAlgebraTools.OperatorShell</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.OperatorShell" title="proteus.LinearAlgebraTools.OperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.OperatorShell</span></code></a></p>
 <p>A base class for inverse operator shells</p>
 <p>Operators derived from this class should have working apply
 functions.</p>
@@ -588,16 +707,50 @@ functions.</p>
 <code class="descname">apply</code><span class="sig-paren">(</span><em>A</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.apply" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.InvOperatorShell.getSize">
+<code class="descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.getSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the size of InvOperatorShell.</p>
+<p class="rubric">Notes</p>
+<p>This acts a virtual method and must be implemented for
+all inherited classes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.InvOperatorShell.create_petsc_ksp_obj">
+<code class="descname">create_petsc_ksp_obj</code><span class="sig-paren">(</span><em>petsc_option_prefix</em>, <em>matrix_operator</em>, <em>constant_null_space=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.create_petsc_ksp_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a PETSc4py KSP object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>petsc_option_prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – PETSc commandline option prefix.</li>
+<li><strong>matrix_operator</strong> (<em>mat</em>) – PETSc matrix object for the ksp class.</li>
+<li><strong>null_space</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – True if the KSP object has a constant null space.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ksp_obj</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PETSc ksp</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.LSCInv_shell">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">LSCInv_shell</code><span class="sig-paren">(</span><em>Qv</em>, <em>B</em>, <em>Bt</em>, <em>F</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.LSCInv_shell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>Shell class for the LSC Inverse Preconditioner</p>
 <p>This class creates a shell for the least-squares commutator (LSC)
 preconditioner, where
-<span class="math">\(M_{s}= (B \hat{Q^{-1}_{v}} B^{'}) (B \hat{Q^{-1}_{v}} F
+<span class="math notranslate nohighlight">\(M_{s}= (B \hat{Q^{-1}_{v}} B^{'}) (B \hat{Q^{-1}_{v}} F
 \hat{Q^{-1}_{v}} B^{'})^{-1} (B \hat{Q^{-1}_{v}} B^{'})\)</span>
 is used to approximate the Schur complement.</p>
 <p>Initializes the LSC inverse operator.</p>
@@ -606,10 +759,10 @@ is used to approximate the Schur complement.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Qv</strong> (<em>petsc4py matrix object</em>) &#8211; The diagonal elements of the velocity mass matrix.</li>
-<li><strong>B</strong> (<em>petsc4py matrix object</em>) &#8211; The discrete divergence operator.</li>
-<li><strong>Bt</strong> (<em>petsc4py matrix object</em>) &#8211; The discrete gradient operator.</li>
-<li><strong>F</strong> (<em>petsc4py matrix object</em>) &#8211; The A-block of the linear system.</li>
+<li><strong>Qv</strong> (<em>petsc4py matrix object</em>) – The diagonal elements of the velocity mass matrix.</li>
+<li><strong>B</strong> (<em>petsc4py matrix object</em>) – The discrete divergence operator.</li>
+<li><strong>Bt</strong> (<em>petsc4py matrix object</em>) – The discrete gradient operator.</li>
+<li><strong>F</strong> (<em>petsc4py matrix object</em>) – The A-block of the linear system.</li>
 </ul>
 </td>
 </tr>
@@ -624,15 +777,15 @@ is used to approximate the Schur complement.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<em>NULL</em>) &#8211; A necessary PETSc4py placeholder for internal function operations.</li>
-<li><strong>x</strong> (<em>PETSc4py vector</em>) &#8211; The incoming residual vector which the operator is applied to.</li>
+<li><strong>A</strong> (<em>NULL</em>) – A placeholder for internal function PETSc functions.</li>
+<li><strong>x</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Vec</span></code>) – Vector which LSC operator is being applied to.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> &#8211; The result of the preconditioners action on x.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> – Result of LSC acting on x.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PETSc4py vector</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Vec</span></code></p>
 </td>
 </tr>
 </tbody>
@@ -644,14 +797,14 @@ is used to approximate the Schur complement.</p>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.MatrixShell">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">MatrixShell</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixShell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.ProductOperatorShell" title="proteus.LinearAlgebraTools.ProductOperatorShell"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearAlgebraTools.ProductOperatorShell</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.ProductOperatorShell" title="proteus.LinearAlgebraTools.ProductOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ProductOperatorShell</span></code></a></p>
 <p>A shell class for a matrix.</p>
 <p>Specifies a basic matrix shell.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>A</strong> (<em>matrix</em>) &#8211; A petsc4py matrix object</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>A</strong> (<em>matrix</em>) – A petsc4py matrix object</td>
 </tr>
 </tbody>
 </table>
@@ -664,8 +817,8 @@ is used to approximate the Schur complement.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<em>matrix</em>) &#8211; Dummy place holder for PETSc compatibility</li>
-<li><strong>x</strong> (<em>vector</em>) &#8211; </li>
+<li><strong>A</strong> (<em>matrix</em>) – Dummy place holder for PETSc compatibility</li>
+<li><strong>x</strong> (<em>vector</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -684,14 +837,14 @@ is used to approximate the Schur complement.</p>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.MatrixInvShell">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">MatrixInvShell</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixInvShell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>A PETSc shell class for a inverse operator.</p>
 <p>Initializes operators and solvers for inverse operator.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>A</strong> (<em>PETSc matrix</em>) &#8211; This is the matrix object used to construct the inverse.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>A</strong> (<em>PETSc matrix</em>) – This is the matrix object used to construct the inverse.</td>
 </tr>
 </tbody>
 </table>
@@ -704,8 +857,8 @@ is used to approximate the Schur complement.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<em>matrix</em>) &#8211; Dummy place holder for PETSc compatibility</li>
-<li><strong>x</strong> (<em>vector</em>) &#8211; </li>
+<li><strong>A</strong> (<em>matrix</em>) – Dummy place holder for PETSc compatibility</li>
+<li><strong>x</strong> (<em>vector</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -722,24 +875,24 @@ is used to approximate the Schur complement.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="proteus.LinearAlgebraTools.Sp_shell">
-<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">Sp_shell</code><span class="sig-paren">(</span><em>A00</em>, <em>A11</em>, <em>A01</em>, <em>A10</em>, <em>constNullSpace=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Sp_shell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
+<dt id="proteus.LinearAlgebraTools.SpInv_shell">
+<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SpInv_shell</code><span class="sig-paren">(</span><em>A00</em>, <em>A11</em>, <em>A01</em>, <em>A10</em>, <em>constNullSpace=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SpInv_shell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>Shell class for the SIMPLE preconditioner which applies the
-following action.</p>
-<div class="math">
-\[\hat{S}^{-1} = (A_{11} - A_{01} \text{diag}(A_{00} A_{10})^{-1}\]</div>
-<p>where <span class="math">\(A_{ij}\)</span> are sub-blocks of the global saddle point system.</p>
+following action:</p>
+<div class="math notranslate nohighlight">
+\[\hat{S}^{-1} = (A_{11} - A_{01} \text{diag}(A_{00}) A_{10})^{-1}\]</div>
+<p>where <span class="math notranslate nohighlight">\(A_{ij}\)</span> are sub-blocks of the global saddle point system.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>A00</strong> (<em>petsc4py matrix</em>) &#8211; The A00 block of the global saddle point system.</li>
-<li><strong>A01</strong> (<em>petsc4py matrix</em>) &#8211; The A01 block of the global saddle point system.</li>
-<li><strong>A10</strong> (<em>petsc4py matrix</em>) &#8211; The A10 block of the global saddle point system.</li>
-<li><strong>A11</strong> (<em>petsc4py matrix</em>) &#8211; The A11 block of the global saddle point system.</li>
-<li><strong>use_constant_null_space</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Indicates whether a constant null space should be used.  See
+<li><strong>A00</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code>) – The A00 block of the global saddle point system.</li>
+<li><strong>A01</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code>) – The A01 block of the global saddle point system.</li>
+<li><strong>A10</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code>) – The A10 block of the global saddle point system.</li>
+<li><strong>A11</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code>) – The A11 block of the global saddle point system.</li>
+<li><strong>use_constant_null_space</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates whether a constant null space should be used.  See
 note below.</li>
 </ul>
 </td>
@@ -747,37 +900,57 @@ note below.</li>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>For Stokes or Navier-Stokes systems, the <span class="math">\(S_{p}\)</span> operator
-resembles a Laplcian matrix on the pressure.  As with other
-Laplacian type operators, <cite>S_{p}</cite> has a constant null space which
-must be accounted for when the operator is being applied.  As
-such, this operator&#8217;s default behavior is to use a constant null
-space.  Should a circumstance arise in which a constant null
-space is not appropriate, it can be disabled with the
-use_constant_null_space flag.</p>
+<p>For Stokes or Navier-Stokes systems, the <span class="math notranslate nohighlight">\(S\)</span> operator
+resembles a Laplcian matrix on the pressure.  In cases where the
+global saddle point system uses pure Dirichlet boundary
+conditions, the <span class="math notranslate nohighlight">\(S^{-1}\)</span> operator has a constant null
+space.  Since most saddle-point simulations of interest do not
+have pure Dirichlet conditions, the <cite>constNullSpace</cite> flag defaults
+to false.  Having the null space set to false when the global
+problem uses pure Dirichlet boundary conditions will likely result
+in poor solver performance or failure.</p>
 <dl class="method">
-<dt id="proteus.LinearAlgebraTools.Sp_shell.apply">
-<code class="descname">apply</code><span class="sig-paren">(</span><em>A</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Sp_shell.apply" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="proteus.LinearAlgebraTools.SpInv_shell.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><em>A</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SpInv_shell.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the <span class="math notranslate nohighlight">\(S_{p}\)</span> operator</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>A</strong> (<a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a>) – Dummy argument for PETSc interface</li>
+<li><strong>x</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Vec</span></code>) – Vector to which <span class="math notranslate nohighlight">\(S\)</span> is applied</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> – Result of <span class="math notranslate nohighlight">\(S^{-1}x\)</span></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Vec</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell">
-<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">TwoPhase_PCDInv_shell</code><span class="sig-paren">(</span><em>Qp_visc</em>, <em>Qp_dens</em>, <em>Ap_rho</em>, <em>Np_rho</em>, <em>alpha=False</em>, <em>delta_t=0</em>, <em>num_chebyshev_its=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">TwoPhase_PCDInv_shell</code><span class="sig-paren">(</span><em>Qp_visc</em>, <em>Qp_dens</em>, <em>Ap_rho</em>, <em>Np_rho</em>, <em>alpha=False</em>, <em>delta_t=0</em>, <em>num_chebyshev_its=0</em>, <em>strong_dirichlet_DOF=[]</em>, <em>laplace_null_space=False</em>, <em>par_info=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>Shell class for the two-phase PCD preconditioner.  The
 two-phase PCD_inverse shell applies the following operator.</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\hat{S}^{-1} = (Q^{(1 / \mu)})^{-1} + (A_{p}^{(1 / \rho)})^{-1}
 (N_{p}^{(\rho)} + \dfrac{\alpha}{\Delta t} Q^{(\rho)} )
 (Q^{(\rho)})^{-1}\]</div>
-<p>where <span class="math">\(Q^{(1 / \mu)}\)</span> and <span class="math">\(Q^{(\rho)}\)</span> denote the pressure
+<p>where <span class="math notranslate nohighlight">\(Q^{(1 / \mu)}\)</span> and <span class="math notranslate nohighlight">\(Q^{(\rho)}\)</span> denote the pressure
 mass matrix scaled by the inverse dynamic viscosity and density
-respectively, <span class="math">\((A_{p}^{(1 / \rho)})^{-1}\)</span>
+respectively, <span class="math notranslate nohighlight">\((A_{p}^{(1 / \rho)})^{-1}\)</span>
 denotes the pressure Laplacian scaled by inverse density, and
-<span class="math">\(N_{p}^{(\rho)}\)</span> denotes the pressure advection operator scaled by
-the density, and <span class="math">\(\alpha\)</span> is a binary operator indicating
+<span class="math notranslate nohighlight">\(N_{p}^{(\rho)}\)</span> denotes the pressure advection operator scaled by
+the density, and <span class="math notranslate nohighlight">\(\alpha\)</span> is a binary operator indicating
 whether the problem is temporal or steady state.</p>
 <p>Initialize the two-phase PCD inverse operator.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -785,38 +958,48 @@ whether the problem is temporal or steady state.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Qp_visc</strong> (<em>petsc4py matrix</em>) &#8211; The pressure mass matrix with dynamic viscocity
+<li><strong>Qp_visc</strong> (<em>petsc4py matrix</em>) – The pressure mass matrix with dynamic viscocity
 scaling.</li>
-<li><strong>Qp_dens</strong> (<em>petsc4py matrix</em>) &#8211; The pressure mass matrix with density scaling.</li>
-<li><strong>Ap_rho</strong> (<em>petsc4py matrix</em>) &#8211; The pressure Laplacian scaled with density scaling.</li>
-<li><strong>Np_rho</strong> (<em>petsc4py matrix</em>) &#8211; The pressure advection operator with inverse density
+<li><strong>Qp_dens</strong> (<em>petsc4py matrix</em>) – The pressure mass matrix with density scaling.</li>
+<li><strong>Ap_rho</strong> (<em>petsc4py matrix</em>) – The pressure Laplacian scaled with density scaling.</li>
+<li><strong>Np_rho</strong> (<em>petsc4py matrix</em>) – The pressure advection operator with inverse density
 scaling.</li>
-<li><strong>alpha</strong> (<em>binary</em>) &#8211; True if problem is temporal, False if problem is steady
+<li><strong>alpha</strong> (<em>binary</em>) – True if problem is temporal, False if problem is steady
 state.</li>
-<li><strong>delta_t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time step parameter.</li>
-<li><strong>num_chebyshev_its</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of chebyshev iteration steps to take. (0 indicates
+<li><strong>delta_t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time step parameter.</li>
+<li><strong>num_chebyshev_its</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of chebyshev iteration steps to take. (0 indicates
 the chebyshev semi iteration is not used)</li>
+<li><strong>strong_dirichlet_DOF</strong> (<em>lst</em>) – List of DOF with known, strongly enforced values.</li>
+<li><strong>laplace_null_space</strong> (<em>binary</em>) – Indicates whether the pressure Laplace matrix has a
+null space or not.</li>
+<li><strong>par_info</strong> (<em>ParInfoClass</em>) – Provides parallel info.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
+<dt id="proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.getSize">
+<code class="descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.getSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the total number of DOF for the shell problem.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.apply">
 <code class="descname">apply</code><span class="sig-paren">(</span><em>A</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.apply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applies the two-phase pressure-convection-diffusion
-preconditioner.</p>
+Schur complement approximation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a>) &#8211; Dummy variabled needed to interface with PETSc</li>
-<li><strong>x</strong> (<em>petsc4py vector</em>) &#8211; Vector to which operator is applied</li>
+<li><strong>A</strong> (<a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a>) – Dummy variabled needed to interface with PETSc</li>
+<li><strong>x</strong> (<em>petsc4py vector</em>) – Vector to which operator is applied</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> &#8211; Result of operator acting on x.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> – Result of operator acting on x.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">petsc4py vector</p>
@@ -824,6 +1007,11 @@ preconditioner.</p>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>When strong Dirichlet conditions are enforced on the pressure,
+the PCD operator is applied to the set of unknowns that do not
+have Dirichlet boundary conditions.  At the end, the solution
+is then loaded into the original y-vector.</p>
 </dd></dl>
 
 </dd></dl>
@@ -831,27 +1019,27 @@ preconditioner.</p>
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.l2Norm">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">l2Norm</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2Norm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the parallel <span class="math">\(l_2\)</span> norm</p>
+<dd><p>Compute the parallel <span class="math notranslate nohighlight">\(l_2\)</span> norm</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.l1Norm">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">l1Norm</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l1Norm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the parallel <span class="math">\(l_1\)</span> norm</p>
-<p>The <span class="math">\(l_1\)</span> norm of a vector <span class="math">\(\mathbf{x} \in
+<dd><p>Compute the parallel <span class="math notranslate nohighlight">\(l_1\)</span> norm</p>
+<p>The <span class="math notranslate nohighlight">\(l_1\)</span> norm of a vector <span class="math notranslate nohighlight">\(\mathbf{x} \in
 \mathbb{R}^n\)</span> is</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\| \mathbf{x} \|_{1} = \sum_{i=0} |x_i|\]</div>
 <p>If Python is running in parallel, then the sum is over all
 dimensions on all processors so that the input must not contain
-&#8220;ghost&#8221; entries.</p>
+“ghost” entries.</p>
 <p>This implemtation works for a distributed array with no ghost
 components (each component must be on a single processor).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> &#8211; numpy array of length n</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> – numpy array of length n</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">float</td>
 </tr>
@@ -862,10 +1050,10 @@ components (each component must be on a single processor).</p>
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.lInfNorm">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">lInfNorm</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.lInfNorm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the parallel <span class="math">\(l_{\infty}\)</span> norm</p>
-<p>The <span class="math">\(l_{\infty}\)</span> norm of a vector <span class="math">\(\mathbf{x} \in
+<dd><p>Compute the parallel <span class="math notranslate nohighlight">\(l_{\infty}\)</span> norm</p>
+<p>The <span class="math notranslate nohighlight">\(l_{\infty}\)</span> norm of a vector <span class="math notranslate nohighlight">\(\mathbf{x} \in
 \mathbb{R}^n\)</span> is</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\|x\|_{\infty} = \max_i |x_i|\]</div>
 <p>This implemtation works for a distributed array with no ghost
 components (each component must be on a single processor).</p>
@@ -873,7 +1061,7 @@ components (each component must be on a single processor).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> &#8211; numpy array of length n</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> – numpy array of length n</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">float</td>
 </tr>
@@ -887,15 +1075,15 @@ components (each component must be on a single processor).</p>
 <dd><p>Compute the parallel weighted dot product of vectors x and y using
 weight vector h.</p>
 <p>The weighted dot product is defined for a weight vector
-<span class="math">\(\mathbf{h}\)</span> as</p>
-<div class="math">
+<span class="math notranslate nohighlight">\(\mathbf{h}\)</span> as</p>
+<div class="math notranslate nohighlight">
 \[(\mathbf{x},\mathbf{y})_h = \sum_{i} h_{i} x_{i} y_{i}\]</div>
 <p>All weight vector components should be positive.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong><strong>,</strong><strong>y</strong><strong>,</strong><strong>h</strong> &#8211; numpy arrays for vectors and weight</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong><strong>,</strong><strong>y</strong><strong>,</strong><strong>h</strong> – numpy arrays for vectors and weight</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the weighted dot product</td>
 </tr>
@@ -924,13 +1112,13 @@ weight vector h.</p>
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.energyDot">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">energyDot</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.energyDot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the &#8220;energy&#8221; dot product x^t A y (not parallel)</p>
+<dd><p>Compute the “energy” dot product x^t A y (not parallel)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.energyNorm">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">energyNorm</code><span class="sig-paren">(</span><em>x</em>, <em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.energyNorm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the &#8220;energy&#8221; norm x^t A x (not parallel)</p>
+<dd><p>Compute the “energy” norm x^t A x (not parallel)</p>
 </dd></dl>
 
 <dl class="function">
@@ -982,7 +1170,7 @@ weight vector h.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

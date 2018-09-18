@@ -1,5 +1,5 @@
-proteus.default_n module
-========================
+proteus.default\_n module
+=========================
 
 .. automodule:: proteus.default_n
     :members:

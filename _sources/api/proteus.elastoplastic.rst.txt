@@ -1,0 +1,16 @@
+proteus.elastoplastic package
+=============================
+
+.. automodule:: proteus.elastoplastic
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   proteus.elastoplastic.ElastoPlastic
+   proteus.elastoplastic.cElastoPlastic
+

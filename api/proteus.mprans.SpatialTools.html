@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.mprans.SpatialTools module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.mprans.SpatialTools module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -157,7 +145,7 @@ shape2.BC.left.setNoSlip()</p>
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS">
 <em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">ShapeRANS</code><span class="sig-paren">(</span><em>domain</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.SpatialTools.html#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.SpatialTools.html#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Base/super class of all shapes. Sets the boundary condition class to
 proteus.mprans.BoundaryConditions.BC_RANS.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -165,9 +153,9 @@ proteus.mprans.BoundaryConditions.BC_RANS.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>nd</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em><em></em>) &#8211; Number of dimensions of the shape. If not set, will take the number of
+<li><strong>nd</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – Number of dimensions of the shape. If not set, will take the number of
 dimensions of the domain.</li>
 </ul>
 </td>
@@ -183,8 +171,8 @@ dimensions of the domain.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>model_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Label of the model to use as a key for selecting particular gauges.</li>
-<li><strong>proteus Gauges.py PointGauges class for the remaining parameters.</strong> (<em>See</em>) &#8211; </li>
+<li><strong>model_key</strong> (<em>string</em>) – Label of the model to use as a key for selecting particular gauges.</li>
+<li><strong>proteus Gauges.py PointGauges class for the remaining parameters.</strong> (<em>See</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -201,8 +189,8 @@ dimensions of the domain.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>model_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Label of the model to use as a key for selecting particular gauges.</li>
-<li><strong>proteus Gauges.py LineGauges class for the remaining parameters.</strong> (<em>See</em>) &#8211; </li>
+<li><strong>model_key</strong> (<em>string</em>) – Label of the model to use as a key for selecting particular gauges.</li>
+<li><strong>proteus Gauges.py LineGauges class for the remaining parameters.</strong> (<em>See</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -219,8 +207,8 @@ dimensions of the domain.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>model_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Label of the model to use as a key for selecting particular gauges.</li>
-<li><strong>proteus Gauges.py LineIntegralGauges class for the remaining parameters.</strong> (<em>See</em>) &#8211; </li>
+<li><strong>model_key</strong> (<em>string</em>) – Label of the model to use as a key for selecting particular gauges.</li>
+<li><strong>proteus Gauges.py LineIntegralGauges class for the remaining parameters.</strong> (<em>See</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -243,7 +231,7 @@ The objects has to be defined with WallFunction class.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wall</strong> (<em>list of WallFunction class object</em>) &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wall</strong> (<em>list of WallFunction class object</em>) – </td>
 </tr>
 </tbody>
 </table>
@@ -258,7 +246,7 @@ The objects has to be defined with WallFunction class.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kWall</strong> (<em>list of WallFunction class object for kappa</em>) &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kWall</strong> (<em>list of WallFunction class object for kappa</em>) – </td>
 </tr>
 </tbody>
 </table>
@@ -273,13 +261,13 @@ The objects has to be defined with WallFunction class.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dragAlpha</strong> (<em>Optional</em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>flags</strong> (<em>array_like</em><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Local flags of the region. Can be an integer or a list.</li>
-<li><strong>epsFact_solid</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Half of absorption zone (region) length (used for blending func).</li>
-<li><strong>center</strong> (<em>array_like</em>) &#8211; Coordinates of the center of the absorption zone.</li>
-<li><strong>orientation</strong> (<em>array_like</em>) &#8211; Orientation vector pointing TOWARDS incoming waves.</li>
-<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
+<li><strong>dragAlpha</strong> (<em>Optional</em>) – Relaxation zone coefficient.</li>
+<li><strong>flags</strong> (<em>array_like</em><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Local flags of the region. Can be an integer or a list.</li>
+<li><strong>epsFact_solid</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Half of absorption zone (region) length (used for blending func).</li>
+<li><strong>center</strong> (<em>array_like</em>) – Coordinates of the center of the absorption zone.</li>
+<li><strong>orientation</strong> (<em>array_like</em>) – Orientation vector pointing TOWARDS incoming waves.</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
 </ul>
 </td>
 </tr>
@@ -296,15 +284,15 @@ The objects has to be defined with WallFunction class.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>flags</strong> (<em>array_like</em><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Local flags of the region. Can be an integer or a list.</li>
-<li><strong>epsFact_solid</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Half of absorption zone (region) length (used for blending func).</li>
-<li><strong>center</strong> (<em>array_like</em>) &#8211; Coordinates of the center of the absorption zone.</li>
-<li><strong>orientation</strong> (<em>array_like</em>) &#8211; Orientation vector pointing TOWARDS incoming waves.</li>
-<li><strong>waves</strong> (<a class="reference internal" href="proteus.WaveTools.html#module-proteus.WaveTools" title="proteus.WaveTools"><em>proteus.WaveTools</em></a>) &#8211; Class instance of wave generated from proteus.WaveTools.</li>
-<li><strong>dragAlpha</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Speed of wind in generation zone (default is (0., 0., 0.))</li>
-<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
+<li><strong>flags</strong> (<em>array_like</em><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Local flags of the region. Can be an integer or a list.</li>
+<li><strong>epsFact_solid</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Half of absorption zone (region) length (used for blending func).</li>
+<li><strong>center</strong> (<em>array_like</em>) – Coordinates of the center of the absorption zone.</li>
+<li><strong>orientation</strong> (<em>array_like</em>) – Orientation vector pointing ACCORDING WITH the direction of generated waves.</li>
+<li><strong>waves</strong> (<em>proteus.WaveTools</em>) – Class instance of wave generated from proteus.WaveTools.</li>
+<li><strong>dragAlpha</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Speed of wind in generation zone (default is (0., 0., 0.))</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
 </ul>
 </td>
 </tr>
@@ -321,10 +309,10 @@ The objects has to be defined with WallFunction class.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>flags</strong> (<em>array_like</em><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Local flags of the region. Can be an integer or a list.</li>
-<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Darcy-type coefficient</li>
-<li><strong>dragBeta</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Forchheimer-type coefficient</li>
-<li><strong>porosity</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Porosity</li>
+<li><strong>flags</strong> (<em>array_like</em><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Local flags of the region. Can be an integer or a list.</li>
+<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Darcy-type coefficient</li>
+<li><strong>dragBeta</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Forchheimer-type coefficient</li>
+<li><strong>porosity</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Porosity</li>
 </ul>
 </td>
 </tr>
@@ -337,18 +325,18 @@ The objects has to be defined with WallFunction class.</p>
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.Tank3D">
 <em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">Tank3D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>coords=None</em>, <em>from_0=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.ShapeRANS" title="proteus.mprans.SpatialTools.ShapeRANS"><code class="xref py py-class docutils literal"><span class="pre">proteus.mprans.SpatialTools.ShapeRANS</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.ShapeRANS" title="proteus.mprans.SpatialTools.ShapeRANS"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.ShapeRANS</span></code></a></p>
 <p>Class to create a 3D tank (cuboidal shape).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Dimensions of the cuboid.</li>
-<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the centroid of the shape.</li>
-<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; If True (default), the tank extends from the origin to postive x, y, z</li>
+<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Dimensions of the cuboid.</li>
+<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
+<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – If True (default), the tank extends from the origin to postive x, y, z</li>
 </ul>
 </td>
 </tr>
@@ -370,10 +358,10 @@ generation zones).
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>x_p</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; length of sponge layer in +x direction.</li>
-<li><strong>x_n</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; length of sponge layer in -x direction.</li>
-<li><strong>y_p</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; length of sponge layer in +y direction.</li>
-<li><strong>y_n</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; length of sponge layer in -y direction.</li>
+<li><strong>x_p</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – length of sponge layer in +x direction.</li>
+<li><strong>x_n</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – length of sponge layer in -x direction.</li>
+<li><strong>y_p</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – length of sponge layer in +y direction.</li>
+<li><strong>y_n</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – length of sponge layer in -y direction.</li>
 </ul>
 </td>
 </tr>
@@ -398,14 +386,14 @@ generation zones).
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, all sponge layers are converted to absorption zones.</li>
-<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x+ region is converted to absorption zone.</li>
-<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x- region is converted to absorption zone.</li>
-<li><strong>y_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, y+ region is converted to absorption zone.</li>
-<li><strong>y_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, y- region is converted to absorption zone.</li>
-<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
+<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Relaxation zone coefficient.</li>
+<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, all sponge layers are converted to absorption zones.</li>
+<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x+ region is converted to absorption zone.</li>
+<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x- region is converted to absorption zone.</li>
+<li><strong>y_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, y+ region is converted to absorption zone.</li>
+<li><strong>y_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, y- region is converted to absorption zone.</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
 </ul>
 </td>
 </tr>
@@ -422,17 +410,17 @@ generation zones).
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>smoothing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Smoothing distance (typically 3.*he)</li>
-<li><strong>waves</strong> (<a class="reference internal" href="proteus.WaveTools.html#module-proteus.WaveTools" title="proteus.WaveTools"><em>proteus.WaveTools</em></a>) &#8211; Class instance of wave generated from proteus.WaveTools.</li>
-<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Speed of wind in generation zone (default is (0., 0., 0.))</li>
-<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, all sponge layers are converted to generation zones.</li>
-<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x+ region is converted to generation zone.</li>
-<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x- region is converted to generation zone.</li>
-<li><strong>y_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, y+ region is converted to generation zone.</li>
-<li><strong>y_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, y- region is converted to generation zone.</li>
-<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
+<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Relaxation zone coefficient.</li>
+<li><strong>smoothing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Smoothing distance (typically 3.*he)</li>
+<li><strong>waves</strong> (<em>proteus.WaveTools</em>) – Class instance of wave generated from proteus.WaveTools.</li>
+<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Speed of wind in generation zone (default is (0., 0., 0.))</li>
+<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, all sponge layers are converted to generation zones.</li>
+<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x+ region is converted to generation zone.</li>
+<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x- region is converted to generation zone.</li>
+<li><strong>y_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, y+ region is converted to generation zone.</li>
+<li><strong>y_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, y- region is converted to generation zone.</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
 </ul>
 </td>
 </tr>
@@ -445,18 +433,18 @@ generation zones).
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.Tank2D">
 <em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">Tank2D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim</em>, <em>coords=None</em>, <em>from_0=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.ShapeRANS" title="proteus.mprans.SpatialTools.ShapeRANS"><code class="xref py py-class docutils literal"><span class="pre">proteus.mprans.SpatialTools.ShapeRANS</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.ShapeRANS" title="proteus.mprans.SpatialTools.ShapeRANS"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.ShapeRANS</span></code></a></p>
 <p>Class to create a 2D tank (rectangular shape).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>dim</strong> (<em>array_like</em>) &#8211; Dimensions of the tank (excluding sponge layers).</li>
-<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the centroid of the shape.</li>
-<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; If True (default), the tank extends from the origin to positive x, y, z</li>
+<li><strong>dim</strong> (<em>array_like</em>) – Dimensions of the tank (excluding sponge layers).</li>
+<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
+<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – If True (default), the tank extends from the origin to positive x, y, z</li>
 </ul>
 </td>
 </tr>
@@ -476,11 +464,11 @@ boundary conditions of the shape.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>frame</strong> (<em>array_like</em>) &#8211; An array of (x,y) coordinates in counterclockwise order to define
+<li><strong>frame</strong> (<em>array_like</em>) – An array of (x,y) coordinates in counterclockwise order to define
 the boundaries of the main (that is, excluding extensions such as
 sponge zones) shape.  This can be generated with tank2DFrame or
 subclass specific methods.</li>
-<li><strong>frame_flags</strong> (<em>array_like</em>) &#8211; A corresponding array of boundary tags associated with each point
+<li><strong>frame_flags</strong> (<em>array_like</em>) – A corresponding array of boundary tags associated with each point
 in the frame.  This can be generated with tank2DFrame or subclass
 specific methods.</li>
 </ul>
@@ -501,8 +489,8 @@ generation zones).
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>x_p</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; length of sponge layer in +x direction.</li>
-<li><strong>x_n</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; length of sponge layer in -x direction.</li>
+<li><strong>x_p</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – length of sponge layer in +x direction.</li>
+<li><strong>x_n</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – length of sponge layer in -x direction.</li>
 </ul>
 </td>
 </tr>
@@ -519,12 +507,12 @@ generation zones).
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, all sponge layers are converted to absorption zones.</li>
-<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x+ region is converted to absorption zone.</li>
-<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x- region is converted to absorption zone.</li>
-<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
+<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Relaxation zone coefficient.</li>
+<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, all sponge layers are converted to absorption zones.</li>
+<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x+ region is converted to absorption zone.</li>
+<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x- region is converted to absorption zone.</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
 </ul>
 </td>
 </tr>
@@ -541,15 +529,15 @@ generation zones).
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Relaxation zone coefficient</li>
-<li><strong>smoothing</strong> &#8211; Smoothing distance</li>
-<li><strong>waves</strong> (<a class="reference internal" href="proteus.WaveTools.html#module-proteus.WaveTools" title="proteus.WaveTools"><em>proteus.WaveTools</em></a>) &#8211; Class instance of wave generated from proteus.WaveTools.</li>
-<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Speed of wind in generation zone (default is (0., 0., 0.))</li>
-<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, all sponge layers are converted to generation zones.</li>
-<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x+ region is converted to generation zone.</li>
-<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x- region is converted to generation zone.</li>
-<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
+<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Relaxation zone coefficient</li>
+<li><strong>smoothing</strong> – Smoothing distance</li>
+<li><strong>waves</strong> (<em>proteus.WaveTools</em>) – Class instance of wave generated from proteus.WaveTools.</li>
+<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Speed of wind in generation zone (default is (0., 0., 0.))</li>
+<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, all sponge layers are converted to generation zones.</li>
+<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x+ region is converted to generation zone.</li>
+<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x- region is converted to generation zone.</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
 </ul>
 </td>
 </tr>
@@ -562,7 +550,7 @@ generation zones).
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.TankWithObstacles2D">
 <em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">TankWithObstacles2D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim=(0.0</em>, <em>0.0)</em>, <em>obstacles=None</em>, <em>special_boundaries=None</em>, <em>full_circle=False</em>, <em>coords=None</em>, <em>from_0=True</em>, <em>hole=True</em>, <em>obstacle_regions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.Tank2D" title="proteus.mprans.SpatialTools.Tank2D"><code class="xref py py-class docutils literal"><span class="pre">proteus.mprans.SpatialTools.Tank2D</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.Tank2D" title="proteus.mprans.SpatialTools.Tank2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.Tank2D</span></code></a></p>
 <p>Class to create a 2D rectangular tank with obstacles built out of any wall.</p>
 <p>An obstacle is defined by a contiguous list of points which start and end
 on the walls or corners of the tank.</p>
@@ -571,7 +559,7 @@ unique boundary tag, add the starting vertex (in the counterclockwise
 format the shape is generated in) of the segment as a value in a dictionary
 element keyed to the name of the boundary tag.</p>
 <p>(!) Warning: If each of the four corners of the rectangular tank is inside
-an obstacle or a vertex for an obstacle, then the tank&#8217;s region is defined
+an obstacle or a vertex for an obstacle, then the tank’s region is defined
 in a pseudorandom manner, which may make it unreliable when dealing with
 holes caused by other shapes.
 (!) Warning: Obstacle boundary tags are keyed to whichever edge they started
@@ -582,28 +570,28 @@ special boundary conditions to affected segments.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Dimensions of the cuboid.</li>
-<li><strong>obstacles</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; A list of lists of (x,y) coordinates.  Each (x,y) coordinate is a length
+<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Dimensions of the cuboid.</li>
+<li><strong>obstacles</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – A list of lists of (x,y) coordinates.  Each (x,y) coordinate is a length
 and height relative to the x-,y- corner of the tank.  Each list of
 coordinates is an obstacle defined by points connected in the order of
 their index.  The list of lists gives all such obstacles in a
 counterclockwise manner of which they should be appended, starting from
 the (x-,y-) corner.</li>
-<li><strong>special_boundaries</strong> (<em>Optional</em><em>[</em><em>mapping</em><em>]</em><em></em>) &#8211; A dictionary of lists of vertices keyed to boundary names. The vertices
+<li><strong>special_boundaries</strong> (<em>Optional</em><em>[</em><em>mapping</em><em>]</em>) – A dictionary of lists of vertices keyed to boundary names. The vertices
 listed will be given the boundary name they are keyed to, overriding
 any other designation they would be given.
 If this is a distinct boundary name, the segment starting from the vertex
 will be assigned the same boundary tag.</li>
-<li><strong>full_circle</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; A boolean tag to check if the final obstacle ends on the same edge that
+<li><strong>full_circle</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – A boolean tag to check if the final obstacle ends on the same edge that
 the first obstacle starts on.  Default is False.</li>
-<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the centroid of the shape.</li>
-<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; If True (default), the tank extends from the origin to positive x, y, z</li>
-<li><strong>hole</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; If True (default), the obstacle of the tank is just an open hole at the
+<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
+<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – If True (default), the tank extends from the origin to positive x, y, z</li>
+<li><strong>hole</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – If True (default), the obstacle of the tank is just an open hole at the
 bottom of the tank. If False, a segment at the bottom of the obstacle is
 created to close the hole.</li>
-<li><strong>obstacle_regions</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; To use only if hole=False.(x,y) coordinates of a point inside the
+<li><strong>obstacle_regions</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – To use only if hole=False.(x,y) coordinates of a point inside the
 obstacle in order to fill the obstacle with what should be inside
 (for example a porous material).</li>
 </ul>
@@ -620,12 +608,12 @@ obstacle in order to fill the obstacle with what should be inside
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Relaxation zone coefficient</li>
-<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, all sponge layers are converted to absorption zones.</li>
-<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x+ region is converted to absorption zone.</li>
-<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x- region is converted to absorption zone.</li>
-<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
+<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Relaxation zone coefficient</li>
+<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, all sponge layers are converted to absorption zones.</li>
+<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x+ region is converted to absorption zone.</li>
+<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x- region is converted to absorption zone.</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
 </ul>
 </td>
 </tr>
@@ -642,15 +630,15 @@ obstacle in order to fill the obstacle with what should be inside
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>smoothing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Smoothing distance (typically 3*he)</li>
-<li><strong>waves</strong> (<a class="reference internal" href="proteus.WaveTools.html#module-proteus.WaveTools" title="proteus.WaveTools"><em>proteus.WaveTools</em></a>) &#8211; Class instance of wave generated from proteus.WaveTools.</li>
-<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Speed of wind in generation zone (default is (0., 0., 0.))</li>
-<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, all sponge layers are converted to generation zones.</li>
-<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x+ region is converted to generation zone.</li>
-<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, x- region is converted to generation zone.</li>
-<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
-<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Relaxation zone coefficient.</li>
+<li><strong>dragAlpha</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Relaxation zone coefficient.</li>
+<li><strong>smoothing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Smoothing distance (typically 3*he)</li>
+<li><strong>waves</strong> (<em>proteus.WaveTools</em>) – Class instance of wave generated from proteus.WaveTools.</li>
+<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Speed of wind in generation zone (default is (0., 0., 0.))</li>
+<li><strong>allSponge</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, all sponge layers are converted to generation zones.</li>
+<li><strong>x_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x+ region is converted to generation zone.</li>
+<li><strong>x_n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, x- region is converted to generation zone.</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</li>
 </ul>
 </td>
 </tr>
@@ -671,7 +659,7 @@ to be attached to the domain.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</td>
 </tr>
 </tbody>
@@ -686,7 +674,7 @@ boundary conditions of the shape.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</td>
 </tr>
 </tbody>
@@ -715,7 +703,7 @@ boundary conditions of the shape.</td>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

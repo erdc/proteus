@@ -1,8 +1,10 @@
 var searchData=
 [
   ['data',['data',['../struct_f_l_c_b_d_f__integrator.html#a3a21e4e53f50cdebc7333442cb8b584c',1,'FLCBDF_integrator']]],
-  ['default_5felement_5fmaterial',['DEFAULT_ELEMENT_MATERIAL',['../mesh_8cpp.html#aeda877142ca1dcbf191305594d24269d',1,'mesh.cpp']]],
-  ['default_5fnode_5fmaterial',['DEFAULT_NODE_MATERIAL',['../mesh_8cpp.html#ac5eb1896979304d2cb81a648238fc653',1,'mesh.cpp']]],
+  ['dbctag',['DBCtag',['../class_mesh_adapt_p_u_m_i_drvr.html#ac91430db54e1c581c67fd0ff6a0e7069',1,'MeshAdaptPUMIDrvr']]],
+  ['default_5felement_5fmaterial',['DEFAULT_ELEMENT_MATERIAL',['../mesh_8cpp.html#aeda877142ca1dcbf191305594d24269d',1,'DEFAULT_ELEMENT_MATERIAL():&#160;mesh.cpp'],['../_parallel_mesh_converter_8cpp.html#aeda877142ca1dcbf191305594d24269d',1,'DEFAULT_ELEMENT_MATERIAL():&#160;ParallelMeshConverter.cpp']]],
+  ['default_5fnode_5fmaterial',['DEFAULT_NODE_MATERIAL',['../mesh_8cpp.html#ac5eb1896979304d2cb81a648238fc653',1,'DEFAULT_NODE_MATERIAL():&#160;mesh.cpp'],['../_parallel_mesh_converter_8cpp.html#ac5eb1896979304d2cb81a648238fc653',1,'DEFAULT_NODE_MATERIAL():&#160;ParallelMeshConverter.cpp']]],
+  ['density',['density',['../struct_inputs.html#afe2a643c71b9258462f0b206b247fa14',1,'Inputs']]],
   ['dfn',['dfn',['../class_fractional_flow_variables.html#a1cb7093d0813d19c9e80a78ef93400ec',1,'FractionalFlowVariables']]],
   ['dfn_5fpsiw',['dfn_psiw',['../struct_compressible_n___fractional_flow_variables.html#a2ff735f4e2575ffcf2dc8dec07b3b078',1,'CompressibleN_FractionalFlowVariables']]],
   ['dfw',['dfw',['../class_fractional_flow_variables.html#ae8a2dd3aa44b5419a4a802f444c841ee',1,'FractionalFlowVariables']]],
@@ -23,6 +25,7 @@ var searchData=
   ['drhon_5fpsiw',['drhon_psiw',['../struct_compressible_n___fractional_flow_variables.html#ab708c49880ac7d138991746c3353c624',1,'CompressibleN_FractionalFlowVariables']]],
   ['dse_5fdpsic',['dSe_dpsic',['../class_psk_relation.html#a4a8163ffde6cbffc32090d68c35841e7',1,'PskRelation']]],
   ['dse_5fdsw',['dSe_dSw',['../class_psk_relation.html#a5e6a67004a600bd0c90e569c6e6e2076',1,'PskRelation']]],
+  ['dt_5ferr',['dt_err',['../_v_m_s_8cpp.html#a3b9eac77f31697a0a072c8225eca4c97',1,'VMS.cpp']]],
   ['dyprimevec',['DyprimeVec',['../struct_f_l_c_b_d_f__integrator.html#a0c66e4c5a63085c0cc83931d6a553eb8',1,'FLCBDF_integrator']]],
   ['dyvec',['DyVec',['../struct_f_l_c_b_d_f__integrator.html#a5e5d470490fbf514ac1abdbe890234db',1,'FLCBDF_integrator']]]
 ];

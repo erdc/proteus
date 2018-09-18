@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.UnstructuredFMMandFSWsolvers module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.UnstructuredFMMandFSWsolvers module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,17 +127,17 @@
   <div class="section" id="module-proteus.UnstructuredFMMandFSWsolvers">
 <span id="proteus-unstructuredfmmandfswsolvers-module"></span><h1>proteus.UnstructuredFMMandFSWsolvers module<a class="headerlink" href="#module-proteus.UnstructuredFMMandFSWsolvers" title="Permalink to this headline">¶</a></h1>
 <p>Fast marching and fast sweeping solvers</p>
-<object data="../_images/inheritance-ecc51153ec9e51703469628537e71bcd25e331db.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.UnstructuredFMMandFSWsolvers</p></object>
+<div class="graphviz"><object data="../_images/inheritance-ecc51153ec9e51703469628537e71bcd25e331db.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.UnstructuredFMMandFSWsolvers</p></object></div>
 <dl class="class">
 <dt id="proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver">
 <em class="property">class </em><code class="descclassname">proteus.UnstructuredFMMandFSWsolvers.</code><code class="descname">FMMEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encapsulate naive implementation of Fast Marching Methods on
 unstructured grids for</p>
 <blockquote>
-<div><div class="math">
+<div><div class="math notranslate nohighlight">
 \[\|\grad T\| = 1/F\]</div>
-<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p><span class="math notranslate nohighlight">\(T = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma\)</span></p>
 <p>1d local solver is standard upwind approximation</p>
 <p>2d local solver variations: acute triangulations version 1 or
 version 2 from Qian Zhang etal 07 obtuse triangulation not
@@ -169,7 +157,7 @@ implemented</p>
 <div><p>assuming phi_0 describes initial location of interface Gamma and
 has reasonable values (absolute values) for T close to Gamma. Here
 T can be interpreted as the travel time from Gamma.</p>
-<p>Right now assumes global node numbers &lt;&#8211;&gt; global dofs but this can be
+<p>Right now assumes global node numbers &lt;–&gt; global dofs but this can be
 fixed easily
 Input</p>
 <p>phi0: dof array from P1 C0 FiniteElementFunction holding initial condition</p>
@@ -182,11 +170,11 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd><dl class="first last docutils">
-<dt>-1 &#8211;&gt; Far</dt>
-<dd>0 &#8211;&gt; Trial
-1 &#8211;&gt; Known</dd>
+<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
+<dd><dl class="first last docutils">
+<dt>-1 –&gt; Far</dt>
+<dd>0 –&gt; Trial
+1 –&gt; Known</dd>
 </dl>
 </dd>
 </dl>
@@ -200,7 +188,7 @@ ec x_n)</p>
 
 <dl class="attribute">
 <dt id="proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -212,9 +200,9 @@ ec x_n)</p>
 <dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
 <dd>for</dd>
 </dl>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\|\grad T\| = 1/F\]</div>
-<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p><span class="math notranslate nohighlight">\(T = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma\)</span></p>
 <p>1d local solver is standard upwind approximation</p>
 <p>2d local solver variations: acute triangulations version 1 or
 version 2 from Qian Zhang etal 07 obtuse triangulation not
@@ -233,7 +221,7 @@ implemented</p>
 <div><p>assuming phi_0 describes initial location of interface Gamma and
 has reasonable values (absolute values) for T close to Gamma. Here
 T can be interpreted as the travel time from Gamma.</p>
-<p>Right now assumes global node numbers &lt;&#8211;&gt; global dofs but this can be
+<p>Right now assumes global node numbers &lt;–&gt; global dofs but this can be
 fixed easily
 Input</p>
 <p>phi0: dof array holding P1 C0 FiniteElementFunction holding initial condition</p>
@@ -246,9 +234,9 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd>0 &#8211;&gt; Not Known (Trial)
-1 &#8211;&gt; Known</dd>
+<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
+<dd>0 –&gt; Not Known (Trial)
+1 –&gt; Known</dd>
 </dl>
 <p>Order  : ordering of points in domain using l_p metric from fixed reference points</p>
 </div></blockquote>
@@ -256,7 +244,7 @@ ec x_n)</p>
 
 <dl class="attribute">
 <dt id="proteus.UnstructuredFMMandFSWsolvers.FSWEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -318,7 +306,7 @@ use c++ interface</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.FemTools module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.FemTools module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -106,7 +94,7 @@
     </a>
   </li>
   <li>
-    <a href="proteus.Gauges.html" title="Next Chapter: proteus.Gauges module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Gauge... &raquo;</span>
+    <a href="proteus.Gauges.html" title="Next Chapter: proteus.Gauges module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Gauges module &raquo;</span>
     </a>
   </li>
               
@@ -139,8 +127,8 @@
   <div class="section" id="module-proteus.FemTools">
 <span id="proteus-femtools-module"></span><h1>proteus.FemTools module<a class="headerlink" href="#module-proteus.FemTools" title="Permalink to this headline">¶</a></h1>
 <p>Class hierarchies for constructing and working with finite element spaces</p>
-<object data="../_images/inheritance-30a6cd13604f30c3c15f7344b64a48a2e208876c.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.FemTools</p></object>
+<div class="graphviz"><object data="../_images/inheritance-7a90a6f81509f34e000eaaedd34f35163d052f02.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.FemTools</p></object></div>
 <dl class="class">
 <dt id="proteus.FemTools.ReferenceElement">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ReferenceElement</code><span class="sig-paren">(</span><em>dim=0</em>, <em>nNodes=0</em>, <em>nElementBoundaries=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceElement" title="Permalink to this definition">¶</a></dt>
@@ -156,8 +144,8 @@ local function spaces will be built</p>
 <dl class="class">
 <dt id="proteus.FemTools.ReferenceSimplex">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ReferenceSimplex</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceSimplex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ReferenceElement" title="proteus.FemTools.ReferenceElement"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ReferenceElement</span></code></a></p>
-<p>The unit simplex in <span class="math">\(R^n, n&lt;=3\)</span></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ReferenceElement" title="proteus.FemTools.ReferenceElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ReferenceElement</span></code></a></p>
+<p>The unit simplex in <span class="math notranslate nohighlight">\(R^n, n&lt;=3\)</span></p>
 <dl class="method">
 <dt id="proteus.FemTools.ReferenceSimplex.onElement">
 <code class="descname">onElement</code><span class="sig-paren">(</span><em>xi</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceSimplex.onElement" title="Permalink to this definition">¶</a></dt>
@@ -168,8 +156,8 @@ local function spaces will be built</p>
 <dl class="class">
 <dt id="proteus.FemTools.ReferenceCube">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ReferenceCube</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceCube" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ReferenceElement" title="proteus.FemTools.ReferenceElement"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ReferenceElement</span></code></a></p>
-<p>The unit cube in <span class="math">\(R^n, n&lt;=3\)</span></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ReferenceElement" title="proteus.FemTools.ReferenceElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ReferenceElement</span></code></a></p>
+<p>The unit cube in <span class="math notranslate nohighlight">\(R^n, n&lt;=3\)</span></p>
 <dl class="method">
 <dt id="proteus.FemTools.ReferenceCube.onElement">
 <code class="descname">onElement</code><span class="sig-paren">(</span><em>xi</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceCube.onElement" title="Permalink to this definition">¶</a></dt>
@@ -193,7 +181,7 @@ on a reference element.</p>
 <dl class="class">
 <dt id="proteus.FemTools.LinearOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">LinearOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.LinearOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <p>First order polynomials on the unit nd-simplex with the nodal basis.</p>
 <p>Nodal basis functions on the reference nd-simplex  (nd &lt;= 3) with
 coordinates xi[0],xi[1],and xi[2]. The basis functions are numbered according to
@@ -203,7 +191,7 @@ the nodes.</p>
 <dl class="class">
 <dt id="proteus.FemTools.LinearOnCubeWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">LinearOnCubeWithNodalBasis</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.LinearOnCubeWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <p>First order polynomials on the unit nd-cube with the nodal basis.</p>
 <p>Nodal basis functions on the reference nd-cube  (nd &lt;=3) with
 coordinates xi[0],xi[1],and xi[2]. The basis functions are numbered according to
@@ -213,7 +201,7 @@ the nodes.</p>
 <dl class="class">
 <dt id="proteus.FemTools.LagrangeOnCubeWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">LagrangeOnCubeWithNodalBasis</code><span class="sig-paren">(</span><em>nd=3</em>, <em>order=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.LagrangeOnCubeWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <p>Lagrange polynomials on the unit nd-cube with the nodal basis.</p>
 <p>Nodal basis functions on the reference nd-cube  (nd &lt;=3) with
 coordinates xi[0],xi[1],and xi[2]. The basis functions are numbered according to
@@ -221,22 +209,92 @@ the nodes.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="proteus.FemTools.BernsteinOnCube">
+<em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">BernsteinOnCube</code><span class="sig-paren">(</span><em>nd=3</em>, <em>order=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.BernsteinOnCube" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<p>Bernstein polynomials on the unit nd-cube</p>
+<p>Bernstein basis functions on the reference nd-cube (nd &lt;=3) with
+coordinates xi[0],xi[1],and xi[2].
+The basis functions are numbered as follows:
+##############
+# <strong>* 2D *</strong> #
+##############
+###########
+# Order=1 #
+###########
+3–2
+|  |
+0–1
+###########
+# Order=2 #
+###########
+3-6-2
+| | |
+7-8-5
+| | |
+0-4-1
+###########
+# Order=3 #
+###########
+3–9–8–2
+|  |  |  |
+10-14-15-7
+|  |  |  |
+11-12-13-6
+|  |  |  |
+0–4–5–1
+###########
+# Order=4 #
+###########
+3–12-11-10-2
+|  |  |  |  |
+13-22-23-24-9
+|  |  |  |  |
+14-19-20-21-8
+|  |  |  |  |
+15-16-17-18-7
+|  |  |  |  |
+0–4–5–6–1</p>
+<dl class="docutils">
+<dt>NOTE (mql): <a href="#id1"><span class="problematic" id="id2">**</span></a>* The polynomials are defined for arbitrary order in 1D.</dt>
+<dd><blockquote class="first">
+<div>This definition is carried to multi-D via tensor products.</div></blockquote>
+<p class="last"><strong>* The numbering is defined for arbitrary order (via funMap) in 2D.
+*</strong> TODO: Generalize numbering for 1D and 3D.
+<strong>* TODO: The quad rule Lobatto edge alt must be generalized.
+*</strong> TODO: define hessians and higher order deriavtives</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="proteus.FemTools.BernsteinOnCube.nChooseK">
+<code class="descname">nChooseK</code><span class="sig-paren">(</span><em>n</em>, <em>k</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.BernsteinOnCube.nChooseK" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.FemTools.BernsteinOnCube.factorial">
+<code class="descname">factorial</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span> &#x2192; Integral<a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.BernsteinOnCube.factorial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find x!. Raise a ValueError if x is negative or non-integral.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="proteus.FemTools.QuadraticOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">QuadraticOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <blockquote>
 <div><p>Quadratic polynomials on the unit nd-simplex with the nodal basis.</p>
 <p>Nodal basis functions on the reference nd-simplex (nd &lt;=3) with
 coordinates xi[0],xi[1],and xi[2]. The basis functions are
 numbered according to</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\]</div>
 <p>psi &amp;= lambda_i(2lambda_i-1)  0&lt;= i&lt;= d
 psi &amp;= 4lambda_jlambda_k       0&lt;= j &lt; k &lt;= d</p>
-<p>where <span class="math">\(\lambda_i\)</span> is the barycentric coordinate associated
-with node i (i.e., it&#8217;s 1 at node i and zero elsewhere)</p>
+<p>where <span class="math notranslate nohighlight">\(\lambda_i\)</span> is the barycentric coordinate associated
+with node i (i.e., it’s 1 at node i and zero elsewhere)</p>
 <p>Gradients of shape functions are</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\]</div>
 </div></blockquote>
 <p>abla psi_i &amp;= (4lambda_i-1)
@@ -246,22 +304,22 @@ ablalambda_j + 4lambda_j
 ablalambda_k mbox{for} 0 &lt;= j &lt; k &lt;= d</p>
 <blockquote>
 <div><p>In 2d we have</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\]</div>
 <p>psi_i &amp;= lambda_i(2lambda_i-1)  0&lt;= i&lt;= 2
 psi_3 &amp;= 4lambda_0lambda_1
 psi_4 &amp;= 4lambda_1lambda_2
 psi_5 &amp;= 4lambda_0lambda_2</p>
-<p>2d numberings for <span class="math">\(\psi\)</span></p>
+<p>2d numberings for <span class="math notranslate nohighlight">\(\psi\)</span></p>
 <blockquote>
 <div>2
 |      |       |        5   4
-|          |           0&#8212;3&#8211;1</div></blockquote>
+|          |           0—3–1</div></blockquote>
 <p>Note that mesh numbers edges according to the node they are across
 from, so that local dof 3 corresponds to edge 2, local dof 4
 corresponds to edge 0, local dof 5 corresponds to edge 1,</p>
 <p>3d should be</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\]</div>
 <p>psi_i &amp;= lambda_i(2lambda_i-1)  0&lt;= i&lt;= 3
 psi_4 &amp;= 4lambda_0lambda_1
@@ -274,9 +332,63 @@ psi_9 &amp;= 4lambda_0lambda_3</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="proteus.FemTools.BernsteinOnSimplex">
+<em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">BernsteinOnSimplex</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.BernsteinOnSimplex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<blockquote>
+<div><p>Quadratic Bernstein polynomials on the unit nd-simplex.</p>
+<p>The basis functions are numbered according to</p>
+<div class="math notranslate nohighlight">
+\[\]</div>
+<p>psi &amp;= lambda_i^2               0&lt;= i&lt;= d
+psi &amp;= 2lambda_jlambda_k       0&lt;= j &lt; k &lt;= d</p>
+<p>where <span class="math notranslate nohighlight">\(\lambda_i\)</span> is the barycentric coordinate associated
+with node i (i.e., it’s 1 at node i and zero elsewhere).
+These can be generalized to:</p>
+<p>psi &amp;= p!/(i!j!k!)lambda_0^ilambda_1^jlambda_2^k, 0&lt;=i,j,k&lt;=order, i+j+k=order</p>
+<p>Gradients of shape functions are</p>
+<div class="math notranslate nohighlight">
+\[\]</div>
+</div></blockquote>
+<p>abla psi_i &amp;= 2lambda_i
+ablalambda_i   0&lt;= i &lt;= d</p>
+<p>abla psi_i &amp;= 2lambda_k
+ablalambda_j + 2lambda_j
+ablalambda_k mbox{for} 0 &lt;= j &lt; k &lt;= d</p>
+<blockquote>
+<div><p>which again can be generalized via the general formula above.</p>
+<p>In 2d we have</p>
+<div class="math notranslate nohighlight">
+\[\]</div>
+<p>psi_i &amp;= lambda_i^2  0&lt;= i&lt;= 2
+psi_3 &amp;= 2lambda_0lambda_1
+psi_4 &amp;= 2lambda_1lambda_2
+psi_5 &amp;= 2lambda_0lambda_2</p>
+<p>2d numberings for <span class="math notranslate nohighlight">\(\psi\)</span></p>
+<blockquote>
+<div>2
+|      |       |        5   4
+|          |           0—3–1</div></blockquote>
+<p>Note that mesh numbers edges according to the node they are across
+from, so that local dof 3 corresponds to edge 2, local dof 4
+corresponds to edge 0, local dof 5 corresponds to edge 1,</p>
+<p>3d should be</p>
+<div class="math notranslate nohighlight">
+\[\]</div>
+<p>psi_i &amp;= lambda_i^2  0&lt;= i&lt;= 3
+psi_4 &amp;= 2lambda_0lambda_1
+psi_5 &amp;= 2lambda_1lambda_2
+psi_6 &amp;= 2lambda_2lambda_3
+psi_7 &amp;= 2lambda_0lambda_2
+psi_8 &amp;= 2lambda_1lambda_3
+psi_9 &amp;= 2lambda_0lambda_3</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
 <dt id="proteus.FemTools.CrouzeixRaviartWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">CrouzeixRaviartWithNodalBasis</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.CrouzeixRaviartWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <p>Crouzeix-Raviart element implemented as a Lagrange type element. That is, the
 degrees of freedom are the values at barycenters of faces. Defined for
 the reference nd-simplex  (nd &lt;=3)</p>
@@ -285,21 +397,21 @@ the reference nd-simplex  (nd &lt;=3)</p>
 <dl class="class">
 <dt id="proteus.FemTools.p0">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">p0</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.Monomials">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">Monomials</code><span class="sig-paren">(</span><em>nd=3</em>, <em>k=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.Monomials" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.P1BubblesWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">P1BubblesWithNodalBasis</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1BubblesWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <p>First order polynomials on the unit nd-simplex with the nodal basis + bubble</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\]</div>
 <p>b = (n_d+1)^{n_d+1} Pi_{i=0}^{n_d} lambda_i</p>
 <p>First nd+1 basis functions are nodal ones on the reference nd-simplex  (nd &lt;=3) with
@@ -310,9 +422,9 @@ the nodes. The last shape function is the bubble, b</p>
 <dl class="class">
 <dt id="proteus.FemTools.P1P0BubblesWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">P1P0BubblesWithNodalBasis</code><span class="sig-paren">(</span><em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubblesWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <p>First order polynomials on the unit nd-simplex with the nodal basis + dg bubble</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\]</div>
 <p>b_e = 1 for x in Omega_e</p>
 <p>First nd+1 basis functions are nodal ones on the reference nd-simplex  (nd &lt;=3) with
@@ -325,7 +437,7 @@ the nodes. The last shape function is the bubble, b</p>
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">InterpolationConditions</code><span class="sig-paren">(</span><em>dim=0</em>, <em>referenceElement=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.InterpolationConditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for generalized interpolation conditions
 for function spaces.</p>
-<p>For example, a function&#8217;s values at a set of points
+<p>For example, a function’s values at a set of points
 that is large enough to uniquely specify an element
 of the local function space that will be paired with
 the interpolation conditions.</p>
@@ -354,7 +466,7 @@ the interpolation conditions.</p>
 <dl class="class">
 <dt id="proteus.FemTools.NodalInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">NodalInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.NodalInterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
 <p>Obtains the DOF from the function values at the nodes</p>
 <dl class="method">
 <dt id="proteus.FemTools.NodalInterpolationConditions.definedOnLocalElementBoundary">
@@ -379,7 +491,7 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.CubeNodalInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">CubeNodalInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.CubeNodalInterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.NodalInterpolationConditions" title="proteus.FemTools.NodalInterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.NodalInterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.NodalInterpolationConditions" title="proteus.FemTools.NodalInterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.NodalInterpolationConditions</span></code></a></p>
 <dl class="method">
 <dt id="proteus.FemTools.CubeNodalInterpolationConditions.definedOnLocalElementBoundary">
 <code class="descname">definedOnLocalElementBoundary</code><span class="sig-paren">(</span><em>k</em>, <em>ebN_local</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.CubeNodalInterpolationConditions.definedOnLocalElementBoundary" title="Permalink to this definition">¶</a></dt>
@@ -400,7 +512,7 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.QuadraticLagrangeNodalInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">QuadraticLagrangeNodalInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticLagrangeNodalInterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
 <p>Obtains the DOF from the function values at vertices and
 midpoints of edges (whole element is considered an edge in 1d)</p>
 <dl class="method">
@@ -437,7 +549,7 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.QuadraticLagrangeCubeNodalInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">QuadraticLagrangeCubeNodalInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticLagrangeCubeNodalInterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
 <p>Obtains the DOF from the function values at vertices and
 midpoints of edges (whole element is considered an edge in 1d)</p>
 <dl class="method">
@@ -479,7 +591,7 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.FaceBarycenterInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">FaceBarycenterInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FaceBarycenterInterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
 <p>Obtains the DOF from the function values at the barycenter of faces</p>
 <dl class="method">
 <dt id="proteus.FemTools.FaceBarycenterInterpolationConditions.definedOnLocalElementBoundary">
@@ -499,7 +611,7 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.p0InterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">p0InterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0InterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
 <dl class="method">
 <dt id="proteus.FemTools.p0InterpolationConditions.quadrature2DOF_element">
 <code class="descname">quadrature2DOF_element</code><span class="sig-paren">(</span><em>k</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0InterpolationConditions.quadrature2DOF_element" title="Permalink to this definition">¶</a></dt>
@@ -512,7 +624,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.p0InterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0InterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0InterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -520,7 +632,7 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.MonomialInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">MonomialInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em>, <em>monomialSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MonomialInterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
 <dl class="method">
 <dt id="proteus.FemTools.MonomialInterpolationConditions.quadrature2DOF_element">
 <code class="descname">quadrature2DOF_element</code><span class="sig-paren">(</span><em>k</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MonomialInterpolationConditions.quadrature2DOF_element" title="Permalink to this definition">¶</a></dt>
@@ -533,7 +645,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.MonomialInterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MonomialInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MonomialInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -541,7 +653,7 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.P1BubbleInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">P1BubbleInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1BubbleInterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
 <p>Interpolation conditions for space P1 enriched with bubbles</p>
 <dl class="method">
 <dt id="proteus.FemTools.P1BubbleInterpolationConditions.definedOnLocalElementBoundary">
@@ -558,7 +670,7 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.P1P0BubbleInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">P1P0BubbleInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em>, <em>monomialSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubbleInterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
 <dl class="method">
 <dt id="proteus.FemTools.P1P0BubbleInterpolationConditions.quadrature2DOF_element">
 <code class="descname">quadrature2DOF_element</code><span class="sig-paren">(</span><em>k</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubbleInterpolationConditions.quadrature2DOF_element" title="Permalink to this definition">¶</a></dt>
@@ -571,7 +683,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -581,8 +693,8 @@ can just use functionals interface</p>
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ReferenceFiniteElement</code><span class="sig-paren">(</span><em>localFunctionSpace</em>, <em>interpolationConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceFiniteElement" title="Permalink to this definition">¶</a></dt>
 <dd><p>The geometric element, local function space, and interpolation
 conditions.</p>
-<p>I distinguish between the &#8220;elements&#8221; (patches) of the mesh and
-the &#8220;finite elements&#8221; which also include information about the
+<p>I distinguish between the “elements” (patches) of the mesh and
+the “finite elements” which also include information about the
 function space. This is sort of consistent with the mathematical
 theory where a finite element is a triple: (T,PI,SIGMA)</p>
 </dd></dl>
@@ -602,7 +714,7 @@ and global degrees of freedom.</p>
 <dl class="class">
 <dt id="proteus.FemTools.NodalDOFMap">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">NodalDOFMap</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.NodalDOFMap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
 <p>The mapping that associates a local degree of freedom number
 with the global node numbers of the element.</p>
 <dl class="method">
@@ -615,7 +727,7 @@ with the global node numbers of the element.</p>
 <dl class="class">
 <dt id="proteus.FemTools.DiscontinuousGalerkinDOFMap">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DiscontinuousGalerkinDOFMap</code><span class="sig-paren">(</span><em>mesh</em>, <em>localFunctionSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DiscontinuousGalerkinDOFMap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
 <p>A DOF map to use with discontinuous Galerkin spaces, which have
 unique degrees of freedom on each element.</p>
 <dl class="method">
@@ -629,7 +741,7 @@ unique degrees of freedom on each element.</p>
 <dl class="class">
 <dt id="proteus.FemTools.ElementBoundaryDOFMap">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ElementBoundaryDOFMap</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ElementBoundaryDOFMap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
 <p>The mapping that associates a local degree of freedom number
 with the global edge numbers of the element.</p>
 <dl class="method">
@@ -642,7 +754,7 @@ with the global edge numbers of the element.</p>
 <dl class="class">
 <dt id="proteus.FemTools.QuadraticLagrangeCubeDOFMap">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">QuadraticLagrangeCubeDOFMap</code><span class="sig-paren">(</span><em>mesh</em>, <em>localFunctionSpace</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticLagrangeCubeDOFMap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
 <p>DOF mapping for quadratic lagrange finite element functions on
 unit cubes</p>
 <p>The mapping associates local degree of freedom with global vertex
@@ -660,7 +772,7 @@ spacedim &lt; iloc</p>
 <dl class="class">
 <dt id="proteus.FemTools.QuadraticLagrangeDOFMap">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">QuadraticLagrangeDOFMap</code><span class="sig-paren">(</span><em>mesh</em>, <em>localFunctionSpace</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticLagrangeDOFMap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
 <p>DOF mapping for quadratic lagrange finite element functions on
 unit simplexes</p>
 <p>The mapping associates local degree of freedom with global vertex
@@ -678,7 +790,7 @@ spacedim &lt; iloc</p>
 <dl class="class">
 <dt id="proteus.FemTools.p0DOFMap">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">p0DOFMap</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0DOFMap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
 <dl class="method">
 <dt id="proteus.FemTools.p0DOFMap.updateAfterParallelPartitioning">
 <code class="descname">updateAfterParallelPartitioning</code><span class="sig-paren">(</span><em>globalMesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0DOFMap.updateAfterParallelPartitioning" title="Permalink to this definition">¶</a></dt>
@@ -690,7 +802,7 @@ spacedim &lt; iloc</p>
 <dl class="class">
 <dt id="proteus.FemTools.P1BubbleDOFMap">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">P1BubbleDOFMap</code><span class="sig-paren">(</span><em>mesh</em>, <em>localFunctionSpace</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1BubbleDOFMap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DOFMap" title="proteus.FemTools.DOFMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DOFMap</span></code></a></p>
 <p>DOF mapping for Lagrange P1 + bubble finite element functions on
 unit simplexes</p>
 <dl class="docutils">
@@ -818,7 +930,7 @@ nExteriorElementBoundaries_global element boundaries.</p>
 <dl class="class">
 <dt id="proteus.FemTools.ParametricMaps">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ParametricMaps</code><span class="sig-paren">(</span><em>mesh</em>, <em>referenceElement</em>, <em>localFunctionSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ElementMaps" title="proteus.FemTools.ElementMaps"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ElementMaps</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ElementMaps" title="proteus.FemTools.ElementMaps"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ElementMaps</span></code></a></p>
 <p>A class that calculates the element maps using the
 nodes of a mesh as the degrees of freedom and a local function space
 for which the nodes are the local DOF.</p>
@@ -900,7 +1012,7 @@ for which the nodes are the local DOF.</p>
 <dl class="class">
 <dt id="proteus.FemTools.AffineMaps">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">AffineMaps</code><span class="sig-paren">(</span><em>mesh</em>, <em>referenceElement</em>, <em>localFunctionSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.AffineMaps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricMaps" title="proteus.FemTools.ParametricMaps"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricMaps</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricMaps" title="proteus.FemTools.ParametricMaps"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricMaps</span></code></a></p>
 <dl class="method">
 <dt id="proteus.FemTools.AffineMaps.getInverseValues">
 <code class="descname">getInverseValues</code><span class="sig-paren">(</span><em>inverseJacobian</em>, <em>xArray</em>, <em>xiArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.AffineMaps.getInverseValues" title="Permalink to this definition">¶</a></dt>
@@ -928,11 +1040,11 @@ for which the nodes are the local DOF.</p>
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ParametricFiniteElementSpace</code><span class="sig-paren">(</span><em>referenceFiniteElement</em>, <em>elementMaps</em>, <em>dofMap</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricFiniteElementSpace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for spaces of functions defined by a set of finite
 elements that are each related to the same reference finite element.</p>
-<p>dim &#8211; global dimension of the space
-mesh &#8211; a Mesh object, which is a partition of the domain
-finiteElements &#8211; a dictionary of the FiniteElement objects
+<p>dim – global dimension of the space
+mesh – a Mesh object, which is a partition of the domain
+finiteElements – a dictionary of the FiniteElement objects
 indexed by element number
-dofMap &#8211; a DOF</p>
+dofMap – a DOF</p>
 <dl class="method">
 <dt id="proteus.FemTools.ParametricFiniteElementSpace.getBasisValuesRef">
 <code class="descname">getBasisValuesRef</code><span class="sig-paren">(</span><em>xiArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricFiniteElementSpace.getBasisValuesRef" title="Permalink to this definition">¶</a></dt>
@@ -956,15 +1068,24 @@ dofMap &#8211; a DOF</p>
 <dl class="method">
 <dt id="proteus.FemTools.ParametricFiniteElementSpace.getBasisGradientValues">
 <code class="descname">getBasisGradientValues</code><span class="sig-paren">(</span><em>xiArray</em>, <em>inverseJacobianArray</em>, <em>grad_vArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricFiniteElementSpace.getBasisGradientValues" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function calculates the BasisGradientValues for calculations on the reference element
-xiArray (input)               - a list of quadrature points (x,y,z) in 2D case, z = 0
-inverseJacobianArray (input)  - values of the inverseJacobian matrix used in the affine transformation from</p>
-<blockquote>
-<div>the physical domain to the reference element</div></blockquote>
-<dl class="docutils">
-<dt>grad_vArray (output)          - gradient values of basis functions on reference triangle, adjusted for transformation</dt>
-<dd>from physical domain</dd>
-</dl>
+<dd><p>This function calculates the BasisGradientValues for
+calculations on the reference element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>xiArray</strong> (input, <code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <a class="reference external" href="https://docs.python.org/2/library/functions.html#tuple" title="(in Python v2.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a>) – A list of quadrature points (x,y,z) in 2D case, z = 0.</li>
+<li><strong>inverseJacobianArray</strong> (input, <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.array</span></code>) – Values of the inverseJacobian matrix used in the affine
+transformation from the physical domain to the reference
+element.</li>
+<li><strong>grad_vArray</strong> (output, <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.array</span></code>) – Gradient values of basis functions on reference triangle,
+adjusted for transformation from physical domain.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -1058,7 +1179,7 @@ like vtkVisualization</p>
 <dl class="class">
 <dt id="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineLinearOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>The standard linear CG space.</p>
 <p>Globally C0
 Each geometric element is the image of the reference simplex under
@@ -1140,7 +1261,7 @@ returns number of function representations written</p>
 <dl class="class">
 <dt id="proteus.FemTools.C0_LinearOnCubeWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_LinearOnCubeWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_LinearOnCubeWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis</span></code></a></p>
 <p>The standard linear CG space.</p>
 <p>Globally C0
 Each geometric element is the image of the reference cube under
@@ -1150,7 +1271,7 @@ a n-linear(non-affine) mapping. The nodal basis is used on the reference cube.</
 <dl class="class">
 <dt id="proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineLinearOnCubeWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>The standard linear CG space.</p>
 <p>Globally C0
 Each geometric element is the image of the reference simplex under
@@ -1175,13 +1296,13 @@ a linear affine mapping. The nodal basis is used on the reference simplex.</p>
 <dl class="attribute">
 <dt id="proteus.FemTools.P1">
 <code class="descclassname">proteus.FemTools.</code><code class="descname">P1</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal"><span class="pre">C0_AffineLinearOnSimplexWithNodalBasis</span></code></a></p>
+<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.C0_LagrangeOnCubeWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_LagrangeOnCubeWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em>, <em>order=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_LagrangeOnCubeWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis</span></code></a></p>
 <p>The standard linear CG space.</p>
 <p>Globally C0
 Each geometric element is the image of the reference cube under
@@ -1191,7 +1312,7 @@ a n-linear(non-affine) mapping. The nodal basis is used on the reference cube.</
 <dl class="class">
 <dt id="proteus.FemTools.C0_AffineLagrangeOnCubeWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineLagrangeOnCubeWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em>, <em>order=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineLagrangeOnCubeWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>The standard linear CG space.</p>
 <p>Globally C0
 Each geometric element is the image of the reference simplex under
@@ -1221,19 +1342,54 @@ a linear affine mapping. The nodal basis is used on the reference simplex.</p>
 <dl class="attribute">
 <dt id="proteus.FemTools.Q1">
 <code class="descclassname">proteus.FemTools.</code><code class="descname">Q1</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.Q1" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis"><code class="xref py py-class docutils literal"><span class="pre">C0_AffineLinearOnCubeWithNodalBasis</span></code></a></p>
+<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.Q2">
 <code class="descclassname">proteus.FemTools.</code><code class="descname">Q2</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.Q2" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">LagrangeCubeOrderN</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LagrangeCubeOrderN</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.FemTools.C0_BernsteinOnCube">
+<em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_BernsteinOnCube</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em>, <em>order=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_BernsteinOnCube" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis</span></code></a></p>
+<p>The standard linear CG space.
+Globally C0
+Each geometric element is the image of the reference cube under
+a n-linear(non-affine) mapping. The Bernstein basis is used on the reference cube.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.FemTools.C0_AffineBernsteinOnCube">
+<em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineBernsteinOnCube</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em>, <em>order=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineBernsteinOnCube" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<p>Bernstein CG space.
+Globally C0
+Each geometric element is the image of the reference simplex under
+a linear affine mapping. The Bernstein basis is used on the reference simplex.</p>
+<dl class="method">
+<dt id="proteus.FemTools.C0_AffineBernsteinOnCube.writeMeshXdmf">
+<code class="descname">writeMeshXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>name</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineBernsteinOnCube.writeMeshXdmf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.FemTools.C0_AffineBernsteinOnCube.writeFunctionXdmf">
+<code class="descname">writeFunctionXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineBernsteinOnCube.writeFunctionXdmf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.FemTools.C0_AffineBernsteinOnCube.writeVectorFunctionXdmf">
+<code class="descname">writeVectorFunctionXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>uList</em>, <em>components</em>, <em>vectorName</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineBernsteinOnCube.writeVectorFunctionXdmf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffinePolynomialsOnSimplexWithMonomialBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em>, <em>k=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <dl class="method">
 <dt id="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis.writeMeshEnsight">
 <code class="descname">writeMeshEnsight</code><span class="sig-paren">(</span><em>filename</em>, <em>description=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis.writeMeshEnsight" title="Permalink to this definition">¶</a></dt>
@@ -1284,7 +1440,7 @@ tries to use basis values at interpolation points if in u</p>
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineP0_OnSimplexWithMonomialBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineP0_OnSimplexWithMonomialBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP0_OnSimplexWithMonomialBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
 <dl class="method">
 <dt id="proteus.FemTools.DG_AffineP0_OnSimplexWithMonomialBasis.writeMeshEnsight">
 <code class="descname">writeMeshEnsight</code><span class="sig-paren">(</span><em>filename</em>, <em>description=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP0_OnSimplexWithMonomialBasis.writeMeshEnsight" title="Permalink to this definition">¶</a></dt>
@@ -1325,43 +1481,43 @@ tries to use basis values at interpolation points if in u</p>
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineP1_OnSimplexWithMonomialBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineP1_OnSimplexWithMonomialBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP1_OnSimplexWithMonomialBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineP2_OnSimplexWithMonomialBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineP2_OnSimplexWithMonomialBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP2_OnSimplexWithMonomialBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineP3_OnSimplexWithMonomialBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineP3_OnSimplexWithMonomialBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP3_OnSimplexWithMonomialBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineP4_OnSimplexWithMonomialBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineP4_OnSimplexWithMonomialBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP4_OnSimplexWithMonomialBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineP5_OnSimplexWithMonomialBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineP5_OnSimplexWithMonomialBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP5_OnSimplexWithMonomialBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineP6_OnSimplexWithMonomialBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineP6_OnSimplexWithMonomialBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP6_OnSimplexWithMonomialBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis" title="proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineLinearOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineLinearOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineLinearOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>A linear DG space with the nodal basis.</p>
 <p>Globally piecewise continuous.
 Each geometric element is the image of the reference simplex under
@@ -1420,7 +1576,7 @@ returns number of function representations written</p>
 <dl class="class">
 <dt id="proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineQuadraticOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>A quadratic C0 space with the nodal basis.</p>
 <p>Globally piecewise continuous.
 Each geometric element is the image of the reference simplex under
@@ -1450,6 +1606,11 @@ The nodal basis is used on the reference simplex.</p>
 <dl class="method">
 <dt id="proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis.writeFunctionXdmf">
 <code class="descname">writeFunctionXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis.writeFunctionXdmf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis.readFunctionXdmf">
+<code class="descname">readFunctionXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis.readFunctionXdmf" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1495,13 +1656,24 @@ returns number of function representations written</p>
 <dl class="attribute">
 <dt id="proteus.FemTools.P2">
 <code class="descclassname">proteus.FemTools.</code><code class="descname">P2</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P2" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal"><span class="pre">C0_AffineQuadraticOnSimplexWithNodalBasis</span></code></a></p>
+<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.FemTools.C0_AffineBernsteinOnSimplex">
+<em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineBernsteinOnSimplex</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineBernsteinOnSimplex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis</span></code></a></p>
+<p>A quadratic C0 space with Bernstein basis.</p>
+<p>Globally piecewise continuous.
+Each geometric element is the image of the reference simplex under
+a piecewise linear, continuous, affine mapping.
+The nodal basis is used on the reference simplex.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.DG_AffineQuadraticOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_AffineQuadraticOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineQuadraticOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>A quadratic DG space with the nodal basis.</p>
 <p>Globally piecewise continuous.  Each geometric element is the
 image of the reference simplex under a piecewise linear,
@@ -1561,7 +1733,7 @@ returns number of function representations written</p>
 <dl class="class">
 <dt id="proteus.FemTools.NC_AffineLinearOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">NC_AffineLinearOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.NC_AffineLinearOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>Space of functions that are P^1 on elements and continuous at
 element boundary barycenters.</p>
 <p>Each geometric element is the image of the reference simplex under
@@ -1619,7 +1791,7 @@ returns number of function representations written</p>
 <dl class="class">
 <dt id="proteus.FemTools.DG_Constants">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DG_Constants</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_Constants" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>The constant DG space</p>
 <dl class="method">
 <dt id="proteus.FemTools.DG_Constants.writeMeshEnsight">
@@ -1674,7 +1846,7 @@ returns number of function representations written</p>
 <dl class="class">
 <dt id="proteus.FemTools.C0_AffineP1BubbleOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineP1BubbleOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineP1BubbleOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>C0P1 enriched with bubble functions</p>
 <dl class="method">
 <dt id="proteus.FemTools.C0_AffineP1BubbleOnSimplexWithNodalBasis.writeMeshEnsight">
@@ -1733,7 +1905,7 @@ tries to use basis values at interpolation points if in u</p>
 <dl class="class">
 <dt id="proteus.FemTools.C0_AffineP1P0BubbleOnSimplexWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineP1P0BubbleOnSimplexWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineP1P0BubbleOnSimplexWithNodalBasis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a></p>
 <p>TODO set output to take advantage of nodal information</p>
 <dl class="method">
 <dt id="proteus.FemTools.C0_AffineP1P0BubbleOnSimplexWithNodalBasis.writeMeshEnsight">
@@ -1787,14 +1959,79 @@ tries to use basis values at interpolation points if in u</p>
 <dt id="proteus.FemTools.FiniteElementFunction">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">FiniteElementFunction</code><span class="sig-paren">(</span><em>finiteElementSpace</em>, <em>dof=None</em>, <em>dim_dof=1</em>, <em>name='no_name'</em>, <em>isVector=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>A member of a finite element space of scalar functions.</p>
+<p>This class manages the calculation of function, gradient, tensor,
+and trace values associated with a finite element function.
+Typically, this function will be a scalar function  (For example,
+in a 2D stokes problem with a pressure, and two velocity
+components (say u or v), this class will manage the calculation of
+one of the scalar functions for p, u or v.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>finiteElementSpace</strong> (<a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a>) &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>finiteElementSpace</strong> (<a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a>) – </td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p><cite>femSpace</cite> and <cite>dof</cite> are the two main attributes of this class.
+The <cite>dof</cite> attributes provide the scalar multiples for the
+underlying basis functions that comes from <cite>femSpace</cite>’s
+ParametricFiniteElementSpace object</p>
+<dl class="attribute">
+<dt id="proteus.FemTools.FiniteElementFunction.name">
+<code class="descname">name</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name assigned to the FiniteElementFunction instance</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.FiniteElementFunction.isVector">
+<code class="descname">isVector</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.isVector" title="Permalink to this definition">¶</a></dt>
+<dd><p>boolean variable identifying whether the
+finiteElementFunction is vector quantitied.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.FiniteElementFunction.femSpace">
+<code class="descname">femSpace</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.femSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#proteus.FemTools.ParametricFiniteElementSpace" title="proteus.FemTools.ParametricFiniteElementSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.ParametricFiniteElementSpace</span></code></a>
+provides information on the underlying finite element
+space.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.FiniteElementFunction.nDOF_global">
+<code class="descname">nDOF_global</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.nDOF_global" title="Permalink to this definition">¶</a></dt>
+<dd><p>integer variable with the global number of degrees of
+freedom</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.FiniteElementFunction.dim_dof">
+<code class="descname">dim_dof</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.dim_dof" title="Permalink to this definition">¶</a></dt>
+<dd><p>dimension of the degree of freedom</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.FiniteElementFunction.dof">
+<code class="descname">dof</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.dof" title="Permalink to this definition">¶</a></dt>
+<dd><p>numpy array of degree-of-freedom values used to
+calculate the finite element function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.FiniteElementFunction.useC">
+<code class="descname">useC</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.useC" title="Permalink to this definition">¶</a></dt>
+<dd><p>boolean variable indentifying whether calculations should
+use C-routines.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.FiniteElementFunction.par_dof">
+<code class="descname">par_dof</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.par_dof" title="Permalink to this definition">¶</a></dt>
+<dd><p>for parallel FiniteElementFunciton capability</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="proteus.FemTools.FiniteElementFunction.projectFromInterpolationConditions">
 <code class="descname">projectFromInterpolationConditions</code><span class="sig-paren">(</span><em>interpolationValues</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.projectFromInterpolationConditions" title="Permalink to this definition">¶</a></dt>
@@ -1808,10 +2045,16 @@ tries to use basis values at interpolation points if in u</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>eN</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Global element number.</li>
-<li><strong>xi</strong> (<em>point</em>) &#8211; Evaluation coordinate.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eN</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Global element number.</li>
+<li><strong>xi</strong> (<em>point</em>) – Evaluation coordinate.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>value</strong> – The finite element functions value at xi.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
 </td>
 </tr>
 </tbody>
@@ -1895,12 +2138,12 @@ those DOF. For now I will ignore the ability to specify
 different boundary conditions for interpolatory DOF that correspond
 to the same physical point (i.e. discontinuous approximations where
 left and right limits can be specified)</p>
-<p>DOFBoundaryConditionDict &#8211; a dictionary of boundary condition functions
+<p>DOFBoundaryConditionDict – a dictionary of boundary condition functions
 accessed by global DOF number
-DOFBoundryConditionPointDict &#8211; a dictionary of physical points associated
+DOFBoundryConditionPointDict – a dictionary of physical points associated
 with the boundary condition
-freeDOFSet &#8211; the DOF not specified by boundary conditions
-global2freeGlobal &#8211; an integer mapping from global DOF numbers
+freeDOFSet – the DOF not specified by boundary conditions
+global2freeGlobal – an integer mapping from global DOF numbers
 to the free DOF numbers.</p>
 <p>The constructor requires a function that takes a point as input
 and, if the point is on a part of the boundary where values are
@@ -1910,7 +2153,7 @@ that computes the boundary condition.</p>
 <dt>TODO</dt>
 <dd>For now allow for flag to specify type of dirichlet condition to allow
 say nonlinear function of solution to be specified
-initially, only weak bc&#8217;s will allow this functionality though</dd>
+initially, only weak bc’s will allow this functionality though</dd>
 </dl>
 </dd></dl>
 
@@ -1923,12 +2166,12 @@ those DOF. For now I will ignore the ability to specify
 different boundary conditions for interpolatory DOF that correspond
 to the same physical point (i.e. discontinuous approximations where
 left and right limits can be specified)</p>
-<p>DOFBoundaryConditionDict &#8211; a dictionary of boundary condition functions
+<p>DOFBoundaryConditionDict – a dictionary of boundary condition functions
 accessed by global DOF number
-DOFBoundryConditionPointDict &#8211; a dictionary of physical points associated
+DOFBoundryConditionPointDict – a dictionary of physical points associated
 with the boundary condition
-freeDOFSet &#8211; the DOF not specified by boundary conditions
-global2freeGlobal &#8211; an integer mapping from global DOF numbers
+freeDOFSet – the DOF not specified by boundary conditions
+global2freeGlobal – an integer mapping from global DOF numbers
 to the free DOF numbers.</p>
 <p>The constructor requires a function that takes a point as input
 and, if the point is on a part of the boundary where values are
@@ -1938,15 +2181,36 @@ that computes the boundary condition.</p>
 <dt>TODO</dt>
 <dd>For now allow for flag to specify type of dirichlet condition to allow
 say nonlinear function of solution to be specified
-initially, only weak bc&#8217;s will allow this functionality though</dd>
+initially, only weak bc’s will allow this functionality though</dd>
 </dl>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.FluxBoundaryConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">FluxBoundaryConditions</code><span class="sig-paren">(</span><em>mesh</em>, <em>nElementBoundaryQuadraturePoints_elementBoundary</em>, <em>x</em>, <em>getAdvectiveFluxBoundaryConditions=None</em>, <em>getDiffusiveFluxBoundaryConditions={}</em>, <em>getStressFluxBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FluxBoundaryConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class for generating the list of element boundaries
-where flux values are specified.</p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Generating class for the fluxBoundaryConditions dictionaries.</p>
+<p>This class manages the generation of the advective, stress and
+diffusive fluxBoundaryCondition dictionaries.  These dictionaries
+store lists of functions that describe the flux conditions along
+the finite element boundaries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>advectiveFluxBoundaryConditionsDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code></a>) – Stores advective flux boundary conditions functions.</li>
+<li><strong>stressFluxBoundaryConditionsDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code></a>) – Stores stress flux boundary conditions functions.</li>
+<li><strong>diffusiveFluxBoundaryConditionsDictDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code></a>) – Stores diffusive flux boundary conditions functions.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The boundary condition dictionaries all use the key convention
+(ebNE,k) where ebNE is the global edge number and k is the local
+quadrature point number.</p>
 </dd></dl>
 
 <dl class="class">
@@ -1969,8 +2233,8 @@ where values are specified.</p>
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">MultilevelProjectionOperators</code><span class="sig-paren">(</span><em>multilevelMesh</em>, <em>femSpaceDictList</em>, <em>offsetListList</em>, <em>strideListList</em>, <em>dofBoundaryConditionsDictList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MultilevelProjectionOperators" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class that takes a hierarchical (multiLevel) mesh and generates
 the interpolation and restriction operators.</p>
-<p>restrictList/prolongList &#8211; projection and restriction at only the free nodes
-restrict_bcList/prolong_bcList &#8211; includes dirichlet boundaries as well</p>
+<p>restrictList/prolongList – projection and restriction at only the free nodes
+restrict_bcList/prolong_bcList – includes dirichlet boundaries as well</p>
 <p>By default this is set up for conforming spaces. Since the spaces
 are conforming the coarse basis functions are in the fine space so we
 need only find the coefficients of the fine space basis functions that
@@ -1984,7 +2248,7 @@ solve instead  a(e_c,w_c) = &lt;f - a(u_f,w_f),w_c&gt; on the coarse grid
 Using the injection i we can express this in the fine space as
 a(i e_c, i w_c) = &lt;f - a(u_f,w_f),i w_c&gt; writing
 this in matrix form yields p^t A_f p E = p^t R_f
-&#8212; P1 nonconforming space &#8212;-
+— P1 nonconforming space —-
 Try to set up now for nonconforming P1 approximation following Chen_96b.
 Setup prolongation by evaluating coarse grid basis functions at
 fine grid interpolation condition points (face barycenters).</p>
@@ -1994,7 +2258,7 @@ grid quantity on fine grid. Otherwise just evaluate it</p>
 <p>Use this simple interpolation from coarse to fine as the projection operator.
 Restriction is taken as the matrix of the adjoint of the
 injection, which is simply the transpose of the projection matrix.</p>
-<p>I don&#8217;t think these fall out as nicely since they&#8217;re nonconforming.</p>
+<p>I don’t think these fall out as nicely since they’re nonconforming.</p>
 </dd></dl>
 
 </div>
@@ -2012,7 +2276,7 @@ injection, which is simply the transpose of the projection matrix.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

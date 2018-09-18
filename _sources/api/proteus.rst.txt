@@ -12,9 +12,11 @@ Subpackages
 .. toctree::
 
     proteus.MeshAdaptPUMI
-    proteus.config
+    proteus.elastoplastic
+    proteus.fenton
+    proteus.mbd
     proteus.mprans
-    proteus.test_utils
+    proteus.richards
 
 Submodules
 ----------
@@ -73,10 +75,11 @@ Submodules
    proteus.default_p
    proteus.default_s
    proteus.default_so
+   proteus.defaults
    proteus.deim_utils
+   proteus.genca
    proteus.iproteus
    proteus.subsurfaceTransportFunctions
-   proteus.test
    proteus.testStuff
    proteus.version
    proteus.waveFunctions

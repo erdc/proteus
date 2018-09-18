@@ -1,7 +1,0 @@
-proteus.config.lightning module
-===============================
-
-.. automodule:: proteus.config.lightning
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.MeshTools module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.MeshTools module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,8 +127,8 @@
   <div class="section" id="module-proteus.MeshTools">
 <span id="proteus-meshtools-module"></span><h1>proteus.MeshTools module<a class="headerlink" href="#module-proteus.MeshTools" title="Permalink to this headline">¶</a></h1>
 <p>Tools for creating and manipulating 1,2, and 3D meshes.</p>
-<object data="../_images/inheritance-0bd1de87b6427724f07662697f1ae824700c8df7.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.MeshTools</p></object>
+<div class="graphviz"><object data="../_images/inheritance-0bd1de87b6427724f07662697f1ae824700c8df7.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.MeshTools</p></object></div>
 <dl class="class">
 <dt id="proteus.MeshTools.Node">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>nodeNumber=0</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node" title="Permalink to this definition">¶</a></dt>
@@ -150,8 +138,8 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.RandomWaves.N" title="proteus.WaveTools.RandomWaves.N"><strong>N</strong></a> &#8211; node number</li>
-<li><strong>p</strong> &#8211; Euclidean coordinates</li>
+<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.RandomWaves.N" title="proteus.WaveTools.RandomWaves.N"><strong>N</strong></a> – node number</li>
+<li><strong>p</strong> – Euclidean coordinates</li>
 </ul>
 </td>
 </tr>
@@ -161,7 +149,7 @@
 coordinates.  This allows using Node objects and tuples of node objects as
 dictionary keys, but in that use case one should be careful not to modify
 the node coordinates.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n0</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n0</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n1</span> <span class="o">&gt;=</span> <span class="n">n0</span>
 <span class="go">True</span>
@@ -169,17 +157,17 @@ the node coordinates.</p>
 </div>
 <dl class="attribute">
 <dt id="proteus.MeshTools.Node.xUnitVector">
-<code class="descname">xUnitVector</code><em class="property"> = array([ 1.,  0.,  0.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node.xUnitVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">xUnitVector</code><em class="property"> = array([1., 0., 0.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node.xUnitVector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.Node.yUnitVector">
-<code class="descname">yUnitVector</code><em class="property"> = array([ 0.,  1.,  0.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node.yUnitVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">yUnitVector</code><em class="property"> = array([0., 1., 0.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node.yUnitVector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.Node.zUnitVector">
-<code class="descname">zUnitVector</code><em class="property"> = array([ 0.,  0.,  1.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node.zUnitVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">zUnitVector</code><em class="property"> = array([0., 0., 1.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node.zUnitVector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -198,35 +186,35 @@ the node coordinates.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.RandomWaves.N" title="proteus.WaveTools.RandomWaves.N"><strong>N</strong></a> &#8211; element number</li>
-<li><strong>nodes</strong> &#8211; sorted tuple of nodes defining the polytope</li>
+<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.RandomWaves.N" title="proteus.WaveTools.RandomWaves.N"><strong>N</strong></a> – element number</li>
+<li><strong>nodes</strong> – sorted tuple of nodes defining the polytope</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <p>The nodes data member can be used as a dictionary key for the polytope as
-long as the nodes aren&#8217;t later modified.</p>
+long as the nodes aren’t later modified.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.MeshTools.Edge">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Edge</code><span class="sig-paren">(</span><em>edgeNumber=0</em>, <em>nodes=[]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Edge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Element" title="proteus.MeshTools.Element"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Element</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Element" title="proteus.MeshTools.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Element</span></code></a></p>
 <dl class="attribute">
 <dt id="proteus.MeshTools.Edge.xUnitVector">
-<code class="descname">xUnitVector</code><em class="property"> = array([ 1.,  1.,  0.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Edge.xUnitVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">xUnitVector</code><em class="property"> = array([1., 1., 0.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Edge.xUnitVector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.Edge.yUnitVector">
-<code class="descname">yUnitVector</code><em class="property"> = array([ 0.,  1.,  0.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Edge.yUnitVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">yUnitVector</code><em class="property"> = array([0., 1., 0.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Edge.yUnitVector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.Edge.zUnitVector">
-<code class="descname">zUnitVector</code><em class="property"> = array([ 0.,  0.,  1.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Edge.zUnitVector" title="Permalink to this definition">¶</a></dt>
-<dd><p>1D Element&#8211;a line connecting two Nodes</p>
+<code class="descname">zUnitVector</code><em class="property"> = array([0., 0., 1.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Edge.zUnitVector" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D Element–a line connecting two Nodes</p>
 <p>The nodes are stored as a lexicographically sorted node list.</p>
 </dd></dl>
 
@@ -246,8 +234,8 @@ long as the nodes aren&#8217;t later modified.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Polygon">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Polygon</code><span class="sig-paren">(</span><em>polygonNumber=0</em>, <em>nodes=[]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Polygon" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Element" title="proteus.MeshTools.Element"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Element</span></code></a></p>
-<p>An abstract 2D element&#8211;a closed set of Edges connecting a set of Nodes.</p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Element" title="proteus.MeshTools.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Element</span></code></a></p>
+<p>An abstract 2D element–a closed set of Edges connecting a set of Nodes.</p>
 <p>The nodes and edges are stored as lexicographically sorted lists.</p>
 </dd></dl>
 
@@ -260,16 +248,16 @@ long as the nodes aren&#8217;t later modified.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Triangle">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Triangle</code><span class="sig-paren">(</span><em>triangleNumber=0</em>, <em>nodes=[]</em>, <em>edgeDict=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Triangle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polygon" title="proteus.MeshTools.Polygon"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Polygon</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polygon" title="proteus.MeshTools.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Polygon</span></code></a></p>
 <p>A 2D triangular element</p>
 <dl class="attribute">
 <dt id="proteus.MeshTools.Triangle.edgeMap">
-<code class="descname">edgeMap</code><em class="property"> = {(1, 2): 0, (0, 1): 2, (0, 2): 1}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Triangle.edgeMap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">edgeMap</code><em class="property"> = {(0, 1): 2, (0, 2): 1, (1, 2): 0}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Triangle.edgeMap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.Triangle.zUnitVector">
-<code class="descname">zUnitVector</code><em class="property"> = array([ 0.,  0.,  1.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Triangle.zUnitVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">zUnitVector</code><em class="property"> = array([0., 0., 1.])</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Triangle.zUnitVector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -282,7 +270,7 @@ long as the nodes aren&#8217;t later modified.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Quadrilateral">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Quadrilateral</code><span class="sig-paren">(</span><em>quadrilateralNumber=0</em>, <em>edges=[]</em>, <em>simple=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Quadrilateral" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polygon" title="proteus.MeshTools.Polygon"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Polygon</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polygon" title="proteus.MeshTools.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Polygon</span></code></a></p>
 <p>A 2D quadrilateral element</p>
 <dl class="method">
 <dt id="proteus.MeshTools.Quadrilateral.sortNodes">
@@ -299,8 +287,8 @@ long as the nodes aren&#8217;t later modified.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Polyhedron">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Polyhedron</code><span class="sig-paren">(</span><em>polyhedronNumber=0</em>, <em>nodes=[]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Polyhedron" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Element" title="proteus.MeshTools.Element"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Element</span></code></a></p>
-<p>An abstract 3D Element&#8211;a closed set of Polygons connecting a set
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Element" title="proteus.MeshTools.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Element</span></code></a></p>
+<p>An abstract 3D Element–a closed set of Polygons connecting a set
 of Edges.</p>
 <p>The nodes and edges are stored as lexicographically sorted lists.</p>
 </dd></dl>
@@ -308,16 +296,16 @@ of Edges.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Tetrahedron">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Tetrahedron</code><span class="sig-paren">(</span><em>tetrahedronNumber</em>, <em>nodes</em>, <em>edgeDict=None</em>, <em>triangleDict=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Tetrahedron" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polyhedron" title="proteus.MeshTools.Polyhedron"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Polyhedron</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polyhedron" title="proteus.MeshTools.Polyhedron"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Polyhedron</span></code></a></p>
 <p>A 3D tetrahedral element</p>
 <dl class="attribute">
 <dt id="proteus.MeshTools.Tetrahedron.triangleMap">
-<code class="descname">triangleMap</code><em class="property"> = {(0, 2, 3): 1, (0, 1, 2): 3, (0, 1, 3): 2, (1, 2, 3): 0}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Tetrahedron.triangleMap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">triangleMap</code><em class="property"> = {(0, 1, 2): 3, (0, 1, 3): 2, (0, 2, 3): 1, (1, 2, 3): 0}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Tetrahedron.triangleMap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.Tetrahedron.edgeMap">
-<code class="descname">edgeMap</code><em class="property"> = {(0, 1): 0, (1, 2): 3, (1, 3): 4, (2, 3): 5, (0, 3): 2, (0, 2): 1}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Tetrahedron.edgeMap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">edgeMap</code><em class="property"> = {(0, 1): 0, (0, 2): 1, (0, 3): 2, (1, 2): 3, (1, 3): 4, (2, 3): 5}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Tetrahedron.edgeMap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -330,7 +318,7 @@ of Edges.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Hexahedron">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Hexahedron</code><span class="sig-paren">(</span><em>HN</em>, <em>quadrilaterals</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Hexahedron" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polyhedron" title="proteus.MeshTools.Polyhedron"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Polyhedron</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polyhedron" title="proteus.MeshTools.Polyhedron"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Polyhedron</span></code></a></p>
 <p>A 3D hexahedral element</p>
 </dd></dl>
 
@@ -360,7 +348,7 @@ plotting the edges of the mesh in Matlab</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><strong>elementBoundariesArray</strong> (<em>array type</em>) &#8211; This array lists the global edge number associated with every
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><strong>elementBoundariesArray</strong> (<em>array type</em>) – This array lists the global edge number associated with every
 edge or face of an element.</td>
 </tr>
 </tbody>
@@ -428,14 +416,14 @@ should remain the edge array?</p>
 <dt>format :</dt>
 <dd>row 1 = x coord,
 row 2 = y coord for nodes in mesh
-row 3 = z coord for nodes in mesh ...</dd>
+row 3 = z coord for nodes in mesh …</dd>
 </dl>
 </dd>
 <dt>edge matrix is [2*nd+3 x num faces]</dt>
 <dd><dl class="first last docutils">
 <dt>format:</dt>
 <dd>row 1  = start vertex number
-...
+…
 row nd   = end vertex number
 row nd+1 = start value in edge parameterization, should be 0
 row nd+2 = next value in edge parameterization, should be 1 or 2
@@ -449,7 +437,7 @@ row 2*nd+3 = subdomain on right? always 0 for now</dd>
 <dd><blockquote class="first">
 <div>row 1 = vertex 1 global number
 row 2 = vertex 2 global number
-...
+…
 row nd+1 = vertex 3 global number
 row 4 = triangle subdomain number</div></blockquote>
 <dl class="last docutils">
@@ -515,7 +503,7 @@ row 4 = triangle subdomain number</div></blockquote>
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelMesh</code><span class="sig-paren">(</span><em>levels=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A hierchical multilevel mesh</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelMesh.buildFromC">
@@ -551,31 +539,31 @@ row 4 = triangle subdomain number</div></blockquote>
 <dl class="class">
 <dt id="proteus.MeshTools.PointMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">PointMesh</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.PointMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>0D mesh</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.MeshTools.EdgeGrid">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">EdgeGrid</code><span class="sig-paren">(</span><em>nx=2</em>, <em>Lx=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.EdgeGrid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A 1D regular grid on an interval</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.MeshTools.QuadrilateralGrid">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">QuadrilateralGrid</code><span class="sig-paren">(</span><em>nx=2</em>, <em>ny=2</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralGrid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A 2D regular grid of quadrilateral cells</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.MeshTools.RectangularGrid">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">RectangularGrid</code><span class="sig-paren">(</span><em>nx=1</em>, <em>ny=1</em>, <em>nz=1</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.RectangularGrid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A regular partition into rectangles.</p>
 <p>Nodes, edges, and faces can be indexed by (i,j,k) as follows.
-The edges and faces are divided according to orientation (i.e. x-edge...).
+The edges and faces are divided according to orientation (i.e. x-edge…).
 An (i,j,k) index is associated with the type of edge or face
 having node (i,j,k) as the first node in a lexicographically sorted
 list of nodes corresponding to the edge or face.</p>
@@ -674,7 +662,7 @@ list of nodes corresponding to the edge or face.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelRectangularGrid">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelRectangularGrid</code><span class="sig-paren">(</span><em>levels</em>, <em>nx</em>, <em>ny=1</em>, <em>nz=1</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelRectangularGrid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical multilevel grid</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelRectangularGrid.refine">
@@ -686,7 +674,7 @@ list of nodes corresponding to the edge or face.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.TetrahedralMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">TetrahedralMesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TetrahedralMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A mesh of tetrahedra.</p>
 <p>The nodes, edges, triangles, and tetrahedra are indexed by their
 node tuples. The corresponding lists are derived from the dictionaries, and
@@ -699,10 +687,10 @@ give a lexicographic ordering.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>elementNodesArray</strong> (<em>array_like</em>) &#8211; A list of lists storing the node values associated with each element
+<li><strong>elementNodesArray</strong> (<em>array_like</em>) – A list of lists storing the node values associated with each element
 in the triangulation.  The first index refers to the element number,
 while the second index refers to the global node value.</li>
-<li><strong>nodeArray</strong> (<em>array_like</em>) &#8211; A list of lists storing node coordinates.  The first index referes
+<li><strong>nodeArray</strong> (<em>array_like</em>) – A list of lists storing node coordinates.  The first index referes
 to the global node number, while the second index refers to the x, y
 and z coordinates of the node respectively.</li>
 </ul>
@@ -882,7 +870,7 @@ the edges and nodes from the boundary triangles.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.HexahedralMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">HexahedralMesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.HexahedralMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A mesh of hexahedra.</p>
 <dl class="method">
 <dt id="proteus.MeshTools.HexahedralMesh.meshType">
@@ -976,7 +964,7 @@ the edges and nodes from the boundary triangles.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Mesh2DM">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Mesh2DM</code><span class="sig-paren">(</span><em>filename</em>, <em>adhBase=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh2DM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A triangular mesh based on an ADH 3dm file</p>
 <dl class="method">
 <dt id="proteus.MeshTools.Mesh2DM.buildEdgeArrays">
@@ -1003,7 +991,7 @@ the edges and nodes from the boundary triangles.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Mesh3DM">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Mesh3DM</code><span class="sig-paren">(</span><em>filename</em>, <em>adhBase=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh3DM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A Mesh for reading in tetrahedral meshes in the .3dm format</p>
 <dl class="method">
 <dt id="proteus.MeshTools.Mesh3DM.buildTriangleArrays">
@@ -1040,7 +1028,7 @@ the edges and nodes from the boundary triangles.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelTetrahedralMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelTetrahedralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTetrahedralMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical multilevel mesh with tetrahedral cells</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelTetrahedralMesh.generateFromExistingCoarseMesh">
@@ -1072,7 +1060,7 @@ the edges and nodes from the boundary triangles.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelHexahedralMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelHexahedralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>px=0</em>, <em>py=0</em>, <em>pz=0</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelHexahedralMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical multilevel mesh with hexahedral cells</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelHexahedralMesh.generateFromExistingCoarseMesh">
@@ -1100,11 +1088,11 @@ element.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Dimension of reference element</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Dimension of reference element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>mesh</strong> &#8211; Simplex mesh</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>mesh</strong> – Simplex mesh</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#proteus.MeshTools.TriangularMesh" title="proteus.MeshTools.TriangularMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.TriangularMesh</span></code></a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#proteus.MeshTools.TriangularMesh" title="proteus.MeshTools.TriangularMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.TriangularMesh</span></code></a></td>
 </tr>
 </tbody>
 </table>
@@ -1113,7 +1101,7 @@ element.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.TriangularMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">TriangularMesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TriangularMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A mesh of triangles</p>
 <p>The nodes, edges, and triangles are indexed by their
 node tuples. The corresponding lists are derived from the dictionaries, and
@@ -1294,7 +1282,7 @@ give a lexicographic ordering.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.QuadrilateralMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">QuadrilateralMesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A mesh of quads</p>
 <p>The nodes, edges, and triangles are indexed by their
 node tuples. The corresponding lists are derived from the dictionaries, and
@@ -1397,12 +1385,17 @@ to run using C.  Implementing this will require some work to the mesh.cpp module
 <code class="descname">writeMeshXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>name=''</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>tCount=0</em>, <em>EB=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.writeMeshXdmf" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.buildNodeDiameterArray">
+<code class="descname">buildNodeDiameterArray</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.buildNodeDiameterArray" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelTriangularMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em>, <em>triangleFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical  multilevel mesh of triangular cells</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh.generateFromExistingCoarseMesh">
@@ -1427,13 +1420,13 @@ to run using C.  Implementing this will require some work to the mesh.cpp module
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh.locallyRefine">
 <code class="descname">locallyRefine</code><span class="sig-paren">(</span><em>elementTagArray</em>, <em>flagForRefineType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.locallyRefine" title="Permalink to this definition">¶</a></dt>
-<dd><p>simple local refinement assuming elementTagArray[eN]=1 &#8211;&gt; bisect</p>
-<p>flagForRefineType = 0 &#8211; newest node, 1 &#8211; 4T, 2 &#8211; U4T</p>
+<dd><p>simple local refinement assuming elementTagArray[eN]=1 –&gt; bisect</p>
+<p>flagForRefineType = 0 – newest node, 1 – 4T, 2 – U4T</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh.cmeshTools">
-<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1441,7 +1434,7 @@ to run using C.  Implementing this will require some work to the mesh.cpp module
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelQuadrilateralMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelQuadrilateralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em>, <em>triangleFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelQuadrilateralMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A heirarchical multilevel mesh of quadrilaterals
 WIP</p>
 <dl class="method">
@@ -1454,7 +1447,7 @@ WIP</p>
 <dl class="class">
 <dt id="proteus.MeshTools.InterpolatedBathymetryMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">InterpolatedBathymetryMesh</code><span class="sig-paren">(</span><em>domain</em>, <em>triangleOptions</em>, <em>atol=0.0001</em>, <em>rtol=0.0001</em>, <em>maxElementDiameter=None</em>, <em>maxLevels=20</em>, <em>maxNodes=100000</em>, <em>bathyType='points'</em>, <em>bathyAssignmentScheme='interpolation'</em>, <em>errorNormType='L2'</em>, <em>refineType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.InterpolatedBathymetryMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelTriangularMesh" title="proteus.MeshTools.MultilevelTriangularMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelTriangularMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelTriangularMesh" title="proteus.MeshTools.MultilevelTriangularMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelTriangularMesh</span></code></a></p>
 <p>A triangular mesh that interpolates bathymetry from a point cloud</p>
 <dl class="method">
 <dt id="proteus.MeshTools.InterpolatedBathymetryMesh.setMeshBathymetry">
@@ -1490,7 +1483,7 @@ WIP</p>
 <dt id="proteus.MeshTools.InterpolatedBathymetryMesh.locatePoints_initial">
 <code class="descname">locatePoints_initial</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.InterpolatedBathymetryMesh.locatePoints_initial" title="Permalink to this definition">¶</a></dt>
 <dd><p>locate the element containing each point</p>
-<p>first find the nearest node, then loop over that node&#8217;s  elements</p>
+<p>first find the nearest node, then loop over that node’s  elements</p>
 </dd></dl>
 
 <dl class="method">
@@ -1511,7 +1504,7 @@ WIP</p>
 <dl class="class">
 <dt id="proteus.MeshTools.EdgeMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">EdgeMesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.EdgeMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A mesh of edges</p>
 <p>The nodes, and edges are indexed by their node tuples. The
 corresponding lists are derived from the dictionaries, and sorted
@@ -1597,7 +1590,7 @@ lexicographic ordering.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelEdgeMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelEdgeMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical multilevel mesh of intervals (edges)</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelEdgeMesh.refine">
@@ -1612,12 +1605,12 @@ lexicographic ordering.</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelEdgeMesh.locallyRefine">
 <code class="descname">locallyRefine</code><span class="sig-paren">(</span><em>elementTagArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh.locallyRefine" title="Permalink to this definition">¶</a></dt>
-<dd><p>simple local refinement assuming elementTagArray[eN]=1 &#8211;&gt; bisect</p>
+<dd><p>simple local refinement assuming elementTagArray[eN]=1 –&gt; bisect</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.MultilevelEdgeMesh.cmeshTools">
-<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1625,7 +1618,7 @@ lexicographic ordering.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelSimplicialMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelSimplicialMesh</code><span class="sig-paren">(</span><em>nd</em>, <em>nx</em>, <em>ny=1</em>, <em>nz=1</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelSimplicialMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A wrapper for all the simplicial hierarchical meshes in 1,2, and 3D</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelSimplicialMesh.refine">
@@ -1640,7 +1633,7 @@ lexicographic ordering.</p>
 <dd><p>Try to find the element of the xml tree xmf that holds a uniform
 grid with the name given in MeshTag by searching through Temporal
 Grid Collections and Grid Collections.</p>
-<p>If MeshTag isn&#8217;t found, uses the first entry in the Domain</p>
+<p>If MeshTag isn’t found, uses the first entry in the Domain</p>
 </dd></dl>
 
 <dl class="function">
@@ -1656,12 +1649,12 @@ nodes from xdmf node for a uniform grid</p>
 <dd><p>Read xmdf element topology information when there are uniform elements in the mesh
 Type of element given by elementTopologyName
 Heavy data stored in hdf5
-topologyid2name &#8211; lookup for number of nodes in a given element type</p>
+topologyid2name – lookup for number of nodes in a given element type</p>
 <p>returns</p>
-<p>nElements_global  &#8211; the number of elements in the mesh
-nNodes_element    &#8211; number of nodes per element
-elementNodesArray &#8211; element &#8211;&gt; node connectivity stored as flattened array accessed using elementNodes_offset
-elementNodes_offset &#8211; offsets into the elementNodesArray storage for element connectivity,
+<p>nElements_global  – the number of elements in the mesh
+nNodes_element    – number of nodes per element
+elementNodesArray – element –&gt; node connectivity stored as flattened array accessed using elementNodes_offset
+elementNodes_offset – offsets into the elementNodesArray storage for element connectivity,
 element eN nodes are in elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]</p>
 </dd></dl>
 
@@ -1670,12 +1663,12 @@ element eN nodes are in elementNodesArray[elementNodes_offset[eN]:elementNodes_o
 <code class="descclassname">proteus.MeshTools.</code><code class="descname">readMixedElementTopologyFromXdmf</code><span class="sig-paren">(</span><em>elementTopologyName</em>, <em>Topology</em>, <em>hdf5</em>, <em>topologyid2name</em>, <em>topology2nodes</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.readMixedElementTopologyFromXdmf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read xmdf element topology information when there are mixed elements in the mesh
 Heavy data stored in hdf5
-topologyid2name &#8211; lookup for number of nodes in a given element type</p>
+topologyid2name – lookup for number of nodes in a given element type</p>
 <p>returns</p>
-<p>nElements_global  &#8211; the number of elements in the mesh
-elementNodesArray &#8211; element &#8211;&gt; node connectivity stored as flattened
+<p>nElements_global  – the number of elements in the mesh
+elementNodesArray – element –&gt; node connectivity stored as flattened
 array accessed using elementNodes_offset
-elementNodes_offset &#8211; offsets into the elementNodesArray storage for element
+elementNodes_offset – offsets into the elementNodesArray storage for element
 connectivity, element eN nodes are
 inelementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]</p>
 </dd></dl>
@@ -1697,12 +1690,12 @@ inelementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]</p>
 <dl class="function">
 <dt id="proteus.MeshTools.writeHexMesh">
 <code class="descclassname">proteus.MeshTools.</code><code class="descname">writeHexMesh</code><span class="sig-paren">(</span><em>mesh_info</em>, <em>hexfile_base</em>, <em>index_base=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.writeHexMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write a hex mesh in Ido&#8217;s format with base numbering index_base
+<dd><p>Write a hex mesh in Ido’s format with base numbering index_base
 HEX
 nNodes_global nElements_global
 x0 y0 z0
 x1 y1 z1
-...
+…
 xN yN zN
 [n0 n1 n2 n3 n4 n5 n6 n7 mat0]
 [n0 n1 n2 n3 n4 n5 n6 n7 mat1]</p>
@@ -1711,7 +1704,7 @@ xN yN zN
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelNURBSMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelNURBSMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>px=1</em>, <em>py=1</em>, <em>pz=1</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelNURBSMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelNURBSMesh.generateFromExistingCoarseMesh">
 <code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelNURBSMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
@@ -1732,7 +1725,7 @@ xN yN zN
 <dl class="class">
 <dt id="proteus.MeshTools.NURBSMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">NURBSMesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.NURBSMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.HexahedralMesh" title="proteus.MeshTools.HexahedralMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.HexahedralMesh</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.HexahedralMesh" title="proteus.MeshTools.HexahedralMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.HexahedralMesh</span></code></a></p>
 <p>A mesh consisting of NURBS.</p>
 <dl class="method">
 <dt id="proteus.MeshTools.NURBSMesh.generateHexahedralMeshFromRectangularGrid">
@@ -1767,7 +1760,7 @@ xN yN zN
 <dt id="proteus.MeshTools.intersectPoints">
 <code class="descclassname">proteus.MeshTools.</code><code class="descname">intersectPoints</code><span class="sig-paren">(</span><em>line</em>, <em>points</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.intersectPoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a line segment (defined as two points), identify all points that the line segment intersects.</p>
-<p>This hasn&#8217;t been vectorized.</p>
+<p>This hasn’t been vectorized.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1776,7 +1769,7 @@ xN yN zN
 <dd><p>Given a line segment (defined as two points), identify the locations of its intersections with all
 given edges (defined as line segments).  If the line and an edge overlap, the <em>furthest</em> point
 along the line (closest to the second point) that is still on each edge is returned.</p>
-<p>This hasn&#8217;t been vectorized.</p>
+<p>This hasn’t been vectorized.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1787,7 +1780,7 @@ polyhedron (defined as a collection of half-planes in three-space in normal, ver
 <p>If the facets of the polyhedron are in edge form, the normal can be computed by taking the cross product of any
 two non-parallel edges of the facet (in three-space).  Any vertex of the facet will work.</p>
 <p>Implementation of algorithm described here: <a class="reference external" href="http://geomalgorithms.com/a13-_intersect-4.html">http://geomalgorithms.com/a13-_intersect-4.html</a></p>
-<p>This hasn&#8217;t been vectorized.</p>
+<p>This hasn’t been vectorized.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1809,9 +1802,9 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>polyfile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Filename with appropriate data for tengen.</li>
-<li><strong>baseFlags</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Standard Tetgen options for generation</li>
-<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; </li>
+<li><strong>polyfile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Filename with appropriate data for tengen.</li>
+<li><strong>baseFlags</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Standard Tetgen options for generation</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – </li>
 </ul>
 </td>
 </tr>
@@ -1828,15 +1821,15 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>polyfile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Filename base for tetgen files</li>
-<li><strong>nbase</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; </li>
+<li><strong>polyfile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Filename base for tetgen files</li>
+<li><strong>nbase</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – </li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mesh</strong> &#8211; Simplex mesh</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mesh</strong> – Simplex mesh</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#proteus.MeshTools.TetrahedralMesh" title="proteus.MeshTools.TetrahedralMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.TetrahedralMesh</span></code></a></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#proteus.MeshTools.TetrahedralMesh" title="proteus.MeshTools.TetrahedralMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.TetrahedralMesh</span></code></a></p>
 </td>
 </tr>
 </tbody>
@@ -1851,7 +1844,7 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#module-proteus.Domain" title="proteus.Domain"><em>proteus.Domain</em></a>) &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<em>proteus.Domain</em>) – </td>
 </tr>
 </tbody>
 </table>
@@ -1863,7 +1856,7 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>he</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; mesh characteristic element size</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>he</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – mesh characteristic element size</td>
 </tr>
 </tbody>
 </table>
@@ -1878,8 +1871,8 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>partitioning_type</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em><em></em>) &#8211; parallel partitioning type (default: &#8216;node&#8217; (1))</li>
-<li><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; layers of overlap for paralllel (default: 0)</li>
+<li><strong>partitioning_type</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – parallel partitioning type (default: ‘node’ (1))</li>
+<li><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – layers of overlap for paralllel (default: 0)</li>
 </ul>
 </td>
 </tr>
@@ -1895,8 +1888,8 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>triangle_options</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>]</em><em></em>) &#8211; string for triangle options. If not passed, it will be
-set with triangle_string attribute and &#8216;he&#8217; value, with
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>triangle_options</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>]</em>) – string for triangle options. If not passed, it will be
+set with triangle_string attribute and ‘he’ value, with
 default for 2D: he**2/2; default for 3D: he**3/6</td>
 </tr>
 </tbody>
@@ -1912,9 +1905,9 @@ default for 2D: he**2/2; default for 3D: he**3/6</td>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>generator</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; options: &#8216;gmsh&#8217;, &#8216;triangle&#8217;, &#8216;tetgen&#8217;</li>
-<li><strong>Only has an effect when setting to 'gmsh' in current</strong> (<em></em><em>(</em><em>!</em><em>)</em><em></em>) &#8211; </li>
-<li><strong></strong><strong>(</strong><strong>triangle is default for 2D</strong><strong>, </strong><strong>tetgen for 3D</strong><strong>)</strong><strong></strong> (<em>implementation</em>) &#8211; </li>
+<li><strong>generator</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – options: ‘gmsh’, ‘triangle’, ‘tetgen’</li>
+<li><strong>Only has an effect when setting to 'gmsh' in current</strong> (<em>(</em><em>!</em><em>)</em>) – </li>
+<li><strong>(</strong><strong>triangle is default for 2D</strong><strong>, </strong><strong>tetgen for 3D</strong><strong>)</strong> (<em>implementation</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -1931,11 +1924,11 @@ default for 2D: he**2/2; default for 3D: he**3/6</td>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>]</em><em></em>) &#8211; name of the mesh files (prefix) (default: &#8216;mesh&#8217;)</li>
-<li><strong>poly</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; create a poly file</li>
-<li><strong>ply</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; create a ply file</li>
-<li><strong>asymptote</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; create an asymptote file</li>
-<li><strong>geo</strong> &#8211; create a geofile</li>
+<li><strong>name</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>]</em>) – name of the mesh files (prefix) (default: ‘mesh’)</li>
+<li><strong>poly</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – create a poly file</li>
+<li><strong>ply</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – create a ply file</li>
+<li><strong>asymptote</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – create an asymptote file</li>
+<li><strong>geo</strong> – create a geofile</li>
 </ul>
 </td>
 </tr>
@@ -1954,7 +1947,7 @@ default for 2D: he**2/2; default for 3D: he**3/6</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileprefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; prefix of the .msh file (e.g. &#8216;mesh&#8217; if file called &#8216;mesh.msh&#8217;)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileprefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – prefix of the .msh file (e.g. ‘mesh’ if file called ‘mesh.msh’)</td>
 </tr>
 </tbody>
 </table>
@@ -1975,7 +1968,7 @@ default for 2D: he**2/2; default for 3D: he**3/6</td>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

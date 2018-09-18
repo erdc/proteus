@@ -1,7 +1,0 @@
-proteus.config.tamucluster module
-=================================
-
-.. automodule:: proteus.config.tamucluster
-    :members:
-    :undoc-members:
-    :show-inheritance:

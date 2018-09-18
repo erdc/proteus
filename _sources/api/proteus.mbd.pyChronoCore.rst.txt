@@ -1,0 +1,7 @@
+proteus.mbd.pyChronoCore module
+===============================
+
+.. automodule:: proteus.mbd.pyChronoCore
+    :members:
+    :undoc-members:
+    :show-inheritance:

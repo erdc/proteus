@@ -1,7 +1,0 @@
-proteus.config.stampede module
-==============================
-
-.. automodule:: proteus.config.stampede
-    :members:
-    :undoc-members:
-    :show-inheritance:

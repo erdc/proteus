@@ -1,7 +1,0 @@
-proteus.config.topaz module
-===========================
-
-.. automodule:: proteus.config.topaz
-    :members:
-    :undoc-members:
-    :show-inheritance:

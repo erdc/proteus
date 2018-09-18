@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.TwophaseDarcyCoefficients module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.TwophaseDarcyCoefficients module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,12 +127,12 @@
   <div class="section" id="module-proteus.TwophaseDarcyCoefficients">
 <span id="proteus-twophasedarcycoefficients-module"></span><h1>proteus.TwophaseDarcyCoefficients module<a class="headerlink" href="#module-proteus.TwophaseDarcyCoefficients" title="Permalink to this headline">¶</a></h1>
 <p>An extension of the TransportCoefficients module for two-phase flow in porous media</p>
-<object data="../_images/inheritance-589258629255bea13b05a6c0e84a9c8fed0ed360.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.TwophaseDarcyCoefficients</p></object>
+<div class="graphviz"><object data="../_images/inheritance-589258629255bea13b05a6c0e84a9c8fed0ed360.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.TwophaseDarcyCoefficients</p></object></div>
 <dl class="class">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base">
 <em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcyFlow_base</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>rhon=1.0</em>, <em>rhow=0.0</em>, <em>mun=1.0</em>, <em>muw=1.0</em>, <em>Ksw=1.0</em>, <em>psk_model='VGM'</em>, <em>vg_alpha=5.0</em>, <em>vg_m=0.75</em>, <em>bc_pd=0.18281535648994515</em>, <em>bc_lambda=0.5</em>, <em>omega=1.0</em>, <em>Sw_max=1.0</em>, <em>Sw_min=0.0</em>, <em>density_w_model='Constant'</em>, <em>density_n_model='Constant'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.setMaterialTypes">
 <code class="descname">setMaterialTypes</code><span class="sig-paren">(</span><em>Ksw_types=[1.0], omega_types=[0.4], Sw_max_types=[1.0], Sw_min_types=[0.0], bc_lambda_types=None, bc_pd_types=None, vg_alpha_types=None, vg_m_types=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.setMaterialTypes" title="Permalink to this definition">¶</a></dt>
@@ -185,7 +173,7 @@
 <dl class="class">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc">
 <em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcy_fc</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>rhon=1.0</em>, <em>rhow=0.0</em>, <em>mun=1.0</em>, <em>muw=1.0</em>, <em>Ksw=1.0</em>, <em>psk_model='VGM'</em>, <em>vg_alpha=5.0</em>, <em>vg_m=0.75</em>, <em>bc_pd=0.18281535648994515</em>, <em>bc_lambda=0.5</em>, <em>omega=1.0</em>, <em>Sw_max=1.0</em>, <em>Sw_min=0.0</em>, <em>density_w_parameters=None</em>, <em>density_n_parameters=None</em>, <em>diagonalHet=False</em>, <em>sparseDiffusionTensors={}</em>, <em>sd=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.evaluate">
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.evaluate" title="Permalink to this definition">¶</a></dt>
@@ -225,7 +213,7 @@
 <dl class="class">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff">
 <em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcy_fc_ff</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>rhon=1.0</em>, <em>rhow=0.0</em>, <em>mun=1.0</em>, <em>muw=1.0</em>, <em>Ksw=1.0</em>, <em>psk_model='VGM'</em>, <em>vg_alpha=5.0</em>, <em>vg_m=0.75</em>, <em>bc_pd=0.18281535648994515</em>, <em>bc_lambda=0.5</em>, <em>omega=1.0</em>, <em>Sw_max=1.0</em>, <em>Sw_min=0.0</em>, <em>diagonalHet=False</em>, <em>sparseDiffusionTensors={}</em>, <em>sd=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.evaluate">
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.evaluate" title="Permalink to this definition">¶</a></dt>
@@ -265,7 +253,7 @@
 <dl class="class">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure">
 <em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcy_split_pressure</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>rhon=1.0</em>, <em>rhow=0.0</em>, <em>mun=1.0</em>, <em>muw=1.0</em>, <em>Ksw=1.0</em>, <em>psk_model='VGM'</em>, <em>vg_alpha=5.0</em>, <em>vg_m=0.75</em>, <em>bc_pd=0.18281535648994515</em>, <em>bc_lambda=0.5</em>, <em>omega=1.0</em>, <em>Sw_max=1.0</em>, <em>Sw_min=0.0</em>, <em>swConstant=0.5</em>, <em>capillaryDiffusionScaling=1.0</em>, <em>nModel=1</em>, <em>diagonalHet=False</em>, <em>sparseDiffusionTensors={}</em>, <em>sd=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.attachModels" title="Permalink to this definition">¶</a></dt>
@@ -330,7 +318,7 @@
 <dl class="class">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation">
 <em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcy_split_saturation</code><span class="sig-paren">(</span><em>g=[9.8], rhon=1.0, rhow=1.0, mun=1.0, muw=1.0, Ksw=1.0, psk_model='VGM', vg_alpha=5.0, vg_m=0.75, bc_pd=0.18281535648994515, bc_lambda=0.5, omega=1.0, Sw_max=1.0, Sw_min=0.0, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, nModel=0, diagonalHet=False, sparseDiffusionTensors={}, sd=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_saturation">
 <code class="descname">twophaseDarcy_split_saturation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_saturation" title="Permalink to this definition">¶</a></dt>
@@ -407,7 +395,7 @@
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

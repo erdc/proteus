@@ -9,6 +9,7 @@ var searchData=
   ['kepsilon_5fk_5f2d_5fevaluate_5fsd',['kEpsilon_k_2D_Evaluate_sd',['../transport_coefficients_8c.html#a925895da7fd0b5d45a65fdfcef5789f5',1,'transportCoefficients.c']]],
   ['kepsilon_5fk_5f3d_5fevaluate_5fsd',['kEpsilon_k_3D_Evaluate_sd',['../transport_coefficients_8c.html#ac0071af0ab2ab4e5af03648fd6ede50b',1,'transportCoefficients.c']]],
   ['keytype',['KeyType',['../class_stupid_heap.html#a63b703db61473c519c8769bffa2562f6',1,'StupidHeap']]],
+  ['kj',['KJ',['../struct_inputs.html#a20af834d8754a9ef74f25f9080c64f21',1,'Inputs']]],
   ['known',['Known',['../class_f_m_m_eikonal_solver_base.html#a7b91694dcd16442eaeff3724192bda15',1,'FMMEikonalSolverBase::Known()'],['../class_f_m_m_eikonal_solver_base.html#a6a8b0973f39ff91be0dc9030284f904ea8cf45778ecadde9e384ef58f60c6d45f',1,'FMMEikonalSolverBase::KNOWN()']]],
   ['krn',['krn',['../class_psk_relation.html#a6a0f012cf857ae0d2ce028f1a8f895f4',1,'PskRelation']]],
   ['krnoffset',['krnOffset',['../class_psk_spline.html#af52590e123b8c191106e388084963e03',1,'PskSpline']]],

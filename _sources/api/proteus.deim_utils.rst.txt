@@ -1,5 +1,5 @@
-proteus.deim_utils module
-=========================
+proteus.deim\_utils module
+==========================
 
 .. automodule:: proteus.deim_utils
     :members:

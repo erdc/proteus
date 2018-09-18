@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.mprans.NCLS3P module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.mprans.NCLS3P module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -141,7 +129,7 @@
 <dl class="class">
 <dt id="proteus.mprans.NCLS3P.SubgridError">
 <em class="property">class </em><code class="descclassname">proteus.mprans.NCLS3P.</code><code class="descname">SubgridError</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.SubgridError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.SubgridError.html#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.SubgridError.html#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.mprans.NCLS3P.SubgridError.initializeElementQuadrature">
 <code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.SubgridError.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
@@ -162,7 +150,7 @@
 <dl class="class">
 <dt id="proteus.mprans.NCLS3P.ShockCapturing">
 <em class="property">class </em><code class="descclassname">proteus.mprans.NCLS3P.</code><code class="descname">ShockCapturing</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.ShockCapturing" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.ShockCapturing.html#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.ShockCapturing.html#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.mprans.NCLS3P.ShockCapturing.initializeElementQuadrature">
 <code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.ShockCapturing.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
@@ -178,13 +166,13 @@
 <dl class="class">
 <dt id="proteus.mprans.NCLS3P.NumericalFlux">
 <em class="property">class </em><code class="descclassname">proteus.mprans.NCLS3P.</code><code class="descname">NumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.NumericalFlux" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.NumericalFlux.html#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart" title="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.NumericalFlux.html#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart" title="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.mprans.NCLS3P.Coefficients">
-<em class="property">class </em><code class="descclassname">proteus.mprans.NCLS3P.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>V_model=0</em>, <em>RD_model=None</em>, <em>ME_model=1</em>, <em>EikonalSolverFlag=0</em>, <em>checkMass=True</em>, <em>epsFact=1.5</em>, <em>useMetrics=0.0</em>, <em>sc_uref=1.0</em>, <em>sc_beta=1.0</em>, <em>waterline_interval=-1</em>, <em>movingDomain=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.mprans.NCLS3P.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>V_model=0</em>, <em>RD_model=None</em>, <em>ME_model=1</em>, <em>EikonalSolverFlag=0</em>, <em>checkMass=True</em>, <em>epsFact=1.5</em>, <em>useMetrics=0.0</em>, <em>sc_uref=1.0</em>, <em>sc_beta=1.0</em>, <em>waterline_interval=-1</em>, <em>movingDomain=False</em>, <em>PURE_BDF=False</em>, <em>EXPLICIT_METHOD=False</em>, <em>outputQuantDOFs=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.mprans.NCLS3P.Coefficients.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
@@ -230,7 +218,7 @@
 <em class="property">class </em><code class="descname">EikonalSolver</code><span class="sig-paren">(</span><em>levelSolverType</em>, <em>F</em>, <em>relativeTolerance=0.0</em>, <em>absoluteTolerance=1e-08</em>, <em>maxSolverIts=100</em>, <em>frontTolerance=0.0001</em>, <em>frontInitType='magnitudeOnly'</em>, <em>bandTolerance=-0.01</em>, <em>eikonalVariable=0</em>, <em>localReconstruction=None</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.EikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple wrapper for special purpose Eikonal equation solvers on a single level.
 Current types allowed:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FMMEikonalSolver</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FMMEikonalSolver</span>
 <span class="n">FSWEikonalSolver</span>
 </pre></div>
 </div>
@@ -262,13 +250,13 @@ representation here</p>
 
 <dl class="class">
 <dt id="proteus.mprans.NCLS3P.Coefficients.FMMEikonalSolver">
-<em class="property">class </em><code class="descclassname">Coefficients.</code><code class="descname">FMMEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.FMMEikonalSolver" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">FMMEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.FMMEikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encapsulate naive implementation of Fast Marching Methods on
 unstructured grids for</p>
 <blockquote>
-<div><div class="math">
+<div><div class="math notranslate nohighlight">
 \[\|\grad T\| = 1/F\]</div>
-<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p><span class="math notranslate nohighlight">\(T = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma\)</span></p>
 <p>1d local solver is standard upwind approximation</p>
 <p>2d local solver variations: acute triangulations version 1 or
 version 2 from Qian Zhang etal 07 obtuse triangulation not
@@ -278,7 +266,7 @@ implemented</p>
 </div></blockquote>
 <dl class="attribute">
 <dt id="proteus.mprans.NCLS3P.Coefficients.FMMEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -293,7 +281,7 @@ implemented</p>
 <div><p>assuming phi_0 describes initial location of interface Gamma and
 has reasonable values (absolute values) for T close to Gamma. Here
 T can be interpreted as the travel time from Gamma.</p>
-<p>Right now assumes global node numbers &lt;&#8211;&gt; global dofs but this can be
+<p>Right now assumes global node numbers &lt;–&gt; global dofs but this can be
 fixed easily
 Input</p>
 <p>phi0: dof array from P1 C0 FiniteElementFunction holding initial condition</p>
@@ -306,11 +294,11 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd><dl class="first last docutils">
-<dt>-1 &#8211;&gt; Far</dt>
-<dd>0 &#8211;&gt; Trial
-1 &#8211;&gt; Known</dd>
+<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
+<dd><dl class="first last docutils">
+<dt>-1 –&gt; Far</dt>
+<dd>0 –&gt; Trial
+1 –&gt; Known</dd>
 </dl>
 </dd>
 </dl>
@@ -326,14 +314,14 @@ ec x_n)</p>
 
 <dl class="class">
 <dt id="proteus.mprans.NCLS3P.Coefficients.FSWEikonalSolver">
-<em class="property">class </em><code class="descclassname">Coefficients.</code><code class="descname">FSWEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>iterAtol=1e-08</em>, <em>iterRtol=0.0</em>, <em>maxIts=100</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>refPoints=None</em>, <em>orderApprox=1</em>, <em>LARGE=1.234e+28</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.FSWEikonalSolver" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">FSWEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>iterAtol=1e-08</em>, <em>iterRtol=0.0</em>, <em>maxIts=100</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>refPoints=None</em>, <em>orderApprox=1</em>, <em>LARGE=1.234e+28</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.FSWEikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
 <dd>for</dd>
 </dl>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\|\grad T\| = 1/F\]</div>
-<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p><span class="math notranslate nohighlight">\(T = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma\)</span></p>
 <p>1d local solver is standard upwind approximation</p>
 <p>2d local solver variations: acute triangulations version 1 or
 version 2 from Qian Zhang etal 07 obtuse triangulation not
@@ -342,7 +330,7 @@ implemented</p>
 <p>For now, the input should be non-negative!</p>
 <dl class="attribute">
 <dt id="proteus.mprans.NCLS3P.Coefficients.FSWEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -357,7 +345,7 @@ implemented</p>
 <div><p>assuming phi_0 describes initial location of interface Gamma and
 has reasonable values (absolute values) for T close to Gamma. Here
 T can be interpreted as the travel time from Gamma.</p>
-<p>Right now assumes global node numbers &lt;&#8211;&gt; global dofs but this can be
+<p>Right now assumes global node numbers &lt;–&gt; global dofs but this can be
 fixed easily
 Input</p>
 <p>phi0: dof array holding P1 C0 FiniteElementFunction holding initial condition</p>
@@ -370,9 +358,9 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd>0 &#8211;&gt; Not Known (Trial)
-1 &#8211;&gt; Known</dd>
+<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
+<dd>0 –&gt; Not Known (Trial)
+1 –&gt; Known</dd>
 </dl>
 <p>Order  : ordering of points in domain using l_p metric from fixed reference points</p>
 </div></blockquote>
@@ -382,7 +370,7 @@ ec x_n)</p>
 
 <dl class="method">
 <dt id="proteus.mprans.NCLS3P.Coefficients.ncLevelSetCoefficientsEvaluate">
-<code class="descclassname">Coefficients.</code><code class="descname">ncLevelSetCoefficientsEvaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.ncLevelSetCoefficientsEvaluate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ncLevelSetCoefficientsEvaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.Coefficients.ncLevelSetCoefficientsEvaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>evaluate the coefficients of the non-conservative level set advection equation</p>
 </dd></dl>
 
@@ -391,7 +379,7 @@ ec x_n)</p>
 <dl class="class">
 <dt id="proteus.mprans.NCLS3P.LevelModel">
 <em class="property">class </em><code class="descclassname">proteus.mprans.NCLS3P.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='defaultName'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.LevelModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
 <dl class="attribute">
 <dt id="proteus.mprans.NCLS3P.LevelModel.nCalls">
 <code class="descname">nCalls</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.LevelModel.nCalls" title="Permalink to this definition">¶</a></dt>
@@ -400,6 +388,11 @@ ec x_n)</p>
 <dl class="method">
 <dt id="proteus.mprans.NCLS3P.LevelModel.calculateCoefficients">
 <code class="descname">calculateCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.LevelModel.calculateCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.NCLS3P.LevelModel.updateVelocityFieldAsFunction">
+<code class="descname">updateVelocityFieldAsFunction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/NCLS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.NCLS3P.LevelModel.updateVelocityFieldAsFunction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -480,7 +473,7 @@ and the shape information at the quadrature points on global element boundaries.
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

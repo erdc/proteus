@@ -1,0 +1,15 @@
+proteus.fenton package
+======================
+
+.. automodule:: proteus.fenton
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   proteus.fenton.Fenton
+

@@ -1,0 +1,16 @@
+proteus.richards package
+========================
+
+.. automodule:: proteus.richards
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   proteus.richards.Richards
+   proteus.richards.cRichards
+

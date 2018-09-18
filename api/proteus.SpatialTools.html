@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.SpatialTools module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.SpatialTools module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -152,7 +140,7 @@ created for each facet (3D) or segment (2D) defining the shape.</p>
 </ul>
 </div></blockquote>
 <p>Example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus</span> <span class="k">import</span> <span class="n">Domain</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus</span> <span class="k">import</span> <span class="n">Domain</span>
 <span class="kn">from</span> <span class="nn">proteus</span> <span class="k">import</span> <span class="n">SpatialTools</span> <span class="k">as</span> <span class="n">st</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="n">domain</span> <span class="o">=</span> <span class="n">Domain</span><span class="o">.</span><span class="n">PlanarStraightLineGraphDomain</span><span class="p">()</span>
@@ -164,23 +152,23 @@ created for each facet (3D) or segment (2D) defining the shape.</p>
 <span class="n">st</span><span class="o">.</span><span class="n">assembleDomain</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
 </pre></div>
 </div>
-<object data="../_images/inheritance-fcab10325422774ac89ea028fc52caec328ffd7d.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.SpatialTools</p></object>
+<div class="graphviz"><object data="../_images/inheritance-fcab10325422774ac89ea028fc52caec328ffd7d.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.SpatialTools</p></object></div>
 <dl class="class">
 <dt id="proteus.SpatialTools.Shape">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">Shape</code><span class="sig-paren">(</span><em>domain</em>, <em>nd=None</em>, <em>BC_class=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Shape" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Base/super class of all shapes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>nd</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em><em></em>) &#8211; Number of dimensions of the shape. If not set, will take the number of
+<li><strong>nd</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – Number of dimensions of the shape. If not set, will take the number of
 dimensions of the domain.</li>
-<li><strong>BC_class</strong> (<em>Optional</em><em>[</em><em>proteus.BoundaryConditions.BC_Base</em><em>]</em><em></em>) &#8211; Class to use for boundary conditions (e.g.
+<li><strong>BC_class</strong> (<em>Optional</em><em>[</em><em>proteus.BoundaryConditions.BC_Base</em><em>]</em>) – Class to use for boundary conditions (e.g.
 proteus.BoundaryConditions.BC_Base or
 proteus.BoundaryConditions.mprans.BC_RANS).</li>
 </ul>
@@ -188,6 +176,11 @@ proteus.BoundaryConditions.mprans.BC_RANS).</li>
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="proteus.SpatialTools.Shape.count_all">
+<code class="descname">count_all</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Shape.count_all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="proteus.SpatialTools.Shape.setPosition">
 <code class="descname">setPosition</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Shape.setPosition" title="Permalink to this definition">¶</a></dt>
@@ -196,7 +189,7 @@ proteus.BoundaryConditions.mprans.BC_RANS).</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>coords</strong> (<em>array_like</em>) &#8211; New set of coordinates for barycenter (list/array).</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>coords</strong> (<em>array_like</em>) – New set of coordinates for barycenter (list/array).</td>
 </tr>
 </tbody>
 </table>
@@ -211,7 +204,7 @@ proteus.BoundaryConditions.mprans.BC_RANS).</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>barycenter</strong> (<em>array_like</em>) &#8211; Global coordinates of barycenter (list/array).</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>barycenter</strong> (<em>array_like</em>) – Global coordinates of barycenter (list/array).</td>
 </tr>
 </tbody>
 </table>
@@ -226,8 +219,8 @@ proteus.BoundaryConditions.mprans.BC_RANS).</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>regions</strong> (<em>array_like</em>) &#8211; Array of coordinates of regions.</li>
-<li><strong>regionFlags</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Array of flags.</li>
+<li><strong>regions</strong> (<em>array_like</em>) – Array of coordinates of regions.</li>
+<li><strong>regionFlags</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Array of flags.</li>
 </ul>
 </td>
 </tr>
@@ -245,8 +238,8 @@ proteus.BoundaryConditions.mprans.BC_RANS).</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>shape</strong> (<a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><em>proteus.SpatialTools.Shape</em></a>) &#8211; child of this shape</li>
-<li><strong>ind</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; parent (current) shape&#8217;s local index of volume (3D) or facet (2D)
+<li><strong>shape</strong> (<a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><em>proteus.SpatialTools.Shape</em></a>) – child of this shape</li>
+<li><strong>ind</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – parent (current) shape’s local index of volume (3D) or facet (2D)
 containing the child shape</li>
 </ul>
 </td>
@@ -266,8 +259,8 @@ Sets the shape within</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>shape</strong> (<a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><em>proteus.SpatialTools.Shape</em></a>) &#8211; the parent of this shape</li>
-<li><strong>ind</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; parent shape&#8217;s local index of volume (3D) or facet (2D) containing
+<li><strong>shape</strong> (<a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><em>proteus.SpatialTools.Shape</em></a>) – the parent of this shape</li>
+<li><strong>ind</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – parent shape’s local index of volume (3D) or facet (2D) containing
 the child (current) shape</li>
 </ul>
 </td>
@@ -278,14 +271,18 @@ the child (current) shape</li>
 
 <dl class="method">
 <dt id="proteus.SpatialTools.Shape.setHoles">
-<code class="descname">setHoles</code><span class="sig-paren">(</span><em>holes</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Shape.setHoles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets a &#8216;hole&#8217; in the mesh. The region where the hole is defined will
+<code class="descname">setHoles</code><span class="sig-paren">(</span><em>holes</em>, <em>indice=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Shape.setHoles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets a ‘hole’ in the mesh. The region where the hole is defined will
 not be meshed.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>holes</strong> (<em>array_like</em>) &#8211; Array of coordinates of holes (list/array).</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>holes</strong> (<em>array_like</em>) – Array of coordinates of holes (list/array).</li>
+<li><strong>indice</strong> (<em>array_like</em>) – Array of index of region where hole is (list/array). Only for gmsh</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -300,9 +297,9 @@ not be meshed.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>rot</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Angle of rotation (in radians).</li>
-<li><strong>axis</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Vector used for rotation. Not necessary for rotation in 2D.</li>
-<li><strong>pivot</strong> (<em>Optional</em><em>[</em><em>array_list</em><em>]</em><em></em>) &#8211; Point around which the shape will rotate. If not set, the
+<li><strong>rot</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Angle of rotation (in radians).</li>
+<li><strong>axis</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Vector used for rotation. Not necessary for rotation in 2D.</li>
+<li><strong>pivot</strong> (<em>Optional</em><em>[</em><em>array_list</em><em>]</em>) – Point around which the shape will rotate. If not set, the
 barycenter will be the center of rotation.</li>
 </ul>
 </td>
@@ -328,7 +325,7 @@ barycenter will be the center of rotation.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trans</strong> (<em>array_like</em>) &#8211; Translation values.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trans</strong> (<em>array_like</em>) – Translation values.</td>
 </tr>
 </tbody>
 </table>
@@ -348,7 +345,7 @@ barycenter will be the center of rotation.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>barycenter</strong> &#8211; Current position of barycenter.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>barycenter</strong> – Current position of barycenter.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">array_like</td>
 </tr>
@@ -363,7 +360,7 @@ barycenter will be the center of rotation.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>coords_system</strong> &#8211; Local coordinate system relative to global coordinate system.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>coords_system</strong> – Local coordinate system relative to global coordinate system.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">array_like</td>
 </tr>
@@ -376,18 +373,18 @@ barycenter will be the center of rotation.</li>
 <dl class="class">
 <dt id="proteus.SpatialTools.Cuboid">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">Cuboid</code><span class="sig-paren">(</span><em>domain</em>, <em>dim=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>coords=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>barycenter=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Cuboid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Class to create a 3D cuboid</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Dimensions of the cuboid.</li>
-<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the centroid of the shape.</li>
-<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the barycenter.</li>
+<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Dimensions of the cuboid.</li>
+<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
+<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the barycenter.</li>
 </ul>
 </td>
 </tr>
@@ -406,7 +403,7 @@ boundary conditions of the shape.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dim</strong> (<em>array_like</em>) &#8211; New dimensions of the shape.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dim</strong> (<em>array_like</em>) – New dimensions of the shape.</td>
 </tr>
 </tbody>
 </table>
@@ -417,18 +414,18 @@ boundary conditions of the shape.</li>
 <dl class="class">
 <dt id="proteus.SpatialTools.Sphere">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">Sphere</code><span class="sig-paren">(</span><em>domain</em>, <em>radius</em>, <em>coords=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>barycenter=None</em>, <em>nSectors=10</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Sphere" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Class to create a 3D cuboid</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Dimensions of the cuboid.</li>
-<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the centroid of the shape.</li>
-<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the barycenter.</li>
+<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Dimensions of the cuboid.</li>
+<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
+<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the barycenter.</li>
 </ul>
 </td>
 </tr>
@@ -451,18 +448,18 @@ returns domain size and boundary flags</p>
 <dl class="class">
 <dt id="proteus.SpatialTools.Rectangle">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">Rectangle</code><span class="sig-paren">(</span><em>domain</em>, <em>dim=(0.0</em>, <em>0.0)</em>, <em>coords=(0.0</em>, <em>0.0)</em>, <em>barycenter=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Rectangle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Class to create a rectangle</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Dimensions of the cuboid.</li>
-<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the centroid of the shape.</li>
-<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the barycenter.</li>
+<li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Dimensions of the cuboid.</li>
+<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
+<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the barycenter.</li>
 </ul>
 </td>
 </tr>
@@ -481,7 +478,7 @@ boundary conditions of the shape.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dim</strong> &#8211; new dimensions (list/array)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dim</strong> – new dimensions (list/array)</td>
 </tr>
 </tbody>
 </table>
@@ -492,20 +489,20 @@ boundary conditions of the shape.</li>
 <dl class="class">
 <dt id="proteus.SpatialTools.Cylinder">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">Cylinder</code><span class="sig-paren">(</span><em>domain</em>, <em>radius</em>, <em>height</em>, <em>nPoints</em>, <em>coords=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>barycenter=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Cylinder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Class to create a cylinder.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; radius of cylinder.</li>
-<li><strong>height</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; height of cylinder.</li>
-<li><strong>nPoints</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; number of points to discretize circles of cylinder.</li>
-<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the centroid of the shape.</li>
-<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the barycenter.</li>
+<li><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – radius of cylinder.</li>
+<li><strong>height</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – height of cylinder.</li>
+<li><strong>nPoints</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of points to discretize circles of cylinder.</li>
+<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
+<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the barycenter.</li>
 </ul>
 </td>
 </tr>
@@ -526,17 +523,17 @@ boundary conditions of the shape.</li>
 <dl class="class">
 <dt id="proteus.SpatialTools.Circle">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">Circle</code><span class="sig-paren">(</span><em>domain</em>, <em>radius</em>, <em>coords</em>, <em>barycenter</em>, <em>nPoints</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.Circle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Class to create a circular shape.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>radius</strong> &#8211; Radius of the circular shape.</li>
-<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the centroid of the shape.</li>
+<li><strong>radius</strong> – Radius of the circular shape.</li>
+<li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
 </ul>
 </td>
 </tr>
@@ -551,30 +548,31 @@ boundary conditions of the shape.</li>
 
 <dl class="class">
 <dt id="proteus.SpatialTools.CustomShape">
-<em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">CustomShape</code><span class="sig-paren">(</span><em>domain</em>, <em>barycenter=None</em>, <em>vertices=None</em>, <em>vertexFlags=None</em>, <em>segments=None</em>, <em>segmentFlags=None</em>, <em>facets=None</em>, <em>facetFlags=None</em>, <em>holes=None</em>, <em>regions=None</em>, <em>regionFlags=None</em>, <em>volumes=None</em>, <em>boundaryTags=None</em>, <em>boundaryOrientations=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.CustomShape" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">CustomShape</code><span class="sig-paren">(</span><em>domain</em>, <em>barycenter=None</em>, <em>vertices=None</em>, <em>vertexFlags=None</em>, <em>segments=None</em>, <em>segmentFlags=None</em>, <em>facets=None</em>, <em>facetFlags=None</em>, <em>holes=None</em>, <em>holes_ind=None</em>, <em>regions=None</em>, <em>regionFlags=None</em>, <em>volumes=None</em>, <em>boundaryTags=None</em>, <em>boundaryOrientations=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.CustomShape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Class to create a custom 2D or 3D shape</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Coordinates of the barycenter.</li>
-<li><strong>vertices</strong> (<em>array_like</em>) &#8211; Array of vertex coordinates.</li>
-<li><strong>vertexFlags</strong> (<em>array_like</em>) &#8211; Array of vertex flags (used for boundary conditions)</li>
-<li><strong>segments</strong> (<em>array_like</em>) &#8211; Array of segments (each defined by indice of 2 vertex).</li>
-<li><strong>segmentFlags</strong> (<em>array_like</em>) &#8211; Array of segment flags (used for boundary conditions)</li>
-<li><strong>facetss</strong> (<em>array_like</em>) &#8211; Array of facets (defined by clockwise or counterclockwise loop of
+<li><strong>barycenter</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the barycenter.</li>
+<li><strong>vertices</strong> (<em>array_like</em>) – Array of vertex coordinates.</li>
+<li><strong>vertexFlags</strong> (<em>array_like</em>) – Array of vertex flags (used for boundary conditions)</li>
+<li><strong>segments</strong> (<em>array_like</em>) – Array of segments (each defined by indice of 2 vertex).</li>
+<li><strong>segmentFlags</strong> (<em>array_like</em>) – Array of segment flags (used for boundary conditions)</li>
+<li><strong>facetss</strong> (<em>array_like</em>) – Array of facets (defined by clockwise or counterclockwise loop of
 vertices).</li>
-<li><strong>facetFlags</strong> (<em>array_like</em>) &#8211; Array of facet flags (used for boundary conditions)</li>
-<li><strong>vertices</strong> &#8211; Array of region coordinates.</li>
-<li><strong>regionFlags</strong> (<em>array_like</em>) &#8211; Array of region flags (used for boundary conditions)</li>
-<li><strong>volumes</strong> (<em>array_like</em>) &#8211; Surface loops describing volumes (used for gmsh)</li>
-<li><strong>holes</strong> (<em>array_like</em>) &#8211; Array of holes coordinates (unmeshed regions)</li>
-<li><strong>boundaryTags</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of flags (int) as keys, and tags (e.g. string) for BC.</li>
-<li><strong>boundaryOrientations</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em><em></em>) &#8211; Array of orientation of boundaries. Can be used for BC.</li>
+<li><strong>facetFlags</strong> (<em>array_like</em>) – Array of facet flags (used for boundary conditions)</li>
+<li><strong>vertices</strong> – Array of region coordinates.</li>
+<li><strong>regionFlags</strong> (<em>array_like</em>) – Array of region flags (used for boundary conditions)</li>
+<li><strong>volumes</strong> (<em>array_like</em>) – Surface loops describing volumes (used for gmsh)</li>
+<li><strong>holes</strong> (<em>array_like</em>) – Array of holes coordinates (unmeshed regions; for triangle/tetgen only)</li>
+<li><strong>holes</strong> – Array of holes index (volume or facet; unmeshed regions; for gmsh only)</li>
+<li><strong>boundaryTags</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of flags (int) as keys, and tags (e.g. string) for BC.</li>
+<li><strong>boundaryOrientations</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Array of orientation of boundaries. Can be used for BC.</li>
 </ul>
 </td>
 </tr>
@@ -590,21 +588,26 @@ vertices).</li>
 <dl class="class">
 <dt id="proteus.SpatialTools.ShapeSTL">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">ShapeSTL</code><span class="sig-paren">(</span><em>domain</em>, <em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.ShapeSTL" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Class to extract geometrical information from STL file</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<li><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</li>
-<li><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of the stl file.</li>
+<li><strong>filename</strong> (<em>string</em>) – Name of the stl file.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="proteus.SpatialTools.ShapeSTL.count">
+<code class="descname">count</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.ShapeSTL.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -617,12 +620,12 @@ so the shape is ready for meshing.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>name of STL file</em>) &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>name of STL file</em>) – </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
-<li><strong>vertices</strong> (<em>array_like</em>) &#8211; Array of vertices that define STL shape (duplicates removed)</li>
-<li><strong>facets</strong> (<em>array_like</em>) &#8211; Array of facets (loops of 3 vertices)</li>
-<li><strong>facetnormals</strong> (<em>array_like</em>) &#8211; normal vertors of each facet</li>
+<li><strong>vertices</strong> (<em>array_like</em>) – Array of vertices that define STL shape (duplicates removed)</li>
+<li><strong>facets</strong> (<em>array_like</em>) – Array of facets (loops of 3 vertices)</li>
+<li><strong>facetnormals</strong> (<em>array_like</em>) – normal vertors of each facet</li>
 </ul>
 </td>
 </tr>
@@ -638,7 +641,7 @@ so the shape is ready for meshing.</p>
 <dl class="class">
 <dt id="proteus.SpatialTools.BCContainer">
 <em class="property">class </em><code class="descclassname">proteus.SpatialTools.</code><code class="descname">BCContainer</code><span class="sig-paren">(</span><em>BC_dict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.BCContainer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Creates a class from a dictionary (keys become class variable names)</p>
 </dd></dl>
 
@@ -651,13 +654,13 @@ so the shape is ready for meshing.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>points</strong> (<em>array_like</em>) &#8211; Array of point coordinates to rotate.</li>
-<li><strong>rot</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Angle of rotation.</li>
-<li><strong>pivot</strong> (<em>array_like</em>) &#8211; Pivotal point around which the set of points will be rotated.</li>
+<li><strong>points</strong> (<em>array_like</em>) – Array of point coordinates to rotate.</li>
+<li><strong>rot</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Angle of rotation.</li>
+<li><strong>pivot</strong> (<em>array_like</em>) – Pivotal point around which the set of points will be rotated.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>points_rot</strong> &#8211; Rotated set of points.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>points_rot</strong> – Rotated set of points.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array_like</p>
@@ -676,14 +679,14 @@ so the shape is ready for meshing.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>points</strong> (<em>array_like</em>) &#8211; Array of point coordinates to rotate.</li>
-<li><strong>rot</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Angle of rotation.</li>
-<li><strong>axis</strong> (<em>array_like</em>) &#8211; Axis of rotation.</li>
-<li><strong>pivot</strong> (<em>array_like</em>) &#8211; Pivotal point around which the set of points will be rotated.</li>
+<li><strong>points</strong> (<em>array_like</em>) – Array of point coordinates to rotate.</li>
+<li><strong>rot</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Angle of rotation.</li>
+<li><strong>axis</strong> (<em>array_like</em>) – Axis of rotation.</li>
+<li><strong>pivot</strong> (<em>array_like</em>) – Pivotal point around which the set of points will be rotated.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>points_rot</strong> &#8211; Rotated set of points.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>points_rot</strong> – Rotated set of points.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array_like</p>
@@ -704,7 +707,7 @@ to be attached to the domain.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) &#8211; Domain class instance that hold all the geometrical informations and
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<a class="reference internal" href="proteus.Domain.html#proteus.Domain.D_base" title="proteus.Domain.D_base"><em>proteus.Domain.D_base</em></a>) – Domain class instance that hold all the geometrical informations and
 boundary conditions of the shape.</td>
 </tr>
 </tbody>
@@ -715,6 +718,27 @@ boundary conditions of the shape.</td>
 <dt id="proteus.SpatialTools.getGmshPhysicalGroups">
 <code class="descclassname">proteus.SpatialTools.</code><code class="descname">getGmshPhysicalGroups</code><span class="sig-paren">(</span><em>geofile</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.getGmshPhysicalGroups" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.SpatialTools.extrude2Dto3D">
+<code class="descclassname">proteus.SpatialTools.</code><code class="descname">extrude2Dto3D</code><span class="sig-paren">(</span><em>extrusion</em>, <em>vertices</em>, <em>segments</em>, <em>facets</em>, <em>regions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SpatialTools.extrude2Dto3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extrude 2D geometry attributes in 3D</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>extrusion</strong> (<em>array_like</em>) – value of the extrusion (e.g. [1.4, 0., 0.])</li>
+<li><strong>vertices</strong> (<em>array_like</em>) – list of vertices of the 2D shape</li>
+<li><strong>segments</strong> (<em>array_like</em>) – list of segments of the 2D shape</li>
+<li><strong>facets</strong> (<em>array_like</em>) – list of facets of the 2D shape</li>
+<li><strong>regions</strong> (<em>array_like</em>) – list of regions of the 2D shape</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </div>
 
@@ -731,7 +755,7 @@ boundary conditions of the shape.</td>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

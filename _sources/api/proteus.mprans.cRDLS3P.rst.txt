@@ -1,0 +1,7 @@
+proteus.mprans.cRDLS3P module
+=============================
+
+.. automodule:: proteus.mprans.cRDLS3P
+    :members:
+    :undoc-members:
+    :show-inheritance:

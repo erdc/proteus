@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.Viewers module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.Viewers module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,8 +127,8 @@
   <div class="section" id="module-proteus.Viewers">
 <span id="proteus-viewers-module"></span><h1>proteus.Viewers module<a class="headerlink" href="#module-proteus.Viewers" title="Permalink to this headline">¶</a></h1>
 <p>Some simple modules for doing runtime visualization</p>
-<object data="../_images/inheritance-3b05103d57fed53f2734f3e76cbb17a12f7d2632.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.Viewers</p></object>
+<div class="graphviz"><object data="../_images/inheritance-3b05103d57fed53f2734f3e76cbb17a12f7d2632.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.Viewers</p></object></div>
 <dl class="function">
 <dt id="proteus.Viewers.gnuplotOn">
 <code class="descclassname">proteus.Viewers.</code><code class="descname">gnuplotOn</code><span class="sig-paren">(</span><em>problemName</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.gnuplotOn" title="Permalink to this definition">¶</a></dt>
@@ -208,8 +196,8 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
-<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) – </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -221,14 +209,14 @@
 <dl class="method">
 <dt id="proteus.Viewers.V_base.stepPlotExact">
 <code class="descname">stepPlotExact</code><span class="sig-paren">(</span><em>mlvt</em>, <em>tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.V_base.stepPlotExact" title="Permalink to this definition">¶</a></dt>
-<dd><p>plot &#8216;exact&#8217; value of desired quantities for a single step</p>
+<dd><p>plot ‘exact’ value of desired quantities for a single step</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
-<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) – </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -243,10 +231,10 @@ and plotOffSet is set correctly</p>
 <code class="descname">stepPlotElementQuantities</code><span class="sig-paren">(</span><em>mlvt</em>, <em>tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.V_base.stepPlotElementQuantities" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>sort through desired quantities in quadrature dictionaries like m, dm, to plot</dt>
-<dd>p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</dd>
+<dd>p    — problem definition
+n    — numerics definition
+mlvt — multilevel vector transport that holds the quantities to measure
+tsim — simulation time</dd>
 </dl>
 <p>assumes this is the correct time to plot
 and plotOffSet is set correctly</p>
@@ -261,9 +249,9 @@ and plotOffSet is set correctly</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>ckey</strong> (<em>what should be plotted</em>) &#8211; </li>
-<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
-<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+<li><strong>ckey</strong> (<em>what should be plotted</em>) – </li>
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) – </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -282,9 +270,9 @@ and plotOffSet is set correctly</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>ckey</strong> (<em>what should be plotted</em>) &#8211; </li>
-<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
-<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+<li><strong>ckey</strong> (<em>what should be plotted</em>) – </li>
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) – </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -301,11 +289,11 @@ and plotOffSet is set correctly</p>
 <dt>plotting routine to look at vector quantity stored in global element quad dictionary q</dt>
 <dd><dl class="first last docutils">
 <dt>input :</dt>
-<dd>ckey &#8212; what should be plotted
-p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</dd>
+<dd>ckey — what should be plotted
+p    — problem definition
+n    — numerics definition
+mlvt — multilevel vector transport that holds the quantities to measure
+tsim — simulation time</dd>
 </dl>
 </dd>
 </dl>
@@ -320,7 +308,7 @@ and plotOffSet is set correctly</p>
 <em class="property">class </em><code class="descclassname">proteus.Viewers.</code><code class="descname">MatlabWriter</code><span class="sig-paren">(</span><em>nxgrid=50</em>, <em>nygrid=50</em>, <em>nzgrid=10</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter" title="Permalink to this definition">¶</a></dt>
 <dd><p>collect functionality for generating visualation data and commands in matlab
 .. todo:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">C0P2</span> <span class="ow">in</span> <span class="mi">3</span><span class="n">d</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C0P2</span> <span class="ow">in</span> <span class="mi">3</span><span class="n">d</span>
 <span class="n">DG</span> <span class="n">monomials</span>
 </pre></div>
 </div>
@@ -352,7 +340,7 @@ TODO: implement local view for vectors</p>
 <code class="descname">viewGlobalScalarPointData</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>q</em>, <em>ckey</em>, <em>name=None</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewGlobalScalarPointData" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>input scalar variable and coordinates stored in dictionary</dt>
-<dd>q[&#8216;x&#8217;], q[ckey]</dd>
+<dd>q[‘x’], q[ckey]</dd>
 </dl>
 <p>respectively, generate global continuous interpolant
 should work for q, ebq_global, and ebqe quadrature dictionaries</p>
@@ -361,8 +349,8 @@ should work for q, ebq_global, and ebqe quadrature dictionaries</p>
 <dt>scalar data is stored in</dt>
 <dd>name_q</dd>
 <dt>if storeMeshData = True, writes out</dt>
-<dd>name_x_q    &#8211; point data
-tri_name_q  &#8211; Delaunay representation (2d,3d)</dd>
+<dd>name_x_q    – point data
+tri_name_q  – Delaunay representation (2d,3d)</dd>
 </dl>
 <p>returns number of figures actually plotted</p>
 </dd></dl>
@@ -372,7 +360,7 @@ tri_name_q  &#8211; Delaunay representation (2d,3d)</dd>
 <code class="descname">viewGlobalVectorPointData</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>q</em>, <em>ckey</em>, <em>name=None</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewGlobalVectorPointData" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>input vector variable and coordinates stored in dictionary</dt>
-<dd>q[&#8216;x&#8217;], q[ckey]</dd>
+<dd>q[‘x’], q[ckey]</dd>
 </dl>
 <p>respectively, generate global continuous interpolant
 should work for q, ebq_global, and ebqe quadrature dictionaries</p>
@@ -381,8 +369,8 @@ should work for q, ebq_global, and ebqe quadrature dictionaries</p>
 <dt>vector data is stored in</dt>
 <dd>name_q</dd>
 <dt>if storeMeshData = True, writes out</dt>
-<dd>name_x_q    &#8211; point data
-tri_name_q  &#8211; Delaunay representation (2d,3d)</dd>
+<dd>name_x_q    – point data
+tri_name_q  – Delaunay representation (2d,3d)</dd>
 </dl>
 <p>returns number of figures actually generated</p>
 </dd></dl>
@@ -392,7 +380,7 @@ tri_name_q  &#8211; Delaunay representation (2d,3d)</dd>
 <code class="descname">viewLocalScalarPointData</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>q</em>, <em>ckey</em>, <em>name=None</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewLocalScalarPointData" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>input scalar variable and coordinates stored in dictionary</dt>
-<dd>q[&#8216;x&#8217;], q[ckey]</dd>
+<dd>q[‘x’], q[ckey]</dd>
 </dl>
 <p>respectively, generate local  interpolant that is element-wise continuous
 should work for q, ebq_global, and ebqe quadrature dictionaries</p>
@@ -401,8 +389,8 @@ should work for q, ebq_global, and ebqe quadrature dictionaries</p>
 <dt>scalar data is stored in</dt>
 <dd>name_q</dd>
 <dt>if storeMeshData = True, writes out</dt>
-<dd>name_x_q    &#8211; point data
-tri_name_q  &#8211; Delaunay representation (2d,3d)</dd>
+<dd>name_x_q    – point data
+tri_name_q  – Delaunay representation (2d,3d)</dd>
 </dl>
 <p>returns number of figures actually plotted</p>
 </dd></dl>
@@ -417,8 +405,8 @@ tri_name_q  &#8211; Delaunay representation (2d,3d)</dd>
 <dt>scalar data is stored in</dt>
 <dd>name_ex</dd>
 <dt>if storeMeshData = True, writes out</dt>
-<dd>name_x_ex   &#8211; point data
-tri_name_ex &#8211; element-node representation (2d,3d)</dd>
+<dd>name_x_ex   – point data
+tri_name_ex – element-node representation (2d,3d)</dd>
 </dl>
 <p>returns number of figures actually plotted</p>
 </dd></dl>
@@ -433,8 +421,8 @@ tri_name_ex &#8211; element-node representation (2d,3d)</dd>
 <dt>vector data is stored in</dt>
 <dd>name_ex</dd>
 <dt>if storeMeshData = True, writes out</dt>
-<dd>name_x_ex   &#8211; point data
-tri_name_ex &#8211; element-node representation (2d,3d)</dd>
+<dd>name_x_ex   – point data
+tri_name_ex – element-node representation (2d,3d)</dd>
 </dl>
 <p>returns number of figures actually plotted</p>
 </dd></dl>
@@ -501,7 +489,7 @@ tri_name_ex &#8211; element-node representation (2d,3d)</dd>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

@@ -1,0 +1,7 @@
+proteus.fenton.Fenton module
+============================
+
+.. automodule:: proteus.fenton.Fenton
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -33,5 +33,7 @@ var searchData=
   ['invertlocal',['invertLocal',['../postprocessing_8c.html#a32b9ca2d3f870d71978bd078d772d4fd',1,'invertLocal(int nSpace, double A[3][3], double AI[3][3]):&#160;postprocessing.c'],['../group__postprocessing.html#ga00965e19890430498237472db27a6351',1,'invertLocal(int nSpace, double(*A)[3], double(*AI)[3]):&#160;postprocessing.h']]],
   ['invertlocal3d',['invertLocal3d',['../time_integration_8c.html#acbdcb13dc5b1cff08ffd02dd955c83c4',1,'timeIntegration.c']]],
   ['isempty',['isEmpty',['../class_stupid_heap.html#a2512dac26048e4472797f6cef0c9b2bc',1,'StupidHeap']]],
+  ['isinsimplex',['isInSimplex',['../_error_residual_method_8cpp.html#afbe6f873976d7af4352302469356752b',1,'ErrorResidualMethod.cpp']]],
+  ['isintet',['isInTet',['../_error_residual_method_8cpp.html#a3f88ee3310d7b6dcb71aba7826c37acd',1,'ErrorResidualMethod.cpp']]],
   ['iswhitespace',['iswhitespace',['../namespace_i_outils.html#ac2895e8f2e806e6d06500829ccdf365a',1,'IOutils']]]
 ];

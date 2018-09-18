@@ -1,5 +1,6 @@
 var searchData=
 [
   ['ddata',['DDATA',['../cfmmfsw_module_8cpp.html#af448d1565e47e1b3e486e93348f423e1',1,'DDATA():&#160;cfmmfswModule.cpp'],['../cpostprocessing_module_8c.html#af448d1565e47e1b3e486e93348f423e1',1,'DDATA():&#160;cpostprocessingModule.c'],['../csmoothers_module_8c.html#af448d1565e47e1b3e486e93348f423e1',1,'DDATA():&#160;csmoothersModule.c'],['../c_subsurface_transport_coefficients_module_8cpp.html#af448d1565e47e1b3e486e93348f423e1',1,'DDATA():&#160;cSubsurfaceTransportCoefficientsModule.cpp'],['../c_twophase_darcy_coefficients_module_8cpp.html#af448d1565e47e1b3e486e93348f423e1',1,'DDATA():&#160;cTwophaseDarcyCoefficientsModule.cpp'],['../flcbdf_wrappers_module_8cpp.html#af448d1565e47e1b3e486e93348f423e1',1,'DDATA():&#160;flcbdfWrappersModule.cpp'],['../superlu_wrappers_module_8c.html#af448d1565e47e1b3e486e93348f423e1',1,'DDATA():&#160;superluWrappersModule.c'],['../test_stuff_impl_module_8c.html#af448d1565e47e1b3e486e93348f423e1',1,'DDATA():&#160;testStuffImplModule.c']]],
-  ['debug_5frefine',['DEBUG_REFINE',['../mesh_8cpp.html#a8f06099f39f6296ef286875bf2a8b147',1,'mesh.cpp']]]
+  ['debug_5frefine',['DEBUG_REFINE',['../mesh_8cpp.html#a8f06099f39f6296ef286875bf2a8b147',1,'mesh.cpp']]],
+  ['default_5felement_5fmaterial',['DEFAULT_ELEMENT_MATERIAL',['../_mesh_converter_8cpp.html#a750523a6333b98c899b96a92b649ae80',1,'MeshConverter.cpp']]]
 ];

@@ -1,0 +1,7 @@
+proteus.defaults module
+=======================
+
+.. automodule:: proteus.defaults
+    :members:
+    :undoc-members:
+    :show-inheritance:

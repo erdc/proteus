@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.SubsurfaceTransportCoefficients module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.SubsurfaceTransportCoefficients module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,8 +127,8 @@
   <div class="section" id="module-proteus.SubsurfaceTransportCoefficients">
 <span id="proteus-subsurfacetransportcoefficients-module"></span><h1>proteus.SubsurfaceTransportCoefficients module<a class="headerlink" href="#module-proteus.SubsurfaceTransportCoefficients" title="Permalink to this headline">¶</a></h1>
 <p>TransportCoefficients for flow and transport in porous media</p>
-<object data="../_images/inheritance-94d5317abb4e8275f53e226ac688231e656ed1b8.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.SubsurfaceTransportCoefficients</p></object>
+<div class="graphviz"><object data="../_images/inheritance-94d5317abb4e8275f53e226ac688231e656ed1b8.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.SubsurfaceTransportCoefficients</p></object></div>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.BlockHeterogeneousCoefficients">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">BlockHeterogeneousCoefficients</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.BlockHeterogeneousCoefficients" title="Permalink to this definition">¶</a></dt>
@@ -161,8 +149,8 @@ global element boundary</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.SinglePhaseDarcyCoefficients">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">SinglePhaseDarcyCoefficients</code><span class="sig-paren">(</span><em>K_types</em>, <em>source_types</em>, <em>S_s_types=None</em>, <em>nc=1</em>, <em>nd=2</em>, <em>timeVaryingCoefficients=False</em>, <em>materialValuesLocallyConstant=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.SinglePhaseDarcyCoefficients" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
-<p><span class="math">\(S_s h_t -\deld ( K_i(x,t) \grad h_i ) + r(x,t) = 0 i=1,nc\)</span></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<p><span class="math notranslate nohighlight">\(S_s h_t -\deld ( K_i(x,t) \grad h_i ) + r(x,t) = 0 i=1,nc\)</span></p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.SinglePhaseDarcyCoefficients.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.SinglePhaseDarcyCoefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
@@ -213,8 +201,8 @@ global element boundary</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.ConservativeHeadRichardsMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">ConservativeHeadRichardsMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>gravity</em>, <em>density</em>, <em>beta</em>, <em>diagonal_conductivity=True</em>, <em>getSeepageFace=None</em>, <em>pc_eps=1e-08</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.ConservativeHeadRichardsMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
-<p>version of Re where element material type id&#8217;s used in evals</p>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<p>version of Re where element material type id’s used in evals</p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.ConservativeHeadRichardsMualemVanGenuchten.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.ConservativeHeadRichardsMualemVanGenuchten.initializeMesh" title="Permalink to this definition">¶</a></dt>
@@ -243,13 +231,13 @@ global element boundary</p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.ConservativeHeadRichardsMualemVanGenuchten.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2">
 <code class="descname">conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.ConservativeHeadRichardsMualemVanGenuchten.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate the coefficients  of Richards&#8217; equation</p>
+<dd><p>evaluate the coefficients  of Richards’ equation</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.ConservativeHeadRichardsMualemVanGenuchten.conservativeHeadRichardsMualemVanGenuchten_sd_het">
 <code class="descname">conservativeHeadRichardsMualemVanGenuchten_sd_het</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.ConservativeHeadRichardsMualemVanGenuchten.conservativeHeadRichardsMualemVanGenuchten_sd_het" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate the coefficients  of Richards&#8217; equation for block heterogeneity with sparse diffusion rep for hydraulic conductivity</p>
+<dd><p>evaluate the coefficients  of Richards’ equation for block heterogeneity with sparse diffusion rep for hydraulic conductivity</p>
 </dd></dl>
 
 </dd></dl>
@@ -257,9 +245,9 @@ global element boundary</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.RE_NCP1_OneLevelTransport">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">RE_NCP1_OneLevelTransport</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressFluxBoundaryConditionsSetterDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='defaultName'</em>, <em>reuse_trial_and_test_quadrature=False</em>, <em>sd=True</em>, <em>movingDomain=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.RE_NCP1_OneLevelTransport" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
 <p>OneLevelTransport designed specifically for Non-Conforming
-<span class="math">\(P^1\)</span> approximation to RE Approximation uses nodal
+<span class="math notranslate nohighlight">\(P^1\)</span> approximation to RE Approximation uses nodal
 quadrature and upwinding</p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.RE_NCP1_OneLevelTransport.calculateElementCoefficients">
@@ -283,16 +271,16 @@ nodes include interpolation points explicitly here now</p>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcyFlow_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, diagonal_conductivity=True, nPSKsplineKnots=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcyFlow_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, diagonal_conductivity=True, nPSKsplineKnots=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <dl class="attribute">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base.default_density_w_parameters">
-<code class="descname">default_density_w_parameters</code><em class="property"> = {'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base.default_density_w_parameters" title="Permalink to this definition">¶</a></dt>
+<code class="descname">default_density_w_parameters</code><em class="property"> = {'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base.default_density_w_parameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base.default_density_n_parameters">
-<code class="descname">default_density_n_parameters</code><em class="property"> = {'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base.default_density_n_parameters" title="Permalink to this definition">¶</a></dt>
+<code class="descname">default_density_n_parameters</code><em class="property"> = {'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base.default_density_n_parameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -341,10 +329,10 @@ nodes include interpolation points explicitly here now</p>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_fc</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, diagonal_conductivity=True, spatialCompressibilityFlag=0, nPSKsplineKnots=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_fc</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, diagonal_conductivity=True, spatialCompressibilityFlag=0, nPSKsplineKnots=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
 <p>continuity equation for each phase</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\pd{m_w}{t} - \deld (   en{a}_w \grad \phi_w) + r_w = 0
 \pd{m_n}{t} - \deld (   en{a}_n \grad \phi_n) + r_n = 0\]</div>
 <dl class="method">
@@ -363,28 +351,28 @@ nodes include interpolation points explicitly here now</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.FullyCoupledMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">FullyCoupledMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>density_w_params</em>, <em>density_n_params</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>use_spline=False</em>, <em>nPSKsplineKnots=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.FullyCoupledMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc</span></code></a></p>
 <p>Formulation using phase continuity equations and Van-Genuchten
 Mualem psk relations</p>
 <p>Basically a convenience wrapper for fully coupled approximation
-with volume-fraction based inputs as in Richards&#8217; equation
+with volume-fraction based inputs as in Richards’ equation
 formulations</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.FullyCoupledSimplePSKs">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">FullyCoupledSimplePSKs</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>density_w_params</em>, <em>density_n_params</em>, <em>diagonal_conductivity=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.FullyCoupledSimplePSKs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc</span></code></a></p>
-<p>Formulation using phase continuity equations and &#8216;simp&#8217; quadratic
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc</span></code></a></p>
+<p>Formulation using phase continuity equations and ‘simp’ quadratic
 rel-perm, linear capillary pressure psk relations</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_fc_pp</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, diagonal_conductivity=True, nPSKsplineKnots=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_fc_pp</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, diagonal_conductivity=True, nPSKsplineKnots=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
 <p>continuity equation for each phase</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\pd{m_w}{t} - \deld (     en{a}_w \grad \phi_w) + r_w = 0
 \pd{m_n}{t} - \deld (     en{a}_n \grad \phi_n) + r_n = 0\]</div>
 <dl class="method">
@@ -423,30 +411,30 @@ rel-perm, linear capillary pressure psk relations</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.FullyCoupledPressurePressureMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">FullyCoupledPressurePressureMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>density_w_params</em>, <em>density_n_params</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>use_spline=False</em>, <em>nPSKsplineKnots=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.FullyCoupledPressurePressureMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp</span></code></a></p>
 <p>Formulation using phase continuity equations, pressure-pressure
 formulation and Van-Genuchten Mualem psk relations</p>
 <p>Basically a convenience wrapper for fully coupled approximation
-with volume-fraction based inputs as in Richards&#8217; equation
+with volume-fraction based inputs as in Richards’ equation
 formulations</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.FullyCoupledPressurePressureSimplePSKs">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">FullyCoupledPressurePressureSimplePSKs</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>density_w_params</em>, <em>density_n_params</em>, <em>diagonal_conductivity=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.FullyCoupledPressurePressureSimplePSKs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp</span></code></a></p>
-<p>Formulation using phase continuity equations and &#8216;simp&#8217; quadratic
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_fc_pp</span></code></a></p>
+<p>Formulation using phase continuity equations and ‘simp’ quadratic
 rel-perm, linear capillary pressure psk relations
 pressure-pressure formulation</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_split_pressure_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nSatModel=1, diagonal_conductivity=True, swConstant=1.0, capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
-<p>Base class for &#8216;pressure&#8217; or total flow conservation equation in
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_split_pressure_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nSatModel=1, diagonal_conductivity=True, swConstant=1.0, capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<p>Base class for ‘pressure’ or total flow conservation equation in
 fractional flow formulations. This</p>
-<p>The primary functionality of the base class is to handle synchronization with a &#8216;saturation&#8217; model to
+<p>The primary functionality of the base class is to handle synchronization with a ‘saturation’ model to
 get the saturation, S_w, and capillary pressure (head), psi_c, variables</p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base.attachModels">
@@ -477,12 +465,12 @@ get the saturation, S_w, and capillary pressure (head), psi_c, variables</p>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_split_saturation_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nPressModel=0, diagonal_conductivity=True, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_split_saturation_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nPressModel=0, diagonal_conductivity=True, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
 <p>Base class for aqueous phase mass conservation equation
 (saturation equation) in a fractional flow formulation.</p>
 <p>The primary responsibility of the base class is to handle
-synchronization with the &#8216;pressure&#8217; equation to get the total flow
+synchronization with the ‘pressure’ equation to get the total flow
 velocity variable, q_t, and aqueous phase pressure head, psi_w</p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base.attachModels">
@@ -514,7 +502,7 @@ velocity variable, q_t, and aqueous phase pressure head, psi_w</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_incompressible_split_pressure</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, psk_model='VGM', nMaterialTypes=1, nSatModel=1, diagonal_conductivity=True, swConstant=1.0, capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base</span></code></a></p>
 <p>Total flow conservation equation in an incompressible fractional
 flow formulation</p>
 <dl class="method">
@@ -533,7 +521,7 @@ flow formulation</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_incompressible_split_saturation</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, psk_model='VGM', nMaterialTypes=1, nPressModel=0, diagonal_conductivity=True, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base</span></code></a></p>
 <p>Aqueous phase mass conservation equation (saturation equation) in
 an incompressible fractional flow formulation</p>
 <dl class="method">
@@ -551,8 +539,8 @@ an incompressible fractional flow formulation</p>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_compressible_split_pressure</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nSatModel=1, compressibilityFlag=2, diagonal_conductivity=True, swConstant=1.0, capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_compressible_split_pressure</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nSatModel=1, compressibilityFlag=2, diagonal_conductivity=True, swConstant=1.0, capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pressure_base</span></code></a></p>
 <p>Total flow conservation equation in a split compressible
 fractional flow formulation Right now, the options are</p>
 <p>compressibility for the non-wetting phase (compressibleN) :
@@ -581,8 +569,8 @@ compressiblityFlag=2</p>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_compressible_split_saturation</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nPressModel=0, compressibilityFlag=2, diagonal_conductivity=True, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_compressible_split_saturation</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nPressModel=0, compressibilityFlag=2, diagonal_conductivity=True, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_saturation_base</span></code></a></p>
 <p>Aqueous phase mass conservation equation (saturation equation) in a
 compressible fractional flow formulation</p>
 <p>Right now, the options are</p>
@@ -612,13 +600,13 @@ compressiblityFlag=2</p>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_split_pp_pressure_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nSatModel=1, diagonal_conductivity=True, swConstant=1.0, capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
-<p>Base class for &#8216;pressure&#8217; or total flow conservation equation in
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_split_pp_pressure_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nSatModel=1, diagonal_conductivity=True, swConstant=1.0, capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<p>Base class for ‘pressure’ or total flow conservation equation in
 fractional flow formulations. This</p>
 <p>The primary functionality of the base class is to handle
-synchronization with a &#8216;saturation&#8217; model to get the saturation,
-<span class="math">\(S_w\)</span>, and capillary pressure (head), <span class="math">\(\psi_c\)</span>, variables</p>
+synchronization with a ‘saturation’ model to get the saturation,
+<span class="math notranslate nohighlight">\(S_w\)</span>, and capillary pressure (head), <span class="math notranslate nohighlight">\(\psi_c\)</span>, variables</p>
 <p>This version would allow for capillary pressure to be unknown for
 saturation equation</p>
 <dl class="method">
@@ -650,13 +638,13 @@ saturation equation</p>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_split_pp_saturation_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 998.2}, density_n_parameters={'psi_0': 0.0, 'model': 'Exponential', 'beta': 0.0, 'nParameters': 3, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nPressModel=0, diagonal_conductivity=True, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_split_pp_saturation_base</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, density_w_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 998.2}, density_n_parameters={'beta': 0.0, 'model': 'Exponential', 'nParameters': 3, 'psi_0': 0.0, 'rho_0': 1.205}, psk_model='VGM', nMaterialTypes=1, nPressModel=0, diagonal_conductivity=True, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
 <p>Base class for aqueous phase mass conservation equation
 (saturation equation) in a fractional flow formulation.</p>
 <p>The primary responsibility of the base class is to handle
-synchronization with the &#8216;pressure&#8217; equation to get the total flow
-velocity variable, <span class="math">\(q_t\)</span>, and aqueous phase pressure head, <span class="math">\(psi_w\)</span></p>
+synchronization with the ‘pressure’ equation to get the total flow
+velocity variable, <span class="math notranslate nohighlight">\(q_t\)</span>, and aqueous phase pressure head, <span class="math notranslate nohighlight">\(psi_w\)</span></p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base.attachModels" title="Permalink to this definition">¶</a></dt>
@@ -687,7 +675,7 @@ velocity variable, <span class="math">\(q_t\)</span>, and aqueous phase pressure
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_pressure">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_incompressible_split_pp_pressure</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, psk_model='VGM', nMaterialTypes=1, nSatModel=1, diagonal_conductivity=True, swConstant=1.0, capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_pressure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_pressure_base</span></code></a></p>
 <p>Total flow conservation equation in an incompressible fractional
 flow formulation</p>
 <dl class="method">
@@ -706,7 +694,7 @@ flow formulation</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_saturation">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">TwophaseDarcy_incompressible_split_pp_saturation</code><span class="sig-paren">(</span><em>nd=1, dimensionless_gravity=[-1.0], density_w=998.2, density_n=1.205, viscosity_w=0.00089, viscosity_n=1.81e-05, psk_model='VGM', nMaterialTypes=1, nPressModel=0, diagonal_conductivity=True, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_saturation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_split_pp_saturation_base</span></code></a></p>
 <p>Aqueous phase mass conservation equation (saturation equation) in
 an incompressible fractional flow formulation</p>
 <dl class="method">
@@ -725,25 +713,25 @@ an incompressible fractional flow formulation</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowPressureMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">IncompressibleFractionalFlowPressureMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>nSatModel=1</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>swConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowPressureMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure</span></code></a></p>
 <p>Total flow equation coefficients for incompressible flow assuming
-Mualem-Van Genuchten psk&#8217;s</p>
+Mualem-Van Genuchten psk’s</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">IncompressibleFractionalFlowSaturationMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>nPressModel=1</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>qScalarConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em>, <em>advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation</span></code></a></p>
 <p>Saturation equation coefficients for incompressible flow assuming
-Mualem-Van Genuchten psk&#8217;s</p>
+Mualem-Van Genuchten psk’s</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>nPressModel=1</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>qScalarConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em>, <em>advectionScaling=1.0</em>, <em>satModelIndex_me=1</em>, <em>satModelIndex_other=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchten" title="proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchten"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchten</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchten" title="proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchten"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchten</span></code></a></p>
 <p>Saturation equation coefficients for incompressible flow assuming
-Mualem-Van Genuchten psk&#8217;s and splitting of advection and
+Mualem-Van Genuchten psk’s and splitting of advection and
 capillary diffusion terms</p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff.attachModels">
@@ -760,55 +748,55 @@ capillary diffusion terms</p>
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.CompressibleFractionalFlowPressureMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">CompressibleFractionalFlowPressureMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>density_w_parameters</em>, <em>density_n_parameters</em>, <em>nSatModel=1</em>, <em>compressibilityFlag=2</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>swConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.CompressibleFractionalFlowPressureMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_pressure</span></code></a></p>
 <p>Total flow equation coefficients for slight compressible flow
-assuming Mualem-Van Genuchten psk&#8217;s</p>
+assuming Mualem-Van Genuchten psk’s</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.CompressibleFractionalFlowSaturationMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">CompressibleFractionalFlowSaturationMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>density_w_parameters</em>, <em>density_n_parameters</em>, <em>nPressModel=1</em>, <em>compressibilityFlag=2</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>qScalarConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em>, <em>advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.CompressibleFractionalFlowSaturationMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_compressible_split_saturation</span></code></a></p>
 <p>Saturation equation coefficients for slightly compressible flow
-assuming Mualem-Van Genuchten psk&#8217;s</p>
+assuming Mualem-Van Genuchten psk’s</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowPressureSimplePSKs">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">IncompressibleFractionalFlowPressureSimplePSKs</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>nSatModel=1</em>, <em>diagonal_conductivity=True</em>, <em>swConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowPressureSimplePSKs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pressure</span></code></a></p>
 <p>Total flow equation coefficients for incompressible flow assuming
-&#8216;simp&#8217; quadratic rel-perm, linear capillary pressure psk relations</p>
+‘simp’ quadratic rel-perm, linear capillary pressure psk relations</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationSimplePSKs">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">IncompressibleFractionalFlowSaturationSimplePSKs</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>nPressModel=1</em>, <em>diagonal_conductivity=True</em>, <em>qScalarConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em>, <em>advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.IncompressibleFractionalFlowSaturationSimplePSKs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_saturation</span></code></a></p>
 <p>Saturation equation coefficients for incompressible flow assuming
-&#8216;simp&#8217; quadratic rel-perm, linear capillary pressure psk relations</p>
+‘simp’ quadratic rel-perm, linear capillary pressure psk relations</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>nSatModel=1</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>swConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_pressure" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_pressure"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_pressure</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_pressure" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_pressure"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_pressure</span></code></a></p>
 <p>Total flow equation coefficients for incompressible flow assuming
-Mualem-Van Genuchten psk&#8217;s</p>
+Mualem-Van Genuchten psk’s</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten">
 <em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten</code><span class="sig-paren">(</span><em>nd</em>, <em>Ksw_types</em>, <em>vgm_n_types</em>, <em>vgm_alpha_types</em>, <em>thetaR_types</em>, <em>thetaSR_types</em>, <em>dimensionless_gravity</em>, <em>density_w</em>, <em>density_n</em>, <em>viscosity_w</em>, <em>viscosity_n</em>, <em>nPressModel=1</em>, <em>diagonal_conductivity=True</em>, <em>vgm_small_eps=1e-16</em>, <em>vgm_ns_del=1e-08</em>, <em>qScalarConstant=1.0</em>, <em>capillaryDiffusionScaling=1.0</em>, <em>advectionScaling=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_saturation" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_saturation"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_saturation</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_saturation" title="proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_saturation"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.TwophaseDarcy_incompressible_split_pp_saturation</span></code></a></p>
 <p>Saturation equation coefficients for incompressible flow assuming
-Mualem-Van Genuchten psk&#8217;s</p>
+Mualem-Van Genuchten psk’s</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.GroundwaterTransportCoefficients">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">GroundwaterTransportCoefficients</code><span class="sig-paren">(</span><em>nc=1</em>, <em>nd=2</em>, <em>omega_types=array([ 0.3])</em>, <em>alpha_L_types=array([ 1.])</em>, <em>alpha_T_types=array([ 0.1])</em>, <em>d=array([  1.30000000e-09])</em>, <em>meModelId=0</em>, <em>flowModelId=None</em>, <em>velocityFunctions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.GroundwaterTransportCoefficients" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">GroundwaterTransportCoefficients</code><span class="sig-paren">(</span><em>nc=1</em>, <em>nd=2</em>, <em>omega_types=array([0.3])</em>, <em>alpha_L_types=array([1.])</em>, <em>alpha_T_types=array([0.1])</em>, <em>d=array([1.3e-09])</em>, <em>meModelId=0</em>, <em>flowModelId=None</em>, <em>velocityFunctions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.GroundwaterTransportCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.GroundwaterTransportCoefficients.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.GroundwaterTransportCoefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
@@ -854,14 +842,8 @@ Mualem-Van Genuchten psk&#8217;s</p>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">MultiphaseGroundwaterTransportCoefficients</code><span class="sig-paren">(</span><em>nc=1</em>, <em>nd=2</em>, <em>omega_types=array([ 0.3])</em>, <em>alpha_L_types=array([ 1.])</em>, <em>alpha_T_types=array([ 0.1])</em>, <em>d=array([  1.30000000e-09])</em>, <em>meModelId=0</em>, <em>flowModelId=None</em>, <em>velocityFunctions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
-<dl class="method">
-<dt id="proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients.variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat">
-<code class="descname">variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients.variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate  the coefficients of linear advective-diffusion transport in variably saturated porous media</p>
-</dd></dl>
-
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">MultiphaseGroundwaterTransportCoefficients</code><span class="sig-paren">(</span><em>nc=1</em>, <em>nd=2</em>, <em>omega_types=array([0.3])</em>, <em>alpha_L_types=array([1.])</em>, <em>alpha_T_types=array([0.1])</em>, <em>d=array([1.3e-09])</em>, <em>meModelId=0</em>, <em>flowModelId=None</em>, <em>velocityFunctions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
@@ -897,12 +879,18 @@ Mualem-Van Genuchten psk&#8217;s</p>
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients.variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat">
+<code class="descname">variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients.variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of linear advective-diffusion transport in variably saturated porous media</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubsurfaceTransportCoefficients.VariablySaturatedGroundwaterEnergyTransportCoefficients">
-<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">VariablySaturatedGroundwaterEnergyTransportCoefficients</code><span class="sig-paren">(</span><em>nc=1</em>, <em>nd=2</em>, <em>density_w=998.2</em>, <em>density_n=1.205</em>, <em>specificHeat_w=0.04882</em>, <em>specificHeat_n=0.01446</em>, <em>omega_types=array([ 0.3])</em>, <em>alpha_L_types=array([ 1.])</em>, <em>alpha_T_types=array([ 0.1])</em>, <em>d=array([  1.30000000e-09])</em>, <em>density_s_types=array([ 2725.086])</em>, <em>specificHeat_s_types=array([ 0.004167])</em>, <em>lambda_sat_types=array([ 0.58])</em>, <em>lambda_dry_types=array([ 0.3])</em>, <em>lambda_ani_types=array([ 1.</em>, <em>1.</em>, <em>1.])</em>, <em>meModelId=0</em>, <em>flowModelId=None</em>, <em>velocityFunctions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.VariablySaturatedGroundwaterEnergyTransportCoefficients" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients" title="proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.SubsurfaceTransportCoefficients.</code><code class="descname">VariablySaturatedGroundwaterEnergyTransportCoefficients</code><span class="sig-paren">(</span><em>nc=1</em>, <em>nd=2</em>, <em>density_w=998.2</em>, <em>density_n=1.205</em>, <em>specificHeat_w=0.04882</em>, <em>specificHeat_n=0.01446</em>, <em>omega_types=array([0.3])</em>, <em>alpha_L_types=array([1.])</em>, <em>alpha_T_types=array([0.1])</em>, <em>d=array([1.3e-09])</em>, <em>density_s_types=array([2725.086])</em>, <em>specificHeat_s_types=array([0.004167])</em>, <em>lambda_sat_types=array([0.58])</em>, <em>lambda_dry_types=array([0.3])</em>, <em>lambda_ani_types=array([1.</em>, <em>1.</em>, <em>1.])</em>, <em>meModelId=0</em>, <em>flowModelId=None</em>, <em>velocityFunctions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.VariablySaturatedGroundwaterEnergyTransportCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients" title="proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubsurfaceTransportCoefficients.MultiphaseGroundwaterTransportCoefficients</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubsurfaceTransportCoefficients.VariablySaturatedGroundwaterEnergyTransportCoefficients.variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat">
 <code class="descname">variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubsurfaceTransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubsurfaceTransportCoefficients.VariablySaturatedGroundwaterEnergyTransportCoefficients.variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat" title="Permalink to this definition">¶</a></dt>
@@ -931,7 +919,7 @@ Mualem-Van Genuchten psk&#8217;s</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

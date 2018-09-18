@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.Context module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.Context module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -102,7 +90,7 @@
               
                 
   <li>
-    <a href="proteus.Comm.html" title="Previous Chapter: proteus.Comm module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Comm ...</span>
+    <a href="proteus.Comm.html" title="Previous Chapter: proteus.Comm module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Comm module</span>
     </a>
   </li>
   <li>
@@ -140,12 +128,12 @@
 <span id="proteus-context-module"></span><h1>proteus.Context module<a class="headerlink" href="#module-proteus.Context" title="Permalink to this headline">¶</a></h1>
 <p>Support for a global user context</p>
 <p>Sub-models in multi-physics simulations sometimes need to be consistent
-with other sub-models through certain &#8220;global&#8221; information. This model
+with other sub-models through certain “global” information. This model
 provides methods for setting and getting such a global user context.
 It also alows declaring input options to the user context that can be
 set from the command line.</p>
 <p>Example (set the global context from an object):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#create a simple context class</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#create a simple context class</span>
 <span class="n">globalSettings</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;nnx&quot;</span><span class="p">:</span><span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span><span class="mf">10.0</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="o">=</span><span class="mf">9.8</span><span class="p">}</span>
 <span class="n">MyContext</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;MyContext&quot;</span><span class="p">,</span><span class="n">globalSettings</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 <span class="c1">#set the global  context  object</span>
@@ -153,12 +141,12 @@ set from the command line.</p>
 </pre></div>
 </div>
 <p>Example (set the global context from a module):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">globalSettingsModule</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">globalSettingsModule</span>
 <span class="n">proteus</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">setFromModule</span><span class="p">(</span><span class="n">globalSettingsModule</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example (use the global context):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ct</span> <span class="o">=</span> <span class="n">proteus</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ct</span> <span class="o">=</span> <span class="n">proteus</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 <span class="n">nnx</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">nnx</span>
 </pre></div>
 </div>
@@ -195,7 +183,7 @@ from proteus.LinearAlgebraToptions object (named tuple)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>optionsList</strong> &#8211; An iteratble of options tuples. Each option is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>optionsList</strong> – An iterable of options tuples. Each option is
 a 3-tuple, with the first entry the option
 name string, the second entry the default
 value, and the third entry a help string</td>
@@ -203,7 +191,7 @@ value, and the third entry a help string</td>
 </tbody>
 </table>
 <p>Example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">opts</span><span class="o">=</span><span class="n">Context</span><span class="o">.</span><span class="n">Options</span><span class="p">([(</span><span class="s2">&quot;nnx&quot;</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;number of mesh nodes in x-direction&quot;</span><span class="p">),</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">opts</span><span class="o">=</span><span class="n">Context</span><span class="o">.</span><span class="n">Options</span><span class="p">([(</span><span class="s2">&quot;nnx&quot;</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;number of mesh nodes in x-direction&quot;</span><span class="p">),</span>
                       <span class="p">(</span><span class="s2">&quot;nny&quot;</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="s2">&quot;number of mesh nodes in y-direction&quot;</span><span class="p">])</span>
 <span class="n">nnx</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">nnx</span>
 <span class="n">nny</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">nny</span>
@@ -226,7 +214,7 @@ value, and the third entry a help string</td>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.Gauges module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.Gauges module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -140,8 +128,8 @@
 <span id="proteus-gauges-module"></span><h1>proteus.Gauges module<a class="headerlink" href="#module-proteus.Gauges" title="Permalink to this headline">¶</a></h1>
 <p>Auxiliary variable classes for storing solutions at points and
 along lines to mimic gauges in lab and field experiments.</p>
-<object data="../_images/inheritance-e9e08121212a3f872c12fc8a9ce0e23a0244c369.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.Gauges</p></object>
+<div class="graphviz"><object data="../_images/inheritance-e9e08121212a3f872c12fc8a9ce0e23a0244c369.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.Gauges</p></object></div>
 <dl class="function">
 <dt id="proteus.Gauges.PointGauges">
 <code class="descclassname">proteus.Gauges.</code><code class="descname">PointGauges</code><span class="sig-paren">(</span><em>gauges</em>, <em>activeTime=None</em>, <em>sampleRate=0</em>, <em>fileName='point_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.PointGauges" title="Permalink to this definition">¶</a></dt>
@@ -151,7 +139,7 @@ as CSV data to the requested file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> – An iterable of “gauges”.  Each gauge is specified
 by a 2-tuple, with the first element in the tuple a
 set of fields to be monitored, and the second
 element a tuple of the 3-space representations of
@@ -161,7 +149,7 @@ the gauge locations.</td>
 </table>
 <p>See the Gauges class for an explanation of the other parameters.</p>
 <p>Example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PointGauges</span><span class="p">(</span><span class="n">gauges</span><span class="o">=</span><span class="p">(((</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">),</span> <span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">))),</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PointGauges</span><span class="p">(</span><span class="n">gauges</span><span class="o">=</span><span class="p">(((</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">),</span> <span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">))),</span>
                        <span class="p">((</span><span class="s1">&#39;p&#39;</span><span class="p">,),</span> <span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">),))),</span>
                 <span class="n">activeTime</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span>
                 <span class="n">sampleRate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
@@ -186,7 +174,7 @@ each line.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> – An iterable of “gauges”.  Each gauge is specified
 by a 2-tuple, with the first element in the tuple a
 set of fields to be monitored, and the second
 element a list of pairs of endpoints of the gauges
@@ -206,7 +194,7 @@ serialized as CSV data to the requested file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> – An iterable of “gauges”.  Each gauge is specified
 by a 2-tuple, with the first element in the tuple a
 set of fields to be monitored, and the second
 element a list of pairs of endpoints of the gauges
@@ -220,7 +208,7 @@ in 3-space representation.</td>
 <dl class="class">
 <dt id="proteus.Gauges.Gauges">
 <em class="property">class </em><code class="descclassname">proteus.Gauges.</code><code class="descname">Gauges</code><span class="sig-paren">(</span><em>fields</em>, <em>activeTime=None</em>, <em>sampleRate=0</em>, <em>fileName='gauges.csv'</em>, <em>points=None</em>, <em>lines=None</em>, <em>integrate=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.Gauges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.AV_base" title="proteus.AuxiliaryVariables.AV_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AuxiliaryVariables.AV_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.AV_base" title="proteus.AuxiliaryVariables.AV_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AuxiliaryVariables.AV_base</span></code></a></p>
 <p>Monitor fields at specific values.</p>
 <p>This class provides a generic point-wise and line-integral monitor
 that can be instantiated and attached to Proteus simulations by
@@ -232,9 +220,9 @@ defined over a given time and sample rate, and a filename is also
 supplied.  All results are serialized to a CSV file.</p>
 <p>Parallel Implementation Notes: After the gauge has been attached,
 all processes are partitioned into Gauge Owners and non-Gauge
-Owners.  The calculate method is a &#8220;no-op&#8221; for non-Owners.  For
+Owners.  The calculate method is a “no-op” for non-Owners.  For
 Gauge Owners, all values are computed individually, then
-collectively transmitted to the &#8220;root&#8221; process, which is the only
+collectively transmitted to the “root” process, which is the only
 process responsible for serializing gauge results to disk.  This
 code has not been aggressively vetted for parallel correctness or
 scalability.</p>
@@ -245,17 +233,17 @@ CSV data to the requested file.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>activeTime</strong> &#8211; If not None, a 2-tuple of start time and
+<li><strong>activeTime</strong> – If not None, a 2-tuple of start time and
 end time for which the point gauge is
 active.</li>
-<li><strong>sampleRate</strong> &#8211; The intervals at which samples should be
+<li><strong>sampleRate</strong> – The intervals at which samples should be
 measured.  Note that this is a rough lower
 bound, and that the gauge values could be
 computed less frequently depending on the
 time integrator.  The default value of zero
 computes the gauge values at every time
 step.</li>
-<li><strong>fileName</strong> &#8211; The name of the file to serialize results to.</li>
+<li><strong>fileName</strong> – The name of the file to serialize results to.</li>
 </ul>
 </td>
 </tr>
@@ -285,7 +273,7 @@ process</p>
 process for monitoring information about this location, as
 well as the node on the process closest to the location.</p>
 <p>Returns a 2-tuple containing an identifier for the closest
-&#8216;owning&#8217; process as well as the local ids of the node and
+‘owning’ process as well as the local ids of the node and
 nearest element.</p>
 </dd></dl>
 
@@ -408,7 +396,7 @@ length_segments - a pair of intersections augmented by length</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

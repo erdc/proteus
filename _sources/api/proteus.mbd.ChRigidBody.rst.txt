@@ -1,0 +1,7 @@
+proteus.mbd.ChRigidBody module
+==============================
+
+.. automodule:: proteus.mbd.ChRigidBody
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,7 +1,0 @@
-proteus.config.centos module
-============================
-
-.. automodule:: proteus.config.centos
-    :members:
-    :undoc-members:
-    :show-inheritance:

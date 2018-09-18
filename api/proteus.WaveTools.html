@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.WaveTools module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.WaveTools module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -136,9 +124,9 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="proteus-wavetools-module">
-<h1>proteus.WaveTools module<a class="headerlink" href="#proteus-wavetools-module" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-proteus.WaveTools"></span><p>Tools for working with water waves.</p>
+  <div class="section" id="module-proteus.WaveTools">
+<span id="proteus-wavetools-module"></span><h1>proteus.WaveTools module<a class="headerlink" href="#module-proteus.WaveTools" title="Permalink to this headline">¶</a></h1>
+<p>Tools for working with water waves.</p>
 <p>The primary objective of this module is to provide solutions (exact and
 approximate) for the free surface deformation and subsurface velocity
 components of water waves. These can be used as boundary conditions, wave
@@ -152,9 +140,9 @@ generation sources, and validation solutions for numerical wave codes.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>U</strong> (<em>numpy.ndarray</em>) &#8211; Current velocity in vector form</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>rampTime</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Ramp time for current</li>
+<li><strong>U</strong> (<em>numpy.ndarray</em>) – Current velocity in vector form</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>rampTime</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Ramp time for current</li>
 </ul>
 </td>
 </tr>
@@ -205,20 +193,20 @@ generation sources, and validation solutions for numerical wave codes.</p>
 <dl class="class">
 <dt id="proteus.WaveTools.SolitaryWave">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">SolitaryWave</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SolitaryWave" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class is used for generating 1st order solitary wave</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>waveHeight</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Regular wave height</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>g</strong> (<em>numpy.ndarray</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) &#8211; Wave direction in vector form</li>
-<li><strong>trans</strong> (<em>numpy.ndarray</em>) &#8211; Position vector of the peak</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for optimised functions</li>
+<li><strong>waveHeight</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Regular wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>g</strong> (<em>numpy.ndarray</em>) – Gravitational acceleration vector</li>
+<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) – Wave direction in vector form</li>
+<li><strong>trans</strong> (<em>numpy.ndarray</em>) – Position vector of the peak</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -243,6 +231,11 @@ generation sources, and validation solutions for numerical wave codes.</p>
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.SolitaryWave.mwl">
+<code class="descname">mwl</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SolitaryWave.mwl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.WaveTools.SolitaryWave.u">
@@ -269,27 +262,46 @@ generation sources, and validation solutions for numerical wave codes.</p>
 <dl class="class">
 <dt id="proteus.WaveTools.MonochromaticWaves">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">MonochromaticWaves</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.MonochromaticWaves" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class is used for generating regular waves in both linear and nonlinear regimes. See Dean and Dalrymple 1994 for equations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>period</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Regular wave period</li>
-<li><strong>waveHeight</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Regular wave height</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>g</strong> (<em>numpy.ndarray</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) &#8211; Wave direction in vector form</li>
-<li><strong>wavelength</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Regular wave lenght, calculated from linear dispersion if set to None</li>
-<li><strong>waveType</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Defines regular wave theory (&#8220;Linear&#8221; or &#8220;Fenton&#8221;)</li>
-<li><strong>Ycoeff</strong> (<em>numpy.ndarray</em>) &#8211; Fenton Fourier coefficients for free-surface elevation</li>
-<li><strong>Bcoeff</strong> (<em>numpy.ndarray</em>) &#8211; Fenton Fourier coefficients for velocity (set to None for linear wave theory)</li>
-<li><strong>Nf</strong> (<em>integer</em>) &#8211; Fenton Fourier components for reconstruction (set to 1000, needs to be equal to the size of Bcoeff and Ycoeff)</li>
-<li><strong>meanVelocity</strong> (<em>numpy.ndarray</em>) &#8211; Mean velocity for Fenton Fourier approximation</li>
-<li><strong>phi0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Regular wave phase (0 by default)</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for optimised functions</li>
+<li><strong>period</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Regular wave period</li>
+<li><strong>waveHeight</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Regular wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>g</strong> (<em>numpy.ndarray</em>) – Gravitational acceleration vector</li>
+<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) – Wave direction in vector form</li>
+<li><strong>wavelength</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Regular wave lenght, calculated from linear dispersion if set to None</li>
+<li><strong>waveType</strong> (<em>string</em>) – Defines regular wave theory (“Linear”, “Fenton”)
+Fenton: uses BCoeffs/YCoeffs provided by user</li>
+<li><strong>autoFenton</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – <dl class="docutils">
+<dt>autoFenton=True: uses waveheight, period, depth, and g to</dt>
+<dd>calculate coeffs</dd>
+</dl>
+<p>autoFenton=False: uses BCoeffs/YCoeffs provided by user</p>
+</li>
+<li><strong>autoFentonOpts</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – <p>options for autoFenton. The dictionary must contain the following
+entries (here the default values if autoFentonOpts is None):
+autoFentonOpts = {‘mode’: ‘Period’,</p>
+<blockquote>
+<div>’current_criterion’: 1,
+‘height_steps’: 1,
+‘niter’: 40,
+‘conv_crit’: 1e-05,
+‘points_freesurface’: 50,
+‘points_velocity’: 16,
+‘points_vertical’: 20}</div></blockquote>
+</li>
+<li><strong>Ycoeff</strong> (<em>numpy.ndarray</em>) – Fenton Fourier coefficients for free-surface elevation</li>
+<li><strong>Bcoeff</strong> (<em>numpy.ndarray</em>) – Fenton Fourier coefficients for velocity (set to None for linear wave theory)</li>
+<li><strong>Nf</strong> (<em>integer</em>) – Fenton Fourier components for reconstruction (set to 1000, needs to be equal to the size of Bcoeff and Ycoeff)</li>
+<li><strong>meanVelocity</strong> (<em>numpy.ndarray</em>) – Mean velocity for Fenton Fourier approximation</li>
+<li><strong>phi0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Regular wave phase (0 by default)</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -350,7 +362,7 @@ generation sources, and validation solutions for numerical wave codes.</p>
 <dl class="class">
 <dt id="proteus.WaveTools.RandomWaves">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">RandomWaves</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.RandomWaves" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class is used for generating plane random waves using linear reconstruction of components from a
 wave spectrum</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -358,20 +370,20 @@ wave spectrum</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Peak wave period</li>
-<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Significant wave height</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) &#8211; Wave direction vector</li>
-<li><strong>g</strong> (<em>Numpy array</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of frequency components</li>
-<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
-<li><strong>spectName</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of spectral distribution</li>
-<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of arguments specific to the spectral distribution
-Example for JONSWAP = {&#8220;gamma&#8221;: 3.3, &#8220;TMA&#8221;:True,&#8221;depth&#8221;: depth}
+<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak wave period</li>
+<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significant wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) – Wave direction vector</li>
+<li><strong>g</strong> (<em>Numpy array</em>) – Gravitational acceleration vector</li>
+<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of frequency components</li>
+<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
+<li><strong>spectName</strong> (<em>string</em>) – Name of spectral distribution</li>
+<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of arguments specific to the spectral distribution
+Example for JONSWAP = {“gamma”: 3.3, “TMA”:True,”depth”: depth}
 TMA=True activates the TMA modification, which in turn needs the depth as a parameter</li>
-<li><strong>phi</strong> (<em>numpy.ndarray</em>) &#8211; Component phases (if set to None, phases are picked at random)</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for optimised functions</li>
+<li><strong>phi</strong> (<em>numpy.ndarray</em>) – Component phases (if set to None, phases are picked at random)</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -539,11 +551,11 @@ wave transformation at the most remote point of the relaxation zone.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Start time</li>
-<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; End time</li>
-<li><strong>x0</strong> (<em>numpy.ndarray</em>) &#8211; Position vector of the time series</li>
-<li><strong>fname</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Filename for timeseries file</li>
-<li><strong>Lgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em><em></em>) &#8211; Length vector of relaxation zone</li>
+<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Start time</li>
+<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – End time</li>
+<li><strong>x0</strong> (<em>numpy.ndarray</em>) – Position vector of the time series</li>
+<li><strong>fname</strong> (<em>string</em>) – Filename for timeseries file</li>
+<li><strong>Lgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em>) – Length vector of relaxation zone</li>
 </ul>
 </td>
 </tr>
@@ -562,7 +574,7 @@ wave transformation at the most remote point of the relaxation zone.</p>
 <dl class="class">
 <dt id="proteus.WaveTools.MultiSpectraRandomWaves">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">MultiSpectraRandomWaves</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.MultiSpectraRandomWaves" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class is used for generating random waves by combining
 multiple spectra with different distributions and directions</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -570,19 +582,19 @@ multiple spectra with different distributions and directions</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Nspectra</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Total number of spectra</li>
-<li><strong>Tp</strong> (<em>list</em>) &#8211; List of peak wave periods</li>
-<li><strong>Hs</strong> (<em>list</em>) &#8211; List of significant wave heights</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>waveDir</strong> (<em>list</em>) &#8211; List of wave direction vector</li>
-<li><strong>g</strong> (<em>Numpy array</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>N</strong> (<em>list</em>) &#8211; List of numbers of frequency components</li>
-<li><strong>bandFactor</strong> (<em>list</em>) &#8211; List of spectral band factors</li>
-<li><strong>spectName</strong> (<em>list</em>) &#8211; List of names of spectral distribution</li>
-<li><strong>spectral_params</strong> (<em>list</em>) &#8211; List of names of spectral distribution (see RandomWaves class)</li>
-<li><strong>phi</strong> (<em>list</em>) &#8211; List of component phases</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for optimised functions</li>
+<li><strong>Nspectra</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Total number of spectra</li>
+<li><strong>Tp</strong> (<em>list</em>) – List of peak wave periods</li>
+<li><strong>Hs</strong> (<em>list</em>) – List of significant wave heights</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>waveDir</strong> (<em>list</em>) – List of wave direction vector</li>
+<li><strong>g</strong> (<em>Numpy array</em>) – Gravitational acceleration vector</li>
+<li><strong>N</strong> (<em>list</em>) – List of numbers of frequency components</li>
+<li><strong>bandFactor</strong> (<em>list</em>) – List of spectral band factors</li>
+<li><strong>spectName</strong> (<em>list</em>) – List of names of spectral distribution</li>
+<li><strong>spectral_params</strong> (<em>list</em>) – List of names of spectral distribution (see RandomWaves class)</li>
+<li><strong>phi</strong> (<em>list</em>) – List of component phases</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -643,7 +655,7 @@ multiple spectra with different distributions and directions</p>
 <dl class="class">
 <dt id="proteus.WaveTools.DirectionalWaves">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">DirectionalWaves</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.DirectionalWaves" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class is used for generating directional random waves using linear reconstruction of components from a
 wave spectrum</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -651,24 +663,24 @@ wave spectrum</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>M</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of directional components</li>
-<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Peak wave period</li>
-<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Significant wave height</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>waveDir0</strong> (<em>numpy.ndarray</em>) &#8211; Leading wave direction vector</li>
-<li><strong>g</strong> (<em>Numpy array</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of frequency components</li>
-<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
-<li><strong>spectName</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of spectral distribution</li>
-<li><strong>spreadName</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of spreading distribution</li>
-<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of arguments specific to the spectral distribution (see RandomWaves class)</li>
-<li><strong>spread_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of arguments specific to the spreading distribution
-Example for Cos-2s = {&#8220;s&#8221;: 10}
-Example for Mitsuyashu-type = {&#8220;fp&#8221;: 1/Tp, &#8220;smax&#8221;:10}</li>
-<li><strong>phi</strong> (<em>numpy.ndarray</em>) &#8211; Component phases (if set to None, phases are picked at random)</li>
-<li><strong>phiSymm</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for enabling a symmetric phase allocation across directional components</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for enabling optimised functions</li>
+<li><strong>M</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of directional components</li>
+<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak wave period</li>
+<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significant wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>waveDir0</strong> (<em>numpy.ndarray</em>) – Leading wave direction vector</li>
+<li><strong>g</strong> (<em>Numpy array</em>) – Gravitational acceleration vector</li>
+<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of frequency components</li>
+<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
+<li><strong>spectName</strong> (<em>string</em>) – Name of spectral distribution</li>
+<li><strong>spreadName</strong> (<em>string</em>) – Name of spreading distribution</li>
+<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of arguments specific to the spectral distribution (see RandomWaves class)</li>
+<li><strong>spread_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of arguments specific to the spreading distribution
+Example for Cos-2s = {“s”: 10}
+Example for Mitsuyashu-type = {“fp”: 1/Tp, “smax”:10}</li>
+<li><strong>phi</strong> (<em>numpy.ndarray</em>) – Component phases (if set to None, phases are picked at random)</li>
+<li><strong>phiSymm</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for enabling a symmetric phase allocation across directional components</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for enabling optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -729,29 +741,29 @@ Example for Mitsuyashu-type = {&#8220;fp&#8221;: 1/Tp, &#8220;smax&#8221;:10}</l
 <dl class="class">
 <dt id="proteus.WaveTools.TimeSeries">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">TimeSeries</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.TimeSeries" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class is used for generating waves from an arbirtrary free-surface elevation time series</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>timeSeriesFile</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Time series file name (csv or txt)</li>
-<li><strong>skiprows</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of header rows in time series file</li>
-<li><strong>timeSeriesPosition</strong> (<em>numpy.ndarrat</em>) &#8211; Coordinates of the gauge / signal location</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of frequency components</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) &#8211; Leading wave direction vector</li>
-<li><strong>g</strong> (<em>Numpy array</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>cutoffTotal</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Cut off fraction, applied both at the leading and tailing parts of the series</li>
-<li><strong>rec_direct</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for activating direct decomposition</li>
-<li><strong>window_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of parameters for window method
-e.g.  window_params = {&#8220;Nwaves&#8221;:15, &#8220;Tm&#8221;: Tp/1.1, &#8220;Window&#8221;:&#8221;costap&#8221;} (minimum parameters required)
-e.g.  window_params = {&#8220;Nwaves&#8221;:15, &#8220;Tm&#8221;: Tp/1.1, &#8220;Window&#8221;:&#8221;costap&#8221;, &#8220;Overlap&#8221;:0.5, &#8220;Cutoff&#8221;:0.2} (full range of parameters)</li>
-<li><strong>arrayData</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for passing the time series as an array (False by default)</li>
-<li><strong>seriesArray</strong> (<em>numpy.ndarray</em>) &#8211; Free surface elevation time series given in an array format (None by default)</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for enabling optimised functions</li>
+<li><strong>timeSeriesFile</strong> (<em>string</em>) – Time series file name (csv or txt)</li>
+<li><strong>skiprows</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of header rows in time series file</li>
+<li><strong>timeSeriesPosition</strong> (<em>numpy.ndarrat</em>) – Coordinates of the gauge / signal location</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of frequency components</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) – Leading wave direction vector</li>
+<li><strong>g</strong> (<em>Numpy array</em>) – Gravitational acceleration vector</li>
+<li><strong>cutoffTotal</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Cut off fraction, applied both at the leading and tailing parts of the series</li>
+<li><strong>rec_direct</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for activating direct decomposition</li>
+<li><strong>window_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of parameters for window method
+e.g.  window_params = {“Nwaves”:15, “Tm”: Tp/1.1, “Window”:”costap”} (minimum parameters required)
+e.g.  window_params = {“Nwaves”:15, “Tm”: Tp/1.1, “Window”:”costap”, “Overlap”:0.5, “Cutoff”:0.2} (full range of parameters)</li>
+<li><strong>arrayData</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for passing the time series as an array (False by default)</li>
+<li><strong>seriesArray</strong> (<em>numpy.ndarray</em>) – Free surface elevation time series given in an array format (None by default)</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for enabling optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -805,12 +817,12 @@ e.g.  window_params = {&#8220;Nwaves&#8221;:15, &#8220;Tm&#8221;: Tp/1.1, &#8220
 <dl class="method">
 <dt id="proteus.WaveTools.TimeSeries.findWindow">
 <code class="descname">findWindow</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.TimeSeries.findWindow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the current spectral window in TimeSeries class.&#8221;</p>
+<dd><p>Returns the current spectral window in TimeSeries class.”</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Index of window as an integer</td>
 </tr>
@@ -892,27 +904,27 @@ using linear reconstruction of components from a wave spectrum</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Start time</li>
-<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; End time</li>
-<li><strong>x0</strong> (<em>numpy.ndarray</em>) &#8211; Position vector for the time series</li>
-<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Peak wave period</li>
-<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Significant wave height</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) &#8211; Wave direction vector</li>
-<li><strong>g</strong> (<em>Numpy array</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of frequency components</li>
-<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
-<li><strong>spectName</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of spectral distribution</li>
-<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of arguments specific to the spectral distribution
-Example for JONSWAP = {&#8220;gamma&#8221;: 3.3, &#8220;TMA&#8221;:True,&#8221;depth&#8221;: depth}
+<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Start time</li>
+<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – End time</li>
+<li><strong>x0</strong> (<em>numpy.ndarray</em>) – Position vector for the time series</li>
+<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak wave period</li>
+<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significant wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) – Wave direction vector</li>
+<li><strong>g</strong> (<em>Numpy array</em>) – Gravitational acceleration vector</li>
+<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of frequency components</li>
+<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
+<li><strong>spectName</strong> (<em>string</em>) – Name of spectral distribution</li>
+<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of arguments specific to the spectral distribution
+Example for JONSWAP = {“gamma”: 3.3, “TMA”:True,”depth”: depth}
 TMA=True activates the TMA modification, which in turn needs the depth as a parameter</li>
-<li><strong>phi</strong> (<em>numpy.ndarray</em>) &#8211; Component phases (if set to None, phases are picked at random)</li>
-<li><strong>Lgen</strong> (<em>numpy.ndarray</em>) &#8211; Length of the generation zone (np.array([0., 0., 0.]) by default</li>
-<li><strong>Nwaves</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of waves per window</li>
-<li><strong>Nfreq</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of Fourier components per window</li>
-<li><strong>checkAcc</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for enabling accuracy checks</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for enabling optimised functions</li>
+<li><strong>phi</strong> (<em>numpy.ndarray</em>) – Component phases (if set to None, phases are picked at random)</li>
+<li><strong>Lgen</strong> (<em>numpy.ndarray</em>) – Length of the generation zone (np.array([0., 0., 0.]) by default</li>
+<li><strong>Nwaves</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of waves per window</li>
+<li><strong>Nfreq</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of Fourier components per window</li>
+<li><strong>checkAcc</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for enabling accuracy checks</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for enabling optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -929,29 +941,29 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <dl class="class">
 <dt id="proteus.WaveTools.RandomNLWaves">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">RandomNLWaves</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.RandomNLWaves" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class is contains functions for calculating random waves with 2nd order corrections</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Start time</li>
-<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; End time</li>
-<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Peak wave period</li>
-<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Significant wave height</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) &#8211; Wave direction vector</li>
-<li><strong>g</strong> (<em>Numpy array</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of frequency components</li>
-<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
-<li><strong>spectName</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of spectral distribution</li>
-<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of arguments specific to the spectral distribution
-Example for JONSWAP = {&#8220;gamma&#8221;: 3.3, &#8220;TMA&#8221;:True,&#8221;depth&#8221;: depth}
+<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Start time</li>
+<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – End time</li>
+<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak wave period</li>
+<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significant wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) – Wave direction vector</li>
+<li><strong>g</strong> (<em>Numpy array</em>) – Gravitational acceleration vector</li>
+<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of frequency components</li>
+<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
+<li><strong>spectName</strong> (<em>string</em>) – Name of spectral distribution</li>
+<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of arguments specific to the spectral distribution
+Example for JONSWAP = {“gamma”: 3.3, “TMA”:True,”depth”: depth}
 TMA=True activates the TMA modification, which in turn needs the depth as a parameter</li>
-<li><strong>phi</strong> (<em>numpy.ndarray</em>) &#8211; Component phases (if set to None, phases are picked at random)</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for enabling optimised functions</li>
+<li><strong>phi</strong> (<em>numpy.ndarray</em>) – Component phases (if set to None, phases are picked at random)</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for enabling optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -972,8 +984,8 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Position vector</li>
-<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Position vector</li>
+<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</li>
 </ul>
 </td>
 </tr>
@@ -1002,8 +1014,8 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Position vector</li>
-<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Position vector</li>
+<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</li>
 </ul>
 </td>
 </tr>
@@ -1027,8 +1039,8 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Position vector</li>
-<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Position vector</li>
+<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</li>
 </ul>
 </td>
 </tr>
@@ -1052,8 +1064,8 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Position vector</li>
-<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Position vector</li>
+<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</li>
 </ul>
 </td>
 </tr>
@@ -1077,8 +1089,8 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Position vector</li>
-<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Position vector</li>
+<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</li>
 </ul>
 </td>
 </tr>
@@ -1109,14 +1121,14 @@ wave transformation at the most remote point of the relaxation zone.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Start time</li>
-<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; End time</li>
-<li><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Sampling interval</li>
-<li><strong>x0</strong> (<em>numpy.ndarray</em>) &#8211; Position vector of the time series</li>
-<li><strong>fname</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Filename for timeseries file</li>
-<li><strong>mode</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a><em>]</em><em></em>) &#8211; Mode of set up calculations (all, long, short, setup)</li>
-<li><strong>setUp</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em><em></em>) &#8211; Switch for activating setup calculation</li>
-<li><strong>Lgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em><em></em>) &#8211; Length vector of relaxation zone</li>
+<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Start time</li>
+<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – End time</li>
+<li><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Sampling interval</li>
+<li><strong>x0</strong> (<em>numpy.ndarray</em>) – Position vector of the time series</li>
+<li><strong>fname</strong> (<em>string</em>) – Filename for timeseries file</li>
+<li><strong>mode</strong> (<em>Optional</em><em>[</em><em>string</em><em>]</em>) – Mode of set up calculations (all, long, short, setup)</li>
+<li><strong>setUp</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – Switch for activating setup calculation</li>
+<li><strong>Lgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em>) – Length vector of relaxation zone</li>
 </ul>
 </td>
 </tr>
@@ -1139,8 +1151,8 @@ wave transformation at the most remote point of the relaxation zone.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Position vector</li>
-<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Position vector</li>
+<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</li>
 </ul>
 </td>
 </tr>
@@ -1150,7 +1162,7 @@ wave transformation at the most remote point of the relaxation zone.</p>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)">None</a></p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">SystemExit</span></code></p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SystemExit</span></code></p>
 </td>
 </tr>
 </tbody>
@@ -1169,27 +1181,27 @@ using linear reconstruction of components from a wave spectrum</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Start time</li>
-<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; End time</li>
-<li><strong>x0</strong> (<em>numpy.ndarray</em>) &#8211; Position vector for the time series</li>
-<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Peak wave period</li>
-<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Significant wave height</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Still water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>waveDir</strong> (<em>np.ndarray</em>) &#8211; Wave direction vector</li>
-<li><strong>g</strong> (<em>Numpy array</em>) &#8211; Gravitational acceleration vector</li>
-<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of frequency components</li>
-<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
-<li><strong>spectName</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of spectral distribution</li>
-<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of arguments specific to the spectral distribution
-Example for JONSWAP = {&#8220;gamma&#8221;: 3.3, &#8220;TMA&#8221;:True,&#8221;depth&#8221;: depth}
+<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Start time</li>
+<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – End time</li>
+<li><strong>x0</strong> (<em>numpy.ndarray</em>) – Position vector for the time series</li>
+<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak wave period</li>
+<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significant wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>waveDir</strong> (<em>np.ndarray</em>) – Wave direction vector</li>
+<li><strong>g</strong> (<em>Numpy array</em>) – Gravitational acceleration vector</li>
+<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of frequency components</li>
+<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
+<li><strong>spectName</strong> (<em>string</em>) – Name of spectral distribution</li>
+<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of arguments specific to the spectral distribution
+Example for JONSWAP = {“gamma”: 3.3, “TMA”:True,”depth”: depth}
 TMA=True activates the TMA modification, which in turn needs the depth as a parameter</li>
-<li><strong>phi</strong> (<em>numpy.ndarray</em>) &#8211; Component phases (if set to None, phases are picked at random)</li>
-<li><strong>Lgen</strong> (<em>numpy.ndarray</em>) &#8211; Length of the generation zone (np.array([0., 0., 0.]) by default</li>
-<li><strong>Nwaves</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of waves per window</li>
-<li><strong>Nfreq</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of Fourier components per window</li>
-<li><strong>NLongw</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Estmated ratio of long wave period to Tp</li>
-<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Switch for enabling optimised functions</li>
+<li><strong>phi</strong> (<em>numpy.ndarray</em>) – Component phases (if set to None, phases are picked at random)</li>
+<li><strong>Lgen</strong> (<em>numpy.ndarray</em>) – Length of the generation zone (np.array([0., 0., 0.]) by default</li>
+<li><strong>Nwaves</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of waves per window</li>
+<li><strong>Nfreq</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of Fourier components per window</li>
+<li><strong>NLongw</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Estmated ratio of long wave period to Tp</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for enabling optimised functions</li>
 </ul>
 </td>
 </tr>
@@ -1240,7 +1252,7 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <dl class="attribute">
 <dt id="proteus.WaveTools.fastcos_test">
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">fastcos_test</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.fastcos_test" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fast cosine function with Taylor approximation - TO BE USED FOR TESTING&#8221;
+<dd><p>Fast cosine function with Taylor approximation - TO BE USED FOR TESTING”
 :param phase: Phase
 :type phase: double
 :param sinus: Switch for cosine or sine calculation
@@ -1251,7 +1263,7 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">cos(<a class="reference internal" href="proteus.StepControl.html#proteus.StepControl.GustafssonFullNewton_dt_controller.phi" title="proteus.StepControl.GustafssonFullNewton_dt_controller.phi">phi</a>) or sin(<a class="reference internal" href="proteus.StepControl.html#proteus.StepControl.GustafssonFullNewton_dt_controller.phi" title="proteus.StepControl.GustafssonFullNewton_dt_controller.phi">phi</a>)</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">cos(phi) or sin(phi)</td>
 </tr>
 </tbody>
 </table>
@@ -1260,7 +1272,7 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <dl class="attribute">
 <dt id="proteus.WaveTools.fastcosh_test">
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">fastcosh_test</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.fastcosh_test" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fast hyperbolic cosine function with Taylor approximation - TO BE USED FOR TESTING&#8221;
+<dd><p>Fast hyperbolic cosine function with Taylor approximation - TO BE USED FOR TESTING”
 :param k: Wavenumber
 :type k: double
 :param Z: Z coordinate
@@ -1280,7 +1292,7 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <dl class="attribute">
 <dt id="proteus.WaveTools.fastsinh_test">
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">fastsinh_test</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.fastsinh_test" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fast hyperbolic sine function with Taylor approximation - TO BE USED FOR TESTING&#8221;
+<dd><p>Fast hyperbolic sine function with Taylor approximation - TO BE USED FOR TESTING”
 :param k: Wavenumber
 :type k: double
 :param Z: Z coordinate
@@ -1302,7 +1314,7 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">coshkzd_test</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.coshkzd_test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculation of u horizontal profile cosh(k(d+Z))/sinh(kd) using fast appoximaitons
 and hyp trig relation cosh(a+b) = cosha*coshb+sinha*sinhb
-:param &#8212;&#8212;&#8212;-:
+:param ———-:
 :param k: Wavenumber
 :type k: double
 :param Z: Z coordinate
@@ -1326,7 +1338,7 @@ and hyp trig relation cosh(a+b) = cosha*coshb+sinha*sinhb
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">sinhkzd_test</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.sinhkzd_test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculation of v vertical profile cosh(k(d+Z))/sinh(kd) using fast appoximaitons
 and hyp trig relation sinh(a+b) = sinha*coshb+cosha*sinhb
-:param &#8212;&#8212;&#8212;-:
+:param ———-:
 :param k: Wavenumber
 :type k: double
 :param Z: Z coordinate
@@ -1356,8 +1368,8 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>funcName</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Function name</li>
-<li><strong>validFunctions</strong> (<em>List</em><em>[</em><em>function</em><em>]</em><em></em>) &#8211; List of valid functions (list of objects)</li>
+<li><strong>funcName</strong> (<em>string</em>) – Function name</li>
+<li><strong>validFunctions</strong> (<em>List</em><em>[</em><em>function</em><em>]</em>) – List of valid functions (list of objects)</li>
 </ul>
 </td>
 </tr>
@@ -1367,7 +1379,7 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">function</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">SystemExit</span></code></p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SystemExit</span></code></p>
 </td>
 </tr>
 </tbody>
@@ -1383,7 +1395,7 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>g</strong> (<em>numpy.ndarray</em>) &#8211; Gravitational acceleration vector (must have 3 components)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>g</strong> (<em>numpy.ndarray</em>) – Gravitational acceleration vector (must have 3 components)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
@@ -1404,8 +1416,8 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>funcName</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Function name</li>
-<li><strong>validFunctions</strong> (<em>List</em><em>[</em><em>function</em><em>]</em><em></em>) &#8211; List of valid functions (list of objects)</li>
+<li><strong>funcName</strong> (<em>string</em>) – Function name</li>
+<li><strong>validFunctions</strong> (<em>List</em><em>[</em><em>function</em><em>]</em>) – List of valid functions (list of objects)</li>
 </ul>
 </td>
 </tr>
@@ -1415,7 +1427,7 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">function</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">SystemExit</span></code></p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SystemExit</span></code></p>
 </td>
 </tr>
 </tbody>
@@ -1431,7 +1443,7 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>g</strong> (<em>numpy.ndarray</em>) &#8211; Gravitational acceleration vector (must have 3 components)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>g</strong> (<em>numpy.ndarray</em>) – Gravitational acceleration vector (must have 3 components)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
@@ -1449,7 +1461,7 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vector</strong> (<em>numpy.ndarray</em>) &#8211; 1D numpy array with three components</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vector</strong> (<em>numpy.ndarray</em>) – 1D numpy array with three components</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
@@ -1468,8 +1480,8 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>v1</strong> (<em>numpy.ndarray</em>) &#8211; 1st vector with three components</li>
-<li><strong>v2</strong> (<em>numpy.ndarray</em>) &#8211; 2nd vector with three components</li>
+<li><strong>v1</strong> (<em>numpy.ndarray</em>) – 1st vector with three components</li>
+<li><strong>v2</strong> (<em>numpy.ndarray</em>) – 2nd vector with three components</li>
 </ul>
 </td>
 </tr>
@@ -1479,7 +1491,7 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)">None</a></p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">SystemExit</span></code></p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SystemExit</span></code></p>
 </td>
 </tr>
 </tbody>
@@ -1491,16 +1503,16 @@ If True, the function is returned. If False, raises SystemExit.</p>
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">reduceToIntervals</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.reduceToIntervals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepares the x-axis array with N elements for numerical integration</p>
 <p>Integration is performed along he x- axis. If
-fi = [a1, a2, a3,...,a_N-1 a_N] then it returns the array
-[a1, 0.5(a1+a2), 0.5(a2+a3),...0.5(a_N-1+a_N), a_N].
+fi = [a1, a2, a3,…,a_N-1 a_N] then it returns the array
+[a1, 0.5(a1+a2), 0.5(a2+a3),…0.5(a_N-1+a_N), a_N].
 Input array must have constant step</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>fi</strong> (<em>numpy.ndarray</em>) &#8211; x- array with N elements</li>
-<li><strong>df</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Constant step of array</li>
+<li><strong>fi</strong> (<em>numpy.ndarray</em>) – x- array with N elements</li>
+<li><strong>df</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Constant step of array</li>
 </ul>
 </td>
 </tr>
@@ -1519,14 +1531,14 @@ Input array must have constant step</p>
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">returnRectangles</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.returnRectangles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns 2D discrete integral array using the rectangle method</p>
 <p>The calculation for each array element is
-<span class="math">\((\Delta y_i = 0.5(a_{n-1}+a_{n})*(x_{n-1}-x_{n})\)</span></p>
+<span class="math notranslate nohighlight">\((\Delta y_i = 0.5(a_{n-1}+a_{n})*(x_{n-1}-x_{n})\)</span></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>a</strong> (<em>numpy.ndarray</em>) &#8211; Description: Array of y(x) function with N+1 elements</li>
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Description: x- coordinate array with N elements</li>
+<li><strong>a</strong> (<em>numpy.ndarray</em>) – Description: Array of y(x) function with N+1 elements</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Description: x- coordinate array with N elements</li>
 </ul>
 </td>
 </tr>
@@ -1545,16 +1557,16 @@ Input array must have constant step</p>
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">returnRectangles3D</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.returnRectangles3D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns 3D discrete integrals using the rectangle method</p>
 <p>The calculation for each array element is
-:math: <cite>(Delta y = 0.25*(a_(n-1,m-1)+a_(n,m-1)+a_(n-1,m) ...
-...+a_(n,m))*(x_n-1-x_n) *(z_m-1-z_m))</cite></p>
+:math: <cite>(Delta y = 0.25*(a_(n-1,m-1)+a_(n,m-1)+a_(n-1,m) …
+…+a_(n,m))*(x_n-1-x_n) *(z_m-1-z_m))</cite></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>a</strong> (<em>numpy.ndarray</em>) &#8211; 2D Array of y(x,y) function with (N+1)x(M+1)elements</li>
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Description: x- coordinate array with N+1 elements</li>
-<li><strong>y</strong> (<em>numpy.ndarray</em>) &#8211; Description: x- coordinate array with N+1 elements</li>
+<li><strong>a</strong> (<em>numpy.ndarray</em>) – 2D Array of y(x,y) function with (N+1)x(M+1)elements</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Description: x- coordinate array with N+1 elements</li>
+<li><strong>y</strong> (<em>numpy.ndarray</em>) – Description: x- coordinate array with N+1 elements</li>
 </ul>
 </td>
 </tr>
@@ -1578,9 +1590,9 @@ Input array must have constant step</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>f</strong> (<em>numpy.ndarray</em>) &#8211; Discrete 2D function
+<li><strong>f</strong> (<em>numpy.ndarray</em>) – Discrete 2D function
 Numpy array or list</li>
-<li><strong>dom</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Discrete function step</li>
+<li><strong>dom</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Discrete function step</li>
 </ul>
 </td>
 </tr>
@@ -1603,12 +1615,12 @@ Numpy array or list</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Position vector</li>
-<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</li>
-<li><strong>kDir</strong> (<em>numpy.ndarray</em>) &#8211; Wave number vector</li>
-<li><strong>omega</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Angular frequency</li>
-<li><strong>phi</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Description: Wave phase</li>
-<li><strong>amp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Description: Wave amplitude</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Position vector</li>
+<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</li>
+<li><strong>kDir</strong> (<em>numpy.ndarray</em>) – Wave number vector</li>
+<li><strong>omega</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Angular frequency</li>
+<li><strong>phi</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Description: Wave phase</li>
+<li><strong>amp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Description: Wave amplitude</li>
 </ul>
 </td>
 </tr>
@@ -1631,10 +1643,10 @@ Numpy array or list</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>amp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Description: Wave amplitude</li>
-<li><strong>gAbs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Magnitude of gravitational acceleration</li>
-<li><strong>c</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Wave celerity</li>
-<li><strong>d</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
+<li><strong>amp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Description: Wave amplitude</li>
+<li><strong>gAbs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Magnitude of gravitational acceleration</li>
+<li><strong>c</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Wave celerity</li>
+<li><strong>d</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
 </ul>
 </td>
 </tr>
@@ -1657,16 +1669,16 @@ Numpy array or list</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>numpy.ndarray</em>) &#8211; Position vector</li>
-<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Time variable</li>
-<li><strong>kDir</strong> (<em>numpy.ndarray</em>) &#8211; Wave number vector</li>
-<li><strong>kAbs</strong> (<em>floatkAbs</em>) &#8211; Wave number magnitude</li>
-<li><strong>omega</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Angular frequency</li>
-<li><strong>phi</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Description: Wave phase</li>
-<li><strong>amplidute</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Description: Wave amplitude</li>
-<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Mean water level</li>
-<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>vDir</strong> (<em>numpy.ndarray</em>) &#8211; Unit vector aligned with vertical direction</li>
+<li><strong>x</strong> (<em>numpy.ndarray</em>) – Position vector</li>
+<li><strong>t</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time variable</li>
+<li><strong>kDir</strong> (<em>numpy.ndarray</em>) – Wave number vector</li>
+<li><strong>kAbs</strong> (<em>floatkAbs</em>) – Wave number magnitude</li>
+<li><strong>omega</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Angular frequency</li>
+<li><strong>phi</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Description: Wave phase</li>
+<li><strong>amplidute</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Description: Wave amplitude</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Mean water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>vDir</strong> (<em>numpy.ndarray</em>) – Unit vector aligned with vertical direction</li>
 </ul>
 </td>
 </tr>
@@ -1691,8 +1703,8 @@ Numpy array or list</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>omega</strong> (<em>numpy.ndarray</em>) &#8211; Angular frequency array</li>
-<li><strong>omega0</strong> (<em>numpy.ndarray</em>) &#8211; Peak angular frequency</li>
+<li><strong>omega</strong> (<em>numpy.ndarray</em>) – Angular frequency array</li>
+<li><strong>omega0</strong> (<em>numpy.ndarray</em>) – Peak angular frequency</li>
 </ul>
 </td>
 </tr>
@@ -1716,12 +1728,12 @@ Numpy array or list</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>f</strong> (<em>numpy.ndarray</em>) &#8211; Frequency array</li>
-<li><strong>f0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Peak frequency</li>
-<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Significant wave height</li>
-<li><strong>gamma</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Peak enhancement factor</li>
-<li><strong>TMA</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Description: TMA switch</li>
-<li><strong>depth</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Water depth</li>
+<li><strong>f</strong> (<em>numpy.ndarray</em>) – Frequency array</li>
+<li><strong>f0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak frequency</li>
+<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significant wave height</li>
+<li><strong>gamma</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Peak enhancement factor</li>
+<li><strong>TMA</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Description: TMA switch</li>
+<li><strong>depth</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Water depth</li>
 </ul>
 </td>
 </tr>
@@ -1747,9 +1759,9 @@ And then to Tucker M J, 1991. Waves in Ocean Engineering. Ellis Horwood Ltd. (Ch
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>f</strong> (<em>numpy.ndarray</em>) &#8211; Frequency array</li>
-<li><strong>f0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Peak frequency</li>
-<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Significant wave height</li>
+<li><strong>f</strong> (<em>numpy.ndarray</em>) – Frequency array</li>
+<li><strong>f0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak frequency</li>
+<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significant wave height</li>
 </ul>
 </td>
 </tr>
@@ -1773,9 +1785,9 @@ see USACE - CETN-I-28 <a class="reference external" href="http://chl.erdc.usace.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>theta</strong> (<em>numpy.ndarray</em>) &#8211; Wave angle array</li>
-<li><strong>f</strong> (<em>numpy.ndarray</em>) &#8211; Frequency array</li>
-<li><strong>s</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Spreading parameter</li>
+<li><strong>theta</strong> (<em>numpy.ndarray</em>) – Wave angle array</li>
+<li><strong>f</strong> (<em>numpy.ndarray</em>) – Frequency array</li>
+<li><strong>s</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Spreading parameter</li>
 </ul>
 </td>
 </tr>
@@ -1793,17 +1805,17 @@ see USACE - CETN-I-28 <a class="reference external" href="http://chl.erdc.usace.
 <dt id="proteus.WaveTools.mitsuyasu">
 <code class="descclassname">proteus.WaveTools.</code><code class="descname">mitsuyasu</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.mitsuyasu" title="Permalink to this definition">¶</a></dt>
 <dd><p>The cos2s wave directional spread with wave frequency dependency</p>
-<p>Equation from &#8220;Random Seas and Design of Maritime Structures&#8221; - Y. Goda - 2010
+<p>Equation from “Random Seas and Design of Maritime Structures” - Y. Goda - 2010
 (3rd ed) eq. 2.22 - 2.25</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>theta</strong> (<em>numpy.ndarray</em>) &#8211; Wave angle array</li>
-<li><strong>fi</strong> (<em>numpy.ndarray</em>) &#8211; Frequency array</li>
-<li><strong>f0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Peak frequency</li>
-<li><strong>smax</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Spreading parameter</li>
+<li><strong>theta</strong> (<em>numpy.ndarray</em>) – Wave angle array</li>
+<li><strong>fi</strong> (<em>numpy.ndarray</em>) – Frequency array</li>
+<li><strong>f0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak frequency</li>
+<li><strong>smax</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Spreading parameter</li>
 </ul>
 </td>
 </tr>
@@ -1826,10 +1838,10 @@ see USACE - CETN-I-28 <a class="reference external" href="http://chl.erdc.usace.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>w</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em> or </em><em>np.ndarray</em>) &#8211; Angular frequency</li>
-<li><strong>d</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Water depth</li>
-<li><strong>g</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em><em></em>) &#8211; Gravitational acceleration</li>
-<li><strong>niter</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em><em></em>) &#8211; Solution iterations</li>
+<li><strong>w</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em> or </em><em>np.ndarray</em>) – Angular frequency</li>
+<li><strong>d</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>g</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Gravitational acceleration</li>
+<li><strong>niter</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – Solution iterations</li>
 </ul>
 </td>
 </tr>
@@ -1852,8 +1864,8 @@ see USACE - CETN-I-28 <a class="reference external" href="http://chl.erdc.usace.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>l</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Length of array</li>
-<li><strong>cutoff</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Cut off fraction at both the leading and tailing part of the array</li>
+<li><strong>l</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Length of array</li>
+<li><strong>cutoff</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Cut off fraction at both the leading and tailing part of the array</li>
 </ul>
 </td>
 </tr>
@@ -1876,8 +1888,8 @@ see USACE - CETN-I-28 <a class="reference external" href="http://chl.erdc.usace.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>l</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Length of array</li>
-<li><strong>cutoff</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Cut off fraction at both the leading and tailing part of the array</li>
+<li><strong>l</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Length of array</li>
+<li><strong>cutoff</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Cut off fraction at both the leading and tailing part of the array</li>
 </ul>
 </td>
 </tr>
@@ -1901,9 +1913,9 @@ of a time series with constant sampling.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>time</strong> (<em>numpy.ndarray</em>) &#8211; Time array</li>
-<li><strong>eta</strong> (<em>numpy.ndarray</em>) &#8211; Signal array</li>
-<li><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Sampling interval</li>
+<li><strong>time</strong> (<em>numpy.ndarray</em>) – Time array</li>
+<li><strong>eta</strong> (<em>numpy.ndarray</em>) – Signal array</li>
+<li><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Sampling interval</li>
 </ul>
 </td>
 </tr>
@@ -1940,7 +1952,7 @@ of a time series with constant sampling.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

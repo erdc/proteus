@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Introduction &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>Introduction &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -39,8 +28,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 <div class="jumbotron">
   <div class="col-md-offset-2">
@@ -50,11 +38,13 @@
      style="height:1in;"> A Python toolkit for computational methods and simulation</p>
     <div class="btn-group" role="group">
       <a class="btn btn-success"
-          href="https://github.com/erdc-cm/proteus/archive/1.4.2.tar.gz">
+          href="https://github.com/erdc-cm/proteus/archive/1.5.1.tar.gz">
             <span class="glyphicon glyphicon-download"></span> Download
       </a>
       <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
       <ul class="dropdown-menu">
+        <li><a https://github.com/erdc-cm/proteus/archive/1.5.1.tar.gz">Version 1.5.1</a></li>
+        <li><a https://github.com/erdc-cm/proteus/archive/1.5.0.tar.gz">Version 1.5.0</a></li>
         <li><a https://github.com/erdc-cm/proteus/archive/1.4.2.tar.gz">Version 1.4.2</a></li>
         <li><a https://github.com/erdc-cm/proteus/archive/1.4.1.tar.gz">Version 1.4.1</a></li>
         <li><a https://github.com/erdc-cm/proteus/archive/1.4.0.tar.gz">Version 1.4.0</a></li>
@@ -81,7 +71,7 @@
         </button>
         <a class="navbar-brand" href="#">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -189,7 +179,7 @@ adjustments to existing methods. The problem with much existing
 software is that the physics and numerics are completely intertwined,
 which makes it difficult to extend (and maintain). In Proteus the
 description of the physical model and initial-boundary value problems
-are nearly &#8220;method agnostic&#8221;.  This approach has been used in the
+are nearly “method agnostic”.  This approach has been used in the
 developement of a variety of mathematical models and numerical
 methods, both of which are described in more detail below
 (<a class="reference internal" href="#capabilities-sec"><span class="std std-ref">Capabilities</span></a>).</p>
@@ -201,19 +191,19 @@ notebook server at <a class="reference external" href="http://try.proteustoolkit
 <p>Proteus is available as source from our public <a class="reference external" href="https://github.com/erdc-cm/proteus">GitHub</a> repository.  If you already
 have compilers (C,C++, and Fortran!) and Git installed on your system,
 you can install Proteus with the following commands.:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">erdc</span><span class="o">-</span><span class="n">cm</span><span class="o">/</span><span class="n">proteus</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">erdc</span><span class="o">-</span><span class="n">cm</span><span class="o">/</span><span class="n">proteus</span>
 <span class="o">%</span> <span class="n">cd</span> <span class="n">proteus</span>
 <span class="o">%</span> <span class="n">make</span> <span class="n">develop</span>
 <span class="o">%</span> <span class="n">make</span> <span class="n">test</span>
 </pre></div>
 </div>
 <p>More information is available on our <a class="reference external" href="https://github.com/erdc-cm/proteus/wiki">Wiki</a>, and you can ask for help on
-the <a class="reference external" href="https://groups.google.com/forum/#!forum/proteus-dev">Developers&#8217; Mailing List</a>.</p>
+the <a class="reference external" href="https://groups.google.com/forum/#!forum/proteus-dev">Developers’ Mailing List</a>.</p>
 </div>
 <div class="section" id="running">
 <span id="running-sec"></span><h1>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h1>
 <p>If you have successfully compiled and tested Proteus then you should be able to do:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>% cd $PROTEUS/tests/ci
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>% cd $PROTEUS/tests/ci
 % $PROTEUS_PREFIX/bin/parun poisson_3d_p.py poisson_3d_c0p1_n.py
 </pre></div>
 </div>
@@ -224,15 +214,15 @@ opened with ParaView or Ensight.</p>
 <span id="capabilities-sec"></span><h1>Capabilities<a class="headerlink" href="#capabilities" title="Permalink to this headline">¶</a></h1>
 <p>Test problems and some analytical solutions have been implemented for</p>
 <ul class="simple">
-<li>Poisson&#8217;s equation</li>
+<li>Poisson’s equation</li>
 <li>The heat equation</li>
 <li>Linear advection-diffusion-reaction equations</li>
-<li>Singly degenerate nonlinear advection-diffusion-reaction equations (including various forms of Burger&#8217;s equation)</li>
+<li>Singly degenerate nonlinear advection-diffusion-reaction equations (including various forms of Burger’s equation)</li>
 <li>Doubly degenerate nonlinear advection-diffusion-reaction equations</li>
 <li>The eikonal (signed distance) equation</li>
 <li>The diffusive wave equations for overland flow</li>
 <li>1D and 2D Shallow Water Equations</li>
-<li>Richards&#8217; equation (mass conservative head- and saturation-based)</li>
+<li>Richards’ equation (mass conservative head- and saturation-based)</li>
 <li>Two-phase flow in porous media with diffuse interface (fully coupled  and IMPES formulations)</li>
 <li>Two-phase flow in porous media with a sharp interface (level set formulation)</li>
 <li>Stokes equations</li>
@@ -247,28 +237,28 @@ complex meshes can by imported from other mesh generators. The finite
 elements implemented are</p>
 <p>Classical and vartiational multiscale methods</p>
 <ul class="simple">
-<li><span class="math">\(C_0 P_1\)</span></li>
-<li><span class="math">\(C_0 P_2\)</span></li>
-<li><span class="math">\(C_0 Q_1\)</span></li>
-<li><span class="math">\(C_0 Q_2\)</span></li>
+<li><span class="math notranslate nohighlight">\(C_0 P_1\)</span></li>
+<li><span class="math notranslate nohighlight">\(C_0 P_2\)</span></li>
+<li><span class="math notranslate nohighlight">\(C_0 Q_1\)</span></li>
+<li><span class="math notranslate nohighlight">\(C_0 Q_2\)</span></li>
 </ul>
 <p>Discontinuous Galerkin methods</p>
 <ul class="simple">
-<li><span class="math">\(C_{-1} P_0\)</span></li>
-<li><span class="math">\(C_{-1} P_1\)</span>  (Lagrange Basis)</li>
-<li><span class="math">\(C_{-1} P_2\)</span>  (Lagrange Basis)</li>
-<li><span class="math">\(C_{-1} P_k\)</span>  (Monomial Basis)</li>
+<li><span class="math notranslate nohighlight">\(C_{-1} P_0\)</span></li>
+<li><span class="math notranslate nohighlight">\(C_{-1} P_1\)</span>  (Lagrange Basis)</li>
+<li><span class="math notranslate nohighlight">\(C_{-1} P_2\)</span>  (Lagrange Basis)</li>
+<li><span class="math notranslate nohighlight">\(C_{-1} P_k\)</span>  (Monomial Basis)</li>
 </ul>
 <p>Non-conforming and mixed methods</p>
 <ul class="simple">
-<li><span class="math">\(P_1\)</span> non-conforming</li>
-<li><span class="math">\(C_0 P_1 C_0 P_2\)</span> Taylor-Hood</li>
+<li><span class="math notranslate nohighlight">\(P_1\)</span> non-conforming</li>
+<li><span class="math notranslate nohighlight">\(C_0 P_1 C_0 P_2\)</span> Taylor-Hood</li>
 </ul>
 <p>The time integration methods are</p>
 <ul class="simple">
 <li>Backward Euler</li>
 <li>Forward Euler</li>
-<li><span class="math">\(\Theta\)</span> Methods</li>
+<li><span class="math notranslate nohighlight">\(\Theta\)</span> Methods</li>
 <li>Strong Stability Preserving Runge-Kutta Methods</li>
 <li>Adaptive BDF Methods</li>
 <li>Pseudo-transient continuation</li>
@@ -286,20 +276,20 @@ elements implemented are</p>
 <li>Jacobi</li>
 <li>Gauss-Seidel</li>
 <li>Alternating Schwarz</li>
-<li>Newton&#8217;s method</li>
+<li>Newton’s method</li>
 <li>Nonlinear Multigrid (Full Approximation Scheme)</li>
 <li>Fast Marching and Fast Sweeping</li>
 </ul>
 <p>Additional tools are included for pre- and post-processings meshes and
 solutions files generated by Proteus and other models, including methods for
-obtaining locally-conservative velocity fields from <span class="math">\(C_0\)</span> finite
+obtaining locally-conservative velocity fields from <span class="math notranslate nohighlight">\(C_0\)</span> finite
 elements.</p>
 </div>
 <div class="section" id="release-policy">
 <span id="release-sec"></span><h1>Release Policy<a class="headerlink" href="#release-policy" title="Permalink to this headline">¶</a></h1>
 <p>The releases are numbered major.minor.revision</p>
 <ul class="simple">
-<li>A revision increment indicates a bug fix or extension that shouldn&#8217;t break any models working with the same major.minor number.</li>
+<li>A revision increment indicates a bug fix or extension that shouldn’t break any models working with the same major.minor number.</li>
 <li>A minor increment introduces significant new functionality but is mostly backward compatible</li>
 <li>A major increment may require changes to input files and significantly change the underlying Proteus implementation.</li>
 </ul>
@@ -367,7 +357,7 @@ Equation on Unstructured Meshes</a>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>

@@ -1,5 +1,5 @@
-proteus.mprans.cRANS2P_IB module
-================================
+proteus.mprans.cRANS2P\_IB module
+=================================
 
 .. automodule:: proteus.mprans.cRANS2P_IB
     :members:

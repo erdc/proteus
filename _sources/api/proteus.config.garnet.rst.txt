@@ -1,7 +1,0 @@
-proteus.config.garnet module
-============================
-
-.. automodule:: proteus.config.garnet
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>proteus.StepControl module &#8212; Proteus 1.4.2 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <title>proteus.StepControl module &#8212; Proteus 1.5.1 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.4.2',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,8 +29,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body role="document">
+  </head><body>
 
 
 
@@ -56,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.4.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -139,8 +127,8 @@
   <div class="section" id="module-proteus.StepControl">
 <span id="proteus-stepcontrol-module"></span><h1>proteus.StepControl module<a class="headerlink" href="#module-proteus.StepControl" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for methods of controlling the step size</p>
-<object data="../_images/inheritance-28773282a97b7ce047c58f22a2fbaa048020f821.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.StepControl</p></object>
+<div class="graphviz"><object data="../_images/inheritance-28773282a97b7ce047c58f22a2fbaa048020f821.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.StepControl</p></object></div>
 <dl class="class">
 <dt id="proteus.StepControl.SC_base">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">SC_base</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.SC_base" title="Permalink to this definition">¶</a></dt>
@@ -223,7 +211,7 @@ without regard to time integration scheme</p>
 <code class="descname">writeSolverStatisticsForStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.SC_base.writeSolverStatisticsForStep" title="Permalink to this definition">¶</a></dt>
 <dd><p>record some relevant time step and solver statistics
 uses finest level to get this information
-called before updating t_model &#8211;&gt; t_model_last etc</p>
+called before updating t_model –&gt; t_model_last etc</p>
 </dd></dl>
 
 </dd></dl>
@@ -231,13 +219,13 @@ called before updating t_model &#8211;&gt; t_model_last etc</p>
 <dl class="attribute">
 <dt id="proteus.StepControl.FixedStep">
 <code class="descclassname">proteus.StepControl.</code><code class="descname">FixedStep</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.FixedStep" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">SC_base</span></code></a></p>
+<dd><p>alias of <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.StepControl.Newton_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Newton_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Newton_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <p>Same as SC_base but since there is no dt we have not  way to retry</p>
 <dl class="method">
 <dt id="proteus.StepControl.Newton_controller.retryStep_solverFailure">
@@ -254,7 +242,7 @@ called before updating t_model &#8211;&gt; t_model_last etc</p>
 <dl class="class">
 <dt id="proteus.StepControl.PsiTCtte_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">PsiTCtte_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.PsiTCtte_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.PsiTCtte_controller.stepExact_model">
 <code class="descname">stepExact_model</code><span class="sig-paren">(</span><em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.PsiTCtte_controller.stepExact_model" title="Permalink to this definition">¶</a></dt>
@@ -285,7 +273,7 @@ called before updating t_model &#8211;&gt; t_model_last etc</p>
 <dl class="class">
 <dt id="proteus.StepControl.Osher_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Osher_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.Osher_controller.stepExact_model">
 <code class="descname">stepExact_model</code><span class="sig-paren">(</span><em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_controller.stepExact_model" title="Permalink to this definition">¶</a></dt>
@@ -311,7 +299,7 @@ called before updating t_model &#8211;&gt; t_model_last etc</p>
 <dl class="class">
 <dt id="proteus.StepControl.Osher_PsiTC_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Osher_PsiTC_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_PsiTC_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.Osher_PsiTC_controller.stepExact_model">
 <code class="descname">stepExact_model</code><span class="sig-paren">(</span><em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_PsiTC_controller.stepExact_model" title="Permalink to this definition">¶</a></dt>
@@ -337,7 +325,7 @@ called before updating t_model &#8211;&gt; t_model_last etc</p>
 <dl class="class">
 <dt id="proteus.StepControl.Osher_PsiTC_controller2">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Osher_PsiTC_controller2</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_PsiTC_controller2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.Osher_PsiTC_controller2.stepExact_model">
 <code class="descname">stepExact_model</code><span class="sig-paren">(</span><em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_PsiTC_controller2.stepExact_model" title="Permalink to this definition">¶</a></dt>
@@ -363,7 +351,7 @@ called before updating t_model &#8211;&gt; t_model_last etc</p>
 <dl class="class">
 <dt id="proteus.StepControl.Osher_FMM_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Osher_FMM_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em>, <em>maxOsherSteps=4</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_FMM_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.Osher_controller" title="proteus.StepControl.Osher_controller"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.Osher_controller</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.Osher_controller" title="proteus.StepControl.Osher_controller"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.Osher_controller</span></code></a></p>
 <dl class="docutils">
 <dt>TODO</dt>
 <dd>setup so that can configure from options,
@@ -379,7 +367,7 @@ test with Fast Sweeping</dd>
 <dl class="class">
 <dt id="proteus.StepControl.Min_dt_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Min_dt_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.Min_dt_controller.initialize_dt_model">
 <code class="descname">initialize_dt_model</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_controller.initialize_dt_model" title="Permalink to this definition">¶</a></dt>
@@ -393,7 +381,7 @@ test with Fast Sweeping</dd>
 <dl class="method">
 <dt id="proteus.StepControl.Min_dt_controller.setSubsteps">
 <code class="descname">setSubsteps</code><span class="sig-paren">(</span><em>tList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_controller.setSubsteps" title="Permalink to this definition">¶</a></dt>
-<dd><p>allow time intergration scheme to pick &#8216;substeps&#8217; for interval. This would be useful
+<dd><p>allow time intergration scheme to pick ‘substeps’ for interval. This would be useful
 for multistage schemes</p>
 </dd></dl>
 
@@ -402,7 +390,7 @@ for multistage schemes</p>
 <dl class="class">
 <dt id="proteus.StepControl.Min_dt_RKcontroller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Min_dt_RKcontroller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_RKcontroller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.Min_dt_RKcontroller.initialize_dt_model">
 <code class="descname">initialize_dt_model</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_RKcontroller.initialize_dt_model" title="Permalink to this definition">¶</a></dt>
@@ -421,7 +409,7 @@ for multistage schemes</p>
 <dl class="method">
 <dt id="proteus.StepControl.Min_dt_RKcontroller.setSubsteps">
 <code class="descname">setSubsteps</code><span class="sig-paren">(</span><em>tList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_RKcontroller.setSubsteps" title="Permalink to this definition">¶</a></dt>
-<dd><p>allow time intergration scheme to pick &#8216;substeps&#8217; for interval. this is necessary for
+<dd><p>allow time intergration scheme to pick ‘substeps’ for interval. this is necessary for
 RK since stages are substeps</p>
 </dd></dl>
 
@@ -430,7 +418,7 @@ RK since stages are substeps</p>
 <dl class="class">
 <dt id="proteus.StepControl.Min_dt_cfl_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Min_dt_cfl_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_cfl_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.Min_dt_controller" title="proteus.StepControl.Min_dt_controller"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.Min_dt_controller</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.Min_dt_controller" title="proteus.StepControl.Min_dt_controller"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.Min_dt_controller</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.Min_dt_cfl_controller.initialize_dt_model">
 <code class="descname">initialize_dt_model</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_cfl_controller.initialize_dt_model" title="Permalink to this definition">¶</a></dt>
@@ -451,7 +439,7 @@ RK since stages are substeps</p>
 <dl class="class">
 <dt id="proteus.StepControl.Min_dt_controller_FCT">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Min_dt_controller_FCT</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Min_dt_controller_FCT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.Min_dt_controller" title="proteus.StepControl.Min_dt_controller"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.Min_dt_controller</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.Min_dt_controller" title="proteus.StepControl.Min_dt_controller"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.Min_dt_controller</span></code></a></p>
 <p>controller try and implement a piece of FCT methodology where first step is
 a low order solution and the next step corrects is</p>
 <dl class="method">
@@ -479,7 +467,7 @@ a low order solution and the next step corrects is</p>
 <dl class="class">
 <dt id="proteus.StepControl.FLCBDF_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">FLCBDF_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.FLCBDF_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.FLCBDF_controller.setInitialGuess">
 <code class="descname">setInitialGuess</code><span class="sig-paren">(</span><em>uList</em>, <em>rList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.FLCBDF_controller.setInitialGuess" title="Permalink to this definition">¶</a></dt>
@@ -520,7 +508,7 @@ a low order solution and the next step corrects is</p>
 <dl class="class">
 <dt id="proteus.StepControl.FLCBDF_controller_sys">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">FLCBDF_controller_sys</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.FLCBDF_controller_sys" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.FLCBDF_controller" title="proteus.StepControl.FLCBDF_controller"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.FLCBDF_controller</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.FLCBDF_controller" title="proteus.StepControl.FLCBDF_controller"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.FLCBDF_controller</span></code></a></p>
 <dl class="method">
 <dt id="proteus.StepControl.FLCBDF_controller_sys.retryStep_solverFailure">
 <code class="descname">retryStep_solverFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.FLCBDF_controller_sys.retryStep_solverFailure" title="Permalink to this definition">¶</a></dt>
@@ -536,7 +524,7 @@ a low order solution and the next step corrects is</p>
 <dl class="class">
 <dt id="proteus.StepControl.HeuristicNL_dt_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">HeuristicNL_dt_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.HeuristicNL_dt_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <p>Classical Heuristic step controller that picks time step based on threshholds in nonlinear
 solver iterations</p>
 <dl class="docutils">
@@ -593,19 +581,19 @@ use finest level to pick for now</p>
 <dl class="class">
 <dt id="proteus.StepControl.GustafssonFullNewton_dt_controller">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">GustafssonFullNewton_dt_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.GustafssonFullNewton_dt_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
 <dl class="docutils">
 <dt>Try version of basic Gustafsson and Soederlind 97 time step selection strategy</dt>
 <dd>that accounts for nonlinear solver performance assuming a full Newton nonlinear
 solver</dd>
 </dl>
-<p>Also includes error control based on classical &#8220;deadbeat&#8221; control
+<p>Also includes error control based on classical “deadbeat” control
 Right now, decisions based on finest level solve</p>
 <p>input: dt_prev
 output: dt</p>
-<p>get time step estimate based on temporal error &#8211;&gt; dt_e
-get convergence rate estimate from nonlinear solver &#8211;&gt; a
-get number of iterations from nonlinear solver &#8211;&gt; nnl</p>
+<p>get time step estimate based on temporal error –&gt; dt_e
+get convergence rate estimate from nonlinear solver –&gt; a
+get number of iterations from nonlinear solver –&gt; nnl</p>
 <p>if nonlinear solver converges</p>
 <blockquote>
 <div>r_a = phi(a_ref/a)
@@ -625,11 +613,11 @@ r_a = min(r_a_max,max(r_a,r_a_min))</p>
 <p>dt = min(dt_e,r_a dt_prev)</p>
 <dl class="docutils">
 <dt>Here,</dt>
-<dd><p class="first">a_ref   &#8211; target convergence rate
-nnl_ref &#8211; target number of nonlinear iterations
-r_a_max &#8211; max growth rate
-r_a_min &#8211; min growth rate</p>
-<p class="last">phi     &#8211; limiter function, defaut is phi(x) = x</p>
+<dd><p class="first">a_ref   – target convergence rate
+nnl_ref – target number of nonlinear iterations
+r_a_max – max growth rate
+r_a_min – min growth rate</p>
+<p class="last">phi     – limiter function, defaut is phi(x) = x</p>
 </dd>
 </dl>
 <p>Also includes simple linear predictor for initial guess</p>
@@ -637,7 +625,7 @@ r_a_min &#8211; min growth rate</p>
 <dl class="method">
 <dt id="proteus.StepControl.GustafssonFullNewton_dt_controller.setInitialGuess">
 <code class="descname">setInitialGuess</code><span class="sig-paren">(</span><em>uList</em>, <em>rList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.GustafssonFullNewton_dt_controller.setInitialGuess" title="Permalink to this definition">¶</a></dt>
-<dd><p>for now ignore time integrations predictor since that is for m and not u by default ...</p>
+<dd><p>for now ignore time integrations predictor since that is for m and not u by default …</p>
 </dd></dl>
 
 <dl class="method">
@@ -650,7 +638,7 @@ r_a_min &#8211; min growth rate</p>
 <code class="descname">retryStep_solverFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.GustafssonFullNewton_dt_controller.retryStep_solverFailure" title="Permalink to this definition">¶</a></dt>
 <dd><p>nonlinear solver failure
 .. todo:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">sure</span> <span class="n">predictor</span> <span class="n">gets</span> <span class="n">called</span> <span class="n">again</span> <span class="n">after</span> <span class="n">this</span> <span class="n">to</span> <span class="n">get</span> <span class="n">error</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">sure</span> <span class="n">predictor</span> <span class="n">gets</span> <span class="n">called</span> <span class="n">again</span> <span class="n">after</span> <span class="n">this</span> <span class="n">to</span> <span class="n">get</span> <span class="n">error</span>
 <span class="n">estimate</span> <span class="n">correct</span> <span class="k">for</span> <span class="nb">next</span> <span class="n">solve</span>
 </pre></div>
 </div>
@@ -687,7 +675,7 @@ r_a_min &#8211; min growth rate</p>
 <dt id="proteus.StepControl.GustafssonFullNewton_dt_controller.initialize_dt_model">
 <code class="descname">initialize_dt_model</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.GustafssonFullNewton_dt_controller.initialize_dt_model" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
-<dt>TODO: Figure out good strategy for picking initial dt since we don&#8217;t necessarily want</dt>
+<dt>TODO: Figure out good strategy for picking initial dt since we don’t necessarily want</dt>
 <dd>time integration to be responsible for this right now</dd>
 </dl>
 </dd></dl>
@@ -742,7 +730,7 @@ use finest level to pick for now</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
     </p>
   </div>
 </footer>
