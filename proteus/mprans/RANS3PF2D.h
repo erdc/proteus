@@ -60,10 +60,12 @@ namespace proteus
                                    double *p_grad_trial_ref,
                                    double *p_test_ref,
                                    double *p_grad_test_ref,
+                                   double *q_p_sharp,
+                                   double *q_grad_p_sharp,
+                                   double *ebqe_p_sharp,
+                                   double *ebqe_grad_p_sharp,
                                    double *q_p,
-                                   double *q_grad_p,
-                                   double *ebqe_p,
-                                   double *ebqe_grad_p,
+                                   double* q_grad_p,
                                    double *vel_trial_ref,
                                    double *vel_grad_trial_ref,
                                    double *vel_hess_trial_ref,
@@ -115,7 +117,7 @@ namespace proteus
                                    const double* q_velocity_solid,
                                    const double* q_vos,
                                    const double* q_dvos_dt,
-				   const double* q_grad_vos,
+                                   const double* q_grad_vos,
                                    const double* q_dragAlpha,
                                    const double* q_dragBeta,
                                    const double* q_mass_source,
@@ -152,6 +154,8 @@ namespace proteus
                                    double *q_dV_last,
                                    double *q_velocity_sge,
                                    double *ebqe_velocity_star,
+                                   double *q_grad_u_star,
+                                   double *q_grad_v_star,
                                    double *q_cfl,
                                    double *q_numDiff_u,
                                    double *q_numDiff_v,
@@ -2024,10 +2028,12 @@ namespace proteus
                              double* p_grad_trial_ref,
                              double* p_test_ref,
                              double* p_grad_test_ref,
-                             double* q_p,
+                             double *q_p_sharp,
+                             double *q_grad_p_sharp,
+                             double *ebqe_p_sharp,
+                             double *ebqe_grad_p_sharp,
+                             double *q_p,
                              double* q_grad_p,
-                             double* ebqe_p,
-                             double* ebqe_grad_p,
                              double* vel_trial_ref,
                              double* vel_grad_trial_ref,
                              double* vel_hess_trial_ref,
@@ -2118,6 +2124,8 @@ namespace proteus
                              double* q_dV_last,
                              double* q_velocity_sge,
                              double* ebqe_velocity_star,
+                             double* q_grad_u_star,
+                             double* q_grad_v_star,
                              double* q_cfl,
                              double* q_numDiff_u, double* q_numDiff_v, double* q_numDiff_w,
                              double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
@@ -3700,13 +3708,13 @@ namespace proteus
                 //cek hack use trial ck.gradTrialFromRef(&vel_grad_test_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_test_trace);
                 //solution and gradients
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_ext); */
-                p_ext = ebqe_p[ebNE_kb];
+                p_ext = ebqe_p_sharp[ebNE_kb];
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext); */
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext); */
                 for (int I=0;I<nSpace;I++)
-                  grad_p_ext[I] = ebqe_grad_p[ebNE_kb_nSpace + I];
+                  grad_p_ext[I] = ebqe_grad_p_sharp[ebNE_kb_nSpace + I];
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_w_ext); */
