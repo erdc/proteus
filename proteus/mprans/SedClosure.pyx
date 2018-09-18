@@ -65,20 +65,9 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double nu,
                        double theta_n,
                        double kappa_n,
-                       double kappa_np1,
                        double epsilon_n,
-                       double nuT_n)
-        double kappa_sed2(double sedF,
-                       double rhoFluid,
-                       double rhoSolid,
-                       double* uFluid,
-                       double* uSolid,
-                       double* gradC,
-                       double nu,
-                       double theta_n,
-                       double kappa_n,
-                       double epsilon_n,
-                       double nuT_n)
+                       double nuT_n,
+		       double * g)
         double dkappa_sed1_dk(double sedF,
                        double rhoFluid,
                        double rhoSolid,
@@ -90,18 +79,6 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double kappa_n,
                        double epsilon_n,
                        double nuT_n)
-        double eps_sed(double sedF,
-                       double rhoFluid,
-                       double rhoSolid,
-                       double* uFluid,
-                       double* uSolid,
-                       double* gradC,
-                       double nu,
-                       double theta_n,
-                       double kappa_n,
-                       double epsilon_n,
-                       double epsilon_np1,
-                       double nuT_n)
         double deps_sed_deps(double sedF,
                        double rhoFluid,
                        double rhoSolid,
@@ -112,7 +89,8 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double theta_n,
                        double kappa_n,
                        double epsilon_n,
-                       double nuT_n)
+                       double nuT_n,
+		       double* g)
 
         double psc(
 		      double sedF,
@@ -373,9 +351,9 @@ cdef class HsuSedStress:
                   nu,
                   theta_n,
                   kappa_n,
-                  kappa_np1,
                   epsilon_n,
-    nuT_n):
+    		  nuT_n,	  
+    		  numpy.ndarray g):
         return self.thisptr.kappa_sed1(sedF,
                     rhoFluid,
                     rhoSolid,
@@ -385,9 +363,10 @@ cdef class HsuSedStress:
                   nu,
                   theta_n,
                   kappa_n,
-                  kappa_np1,
-                epsilon_n,
-                nuT_n)
+                  epsilon_n,
+                  nuT_n,
+		< double *>  g.data)
+		
     def dkappa_sed1_dk(self,
                   sedF,
                   rhoFluid,
@@ -411,56 +390,7 @@ cdef class HsuSedStress:
                   kappa_n,
                 epsilon_n,
                 nuT_n)
-    def kappa_sed2(self,
-                  sedF,
-                  rhoFluid,
-                  rhoSolid,
-                  numpy.ndarray uFluid,
-                  numpy.ndarray uSolid,
-                  numpy.ndarray gradC,
-                  nu,
-                  theta_n,
-                  kappa_n,
-                  epsilon_n,
-                nuT_n):
-        return self.thisptr.kappa_sed2(sedF,
-                    rhoFluid,
-                    rhoSolid,
-                  < double *> uFluid.data,
-                  < double *>  uSolid.data,
-                  < double *>  gradC.data,
-                  nu,
-                  theta_n,
-                  kappa_n,
-                epsilon_n,
-                nuT_n)
 
-
-    def eps_sed(self,
-                  sedF,
-                  rhoFluid,
-                  rhoSolid,
-                  numpy.ndarray uFluid,
-                  numpy.ndarray uSolid,
-                  numpy.ndarray gradC,
-                  nu,
-                  theta_n,
-                  kappa_n,
-                  epsilon_n,
-                  epsilon_np1,
-                nuT_n):
-        return self.thisptr.eps_sed(sedF,
-                    rhoFluid,
-                    rhoSolid,
-                  < double *> uFluid.data,
-                  < double *>  uSolid.data,
-                  < double *>  gradC.data,
-                  nu,
-                  theta_n,
-                  kappa_n,
-                  epsilon_n,
-                epsilon_np1,
-                nuT_n)
 
     def deps_sed_deps(self,
                   sedF,
@@ -473,7 +403,8 @@ cdef class HsuSedStress:
                   theta_n,
                   kappa_n,
                   epsilon_n,
-                nuT_n):
+                  nuT_n,
+		          numpy.ndarray g):
         return self.thisptr.deps_sed_deps(sedF,
                     rhoFluid,
                     rhoSolid,
@@ -484,7 +415,8 @@ cdef class HsuSedStress:
                   theta_n,
                   kappa_n,
                 epsilon_n,
-                nuT_n)
+                nuT_n,
+		        < double *>  g.data)
 
     def psc(self,
             sedF,
@@ -580,7 +512,7 @@ cdef class HsuSedStress:
 
     def k_diff(self,  sedF, rhoSolid, theta ):
         return self.thisptr.k_diff( sedF, rhoSolid, theta)
-    
+    
     def p_friction(self, sedF):
         return self.thisptr.p_friction(sedF)
 

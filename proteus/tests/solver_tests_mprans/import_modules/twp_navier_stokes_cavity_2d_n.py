@@ -1,7 +1,15 @@
+from __future__ import absolute_import
 from proteus import *
-import cavity2d
+try:
+    from . import cavity2d
+except:
+    import cavity2d
+
 from proteus.default_n import *
-from twp_navier_stokes_cavity_2d_p import *
+try:
+    from .twp_navier_stokes_cavity_2d_p import *
+except:
+    from twp_navier_stokes_cavity_2d_p import *
 
 from proteus import Context
 ct = cavity2d.opts
@@ -95,7 +103,7 @@ if usePETSc:
     elif schur_solver == 'petsc_LU':
         linearSmoother=petsc_LU
     else:
-        raise Exception, 'invalid solver type'
+        raise Exception('invalid solver type')
     linearSolverConvergenceTest = 'r-true'
     parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
     nLayersOfOverlapForParallel = 0

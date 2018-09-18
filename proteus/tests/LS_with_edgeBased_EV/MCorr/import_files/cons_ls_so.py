@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import range
 from proteus.default_so import *
-import cons_ls
-from cons_ls import *
+from . import cons_ls
+from .cons_ls import *
 
 cons_ls.LS_model = 0
 cons_ls.V_model = 0

@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from proteus import Domain
 #if True uses PETSc solvers
 parallel = False
@@ -41,7 +44,7 @@ lRefinement=1
 #soname="rotationcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*5+1
 nnz=1
-he=1.0/(nnx-1.0)
+he=old_div(1.0,(nnx-1.0))
 L=[1.0,1.0]
 
 unstructured=True#True for tetgen, false for tet or hex from rectangular grid
@@ -50,7 +53,7 @@ box=Domain.RectangularDomain(L=(2.0,2.0),
                              name="box");
 box.writePoly("box")
 if unstructured:
-    from rotationDomain import *
+    from .rotationDomain import *
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
     domain.boundaryTags = box.boundaryTags
     bt = domain.boundaryTags
@@ -104,6 +107,6 @@ correctionType = 'cg'
 #correctionType = 'none'
 if useHex:
     hex=True
-    soname="rotation_c0q"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="rotation_c0q"+repr(pDegree_ls)+correctionType+"_"+timeIntegration_vof+"_"+repr(timeOrder)+"_level_"+repr(lRefinement)
 else:
-    soname="rotation_c0p"+`pDegree_ls`+correctionType+"_"+timeIntegration_vof+"_"+`timeOrder`+"_level_"+`lRefinement`
+    soname="rotation_c0p"+repr(pDegree_ls)+correctionType+"_"+timeIntegration_vof+"_"+repr(timeOrder)+"_level_"+repr(lRefinement)

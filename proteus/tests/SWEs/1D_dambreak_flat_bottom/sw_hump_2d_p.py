@@ -1,3 +1,6 @@
+from __future__ import division
+from past.utils import old_div
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2D
@@ -31,7 +34,7 @@ def bathymetry_function(X):
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
-class dam_break_problem_starting_at_t0:
+class dam_break_problem_starting_at_t0(object):
     def __init__(self,hl=1.,xc=0.5):
         self.hl=hl
         self.xc=xc
@@ -44,7 +47,7 @@ class dam_break_problem_starting_at_t0:
             h = 0.000
         return h
 
-class dam_break_problem_starting_at_t1:
+class dam_break_problem_starting_at_t1(object):
     def __init__(self,hl=1.,xc=0.5,g=1):
         self.hl=hl
         self.xc=xc
@@ -57,11 +60,11 @@ class dam_break_problem_starting_at_t1:
         if (0 <= x and x <= xA):
             return hl
         elif (xA < x <= xB):
-            return 4/9./self.g*(math.sqrt(g*self.hl)-(x-self.xc)/2.)**2
+            return 4/9./self.g*(math.sqrt(g*self.hl)-old_div((x-self.xc),2.))**2
         else: 
             return 0.
 
-class velX_starting_at_t1:
+class velX_starting_at_t1(object):
     def __init__(self,hl=1.,xc=0.5,g=1):
         self.hl=hl
         self.xc=xc
@@ -78,7 +81,7 @@ class velX_starting_at_t1:
         else: 
             return 0.
 
-class momX_starting_at_t1:
+class momX_starting_at_t1(object):
     def __init__(self,hl=1.,xc=0.5,g=1):
         self.hl=hl
         self.xc=xc
@@ -88,7 +91,7 @@ class momX_starting_at_t1:
         vel = velX_starting_at_t1(hl=self.hl,xc=self.xc,g=self.g)
         return h.uOfXT(X,t)*vel.uOfXT(X,t)
 
-class Zero:
+class Zero(object):
     def uOfXT(self,x,t):
         return 0.0
 
@@ -102,7 +105,7 @@ initialConditions = {0:dam_break_problem_starting_at_t1(hl=hl,xc=xc,g=g),
 ##########################
 ##### EXACT SOLUTION #####
 ##########################
-class exact_h_starting_at_t0:
+class exact_h_starting_at_t0(object):
     def __init__(self,hl,xc,g):
         self.hl = hl
         self.xc = xc
@@ -119,7 +122,7 @@ class exact_h_starting_at_t0:
         else: 
             return 0.
 
-class exact_h_starting_at_t1:
+class exact_h_starting_at_t1(object):
     def __init__(self,hl,xc,g):
         self.hl = hl
         self.xc = xc
@@ -136,7 +139,7 @@ class exact_h_starting_at_t1:
         else: 
             return 0.
 
-class exact_velx:
+class exact_velx(object):
     def __init__(self,hl,xc,g):
         self.hl = hl
         self.g = g

@@ -1,6 +1,11 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-import blockDomain
+from . import blockDomain
 
 """
 Heterogenous Poisson's equation in 2D on an sShaped domain
@@ -70,7 +75,7 @@ def noFlowBCs(x,tag):
     if tag == boundaryTags['left'] and x[1] < L[1]*0.75:
         return lambda x,t: 0.0
 
-class velEx:
+class velEx(object):
     def __init__(self,duex,aex):
         self.duex = duex
         self.aex = aex
@@ -113,7 +118,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                          hamiltonian,
                          useSparseDiffusion=True,
                          sparseDiffusionTensors={0:(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
-                                                  numpy.array([range(nd) for row in range(nd)],dtype='i').flatten())})
+                                                  numpy.array([list(range(nd)) for row in range(nd)],dtype='i').flatten())})
     def initializeMesh(self,mesh):
         self.elementMaterialTypes = mesh.elementMaterialTypes
         self.exteriorElementBoundaryTypes =  numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
@@ -145,22 +150,22 @@ class SinglePhaseDarcyCoefficients(TC_base):
         nd = self.nd
         #use harmonic average for a, arith average for f
         for ci in range(self.nc):
-            if cebq_global.has_key(('f',ci)): cebq_global[('f',ci)].flat[:] = 0.0
-            if cebq.has_key(('f',ci)): cebq[('f',ci)].flat[:] = 0.0
+            if ('f',ci) in cebq_global: cebq_global[('f',ci)].flat[:] = 0.0
+            if ('f',ci) in cebq: cebq[('f',ci)].flat[:] = 0.0
             for ebN in range(cebq_global['x'].shape[0]):
                 material_left = self.elementBoundaryTypes[ebN,0]
                 material_right= self.elementBoundaryTypes[ebN,1]
                 for k in range(cebq_global['x'].shape[1]):
-                    if cebq_global.has_key(('r',ci)):
+                    if ('r',ci) in cebq_global:
                         cebq_global[('r',ci)][eN,k] =-0.5*(self.source_types[material_left](cebq_global['x'][ebN,k],t)+
                                                            self.source_types[material_right](cebq_global['x'][ebN,k],t))
-                    if cebq_global.has_key(('a',ci,ci)):
+                    if ('a',ci,ci) in cebq_global:
                         for i in range(nd):
                             for j in range(nd):
                                 x = cebq_global['x'][ebN,k];
                                 numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                 denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = numer/denom
+                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = old_div(numer,denom)
             for eN in range(cebq['x'].shape[0]):
                 for ebN_local in range(cebq['x'].shape[1]):
                     ebN = self.elementBoundariesArray[eN,ebN_local]
@@ -168,15 +173,15 @@ class SinglePhaseDarcyCoefficients(TC_base):
                     material_right= self.elementBoundaryTypes[ebN,1]
                     for k in range(cebq['x'].shape[2]):
                         x = cebq['x'][eN,ebN_local,k]
-                        if cebq.has_key(('r',ci)):
+                        if ('r',ci) in cebq:
                             cebq[('r',ci)][eN,ebN_local,k] =-0.5*(self.source_types[material_left](x,t)+
                                                                   self.source_types[material_right](x,t))
-                        if cebq.has_key(('a',ci,ci)):
+                        if ('a',ci,ci) in cebq:
                             for i in range(nd):
                                 for j in range(nd):
                                     numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                     denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = numer/denom
+                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = old_div(numer,denom)
                     #
                 #
             #
@@ -184,14 +189,14 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         nd = self.nd
         for ci in range(self.nc):
-            if cebqe.has_key(('f',ci)): cebqe[('f',ci)].flat[:] = 0.0
+            if ('f',ci) in cebqe: cebqe[('f',ci)].flat[:] = 0.0
             for ebNE in range(cebqe['x'].shape[0]):
                 material = self.exteriorElementBoundaryTypes[ebNE]
                 for k in range(cebqe['x'].shape[1]):
                     x = cebqe['x'][ebNE,k]
-                    if cebqe.has_key(('r',ci)):
+                    if ('r',ci) in cebqe:
                         cebqe[('r',ci)][ebNE,k] = -self.source_types[material](x,t)
-                    if cebqe.has_key(('a',ci,ci)):
+                    if ('a',ci,ci) in cebqe:
                         cebqe[('a',ci,ci)][ebNE,k,:] = self.a_types[material](x,t).flat
                 #
             #

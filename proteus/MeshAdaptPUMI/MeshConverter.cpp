@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "MeshAdaptPUMI.h"
+#include <PCU.h>
 #include "mesh.h"
 #include <apfShape.h>
 
@@ -513,26 +514,98 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
   apf::MeshIterator* it;
   apf::MeshEntity* f;
 
+  //first associate all nodes with a material tag and synchronize fields to avoid mismatches 
+  //The procedure is to have each vertex look for its classification.
+  //If it is classified in the region, then it is interior.
+  //Else, loop over adjacent faces and stop at first instance of mesh face classified on model boundary and take tag.
+    //If there are no such adjacent mesh faces, then set the value to be -1. This should only happen if the vertex is a shared entity.
+  //If the vertex is shared, communicate value to remote copies.
+  //When receiving values, if the current value is -1, write to field the received value. Otherwise, do nothing. 
+
+  apf::Field* nodeMaterials = apf::createLagrangeField(m, "nodeMaterials", apf::SCALAR, 1);
+  it = m->begin(0);
+  PCU_Comm_Begin();
+  while(f = m->iterate(it))
+  {
+    geomEnt = m->toModel(f);
+    //if classified in a region
+    if(m->getModelType(geomEnt) == m->getDimension())
+    {
+      apf::setScalar(nodeMaterials,f,0,0); 
+    }
+    else
+    {
+      apf::Adjacent vert_adjFace;
+      m->getAdjacent(f,m->getDimension()-1,vert_adjFace);
+      apf::MeshEntity* face;
+      for(int i =0; i<vert_adjFace.getSize();i++)
+      {
+        face=vert_adjFace[i];
+        geomEnt = m->toModel(face);
+
+        //IF mesh face is classified on boundary
+        if(m->getModelType(geomEnt) == m->getDimension()-1)
+        {
+          geomTag = m->getModelTag(geomEnt);
+          apf::setScalar(nodeMaterials,f,0,geomTag);
+          if(m->isShared(f))
+          {
+            apf::Copies remotes;
+            m->getRemotes(f,remotes);
+            for(apf::Copies::iterator iter = remotes.begin(); iter != remotes.end(); ++iter)
+            {
+              PCU_COMM_PACK(iter->first,iter->second);
+              PCU_COMM_PACK(iter->first,geomTag);
+            }
+          }  
+          break;
+        }
+        if(i == vert_adjFace.getSize()-1 )
+          apf::setScalar(nodeMaterials,f,0,-1);
+      }
+    }
+  }
+  PCU_Comm_Send();
+  while(PCU_Comm_Receive())
+  {
+    PCU_COMM_UNPACK(f);
+    PCU_COMM_UNPACK(geomTag);
+    int currentTag = apf::getScalar(nodeMaterials,f,0);
+    int newTag = std::min(currentTag,geomTag);
+    //if vertex is not interior and had no adjacent faces, take received values
+    //else take minimum value of all tags
+    if(currentTag==-1)
+      apf::setScalar(nodeMaterials,f,0,geomTag);
+    else
+      apf::setScalar(nodeMaterials,f,0,newTag);
+  }
+  //Ensure there are no mismatches across parts and then assign node materials
+  apf::synchronize(nodeMaterials);
+  it = m->begin(0);
+  while(f=m->iterate(it))
+  {
+    int vID = localNumber(f);
+    mesh.nodeMaterialTypes[vID] = apf::getScalar(nodeMaterials,f,0);
+  }
+
   //First iterate over all faces in 3D, get the model tag and apply to all downward adjacencies
   int dim = m->getDimension()-1;
   it = m->begin(dim);
-  while(f = m->iterate(it)){
+  while(f = m->iterate(it))
+  {
     int i = localNumber(f);
     geomEnt = m->toModel(f);
     geomTag = m->getModelTag(geomEnt);
-    if(m->getModelType(geomEnt) == dim){
+    if(m->getModelType(geomEnt) == dim)
+    {
       mesh.elementBoundaryMaterialTypes[i] = geomTag;
-      apf::Adjacent face_adjVert;
-      m->getAdjacent(f,0,face_adjVert);
-      for(int j=0;j<face_adjVert.getSize();j++){
-          int vID = localNumber(face_adjVert[j]);
-          mesh.nodeMaterialTypes[vID] = geomTag;
-      }
     }
   }
   m->end(it);
 
+  apf::destroyField(nodeMaterials);
   std::cout<<"Finished faces and verts\n";
+
   //Loop over regions
   dim = m->getDimension();
   it = m->begin(dim);
@@ -555,7 +628,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
  * scorec/core. This may be added into scorec/core eventually and removed.
  */
 
-#include <PCU.h>
+//#include <PCU.h>
 #include "apfConvert.h"
 #include "apfMesh2.h"
 #include "apf.h"

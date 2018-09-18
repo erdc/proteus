@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from proteus import Domain
 from proteus import Context
 
@@ -62,7 +64,7 @@ partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 nn=nnx=(2**ct.refinement)*10+1
 nny=nnx
 nnz=1
-he=1.0/(nnx-1.0)
+he=old_div(1.0,(nnx-1.0))
 
 box=Domain.RectangularDomain(L=(1.0,1.0),
                              x=(0.0,0.0),
@@ -103,5 +105,5 @@ linearSolverConvergenceTest = 'r-true' #rits is do a set number of iterations, r
 #redist solver
 fmmFlag=0
 
-soname="cons_ls_level_"+`ct.refinement`
+soname="cons_ls_level_"+repr(ct.refinement)
 
