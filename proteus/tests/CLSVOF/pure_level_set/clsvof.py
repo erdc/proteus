@@ -21,7 +21,6 @@ AUTOMATED_TEST=True
 
 # ----- PARAMETERS FOR CLSVOF ----- #
 doSpinUpStep=False
-timeOrder=2
 lambdaFact=1.0
 computeMetrics=0 #0: don't compute metrics, 1: compute at EOS, 2: compute at ETS
 eps_tolerance_clsvof=True #Set tol on nonlinear solver to machine zero?
