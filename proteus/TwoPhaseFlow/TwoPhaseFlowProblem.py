@@ -54,7 +54,8 @@ class TwoPhaseFlowProblem:
             # assertion now done in TwoPhaseFlow_so.py
 
         # ***** SAVE PARAMETERS ***** #
-        self.Parameters = Parameters.ParametersHolder()
+        self.domain=domain
+        self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
         self.ns_model=ns_model
         self.ls_model = ls_model
         self.nd=nd
@@ -64,8 +65,13 @@ class TwoPhaseFlowProblem:
         self.nnx=nnx
         self.nny=nny
         self.nnz=nnz
-        self.domain=domain
-        self.triangleFlag=triangleFlag
+        self.triangleFlag = triangleFlag
+        self.Parameters.mesh.he = he
+        self.Parameters.mesh.nnx = nnx
+        self.Parameters.mesh.nny = nny
+        self.Parameters.mesh.nnz = nnz
+        self.Parameters.mesh.triangleFlag
+        self.Parameters.mesh.setTriangleOptions()
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
         self.restrictFineSolutionToAllMeshes = False

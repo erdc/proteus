@@ -2,6 +2,7 @@ from __future__ import division
 from past.utils import old_div
 from builtins import object
 from proteus.Profiling import logEvent
+from proteus.MeshTools import MeshOptions
 
 # default values for several models
 epsFact = 1.5
@@ -9,15 +10,20 @@ sc_uref = 1.
 sc_beta = 1.5
 shockCapturingFactor = 0.5
 
+
 class ParametersHolder:
     """
     """
-    def __init__(self):
+    def __init__(self, ProblemInstance=None):
+        # gain access to problem class if necessary
+        self.__Problem = ProblemInstance
+        # default options
         self.minTol = 1e-8
         self.nModels = 0
         self.models_list = []
         self.Models = ParametersModelsHolder()
         self.physical = ParametersPhysical()
+        self.mesh = MeshOptions(nd=self.__Problem.domain.nd)
 
     def initializeParameters(self):
         all_models = [self.Models.rans2p,
@@ -45,7 +51,10 @@ class ParametersHolder:
                     logEvent('{key}: {value}'. format(key=key, value=value))
                 logEvent('----------')
 
+
 class ParametersModelsHolder:
+    """
+    """
     def __init__(self):
         self.rans2p = ParametersModelRANS2P()
         self.vof = ParametersModelVOF()
@@ -61,22 +70,47 @@ class ParametersModelsHolder:
         self.pressureIncrement = ParametersModelPressureIncrement()
         self.mcorr = ParametersModelMCorr()
 
-class ParametersModelBase(object):
+
+class ParametersBase(object):
+    """Base class for all parameters class, enforces attribute freezing
     """
-    """
-    def __init__(self,
-                 name=None,
-                 index=None):
-        self.name = name
-        self.index = index
-        self.tolFac = 0.001
-        self.minTol = 1e-8
+    __frozen = False
+
+    def __init__(self):
+        pass
 
     def __getitem__(self, key):
         return self.__dict__[key]
 
     def __setitem__(self, key, val):
-        self.__dict__[key] = val
+        self.__setattr__(key, val)
+
+    def __setattr__(self, key, val):
+        if self.__frozen and not hasattr(self, key):
+            raise TypeError("{key} is not an option for model {name}".format(key=key, name=self.name))
+        object.__setattr__(self, key, val)
+
+    def _freeze(self):
+        self.__frozen = True
+
+    def addOption(self, name, value):
+        self.__frozen = False
+        self.__setattr__(name, value)
+        self._freeze()
+
+
+class ParametersModelBase(ParametersBase):
+    """
+    """
+    def __init__(self,
+                 name=None,
+                 index=None):
+        super(ParametersModelBase, self).__init__()
+        self.name = name
+        self.index = index
+        self.tolFac = 0.001
+        self.minTol = 1e-8
+
 
 class ParametersModelRANS2P(ParametersModelBase):
     """
@@ -97,6 +131,9 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.ns_lag_subgridError = True
         self.timeDiscretization = None
         self.timeOrder = 2
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelRANS3P(ParametersModelBase):
     """
@@ -123,24 +160,36 @@ class ParametersModelRANS3P(ParametersModelBase):
         self.ARTIFICIAL_VISCOSITY = 2
         self.cE = 1.
         self.cMax = 1.
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelPressure(ParametersModelBase):
     """
     """
     def __init__(self):
         super(ParametersModelPressure, self).__init__(name='pressure', index=None)
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelPressureInitial(ParametersModelBase):
     """
     """
     def __init__(self):
         super(ParametersModelPressureInitial, self).__init__(name='pressureInitial', index=None)
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelPressureIncrement(ParametersModelBase):
     """
     """
     def __init__(self):
         super(ParametersModelPressureIncrement, self).__init__(name='pressureincrement', index=None)
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelCLSVOF(ParametersModelBase):
     def __init__(self):
@@ -153,6 +202,9 @@ class ParametersModelCLSVOF(ParametersModelBase):
         self.outputQuantDOFs = True
         self.computeMetrics = 1
         self.eps_tolerance_clsvof = False
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelVOF(ParametersModelBase):
     """
@@ -166,6 +218,9 @@ class ParametersModelVOF(ParametersModelBase):
         self.epsFact = epsFact
         self.shockCapturingFactor = shockCapturingFactor
         self.lag_shockCapturing = True
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelNCLS(ParametersModelBase):
     """
@@ -179,6 +234,9 @@ class ParametersModelNCLS(ParametersModelBase):
         self.epsFact = epsFact
         self.shockCapturingFactor = shockCapturingFactor
         self.lag_shockCapturing = True
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelRDLS(ParametersModelBase):
     """
@@ -192,6 +250,9 @@ class ParametersModelRDLS(ParametersModelBase):
         self.epsFact = 0.33
         self.shockCapturingFactor = shockCapturingFactor
         self.lag_shockCapturing = False
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelMCorr(ParametersModelBase):
     """
@@ -205,6 +266,9 @@ class ParametersModelMCorr(ParametersModelBase):
         self.epsFactHeaviside = epsFact
         self.epsFactDirac = epsFact
         self.epsFactDiffusion = 0.1
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelAddedMass(ParametersModelBase):
     """
@@ -212,11 +276,16 @@ class ParametersModelAddedMass(ParametersModelBase):
     def __init__(self):
         super(ParametersModelAddedMass, self).__init__(name='addedmass', index=None)
         self.flags_rigidbody = None
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
+    """
+    """
     def __init__(self):
         super(ParametersModelMoveMeshMonitor, self).__init__(name='movemeshmonitor', index=None)
-        self.fund = lambda x, t: 1000.
+        self.func = lambda x, t: 1000.
         self.he_min = 0.
         self.he_max = 1000.
         self.epsFact = epsFact
@@ -231,25 +300,32 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         self.noNodeVelocityNodeMaterialTypes = None
         self.scale_with_nd = None
         self.do_firstStep = False
+        # freeze attributes
+        self._freeze()
+
 
 class ParametersModelMoveMeshElastic(ParametersModelBase):
+    """
+    """
     def __init__(self):
         super(ParametersModelMoveMeshElastic, self).__init__(name='movemeshelastic', index=None)
         self.E = 1.
         self.nu = 0.3
+        # freeze attributes
+        self._freeze()
 
-class ParametersPhysical:
+
+class ParametersPhysical(ParametersBase):
+    """
+    """
     def __init__(self):
+        super(ParametersPhysical, self).__init__()
         self.densityA = 998.2
         self.densityB = 1.205
         self.viscosityA = 1.004e-6
         self.viscosityB = 1.500e-5
         self.surf_tension_coeff = 72.8e-3
         self.gravity = [0., -9.81, 0.]
-
-    def __getitem__(self, key):
-        return self.__dict__[key]
-
-    def __setitem__(self, key, val):
-        self.__dict__[key] = val
+        # freeze attributes
+        self._freeze()
 

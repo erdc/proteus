@@ -75,8 +75,8 @@ else:
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
 fullNewtonFlag = True
-multilevelNonlinearSolver = Newton
-levelNonlinearSolver      = Newton
+multilevelNonlinearSolver = NonlinearSolvers.Newton
+levelNonlinearSolver = NonlinearSolvers.Newton
 nonlinearSmoother = None
 nonlinearSolverConvergenceTest = 'rits'
 levelNonlinearSolverConvergenceTest = 'r'

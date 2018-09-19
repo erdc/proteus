@@ -6375,10 +6375,10 @@ class MeshOptions(object):
 
     Parameters
     ----------
-    domain: proteus.Domain
+    nd: 2 for 2D, 3 for 3D
     """
-    def __init__(self, domain):
-        self.Domain = domain
+    def __init__(self, nd=None):
+        self.nd = nd
         self.he = 1.
         self.use_gmsh = False
         self.genMesh = True
@@ -6392,11 +6392,15 @@ class MeshOptions(object):
         self.nLayersOfOverlapForParallel = 1
         self.triangleOptions = "q30DenA" # defined when setTriangleOptions called
         self.nLevels = 1
-        if domain is not None:
-            self.nd = domain.nd
-            if self.nd == 2:
+        self.nnx = None
+        self.nny = None
+        self.nnz = None
+        self.triangleFlag = 1
+        self.nd = nd
+        if nd is not None:
+            if nd == 2:
                 self.triangle_string = 'VApq30Dena'
-            if self.nd == 3:
+            if nd == 3:
                 self.triangle_string = 'VApq1.35q12feena'
         else:
             self.triangle_string = None
