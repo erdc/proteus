@@ -55,13 +55,13 @@ multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver      = LinearSolvers.KSP_petsc4py
 parallelPartitioningType = mesh.parallelPartitioningType
 nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-nonlinearSmoother = NonlinearSolvers.Newton
+nonlinearSmoother = NonlinearSolvers.MoveMeshMonitorNewton
 linearSmoother = LinearSolvers.NavierStokesPressureCorrection
 
 linear_solver_options_prefix = 'mesh2_'
 
-multilevelNonlinearSolver  = NonlinearSolvers.Newton
-levelNonlinearSolver       = NonlinearSolvers.Newton
+multilevelNonlinearSolver  = NonlinearSolvers.MoveMeshMonitorNewton
+levelNonlinearSolver       = NonlinearSolvers.MoveMeshMonitorNewton
 
 linTolFac = 0.0
 l_atol_res = 1.0e-8
