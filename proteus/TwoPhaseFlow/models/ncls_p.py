@@ -63,9 +63,6 @@ initialConditions = {0: initialConditions['ncls']}
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
-    dirichletConditions = {0: boundaryConditions['ncls_DBC']}
-else:
-    dirichletConditions = {0: lambda x, flag: domain.bc[flag].ls_dirichlet.init_cython()}
+dirichletConditions = {0: lambda x, t: None}
 advectiveFluxBoundaryConditions = {}
 diffusiveFluxBoundaryConditions = {0: {}}

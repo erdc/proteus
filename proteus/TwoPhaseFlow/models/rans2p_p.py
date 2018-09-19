@@ -138,5 +138,5 @@ else:
                                        2: {2:lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
     if nd == 3:
         dirichletConditions[3] = lambda x, flag: domain.bc[flag].w_dirichlet.init_cython()
-        advectiveConditions[3] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
-        diffusiveConditions[3] = lambda x, flag: domain.bc[flag].w_diffusive.init_cython()
+        advectiveFLuxBoundaryConditions[3] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
+        diffusiveFluxBoundaryConditions[3] = {3: lambda x, flag: domain.bc[flag].w_diffusive.init_cython()}

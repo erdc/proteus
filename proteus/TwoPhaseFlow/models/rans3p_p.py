@@ -120,20 +120,26 @@ else:
 # ***************************************** #    
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-if nd==2:
+
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
     dirichletConditions = {0: boundaryConditions['vel_u_DBC'],
                            1: boundaryConditions['vel_v_DBC']}
-    advectiveFluxBoundaryConditions =  {0: boundaryConditions['vel_u_AFBC'],
-                                        1: boundaryConditions['vel_v_AFBC']}
-    diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['vel_u_DFBC']},
-                                       1:{1: boundaryConditions['vel_v_DFBC']}}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['vel_u_AFBC'],
+                                       1: boundaryConditions['vel_v_AFBC']}
+    diffusiveFluxBoundaryConditions = {0: {0: boundaryConditions['vel_u_DFBC']},
+                                       1: {1: boundaryConditions['vel_v_DFBC']}}
+    if nd == 3:
+        dirichletConditions[2] = boundaryConditions['vel_w_DBC']
+        advectiveFluxBoundaryConditions[2] = boundaryConditions['vel_w_AFBC']
+        diffusiveFluxBoundaryConditions[2] = {2: boundaryConditions['vel_w_AFBC']}
 else:
-    dirichletConditions = {0: boundaryConditions['vel_u_DBC'],
-                           1: boundaryConditions['vel_v_DBC'],
-                           2: boundaryConditions['vel_w_DBC']}
-    advectiveFluxBoundaryConditions =  {0: boundaryConditions['vel_u_AFBC'],
-                                        1: boundaryConditions['vel_v_AFBC'],
-                                        2: boundaryConditions['vel_w_AFBC']}
-    diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['vel_u_DFBC']},
-                                       1:{1: boundaryConditions['vel_v_DFBC']},
-                                       2:{2: boundaryConditions['vel_w_DFBC']}}
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
+                           1: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].u_advective.init_cython(),
+                                       1: lambda x, flag: domain.bc[flag].v_advective.init_cython()}
+    diffusiveFluxBoundaryConditions = {0: {0:lambda x, flag: domain.bc[flag].u_diffusive.init_cython()},
+                                       1: {1:lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
+    if nd == 3:
+        dirichletConditions[2] = lambda x, flag: domain.bc[flag].w_dirichlet.init_cython()
+        advectiveFLuxBoundaryConditions[2] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
+        diffusiveFluxBoundaryConditions[2] = {2: lambda x, flag: domain.bc[flag].w_diffusive.init_cython()}

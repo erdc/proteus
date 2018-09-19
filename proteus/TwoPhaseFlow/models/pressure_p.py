@@ -52,5 +52,9 @@ initialConditions = {0: initialConditions['pressure']}
 # ***************************************** #    
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-dirichletConditions = {0: boundaryConditions['pressure_DBC']} 
-advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC']}
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
+    dirichletConditions = {0: boundaryConditions['pressure_DBC']}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC']}
+else:
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].p_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].p_advective.init_cython()}

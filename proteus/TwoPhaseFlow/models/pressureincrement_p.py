@@ -52,6 +52,11 @@ initialConditions = {0: initialConditions['pressure_increment']}
 # ******************************* #
 # ***** BOUNDARY CONDITIONS ***** #
 # ******************************* #
-dirichletConditions = {0: boundaryConditions['pressure_increment_DBC']}
-advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_increment_AFBC']}
-diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['pressure_increment_DFBC']}}
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
+    dirichletConditions = {0: boundaryConditions['pressure_increment_DBC']}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_increment_AFBC']}
+    diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['pressure_increment_DFBC']}}
+else:
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].pInc_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].pInc_advective.init_cython()}
+    diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.bc[flag].pInc_diffusive.init_cython()}}

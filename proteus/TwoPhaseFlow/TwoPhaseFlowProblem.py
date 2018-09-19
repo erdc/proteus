@@ -11,7 +11,7 @@ class TwoPhaseFlowProblem:
 
     def __init__(self,
                  ns_model=0, #0: rans2p, 1: rans3p
-                 ls_model=1, #0: vof+ncls+rdls+ls_consrv, 1: clsvof
+                 ls_model=1, #0: vof+ncls+rdls+mcorr, 1: clsvof
                  nd=2,
                  # TIME STEPPING #
                  cfl=0.33,
@@ -35,7 +35,7 @@ class TwoPhaseFlowProblem:
         if ns_model is not None:
             assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
         if ls_model is not None:
-            assert ls_model in [0,1], "ls_model={0,1} for vof+ncls+rdls+ls_consrv or clsvof respectively"
+            assert ls_model in [0,1], "ls_model={0,1} for vof+ncls+rdls+mcorr or clsvof respectively"
         assert nd in [2,3], "nd={2,3}"
         assert cfl <= 1, "Choose cfl <= 1"
         assert isinstance (outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
@@ -116,7 +116,7 @@ class TwoPhaseFlowProblem:
             ind += 1
             self.Parameters.Models.rdls.index = ind
             ind += 1
-            self.Parameters.Models.ls_consrv.index = ind
+            self.Parameters.Models.mcorr.index = ind
             ind += 1
         elif self.ls_model == 1:
             self.Parameters.Models.clsvof.index = ind
@@ -198,7 +198,7 @@ class TwoPhaseFlowProblem:
                 # check diffusive flux BCs
                 assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
         else:
-            assert self.domain.useSpatialTools is not None, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
+            assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
 
     def initializeAll(self):
         # initial conditions

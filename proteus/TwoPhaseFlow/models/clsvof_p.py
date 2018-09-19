@@ -9,7 +9,7 @@ from proteus.mprans import CLSVOF
 # *********************************************** #
 ct = Context.get()
 
-myTpFlowProblem = ct.myTpFlowProblem 
+myTpFlowProblem = ct.myTpFlowProblem
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -64,9 +64,14 @@ name="clsvof"
 # **************************************** #
 initialConditions  = {0: initialConditions['clsvof']}
 
-# ***************************************** #    
+# ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-dirichletConditions = {0: boundaryConditions['clsvof_DBC']}
-advectiveFluxBoundaryConditions = {0: boundaryConditions['clsvof_AFBC']}
-diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['clsvof_DFBC']}}
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
+    dirichletConditions = {0: boundaryConditions['clsvof_DBC']}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['clsvof_AFBC']}
+    diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['clsvof_DFBC']}}
+else:
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].clsvof_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].clsvof_advective.init_cython()}
+    diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.bc[flag].clsvof_diffusive.init_cython()}}
