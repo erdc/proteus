@@ -1549,13 +1549,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                   self.nSpace_global),
                  'd')
         self.q[
-            'grad_u_Star'] = numpy.zeros(
+            'grad_u_star'] = numpy.zeros(
                  (self.mesh.nElements_global,
                   self.nQuadraturePoints_element,
                   self.nSpace_global),
                  'd')
         self.q[
-            'grad_v_Star'] = numpy.zeros(
+            'grad_v_star'] = numpy.zeros(
                  (self.mesh.nElements_global,
                   self.nQuadraturePoints_element,
                   self.nSpace_global),
@@ -2672,8 +2672,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.q_grad_p_sharp,
             self.pressureModel.ebqe_p_sharp,
             self.pressureModel.ebqe_grad_p_sharp,
-            # self.pressureModel.q[('u',0)],
-            # self.pressureModel.q[('grad(u)',0)],
+            self.pressureModel.q[('u',0)],
+            self.pressureModel.q[('grad(u)',0)],
             # self.pressureModel.ebqe[('u',0)],
             # self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,

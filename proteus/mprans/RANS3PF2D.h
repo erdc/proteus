@@ -1062,20 +1062,20 @@ namespace proteus
             if(phi_s_effect>0)
             {
               mom_u_ham = grad_p[0];//this is grad p_sharp
-              dmom_u_ham_grad_p[0]=1.0;
+              dmom_u_ham_grad_p[0]=0.0;
               dmom_u_ham_grad_p[1]=0.0;
               //v momentum Hamiltonian (pressure)
               mom_v_ham = grad_p[1];
               dmom_v_ham_grad_p[0]=0.0;
-              dmom_v_ham_grad_p[1]=1.0;
+              dmom_v_ham_grad_p[1]=0.0;
             }else{
               mom_u_ham = grad_pn[0];
-              dmom_u_ham_grad_p[0]=1.0;
+              dmom_u_ham_grad_p[0]=0.0;
               dmom_u_ham_grad_p[1]=0.0;
               //v momentum Hamiltonian (pressure)
               mom_v_ham = grad_pn[1];
               dmom_v_ham_grad_p[0]=0.0;
-              dmom_v_ham_grad_p[1]=1.0;
+              dmom_v_ham_grad_p[1]=0.0;
             }
 
             //u momentum Hamiltonian (advection)
@@ -3031,25 +3031,44 @@ namespace proteus
                 if (q_dV_last[eN_k] <= -100)
                   q_dV_last[eN_k] = dV;
                 q_dV[eN_k] = dV;
-                if (phi_solid[eN_k] > 0)
-                {
+
                 ck.bdf(alphaBDF,
-                       q_mom_u_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
+                       q_mom_u_acc_beta_bdf[eN_k] * q_dV_last[eN_k] / dV,
                        mom_u_acc,
                        dmom_u_acc_u,
                        mom_u_acc_t,
                        dmom_u_acc_u_t);
                 ck.bdf(alphaBDF,
-                       q_mom_v_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
+                       q_mom_v_acc_beta_bdf[eN_k] * q_dV_last[eN_k] / dV,
                        mom_v_acc,
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
-                }else{
-                  mom_u_acc_t *= alphaBDF*mom_u_acc;
-                  dmom_u_acc_u_t *= alphaBDF*dmom_u_acc_u;
-                  mom_v_acc_t *= alphaBDF*mom_v_acc;
-                  dmom_v_acc_v_t *= alphaBDF*dmom_v_acc_v;
+
+                if (USE_SBM == -1)
+                {
+                  if (phi_solid[eN_k] > 0)
+                  {
+                    ck.bdf(alphaBDF,
+                           q_mom_u_acc_beta_bdf[eN_k],
+                           mom_u_acc,
+                           dmom_u_acc_u,
+                           mom_u_acc_t,
+                           dmom_u_acc_u_t);
+                    ck.bdf(alphaBDF,
+                           q_mom_v_acc_beta_bdf[eN_k],
+                           mom_v_acc,
+                           dmom_v_acc_v,
+                           mom_v_acc_t,
+                           dmom_v_acc_v_t);
+                  }
+                  else
+                  {
+                    mom_u_acc_t *= alphaBDF * mom_u_acc;
+                    dmom_u_acc_u_t *= alphaBDF * dmom_u_acc_u;
+                    mom_v_acc_t *= alphaBDF * mom_v_acc;
+                    dmom_v_acc_v_t *= alphaBDF * dmom_v_acc_v;
+                  }
                 }
                 /* ck.bdf(alphaBDF, */
                 /*           q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
@@ -5393,6 +5412,31 @@ namespace proteus
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
+                if (USE_SBM == -1)
+                {
+                  if (phi_solid[eN_k] > 0)
+                  {
+                    ck.bdf(alphaBDF,
+                           q_mom_u_acc_beta_bdf[eN_k],
+                           mom_u_acc,
+                           dmom_u_acc_u,
+                           mom_u_acc_t,
+                           dmom_u_acc_u_t);
+                    ck.bdf(alphaBDF,
+                           q_mom_v_acc_beta_bdf[eN_k],
+                           mom_v_acc,
+                           dmom_v_acc_v,
+                           mom_v_acc_t,
+                           dmom_v_acc_v_t);
+                  }
+                  else
+                  {
+                    mom_u_acc_t *= alphaBDF * mom_u_acc;
+                    dmom_u_acc_u_t *= alphaBDF * dmom_u_acc_u;
+                    mom_v_acc_t *= alphaBDF * mom_v_acc;
+                    dmom_v_acc_v_t *= alphaBDF * dmom_v_acc_v;
+                  }
+                }
                 /* ck.bdf(alphaBDF, */
                 /*           q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
                 /*           mom_w_acc, */
