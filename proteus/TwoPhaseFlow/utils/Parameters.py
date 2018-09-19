@@ -44,6 +44,7 @@ class ParametersHolder:
         for i in range(len(all_models)):
             model = all_models[i]
             if model['index'] >= 0:
+                print(model)
                 self.nModels += 1
                 self.models_list += [model]
                 logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))

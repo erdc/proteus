@@ -36,7 +36,7 @@ epsFactDiffusion = mparams.mcorr['epsFactDiffusion']
 # ********** MODEL INDEXING ********** #
 # ************************************ #
 ME_model = mparams.mcorr['index']
-assert ME_model != None, 'vof model index was not set!'
+assert ME_model is not None, 'vof model index was not set!'
 LS_model = mparams.ncls['index']
 VOF_model = mparams.vof['index']
 if mparams.rans2p['index'] is not None:

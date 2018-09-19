@@ -46,7 +46,7 @@ func = mparams.movemeshmonitor['func']
 # ********** MODEL INDEXING ********** #
 # ************************************ #
 ME_model = mparams.movemeshmonitor['index']
-assert ME_model != None, 'vof model index was not set!'
+assert ME_model is not None, 'vof model index was not set!'
 if mparams.movemeshmonitor['useLS'] is True:
     LS_MODEL = mparams.ncls['index']
 else:

@@ -35,7 +35,7 @@ backgroundDiffusionFactor = mparams.rdls['backgroundDiffusionFactor']
 # ********** MODEL INDEXING ********** #
 # ************************************ #
 nModelId = mparams.ncls['index']
-assert nModelId != None, 'redist model index was not set!'
+assert nModelId is not None, 'redist model index was not set!'
 rdModelId = mparams.rdls['index']
 
 LevelModelType = RDLS.LevelModel

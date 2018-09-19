@@ -14,6 +14,7 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 # *************************** #
 opts= Context.Options([
     ('ns_model',1,"ns_model = {rans2p,rans3p}"),
+    ('ls_model',1,"ls_model = {ncls,clsvof}"),
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
@@ -178,6 +179,7 @@ boundaryConditions = {
     'vel_v_DFBC': lambda x,flag: lambda x,t: 0.0,
     'clsvof_DFBC': lambda x,flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+                                             ls_model=opts.ls_model,
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -195,12 +197,12 @@ myTpFlowProblem.Parameters.physical['densityB'] = 1.0
 myTpFlowProblem.Parameters.physical['viscosityB'] = 2.0E-5/1.0
 myTpFlowProblem.Parameters.physical['surf_tension_coeff'] = 0.
 
-if opts.ns_model == 0:
-    myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
-    myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
-elif opts.ns_model == 1:
-    myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
-    myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
-    myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
-    myTpFlowProblem.Parameters.Models.pressure['index'] = 3
-    myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4
+# if opts.ns_model == 0:
+#     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
+# elif opts.ns_model == 1:
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+#     myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+#     myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+#     myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+#     myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4

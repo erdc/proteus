@@ -16,6 +16,7 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 opts= Context.Options([
     ("test_case",1,"Rising bubble test cases"),
     ('ns_model',1,"ns_model = {rans2p,rans3p}"),
+    ('ls_model',1,"ls_model = {ncls,clsvof}"),
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
@@ -113,6 +114,7 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+                                             ls_model=opts.ls_model,
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -141,12 +143,12 @@ else: #test_case=2
     physical_parameters['viscosityB'] = 0.1/physical_parameters['densityB']
     physical_parameters['surf_tension_coeff'] = 1.96    
 
-if opts.ns_model == 0:
-    myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
-    myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
-elif opts.ns_model == 1:
-    myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
-    myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
-    myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
-    myTpFlowProblem.Parameters.Models.pressure['index'] = 3
-    myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4
+# if opts.ns_model == 0:
+#     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
+# elif opts.ns_model == 1:
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+#     myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+#     myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+#     myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+#     myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4

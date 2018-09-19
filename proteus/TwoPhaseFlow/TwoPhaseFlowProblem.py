@@ -77,6 +77,9 @@ class TwoPhaseFlowProblem:
         self.restrictFineSolutionToAllMeshes = False
         self.useSuperlu = useSuperlu
         self.movingDomain = False
+        # to use proteus.mprans.BoundaryConditions
+        # but only if SpatialTools was used to make the domain
+        self.useBoundaryConditionsModule = True
 
         # ***** CHOOSE SOME DEFAULT OPTIONS FOR PARALLEL RUNS ***** #
         self.parallelPartitioningType = mt.MeshParallelPartitioningTypes.node
@@ -95,14 +98,26 @@ class TwoPhaseFlowProblem:
         # set indice of models if ns_model and ls_model is set
         ind = 0
         if self.ls_model == 0:
-                self.Parameters.Models.vof.index = ind
+            if self.ns_model == 0:
+                self.Parameters.Models.rans2p.index = ind
                 ind += 1
-                self.Parameters.Models.ncls.index = ind
+            else:
+                self.Parameters.Models.rans3p.index = ind
                 ind += 1
-                self.Parameters.Models.rdls.index = ind
+                self.Parameters.Models.pressureIncrement.index = ind
                 ind += 1
-                self.Parameters.Models.ls_consrv.index = ind
+                self.Parameters.Models.pressure.index = ind
                 ind += 1
+                self.Parameters.Models.pressureInitial.index = ind
+                ind += 1
+            self.Parameters.Models.vof.index = ind
+            ind += 1
+            self.Parameters.Models.ncls.index = ind
+            ind += 1
+            self.Parameters.Models.rdls.index = ind
+            ind += 1
+            self.Parameters.Models.ls_consrv.index = ind
+            ind += 1
         elif self.ls_model == 1:
             self.Parameters.Models.clsvof.index = ind
             ind += 1

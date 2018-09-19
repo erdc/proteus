@@ -58,7 +58,7 @@ Closure_1_model = None
 # ********** MODEL INDEXING ********** #
 # ************************************ #
 ME_model = mparams.rans2p['index']
-assert ME_model != None, 'rans2p model index was not set!'
+assert ME_model is not None, 'rans2p model index was not set!'
 CLSVOF_model = mparams.clsvof['index']
 VF_model = mparams.vof['index']
 LS_model = mparams.ncls['index']
@@ -72,7 +72,7 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    nu_1=nu_1,
                                    g=g,
                                    nd=nd,
-                                   ME_model=0,
+                                   ME_model=ME_model,
                                    CLSVOF_model=CLSVOF_model,
                                    VF_model=VF_model,
                                    LS_model=LS_model,
@@ -83,7 +83,7 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    useVF=useVF,
                                    useRBLES=useRBLES,
                                    useMetrics=useMetrics,
-                                   eb_adjoint_sigma=1.0,
+                                   eb_adjoint_sigma=1.,
                                    eb_penalty_constant=weak_bc_penalty_constant,
                                    forceStrongDirichlet=ns_forceStrongDirichlet,
                                    turbulenceClosureModel=ns_closure,
@@ -92,44 +92,40 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
-if nd==2:
-    initialConditions = {0: initialConditions['pressure'],
-                         1: initialConditions['vel_u'],
-                         2: initialConditions['vel_v']}
-else:
-    initialConditions = {0: initialConditions['pressure'],
-                         1: initialConditions['vel_u'],
-                         2: initialConditions['vel_v'],
-                         3: initialConditions['vel_w']}
+initialConditions = {0: initialConditions['pressure'],
+                     1: initialConditions['vel_u'],
+                     2: initialConditions['vel_v']}
+if nd == 3:
+    initialConditions[3] = initialConditions['vel_w']
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
 
-if domain.useSpatialTools is False:
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
     if nd==2:
         dirichletConditions = {0: boundaryConditions['pressure_DBC'],
-                            1: boundaryConditions['vel_u_DBC'],
-                            2: boundaryConditions['vel_v_DBC']}
+                               1: boundaryConditions['vel_u_DBC'],
+                               2: boundaryConditions['vel_v_DBC']}
         advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC'],
-                                        1: boundaryConditions['vel_u_AFBC'],
-                                        2: boundaryConditions['vel_v_AFBC']}
+                                           1: boundaryConditions['vel_u_AFBC'],
+                                           2: boundaryConditions['vel_v_AFBC']}
         diffusiveFluxBoundaryConditions = {0: {},
-                                        1: {1: boundaryConditions['vel_u_DFBC']},
-                                        2: {2: boundaryConditions['vel_v_DFBC']}}
+                                           1: {1: boundaryConditions['vel_u_DFBC']},
+                                           2: {2: boundaryConditions['vel_v_DFBC']}}
     else:
         dirichletConditions = {0: boundaryConditions['pressure_DBC'],
-                            1: boundaryConditions['vel_u_DBC'],
-                            2: boundaryConditions['vel_v_DBC'],
-                            3: boundaryConditions['vel_w_DBC']}
+                               1: boundaryConditions['vel_u_DBC'],
+                               2: boundaryConditions['vel_v_DBC'],
+                               3: boundaryConditions['vel_w_DBC']}
         advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC'],
-                                        1: boundaryConditions['vel_u_AFBC'],
-                                        2: boundaryConditions['vel_v_AFBC'],
-                                        3: boundaryConditions['vel_w_AFBC']}
+                                           1: boundaryConditions['vel_u_AFBC'],
+                                           2: boundaryConditions['vel_v_AFBC'],
+                                           3: boundaryConditions['vel_w_AFBC']}
         diffusiveFluxBoundaryConditions = {0: {},
-                                        1: {1: boundaryConditions['vel_u_DFBC']},
-                                        2: {2: boundaryConditions['vel_v_DFBC']},
-                                        3: {3: boundaryConditions['vel_w_DFBC']}}
+                                           1: {1: boundaryConditions['vel_u_DFBC']},
+                                           2: {2: boundaryConditions['vel_v_DFBC']},
+                                           3: {3: boundaryConditions['vel_w_DFBC']}}
 else:
     dirichletConditions = {0: lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
                            1: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),

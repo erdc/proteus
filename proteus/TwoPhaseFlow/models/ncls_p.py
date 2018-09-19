@@ -35,7 +35,7 @@ epsFact = mparams.ncls['epsFact']
 # ********** MODEL INDEXING ********** #
 # ************************************ #
 ME_model = mparams.ncls['index']
-assert ME_model != None, 'ls model index was not set!'
+assert ME_model is not None, 'ls model index was not set!'
 if mparams.rans2p['index'] is not None:
     V_model = mparams.rans2p['index']
 elif mparams.rans3p['index'] is not None:
@@ -63,6 +63,9 @@ initialConditions = {0: initialConditions['ncls']}
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-dirichletConditions = {0: lambda x, flag: None}
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
+    dirichletConditions = {0: boundaryConditions['ncls_DBC']}
+else:
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].ls_dirichlet.init_cython()}
 advectiveFluxBoundaryConditions = {}
 diffusiveFluxBoundaryConditions = {0: {}}
