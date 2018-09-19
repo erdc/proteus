@@ -9,30 +9,35 @@ namespace chrono {
     ChBodyAddedMass::ChBodyAddedMass() {
         ChBody::variables = variables;
 	}
-  // void ChBodyAddedMass::SetMass(double newmass) {
-  //       variables.SetBodyMass(newmass);
-  //   }
-  //   void ChBodyAddedMass::SetInertia(const ChMatrix33<>& newXInertia) {
-  //       variables.SetBodyInertia(newXInertia);
-  //   }
 
-  //   void ChBodyAddedMass::SetInertiaXX(const ChVector<>& iner) {
-  //       ChMatrix33<> Miner;
-  //       Miner.SetElement(0, 0, iner.x());
-  //       Miner.SetElement(1, 1, iner.y());
-  //       Miner.SetElement(2, 2, iner.z());
-  //       variables.SetBodyInertia(Miner);
-  //   }
-  //   void ChBodyAddedMass::SetInertiaXY(const ChVector<>& iner) {
-  //       ChMatrix33<> Miner;
-  //       Miner.SetElement(0, 1, iner.x());
-  //       Miner.SetElement(0, 2, iner.y());
-  //       Miner.SetElement(1, 2, iner.z());
-  //       Miner.SetElement(1, 0, iner.x());
-  //       Miner.SetElement(2, 0, iner.y());
-  //       Miner.SetElement(2, 1, iner.z());
-  //       variables.SetBodyInertia(Miner);
-  //   }
+  void ChBodyAddedMass::SetMass(double newmass) {
+        variables.SetBodyMass(newmass);
+        ChBody::variables.SetBodyMass(newmass);
+    }
+
+  void ChBodyAddedMass::SetInertia(const ChMatrix33<>& newXInertia) {
+    variables.SetBodyInertia(newXInertia);
+    ChBody::variables.SetBodyInertia(newXInertia);
+  }
+
+  void ChBodyAddedMass::SetInertiaXX(const ChVector<>& iner) {
+    variables.GetBodyInertia().SetElement(0, 0, iner.x());
+    variables.GetBodyInertia().SetElement(1, 1, iner.y());
+    variables.GetBodyInertia().SetElement(2, 2, iner.z());
+    variables.GetBodyInertia().FastInvert(variables.GetBodyInvInertia());
+    ChBody::SetInertiaXX(iner);
+  }
+
+  void ChBodyAddedMass::SetInertiaXY(const ChVector<>& iner) {
+    variables.GetBodyInertia().SetElement(0, 1, iner.x());
+    variables.GetBodyInertia().SetElement(0, 2, iner.y());
+    variables.GetBodyInertia().SetElement(1, 2, iner.z());
+    variables.GetBodyInertia().SetElement(1, 0, iner.x());
+    variables.GetBodyInertia().SetElement(2, 0, iner.y());
+    variables.GetBodyInertia().SetElement(2, 1, iner.z());
+    variables.GetBodyInertia().FastInvert(variables.GetBodyInvInertia());
+    ChBody::SetInertiaXY(iner);
+  }
 
   //   ChVector<> ChBodyAddedMass::GetInertiaXX() {
   //       ChVector<> iner;
