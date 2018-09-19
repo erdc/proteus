@@ -9,6 +9,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
+#include "PyEmbeddedFunctions.h"
 
 //////////////////////
 // ***** TODO ***** //
@@ -997,7 +998,7 @@ namespace proteus
         /* dmom_w_ham_grad_w[1]=porosity*rho*vStar; */
         /* dmom_w_ham_grad_w[2]=porosity*rho*wStar; */
         //Pseudo-penalty method
-        if(USE_SBM==-1)
+        if(USE_SBM==-1 || USE_SBM==0)
         {
             //u momentum accumulation
             mom_u_acc = u;
@@ -1043,22 +1044,26 @@ namespace proteus
             dmom_v_adv_v[1]=0.0;
 
             //u momentum diffusion tensor
-            mom_uu_diff_ten[0] = nu_0;
+            mom_uu_diff_ten[0] = 2.0*nu_0;
             mom_uu_diff_ten[1] = nu_0;
-            mom_uv_diff_ten[0] = 0.0;
+            mom_uv_diff_ten[0] = nu_0;
             //v momentum diffusion tensor
             mom_vv_diff_ten[0] = nu_0;
-            mom_vv_diff_ten[1] = nu_0;
-            mom_vu_diff_ten[0] = 0.0;
+            mom_vv_diff_ten[1] = 2.0*nu_0;
+            mom_vu_diff_ten[0] = nu_0;
 
-            //momentum sources
+            // //momentum sources
             mom_u_source = -phi_s_effect * g[0];
             mom_v_source = -phi_s_effect * g[1];
 
-            // mom_u_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcex;
-            // mom_v_source -= (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcey;
-            
             //u momentum Hamiltonian (pressure)
+            // mom_u_ham = grad_p[0]; //this is grad p_sharp
+            // dmom_u_ham_grad_p[0] = 0.0;
+            // dmom_u_ham_grad_p[1] = 0.0;
+            // //v momentum Hamiltonian (pressure)
+            // mom_v_ham = grad_p[1];
+            // dmom_v_ham_grad_p[0] = 0.0;
+            // dmom_v_ham_grad_p[1] = 0.0;
             if(phi_s_effect>0)
             {
               mom_u_ham = grad_p[0];//this is grad p_sharp
@@ -1083,15 +1088,16 @@ namespace proteus
             {
               const double curl_u = grad_v_star[0] - grad_u_star[1];
               mom_u_ham += vStar*curl_u;
+              // mom_u_ham += uStar*grad_u_star[0]+vStar*grad_u_star[1];
               dmom_u_ham_grad_u[0]=0.0;
               dmom_u_ham_grad_u[1]=0.0;
             
               //v momentum Hamiltonian (advection)
               mom_v_ham += -uStar*curl_u;
+              // mom_v_ham += uStar*grad_v_star[0]+vStar*grad_v_star[1];
               dmom_v_ham_grad_v[0]=0.0;
               dmom_v_ham_grad_v[1]=0.0;
             }
-            
         }
       }
 
@@ -1314,30 +1320,29 @@ namespace proteus
               }
 
             // These should be done inside to make sure the correct velocity of different particles are used
-            mom_u_source += C * (u - u_s);
-            mom_v_source += C * (v - v_s);
+            // mom_u_source += C*(u - u_s);
+            // mom_v_source += C*(v - v_s);
+            // dmom_u_source[0] += C;
+            // dmom_v_source[1] += C;
 
-            dmom_u_source[0] += C;
-            dmom_v_source[1] += C;
+            // //Nitsche terms
+            // mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
+            // dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
+            // dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
 
-            //Nitsche terms
-            mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
-            dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
+            // mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
+            // dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
+            // dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
-            dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
+            // mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
+            // mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
+            // dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
+            // dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
-            mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
-            dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
-
-            mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
-            mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
-            dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
+            // mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
+            // mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
+            // dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
+            // dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
           }
       }
       inline void compute_force_around_solid(bool element_owned,
@@ -3032,44 +3037,49 @@ namespace proteus
                   q_dV_last[eN_k] = dV;
                 q_dV[eN_k] = dV;
 
-                ck.bdf(alphaBDF,
-                       q_mom_u_acc_beta_bdf[eN_k] * q_dV_last[eN_k] / dV,
-                       mom_u_acc,
-                       dmom_u_acc_u,
-                       mom_u_acc_t,
-                       dmom_u_acc_u_t);
-                ck.bdf(alphaBDF,
-                       q_mom_v_acc_beta_bdf[eN_k] * q_dV_last[eN_k] / dV,
-                       mom_v_acc,
-                       dmom_v_acc_v,
-                       mom_v_acc_t,
-                       dmom_v_acc_v_t);
 
-                if (USE_SBM == -1)
+
+                // if (USE_SBM == -1)
+                // {
+                //   if (phi_solid[eN_k] > 0)
+                //   {
+                //     ck.bdf(alphaBDF,
+                //            q_mom_u_acc_beta_bdf[eN_k],
+                //            mom_u_acc,
+                //            dmom_u_acc_u,
+                //            mom_u_acc_t,
+                //            dmom_u_acc_u_t);
+                //     ck.bdf(alphaBDF,
+                //            q_mom_v_acc_beta_bdf[eN_k],
+                //            mom_v_acc,
+                //            dmom_v_acc_v,
+                //            mom_v_acc_t,
+                //            dmom_v_acc_v_t);
+                //   }
+                //   else
+                //   {
+                //     mom_u_acc_t *= alphaBDF * mom_u_acc;
+                //     dmom_u_acc_u_t *= alphaBDF * dmom_u_acc_u;
+                //     mom_v_acc_t *= alphaBDF * mom_v_acc;
+                //     dmom_v_acc_v_t *= alphaBDF * dmom_v_acc_v;
+                //   }
+                // }
+                // else
                 {
-                  if (phi_solid[eN_k] > 0)
-                  {
-                    ck.bdf(alphaBDF,
-                           q_mom_u_acc_beta_bdf[eN_k],
-                           mom_u_acc,
-                           dmom_u_acc_u,
-                           mom_u_acc_t,
-                           dmom_u_acc_u_t);
-                    ck.bdf(alphaBDF,
-                           q_mom_v_acc_beta_bdf[eN_k],
-                           mom_v_acc,
-                           dmom_v_acc_v,
-                           mom_v_acc_t,
-                           dmom_v_acc_v_t);
-                  }
-                  else
-                  {
-                    mom_u_acc_t *= alphaBDF * mom_u_acc;
-                    dmom_u_acc_u_t *= alphaBDF * dmom_u_acc_u;
-                    mom_v_acc_t *= alphaBDF * mom_v_acc;
-                    dmom_v_acc_v_t *= alphaBDF * dmom_v_acc_v;
-                  }
+                  ck.bdf(alphaBDF,
+                         q_mom_u_acc_beta_bdf[eN_k] * q_dV_last[eN_k] / dV,
+                         mom_u_acc,
+                         dmom_u_acc_u,
+                         mom_u_acc_t,
+                         dmom_u_acc_u_t);
+                  ck.bdf(alphaBDF,
+                         q_mom_v_acc_beta_bdf[eN_k] * q_dV_last[eN_k] / dV,
+                         mom_v_acc,
+                         dmom_v_acc_v,
+                         mom_v_acc_t,
+                         dmom_v_acc_v_t);
                 }
+
                 /* ck.bdf(alphaBDF, */
                 /*           q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
                 /*           mom_w_acc, */
@@ -5400,42 +5410,45 @@ namespace proteus
                 //
                 //calculate time derivatives
                 //
-                ck.bdf(alphaBDF,
-                       q_mom_u_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
-                       mom_u_acc,
-                       dmom_u_acc_u,
-                       mom_u_acc_t,
-                       dmom_u_acc_u_t);
-                ck.bdf(alphaBDF,
-                       q_mom_v_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
-                       mom_v_acc,
-                       dmom_v_acc_v,
-                       mom_v_acc_t,
-                       dmom_v_acc_v_t);
-                if (USE_SBM == -1)
+                // if (USE_SBM == -1)
+                // {
+                //   if (phi_solid[eN_k] > 0)
+                //   {
+                //     ck.bdf(alphaBDF,
+                //            q_mom_u_acc_beta_bdf[eN_k],
+                //            mom_u_acc,
+                //            dmom_u_acc_u,
+                //            mom_u_acc_t,
+                //            dmom_u_acc_u_t);
+                //     ck.bdf(alphaBDF,
+                //            q_mom_v_acc_beta_bdf[eN_k],
+                //            mom_v_acc,
+                //            dmom_v_acc_v,
+                //            mom_v_acc_t,
+                //            dmom_v_acc_v_t);
+                //   }
+                //   else
+                //   {
+                //     mom_u_acc_t *= alphaBDF * mom_u_acc;
+                //     dmom_u_acc_u_t *= alphaBDF * dmom_u_acc_u;
+                //     mom_v_acc_t *= alphaBDF * mom_v_acc;
+                //     dmom_v_acc_v_t *= alphaBDF * dmom_v_acc_v;
+                //   }
+                // }
+                // else
                 {
-                  if (phi_solid[eN_k] > 0)
-                  {
-                    ck.bdf(alphaBDF,
-                           q_mom_u_acc_beta_bdf[eN_k],
-                           mom_u_acc,
-                           dmom_u_acc_u,
-                           mom_u_acc_t,
-                           dmom_u_acc_u_t);
-                    ck.bdf(alphaBDF,
-                           q_mom_v_acc_beta_bdf[eN_k],
-                           mom_v_acc,
-                           dmom_v_acc_v,
-                           mom_v_acc_t,
-                           dmom_v_acc_v_t);
-                  }
-                  else
-                  {
-                    mom_u_acc_t *= alphaBDF * mom_u_acc;
-                    dmom_u_acc_u_t *= alphaBDF * dmom_u_acc_u;
-                    mom_v_acc_t *= alphaBDF * mom_v_acc;
-                    dmom_v_acc_v_t *= alphaBDF * dmom_v_acc_v;
-                  }
+                  ck.bdf(alphaBDF,
+                         q_mom_u_acc_beta_bdf[eN_k] * q_dV_last[eN_k] / dV,
+                         mom_u_acc,
+                         dmom_u_acc_u,
+                         mom_u_acc_t,
+                         dmom_u_acc_u_t);
+                  ck.bdf(alphaBDF,
+                         q_mom_v_acc_beta_bdf[eN_k] * q_dV_last[eN_k] / dV,
+                         mom_v_acc,
+                         dmom_v_acc_v,
+                         mom_v_acc_t,
+                         dmom_v_acc_v_t);
                 }
                 /* ck.bdf(alphaBDF, */
                 /*           q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
