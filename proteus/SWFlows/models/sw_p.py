@@ -9,38 +9,57 @@ from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import Context
 
-# READ FROM CONTEXT #
+# *********************************************** #
+# ********** READ FROM myTpFlowProblem ********** #
+# *********************************************** #
 ct = Context.get()
-initialConditions = ct.initialConditions
-boundaryConditions = ct.boundaryConditions
-bathymetry_function = ct.bathymetry_function
-
-# PHYSICAL PARAMETERS #
-g=ct.physical_parameters['g']
-LINEAR_FRICTION=ct.physical_parameters['LINEAR_FRICTION']
-mannings=ct.physical_parameters['mannings']
-
-# NUMERICAL PARAMETERS #
-cE=ct.numerical_parameters['cE']
-LUMPED_MASS_MATRIX=ct.numerical_parameters['LUMPED_MASS_MATRIX']
+mySWFlowProblem = ct.mySWFlowProblem
+physical_parameters = mySWFlowProblem.physical_parameters
+numerical_parameters = mySWFlowProblem.swe_parameters
+initialConditions = mySWFlowProblem.initialConditions
+boundaryConditions = mySWFlowProblem.boundaryConditions
+bathymetry = mySWFlowProblem.bathymetry
 
 # DOMAIN #
 nd = 2
-domain = ct.domain
+domain = mySWFlowProblem.domain
+
+# ******************************** #
+# ********** PARAMETERS ********** #
+# ******************************** #
+# PHYSICAL PARAMETERS #
+g = physical_parameters['gravity']
+LINEAR_FRICTION = physical_parameters['LINEAR_FRICTION']
+mannings = physical_parameters['mannings']
+
+# NUMERICAL PARAMETERS #
+cE = numerical_parameters['cE']
+LUMPED_MASS_MATRIX = numerical_parameters['LUMPED_MASS_MATRIX']
+
+# ********************************** #
+# ********** COEFFICIENTS ********** #
+# ********************************** #
+LevelModelType = SW2DCV.LevelModel
+coefficients = SW2DCV.Coefficients(g=g,
+                                   bathymetry={0:bathymetry},
+                                   cE=cE,
+                                   LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
+                                   LINEAR_FRICTION=LINEAR_FRICTION,
+                                   mannings=mannings)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
 initialConditions = {0: initialConditions['water_height'],
-                     1: initialConditions['x-mom'],
-                     2: initialConditions['y-mom']}
+                     1: initialConditions['x_mom'],
+                     2: initialConditions['y_mom']}
 
-###################################
-##### FOR BOUNDARY CONDITIONS #####
-###################################
+# ***************************************** #    
+# ********** BOUNDARY CONDITIONS ********** #
+# ***************************************** #
 dirichletConditions = {0: boundaryConditions['water_height'],
-                       1: boundaryConditions['x-mom'],
-                       2: boundaryConditions['y-mom']}
+                       1: boundaryConditions['x_mom'],
+                       2: boundaryConditions['y_mom']}
 
 fluxBoundaryConditions = {0: 'outFlow',
                           1: 'outFlow',
@@ -52,14 +71,4 @@ diffusiveFluxBoundaryConditions = {0:{},
                                    1:{1: lambda x,flag: lambda x,t: 0.0},
                                    2:{2: lambda x,flag: lambda x,t: 0.0}}
 
-#########################################
-##### CREATE MODEL AND COEFFICIENTS #####
-#########################################
-bathymetry={0: bathymetry_function}
-LevelModelType = SW2DCV.LevelModel
-coefficients = SW2DCV.Coefficients(g=g,
-                                   bathymetry={0: bathymetry_function},
-                                   cE=cE,
-                                   LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
-                                   LINEAR_FRICTION=LINEAR_FRICTION,
-                                   mannings=mannings)
+
