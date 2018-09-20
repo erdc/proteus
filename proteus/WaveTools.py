@@ -59,7 +59,8 @@ __all__ = ['SteadyCurrent',
            'dispersion',
            'tophat',
            'costap',
-           'decompose_tseries']
+           'decompose_tseries',
+           'FGSolitaryWave']
 
 
 def fastcos_test(phase,sinus=False):
@@ -3003,3 +3004,71 @@ class RandomNLWavesFast(object):
         uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
         return uR
     
+class  FGSolitaryWave(object):
+    """
+    This class is used for generating a (uniform in y)
+    solitary wave given in the Favrie-Gavrilyuk paper
+    that is traveling to the right
+
+    Parameters
+    ----------
+    h1: float
+            This is reference height, ie still water level  height
+            DON'T SET h1 = 0 !!!
+    amp : float
+            amp gives the amplitude of the solitary wave
+    x0 : float
+            Position of the solitary wave
+    """
+    def __init__(self,
+                 h1,
+                 amp,
+                 x0,
+                 g):
+        
+        self.h1 = h1
+        self.amp = amp
+        self.h2 = amp + h1
+        self.x0 = x0
+        self.g = g
+        self.d = np.sqrt(g * self.h2)
+        self.z = np.sqrt(old_div( 3.0*(self.h2-h1), self.h2 * h1**2 ))
+        
+    def eta(self,x,t):
+        """Calculates free surface elevation (SolitaryWave class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+        Position vector
+        t : float
+        Time variable
+        
+        Returns
+        --------
+        float
+        Free-surface elevation as a float
+        
+        """
+        phase = x - self.d * t - self.x0
+        a1 = self.z * phase/2.0
+        return  self.h1 + self.amp * 1.0/ cosh(a1)**2
+    
+    def u(self,x,t):
+        """Calculates wave u velocity  (FGSolitaryWave class).
+        Parameters
+        ----------
+        x : numpy.ndarray
+        Position vector
+        t : float
+        Time variable
+        Returns
+        --------
+        numpy.ndarray
+        Velocity vector as 1D array
+        """
+        
+        phase = x - self.d * t - self.x0
+        a1 = self.z * phase/2.0
+        soliton = self.h1 + self.amp * 1.0/ cosh(a1)**2
+        u = self.d*(1.0 - old_div(self.h1,soliton))
+        return u
