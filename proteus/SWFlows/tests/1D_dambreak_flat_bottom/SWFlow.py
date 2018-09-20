@@ -16,17 +16,19 @@ import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
+    ('start_at_t0',False,"Consider dambreak from t=0?"),
+    ('refinement',3,"Refinement level"),
     ('sw_model',0,"sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time",1000.0,"Final time for simulation"),
-    ("dt_output",100.0,"Time interval to output solution"),
+    ("final_time",5.0,"Final time for simulation"),
+    ("dt_output",0.1,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction")
     ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L=(8000.0,800.0)
-refinement = 3
+L=(10.0,1.0)
+refinement = opts.refinement
 domain = RectangularDomain(L=L,x=[0,0,0])
 
 # CREATE REFINEMENT #
@@ -40,51 +42,81 @@ triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
 ######################
 ##### BATHYMETRY #####
 ######################
-h0=10
-a=3000
-B=2
-k=0.001
-g = SWFlowProblem.default_physical_parameters['gravity']
-p = old_div(np.sqrt(8*g*h0),a)
-s = old_div(np.sqrt(p**2 - k**2),2.)
-mannings=k
-
-def bathymetry(X):
-    x=X[0]
-    return h0*(x-old_div(L[0],2))**2/a/a
-
-def eta_function(x,t):
-    coeff1 = a**2*B**2/8./g/g/h0
-    coeff2 = -B**2/4./g
-    coeff3 = old_div(-1.,g)
-    
-    eta_part1 = coeff1*np.exp(-k*t)*(-s*k*np.sin(2*s*t)+(old_div(k**2,4.)-s**2)*np.cos(2*s*t))
-    eta_part2 = coeff2*np.exp(-k*t)
-    eta_part3 = coeff3*np.exp(-k*t/2.)*(B*s*np.cos(s*t)+k*B/2.*np.sin(s*t))*(x-old_div(L[0],2))
-    
-    return h0 + eta_part1 + eta_part2 + eta_part3
+bathymetry = lambda x: 0.*x[0]
 
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
-class water_height_at_t0(object):
+hl=0.005
+xc=5.0
+g=9.81
+class dam_break_problem_starting_at_t0(object):
+    def __init__(self):
+        pass
     def uOfXT(self,X,t):
-        eta = eta_function(X[0],0)
-        h = eta-bathymetry(X)
-        hp = max(h,0.)
-        return hp
+        import math
+        x = X[0]
+        if (x <= xc):
+            h = hl
+        else:
+            h = 0.000
+        return h
+
+class dam_break_problem_starting_at_t1(object):
+    def __init__(self):
+        pass
+    def uOfXT(self,X,t):
+        import math
+        x = X[0]
+        xA = xc-math.sqrt(g*hl)
+        xB = xc+2*math.sqrt(g*hl)
+        if (0 <= x and x <= xA):
+            return hl
+        elif (xA < x <= xB):
+            return 4/9./g*(math.sqrt(g*hl)-old_div((x-xc),2.))**2
+        else: 
+            return 0.
+
+class velX_starting_at_t1(object):
+    def __init__(self):
+        pass 
+    def uOfXT(self,X,t):
+        import math
+        x = X[0]
+        xA = xc-math.sqrt(g*hl)
+        xB = xc+2*math.sqrt(g*hl)
+        if (0 <= x and x <= xA):
+            return 0.
+        elif (xA < x <= xB):
+            return 2/3.*(x-xc+math.sqrt(g*hl))
+        else: 
+            return 0.
+
+class momX_starting_at_t1(object):
+    def __init__(self):
+        pass
+    def uOfXT(self,X,t):
+        h = dam_break_problem_starting_at_t1()
+        vel = velX_starting_at_t1()
+        return h.uOfXT(X,t)*vel.uOfXT(X,t)
 
 class Zero(object):
-    def uOfXT(self,X,t):
+    def uOfXT(self,x,t):
         return 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
 outputStepping = SWFlowProblem.OutputStepping(opts.final_time,dt_output=opts.dt_output)
-initialConditions = {'water_height': water_height_at_t0(),
-                     'x_mom': Zero(),
-                     'y_mom': Zero()}
+if opts.start_at_t0:
+    initialConditions = {'water_height': dam_break_problem_starting_at_t0(),
+                         'x_mom': Zero(),
+                         'y_mom': Zero()}
+else:
+    initialConditions = {'water_height': dam_break_problem_starting_at_t1(),
+                         'x_mom': momX_starting_at_t1(),
+                         'y_mom': Zero()}
+#
 boundaryConditions = {'water_height': lambda x,flag: None,
                       'x_mom': lambda x,flag: None,
                       'y_mom': lambda x,flag: lambda x,t: 0.0}
@@ -99,5 +131,3 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
                                               bathymetry=bathymetry)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION']=1
-mySWFlowProblem.physical_parameters['mannings']=mannings

@@ -1,71 +1,84 @@
-from __future__ import division
-from builtins import range
-from past.utils import old_div
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from sw_p import *
 
+# *********************************************** #
+# ********** Read from mySWFlowProblem ********** #
+# *********************************************** #
 # READ FROM CONTEXT #
-runCFL=ct.numerical_parameters['cfl']
-SSPOrder=ct.numerical_parameters['SSPOrder']
-LUMPED_MASS_MATRIX=ct.numerical_parameters['LUMPED_MASS_MATRIX']
+runCFL = mySWFlowProblem.cfl
+FESpace = mySWFlowProblem.FESpace
+he = mySWFlowProblem.he
+useSuperlu = mySWFlowProblem.useSuperlu
+domain = mySWFlowProblem.domain
+SSPOrder = mySWFlowProblem.swe_parameters['SSPOrder']
+LUMPED_MASS_MATRIX = mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX']
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-he = ct.he
-nnx = ct.nnx if hasattr(ct,'nnx') else None
-nny = ct.nny if hasattr(ct,'nny') else None
+triangleFlag = mySWFlowProblem.triangleFlag
+nnx = mySWFlowProblem.nnx
+nny = mySWFlowProblem.nny
+nnz = mySWFlowProblem.nnz
 triangleOptions = domain.MeshOptions.triangleOptions
 
+# ************************************** #
+# ********** TIME INTEGRATION ********** #
+# ************************************** #
+timeIntegration = SW2DCV.RKEV
+timeOrder = SSPOrder
+nStagesTime = SSPOrder
+
+# ****************************************** #
+# ********** TIME STEP CONTROLLER ********** #
+# ****************************************** #
+stepController = Min_dt_controller
+
+# ******************************************* #
+# ********** FINITE ELEMENT SAPCES ********** #
+# ******************************************* #
+elementQuadrature = FESpace['elementQuadrature']
+elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
+femSpaces = {0: FESpace['basis']}
+femSpaces = {0: FESpace['basis'],
+             1: FESpace['basis'],
+             2: FESpace['basis']}
+
+# ************************************** #
+# ********** NONLINEAR SOLVER ********** #
+# ************************************** #
 multilevelNonlinearSolver  = Newton
+fullNewtonFlag = False #NOTE: False just if the method is explicit
 if (LUMPED_MASS_MATRIX==1):
     levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 else:
     levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
 
-timeIntegration = SW2DCV.RKEV 
-stepController = Min_dt_controller
-timeOrder = SSPOrder
-nStagesTime = SSPOrder
-
-rtol_u[0] = 1.0e-4
-rtol_u[1] = 1.0e-4
-rtol_u[2] = 1.0e-4
-atol_u[0] = 1.0e-4
-atol_u[1] = 1.0e-4
-atol_u[2] = 1.0e-4
-femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis,
-             1:C0_AffineLinearOnSimplexWithNodalBasis,
-             2:C0_AffineLinearOnSimplexWithNodalBasis}
-
-elementQuadrature = SimplexGaussQuadrature(nd,3) #3
-elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
-fullNewtonFlag = False #NOTE: False just if the method is explicit
-
-#added flag for using SUPG stabilization based on Berger and Stockstill, 95
+# ************************************ #
+# ********** NUMERICAL FLUX ********** #
+# ************************************ #
 try_supg_stabilization = True
 subgridError = SW2D.SubgridError(coefficients,nd,lag=True)
-
-#massLumping=False
-
 shockCapturing = SW2D.ShockCapturing(coefficients,nd,shockCapturingFactor=0.1,lag=True)
 numericalFluxType = SW2D.NumericalFlux
 
-tolFac = 0.0
-
+# ************************************ #
+# ********** LINEAR ALGEBRA ********** #
+# ************************************ #
+matrix = SparseMatrix
+multilevelLinearSolver = LU
+levelLinearSolver = LU
 levelNonlinearSolverConvergenceTest = 'r'
-linearSolverConvergenceTest             = 'r-true'
+linearSolverConvergenceTest = 'r-true'
 
-maxLineSearches=0
+# ******************************** #
+# ********** TOLERANCES ********** #
+# ******************************** #
 nl_atol_res = 1.0e-5
 nl_rtol_res = 0.0
 l_atol_res = 1.0e-7
 l_rtol_res = 0.0
-
-matrix = SparseMatrix
-multilevelLinearSolver = LU
-levelLinearSolver = LU
-
-#conservativeFlux = {0:'pwl'}
-#tnList=[0.,1E-6]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
+tolFac = 0.0
+maxLineSearches=0

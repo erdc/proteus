@@ -1,5 +1,5 @@
 """
-Split operator module for multiphase: CLSVOF with RANS2P
+Split operator module for SWFlow: SWEs or Dispersive SWEs
 """
 from __future__ import absolute_import
 from builtins import range
@@ -15,10 +15,22 @@ case = __import__(name)
 Context.setFromModule(case)
 ct = Context.get()
 
+# READ FROM myTpFlowProblem #
+assert hasattr(ct,'mySWFlowProblem'), "Create mySWFlowProblem from SWFlowProblem"
+sw_model = ct.mySWFlowProblem.sw_model
+outputStepping = ct.mySWFlowProblem.outputStepping
+
 # **************************** #
 # ********** pnList ********** #
 # **************************** #
-pnList = [("sw_p", "sw_n")]
+if sw_model==0: #SWEs
+    pnList = [("sw_p", "sw_n")]
+else:
+    raise("Not implemented!")
+    #pnList = [("dsw_p", "dsw_n")]
 
+# **************************** #
+# ********** tnList ********** #
+# **************************** #
+tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
 
-tnList=[0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
