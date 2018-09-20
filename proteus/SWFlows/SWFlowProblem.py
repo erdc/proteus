@@ -22,6 +22,7 @@ class SWFlowProblem:
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
+                 reflectingBCs=False,
                  # BATHYMETRY #
                  bathymetry=None,
                  # OTHERS #
@@ -54,6 +55,7 @@ class SWFlowProblem:
         self.triangleFlag=triangleFlag
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
+        self.reflectingBCs=reflectingBCs
         self.bathymetry=bathymetry
         self.useSuperlu = useSuperlu
 
