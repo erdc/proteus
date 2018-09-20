@@ -1089,15 +1089,13 @@ namespace proteus
               const double curl_u = grad_v_star[0] - grad_u_star[1];
               mom_u_ham += vStar*curl_u; 
               // mom_u_ham += uStar*grad_u_star[0]+vStar*grad_u_star[1];//has no difference
-              dmom_u_ham_grad_u[0]=0.0;
-              dmom_u_ham_grad_u[1]=0.0;
-            
-              //v momentum Hamiltonian (advection)
               mom_v_ham += -uStar*curl_u;
               // mom_v_ham += uStar*grad_v_star[0]+vStar*grad_v_star[1];
-              dmom_v_ham_grad_v[0]=0.0;
-              dmom_v_ham_grad_v[1]=0.0;
             }
+            dmom_u_ham_grad_u[0] = 0.0;
+            dmom_u_ham_grad_u[1] = 0.0;
+            dmom_v_ham_grad_v[0] = 0.0;
+            dmom_v_ham_grad_v[1] = 0.0;
         }
       }
 
@@ -1115,7 +1113,7 @@ namespace proteus
                                                const double nu_0,
                                                const double rho_1,
                                                const double nu_1,
-					       double nu_t,
+                                               double nu_t,
                                                const double useVF,
                                                const double vf,
                                                const double phi,
