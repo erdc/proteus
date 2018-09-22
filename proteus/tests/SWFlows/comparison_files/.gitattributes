@@ -1,0 +1,2 @@
+parab1D.h5 filter=lfs diff=lfs merge=lfs -text
+solitary.h5 filter=lfs diff=lfs merge=lfs -text
