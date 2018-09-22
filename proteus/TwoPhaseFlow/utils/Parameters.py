@@ -32,9 +32,9 @@ class ParametersHolder:
                       self.Models.vof,
                       self.Models.ncls,
                       self.Models.rdls,
-                      self.Models.movemeshelastic,
-                      self.Models.movemeshmonitor,
-                      self.Models.addedmass,
+                      self.Models.moveMeshElastic,
+                      self.Models.moveMeshMonitor,
+                      self.Models.addedMass,
                       self.Models.pressureInitial,
                       self.Models.pressure,
                       self.Models.pressureIncrement,
@@ -61,9 +61,9 @@ class ParametersModelsHolder:
         self.vof = ParametersModelVOF()
         self.ncls = ParametersModelNCLS()
         self.rdls = ParametersModelRDLS()
-        self.addedmass = ParametersModelAddedMass()
-        self.movemeshmonitor = ParametersModelMoveMeshMonitor()
-        self.movemeshelastic = ParametersModelMoveMeshElastic()
+        self.addedMass = ParametersModelAddedMass()
+        self.moveMeshMonitor = ParametersModelMoveMeshMonitor()
+        self.moveMeshElastic = ParametersModelMoveMeshElastic()
         self.clsvof = ParametersModelCLSVOF()
         self.rans3p = ParametersModelRANS3P()
         self.pressureInitial = ParametersModelPressureInitial()
@@ -187,7 +187,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
     """
     """
     def __init__(self):
-        super(ParametersModelPressureIncrement, self).__init__(name='pressureincrement', index=None)
+        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement', index=None)
         # freeze attributes
         self._freeze()
 
@@ -275,7 +275,7 @@ class ParametersModelAddedMass(ParametersModelBase):
     """
     """
     def __init__(self):
-        super(ParametersModelAddedMass, self).__init__(name='addedmass', index=None)
+        super(ParametersModelAddedMass, self).__init__(name='addedMass', index=None)
         self.flags_rigidbody = None
         # freeze attributes
         self._freeze()
@@ -285,7 +285,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
     """
     """
     def __init__(self):
-        super(ParametersModelMoveMeshMonitor, self).__init__(name='movemeshmonitor', index=None)
+        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor', index=None)
         self.func = lambda x, t: 1000.
         self.he_min = 0.
         self.he_max = 1000.
@@ -309,7 +309,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
     """
     """
     def __init__(self):
-        super(ParametersModelMoveMeshElastic, self).__init__(name='movemeshelastic', index=None)
+        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic', index=None)
         self.E = 1.
         self.nu = 0.3
         # freeze attributes

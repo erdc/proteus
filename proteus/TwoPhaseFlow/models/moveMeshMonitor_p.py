@@ -50,7 +50,7 @@ assert ME_model is not None, 'vof model index was not set!'
 if mparams.movemeshmonitor['useLS'] is True:
     LS_MODEL = mparams.ncls['index']
 else:
-    LS_MODEL = False
+    LS_MODEL = None
 initialConditions = None
 
 analyticalSolution = {}

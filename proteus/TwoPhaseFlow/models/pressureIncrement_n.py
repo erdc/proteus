@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from pressureincrement_p import *
+from pressureIncrement_p import *
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #

@@ -5,7 +5,7 @@ from proteus import (StepControl,
                      NonlinearSolvers,
                      LinearSolvers,
                      LinearAlgebraTools)
-import movemeshmonitor_p as physics
+import moveMeshMonitor_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
@@ -44,9 +44,9 @@ timeIntegration = TimeIntegration.NoIntegration
 # ******************************************* #
 # ********** FINITE ELEMENT SPACES ********** #
 # ******************************************* #
-elementQuadrature = ct.FESpace['elementQuadrature']
-elementBoundaryQuadrature = ct.FESpace['elementBoundaryQuadrature']
-femSpaces = {0: ct.FESpace['lsBasis']}
+elementQuadrature = FESpace['elementQuadrature']
+elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
+femSpaces = {0: FESpace['lsBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
@@ -85,7 +85,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(mparams.movemeshmonitor.minTol, mparams.movemeshmonitor['tolFac']*ct.he**2)
+nl_atol_res = max(mparams.moveMeshMonitor.minTol, mparams.moveMeshMonitor['tolFac']*ct.he**2)
 linTolFac = 0.001
 l_atol_res = 0.001*nl_atol_res
 #

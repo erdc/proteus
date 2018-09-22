@@ -22,7 +22,7 @@ domain = myTpFlowProblem.domain
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-flags_rigidbody = params.addedmass['flags_rigidbody']
+flags_rigidbody = params.addedMass['flags_rigidbody']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #

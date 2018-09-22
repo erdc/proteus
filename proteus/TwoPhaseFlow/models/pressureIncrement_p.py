@@ -42,7 +42,7 @@ coefficients=PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*rho_1,
                                   modelIndex=PINC_model,
                                   fluidModelIndex=V_model,
                                   fixNullSpace=False)
-name = "pressureincrement"
+name = "pressureIncrement"
 
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
