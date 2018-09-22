@@ -24,6 +24,8 @@ reflecting_BCs = mySWFlowProblem.reflectingBCs
 # DOMAIN #
 nd = 2
 domain = mySWFlowProblem.domain
+if domain is None:
+    meshfile = mySWFlowProblem.AdH_file
 
 # ******************************** #
 # ********** PARAMETERS ********** #
@@ -42,7 +44,7 @@ LUMPED_MASS_MATRIX = numerical_parameters['LUMPED_MASS_MATRIX']
 # ********************************** #
 LevelModelType = SW2DCV.LevelModel
 coefficients = SW2DCV.Coefficients(g=g,
-                                   bathymetry={0:bathymetry},
+                                   bathymetry={0:bathymetry} if bathymetry is not None else None,
                                    cE=cE,
                                    LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
                                    LINEAR_FRICTION=LINEAR_FRICTION,

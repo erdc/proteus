@@ -18,11 +18,12 @@ LUMPED_MASS_MATRIX = mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX']
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = mySWFlowProblem.triangleFlag
-nnx = mySWFlowProblem.nnx
-nny = mySWFlowProblem.nny
-nnz = mySWFlowProblem.nnz
-triangleOptions = domain.MeshOptions.triangleOptions
+if domain is not None:
+    triangleFlag = mySWFlowProblem.triangleFlag
+    nnx = mySWFlowProblem.nnx
+    nny = mySWFlowProblem.nny
+    nnz = mySWFlowProblem.nnz
+    triangleOptions = domain.MeshOptions.triangleOptions
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
