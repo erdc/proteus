@@ -1,0 +1,8 @@
+TODO LIST:
+* Share common sections between models. E.g., nnx, ..., etc.
+* Add movingDomain capability.
+* Fix tests to make sure indexing is done automatically.
+* Put test where the indexing is changed.
+* Do documentation.
+* Make sure rans3p and clsvof work with same spatial tools and BCs capabilities as rans2p and vof+ls+rdls+mcorr
+* Set up a common set of initialConditions. E.g., rest, damBreak, etc. 

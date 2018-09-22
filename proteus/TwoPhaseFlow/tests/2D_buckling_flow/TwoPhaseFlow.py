@@ -31,7 +31,7 @@ opts= Context.Options([
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
-tank_dim = (1.0,1.0) 
+tank_dim = (1.0,1.0)
 # MESH
 refinement=opts.refinement #64 if structured=False
 structured=False
@@ -40,8 +40,8 @@ boundaryTags = dict([(key, i + 1) for (i, key) in enumerate(boundaries)])
 if structured:
     nnx = 4 * refinement**2 + 1
     nny = nnx
-    nnz = None 
-    domain = Domain.RectangularDomain(tank_dim)    
+    nnz = None
+    domain = Domain.RectangularDomain(tank_dim)
     domain.boundaryTags = boundaryTags
     he = tank_dim[0]/(nnx - 1)
 else:
@@ -77,21 +77,32 @@ else:
     he = old_div(tank_dim[0], float(4 * refinement - 1))
     domain.MeshOptions.he = he
     domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
-    
+
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
 # ****************************** #
 class zero(object):
     def uOfXT(self,x,t):
         return 0.
-    
+
 class clsvof_init_cond(object):
     def uOfXT(self,X,t):
+        flat_inlet = False
         x=X[0]
         y=X[1]
-        rInflow = np.sqrt((x-0.5)**2 + (y-1.0)**2)
-        dB = -(0.05-rInflow)    
-        return dB
+        if flat_inlet:
+            if x-tank_dim[0]/2. >= -0.05 and x-tank_dim[0]/2. <= 0.05:
+                if y==tank_dim[1]:
+                    return 0.
+                else:
+                    return tank_dim[1] - y
+            else:
+                return min(np.sqrt( (x-(tank_dim[0]/2.-0.05))**2 + (y-tank_dim[1])**2),
+                           np.sqrt( (x-(tank_dim[0]/2.+0.05))**2 + (y-tank_dim[1])**2) )
+        else: #circular inlet
+            rInflow = np.sqrt((x-0.5)**2 + (y-1.0)**2)
+            dB = -(0.05-rInflow)
+            return dB
 
 # ******************************* #
 # ***** BOUNDARY CONDITIONS ***** #
@@ -103,13 +114,13 @@ class clsvof_init_cond(object):
 def pressure_DBC(x,flag):
     if flag == boundaryTags['top'] and not (x[0]>=0.5-0.05 and x[0]<=0.5+0.05):
         return lambda x,t: 0.0
-    
+
 def pressure_increment_DBC(x,flag):
     if flag == boundaryTags['top'] and not(x[0]>=0.5-0.05 and x[0]<=0.5+0.05):
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 def vel_u_DBC(x,flag):
-    if flag==boundaryTags['bottom'] or flag==boundaryTags['left'] or flag==boundaryTags['right']: 
+    if flag==boundaryTags['bottom'] or flag==boundaryTags['left'] or flag==boundaryTags['right']:
         return lambda x,t: 0.0
 
 def vel_v_DBC(x,flag):
@@ -117,24 +128,24 @@ def vel_v_DBC(x,flag):
         return lambda x,t: 0.0
     elif flag == boundaryTags['top'] and (x[0]>=0.5-0.05 and x[0]<=0.5+0.05):
         return lambda x,t: -1.0
-        
+
 # ADVECTIVE FLUX #
 def pressure_AFBC(x,flag):
     if not(flag == boundaryTags['top']):
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 def pressure_increment_AFBC(x,flag):
     if not (flag == boundaryTags['top']):
         return lambda x,t: 0.0
     elif x[0]>=0.5-0.05 and x[0]<=0.5+0.05:
         return lambda x,t: -1.0
-    
+
 # DIFFUSIVE FLUX #
 def pressure_increment_DFBC(x,flag):
     if not (flag == boundaryTags['top']):
         return lambda x,t: 0.0
     elif x[0]>=0.5-0.05 and x[0]<=0.5+0.05:
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 #############
 # LEVEL SET #
@@ -144,8 +155,8 @@ def clsvof_DBC(x,flag):
         if x[0]>=0.5-0.05 and x[0]<=0.5+0.05:
             return lambda x,t: 0.0 #input water
         else:
-            return lambda x,t: 1.0 #in open top area let only air in    
-    
+            return lambda x,t: 1.0 #in open top area let only air in
+
 def clsvof_AFBC(x,flag):
     if flag != boundaryTags['top']:
         return lambda x,t: 0.0
@@ -167,7 +178,7 @@ boundaryConditions = {
     'vel_u_DBC': vel_u_DBC,
     'vel_v_DBC': vel_v_DBC,
     'clsvof_DBC': clsvof_DBC,
-    # ADVECTIVE FLUX BCs # 
+    # ADVECTIVE FLUX BCs #
     'pressure_AFBC': pressure_AFBC,
     'pressure_increment_AFBC': pressure_increment_AFBC,
     'vel_u_AFBC': lambda x,flag: None,
@@ -196,13 +207,4 @@ myTpFlowProblem.Parameters.physical['viscosityA'] = 500.0/1800.0
 myTpFlowProblem.Parameters.physical['densityB'] = 1.0
 myTpFlowProblem.Parameters.physical['viscosityB'] = 2.0E-5/1.0
 myTpFlowProblem.Parameters.physical['surf_tension_coeff'] = 0.
-
-# if opts.ns_model == 0:
-#     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
-#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
-# elif opts.ns_model == 1:
-#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
-#     myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
-#     myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
-#     myTpFlowProblem.Parameters.Models.pressure['index'] = 3
-#     myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4
+myTpFlowProblem.Parameters.Models.rans3p['ns_forceStrongDirichlet'] = True
