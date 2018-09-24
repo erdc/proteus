@@ -1596,6 +1596,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
+                                      self.l2g[0]['freeGlobal'],
+                                      self.l2g[1]['freeGlobal'],
                                       self.u[0].dof,
                                       self.u[1].dof,
                                       self.u[2].dof,
