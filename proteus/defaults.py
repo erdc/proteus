@@ -68,7 +68,7 @@ class Physics_base(_Physics_base):
                     pass
                 
 def reset_default_p():
-    for k,v in Physics_base().__dict__.iteritems():
+    for k,v in Physics_base().__dict__.items():
         default_p.__dict__[k] = v
 
 def load_physics(pModule, path='.'):
@@ -77,7 +77,7 @@ def load_physics(pModule, path='.'):
     p = imp.load_source(pModule, os.path.join(path, pModule+".py"))
     sys.path.remove(path)
     physics_object = Physics_base()
-    for k,v in p.__dict__.iteritems():
+    for k,v in p.__dict__.items():
         if k not in physics_excluded_keys:
             physics_object.__dict__[k] = v
     return physics_object
@@ -131,7 +131,7 @@ class Numerics_base(_Numerics_base):
                 except:
                     pass
 def reset_default_n():
-    for k,v in Numerics_base().__dict__.iteritems():
+    for k,v in Numerics_base().__dict__.items():
         default_n.__dict__[k] = v
 
 def load_numerics(nModule, path='.'):
@@ -140,7 +140,7 @@ def load_numerics(nModule, path='.'):
     n = imp.load_source(nModule, os.path.join(path, nModule+".py"))
     sys.path.remove(path)
     numerics_object = Numerics_base()
-    for k,v in n.__dict__.iteritems():
+    for k,v in n.__dict__.items():
         if k not in numerics_excluded_keys:
             numerics_object.__dict__[k] = v
     return numerics_object
@@ -173,7 +173,7 @@ class System_base(_System_base):
                 except:
                     pass
 def reset_default_so():
-    for k,v in System_base().__dict__.iteritems():
+    for k,v in System_base().__dict__.items():
         default_so.__dict__[k] = v
 
 def load_system(soModule, path='.'):
@@ -182,7 +182,7 @@ def load_system(soModule, path='.'):
     so = imp.load_source(soModule, os.path.join(path, soModule+".py"))
     sys.path.remove(path)
     system_object = System_base()
-    for k,v in so.__dict__.iteritems():
+    for k,v in so.__dict__.items():
         if k not in system_excluded_keys:
             system_object.__dict__[k] = v
     return system_object

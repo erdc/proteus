@@ -9,6 +9,7 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+from builtins import object
 from proteus.iproteus import *
 from proteus.defaults import load_physics, load_numerics, System_base
 from petsc4py import PETSc
@@ -18,7 +19,7 @@ modulepath = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.mark.modelTest
 @pytest.mark.poissonTest
-class TestPoisson():
+class TestPoisson(object):
 
     @classmethod
     def setup_class(cls):
@@ -68,7 +69,7 @@ class TestPoisson():
         nList = [load_numerics('poisson_3d_c0p1_n',
                                modulepath)]
         so = System_base()
-        so.name = pList[0].name = "poisson_3d_c0p1"+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_3d_c0p1"+"pe"+repr(comm.size())
         so.sList=[default_s]
         opts.logLevel=7
         opts.verbose=True
@@ -90,7 +91,7 @@ class TestPoisson():
         nList = [load_numerics('poisson_3d_c0p2_n',
                                modulepath)]
         so = System_base()
-        so.name = pList[0].name = "poisson_3d_c0p2"+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_3d_c0p2"+"pe"+repr(comm.size())
         so.sList=[default_s]
         opts.logLevel=7
         opts.verbose=True
@@ -116,7 +117,7 @@ class TestPoisson():
         pList = [poisson_3d_p]
         nList = [poisson_3d_c0q1_n]
         so = System_base()
-        so.name = pList[0].name = "poisson_3d_c0q1"+name+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_3d_c0q1"+name+"pe"+repr(comm.size())
         so.sList=[default_s]
         opts.logLevel=7
         opts.verbose=True
@@ -152,7 +153,7 @@ class TestPoisson():
         nList = [load_numerics('poisson_3d_c0q2_n',
                                modulepath)]
         so = System_base()
-        so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+`comm.size()`
+        so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+repr(comm.size())
         so.sList=[default_s]
         opts.logLevel=7
         opts.verbose=True

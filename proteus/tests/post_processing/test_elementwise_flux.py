@@ -4,6 +4,8 @@
 Test module for BDM2 Elements
 
 """
+from __future__ import print_function
+from builtins import object
 import proteus.test_utils.TestTools
 import os
 import sys
@@ -21,7 +23,7 @@ import pytest
 import bdm_tests_template_mesh8 as bt
 
 @pytest.mark.PostProcessingTools
-class TestElementwiseFlux2D():
+class TestElementwiseFlux2D(object):
     
     @classmethod
     def setup_class(cls):
@@ -48,7 +50,7 @@ class TestElementwiseFlux2D():
             if os.path.exists(file):
                 try:
                     os.remove(file)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s." %(e.filename, e.strerror ))
             else:
                 pass

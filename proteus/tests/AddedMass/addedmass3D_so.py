@@ -1,13 +1,17 @@
 """
 Split operator module for two-phase flow
 """
+from __future__ import absolute_import
 
+from builtins import range
 import os
 from proteus.default_so import *
 from proteus import Context
 from importlib import import_module
-import addedmass3D
-
+try:
+    from . import addedmass3D
+except:
+    import addedmass3D
 # Create context from main module
 name_so = os.path.basename(__file__)
 if '_so.py' in name_so[-6:]:
@@ -15,7 +19,7 @@ if '_so.py' in name_so[-6:]:
 elif '_so.pyc' in name_so[-7:]:
     name = name_so[:-7]
 else:
-    raise NameError, 'Split operator module must end with "_so.py"'
+    raise NameError('Split operator module must end with "_so.py"')
 
 Context.setFromModule(addedmass3D)
 ct = Context.get()

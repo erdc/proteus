@@ -1,3 +1,4 @@
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from couette import *
@@ -11,7 +12,7 @@ coefficients = MCorr.Coefficients(LSModel_index=2,V_model=0,me_model=4,VOFModel_
                                   epsFactDirac=epsFact_consrv_dirac,
                                   epsFactDiffusion=epsFact_consrv_diffusion)
 
-class zero_phi:
+class zero_phi(object):
     def __init__(self):
         pass
     def uOfX(self,X):

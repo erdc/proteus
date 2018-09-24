@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
-from vortex2D import *
+from .vortex2D import *
 from proteus.mprans import VOF
 name=soname+"_vof"
 
@@ -35,7 +37,7 @@ def Heaviside(phi):
     else:
         return 0.5
 
-class Vortex_phi:
+class Vortex_phi(object):
     def __init__(self,center=[0.5,0.75,0.5],radius=0.15):
         self.radius  = radius
         self.center  = center
@@ -49,7 +51,7 @@ class Vortex_phi:
     #end
 #end Vortex_phi
 
-class Vortex_phi_cylinder:
+class Vortex_phi_cylinder(object):
     def __init__(self,center=[0.5,0.75,0.5],radius=0.15):
         self.radius  = radius
         self.center  = center
