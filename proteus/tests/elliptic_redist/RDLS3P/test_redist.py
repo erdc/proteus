@@ -2,6 +2,9 @@
 """
 Test module for Elliptic Re-distancing
 """
+from __future__ import print_function
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -15,7 +18,7 @@ from . import (vortex2D, vortex2D_so,
                ncls_p, ncls_n,
                rdls_p, rdls_n)
 
-class TestEllipticRedistancing():
+class TestEllipticRedistancing(object):
 
     @classmethod
     def setup_class(cls):
@@ -121,7 +124,7 @@ class TestEllipticRedistancing():
                                                opts)
         ns.calculateSolution('rdls')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_2.h5','r')
-        print np.amax(actual.root.u_t1)
+        Profiling.logEvent("max u"+repr(np.amax(actual.root.u_t1)))
         assert np.isclose(np.amax(actual.root.u_t1),0.10626477076036571,atol=1e-10)
         actual.close()
 

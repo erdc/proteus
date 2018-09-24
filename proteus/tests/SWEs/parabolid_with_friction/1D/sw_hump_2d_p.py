@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2D
@@ -18,8 +21,8 @@ h0=10
 a=3000
 B=2
 k=0.001
-p = np.sqrt(8*g*h0)/a
-s = np.sqrt(p**2 - k**2)/2.
+p = old_div(np.sqrt(8*g*h0),a)
+s = old_div(np.sqrt(p**2 - k**2),2.)
 mannings=k
 
 cE=1
@@ -36,30 +39,30 @@ domain.writePoly("tank2d")
 ######################
 def bathymetry_function(X):
     x=X[0]
-    return h0*(x-L[0]/2)**2/a/a
+    return h0*(x-old_div(L[0],2))**2/a/a
 
 def eta_function(x,t):
     coeff1 = a**2*B**2/8./g/g/h0
     coeff2 = -B**2/4./g
-    coeff3 = -1./g
+    coeff3 = old_div(-1.,g)
     
-    eta_part1 = coeff1*np.exp(-k*t)*(-s*k*np.sin(2*s*t)+(k**2/4.-s**2)*np.cos(2*s*t))
+    eta_part1 = coeff1*np.exp(-k*t)*(-s*k*np.sin(2*s*t)+(old_div(k**2,4.)-s**2)*np.cos(2*s*t))
     eta_part2 = coeff2*np.exp(-k*t)
-    eta_part3 = coeff3*np.exp(-k*t/2.)*(B*s*np.cos(s*t)+k*B/2.*np.sin(s*t))*(x-L[0]/2)
+    eta_part3 = coeff3*np.exp(-k*t/2.)*(B*s*np.cos(s*t)+k*B/2.*np.sin(s*t))*(x-old_div(L[0],2))
     
     return h0 + eta_part1 + eta_part2 + eta_part3
 
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
-class water_height_at_t0:
+class water_height_at_t0(object):
     def uOfXT(self,X,t):
         eta = eta_function(X[0],0)
         h = eta-bathymetry_function(X)
         hp = max(h,0.)
         return hp
 
-class Zero:
+class Zero(object):
     def uOfXT(self,x,t):
         return 0.0
 
@@ -70,17 +73,17 @@ initialConditions = {0:water_height_at_t0(),
 ##########################
 ##### EXACT SOLUTION #####
 ##########################
-class water_height:
+class water_height(object):
     def uOfXT(self,X,t):
         h = eta_function(X[0],t) - bathymetry_function(X)
         hp = max(h,0.)
         return hp
         
-class exact_velx:
+class exact_velx(object):
     def uOfXT(self,X,t):
         return B*np.exp(-k*t/2.)*np.sin(s*t)
 
-class exact_momx:
+class exact_momx(object):
     def uOfXT(self,X,t):
         ht = eta_function(X[0],t) - bathymetry_function(X)
         if (ht >= 0):

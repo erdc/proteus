@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import division
+from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -33,7 +36,7 @@ he = opts.he
 
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit() 
 if spaceOrder == 1:
     hFactor=1.0
@@ -108,7 +111,7 @@ else:
         domain.writePoly("mesh")
         domain.writePLY("mesh")
         domain.writeAsymptote("mesh")
-        triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
+        triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
         logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
@@ -157,15 +160,15 @@ dissipation_nl_atol_res = max(1.0e-10, 0.001 * he ** 2)
 #Two-phase example with Re=100
 if opts.reynolds_number == 100:
     rho_0 = 1.0 #1.205 / 998.2
-    nu_0 = 1.0 / 50.
-    rho_1 =  1.205 / 998.2
-    nu_1 = (1.0/50) * ( 1.500e-5 / 1.004e-6)
+    nu_0 = old_div(1.0, 50.)
+    rho_1 =  old_div(1.205, 998.2)
+    nu_1 = (old_div(1.0,50)) * ( old_div(1.500e-5, 1.004e-6))
 
 elif opts.reynolds_number == 10:
     rho_0 = 1.0
-    nu_0 = 1.0 / 5.
-    rho_1 = 1.205/998.2
-    nu_1 = (1.0 / 5.) * ( 1.500e-5 / 1.004e-6)
+    nu_0 = old_div(1.0, 5.)
+    rho_1 = old_div(1.205,998.2)
+    nu_1 = (old_div(1.0, 5.)) * ( old_div(1.500e-5, 1.004e-6))
 
 # Gravity
 g = [0.0,0.0]

@@ -1,3 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -37,7 +42,7 @@ fl_H = H
 
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit() 
 if spaceOrder == 1:
     hFactor=1.0
@@ -62,7 +67,7 @@ elif spaceOrder == 2:
 
 nLevels = 1
 #from cylinder2dDomain import *
-from symmetricDomain_john import *
+from .symmetricDomain_john import *
 domain = symmetric2D(box=(2.2,0.41),
                      L= 0.2,
                      H = 0.2,
@@ -78,7 +83,7 @@ T= opts.T
 runCFL = 0.9
 dt_fixed = 0.005
 dt_init = 0.0025
-nDTout = int(T/dt_fixed)
+nDTout = int(old_div(T,dt_fixed))
 dt_init = min(dt_init,0.5*dt_fixed)
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)] 
 if opts.onlySaveFinalSolution == True:
@@ -109,7 +114,7 @@ g = [0.0,0.0]
 
 #triangleOptions="pAq30.0Dena%f" % (.5*DX**2)  #% (0.5*(DX)**2,)
 triangleOptions="pAq30.0Dena"
-print triangleOptions
+print(triangleOptions)
 genMesh=True
 domain.writePLY('cylinder2D')
 domain.writePoly('cylinder2D')

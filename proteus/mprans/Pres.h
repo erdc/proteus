@@ -319,7 +319,6 @@ namespace proteus
           for(int i=0;i<nDOF_test_element;i++)
             {
               register int eN_i=eN*nDOF_test_element+i;
-
               globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
             }//i
         }//elements
@@ -427,7 +426,6 @@ namespace proteus
           for (int i=0;i<nDOF_test_element;i++)
             {
               int eN_i = eN*nDOF_test_element+i;
-
               globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
             }//i
         }//ebNE

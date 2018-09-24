@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
-from vortex2D import *
+from .vortex2D import *
 from proteus.mprans import NCLS
 #import Profiling
 
@@ -38,7 +40,7 @@ nd=2
 # \image latex save_la_vortex_2d_dgp2_phi.eps "RKDG $P^2$ solution, Cr=0.1, $L^2$ error= 7.84e-3"
 #
 
-class OscillatingVortex2D:
+class OscillatingVortex2D(object):
     #cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self,L):
         self.radius = 0.15*L[0]
@@ -46,7 +48,7 @@ class OscillatingVortex2D:
         self.yc=0.75*L[1]
     def uOfXT(self,x,t):
         return self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2)
-class OscillatingVortex2Dcylinder:
+class OscillatingVortex2Dcylinder(object):
     #cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self,L):
         self.radius = 0.15*L[0]

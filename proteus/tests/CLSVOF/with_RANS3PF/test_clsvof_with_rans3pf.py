@@ -2,6 +2,8 @@
 """
 Test module for CLSVOF with RANS3PF
 """
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -26,7 +28,7 @@ from . import (parameters,
                pressureInitial_p,
                pressureInitial_n)
 
-class TestCLSVOF_with_RANS3PF():
+class TestCLSVOF_with_RANS3PF(object):
 
     @classmethod
     def setup_class(cls):
