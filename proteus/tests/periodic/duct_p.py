@@ -31,6 +31,7 @@ coefficients = RANS2P.Coefficients(epsFact=0.0,
                                    forceStrongDirichlet=False,
                                    turbulenceClosureModel=0,
                                    NONCONSERVATIVE_FORM=1.0)
+#boundaryCreatesNullSpace = True
 
 T = 100.0
 nsave=100

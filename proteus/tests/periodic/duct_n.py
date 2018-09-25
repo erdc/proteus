@@ -27,7 +27,7 @@ elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 nnx=21
 nny=6
 nnz=6
-nLevels = 1
+#nLevels = 1
 
 numericalFluxType = RANS2P.NumericalFlux
 
@@ -40,7 +40,7 @@ subgridError = RANS2P.SubgridError(coefficients=coefficients,
 
 shockCapturing = RANS2P.ShockCapturing(coefficients=coefficients,
                                       nd=nd,
-                                      shockCapturingFactor=0.1,
+                                      shockCapturingFactor=0.0,
                                       lag=True)
 
 multilevelNonlinearSolver  = Newton
@@ -57,11 +57,11 @@ nl_atol_res = 1.0e-8
 
 matrix = SparseMatrix
 
-#multilevelLinearSolver = KSP_petsc4py
-#levelLinearSolver = KSP_petsc4py
-#linearSmoother = SimpleNavierStokes3D
-multilevelLinearSolver = LU
-levelLinearSolver = LU
+multilevelLinearSolver = KSP_petsc4py
+levelLinearSolver = KSP_petsc4py
+linearSmoother = SimpleNavierStokes3D
+#multilevelLinearSolver = LU
+#levelLinearSolver = LU
 linearSmoother = None
 
 linear_solver_options_prefix = 'rans2p_'
