@@ -3992,7 +3992,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_t{0:d}".format(tCount)
                     comm = Comm.get()
-                    ar.create_dataset_sync(u.name+"_t{0:d}".format(tCounts),
+                    ar.create_dataset_sync(u.name+"_t{0:d}".format(tCount),
                                            #need to use the mesh node offsets due to parallel periodic case
                                            #offsets = self.dofMap.dof_offsets_subdomain_owned,
                                            #data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
