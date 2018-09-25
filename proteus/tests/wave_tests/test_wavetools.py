@@ -18,7 +18,7 @@ import cython
 comm = Comm.init()
 Profiling.procID = comm.rank()
 def getpath():
-    path = sys.path[0]+'/proteus/tests/wave_tests/'
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
     return path
 
 def remove_files(filenames):
@@ -448,58 +448,22 @@ class VerifySolitaryWave(unittest.TestCase):
         Z = xx[1] - mwl
         sqrt = np.sqrt
         cosh = np.cosh
-
+        tanh = np.tanh
 # Formula taken from waves2Foam
-        Uhorz = 1.0/(4.0*pow(h_, 4.0) )*sqrt(G_*h_)*H_ *( 
-             2.*pow(h_, 3.0) + pow(h_, 2.0)*H_ 
-           + 12.0*h_*H_*Z + 6.0*H_*pow(Z, 2.0)
-           + (
-                 2*pow(h_, 3.0) - pow(h_, 2.0)*H_ 
-               - 6.0*h_*H_*Z - 3.0*H_*pow(Z, 2.0)
-             ) 
-             *cosh( 
-                 sqrt( 3*H_/pow(h_, 3.0))
-                *(
-                     sqrt( G_*(h_ + H_))*t
-                    - ( x )
-                 )
-             )
-        )/pow(
-            cosh(   sqrt( 3*H_/( 4.0*pow(h_, 3.0)))
-           *(
-                sqrt( G_*(h_ + H_))*t
-              - ((x)))
-            ), 4.0
-        )
+        Uhorz = sqrt( G_ * h_) * ( H_ / h_) * \
+                ( 1. /  ( pow(cosh(sqrt( (3.*H_ / (4. * h_) ) ) \
+                                   * (( x ) \
+                                      -sqrt( G_ * ( h_ + H_ ) ) *t ) ) , 2. )\
+                ) ) * ( 1. -  ( H_ / ( 4. * h_)) * \
+                        ( 1. / ( pow(cosh(sqrt((3.*H_ / (4. * h_))) \
+                                          * ( ( x ) \
+                                              -sqrt( G_*(h_ + H_) ) *t )), 2. ))))
+        Uvert = -sqrt( G_ * h_) * ( Z / h_) * ( 1. - ( H_ / ( 4. * h_)) * ( 1. / ( pow(cosh(sqrt((3.*H_ / (4. * h_))) * ( ( x ) -sqrt( G_*(h_ + H_) ) *t )), 2. )))) * \
+( ( 2. * H_ / h_) * sqrt(3. *H_/ (4. * h_)) * ( tanh(sqrt((3.*H_ / (4. * h_))) * ( ( x ) -sqrt( G_*(h_ + H_) ) *t )) / ( pow(cosh(sqrt((3.*H_ / (4. * h_))) * ( ( x ) -sqrt( G_*(h_ + H_) ) *t )), 2. )))) ;
 
-        Uvert = 1.0/( 4.0*sqrt( G_*h_) )*sqrt(3.0)*G_ *pow( old_div(H_,pow(h_,3.0)), 1.5 )*(h_ + Z)*(
-             2*pow(h_, 3.0) - 7.0*pow(h_, 2.0)*H_
-           + 10.0*h_*H_*Z + 5.0*H_*pow(Z, 2.0)
-           +(
-                2*pow(h_, 3.0) + pow(h_, 2.0)*H_
-              - 2.0*h_*H_*Z - H_*pow(Z, 2.0)
-            )
-           *cosh
-            (
-                sqrt( 3*H_/pow(h_, 3.0))*
-                (
-                    sqrt( G_*(h_ + H_))*t
-                  - ((x ) )
-                )
-            )
-        )/pow(
-            cosh(sqrt( 3*H_/( 4.0*pow(h_, 3.0)))
-          *(
-               sqrt( G_*(h_ + H_))*t
-              - ((x ))
-           )
-        ), 4.0 )*tanh( sqrt( 3*H_/( 4.0*pow(h_, 3.0)))*(
-             sqrt( G_*(h_ + H_))*t
-           - ((x ))
-         ));
         self.assertAlmostEqual(Uhorz, aa.u(xx,t)[0])
         self.assertAlmostEqual(-Uvert, aa.u(xx,t)[1])
-        
+
 
 class CheckMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
@@ -853,7 +817,7 @@ class VerifyRandomWaves(unittest.TestCase):
         for ii in range(len(tlist)):
             etaWrite[ii] = a.eta(x0,tlist[ii])
         path =getpath()
-        fname = path+"randomSeries.txt"
+        fname = os.path.join(path, "randomSeries.txt")
         filenames = ['randomSeries.txt']
         if Tlag < 0.:
             with self.assertRaises(SystemExit) as cm1:
@@ -1261,7 +1225,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         #load successfully - direct decomposition
         path = getpath()
         aa= TimeSeries(
-            path+"data_timeSeries.txt",
+            os.path.join(path, "data_timeSeries.txt"),
             0,
             np.array([1.,0,0]),
             1.  ,
@@ -1273,7 +1237,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
 
         with self.assertRaises(SystemExit) as cm1:
             aa= TimeSeries(
-                path+"data_timeSeries.dat",
+                os.join(path,"data_timeSeries.dat"),
                 0,
                 np.array([1.,0,0]),
                 1.  ,
@@ -1284,7 +1248,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             )
         with self.assertRaises(SystemExit) as cm2:
             aa= TimeSeries(
-                path+"data_timeSeries_err1.csv",
+                os.path.join(path, "data_timeSeries_err1.csv"),
                 0,
                 np.array([1.,0,0]),
                 1.  ,
@@ -1296,7 +1260,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         self.assertEqual(cm2.exception.code, 1 )
         with self.assertRaises(SystemExit) as cm3:
             aa= TimeSeries(
-                path+"data_timeSeries_err2.txt",
+                os.path.join(path, "data_timeSeries_err2.txt"),
                 0,
                 np.array([1.,0,0]),
                 1.  ,
@@ -1312,7 +1276,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         #load successfully - window decomposition
         path = getpath()
         aa= TimeSeries(
-            path+"data_timeSeries.txt",
+            os.path.join(path, "data_timeSeries.txt"),
             0,
             np.array([1.,0,0]),
             1.  ,
@@ -1331,7 +1295,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         numarray[:,0] = np.linspace(0,100,10001)
         numarray[:,1] = np.cos(pi*numarray[:,0])
         aa= TimeSeries(
-            path+"data_timeSeries.txt",
+            os.path.join(path, "data_timeSeries.txt"),
             0,
             np.array([1.,0,0]),
             1.  ,
@@ -1349,7 +1313,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         # Putting too many waves
         with self.assertRaises(SystemExit) as cm1:
             aa= TimeSeries(
-            path+"data_timeSeries.txt",
+            os.path.join(path, "data_timeSeries.txt"),
             0,
             np.array([1.,0,0]),
             1.  ,
@@ -1368,7 +1332,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         #No Nwaves
         with self.assertRaises(SystemExit) as cm2:
             aa= TimeSeries(
-                path+"data_timeSeries.txt",
+                os.path.join(path, "data_timeSeries.txt"),
                 0,
                 np.array([1.,0,0]),
                 1.  ,
@@ -1390,7 +1354,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         #No tm
         with self.assertRaises(SystemExit) as cm3:
             aa= TimeSeries(
-                path+"data_timeSeries.txt",
+                os.path.join(path, "data_timeSeries.txt"),
                 0,
                 np.array([1.,0,0]),
                 1.  ,
@@ -1501,7 +1465,7 @@ class VerifyTimeSeries(unittest.TestCase):
             np.array([0,0,-9.81]),
             cutoffTotal=0.025
             )
-        fid = open(path+"data_timeSeries.txt","r")
+        fid = open(path, "data_timeSeries.txt","r")
         data = np.loadtxt(fid)
         timeRef = data[:,0]
         etaRef = data[:,1]
@@ -1528,7 +1492,7 @@ class VerifyTimeSeries(unittest.TestCase):
         series[:,0] = timeInt
         series[:,1] = etaInt
         aa2= TimeSeries(
-            path+"data_timeSeries.txt",
+            os.path.join(path, "data_timeSeries.txt"),
             0,
              np.array([0.,0.,0]),
             1.  ,
@@ -1560,7 +1524,7 @@ class VerifyTimeSeries(unittest.TestCase):
         from proteus.WaveTools import TimeSeries, costap
         import random
         aa= TimeSeries(
-            path+"data_timeSeries.txt",
+            os.path.join(path, "data_timeSeries.txt"),
             0,
              np.array([0.,0.,0]),
             1.  ,
@@ -1600,7 +1564,7 @@ class VerifyTimeSeries(unittest.TestCase):
         series[:,0] = timeInt
         series[:,1] = etaInt
         aa2= TimeSeries(
-            path+"data_timeSeries.txt",
+            os.path.join(path, "data_timeSeries.txt"),
             0,
              np.array([0.,0.,0]),
             1.  ,
@@ -1676,7 +1640,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
         from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
         import random
         path =getpath()
-        fname = path+"randomFastSeries.txt"
+        fname = os.path.join(path, "randomFastSeries.txt")
         # Assinging a random value at a field and getting the expected output
         Tp = 1.
         Hs = 0.15
@@ -1834,7 +1798,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
     def testFunctions(self):
         from proteus.WaveTools import RandomWaves,TimeSeries,RandomNLWaves,eta_mode
         path =getpath()
-        fname = path+"randomSeries.txt"
+        fname = os.path.join(path, "randomSeries.txt")
         # Assinging a random value at a field and getting the expected output
         Tp = 1.
         Hs = 0.1
