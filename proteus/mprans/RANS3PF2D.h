@@ -1097,6 +1097,49 @@ namespace proteus
             dmom_v_ham_grad_v[0] = 0.0;
             dmom_v_ham_grad_v[1] = 0.0;
         }
+        if(USE_SBM==0)
+        {
+            // u momentum Hamiltonian (pressure)
+            // mom_u_ham = grad_p[0]; //this is grad p_sharp
+            // dmom_u_ham_grad_p[0] = 0.0;
+            // dmom_u_ham_grad_p[1] = 0.0;
+            // //v momentum Hamiltonian (pressure)
+            // mom_v_ham = grad_p[1];
+            // dmom_v_ham_grad_p[0] = 0.0;
+            // dmom_v_ham_grad_p[1] = 0.0;
+            if(phi_s_effect>0)
+            {
+              mom_u_ham = grad_p[0];//this is grad p_sharp
+              dmom_u_ham_grad_p[0]=0.0;
+              dmom_u_ham_grad_p[1]=0.0;
+              //v momentum Hamiltonian (pressure)
+              mom_v_ham = grad_p[1];
+              dmom_v_ham_grad_p[0]=0.0;
+              dmom_v_ham_grad_p[1]=0.0;
+            }else{
+              mom_u_ham = grad_pn[0];
+              dmom_u_ham_grad_p[0]=0.0;
+              dmom_u_ham_grad_p[1]=0.0;
+              //v momentum Hamiltonian (pressure)
+              mom_v_ham = grad_pn[1];
+              dmom_v_ham_grad_p[0]=0.0;
+              dmom_v_ham_grad_p[1]=0.0;
+            }
+
+            //u momentum Hamiltonian (advection)
+            if(phi_s_effect>0)
+            {
+              const double curl_u = grad_v_star[0] - grad_u_star[1];
+              mom_u_ham += vStar*curl_u; 
+              // mom_u_ham += uStar*grad_u_star[0]+vStar*grad_u_star[1];//has no difference
+              mom_v_ham += -uStar*curl_u;
+              // mom_v_ham += uStar*grad_v_star[0]+vStar*grad_v_star[1];
+            }
+            dmom_u_ham_grad_u[0] = 0.0;
+            dmom_u_ham_grad_u[1] = 0.0;
+            dmom_v_ham_grad_v[0] = 0.0;
+            dmom_v_ham_grad_v[1] = 0.0;
+        }
       }
 
       //VRANS specific
