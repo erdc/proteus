@@ -914,15 +914,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
 
-        if 'use_SUPG' in dir(options):
-            self.calculateResidual = self.sw2d.calculateResidual_SUPG
-            self.calculateJacobian = self.sw2d.calculateJacobian_SUPG
+        self.calculateResidual = self.sw2d.calculateResidual_entropy_viscosity
+        if (self.coefficients.LUMPED_MASS_MATRIX):
+            self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
         else:
-            self.calculateResidual = self.sw2d.calculateResidual_entropy_viscosity
-            if (self.coefficients.LUMPED_MASS_MATRIX):
-                self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
-            else:
-                self.calculateJacobian = self.sw2d.calculateMassMatrix
+            self.calculateJacobian = self.sw2d.calculateMassMatrix
 
     def FCTStep(self):
         # NOTE: this function is meant to be called within the solver
