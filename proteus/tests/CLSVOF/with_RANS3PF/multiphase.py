@@ -17,7 +17,6 @@ AUTOMATED_TEST=True
 
 # ----- PARAMETERS FOR CLSVOF ----- #
 useCLSVOF=True
-timeOrder_clsvof=2 #1 or 2
 epsFactHeaviside_clsvof=1.5 #epsilon parameter on heaviside functions
 lambdaFact_clsvof=10.0 #lambda parameter in paper
 computeMetrics_clsvof=0 #0: no metrics, 1: at EOS (needs exact solution) or 2: EOS and ETS
