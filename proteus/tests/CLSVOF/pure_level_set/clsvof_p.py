@@ -22,7 +22,6 @@ if ct.test_case==4:
 
 coefficients = MyCoefficients(useMetrics=useMetrics,
                               doSpinUpStep=doSpinUpStep,
-                              timeOrder=timeOrder,
                               epsFactHeaviside=epsFactHeaviside,
                               epsFactDirac=epsFactHeaviside,
                               lambdaFact=lambdaFact,
