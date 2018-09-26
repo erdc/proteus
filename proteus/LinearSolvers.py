@@ -1944,7 +1944,6 @@ class Schur_Sp(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
-        self._setSchurlog(global_ksp)
         if self.bdyNullSpace is True:
             self._setConstantPressureNullSpace(global_ksp)
         self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
@@ -1970,6 +1969,7 @@ class Schur_Sp(NavierStokesSchur):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        self._setSchurlog(global_ksp)
 
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
     r""" Two-phase PCD Schur complement approximation class.
