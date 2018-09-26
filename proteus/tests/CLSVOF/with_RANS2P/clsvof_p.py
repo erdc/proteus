@@ -11,7 +11,6 @@ LevelModelType = CLSVOF.LevelModel
 coefficients = CLSVOF.Coefficients(V_model=0,
                                    ME_model=CLSVOF_model,
                                    useMetrics=useMetrics,
-                                   timeOrder=timeOrder_clsvof,
                                    epsFactHeaviside=epsFactHeaviside_clsvof,
                                    epsFactDirac=epsFactHeaviside_clsvof,
                                    lambdaFact=lambdaFact_clsvof,
