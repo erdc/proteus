@@ -9,14 +9,23 @@ timeOrder = 2
 stepController  = StepControl.Min_dt_cfl_controller
 systemStepExact = False
 
-femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis,
-             1:C0_AffineLinearOnSimplexWithNodalBasis,
-             2:C0_AffineLinearOnSimplexWithNodalBasis,
-             3:C0_AffineLinearOnSimplexWithNodalBasis}
-
-elementQuadrature = SimplexGaussQuadrature(nd,3)
-
-elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+spaceOrder=2
+if spaceOrder == 1:
+    femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis,
+                 1:C0_AffineLinearOnSimplexWithNodalBasis,
+                 2:C0_AffineLinearOnSimplexWithNodalBasis}
+    if nd == 3:
+        femSpaces[3] = C0_AffineLinearOnSimplexWithNodalBasis
+    elementQuadrature = SimplexGaussQuadrature(nd,3)
+    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+elif spaceOrder == 2:    
+    femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis,
+                 1:C0_AffineQuadraticOnSimplexWithNodalBasis,
+                 2:C0_AffineQuadraticOnSimplexWithNodalBasis}
+    if nd == 3:
+        femSpaces[3] = C0_AffineQuadraticOnSimplexWithNodalBasis
+    elementQuadrature = SimplexGaussQuadrature(nd,5)
+    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,5)
 
 #nnx=81
 #nny=21
@@ -26,22 +35,29 @@ elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 #nnz=11
 nnx=21
 nny=6
-nnz=6
+if nd == 3:
+    nnz=6
 #nLevels = 1
+he = L[0]/float(nnx-1)
+if nd == 3:
+    triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
+else:
+    triangleOptions="pAq30.0Dena%f" % ((he**2)/4.0,)
 
 numericalFluxType = RANS2P.NumericalFlux
 
-parallelPeriodic=True
+if periodic:
+    parallelPeriodic=True
 
 subgridError = RANS2P.SubgridError(coefficients=coefficients,
-                                  nd=nd,
-                                  lag=True,
-                                  hFactor=1.0)
+                                   nd=nd,
+                                   lag=True,
+                                   hFactor=1.0)
 
 shockCapturing = RANS2P.ShockCapturing(coefficients=coefficients,
-                                      nd=nd,
-                                      shockCapturingFactor=0.0,
-                                      lag=True)
+                                       nd=nd,
+                                       shockCapturingFactor=0.0,
+                                       lag=True)
 
 multilevelNonlinearSolver  = Newton
 
@@ -60,8 +76,8 @@ matrix = SparseMatrix
 multilevelLinearSolver = KSP_petsc4py
 levelLinearSolver = KSP_petsc4py
 linearSmoother = SimpleNavierStokes3D
-#multilevelLinearSolver = LU
-#levelLinearSolver = LU
+multilevelLinearSolver = LU
+levelLinearSolver = LU
 linearSmoother = None
 
 linear_solver_options_prefix = 'rans2p_'
