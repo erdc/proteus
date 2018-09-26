@@ -9,8 +9,6 @@ from scipy import signal as sn
 import collections as cll
 import csv
 from proteus import WaveTools as WT
-import numpy as np
-import WaveTools as WT
 import math
        
 
