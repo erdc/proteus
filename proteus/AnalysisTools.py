@@ -1,3 +1,9 @@
+
+"""Tools for Analysis.
+The primary objective of this module is to provide tools for manipulation 
+and to perform operations.
+"""
+
 from __future__ import print_function
 from __future__ import division
 from builtins import zip
@@ -10,9 +16,25 @@ import collections as cll
 import csv
 from proteus import WaveTools as WT
 import math
+
+__all__ = ['readProbeFile',
+           'signalFilter',
+           'zeroCrossing',
+           'pressureToHeight']
        
 
 def readProbeFile(filename):
+    """Read raw probe data from .csv to a list - TO BE USED IN OTHER ANALYSES.
+    Parameters
+    ----------
+    filename : single
+               Filename
+    Returns
+    ----------
+    datalist
+
+    """
+       
     with open (filename, 'rb') as csvfile:
         data=np.loadtxt(csvfile, delimiter=",",skiprows=1)
         time=data[:,0]
@@ -40,6 +62,24 @@ def readProbeFile(filename):
         return datalist
 
 def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
+    """Filter a band of frequencies from a spectrum.
+    Parameters
+    ----------
+    time : double
+           time
+    data : ???
+           ???
+    minfreq : double
+              frequency
+    maxfreq : double
+              frequency
+    costapCut : Boolean
+    Returns
+    ----------
+    data1 : ???
+            ???
+    """
+
     dt = old_div((time[-1]-time[0]),(len(time)-1))
     doInterp = False
     data1 = np.zeros(data.shape,)
