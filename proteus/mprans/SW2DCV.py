@@ -645,6 +645,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # To compute edge_based_cfl from withing choose_dt of RKEV
         self.edge_based_cfl = numpy.zeros(self.u[0].dof.shape)
         self.dLow = None
+        self.hBT = None
         # Old DOFs
         # NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
         # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual).
@@ -914,7 +915,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
                                  compKernelFlag)
 
-        self.calculateResidual = self.sw2d.calculateResidual_entropy_viscosity
+        self.calculateResidual = self.sw2d.calculateResidual
         if (self.coefficients.LUMPED_MASS_MATRIX):
             self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
         else:
@@ -958,7 +959,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.muH_minus_muL,
                           self.hEps,
                           self.hReg,
-                          self.coefficients.LUMPED_MASS_MATRIX)
+                          self.coefficients.LUMPED_MASS_MATRIX,
+                          self.hBT)
 
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex] = limited_hnp1
@@ -1184,6 +1186,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Allocate space for dLow (for the first stage in the SSP method)
         if self.dLow is None:
             self.dLow = numpy.zeros(Cx.shape, 'd')
+            self.hBT = numpy.zeros(Cx.shape, 'd')
 
         numDOFsPerEqn = self.u[0].dof.size  # (mql): I am assuming all variables live on the same FE space
         numNonZeroEntries = len(Cx)
@@ -1366,6 +1369,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.normalx,
             self.normaly,
             self.dLow,
+            self.hBT,
             self.timeIntegration.lstage)
 
         self.COMPUTE_NORMALS = 0
