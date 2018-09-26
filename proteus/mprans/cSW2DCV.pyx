@@ -31,7 +31,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                      double * muH_minus_muL,
                      double hEps,
                      double * hReg,
-                     int LUMPED_MASS_MATRIX)
+                     int LUMPED_MASS_MATRIX,
+                     double * hBT)
         double calculateEdgeBasedCFL(
             double g,
             int numDOFsPerEqn,
@@ -184,6 +185,7 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                double * normalx,
                                double * normaly,
                                double * dLow,
+                               double * hBT,
                                int lstage)
         void calculateMassMatrix(double * mesh_trial_ref,
                                  double * mesh_grad_trial_ref,
@@ -460,7 +462,8 @@ cdef class cSW2DCV_base:
                 numpy.ndarray muH_minus_muL,
                 double hEps,
                 numpy.ndarray hReg,
-                int LUMPED_MASS_MATRIX):
+                int LUMPED_MASS_MATRIX,
+                numpy.ndarray hBT):
         self.thisptr.FCTStep(dt,
                              NNZ,
                              numDOFs,
@@ -485,7 +488,8 @@ cdef class cSW2DCV_base:
                              < double * > muH_minus_muL.data,
                              hEps,
                              < double * > hReg.data,
-                             LUMPED_MASS_MATRIX)
+                             LUMPED_MASS_MATRIX,
+                             < double * > hBT.data)
 
     def calculateEdgeBasedCFL(self,
                               double g,
@@ -659,6 +663,7 @@ cdef class cSW2DCV_base:
                           numpy.ndarray normalx,
                           numpy.ndarray normaly,
                           numpy.ndarray dLow,
+                          numpy.ndarray hBT,
                           int lstage):
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -793,6 +798,7 @@ cdef class cSW2DCV_base:
                                        < double * > normalx.data,
                                        < double * > normaly.data,
                                        < double * > dLow.data,
+                                       < double * > hBT.data,
                                        lstage)
     def calculateMassMatrix(self,
                             numpy.ndarray mesh_trial_ref,
