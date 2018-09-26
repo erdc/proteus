@@ -1,5 +1,10 @@
+from __future__ import print_function
+from __future__ import division
+from past.utils import old_div
+from builtins import object
 from math import ceil, sqrt, pow
 
+import os
 import numpy as np
 import numpy.testing as npt
 
@@ -13,10 +18,12 @@ from proteus import (Comm,
                      NumericalFlux)
 from proteus import default_p as p
 from proteus import default_n as n
+reload(p)
+reload(n)
 
 from proteus.Gauges import PointGauges, LineGauges, LineIntegralGauges
 
-from proteus.tests.util import setup_profiling, silent_rm
+from proteus.test_utils.util import setup_profiling, silent_rm
 from nose.tools import eq_
 
 def build1DMesh(p, nnx):
@@ -50,7 +57,7 @@ def gauge_setup(nd, total_nodes=None):
 
     p.nd = nd
 
-    class LinearSolution:
+    class LinearSolution(object):
         def uOfXT(self,x,t):
             return (x[0]+10*x[1]+100*x[2])*(t+1.0)
 
@@ -64,6 +71,8 @@ def gauge_setup(nd, total_nodes=None):
     n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,3)
     n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
     n.numericalFluxType = NumericalFlux.NoFlux
+    n.cfluxtag = None
+    n.conservativeFlux = None
 
     if total_nodes is None:
         total_nodes = 2*comm.size()
@@ -74,7 +83,7 @@ def gauge_setup(nd, total_nodes=None):
         nnx = nny = int(ceil(sqrt(total_nodes)))+1
         mlMesh = build2DMesh(p, nnx, nny)
     elif p.nd == 3:
-        nnx = nny = nnz = int(ceil(pow(total_nodes, 1.0/3.0)))+1
+        nnx = nny = nnz = int(ceil(pow(total_nodes, old_div(1.0,3.0))))+1
         mlMesh = build3DMesh(p, nnx, nny, nnz)
 
     model = Transport.MultilevelTransport(p, n, mlMesh)
@@ -130,7 +139,7 @@ def test_2D_point_gauge_output():
 
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-
+    delete_file(filename)
 
 def test_point_gauge_output():
     filename = 'test_gauge_output.csv'
@@ -154,7 +163,7 @@ def test_point_gauge_output():
 
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-
+    delete_file(filename)
 
 
 def test_point_gauge_output_2():
@@ -180,7 +189,7 @@ def test_point_gauge_output_2():
 
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-
+    delete_file(filename)
 
 def test_line_integral_gauge_output():
     filename = 'test_line_integral_gauge_output.csv'
@@ -205,7 +214,7 @@ def test_line_integral_gauge_output():
     gauge_names, data = parse_gauge_output(filename)
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-
+    delete_file(filename)
 
 def test_2D_line_integral_gauge_output():
     filename = 'test_2D_line_integral_gauge_output.csv'
@@ -245,7 +254,7 @@ def test_2D_line_integral_gauge_output():
     eq_(correct_gauge_names, gauge_names)
 
     npt.assert_allclose(correct_data, data)
-
+    delete_file(filename)
 
 def test_line_gauge_output():
     filename = 'test_line_output.csv'
@@ -285,7 +294,17 @@ def test_line_gauge_output():
 
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
+    delete_file(filename)
 
+def delete_file(filename):
+    if os.path.exists(filename):
+        try:
+            os.remove(filename)
+        except OSError as e:
+            print ("Error: %s - %s" %(e.filename,e.strerror))
+        else:
+            pass
+    
 
 if __name__ == '__main__':
     setup_profiling()

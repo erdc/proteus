@@ -7,6 +7,8 @@ can try to read and write files in the format that Triangle expects
 .. inheritance-diagram:: proteus.TriangleFileUtils
    :parts: 1
 """
+from __future__ import print_function
+from builtins import range
 import sys,os
 import numpy
 
@@ -14,7 +16,7 @@ import numpy
 #setup basic script for doing simulations
 def checkFileExists(filename):
     if not os.path.isfile(filename):
-        print '%s is not a file!' % filename
+        print('%s is not a file!' % filename)
         #sys.exit(1)
         return False
     #end
@@ -52,11 +54,11 @@ def generateDefaultFormatPattern(recInfo,verbose=0):
     #number of records looking for
     nrecs = recInfo['nRecords']
     if verbose > 2:
-        print 'looking for pattern with up to ',nrecs,' records'
+        print('looking for pattern with up to ',nrecs,' records')
     #end if
     if verbose > 2:
         for i in range(nrecs):
-            print 'record type[',i,']= ',recInfo['types'][i]
+            print('record type[',i,']= ',recInfo['types'][i])
     #end verbose
     #format line is a sequence of unsigned integers
     unint = r'(\d+)'
@@ -68,7 +70,7 @@ def generateDefaultFormatPattern(recInfo,verbose=0):
     #the beginning?
     formatpattern += r'\s*$' #don't need this to get match at beg. of line
     if verbose > 2:
-        print 'trying to match pattern ',formatpattern
+        print('trying to match pattern ',formatpattern)
     #end if
 
     return formatpattern
@@ -76,21 +78,16 @@ def generateDefaultFormatPattern(recInfo,verbose=0):
 
 def findInitialFormatLine(lines,recInfo,formatpattern,
                           commchar='#',nbase=0,verbose=0):
-    """
-    find the line for the Triangle data files, specified in
+    """find the line for the Triangle data files, specified in
     formatpattern.
 
     Generate dataInfo dictionary that should specify
-
-      dataInfo['nEntries']    : number of entries in the file
-      dataInfo['recordSizes'] : size of each record per entry (can be 0)
-      dataInfo['dataStartLineNumber']    : line where actual data entries may
-                                           start
-      dataInfo['recordLocationsPerLine'] : array of indeces saying
-                                           where each record
-                                           should start on a valid entry line
-                                           record I is in entries
-                                           recStart[I]:recStart[I+1]
+    dataInfo['nEntries']    : number of entries in the file
+    dataInfo['recordSizes'] : size of each record per entry (can be 0)
+    dataInfo['dataStartLineNumber']    : line where actual data entries may start
+    dataInfo['recordLocationsPerLine'] : array of indeces saying where
+    each record should start on a valid entry line record I is in
+    entries recStart[I]:recStart[I+1]
 
     """
 
@@ -100,14 +97,14 @@ def findInitialFormatLine(lines,recInfo,formatpattern,
     #number of records looking for
     nrecs = recInfo['nRecords']
     if verbose > 2:
-        print 'looking for file with up to ',nrecs,' records'
+        print('looking for file with up to ',nrecs,' records')
     #end if
     if verbose > 2:
         for i in range(nrecs):
-            print 'record type[',i,']= ',recInfo['types'][i]
+            print('record type[',i,']= ',recInfo['types'][i])
     #end verbose
     if verbose > 2:
-        print 'trying to match pattern ',formatpattern
+        print('trying to match pattern ',formatpattern)
     #end if
     #record information about what is read
     dataInfo = {}
@@ -115,7 +112,7 @@ def findInitialFormatLine(lines,recInfo,formatpattern,
     dataInfo['recordSizes'] = []  #fields for each record per entry
     dataInfo['recordSizes'] = [0 for i in range(nrecs)]
     if verbose > 9:
-        print 'recordSizes= ',dataInfo['recordSizes']
+        print('recordSizes= ',dataInfo['recordSizes'])
     #end verbose
     done = False
     iline= 0
@@ -123,17 +120,17 @@ def findInitialFormatLine(lines,recInfo,formatpattern,
         #read next line
         line = lines[iline]
         if verbose > 5:
-            print 'read line= ',line
+            print('read line= ',line)
         #throw away anything after # character
         dline= line.split(commchar)[0]
         if verbose > 5:
-            print 'leading portion= ',dline
+            print('leading portion= ',dline)
         match =  re.search(formatpattern,dline)
         if match:
             foundFirstLine = True
             done = True
             if verbose > 5:
-                print 'first line match.groups()= ',match.groups()
+                print('first line match.groups()= ',match.groups())
             #end if
             dataInfo['nEntries']    = int(match.group(1))
             dataInfo['recordSizes'] = [int(match.group(i)) for i in range(2,nrecs+2)]
@@ -158,15 +155,15 @@ def findInitialFormatLine(lines,recInfo,formatpattern,
         recStart[2+i] = recStart[i+1]+dataInfo['recordSizes'][i]
     #end i
     if verbose > 2:
-        print 'recStart= ',recStart
+        print('recStart= ',recStart)
     #end verbose
     dataInfo['recordLocationsPerLine'] = recStart
     dataInfo['dataStartLineNumber']    = int(iline)
     if verbose > 2:
-        print 'end of findInitialFormatLine, foundFirstLine= ',foundFirstLine
-        print 'next line is ',iline
-        print """nEntries= %d nValuesPerLine= %d """ % (dataInfo['nEntries'],
-                                                        nValuesPerLine)
+        print('end of findInitialFormatLine, foundFirstLine= ',foundFirstLine)
+        print('next line is ',iline)
+        print("""nEntries= %d nValuesPerLine= %d """ % (dataInfo['nEntries'],
+                                                        nValuesPerLine))
     #end verbose
     return dataInfo
 
@@ -201,7 +198,7 @@ def readSimpleFormattedDataEntries(lines,recInfo,dataInfo,
     """
     #
     if verbose > 2:
-        print "rec info in read simple....",recInfo
+        print("rec info in read simple....",recInfo)
     nrecs = recInfo['nRecords']
     #proceed through the rest of the file and get the data
     nentries= dataInfo['nEntries']
@@ -240,35 +237,35 @@ def readSimpleFormattedDataEntries(lines,recInfo,dataInfo,
         #read next line
         line = lines[iline]
         if verbose > 5:
-            print 'read line= ',line
+            print('read line= ',line)
         #throw away anything after # character
         dline= line.split(commchar)[0]
         if verbose > 5:
-            print 'leading portion= ',dline
+            print('leading portion= ',dline)
         #end if
         #skip empty or all white space
         if (len(dline) > 0 and not dline.isspace()):
             entry = dline.split() #separate by white space
             if not (len(entry) == nValuesPerLine):
-                print 'PROBLEM readFormatted info non-trivial line wrong length, quitting!'
-                print 'len(entry)= ',len(entry),' problem nValuesPerLine= ',nValuesPerLine
-                print 'entry = ',entry
-                raise IOError, "file format in TriangleFileUtils.readSimpleFormattedDataEntries"
+                print('PROBLEM readFormatted info non-trivial line wrong length, quitting!')
+                print('len(entry)= ',len(entry),' problem nValuesPerLine= ',nValuesPerLine)
+                print('entry = ',entry)
+                raise IOError("file format in TriangleFileUtils.readSimpleFormattedDataEntries")
                 return data,iline
             #end if
             entryNum = entry[recStart[0]:recStart[1]]
             if verbose > 5:
-                print 'entryNum= ',entryNum
+                print('entryNum= ',entryNum)
             index    = int(entryNum[0])-nbase #could be base 1
             if verbose > 5:
-                print 'index= ',index
+                print('index= ',index)
 
             for i in range(nrecs): #go through each record and insert if it is in file
                 #get the substring for this record
                 subentry = entry[recStart[i+1]:recStart[i+2]]
                 if verbose > 5:
-                    print """entry num %d rec %d subentry= %s """ % (ientry,i,subentry)
-                    print """conversions[i]= %s """ % recInfo['conversions'][i]
+                    print("""entry num %d rec %d subentry= %s """ % (ientry,i,subentry))
+                    print("""conversions[i]= %s """ % recInfo['conversions'][i])
                 if dataInfo['recordSizes'][i] > 1:
                     for j,s in enumerate(subentry):
                         data[i][index,j] = recInfo['conversions'][i](s)
@@ -283,7 +280,7 @@ def readSimpleFormattedDataEntries(lines,recInfo,dataInfo,
         done = (ientry == nentries) or (iline == len(lines))
     #end not done
     if verbose > 3:
-        print """leaving readInfo iline= %d ientry= %d """ % (iline,ientry)
+        print("""leaving readInfo iline= %d ientry= %d """ % (iline,ientry))
     #end
     ilast = iline
     return data,ilast
@@ -358,29 +355,29 @@ def readSimpleFormattedDataEntriesLastOptional(lines,recInfo,dataInfo,
         #read next line
         line = lines[iline]
         if verbose > 5:
-            print 'read line= ',line
+            print('read line= ',line)
         #throw away anything after # character
         dline= line.split(commchar)[0]
         if verbose > 5:
-            print 'leading portion= ',dline
+            print('leading portion= ',dline)
         #end if
         #skip empty or all white space
         if (len(dline) > 0 and not dline.isspace()):
             entry = dline.split() #separate by white space
             if not (len(entry) == nValuesPerLine or
                     len(entry) == nValuesPerLine-1):
-                print 'PROBLEM readFormatted info non-trivial line wrong length, quitting!'
-                print 'len(entry)= ',len(entry),' problem nValuesPerLine= ',nValuesPerLine
-                print 'entry = ',entry
-                raise IOError, "file format in TriangleFileUtils.readSimpleFormattedDataEntries"
+                print('PROBLEM readFormatted info non-trivial line wrong length, quitting!')
+                print('len(entry)= ',len(entry),' problem nValuesPerLine= ',nValuesPerLine)
+                print('entry = ',entry)
+                raise IOError("file format in TriangleFileUtils.readSimpleFormattedDataEntries")
                 return data,iline
             #end if
             entryNum = entry[recStart[0]:recStart[1]]
             if verbose > 5:
-                print 'entryNum= ',entryNum
+                print('entryNum= ',entryNum)
             index    = int(entryNum[0])-nbase #could be base 1
             if verbose > 5:
-                print 'index= ',index
+                print('index= ',index)
 
             for i in range(nrecs): #go through each record and insert if it is in file
                 #get the substring for this record
@@ -392,7 +389,7 @@ def readSimpleFormattedDataEntriesLastOptional(lines,recInfo,dataInfo,
                 #end if
                 subentry = entry[recStart[i+1]:lastInd]
                 if verbose > 5:
-                    print """entry num %d rec %d subentry= %s """ % (ientry,i,subentry)
+                    print("""entry num %d rec %d subentry= %s """ % (ientry,i,subentry))
                     #print """conversions[i]= %s """ % recInfo['conversions'][i]
                 if dataInfo['recordSizes'][i] > 1:
                     for j,s in enumerate(subentry):
@@ -411,7 +408,7 @@ def readSimpleFormattedDataEntriesLastOptional(lines,recInfo,dataInfo,
         done = (ientry == nentries) or (iline == len(lines))
     #end not done
     if verbose > 3:
-        print """leaving readInfo iline= %d ientry= %d """ % (iline,ientry)
+        print("""leaving readInfo iline= %d ientry= %d """ % (iline,ientry))
     #end
     ilast = iline
     return data,ilast

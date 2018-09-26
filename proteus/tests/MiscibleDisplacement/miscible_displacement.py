@@ -20,6 +20,11 @@ common definitions for simple miscible displacement problem
      We'll assume \hat{\mu}(c) = a*(c-c_0) + b
      
 """
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus import SubsurfaceTransportCoefficients as STC
 
@@ -47,10 +52,10 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
                  concentration_model_id=None,  #which number is the model for the concentration transport equation? 
                  timeVaryingCoefficients=False, #do the coefficients vary in time?
                  materialValuesLocallyConstant=False): #are the material functions constants? e.g., K_j(x,t) = K^0_j ?
-        if concentration_model_id != None and viscosity_a <= 1.0e-16:
-            print "Warning, specified concentration model with id {0} but no viscosity dependence mu=a*c+b with a={1:10.3e} b={2:10.3e} ".format(concentration_model_id,viscosity_a,viscosity_b)
-        if concentration_model_id == None and viscosity_a > 1.0e-16:
-            print "Warning, no specified concentration model but have viscosity dependence mu=a*c+b with a={0:10.3e} b={1:10.3e} ".format(viscosity_a,viscosity_b)
+        if concentration_model_id is not None and viscosity_a <= 1.0e-16:
+            print("Warning, specified concentration model with id {0} but no viscosity dependence mu=a*c+b with a={1:10.3e} b={2:10.3e} ".format(concentration_model_id,viscosity_a,viscosity_b))
+        if concentration_model_id is None and viscosity_a > 1.0e-16:
+            print("Warning, no specified concentration model but have viscosity dependence mu=a*c+b with a={0:10.3e} b={1:10.3e} ".format(viscosity_a,viscosity_b))
         
         self.concentration_model_id = concentration_model_id; self.concentration_model = None
         self.viscosity_a = viscosity_a 
@@ -63,7 +68,7 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
         self.variableNames=['h']
         
     def attachModels(self,modelList):
-        if self.concentration_model_id != None: #grab a reference to the model that solves for concentration 
+        if self.concentration_model_id is not None: #grab a reference to the model that solves for concentration 
             assert 0 <= self.concentration_model_id and self.concentration_model_id < len(modelList)
             self.concentration_model = modelList[self.concentration_model_id]
             #assumes that the first unknown in the transport equation is the concentration of our species of interest
@@ -73,10 +78,10 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
             #exterior boundary of domain
             self.ebqe_c = self.concentration_model.ebqe[('u',0)]
             #element boundary points treated as unique per element (e.g., for DG) 
-            if self.concentration_model.ebq.has_key(('u',0)):
+            if ('u',0) in self.concentration_model.ebq:
                 self.ebq_c = self.concentration_model.ebq[('u',0)]
             #element boundary points treated as unique per element boundary
-            if self.concentration_model.ebq_global.has_key(('u',0)):
+            if ('u',0) in self.concentration_model.ebq_global:
                 self.ebq_global_c = self.concentration_model.ebq_global[('u',0)]
 
     def initializeElementQuadrature(self,t,cq):
@@ -160,9 +165,9 @@ domain.boundaryTags = regular_domain.boundaryLegend
 
 genMesh = True
 refinement_level = 32 #define characteristic length
-he = L[0]/float(refinement_level)
+he = old_div(L[0],float(refinement_level))
 
-triangleOptions = "VApq30Dena{area:8.8f}".format(area=(he**2)/2.0)
+triangleOptions = "VApq30Dena{area:8.8f}".format(area=old_div((he**2),2.0))
 
 
 ### Material Properties ###
@@ -244,7 +249,7 @@ def concentration_bc(x,flag):
         return lambda x,t: concentration_inflow
 
 ### Initial conditions ###
-class ConstantIC:
+class ConstantIC(object):
     def __init__(self,val=0.0):
         self.val = val
     def uOfXT(self,x,t):
@@ -259,7 +264,7 @@ initialConditions_trans = {0:ConstantIC(concentration_background)}
 # numerics
 parallel = False
 
-nnx = nny = int(L[0]/he)
+nnx = nny = int(old_div(L[0],he))
 nLevels = 1
 if parallel:
     nLevels = 1

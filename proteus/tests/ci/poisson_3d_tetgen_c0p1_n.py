@@ -1,6 +1,12 @@
+from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
-from poisson_3d_tetgen_p import *
+try:
+    from .poisson_3d_tetgen_p import *
+except:
+    from poisson_3d_tetgen_p import *
 
 #steady-state so no time integration
 timeIntegration = NoIntegration
@@ -13,7 +19,7 @@ femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
 elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
-triangleOptions="VApq1.35q12feena%e" % ((he**3)/6.0,)
+triangleOptions="VApq1.35q12feena%e" % (old_div((he**3),6.0),)
 logEvent("""Mesh generated using: tetgen -%s %s"""  % (triangleOptions,domain.polyfile+".poly"))
 
 #number of levels in mesh
@@ -77,4 +83,5 @@ linTolFac = 0.0
 #linear solver absolute convergence test
 l_atol_res = 1.0e-10
 
-#conservativeFlux =  {0:'pwl'}
+conservativeFlux =  None
+cfluxtag = None

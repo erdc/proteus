@@ -1,6 +1,10 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from poisson_3d_p import *
+try:
+    from .poisson_3d_p import *
+except:
+    from poisson_3d_p import *
 
 #steady-state so no time integration
 timeIntegration = NoIntegration
@@ -83,4 +87,6 @@ linTolFac = 0.0
 #linear solver absolute convergence test
 l_atol_res = 1.0e-10
 
-#conservativeFlux =  {0:'pwl'}
+conservativeFlux =  None
+cfluxtag = None
+conservativeFlux =  {0:'pwl-bdm2'}

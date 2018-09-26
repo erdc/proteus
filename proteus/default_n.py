@@ -5,19 +5,20 @@ The default values for numerics modules
 
   Clean up default_n.py, finish documenting, decide on tolerance scheme
 """
-from TimeIntegration import *
-from Quadrature import *
-from FemTools import *
-from SubgridError import *
-from ShockCapturing import *
-from NumericalFlux import *
-from NonlinearSolvers import *
-from LinearAlgebraTools import *
-from LinearSolvers import *
-from lapackWrappers import *
-from StepControl import *
-from AuxiliaryVariables import *
-from MeshTools import *
+from __future__ import absolute_import
+from .TimeIntegration import *
+from .Quadrature import *
+from .FemTools import *
+from .SubgridError import *
+from .ShockCapturing import *
+from .NumericalFlux import *
+from .NonlinearSolvers import *
+from .LinearAlgebraTools import *
+from .LinearSolvers import *
+from .lapackWrappers import *
+from .StepControl import *
+from .AuxiliaryVariables import *
+from .MeshTools import *
 ## \todo clean up default_n module
 
 stepController = FixedStep
@@ -94,6 +95,14 @@ nnz = None
 triangleOptions="q30DenA"
 """Options string for triangle or tetGen"""
 
+triangleFlag=0
+"""Set the diagonal direction when triangulating a quadrilateral mesh
+
+0 - right leaning
+1 - alternating 'union jack'
+2 - left leaning
+"""
+
 nLevels = 1
 """Number of levels for multilevel mesh"""
 
@@ -148,6 +157,8 @@ computeEigenvalues = False
 computeEigenvectors = None#'left','right'
 
 linearSmoother = None
+
+linearSmootherOptions = ()
 
 linTolFac = 0.001
 
@@ -214,7 +225,7 @@ auxiliaryVariables=[]
 periodicDirichletConditions=None
 
 restrictFineSolutionToAllMeshes=False
-parallelPartitioningType = MeshParallelPartitioningTypes.element
+parallelPartitioningType = MeshParallelPartitioningTypes.node
 #default number of layers to use > 1 with element partition means
 #C0P1 methods don't need to do communication in global element assembly
 #nodal partitioning does not need communication for C0P1 (has overlap 1) regardless
@@ -231,3 +242,12 @@ linearSolverConvergenceTest = 'r' #r,its,r-true for true residual
 
 bcsTimeDependent = True
 """Allow optimizations if boundary conditions are not time dependent"""
+
+adaptMesh = False
+"""Adaptively refine the mesh in space"""
+
+adaptMesh_nSteps = 10
+"""Adapt the mesh every nSteps"""
+
+adaptMesh_numIter = 2
+"""If the mesh adaption  algorithm is iterative, do this many iterates"""

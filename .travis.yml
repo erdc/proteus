@@ -1,9 +1,13 @@
+dist: trusty
+sudo: required
+
 language: python
 
-sudo: false
-
 env:
-- TEST_PROFILE="test.proteus.yaml"
+  - TEST_PROFILE="proteus"
+  - TEST_PROFILE="1st_set"
+  - TEST_PROFILE="2nd_set"  
+    #- TEST_PROFILE="air-water-vv"
 
 python:
 - 2.7
@@ -12,29 +16,75 @@ addons:
   apt:
     packages:
     - gfortran
-    - cmake
-    - swig
-    - libblas-dev
-    - liblapack-dev
+    - libffi-dev
+    - libssl-dev
+    - python-lzma
 
 before_install:
-- wget https://dl.dropboxusercontent.com/u/26353144/hashdist_travis.tgz
-- tar xzf hashdist_travis.tgz 
-- mv .hashdist $HOME
+- pip install pyliblzma
+- wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
+- tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
+- cd git-lfs-1.5.5
+- PREFIX=${HOME} ./install.sh
+- export PATH=${HOME}/bin:${PATH}
+- cd ..
 
 install:
+- git lfs fetch
+- git lfs checkout
 - make hashdist
 - make stack
 - make stack/default.yaml
-- CFLAGS='-w -fno-var-tracking-assignments' make install
+- ./hashdist/bin/hit init-home
+- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- pushd $HOME
+- mkdir -p hashdist_src
+- mkdir -p hashdist_bld
+- cd .hashdist
+- rm -rf src bld
+- ln -s ../hashdist_src src 
+- ln -s ../hashdist_bld bld
+- pwd
+- ls bld src
+- popd
+- cd stack
+- ../hashdist/bin/hit build -j 2 -v default.yaml
+- cd ..
+- git submodule init
+- git submodule update --recursive --remote --force 
+- make profile
+- make distclean
+- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=2
 - export PATH=$PWD/linux2/bin:$PATH
+- export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
+- pip install matplotlib
+
+cache:
+  - timeout: 1000
+  - directories:
+    - $HOME/hashdist_src    
+    - $HOME/hashdist_bld    
 
 script:
-- nosetests -vv --traverse-namespace proteus/tests proteus/tests/ci  proteus/tests/poisson_2d
+  - which python
+  - python -c "import sys; print sys.path"
+  - python -c "import backports"
+  - python -c "import backports.functools_lru_cache"
+  - python -c "import matplotlib"
+  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
+  
+  - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then py.test --forked -v air-water-vv/Tests/1st_set/; fi
+  
+  - if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then py.test --forked -v air-water-vv/Tests/2nd_set/; fi
 
 notifications:
   email:
     on_success: change
     on_failure: always
+
+after_success:
+  - pip install codecov
+  - codecov

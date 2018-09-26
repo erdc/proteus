@@ -1,3 +1,14 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
+import numpy as np
+from scipy import signal as sn
+#from pylab import *
+import collections as cll
+import csv
+from proteus import WaveTools as WT
 import numpy as np
 import WaveTools as WT
 import math
@@ -26,12 +37,12 @@ def readProbeFile(filename):
             probex.append(float(header[ii+1]))
             probey.append(float(header[ii+2]))
             probez.append(float(header[ii+3]))
-        probeCoord = zip(np.array(probex),np.array(probey),np.array(probez))
+        probeCoord = list(zip(np.array(probex),np.array(probey),np.array(probez)))
         datalist = [probeType,probeCoord,time,data]
         return datalist
 
 def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
-    dt = (time[-1]-time[0])/(len(time)-1)
+    dt = old_div((time[-1]-time[0]),(len(time)-1))
     doInterp = False
     data1 = np.zeros(data.shape,)
     
@@ -41,7 +52,7 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
         if dt_temp!=dt:
             doInterp = True
     if(doInterp):
-#        print "Interpolating series"
+        print("Interpolating series")
         time_lin = np.linspace(time[0],time[-1],len(time))
         try:
             for ii in range(nprobes):
@@ -56,7 +67,7 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
             data = data1
             nprobes = -1
     nfft = len(time)
-    dt = (time[-1]-time[0])/(len(time)-1)
+    dt = old_div((time[-1]-time[0]),(len(time)-1))
     freq = np.fft.fftfreq(nfft,dt)   
     i1 = np.where(freq > maxfreq)[0]
     i3 = np.where(freq < -maxfreq)[0]
@@ -100,30 +111,25 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
 
     return data1
 
-
-def zeroCrossing(time,data,Tstart=0.,Tend=1e300,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e300,costapCut=True):
-    irange = np.where(time[np.where(time<Tend)[0]]>Tstart)
-    time = time[irange]
-    data = data[irange]
-#    print time
+def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e300,costapCut=True):
     if(filt):
-        data_filt = signalFilter(time,data,minfreq,maxfreq,costapCut)    
-    trend = np.mean(data_filt)
-    data_filt = data_filt - trend
+        data = signalFilter(time,data,minfreq,maxfreq,costapCut)    
+    trend = mean(data)
+    data = data - trend
 
-    data_temp=np.zeros(data_filt.shape,)
-    data_temp[0:-1] = data_filt[1:]
-    zc = data_temp*data_filt
+    data_temp=np.zeros(data.shape,)
+    data_temp[0:-1] = data[1:]
+    zc = data_temp*data
     zcPoints = np.where(zc<0)[0]
     if(up):
-        if(data_filt[0]<0):
+        if(data[0]<0):
             zcPoints = zcPoints[::2]
-        if(data_filt[0]>0):
+        if(data[0]>0):
             zcPoints = zcPoints[1::2]
     else:
-        if(data_filt[0]<0):
+        if(data[0]<0):
             zcPoints = zcPoints[1::2]
-        if(data_filt[0]>0):
+        if(data[0]>0):
             zcPoints = zcPoints[::2]
 
     zCH = []
@@ -135,46 +141,41 @@ def zeroCrossing(time,data,Tstart=0.,Tend=1e300,mode="mean",up=True,filt=True,mi
         period.append(time[i2]-time[i1])
     zCH = np.array(zCH)
     period = np.array(period)
-
-    args = zCH.argsort()
-    height = zCH[args]
-    period = period[args]
-#    print height, period
+    height = None
 
     if mode == "mean":
-        height = np.mean(height)
-        period = np.mean(period)
-    elif mode >= 1:
-        ii = len(height) - mode
-        height = np.mean(height[ii:])
-        period = np.mean(period[ii:])
-    elif  mode < 1:
-        ii = int(round(len(height*(1. - mode))))
-        height = np.mean(height[ii:])
-        period = np.mean(period[ii:])
+        height = mean(zCH)
+        period = mean(period)
+    elif type(mode) == "int":
+        height = np.sort(zCH)
+        ii = len(height) - old_div(float(len(height)),float(mode))
+        height = mean(height[ii:])
+        period = mean(period)
     else:
-        print "mode must be either an integer > 1, a float < 1 or a 'mean'"
+        print("mode must be either 'period', 'mean' or an integer ")
+
     return [period,height]
                       
 
 def pressureToHeight(data,Z,depth,wavelength,rho,g):
     k = 2*math.pi/wavelength
-    Kp = rho*g*np.cosh(k*(depth+Z))/np.cosh(k*depth)
-    return data/Kp
+    Kp = rho*g*cosh(k*(depth+Z))/cosh(k*depth)
+    return old_div(data,Kp)
 
-def reflStat(H1,H2,H3,dx,wavelength):
-    D = 2*math.pi*dx/wavelength
-    Amp =np.array([H1/2.,H2/2.,H3/2.])
-    A1 = Amp[0]*Amp[0]
-    A2 = Amp[1]*Amp[1]
-    A3 = Amp[2]*Amp[2]
-    Lamda = (A1 + A3 - 2.*A2*np.cos(2*D))/(4.*np.sin(D)*np.sin(D))
-    Gamma = 0.5*np.sqrt(
-        ((2*A2-A1-A3)/(2.*np.sin(D)*np.sin(D)))**2+((A1-A3)/np.sin(2*D))**2)
+
+def ReflStat(H1,H2,H3,dx,wavelenght):
+    D = 2*math.pi*dx/wavelegth
+    Amp =np.array([old_div(H1,2.),old_div(H2,2.),old_div(H3,2.)])
+    A1 = Amp[j]*Amp[j]
+    A2 = Amp[j+1]*Amp[j+1]
+    A3 = Amp[j+2]*Amp[j+2]
+    Lamda = old_div((A1 + A3 - 2.*A2*cos(2*D)),(4.*sin(D)*sin(D)))
+    Gamma = 0.5*sqrt(
+        (old_div((2*A2-A1-A3),(2.*sin(D)*sin(D))))**2+(old_div((A1-A3),sin(2*D)))**2)
     
-    Hi = np.sqrt(Lamda + Gamma) + np.sqrt(Lamda - Gamma)
-    Hr = np.sqrt(Lamda + Gamma) - np.sqrt(Lamda - Gamma)
-    Rf = Hr/(Hi+1e-15)
+    Hi = sqrt(Lamda + Gamma) + sqrt(Lamda - Gamma)
+    Hr = sqrt(Lamda + Gamma) - sqrt(Lamda - Gamma)
+    Rf = old_div(Hr,(Hi+1e-15))
     return [Hi,Hr,Rf]
 
 #    i3 = np.where(freq[np.where(freq<0)[0]]

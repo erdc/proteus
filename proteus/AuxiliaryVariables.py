@@ -4,23 +4,32 @@ Classes for calculating auxiliary variables based on the numerical solution.
 .. inheritance-diagram:: proteus.AuxiliaryVariables
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import numpy
-import Viewers
-import Archiver
+from . import Viewers
+from . import Archiver
 from xml.etree.ElementTree import *
 
-from Profiling import logEvent
+from . import Profiling
+from .Profiling import logEvent
 
 try:
     from proteusGraphical import vtkViewers
 except:
     pass
 import copy
-import cfemIntegrals
+from . import cfemIntegrals
 import math
 import os
 
-class AV_base:
+class AV_base(object):
     def __init__(self):
         pass
     def attachModel(self,model,ar):
@@ -34,7 +43,7 @@ class AV_base:
         for child in self.ar.domain:
             if child.tag == "Grid" and child.attrib["Name"] == "Mesh Spatial_Domain":
                 self.arGridCollection = child
-        assert self.arGridCollection != None
+        assert self.arGridCollection is not None
         self.arGrid = self.arGridCollection[-1]
         #write the attribute
         attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
@@ -57,7 +66,7 @@ class GatherDOF(AV_base):
         self.filename=filename
         self.firstCall = True
     def calculate(self):
-        import Comm
+        from . import Comm
         comm = Comm.get()
         if self.firstCall:
             self.firstCall = False
@@ -65,8 +74,8 @@ class GatherDOF(AV_base):
 
         self.fineGridModel=self.model.levelModelList[-1]
         comm.beginSequential()
-        print "writing for dof processsor ",comm.rank()
-        print "opening dof and node files for processsor ",comm.rank()
+        print("writing for dof processsor ",comm.rank())
+        print("opening dof and node files for processsor ",comm.rank())
         if comm.isMaster():
             doffile=open(self.filename+"_dof.txt","w")
             nodefile=open(self.filename+"_node.txt","w")
@@ -74,19 +83,19 @@ class GatherDOF(AV_base):
             doffile=open(self.filename+"_dof.txt","a")
             nodefile=open(self.filename+"_node.txt","a")
         for j in range(self.fineGridModel.nc):
-            print "writing dof for component ",j
+            print("writing dof for component ",j)
             self.fineGridModel.u[j].dof.tofile(doffile,sep='\n',format='%21.16e')
             doffile.write('\n')
-        print "writing nodes for processor ",comm.rank()
+        print("writing nodes for processor ",comm.rank())
         self.fineGridModel.mesh.nodeArray.tofile(nodefile,sep='\n',format='%21.16e')
         nodefile.write('\n')
-        print "closing dof and node files for processsor ",comm.rank()
+        print("closing dof and node files for processsor ",comm.rank())
         doffile.close()
         nodefile.close()
         comm.endSequential()
 class BoundaryForce(AV_base):
     def __init__(self,D=1.0,Ubar=1.0,rho=1.0):
-        self.C_fact = 2.0/(rho*D*Ubar**2)
+        self.C_fact = old_div(2.0,(rho*D*Ubar**2))
     def attachModel(self,model,ar):
         self.model=model
         self.ar=ar
@@ -105,7 +114,7 @@ class BoundaryForce(AV_base):
             elif self.nd == 3:
                 F = numpy.zeros((self.nForces,3),'d')
             else:
-                logEvent("Can't use stress computation for nd = "+`self.nd`)
+                logEvent("Can't use stress computation for nd = "+repr(self.nd))
                 F=None
             self.levelFlist.append(F)
         self.historyF=[]
@@ -143,16 +152,16 @@ class BoundaryForce(AV_base):
                                                                        m.ebqe[('n')],
                                                                        F)
             logEvent("Force")
-            logEvent(`F`)
+            logEvent(repr(F))
             Ftot=F[0,:]
             for ib in range(1,self.nForces):
                 Ftot+=F[ib,:]
             logEvent("Total force on all boundaries")
-            logEvent(`Ftot`)
-        logEvent("Drag Force " +`self.model.stepController.t_model`+" "+`F[-1,0]`)
-        logEvent("Lift Force " +`self.model.stepController.t_model`+" "+`F[-1,1]`)
-        logEvent("Drag Coefficient " +`self.model.stepController.t_model`+" "+`self.C_fact*F[-1,0]`)
-        logEvent("Lift Coefficient " +`self.model.stepController.t_model`+" "+`self.C_fact*F[-1,1]`)
+            logEvent(repr(Ftot))
+        logEvent("Drag Force " +repr(self.model.stepController.t_model)+" "+repr(F[-1,0]))
+        logEvent("Lift Force " +repr(self.model.stepController.t_model)+" "+repr(F[-1,1]))
+        logEvent("Drag Coefficient " +repr(self.model.stepController.t_model)+" "+repr(self.C_fact*F[-1,0]))
+        logEvent("Lift Coefficient " +repr(self.model.stepController.t_model)+" "+repr(self.C_fact*F[-1,1]))
 #        for ib in range(self.nForces):
 #             self.writeScalarXdmf(self.C_fact*F[ib,0],"Drag Coefficient %i" % (ib,))
 #             self.writeScalarXdmf(self.C_fact*F[ib,1],"Lift Coefficient %i" % (ib,))
@@ -201,16 +210,16 @@ class PressureProfile(AV_base):
                 for nN in range(m.mesh.nNodes_global):
                     if m.mesh.nodeMaterialTypes[nN] == self.flag:
                         p.append(m.u[0].dof[nN])
-                        theta.append((180.0/math.pi)*math.atan2(m.mesh.nodeArray[nN][1]-self.center[1],
+                        theta.append((old_div(180.0,math.pi))*math.atan2(m.mesh.nodeArray[nN][1]-self.center[1],
                                                                 m.mesh.nodeArray[nN][0]-self.center[0]))
             elif self.nd == 3:
                 pass
             else:
-                logEvent("Can't use stress computation for nd = "+`self.nd`)
+                logEvent("Can't use stress computation for nd = "+repr(self.nd))
                 pass
             self.levelPlist.append(p)
             self.levelThetalist.append(theta)
-        if self.ar.hdfFile != None:
+        if self.ar.hdfFile is not None:
             self.ar.hdfFile.createArray("/",'theta',theta)
         #self.historyP=[]
         #self.historyP.append(copy.deepcopy(self.levelPlist))
@@ -235,10 +244,10 @@ class PressureProfile(AV_base):
                     if m.mesh.nodeMaterialTypes[nN] == self.flag:
                         p.append(m.u[0].dof[nN])
             self.levelPlist.append(p)
-        if self.ar.hdfFile != None:
+        if self.ar.hdfFile is not None:
             self.ar.hdfFile.createArray("/","pressure"+str(self.tCount),p)
         self.tCount+=1
-#         if self.dataStorage != None:
+#         if self.dataStorage is not None:
 #             tmp = self.dataStorage['PressureHistory']
 #             tmp.append(self.levelPlist)
 #             self.dataStorage['PressureHistory']=tmp
@@ -301,7 +310,7 @@ class RecirculationLength(AV_base):
                             if x > self.maxX:
                                 self.maxX = x
                             #check to see if 0 contour is further to right
-                            for nN_neigh in range(0,nN)+range(nN+1,m.mesh.nNodes_element):
+                            for nN_neigh in list(range(0,nN))+list(range(nN+1,m.mesh.nNodes_element)):
                                 u2 = m.u[1].dof[m.mesh.elementNodesArray[eN,nN_neigh]]
                                 x2 = m.mesh.nodeArray[m.mesh.elementNodesArray[eN,nN_neigh]][0]
                                 if x2 > x:
@@ -314,7 +323,7 @@ class RecirculationLength(AV_base):
                             if x < self.minX:
                                 self.minX = x
                             #check to see if 0 contour is further to right
-                            for nN_neigh in range(0,nN)+range(nN+1,m.mesh.nNodes_element):
+                            for nN_neigh in list(range(0,nN))+list(range(nN+1,m.mesh.nNodes_element)):
                                 u2 = m.u[1].dof[m.mesh.elementNodesArray[eN,nN_neigh]]
                                 x2 = m.mesh.nodeArray[m.mesh.elementNodesArray[eN,nN_neigh]][0]
                                 if x2 < x:
@@ -327,7 +336,7 @@ class RecirculationLength(AV_base):
                 self.minX = self.minX_domain
             if self.maxX < self.minX_domain:
                 self.maxX = self.minX_domain
-            if self.rcStartX != None:
+            if self.rcStartX is not None:
                 if self.maxX > self.rcStartX:
                     self.levelLlist.append(self.maxX-self.rcStartX)
                 else:
@@ -336,7 +345,7 @@ class RecirculationLength(AV_base):
                 self.levelLlist.append(self.maxX-self.minX)
         #self.historyL.append(copy.deepcopy(self.levelLlist))
         #self.writeScalarXdmf(self.levelLlist,"Recirculation Length")
-#         if self.dataStorage != None:
+#         if self.dataStorage is not None:
 #             tmp = self.dataStorage['RecirculationLengthHistory']
 #             tmp.append(self.levelLlist)
 #             self.dataStorage['RecirculationLengthHistory']=tmp
@@ -344,7 +353,7 @@ class RecirculationLength(AV_base):
 #             self.viewL()
 #         except:
 #             pass
-        logEvent("Recirculation Length "+`self.levelLlist[-1]`)
+        logEvent("Recirculation Length "+repr(self.levelLlist[-1]))
 #     def viewL(self):
 #         tList=[]
 #         LList=[]
@@ -389,7 +398,7 @@ class VelocityAverage(AV_base):
             elif self.nd == 3:
                 V = numpy.zeros((3,),'d')
             else:
-                logEvent("Can't use velocity average for nd = "+`self.nd`)
+                logEvent("Can't use velocity average for nd = "+repr(self.nd))
                 V=None
             self.levelVlist.append(V)
 #         self.historyV=[]
@@ -424,7 +433,7 @@ class VelocityAverage(AV_base):
 #                                                                m.q[('dV_u',0)],#dV
 #                                                                V)
             logEvent("Average Velocity")
-            logEvent(`V`)
+            logEvent(repr(V))
             if self.nd == 2:
                 self.Vfile.write('%21.15e %21.15e \n' % tuple(V))
             else:
@@ -479,13 +488,13 @@ class BoundaryPressure(AV_base):
                 if abs(A[i]) > 0.0:
                     P[i] /= A[i]
             logEvent("Pressure")
-            logEvent(`P`)
+            logEvent(repr(P))
         self.historyP.append(copy.deepcopy(self.levelPlist))
 
 class ConservationHistoryMC(AV_base):
     """A simple class for storing the time history of things related conservation in conservative level set methods"""
     def __init__(self,filename):
-        import Comm
+        from . import Comm
         self.comm = Comm.get()
         self.filename=filename
         AV_base.__init__(self)
@@ -511,7 +520,7 @@ class ConservationHistoryMC(AV_base):
 class ConservationHistoryLS(AV_base):
     """A simple class for storing the time history of things related conservation in non-conservative level set methods"""
     def __init__(self,filename):
-        import Comm
+        from . import Comm
         self.comm = Comm.get()
         self.filename=filename
         AV_base.__init__(self)
@@ -590,7 +599,7 @@ class MassOverRegion(AV_base):
         self.elementsInRegion = []
         for m in self.model.levelModelList:
             self.elementsInRegion.append([])
-            if self.regionIdList == None:
+            if self.regionIdList is None:
                 #where returns a tuple
                 self.elementsInRegion[-1].append((numpy.arange(m.mesh.nElements_global),))
             else:
@@ -624,7 +633,7 @@ class MassOverRegion(AV_base):
                         results['L2'] += e2*m.q[('dV_u',ci)][eN,k]
                         results['L1'] += e1*m.q[('dV_u',ci)][eN,k]
                         results['LI'] = max(results['LI'],ei)
-            if self.regionIdList==None:
+            if self.regionIdList is None:
                 logEvent("Mass Norms in Domain Total= %s L2= %s L1= %s LI= %s " % (results['total'],results['L2'],results['L1'],results['LI']))
             else:
                 logEvent("Mass Norms in Domain %s Total= %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['total'],results['L2'],results['L1'],results['LI']))
@@ -635,7 +644,7 @@ class PT123velocityGenerator(AV_base):
     write out the velocity field from a model for PT123 to use in tracking as a
     standalone application
     """
-    from cpostprocessing import getElementRT0velocityValues
+    from .cpostprocessing import getElementRT0velocityValues
     def __init__(self,filebase,tnList,ci=0):
         self.filebase = filebase
         self.tnList = tnList
@@ -653,7 +662,7 @@ class PT123velocityGenerator(AV_base):
         self.mesh= model.levelModelList[-1].mesh
         self.writePT123inputMesh(self.nd,self.mesh)
         self.velocityPostProcessor = self.model.levelModelList[-1].velocityPostProcessor
-        if self.velocityPostProcessor != None:
+        if self.velocityPostProcessor is not None:
             self.PT123_RT0_interpolation_points = self.mesh.nodeArray[self.mesh.elementNodesArray]
             self.PT123_interpolation_values = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'d')
 
@@ -689,7 +698,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123nodalVelocity(self,components):
         #write out velocity file for current time step
-        if self.nodal_velocity_file == None:
+        if self.nodal_velocity_file is None:
             vel_prefix = 'vn1';
             if self.nd == 2:
                 vel_prefix = 'vn2';
@@ -713,7 +722,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123elementVelocity(self,components):
         #write out velocity file for current time step
-        if self.element_velocity_file == None:
+        if self.element_velocity_file is None:
             vel_prefix = 've1';
             if self.nd == 2:
                 vel_prefix = 've2';
@@ -739,7 +748,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123MixedVelocityAsElementVelocity(self,ci):
         #write out velocity file for current time step
-        if self.element_velocity_file == None:
+        if self.element_velocity_file is None:
             vel_prefix = 've1';
             if self.nd == 2:
                 vel_prefix = 've2';
@@ -766,7 +775,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123elementPorosity(self,value=1.0):
         #write out constant value for volume fraction for now
-        if self.element_vf_file == None:
+        if self.element_vf_file is None:
             vf_prefix = 'eemc1';
             if self.nd == 2:
                 vf_prefix = 'eemc2';
@@ -786,7 +795,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123nodalPorosity(self,value=1.0):
         #write out constant value for volume fraction for now
-        if self.nodal_vf_file == None:
+        if self.nodal_vf_file is None:
             vf_prefix = 'nemc1';
             if self.nd == 2:
                 vf_prefix = 'nemc2';
@@ -811,7 +820,7 @@ class PT123velocityGenerator(AV_base):
                 timeToPrint = True
                 break
         if timeToPrint:
-            if self.velocityPostProcessor != None:
+            if self.velocityPostProcessor is not None:
                 self.writePT123MixedVelocityAsElementVelocity(self.ci)
                 self.writePT123elementPorosity(value=1.)
         #mwf stopped here

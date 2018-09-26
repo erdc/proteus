@@ -2,6 +2,8 @@
 """
 A test script for MeshTools and cmeshTools
 """
+from __future__ import print_function
+from builtins import range
 import Comm
 import MeshTools
 import cmeshTools
@@ -26,9 +28,9 @@ if __name__ == '__main__':
                       dest="petscOptions",
                       default=None)
     (opts,args) = parser.parse_args()
-    if opts.petscOptions != None:
+    if opts.petscOptions is not None:
         sys.argv = sys.argv[:-1]+opts.petscOptions.split()
-        print sys.argv
+        print(sys.argv)
     Comm.argv = sys.argv
     comm = Comm.init()
     #cmesh = cmeshTools.CMesh()
@@ -131,17 +133,17 @@ if __name__ == '__main__':
 #            "exteriorElementBoundariesArray,                ",mesh.exteriorElementBoundariesArray,'\n',
 #            "elementMaterialTypes,                          ",mesh.elementMaterialTypes,'\n',
 #            "nodeArray                                      ",mesh.nodeArray)
-    print "Testing multilevel mesh"
+    print("Testing multilevel mesh")
     multilevelMesh = MeshTools.MultilevelTetrahedralMesh(10,10,10,1.0,1.0,1.0,1)
-    print multilevelMesh.meshList[-1].nodeArray
-    print multilevelMesh.meshList[-1].edgeNodesArray
+    print(multilevelMesh.meshList[-1].nodeArray)
+    print(multilevelMesh.meshList[-1].edgeNodesArray)
 #     for i in range(multilevelMesh.nLevels):
 #         multilevelMesh.meshList[i].partitionMesh()
-    print multilevelMesh.meshList[-1].nodeArray
-    print multilevelMesh.meshList[-1].edgeNodesArray
-    multilevelMesh.meshList[-1].subdomainMesh.writeEdgesGnuplot2('subdomain_meshEdges'+`comm.rank()`)
+    print(multilevelMesh.meshList[-1].nodeArray)
+    print(multilevelMesh.meshList[-1].edgeNodesArray)
+    multilevelMesh.meshList[-1].subdomainMesh.writeEdgesGnuplot2('subdomain_meshEdges'+repr(comm.rank()))
     comm.barrier()
     if comm.isMaster():
-        filenames = ['subdomain_meshEdges'+`i` for i in range(comm.size())]
-        print filenames
+        filenames = ['subdomain_meshEdges'+repr(i) for i in range(comm.size())]
+        print(filenames)
         multilevelMesh.meshList[-1].subdomainMesh.viewMeshGnuplotPipePar(filenames)

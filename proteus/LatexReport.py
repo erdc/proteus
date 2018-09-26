@@ -5,7 +5,13 @@ Class and script for generating a report from simulation data.
 .. inheritance-diagram:: proteus.LatexReport
    :parts: 1
 """
+from __future__ import division
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from .Profiling import logEvent
 
 def openLatexReport(filename,reportname):
@@ -34,12 +40,12 @@ def closeLatexReport(file):
     file.close()
 
 
-class LatexResultsSummary:
+class LatexResultsSummary(object):
     """
     simple steps for taking simulation results and generating Latex
     Table of results
     """
-    import cPickle
+    import pickle
     def __init__(self,resFileName,repFileName,repName=None):
         self.resFileName = resFileName
         self.repFileName = repFileName
@@ -59,7 +65,7 @@ class LatexResultsSummary:
             return True
         import shelve
         self.results = shelve.open(self.resFileName)
-        if self.repName == None:
+        if self.repName is None:
             repRaw = self.results['flags']['simulationName']
             self.repName = repRaw.replace('_','-')
         self.report = openLatexReport(self.repFileName,self.repName)
@@ -94,7 +100,7 @@ class LatexResultsSummary:
         tabcols = "|l|c|c|"
         rowform0 = """%s[%d] & %s & %g """
         for enorm in self.results['flags']['errorNorms']:
-            if enorm != None:
+            if enorm is not None:
                 tabcols += "c|c|"
         #
         #treat mass conservation results differently for now
@@ -107,7 +113,7 @@ class LatexResultsSummary:
         rowtitle = """err. comp & level & h """
         #assumes every component and velocity gets same error norms
         for enorm in self.results['flags']['errorNorms']:
-            if enorm != None:
+            if enorm is not None:
                 rowtitle += " & "
                 rowtitle += enorm.replace('_','-')
                 rowtitle += """ & rate """
@@ -150,7 +156,7 @@ class LatexResultsSummary:
                     h  = self.results['simulationData']['spatialMesh'][il]['h'][-1]
                     row = rowform0 % (elabelBase,ci,il,h)
                     for enorm in self.results['flags']['errorNorms']:
-                        if enorm != None:
+                        if enorm is not None:
                             elabel = elabelBase+' '+enorm
                             ekey   = ekeyBase+'_'+enorm
                             exkey  = exKeyBase+'_'+enorm
@@ -170,7 +176,7 @@ class LatexResultsSummary:
                                     exact = self.results['errorData'][ci][nLevels-1][exkey]
                                 if abs(exact) < relativeErrorEps:
                                     exact += relativeErrorEps
-                                error = error/exact
+                                error = old_div(error,exact)
                             if il == 0:
                                 row += """ & %g & %s """ % (error,'-')
                             else:
@@ -180,9 +186,9 @@ class LatexResultsSummary:
                                     errM=self.results['errorData'][ci][il-1][ekey]
                                 hM = self.results['simulationData']['spatialMesh'][il-1]['h'][-1]
                                 if useRelativeError == True: #only normalizing by finest mesh val
-                                    rate = math.log((errM/exact+1.0e-24)/(error+1.0e-24))/math.log(hM/h)
+                                    rate = old_div(math.log(old_div((old_div(errM,exact)+1.0e-24),(error+1.0e-24))),math.log(old_div(hM,h)))
                                 else:
-                                    rate = math.log((errM+1.0e-24)/(error+1.0e-24))/math.log(hM/h)
+                                    rate = old_div(math.log(old_div((errM+1.0e-24),(error+1.0e-24))),math.log(old_div(hM,h)))
 
                                 row += """& %g & %g """ % (error,rate)
                     if computeLocalMassBalErr or computeGlobalHeavisideMassBalErr:

@@ -37,11 +37,11 @@ if [ -f gmsh.mesh ]; then
   tetgen -Vfeen mesh.ele
   echo =============================
   ls -lhatr mesh.*
-  cp mesh.1.ele mesh.ele
-  cp mesh.1.node mesh.node
-  cp mesh.1.face mesh.face
-  cp mesh.1.neigh mesh.neigh
-  cp mesh.1.edge mesh.edge
+  mv mesh.1.ele mesh.ele
+  mv mesh.1.node mesh.node
+  mv mesh.1.face mesh.face
+  mv mesh.1.neigh mesh.neigh
+  mv mesh.1.edge mesh.edge
   echo =============================
   ls -lhatr mesh.*
   grep ille gmsh.log

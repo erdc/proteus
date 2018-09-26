@@ -1,6 +1,7 @@
 #ifndef FLCBDFWRAPPERSMODULE_H
 #define FLCBDFWRAPPERSMODULE_H 
 #include <cstddef>
+#include <complex>
 
 extern "C"
 {

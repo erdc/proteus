@@ -4,13 +4,17 @@ A class hierarchy for shock capturing diffusion methods
 .. inheritance-diagram:: proteus.ShockCapturing
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import numpy
-import cshockCapturing
-class ShockCapturing_base:
+from . import cshockCapturing
+class ShockCapturing_base(object):
     def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True):
         self.nc = coefficients.nc
         self.nd = nd
-        self.components=range(self.nc)
+        self.components=list(range(self.nc))
         self.shockCapturingFactor=shockCapturingFactor
         self.lag=lag
         #mwf had to put in da_sge, df_sge
@@ -31,16 +35,16 @@ class ShockCapturing_base:
         #done by Subgrid error
         for ci in range(self.nc):
             for cj in range(self.nc):
-                if cq.has_key(('df',ci,cj)) and not cq.has_key(('df_sge',ci,cj)):
+                if ('df',ci,cj) in cq and ('df_sge',ci,cj) not in cq:
                     cq[('df_sge',ci,cj)]=cq[('df',ci,cj)]
-        for ci,ckDict in self.coefficients.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
-                if not cq.has_key(('grad(phi)_sge',ck)):
+        for ci,ckDict in self.coefficients.diffusion.items():
+            for ck,cjDict in ckDict.items():
+                if ('grad(phi)_sge',ck) not in cq:
                     cq[('grad(phi)_sge',ck)]=cq[('grad(phi)',ck)]
-                for cj in cjDict.keys():
-                    if not cq.has_key(('dphi_sge',ck,cj)):
+                for cj in list(cjDict.keys()):
+                    if ('dphi_sge',ck,cj) not in cq:
                         cq[('dphi_sge',ck,cj)]=cq[('dphi',ck,cj)]
-                    if not cq.has_key(('da_sge',ci,ck,cj)):
+                    if ('da_sge',ci,ck,cj) not in cq:
                         cq[('da_sge',ci,ck,cj)]=cq[('da',ci,ck,cj)]
 
     def calculateNumericalDiffusion(self,q):
@@ -83,7 +87,7 @@ class ResGradQuad_SC(ShockCapturing_base):
             if self.debug:
                 if numpy.isnan(q[('pdeResidual',ci)]).any(): #
                     import pdb
-                    print "NaN's in res"
+                    print("NaN's in res")
                     pdb.set_trace()
             cshockCapturing.calculateNumericalDiffusionResGradQuad(self.shockCapturingFactor,
                                                                    self.mesh.elementDiametersArray,
@@ -93,7 +97,7 @@ class ResGradQuad_SC(ShockCapturing_base):
             if self.debug:
                 if numpy.isnan(self.numDiff[ci]).any():
                     import pdb
-                    print "NaN's in numDiff"
+                    print("NaN's in numDiff")
                     pdb.set_trace()
 
 class Eikonal_SC(ShockCapturing_base):
@@ -187,7 +191,7 @@ class ResGradDelayLag_SC(ResGrad_SC):
             if self.lag:
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-            elif self.lag == False and self.nStepsToDelay != None:
+            elif self.lag == False and self.nStepsToDelay is not None:
                 self.cq_numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
             else:
@@ -197,16 +201,16 @@ class ResGradDelayLag_SC(ResGrad_SC):
         #done by Subgrid error
         for ci in range(self.nc):
             for cj in range(self.nc):
-                if cq.has_key(('df',ci,cj)) and not cq.has_key(('df_sge',ci,cj)):
+                if ('df',ci,cj) in cq and ('df_sge',ci,cj) not in cq:
                     cq[('df_sge',ci,cj)]=cq[('df',ci,cj)]
-        for ci,ckDict in self.coefficients.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
-                if not cq.has_key(('grad(phi)_sge',ck)):
+        for ci,ckDict in self.coefficients.diffusion.items():
+            for ck,cjDict in ckDict.items():
+                if ('grad(phi)_sge',ck) not in cq:
                     cq[('grad(phi)_sge',ck)]=cq[('grad(phi)',ck)]
-                for cj in cjDict.keys():
-                    if not cq.has_key(('dphi_sge',ck,cj)):
+                for cj in list(cjDict.keys()):
+                    if ('dphi_sge',ck,cj) not in cq:
                         cq[('dphi_sge',ck,cj)]=cq[('dphi',ck,cj)]
-                    if not cq.has_key(('da_sge',ci,ck,cj)):
+                    if ('da_sge',ci,ck,cj) not in cq:
                         cq[('da_sge',ci,ck,cj)]=cq[('da',ci,ck,cj)]
     #
     def updateShockCapturingHistory(self):
@@ -214,7 +218,7 @@ class ResGradDelayLag_SC(ResGrad_SC):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff = []
             self.numDiff_last=[]
@@ -236,7 +240,7 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
             if self.lag:
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-            elif self.lag == False and self.nStepsToDelay != None:
+            elif self.lag == False and self.nStepsToDelay is not None:
                 self.numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
             else:
@@ -253,7 +257,7 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff=[]
             for ci in range(self.nc):
@@ -268,7 +272,7 @@ class NavierStokes_SC(ResGradQuad_SC):
         for ci in range(1,self.nc):
             if numpy.isnan(q[('pdeResidual',ci)]).any():
                 import pdb
-                print "NaN's in res"
+                print("NaN's in res")
                 pdb.set_trace()
             cshockCapturing.calculateNumericalDiffusionResGradQuad(self.shockCapturingFactor,
                                                                    self.mesh.elementDiametersArray,
@@ -277,7 +281,7 @@ class NavierStokes_SC(ResGradQuad_SC):
                                                                    self.numDiff[ci])
             if numpy.isnan(self.numDiff[ci]).any():
                 import pdb
-                print "NaN's in numDiff"
+                print("NaN's in numDiff")
                 pdb.set_trace()
     def initializeElementQuadrature(self,mesh,t,cq):
         self.mesh=mesh
@@ -288,7 +292,7 @@ class NavierStokes_SC(ResGradQuad_SC):
             if self.lag:
                 self.numDiff_last[ci]=cq[('numDiff',ci,ci)]
                 self.numDiff[ci]=numpy.zeros(cq[('u',ci)].shape,'d')
-            elif self.lag == False and self.nStepsToDelay != None:
+            elif self.lag == False and self.nStepsToDelay is not None:
                 self.cq_numDiff[ci]=cq[('numDiff',ci,ci)]
                 self.numDiff[ci]=cq[('numDiff',ci,ci)]
             else:
@@ -298,7 +302,7 @@ class NavierStokes_SC(ResGradQuad_SC):
         if self.lag:
             for ci in range(1,self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff = []
             self.numDiff_last=[]
@@ -315,7 +319,7 @@ class NavierStokes_SC_opt(ResGradQuad_SC):
         for ci in range(1,self.nc):
             if numpy.isnan(q[('pdeResidual',ci)]).any():
                 import pdb
-                print "NaN's in res"
+                print("NaN's in res")
                 pdb.set_trace()
             cshockCapturing.calculateNumericalDiffusionResGradQuad(self.shockCapturingFactor,
                                                                    self.mesh.elementDiametersArray,
@@ -324,7 +328,7 @@ class NavierStokes_SC_opt(ResGradQuad_SC):
                                                                    self.numDiff[ci])
             if numpy.isnan(self.numDiff[ci]).any():
                 import pdb
-                print "NaN's in numDiff"
+                print("NaN's in numDiff")
                 pdb.set_trace()
     def initializeElementQuadrature(self,mesh,t,cq):
         self.mesh=mesh
@@ -357,7 +361,7 @@ class ResGradFFDarcyDelayLag_SC(ResGradFFDarcy_SC):
             if self.lag:
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-            elif self.lag == False and self.nStepsToDelay != None:
+            elif self.lag == False and self.nStepsToDelay is not None:
                 self.cq_numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
             else:
@@ -367,7 +371,7 @@ class ResGradFFDarcyDelayLag_SC(ResGradFFDarcy_SC):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff = []
             self.numDiff_last=[]

@@ -13,6 +13,10 @@
 #
 #
 
+from __future__ import print_function
+from builtins import zip
+from builtins import str
+from builtins import range
 import os
 import proteus
 
@@ -214,7 +218,7 @@ if opts.dataDir != '':
     	try:
     	     os.mkdir(opts.dataDir)
         except os.error:
-             print "Failed to create: " + opts.dataDir
+             print("Failed to create: " + opts.dataDir)
              opts.dataDir=''
     logDir = opts.dataDir
 
@@ -224,13 +228,13 @@ log("HashStack Version: " + version.hashstack)
 log("Proteus Version: " + version.proteus)
 
 log("Initializing MPI")
-if opts.petscOptions != None:
+if opts.petscOptions is not None:
     petsc_argv = sys.argv[:1]+opts.petscOptions.split()
     log("PETSc options from commandline")
     log(str(petsc_argv))
 else:
     petsc_argv=sys.argv[:1]
-if opts.petscOptionsFile != None:
+if opts.petscOptionsFile is not None:
 
     petsc_argv=[sys.argv[0]]
     with open(opts.petscOptionsFile) as petsc_file:
@@ -285,12 +289,12 @@ if __name__ == '__main__':
         if args[0][-3:] == '.py':
             log("Loading so module = "+args[0])
             so = __import__(args[0][:-3])
-            if so.name == None:
+            if so.name is None:
                 so.name = args[0][:-3]
             for (pModule,nModule) in so.pnList:
                 log("Loading p module = "+pModule)
                 pList.append(__import__(pModule))
-                if pList[-1].name == None:
+                if pList[-1].name is None:
                     pList[-1].name = pModule
                 log("Loading n module = "+nModule)
                 nList.append(__import__(nModule))
@@ -325,7 +329,7 @@ if __name__ == '__main__':
                     pList.append(__import__(filenames[0][:-3]))
                     log("Loading n module = "+filenames[1][:-3])
                     nList.append(__import__(filenames[1][:-3]))
-                    if pList[-1].name == None:
+                    if pList[-1].name is None:
                         pList[-1].name = filenames[0][:-3]
     elif len(args) == 2: #p and n modules provided
         so=default_so
@@ -334,7 +338,7 @@ if __name__ == '__main__':
         log("Using default so module")
         log("Loading p module = "+args[0][:-3])
         pList.append(__import__(args[0][:-3]))
-        if pList[-1].name == None:
+        if pList[-1].name is None:
             pList[-1].name = args[0][:-5]
         so.name = pList[-1].name
         log("Loading n module = "+args[1][:-3])
@@ -366,10 +370,10 @@ if __name__ == '__main__':
     log("Running Proteus version "+proteus.__version__,level=0)
     if opts.viewer:
         log("Starting viewer")
-        Viewers.viewerOn(so.name+`comm.rank()`,opts.viewer)
+        Viewers.viewerOn(so.name+repr(comm.rank()),opts.viewer)
     log("Setting simulation processing defaults")
     for p,simFlags in zip(pList,simFlagsList):
-        pNameProc = p.name + `comm.rank()`
+        pNameProc = p.name + repr(comm.rank())
         simFlags['simulationName'] = p.name
         simFlags['simulationNameProc'] = pNameProc
         simFlags['dataFile']       = pNameProc+'.dat'
@@ -379,15 +383,15 @@ if __name__ == '__main__':
             simFlags['plotQuantities'] = ['u']  #plot soln and exact soln if exists
             p.coefficients.plotCoefficients = opts.plotCoefficients
         if opts.ensight:
-            if simFlags.has_key('plotOptions'):
-                if simFlags['plotOptions'].has_key('ensight'):
+            if 'plotOptions' in simFlags:
+                if 'ensight' in simFlags['plotOptions']:
                     simFlags['plotOptions']['ensight']['on'] = True
                 else:
                     simFlags['plotOptions']['ensight'] = {'on':True}
             else:
                 simFlags['plotOptions'] = {'ensight':{'on':True}}
             #control convention on case file for multiple models, doesn't effect parun right now
-            simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
+            simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ repr(comm.rank())
     if opts.batchFileName != "":
         log("Reading batch file = ",opts.batchFileName)
         #try to split batch file into executable blocks delimited by
@@ -425,7 +429,7 @@ if __name__ == '__main__':
         elif opts.batchFileName != "":
             userInput = False
             lines = '\n'.join(batchBlocks.pop(0))
-            exec lines
+            exec(lines)
             run     = True
             running = len(batchBlocks) > 0
         else:
@@ -446,7 +450,7 @@ if __name__ == '__main__':
                     running = False
                 else:
                     userInput = True
-                    exec line
+                    exec(line)
                     sys.stdout.write(">>>")
             else:
                 userInput = False
@@ -454,23 +458,23 @@ if __name__ == '__main__':
                 running = False
         if run:
             log("Starting %s run number %i" %(so.name,runNumber))
-            runName = so.name+`runNumber`
+            runName = so.name+repr(runNumber)
             if opts.profile:
-                profiler.run('ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)',so.name+'_init_prof'+`comm.rank()`)
-                stats = pstats.Stats(so.name+'_init_prof'+`comm.rank()`)
+                profiler.run('ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)',so.name+'_init_prof'+repr(comm.rank()))
+                stats = pstats.Stats(so.name+'_init_prof'+repr(comm.rank()))
                 stats.strip_dirs()
-                stats.dump_stats(so.name+'_init_prof_c'+`comm.rank()`)
+                stats.dump_stats(so.name+'_init_prof_c'+repr(comm.rank()))
                 stats.sort_stats('cumulative')
                 if Profiling.verbose:
                     stats.print_stats(30)
                 stats.sort_stats('time')
                 if Profiling.verbose:
                     stats.print_stats(30)
-                profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+`comm.rank()`)
+                profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+repr(comm.rank()))
                 runNumber+=1
-                stats = pstats.Stats(so.name+'_run_prof'+`comm.rank()`)
+                stats = pstats.Stats(so.name+'_run_prof'+repr(comm.rank()))
                 stats.strip_dirs()
-                stats.dump_stats(so.name+'_run_prof_c'+`comm.rank()`)
+                stats.dump_stats(so.name+'_run_prof_c'+repr(comm.rank()))
                 stats.sort_stats('cumulative')
                 if Profiling.verbose:
                     stats.print_stats(30)
@@ -492,14 +496,14 @@ if __name__ == '__main__':
             try:
                 if vtkViewers.hasQt:
                     vtkViewers.g.app.exec_()
-                for w in vtkViewers.windowDict.values():
+                for w in list(vtkViewers.windowDict.values()):
                     w.compManager.StopServices()
                 sys.exit()
             except:
                 pass
         else:
             try:
-                for w in vtkViewers.windowDict.values():
+                for w in list(vtkViewers.windowDict.values()):
                     w.compManager.StartServices()
                 sys.exit()
             except:

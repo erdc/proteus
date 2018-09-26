@@ -2,6 +2,9 @@
 """
 utility module for generating deim interpolants
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
 def read_from_hdf5(hdfFile,label,dof_map=None):
@@ -10,8 +13,8 @@ def read_from_hdf5(hdfFile,label,dof_map=None):
     If dof_map is not none, use this to map values in the array
     If dof_map is not none, this determines shape of the output array
     """
-    assert hdfFile != None, "requires hdf5 for heavy data"
-    vals = hdfFile.getNode(label).read()
+    assert hdfFile is not None, "requires hdf5 for heavy data"
+    vals = hdfFile.get_node(label).read()
     if dof_map is not None:
         dof = vals[dof_map]
     else:
@@ -74,7 +77,7 @@ def calculate_deim_indices(Uin):
         Up=U[rho]#Up= np.dot(Pt,U)
         up=u[rho]#up= np.dot(Pt,u)
         if j==1:
-            c=up/Up
+            c=old_div(up,Up)
             r=u-U*c
         else:
             c =np.linalg.solve(Up,up)
@@ -89,20 +92,17 @@ def calculate_deim_indices(Uin):
     return rho
 
 def deim_alg(Uin,m):
-    """
-    Basic procedure
+    # """dem_alg
 
-    - given $m$, dimension for $F$ reduced basis $\mathbf{U}_m$
-    - call DEIM algorithm to determine $\vec \rho$. 
-    - build $\mathbf{P}$ from $\rho$ as 
-      $$
-      \mathbf{P} = [\vec e_{\rho_1},\vec e_{\rho_2},\dots,\vec e_{\rho_m}]
-      $$
-    - invert $\mathbf{P}^T\mathbf{U}_m$
-    - return \rho and $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+    # Basic procedure:
 
-    
-    """
+    #     * given :math:`m`, dimension for :math:`F` reduced basis :math:`\mathbf{U}_m`
+    #     * call DEIM algorithm to determine :math:`\vec \rho`. 
+    #     * build :math:`\mathbf{P}` from :math:`\rho` as :math:`\mathbf{P} = [\vec e_{\rho_1},\vec e_{\rho_2},\dots,\vec e_{\rho_m}]`
+    #     * invert :math:`\mathbf{P}^T\mathbf{U}_m`
+    #     * return :math:`\rho` and :math:`\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}`
+
+    # """
     assert m <= Uin.shape[1]
     Um = Uin[:,0:m]
     rho = calculate_deim_indices(Um)
@@ -120,9 +120,9 @@ def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
     iend   = nnx*nny*(iz+1)
     v_slice= variable[istart:iend]
     v_slice= v_slice.reshape(nnx,nny)
-    if x == None:
+    if x is None:
         x = np.outer(np.arange(nnx),np.arange(nnx))
-    if y == None:
+    if y is None:
         y = np.outer(np.arange(nny),np.arange(nny))
     assert x.shape == v_slice.shape
     assert y.shape == v_slice.shape
@@ -135,7 +135,7 @@ def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
     ax = fig.gca(projection='3d')
     surf=ax.plot_surface(x,y,v_slice,rstride=1,cstride=1,cmap=cm.coolwarm,linewidth=0,antialiased=False)
     plt.xlabel('x'); plt.ylabel('y')
-    if name == None:
+    if name is None:
         name = 'deim_slice_z={0}.png'.format(iz)
     plt.savefig(name)
 
