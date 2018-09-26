@@ -1521,7 +1521,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
-                                                 self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                                                 self.timeIntegration.t)
+                        if self.MOVING_DOMAIN == 1.0:
+                            self.u[cj].dof[dofN] += self.mesh.nodeVelocityArray[dofN, cj - 1]
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
@@ -1756,8 +1758,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
                     else:
                         r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
-                            g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) - \
-                            self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                            g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) 
+                        if self.MOVING_DOMAIN == 1.0:
+                            r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax), level=2)
