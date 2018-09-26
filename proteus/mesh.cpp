@@ -2462,6 +2462,7 @@ extern "C"
           nodes[0] = mesh.elementNodesArray[eN*4+((ebN+1)%4)];
           nodes[1] = mesh.elementNodesArray[eN*4+((ebN+2)%4)];
           nodes[2] = mesh.elementNodesArray[eN*4+((ebN+3)%4)];
+
           NodeTuple<3> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
             {
@@ -2890,11 +2891,12 @@ extern "C"
 	    mesh.elementBoundaryBarycentersArray[ebN*3 + 2] += 
 	      nNperElemBInv*mesh.nodeArray[mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_L]*3 + 2];
 
-	    for (int nN_R=nN_L+1;nN_R<mesh.nNodes_elementBoundary;nN_R++)
+	    for (int nN_R=nN_L+1;nN_R<mesh.nNodes_elementBoundary;nN_R++) {
 	      mesh.elementBoundaryDiametersArray[ebN] = fmax(mesh.elementBoundaryDiametersArray[ebN],
 							     edgeLength(mesh.elementBoundaryNodesArray[ebN*3+nN_L],
 									mesh.elementBoundaryNodesArray[ebN*3+nN_R],
 									mesh.nodeArray));
+            }
 	  }
       } 
     for (int eN=0;eN<mesh.nElements_global;eN++)
@@ -2947,10 +2949,10 @@ extern "C"
       {
 	mesh.nodeDiametersArray[nN] /= mesh.nodeSupportArray[nN];
       }
-    //printf("volume = %12.5e \n",mesh.volume);
-    //printf("h = %12.5e \n",mesh.h);
-    //printf("hMin = %12.5e \n",mesh.hMin);
-    //printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+//    printf("volume = %12.5e \n",mesh.volume);
+//    printf("h = %12.5e \n",mesh.h);
+//    printf("hMin = %12.5e \n",mesh.hMin);
+//    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
   inline double hexahedronVolume(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, const double* nodeArray)
@@ -4698,14 +4700,13 @@ int writeTetgenMesh(Mesh& mesh, const char* filebase, int tetgenIndexBase)
 					   mesh.exteriorElementBoundariesArray);
   return failed;
 }
-//------------------------------ mwf hack ------------------------------
 
 int read3DM(Mesh& mesh, const char* filebase, int indexBase)
 {
   /***************************************************
-    read nodes and element information from tetgen
+    read nodes and element information from XMS 3DM
      formatted mesh assuming base name in filebase
-    tetgen vertex numbering base as input
+    and base for integer indexing is indexBase
 
   **************************************************/
   using namespace std;
@@ -4763,6 +4764,89 @@ int read3DM(Mesh& mesh, const char* filebase, int indexBase)
       meshFile>>firstWord;
     }
   mesh.nNodes_element =  4;
+  assert(!mesh.nodeArray);
+  mesh.nodeArray     = new double[mesh.nNodes_global*3];
+  copy(nodeArray_file.begin(),nodeArray_file.end(),mesh.nodeArray);
+  
+  assert(!mesh.nodeMaterialTypes);
+  mesh.nodeMaterialTypes = new int[mesh.nNodes_global];
+  copy(nodeMaterialTypes_file.begin(),nodeMaterialTypes_file.end(),
+       mesh.nodeMaterialTypes);
+  
+  assert(!mesh.elementNodesArray);
+  mesh.elementNodesArray = new int[mesh.nElements_global*mesh.nNodes_element];
+  copy(elementNodesArray_file.begin(),elementNodesArray_file.end(),
+       mesh.elementNodesArray);
+
+  assert(!mesh.elementMaterialTypes);
+  mesh.elementMaterialTypes = new int[mesh.nElements_global];
+  copy(elementMaterialTypes_file.begin(),elementMaterialTypes_file.end(),
+       mesh.elementMaterialTypes);
+  return 0;
+}
+
+int read2DM(Mesh& mesh, const char* filebase, int indexBase)
+{
+  /***************************************************
+    read nodes and element information from XMS 2DM
+     formatted mesh assuming base name  filebase
+    and base for integer indexing is indexBase
+
+  **************************************************/
+  using namespace std;
+  assert(filebase);
+  bool failed=true;
+  std::string meshFilename= std::string(filebase)+".3dm";
+  std::ifstream meshFile(meshFilename.c_str());
+  if (!meshFile.good())
+    {
+      std::cerr<<"read2DM cannot open file "
+	       <<meshFilename<<std::endl;
+      failed = true;
+      return failed;
+    }
+  //read elements
+  std::string fileType;
+  meshFile>>fileType;
+  if (fileType != "MESH2D")
+    {
+      std::cerr<<"read2DM does not recognize filetype "
+	       <<fileType<<std::endl;
+      failed = true;
+      return failed;
+    }
+  std::string firstWord;
+  meshFile>>firstWord;
+  mesh.nElements_global=0;
+  std::vector<int> elementNodesArray_file;
+  std::vector<int> elementMaterialTypes_file;
+  int eN,n0,n1,n2,emt;
+  while (firstWord == "E3T")
+    {
+      mesh.nElements_global+=1;
+      meshFile>>eN>>n0>>n1>>n2>>emt;
+      elementNodesArray_file.push_back(n0-indexBase);
+      elementNodesArray_file.push_back(n1-indexBase);
+      elementNodesArray_file.push_back(n2-indexBase);
+      elementMaterialTypes_file.push_back(emt-indexBase);
+      meshFile>>firstWord;
+    }
+  std::vector<int> nodeMaterialTypes_file;
+  std::vector<double> nodeArray_file;
+  int nN;
+  double x,y,z;
+  mesh.nNodes_global=0;
+  while (!meshFile.eof() && firstWord == "ND")
+    {
+      mesh.nNodes_global+=1;
+      meshFile>>nN>>x>>y>>z;
+      nodeArray_file.push_back(x);
+      nodeArray_file.push_back(y);
+      nodeArray_file.push_back(z);
+      nodeMaterialTypes_file.push_back(0);
+      meshFile>>firstWord;
+    }
+  mesh.nNodes_element =  3;
   assert(!mesh.nodeArray);
   mesh.nodeArray     = new double[mesh.nNodes_global*3];
   copy(nodeArray_file.begin(),nodeArray_file.end(),mesh.nodeArray);
@@ -4862,7 +4946,7 @@ int readHex(Mesh& mesh, const char* filebase, int indexBase)
 int readBC(Mesh& mesh, const char* filebase, int indexBase)
 {
   /***************************************************
-    read nodes and element information from tetgen
+    read nodes and element information from 2DM or 3DM
      formatted mesh assuming base name in filebase
     tetgen vertex numbering base as input
 

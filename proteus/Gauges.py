@@ -1,9 +1,16 @@
-"""
-Gauges module
+"""Auxiliary variable classes for storing solutions at points and
+along lines to mimic gauges in lab and field experiments.
 
 .. inheritance-diagram:: proteus.Gauges
    :parts: 1
+
 """
+from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import os
 from collections import defaultdict, OrderedDict
 from itertools import product
@@ -21,26 +28,31 @@ from proteus import Profiling
 
 
 def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
-    """ Create a set of point gauges that will automatically be serialized as CSV data to the requested file.
+    """Create a set of point gauges that will automatically be serialized 
+    as CSV data to the requested file.
 
-    :param gauges: An iterable of "gauges".  Each gauge is specified by a 2-tuple, with the first element in the
-    tuple a set of fields to be monitored, and the second element a tuple of the 3-space representations of the gauge
-    locations.
+    :param gauges: An iterable of "gauges".  Each gauge is specified
+                   by a 2-tuple, with the first element in the tuple a
+                   set of fields to be monitored, and the second
+                   element a tuple of the 3-space representations of
+                   the gauge locations.
 
     See the Gauges class for an explanation of the other parameters.
 
-    Example:
+    Example::
 
-    p = PointGauges(gauges=((('u', 'v'), ((0.5, 0.5, 0), (1, 0.5, 0))),
-                            (('p',), ((0.5, 0.5, 0),))),
-                    activeTime=(0, 2.5),
-                    sampleRate=0.2,
-                    fileName='combined_gauge_0_0.5_sample_all.csv')
+      p = PointGauges(gauges=((('u', 'v'), ((0.5, 0.5, 0), (1, 0.5, 0))),
+                             (('p',), ((0.5, 0.5, 0),))),
+                      activeTime=(0, 2.5),
+                      sampleRate=0.2,
+                      fileName='combined_gauge_0_0.5_sample_all.csv')
 
-    This creates a PointGauges object that will monitor the u and v fields at the locations [0.5, 0.5,
-    0] and [1, 0.5, 0], and the p field at [0.5, 0.5, 0] at simulation time between = 0 and 2.5 with samples
-    taken no more frequently than every 0.2 seconds.  Results will be saved to:
-    combined_gauge_0_0.5_sample_all.csv.
+    This creates a PointGauges object that will monitor the u and v
+    fields at the locations [0.5, 0.5, 0] and [1, 0.5, 0], and the p
+    field at [0.5, 0.5, 0] at simulation time between = 0 and 2.5 with
+    samples taken no more frequently than every 0.2 seconds.  Results
+    will be saved to: combined_gauge_0_0.5_sample_all.csv.
+
     """
 
     # build up dictionary of location information from gauges
@@ -65,14 +77,19 @@ def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.cs
     return Gauges(fields, activeTime, sampleRate, fileName, points=points)
 
 def LineGauges(gauges, activeTime=None, sampleRate=0, fileName='line_gauges.csv'):
-    """ Create a set of line gauges that will automatically be serialized as CSV data to the requested file.  The
-    line gauges will gather data at every element on the mesh between the two endpoints on each line.
+    """Create a set of line gauges that will automatically be serialized
+    as CSV data to the requested file.  The line gauges will gather
+    data at every element on the mesh between the two endpoints on
+    each line.
 
-    :param gauges: An iterable of "gauges".  Each gauge is specified by a 2-tuple, with the first element in the
-    tuple a set of fields to be monitored, and the second element a list of pairs of endpoints of the gauges in
-    3-space representation.
+    :param gauges: An iterable of "gauges".  Each gauge is specified
+                   by a 2-tuple, with the first element in the tuple a
+                   set of fields to be monitored, and the second
+                   element a list of pairs of endpoints of the gauges
+                   in 3-space representation.
 
     See the Gauges class for an explanation of the other parameters.
+
     """
 
     # expand the product of fields and lines for each gauge
@@ -88,13 +105,17 @@ def LineGauges(gauges, activeTime=None, sampleRate=0, fileName='line_gauges.csv'
     return Gauges(fields, activeTime, sampleRate, fileName, lines=lines)
 
 def LineIntegralGauges(gauges, activeTime=None, sampleRate=0, fileName='line_integral_gauges.csv'):
-    """ Create a set of line integral gauges that will automatically be serialized as CSV data to the requested file.
+    """Create a set of line integral gauges that will automatically be
+    serialized as CSV data to the requested file.
 
-    :param gauges: An iterable of "gauges".  Each gauge is specified by a 2-tuple, with the first element in the
-    tuple a set of fields to be monitored, and the second element a list of pairs of endpoints of the gauges in
-    3-space representation.
+    :param gauges: An iterable of "gauges".  Each gauge is specified
+                   by a 2-tuple, with the first element in the tuple a
+                   set of fields to be monitored, and the second
+                   element a list of pairs of endpoints of the gauges
+                   in 3-space representation.
 
     See the Gauges class for an explanation of the other parameters.
+
     """
 
     # expand the product of fields and lines for each gauge
@@ -111,36 +132,50 @@ def LineIntegralGauges(gauges, activeTime=None, sampleRate=0, fileName='line_int
 
 
 class Gauges(AV_base):
-    """ Monitor fields at specific values.
+    """Monitor fields at specific values.
 
-    This class provides a generic point-wise and line-integral monitor that can be instantiated and attached to
-    Proteus simulations by including them in the list of Auxiliary Variables in problem setup.
+    This class provides a generic point-wise and line-integral monitor
+    that can be instantiated and attached to Proteus simulations by
+    including them in the list of Auxiliary Variables in problem
+    setup.
 
-    Each Gauges instance may contain one or more fields, which may contain one or more locations to
-    monitor.  The monitoring is defined over a given time and sample rate, and a filename is also supplied.  All
-    results are serialized to a CSV file.
+    Each Gauges instance may contain one or more fields, which may
+    contain one or more locations to monitor.  The monitoring is
+    defined over a given time and sample rate, and a filename is also
+    supplied.  All results are serialized to a CSV file.
 
-    Parallel Implementation Notes:
-    After the gauge has been attached, all processes are partitioned into Gauge Owners and non-Gauge Owners.  The
-    calculate method is a "no-op" for non-Owners.  For Gauge Owners, all values are computed individually,
-    then collectively transmitted to the "root" process, which is the only process responsible for serializing gauge
-    results to disk.  This code has not been aggressively vetted for parallel correctness or scalability.
+    Parallel Implementation Notes: After the gauge has been attached,
+    all processes are partitioned into Gauge Owners and non-Gauge
+    Owners.  The calculate method is a "no-op" for non-Owners.  For
+    Gauge Owners, all values are computed individually, then
+    collectively transmitted to the "root" process, which is the only
+    process responsible for serializing gauge results to disk.  This
+    code has not been aggressively vetted for parallel correctness or
+    scalability.
 
     """
     def __init__(self, fields, activeTime=None, sampleRate=0, fileName='gauges.csv', points=None, lines=None,
                  integrate=False):
-        """
-        Create a set of gauges that will automatically be serialized as CSV data to the requested file.
+        """Create a set of gauges that will automatically be serialized as
+        CSV data to the requested file.
 
 
-        :param activeTime: If not None, a 2-tuple of start time and end time for which the point gauge is active.
-        :param sampleRate: The intervals at which samples should be measured.  Note that this is a rough lower
-        bound, and that the gauge values could be computed less frequently depending on the time integrator.  The
-        default value of zero computes the gauge values at every time step.
+        :param activeTime: If not None, a 2-tuple of start time and
+                           end time for which the point gauge is
+                           active.
+        :param sampleRate: The intervals at which samples should be
+                           measured.  Note that this is a rough lower
+                           bound, and that the gauge values could be
+                           computed less frequently depending on the
+                           time integrator.  The default value of zero
+                           computes the gauge values at every time
+                           step.
         :param fileName: The name of the file to serialize results to.
 
-        Data is currently column-formatted, with 10 characters allotted to the time field, and 45 characters
-        allotted to each point field.
+        Data is currently column-formatted, with 10 characters
+        allotted to the time field, and 45 characters allotted to each
+        point field.
+
         """
 
         AV_base.__init__(self)
@@ -161,6 +196,7 @@ class Gauges(AV_base):
         self.dofsVecs = []
         self.pointGaugeVecs = []
         self.segments = []
+        self.adapted = False
 
         self.isPointGauge = bool(points)
         self.isLineGauge = bool(lines) and not integrate
@@ -173,61 +209,80 @@ class Gauges(AV_base):
 
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
-        node_distances = norm(self.vertices - location, axis=1)
-        nearest_node = np.argmin(node_distances)
-        nearest_node_distance = node_distances[nearest_node]
+        nearest_node_distance_kdtree, nearest_node_kdtree = self.nodes_kdtree.query(location)
         comm = Comm.get().comm.tompi4py()
-        return comm.rank, nearest_node, nearest_node_distance
+        return comm.rank, nearest_node_kdtree, nearest_node_distance_kdtree
 
     def getLocalElement(self, femSpace, location, node):
-        """Given a location and its nearest node, determine if it is on a local element.
+        """Given a location and its nearest node, determine if it is on a
+        local element.
 
-        Returns None if location is not on any elements owned by this process
+        Returns None if location is not on any elements owned by this
+        process
+
         """
 
         # search elements that contain the nearest node
+        patchBoundaryNodes=set()
+        checkedElements=[]
         for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
             eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
             # evaluate the inverse map for element eN
             xi = femSpace.elementMaps.getInverseValue(eN, location)
             # query whether xi lies within the reference element
             if femSpace.elementMaps.referenceElement.onElement(xi):
                 return eN
+        for node in patchBoundaryNodes:
+            for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+                eN = femSpace.mesh.nodeElementsArray[eOffset]
+                if eN not in checkedElements:
+                    checkedElements.append(eN)
+                    # evaluate the inverse map for element eN
+                    xi = femSpace.elementMaps.getInverseValue(eN, location)
+                    # query whether xi lies within the reference element
+                    if femSpace.elementMaps.referenceElement.onElement(xi):
+                        return eN
         # no elements found
         return None
 
-
     def findNearestNode(self, femSpace, location):
-        """Given a gauge location, attempts to locate the most suitable process for monitoring information about
-        this location, as well as the node on the process closest to the location.
+        """Given a gauge location, attempts to locate the most suitable
+        process for monitoring information about this location, as
+        well as the node on the process closest to the location.
 
-        Returns a 2-tuple containing an identifier for the closest 'owning' process as well as the local ids of the
-        node and nearest element.
+        Returns a 2-tuple containing an identifier for the closest
+        'owning' process as well as the local ids of the node and
+        nearest element.
+
         """
         comm = Comm.get().comm.tompi4py()
-
         comm_rank, nearest_node, nearest_node_distance = self.getLocalNearestNode(location)
         local_element = self.getLocalElement(femSpace, location, nearest_node)
 
         # determine global nearest node
         haveElement = int(local_element is not None)
-        global_have_element, owning_proc = comm.allreduce(haveElement, op=MPI.MAXLOC)
+        global_have_element, owning_proc = comm.allreduce((haveElement, comm.rank),
+                                                          op=MPI.MAXLOC)
         if global_have_element:
             logEvent("Gauges on element at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                     owning_proc), 3)
         else:
             # gauge isn't on any of the elements, just use nearest node
-            global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
+            global_min_distance, owning_proc = comm.allreduce((nearest_node_distance,comm.rank), op=MPI.MINLOC)
             logEvent("Off-element gauge location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                  owning_proc), 3)
-        if comm_rank != owning_proc:
+        if comm.rank != owning_proc:
             nearest_node = None
 
         assert owning_proc is not None
         return owning_proc, nearest_node
 
     def buildQuantityRow(self, m, femFun, quantity_id, quantity):
-        """ Builds up contributions to gauge operator from the underlying element space
+        """Builds up contributions to gauge operator from the underlying
+        element space
+
         """
 
         location, node = quantity
@@ -247,23 +302,32 @@ class Gauges(AV_base):
 
 
     def initOutputWriter(self):
-        """ Initialize communication strategy for collective output of gauge data.
+        """Initialize communication strategy for collective output of gauge
+        data.
 
-        On the root process in this communicator, create a map of quantity owners and the corresponding location in
-        their arrays.  This process is responsible for collecting gauge data and saving it to disk.
+        On the root process in this communicator, create a map of
+        quantity owners and the corresponding location in their
+        arrays.  This process is responsible for collecting gauge data
+        and saving it to disk.
 
-        Gauge data is globally ordered by field, then by location id (as ordered by globalMeasuredQuantities)
+        Gauge data is globally ordered by field, then by location id
+        (as ordered by globalMeasuredQuantities)
+
         """
 
         numLocalQuantities = sum([len(self.measuredQuantities[field]) for field in self.fields])
         self.localQuantitiesBuf = np.zeros(numLocalQuantities)
-
         if self.gaugeComm.rank != 0:
             self.globalQuantitiesBuf = None
             self.globalQuantitiesCounts = None
         else:
-            self.fileName = os.path.join(Profiling.logDir, self.fileName)
-            self.file = open(self.fileName, 'w')
+            if self.adapted:
+              if(Profiling.logDir not in self.fileName):
+                self.fileName = os.path.join(Profiling.logDir, self.fileName)                
+              self.file = open(self.fileName, 'a')
+            else:
+              self.fileName = os.path.join(Profiling.logDir, self.fileName)
+              self.file = open(self.fileName, 'w')
 
             if self.isLineIntegralGauge:
                 #Only need to set up mapping for point gauges
@@ -306,10 +370,13 @@ class Gauges(AV_base):
         self.outputWriterReady = True
 
     def buildGaugeComm(self):
-        """ Create a communicator composed only of processes that own gauge quantities.
+        """Create a communicator composed only of processes that own gauge
+        quantities.
 
-        Collective over global communicator.  Builds a local communicator for collecting all gauge data.
-        This communicator contains only processes that will contain gauge data.
+        Collective over global communicator.  Builds a local
+        communicator for collecting all gauge data.  This communicator
+        contains only processes that will contain gauge data.
+
         """
 
         comm = Comm.get().comm.tompi4py()
@@ -335,7 +402,7 @@ class Gauges(AV_base):
 
 
     def addLineGaugePoints(self, line, line_segments):
-        """ Add all gauge points from each line into self.points
+        """Add all gauge points from each line into self.points
         """
         points = self.points
         new_points = {}
@@ -393,7 +460,7 @@ class Gauges(AV_base):
 
         points = self.points
 
-        for point, l_d in points.iteritems():
+        for point, l_d in points.items():
             if 'nearest_node' not in l_d:
                 # TODO: Clarify assumption here about all fields sharing the same element mesh
                 field_id = self.fieldNames.index(list(l_d['fields'])[0])
@@ -425,7 +492,8 @@ class Gauges(AV_base):
 
         for field, field_id in zip(self.fields, self.field_ids):
             m = PETSc.Mat().create(PETSc.COMM_SELF)
-            m.setSizes([len(self.measuredQuantities[field]), self.num_owned_nodes])
+            m.setSizes([len(self.measuredQuantities[field]),
+                        self.u[field_id].femSpace.dim])
             m.setType('aij')
             m.setUp()
             # matrices are a list in same order as fields
@@ -495,11 +563,11 @@ class Gauges(AV_base):
 
                 segment_length, proc_rank, segment = longest_segment
                 if segment_length == 0:
-                    print segment_pos
-                    print 'segments'
-                    for segment in selected_segments: print segment
-                    print 'length_segments'
-                    for length_segment in length_segments: print length_segment
+                    print(segment_pos)
+                    print('segments')
+                    for segment in selected_segments: print(segment)
+                    print('length_segments')
+                    for length_segment in length_segments: print(length_segment)
                     raise FloatingPointError("Unable to identify next segment while segmenting, are %s in domain?" %
                                              str(endpoints))
                 logEvent("Identified best segment of length %g on %d: %s" % (segment_length, proc_rank, str(segment)), 9)
@@ -535,7 +603,7 @@ class Gauges(AV_base):
         endpoints = np.asarray(endpoints, np.double)
         length = norm(endpoints[1] - endpoints[0])
 
-        length_segments = [(norm(i[0]-endpoints[0])/length, norm(i[1]-endpoints[0])/length, i) for i in intersections]
+        length_segments = [(old_div(norm(i[0]-endpoints[0]),length), old_div(norm(i[1]-endpoints[0]),length), i) for i in intersections]
 
         segments = self.pruneDuplicateSegments(endpoints, length_segments)
         return segments
@@ -581,7 +649,7 @@ class Gauges(AV_base):
                     # only assign coefficients for locally owned points
                     if field in point_data:
                         pointID = point_data[field]
-                        self.lineIntegralGaugeMats[fieldIndex].setValue(lineIndex, pointID, segmentLength/2, addv=True)
+                        self.lineIntegralGaugeMats[fieldIndex].setValue(lineIndex, pointID, old_div(segmentLength,2), addv=True)
 
         for m in self.lineIntegralGaugeMats:
             m.assemble()
@@ -589,6 +657,7 @@ class Gauges(AV_base):
     def attachModel(self, model, ar):
         """ Attach this gauge to the given simulation model.
         """
+        from scipy import spatial
         self.model = model
         self.fieldNames = model.levelModelList[-1].coefficients.variableNames
         self.vertexFlags = model.levelModelList[-1].mesh.nodeMaterialTypes
@@ -596,17 +665,16 @@ class Gauges(AV_base):
         self.num_owned_nodes = model.levelModelList[-1].mesh.nNodes_global
         self.u = model.levelModelList[-1].u
         self.timeIntegration = model.levelModelList[-1].timeIntegration
-
         for field in self.fields:
             field_id = self.fieldNames.index(field)
             self.field_ids.append(field_id)
-
+        self.nodes_kdtree = spatial.cKDTree(model.levelModelList[-1].mesh.nodeArray)
         linesSegments = []
         for line in self.lines:
             lineSegments = self.getMeshIntersections(line)
             self.addLineGaugePoints(line, lineSegments)
             linesSegments.append(lineSegments)
-
+  
         self.identifyMeasuredQuantities()
 
         self.buildGaugeComm()
@@ -615,7 +683,10 @@ class Gauges(AV_base):
             self.initOutputWriter()
             self.buildPointGaugeOperators()
             self.buildLineIntegralGaugeOperators(self.lines, linesSegments)
-            self.outputHeader()
+            if self.adapted:
+              pass
+            else:
+              self.outputHeader()
         return self
 
     def get_time(self):
@@ -627,7 +698,6 @@ class Gauges(AV_base):
         """ Outputs a single header for a CSV style file to self.file"""
 
         assert self.isGaugeOwner
-
         if self.gaugeComm.rank == 0:
             self.file.write("%10s" % ('time',))
             if self.isPointGauge or self.isLineGauge:
@@ -667,7 +737,7 @@ class Gauges(AV_base):
             globalLineIntegralGaugeBuf = []
 
         if self.gaugeComm.rank == 0:
-            self.file.write("%10.4e" % time)
+            self.file.write("%25.15e" % time)
             if self.isPointGauge or self.isLineGauge:
                 for id in self.globalQuantitiesMap:
                     self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))

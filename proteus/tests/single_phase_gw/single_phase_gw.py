@@ -19,6 +19,9 @@ the accumulation term in the 'conservative form'
 since this is the form that proteus uses by default
      
 """
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus import SubsurfaceTransportCoefficients as STC
 
@@ -44,7 +47,7 @@ nDTout = 10
 domain = Domain.RectangularDomain(L[:nd],
                                           units="m")
 refinement_level = 16 #define characteristic length
-he = L[0]/float(refinement_level)
+he = old_div(L[0],float(refinement_level))
 
 ### Material Properties ###
 #homogeneous for now
@@ -93,7 +96,7 @@ def noflux(x,flag):
 
 
 ### Initial conditions ###
-class ConstantIC:
+class ConstantIC(object):
     def __init__(self,val=0.0):
         self.val = val
     def uOfXT(self,x,t):
@@ -105,7 +108,7 @@ initialConditions_flow = {0:ConstantIC(head_outflow)}
 # numerics
 parallel = False
 
-nnx = nny = int(L[0]/he)
+nnx = nny = int(old_div(L[0],he))
 nLevels = 1
 if parallel:
     nLevels = 1

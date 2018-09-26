@@ -3,34 +3,42 @@ TransportCoefficients for flow and transport in porous media
 
 .. inheritance-diagram:: proteus.SubsurfaceTransportCoefficients
    :parts: 1
+
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from math import *
-from TransportCoefficients import TC_base
+from .TransportCoefficients import TC_base
 import numpy
 from .Profiling import logEvent
 from proteus import FemTools
 from proteus import Transport
-import subsurfaceTransportFunctions as stfuncs
+from . import subsurfaceTransportFunctions as stfuncs
 
 ######################################################################
 #Utility classes for dealing with common aspects of flow and transport
 ######################################################################
 
-class BlockHeterogeneousCoefficients:
-    """
-    Basic data structures and functionality for keeping track of a
+class BlockHeterogeneousCoefficients(object):
+    """Basic data structures and functionality for keeping track of a
     block heterogeneity
+
     """
     def __init__(self,mesh):
         self.mesh = mesh
     def initializeMaterialTypes(self):
-        """
-        returns material type identifiers for mesh topology
-          in tuple
+        """returns material type identifiers for mesh topology in tuple
         element,exterior_element_boundaries,element_boundaries
 
-        note element_boundaries is nElementBoundaries_global x 2 and gives the
-         element material property to the left and right of a global element boundary
+        note element_boundaries is nElementBoundaries_global x 2 and
+        gives the element material property to the left and right of a
+        global element boundary
+
         """
         elementMaterialTypes = self.mesh.elementMaterialTypes
         exteriorElementBoundaryTypes =  numpy.zeros((self.mesh.nExteriorElementBoundaries_global),'i')
@@ -49,8 +57,8 @@ class BlockHeterogeneousCoefficients:
 #Single-phase flow
 ##################################################
 class SinglePhaseDarcyCoefficients(TC_base):
-    """
-    S_s h_t -\deld ( K_i(x,t) \grad h_i ) + r(x,t) = 0 i=1,nc
+    """:math:`S_s h_t -\deld ( K_i(x,t) \grad h_i ) + r(x,t) = 0 i=1,nc`
+
     """
     def __init__(self,K_types,source_types,S_s_types=None,
                  nc=1,nd=2,
@@ -58,9 +66,9 @@ class SinglePhaseDarcyCoefficients(TC_base):
                  materialValuesLocallyConstant=False):
         self.K_types = K_types
         self.source_types = source_types
-        if S_s_types == None:
+        if S_s_types is None:
             self.S_s_types = {}
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.S_s_types[mat] = lambda x,t: 0.0
         else:
             self.S_s_types = S_s_types
@@ -74,11 +82,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
         if self.materialValuesLocallyConstant:
             self.K_types_const = {}; self.source_types_const= {}; self.S_s_types_const = {}
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
         #for matching shapes of quadrature arrays
         self.q_x_shape = None;  self.ebqe_x_shape=None
@@ -99,7 +107,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
         sparseDiffusionTensors = {}
         for ci in range(nc):
             sparseDiffusionTensors[(ci,ci)]=(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
-                                             numpy.array([range(nd) for row in range(nd)],dtype='i'))
+                                             numpy.array([list(range(nd)) for row in range(nd)],dtype='i'))
         TC_base.__init__(self,
                          nc,
                          mass,
@@ -129,11 +137,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def evaluateHeterogeneity_element(self,t,cq):
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
 
             for ci in range(self.nc):
@@ -147,7 +155,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 stfuncs.setVectorMaterialFunctionOverElements(self.elementMaterialTypes,
                                                               cq[('a',ci,ci)],
                                                               self.K_types_const)
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     stfuncs.setScalarMaterialFunctionOverElements(self.elementMaterialTypes,
                                                                   cq[('dm',ci,ci)],
                                                                   self.S_s_types_const)
@@ -168,7 +176,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                    cq[('a',ci,ci)],
                                                                    self.K_types)
 
-                if cq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cq:
                     stfuncs.evaluateScalarMaterialFunctionOverElements(t,self.elementMaterialTypes,
                                                                        cq['x'],
                                                                        cq[('dm',ci,ci)],
@@ -179,28 +187,28 @@ class SinglePhaseDarcyCoefficients(TC_base):
         #use harmonic average for a, arith average for f
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
-                if cebq.has_key(('f',ci)): cebq[('f',ci)].flat[:] = 0.0
-                if cebq.has_key(('r',ci)):
+                if ('f',ci) in cebq: cebq[('f',ci)].flat[:] = 0.0
+                if ('r',ci) in cebq:
                     stfuncs.setScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                              self.elementBoundaryTypes,
                                                                                              cebq[('r',ci)],
                                                                                              self.source_types_const)
                     cebq[('r',ci)] *= -1.0
-                if cebq.has_key(('a',ci,ci)):
+                if ('a',ci,ci) in cebq:
                     stfuncs.setSparseTensorMaterialFunctionOverElementBoundaries_harmonicAverage(self.nd,
                                                                                                  self.elementBoundariesArray,
                                                                                                  self.elementBoundaryTypes,
                                                                                                  cebq[('a',ci,ci)],
                                                                                                  self.K_types_const)
 
-                if cebq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebq:
                     stfuncs.setScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                              self.elementBoundaryTypes,
                                                                                              cebq[('dm',ci,ci)],
@@ -210,8 +218,8 @@ class SinglePhaseDarcyCoefficients(TC_base):
 
         else:
             for ci in range(self.nc):
-                if cebq.has_key(('f',ci)): cebq[('f',ci)].fill(0.0)
-                if cebq.has_key(('r',ci)):
+                if ('f',ci) in cebq: cebq[('f',ci)].fill(0.0)
+                if ('r',ci) in cebq:
                     stfuncs.evaluateScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(t,
                                                                                                   self.elementBoundariesArray,
                                                                                                   self.elementBoundaryTypes,
@@ -219,7 +227,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                   cebq[('r',ci)],
                                                                                                   self.source_types)
                     cebq[('r',ci)] *= -1.0
-                if cebq.has_key(('a',ci,ci)):
+                if ('a',ci,ci) in cebq:
                     stfuncs.evaluateSparseTensorMaterialFunctionOverElementBoundaries_harmonicAverage(self.nd,
                                                                                                       t,
                                                                                                       self.elementBoundariesArray,
@@ -227,7 +235,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                       cebq['x'],
                                                                                                       cebq[('a',ci,ci)],
                                                                                                       self.K_types)
-                if cebq.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebq:
                     stfuncs.evaluateScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(t,
                                                                                                   self.elementBoundariesArray,
                                                                                                   self.elementBoundaryTypes,
@@ -242,28 +250,28 @@ class SinglePhaseDarcyCoefficients(TC_base):
         #use harmonic average for a, arith average for f
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
-                if cebq_global.has_key(('f',ci)): cebq_global[('f',ci)].flat[:] = 0.0
-                if cebq_global.has_key(('r',ci)):
+                if ('f',ci) in cebq_global: cebq_global[('f',ci)].flat[:] = 0.0
+                if ('r',ci) in cebq_global:
                     stfuncs.setScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                                    self.elementBoundaryTypes,
                                                                                                    cebq_global[('r',ci)],
                                                                                                    self.source_types_const)
                     cebq_global[('r',ci)] *= -1.0
-                if cebq_global.has_key(('a',ci,ci)):
+                if ('a',ci,ci) in cebq_global:
                     stfuncs.setSparseTensorMaterialFunctionOverGlobalElementBoundaries_harmonicAverage(self.nd,
                                                                                                        self.elementBoundariesArray,
                                                                                                        self.elementBoundaryTypes,
                                                                                                        cebq_global[('a',ci,ci)],
                                                                                                        self.K_types_const)
 
-                if cebq_global.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebq_global:
                     stfuncs.setScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                                    self.elementBoundaryTypes,
                                                                                                    cebq_global[('dm',ci,ci)],
@@ -272,8 +280,8 @@ class SinglePhaseDarcyCoefficients(TC_base):
                     cebq_global[('m',ci)] *= cebq_global[('dm',ci,ci)]
         else:
             for ci in range(self.nc):
-                if cebq_global.has_key(('f',ci)): cebq_global[('f',ci)].flat[:] = 0.0
-                if cebq_global.has_key(('r',ci)):
+                if ('f',ci) in cebq_global: cebq_global[('f',ci)].flat[:] = 0.0
+                if ('r',ci) in cebq_global:
                     stfuncs.evaluateScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(t,
                                                                                                         self.elementBoundariesArray,
                                                                                                         self.elementBoundaryTypes,
@@ -281,7 +289,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                         cebq_global[('r',ci)],
                                                                                                         self.source_types)
                     cebq_global[('r',ci)] *= -1.0
-                if cebq_global.has_key(('a',ci,ci)):
+                if ('a',ci,ci) in cebq_global:
                     stfuncs.evaluateSparseTensorMaterialFunctionOverGlobalElementBoundaries_harmonicAverage(self.nd,
                                                                                                             t,
                                                                                                             self.elementBoundariesArray,
@@ -290,7 +298,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                             cebq_global[('a',ci,ci)],
                                                                                                             self.K_types)
 
-                if cebq_global.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebq_global:
                     stfuncs.evaluateScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(t,
                                                                                                         self.elementBoundariesArray,
                                                                                                         self.elementBoundaryTypes,
@@ -302,11 +310,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def evaluateHeterogeneity_exteriorElementBoundary(self,t,cebqe):
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
-            for mat in self.K_types.keys():
+            for mat in list(self.K_types.keys()):
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
-            for mat in self.source_types.keys():
+            for mat in list(self.source_types.keys()):
                 self.source_types_const[mat]=self.source_types[mat](x,t0)
-            for mat in self.S_s_types.keys():
+            for mat in list(self.S_s_types.keys()):
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
                 cebqe[('f',ci)].flat[:] = 0.0
@@ -320,7 +328,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                               cebqe[('a',ci,ci)],
                                                               self.K_types_const)
 
-                if cebqe.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebqe:
                     stfuncs.setScalarMaterialFunctionOverElements(self.exteriorElementBoundaryTypes,
                                                                   cebqe[('dm',ci,ci)],
                                                                   self.S_s_types_const)
@@ -341,7 +349,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                    cebqe[('a',ci,ci)],
                                                                    self.K_types)
 
-                if cebqe.has_key(('dm',ci,ci)):
+                if ('dm',ci,ci) in cebqe:
                     stfuncs.evaluateScalarMaterialFunctionOverElements(t,self.exteriorElementBoundaryTypes,
                                                                        cebqe['x'],
                                                                        cebqe[('dm',ci,ci)],
@@ -368,11 +376,11 @@ class SinglePhaseDarcyCoefficients(TC_base):
 #Richards equation
 ########################################
 class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
+    """version of Re where element material type id's used in evals
+
     """
-    version of Re where element material type id's used in evals
-    """
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchten_sd_het
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchten_sd_het
     def __init__(self,
                  nd,
                  Ksw_types,
@@ -428,7 +436,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                 self.Ksw_types = Ksw_types
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
             assert len(Ksw_types.shape) in [1,2], "if full tensor conductivity true then Ksw_types scalar or 'flattened' row-major representation of entries"
             if len(Ksw_types.shape)==1:
                 self.Ksw_types = numpy.zeros((self.nMaterialTypes,self.nd**2),'d')
@@ -456,7 +464,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         #want element boundary material types for evaluating heterogeneity
         #not boundary conditions
         self.isSeepageFace = numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
-        if self.getSeepageFace != None:
+        if self.getSeepageFace is not None:
             for ebNE in range(mesh.nExteriorElementBoundaries_global):
                 #mwf missing ebNE-->ebN?
                 ebN = mesh.exteriorElementBoundariesArray[ebNE]
@@ -551,9 +559,10 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
 
 from proteus import cfemIntegrals
 class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
-    """
-    OneLevelTransport designed specifically for Non-Conforming P^1 approximation to RE
-    Approximation uses nodal quadrature and upwinding
+    """OneLevelTransport designed specifically for Non-Conforming
+    :math:`P^1` approximation to RE Approximation uses nodal
+    quadrature and upwinding
+
     """
     def __init__(self,
                  uDict,
@@ -715,7 +724,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #         for k in self.tensors_u_ip:
 #             if (self.sd
 #                 and k[0] in ['a','da']
-#                 and self.coefficients.sdInfo != None
+#                 and self.coefficients.sdInfo is not None
 #                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
 #                 self.u_ip[k]=numpy.zeros(
 #                     (self.mesh.nElements_global,
@@ -752,7 +761,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #             if ks not in entryStrings:
 #                 return False
 #             k0 = (ks,)+(refi,)
-#             if self.reuse_test_trial_quadrature and refi != None:
+#             if self.reuse_test_trial_quadrature and refi is not None:
 #                 if k0 in sd.keys():
 #                     logEvent("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
 #                     sd[k] = sd[k0]
@@ -802,15 +811,15 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                      self.nSpace_global),
 #                     'd')
     def calculateElementCoefficients(self):
-        """
-        calculate the nonlinear coefficients at the quadrature points and nodes
-        include interpolation points explicitly here now
+        """calculate the nonlinear coefficients at the quadrature points and
+        nodes include interpolation points explicitly here now
+
         """
 
         for cj in range(self.nc):
             self.u[cj].getValues(self.q[('v',cj)],
                                  self.q[('u',cj)])
-            if self.q.has_key(('grad(u)',cj)):
+            if ('grad(u)',cj) in self.q:
                 self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
                                              self.q[('grad(u)',cj)])
 
@@ -889,7 +898,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                                                self.q[('pe',ci)],
                                                                self.q[('cfl',ci)])
 
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.calculateNumericalDiffusion(self.q)
 
     def calculateElementResidual(self):
@@ -969,15 +978,17 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 ########################################
 class TwophaseDarcyFlow_base(TC_base):
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_vol_frac,generateSplineTables
-    """
-    base class for two-phase flow implementations
-    holds information for
+    """base class for two-phase flow implementations 
 
-        fluid properties
-        eos model tag
-        psk model tag
-        material heterogeneity information (number of types, lookup arrays)
+    holds information for:
+
+      * fluid properties
+      * eos model tag
+      * psk model tag
+      * material heterogeneity information (number of types, lookup arrays)
+
     default fluids are water and air assumed to be incompressible
+
     """
     default_density_w_parameters = {'model':'Exponential',
                                     'nParameters':3,
@@ -1006,12 +1017,12 @@ class TwophaseDarcyFlow_base(TC_base):
         self.g  = dimensionless_gravity
         ##fluid properties
         #normalized density terms
-        self.rhon = density_n/density_w
-        self.rhow = density_w/density_w
-        self.b  = density_n/density_w
+        self.rhon = old_div(density_n,density_w)
+        self.rhow = old_div(density_w,density_w)
+        self.b  = old_div(density_n,density_w)
         #normalized viscosities
-        self.muw= viscosity_w/viscosity_w
-        self.mun= viscosity_n/viscosity_w
+        self.muw= old_div(viscosity_w,viscosity_w)
+        self.mun= old_div(viscosity_n,viscosity_w)
         #density eos options
         self.density_types={'Exponential':1,
                             'IdealGas':2}
@@ -1023,17 +1034,17 @@ class TwophaseDarcyFlow_base(TC_base):
         self.density_n_parameters = density_n_parameters
         for params,rwork in zip([self.density_w_parameters,self.density_n_parameters],
                                 ['rwork_density_w','rwork_density_n']):
-            if params != None:
+            if params is not None:
                 if params['model'] == 'Exponential':
-                    setattr(self,rwork,numpy.array([params['rho_0']/params['rho_0'],#normalize by phase density
+                    setattr(self,rwork,numpy.array([old_div(params['rho_0'],params['rho_0']),#normalize by phase density
                                                     params['psi_0'],
                                                     params['beta']],dtype='d'))
                 elif params['model'] == 'IdealGas':
                     setattr(self,rwork,numpy.array([params['T'],
-                                                    params['W']/params['rho_0'],#normalize by phase density
+                                                    old_div(params['W'],params['rho_0']),#normalize by phase density
                                                     params['R'],
                                                     params['headToPressure'],
-                                                    params['rho_0']/params['rho_0'],#normalize by phase density
+                                                    old_div(params['rho_0'],params['rho_0']),#normalize by phase density
                                                     params['psi_0']],dtype='d'))
                 else:
                     assert False, 'TwophaseDarcy_base density params= %s not found ' % params
@@ -1050,10 +1061,10 @@ class TwophaseDarcyFlow_base(TC_base):
         self.psk_tolerances={'default':{'eps_small':1.0e-16},
                              'VGM':{'eps_small':1.0e-16,'ns_del':1.0e-8}}
         for psk_model_id in self.psk_types:
-            if not self.psk_tolerances.has_key(psk_model_id):
+            if psk_model_id not in self.psk_tolerances:
                 self.psk_tolerances[psk_model_id] = self.psk_tolerances['default']
         self.nPskTolerances=1
-        assert(self.psk_model in self.psk_types.keys())
+        assert(self.psk_model in list(self.psk_types.keys()))
         self.nMaterialTypes = nMaterialTypes
         #psk rwork array lengths
         self.nPSKsplineKnots = nPSKsplineKnots
@@ -1067,7 +1078,7 @@ class TwophaseDarcyFlow_base(TC_base):
         elif self.psk_model in ['BCM','BCB']:
             self.nPskParams=4
         elif self.psk_model in ['PSKspline']:
-            assert self.nPSKsplineKnots != None
+            assert self.nPSKsplineKnots is not None
             self.nPskParams=self.nPSKsplineKnots*4
             self.iwork_psk[0] = self.nPSKsplineKnots
             self.iwork_psk[1] = self.nPskParams
@@ -1105,7 +1116,7 @@ class TwophaseDarcyFlow_base(TC_base):
         cebq[('dpsi_n',1)] = numpy.zeros(cebq[('u',0)].shape,'d')
         for ci in range(2):
             self.ebq[('vol_frac',ci)] = numpy.zeros(self.ebq_shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',1)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
@@ -1144,29 +1155,29 @@ class TwophaseDarcyFlow_base(TC_base):
         if self.psk_model == 'simp':
             assert self.nPskParams == 2
             self.rwork_psk = numpy.zeros((self.nMaterialTypes,self.nPskParams),'d')
-            for Sw_min,Sw_max,i in zip(Sw_min_types,Sw_max_types,range(self.nMaterialTypes)):
+            for Sw_min,Sw_max,i in zip(Sw_min_types,Sw_max_types,list(range(self.nMaterialTypes))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
         elif self.psk_model in ['VGM','VGB']:
-            assert(vg_alpha_types != None and vg_m_types  != None)
+            assert(vg_alpha_types is not None and vg_m_types  is not None)
             assert self.nPskParams == 4
             self.rwork_psk = numpy.zeros((self.nMaterialTypes,self.nPskParams),'d')
-            for Sw_min,Sw_max,vg_alpha,vg_m,i in zip(Sw_min_types,Sw_max_types,vg_alpha_types,vg_m_types,range(self.nMaterialTypes)):
+            for Sw_min,Sw_max,vg_alpha,vg_m,i in zip(Sw_min_types,Sw_max_types,vg_alpha_types,vg_m_types,list(range(self.nMaterialTypes))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
                 self.rwork_psk[i,2] = vg_alpha
                 self.rwork_psk[i,3] = vg_m
         elif self.psk_model in ['BCM','BCB']:
-            assert(bc_lambda_types != None and bc_lambda_types  != None)
+            assert(bc_lambda_types is not None and bc_lambda_types  is not None)
             assert self.nPskParams == 4
             self.rwork_psk = numpy.zeros((self.nMaterialTypes,self.nPskParams),'d')
-            for Sw_min,Sw_max,bc_pd,bc_lambda,i in zip(Sw_min_types,Sw_max_types,bc_pd_types,bc_lambda_types,range(self.nMaterialTypes)):
+            for Sw_min,Sw_max,bc_pd,bc_lambda,i in zip(Sw_min_types,Sw_max_types,bc_pd_types,bc_lambda_types,list(range(self.nMaterialTypes))):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
                 self.rwork_psk[i,2] = bc_pd
                 self.rwork_psk[i,3] = bc_lambda
         elif self.psk_model in ['PSKspline']:
-            assert psk_spline_types != None
+            assert psk_spline_types is not None
             self.rwork_psk = psk_spline_types
             assert self.rwork_psk.shape[0] == self.nMaterialTypes*self.nPskParams
 
@@ -1205,52 +1216,68 @@ class TwophaseDarcyFlow_base(TC_base):
     #
 
 class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
+    """continuity equation for each phase
+
+    .. math::
+
+        \pd{m_w}{t} - \deld (\ten{a}_w \grad \phi_w) + r_w = 0
+        \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
+
     """
-    continuity equation for each phase
+    # (normalized) mass for each phase
 
-      \pd{m_w}{t} - \deld (\ten{a}_w \grad \phi_w) + r_w = 0
+    # .. math::
 
-      \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
+    #     m_i = \theta_i \rho_i,  i=w,n
 
-    (normalized) mass for each phase
-       m_i = \theta_i \rho_i,  i=w,n
+    #     \theta_i = \theta_s S_i
 
-       \theta_i = \theta_s S_i
-       \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
+    #     \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
 
-     where S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    # where :math:`S_i` is the saturation for each phase,
+    # :math:`\varrho_{i}` is the density and :math:`\varrho_{i,0}` is a
+    # reference value
 
-    (normalized) mass flux for each phase is
+    # (normalized) mass flux for each phase is
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # .. math::
 
-       \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
-    and the potentials are defined as
-       \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
-       \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
+    #     \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    #     \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
 
-    where
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # and the potentials are defined as
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    # .. math::
 
-    The dependent variables are
-      S_w, and \psi_w
+    #     \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
+    #     \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
 
-    Note S_n = 1-S_w
+    # where
 
-    needs to be implemented
-    r_i = r_i(\vec x,t)
+    # .. math::
 
+    #     \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #     b        = \varrho_{n,0}/\varrho_{w,0}
+    #     \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    slight compressibility assumed in spatial gradients
+    # for the pressure of each phase, :math:`p_i`, and we have the
+    # capillary pressure relation
 
-    TODO:
-   """
+    # .. math::
+
+    #     \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #     r_i = r_i(\vec x,t)
+
+    # slight compressibility assumed in spatial gradients
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_het_matType
     def __init__(self,
                  nd=1,
@@ -1308,9 +1335,9 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i')),
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i')),
                                       (1,1):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -1345,8 +1372,8 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
             vol_frac_n = self.ebq[('vol_frac',1)]
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
-        assert self.rwork_psk != None
-        assert self.iwork_psk != None
+        assert self.rwork_psk is not None
+        assert self.iwork_psk is not None
         #mwf do some debugging
         assert materialTypes.max() < self.nMaterialTypes
         assert materialTypes.min() == 0
@@ -1413,12 +1440,12 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 #
 
 class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
-    """
-    Formulation using phase continuity equations and
-     Van-Genuchten Mualem psk relations
+    """Formulation using phase continuity equations and Van-Genuchten
+    Mualem psk relations
 
     Basically a convenience wrapper for fully coupled approximation
-     with volume-fraction based inputs as in Richards' equation formulations
+    with volume-fraction based inputs as in Richards' equation
+    formulations
 
     """
     def __init__(self,
@@ -1443,7 +1470,7 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
         self.use_spline = use_spline
         psk_model = 'VGM'
         if self.use_spline:
-            assert nPSKsplineKnots != None
+            assert nPSKsplineKnots is not None
             psk_model = 'PSKspline'
         TwophaseDarcy_fc.__init__(self,
                                   nd=nd,
@@ -1461,10 +1488,10 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
         self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
         if self.use_spline:
@@ -1524,9 +1551,8 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
 
 
 class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
-    """
-    Formulation using phase continuity equations and
-     'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """Formulation using phase continuity equations and 'simp' quadratic
+    rel-perm, linear capillary pressure psk relations
 
     """
     def __init__(self,
@@ -1560,7 +1586,7 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         self.setMaterialTypes(Ksw_types=Ksw_types,
                               omega_types=thetaS_types,
                               Sw_max_types=Sw_max_types,
@@ -1568,52 +1594,72 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
 
 
 class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
-    """
-    continuity equation for each phase
+    """continuity equation for each phase
+
+    .. math::
 
       \pd{m_w}{t} - \deld (\ten{a}_w \grad \phi_w) + r_w = 0
-
       \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
+    
+    """
+    
+    # (normalized) mass for each phase :math:`m_i = \theta_i \rho_i,
+    # i=w,n`
 
-    (normalized) mass for each phase
-       m_i = \theta_i \rho_i,  i=w,n
+    # .. math::
 
-       \theta_i = \theta_s S_i
-       \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
+    #    \theta_i = \theta_s S_i
+    #    \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
 
-     where S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    # where :math:`S_i` is the saturation for each phase,
+    # :math:`\varrho_{i}` is the density and :math:`\varrho_{i,0}` is a
+    # reference value
 
-    (normalized) mass flux for each phase is
+    # (normalized) mass flux for each phase is
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # .. math::
 
-       \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
-    and the potentials are defined as
-       \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
-       \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    #    \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
 
-    where
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # and the potentials are defined as
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    # .. math::
 
-    The dependent variables are
-      \psi_w, and \psi_c
+    #    \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
+    #    \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
 
-    Note S_n = 1-S_w
+    # where
 
-    needs to be implemented
-    r_i = r_i(\vec x,t)
+    # .. math::
 
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    slight compressibility assumed in spatial gradients
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-    TODO:
-   """
+    # .. math::
+
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are
+
+    # .. math::
+
+    #   \psi_w, and \psi_c
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #   r_i = r_i(\vec x,t)
+
+    # slight compressibility assumed in spatial gradients
+
+    # """
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_pp_sd_het_matType
     def __init__(self,
                  nd=1,
@@ -1668,9 +1714,9 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i')),
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i')),
                                       (1,1):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -1694,11 +1740,11 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
         cq[('dpsi_n',1)].fill(1.0)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['sw'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)].fill(1.0)
             cebq[('dpsi_n',1)].fill(1.0)
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['sw'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)].fill(1.0)
             cebq_global[('dpsi_n',1)].fill(1.0)
@@ -1731,7 +1777,7 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
             vol_frac_n = self.ebq[('vol_frac',1)]
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf do some debugging
         assert materialTypes.max() < self.nMaterialTypes
         assert materialTypes.min() == 0
@@ -1799,12 +1845,12 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
             pdb.set_trace()
 #
 class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
-    """
-    Formulation using phase continuity equations, pressure-pressure formulation and
-     Van-Genuchten Mualem psk relations
+    """Formulation using phase continuity equations, pressure-pressure
+    formulation and Van-Genuchten Mualem psk relations
 
     Basically a convenience wrapper for fully coupled approximation
-     with volume-fraction based inputs as in Richards' equation formulations
+    with volume-fraction based inputs as in Richards' equation
+    formulations
 
     """
     def __init__(self,
@@ -1829,7 +1875,7 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
         self.use_spline = use_spline
         psk_model = 'VGM'
         if self.use_spline:
-            assert nPSKsplineKnots != None
+            assert nPSKsplineKnots is not None
             psk_model = 'PSKspline'
 
         TwophaseDarcy_fc_pp.__init__(self,
@@ -1848,14 +1894,14 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
         self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
         if self.use_spline:
-            import cpskRelations
+            from . import cpskRelations
             self.splineTableWork = numpy.zeros((self.nPskParams*self.nMaterialTypes),'d')
             pskCalcFlag = 1 #formulation is f(psic)
             rwork_tmp = numpy.zeros((4,),'d')
@@ -1916,10 +1962,10 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
 
 
 class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
-    """
-    Formulation using phase continuity equations and
-     'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """Formulation using phase continuity equations and 'simp' quadratic
+    rel-perm, linear capillary pressure psk relations
     pressure-pressure formulation
+
     """
     def __init__(self,
                  nd,
@@ -1952,7 +1998,7 @@ class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         self.setMaterialTypes(Ksw_types=Ksw_types,
                               omega_types=thetaS_types,
                               Sw_max_types=Sw_max_types,
@@ -1963,13 +2009,13 @@ class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
 
 ###########
 class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
-    """
-    Base class for 'pressure' or total flow conservation equation in fractional flow formulations. This
+    """Base class for 'pressure' or total flow conservation equation in
+    fractional flow formulations. This
 
     The primary functionality of the base class is to handle synchronization with a 'saturation' model to
     get the saturation, S_w, and capillary pressure (head), \psi_c, variables
 
-   """
+    """
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -2007,17 +2053,17 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         self.swConstant=swConstant
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
     def attachModels(self,modelList):
-        if self.nSatModel == None:
-            print 'Warning TwophaseDarcy_split_pressure_base nSatModel == None returning in attachModels'
+        if self.nSatModel is None:
+            print('Warning TwophaseDarcy_split_pressure_base nSatModel is None returning in attachModels')
             return
         #not ideal, but need a way to force nonlinear potential to be evaluated in saturation model
         modelList[self.nSatModel].calculateElementCoefficients()
         self.q_s_w   = modelList[self.nSatModel].q[('u',0)]
         self.ebqe_s_w = modelList[self.nSatModel].ebqe[('u',0)]
-        if modelList[self.nSatModel].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.nSatModel].ebq:
             self.ebq_s_w = modelList[self.nSatModel].ebq[('u',0)]
         #mwf need to check
-        assert modelList[self.nSatModel].phi_ip.has_key(('u',0))
+        assert ('u',0) in modelList[self.nSatModel].phi_ip
         assert self.ip_s_w.shape ==  modelList[self.nSatModel].phi_ip[('u',0)].shape
         self.ip_s_w = modelList[self.nSatModel].phi_ip[('u',0)]
         #mwf hack 04/03/09 skip
@@ -2026,19 +2072,19 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         #mwf end ip stuff
         self.q_grad_psic   = modelList[self.nSatModel].q[('grad(phi)',0)]
         self.ebqe_grad_psic = modelList[self.nSatModel].ebqe[('grad(phi)',0)]
-        if modelList[self.nSatModel].ebq.has_key(('grad(phi)',0)):
+        if ('grad(phi)',0) in modelList[self.nSatModel].ebq:
             self.ebq_grad_psic = modelList[self.nSatModel].ebq[('grad(phi)',0)]
         self.q_psic   = modelList[self.nSatModel].q[('phi',0)]
         self.ebqe_psic= modelList[self.nSatModel].ebqe[('phi',0)]
-        if modelList[self.nSatModel].ebq.has_key(('phi',0)):
+        if ('phi',0) in modelList[self.nSatModel].ebq:
             self.ebq_psic = modelList[self.nSatModel].ebq[('phi',0)]
-        assert modelList[self.nSatModel].phi_ip.has_key(('phi',0))
+        assert ('phi',0) in modelList[self.nSatModel].phi_ip
         assert self.ip_psic.shape ==  modelList[self.nSatModel].phi_ip[('phi',0)].shape
         self.ip_psic = modelList[self.nSatModel].phi_ip[('phi',0)]
         #
         self.q_grad_sw   = modelList[self.nSatModel].q[('grad(u)',0)]
         self.ebqe_grad_sw = modelList[self.nSatModel].ebqe[('grad(u)',0)]
-        if modelList[self.nSatModel].ebq.has_key(('grad(u)',0)):
+        if ('grad(u)',0) in modelList[self.nSatModel].ebq:
             self.ebq_grad_sw = modelList[self.nSatModel].ebq[('grad(u)',0)]
 
     def initializeElementQuadrature(self,t,cq):
@@ -2061,10 +2107,10 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_psic = numpy.zeros(cebq[('u',0)].shape,'d')
         self.ebq_grad_sw = numpy.zeros(cebq[('f',0)].shape,'d')
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)] = numpy.ones(cebq[('u',0)].shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.ones(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
@@ -2091,15 +2137,14 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
 
 #
 class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
-    """
-    Base class for aqueous phase mass conservation equation (saturation equation) in
-    a fractional flow formulation.
+    """Base class for aqueous phase mass conservation equation
+    (saturation equation) in a fractional flow formulation.
 
     The primary responsibility of the base class is to handle
     synchronization with the 'pressure' equation to get the total flow
     velocity variable, q_t, and aqueous phase pressure head, psi_w
 
-   """
+    """
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -2138,21 +2183,21 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
         self.advectionScaling=advectionScaling
     def attachModels(self,modelList):
-        if self.nPressModel == None:
-            print 'Warning TwophaseDarcy_split_saturation_base nPressModel == None returning in attachModels'
+        if self.nPressModel is None:
+            print('Warning TwophaseDarcy_split_saturation_base nPressModel is None returning in attachModels')
             return
         self.flowModel = modelList[self.nPressModel]
         #
         self.q_q_t    = modelList[self.nPressModel].q[('velocity',0)]
         self.ebqe_q_t  = modelList[self.nPressModel].ebqe[('velocity',0)]
-        if modelList[self.nPressModel].ebq.has_key(('velocity',0)):
+        if ('velocity',0) in modelList[self.nPressModel].ebq:
             self.ebq_q_t  = modelList[self.nPressModel].ebq[('velocity',0)]
         #do we really need other model values for q_t in potential calculation?
         assert self.ip_psiw.shape == modelList[self.nPressModel].phi_ip[('u',0)].shape
         self.ip_psiw = modelList[self.nPressModel].phi_ip[('u',0)]
         self.q_psiw    = modelList[self.nPressModel].q[('u',0)]
         self.ebqe_psiw = modelList[self.nPressModel].ebqe[('u',0)]
-        if modelList[self.nPressModel].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.nPressModel].ebq:
             self.ebq_psiw = modelList[self.nPressModel].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
@@ -2180,72 +2225,86 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
         self.ip_psiw = numpy.ones(cip[('u',0)].shape,'d')
 
 class TwophaseDarcy_incompressible_split_pressure(TwophaseDarcy_split_pressure_base):
+    """Total flow conservation equation in an incompressible fractional
+    flow formulation
+
     """
-    Total flow conservation equation in an incompressible fractional flow formulation
+    # Saturation equation
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    # .. math::
 
-\begin{table}[ht]
-\caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
-\label{tab:2p-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\end{tabular}
-\end{table}
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-m}
+    #     \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
+    #     \label{tab:2p-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \end{tabular}
+    #     \end{table}
 
-    (normalized) mass flux for each phase is
+    #  Here :math:`S_i` is the saturation for each phase,
+    #  :math:`\varrho_{i}` is the density and :math:`\varrho_{i,0}` is a
+    #  reference value
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # (normalized) mass flux for each phase is
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # .. math::
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-    The dependent variables are
-      S_w, and \psi_w
+    # and
+   
+    # .. math::
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    Note S_n = 1-S_w
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    # .. math::
 
-    TODO:
+    #    \psi_{c} = \psi_{n} - \psi_{w}
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #   r_m = r_m(\vec x,t)
+
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_pressure_het_matType
     def __init__(self,
                  nd=1,
@@ -2290,7 +2349,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -2361,7 +2420,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
 
         self.twophaseDarcy_incompressible_split_sd_pressure_het_matType(self.psk_types[self.psk_model],
                                                                         self.sdInfo[(0,0)][0],
@@ -2402,73 +2461,87 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 #
 class TwophaseDarcy_incompressible_split_saturation(TwophaseDarcy_split_saturation_base):
-    """
-    Aqueous phase mass conservation equation (saturation equation) in
+    """Aqueous phase mass conservation equation (saturation equation) in
     an incompressible fractional flow formulation
+ 
+    """
+    
+    # Saturation equation
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    # .. math::
 
-\begin{table}[ht]
-\caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
-\label{tab:2p-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\end{tabular}
-\end{table}
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-m}
+    #     \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
+    #     \label{tab:2p-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \end{tabular}
+    #     \end{table}
 
-    (normalized) mass flux for each phase is
+    #  Here :math:`S_i` is the saturation for each phase, :math:`\varrho_{i}` is the density and
+    #  :math:`\varrho_{i,0}` is a reference value
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # (normalized) mass flux for each phase is
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # .. math::
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-    The dependent variables are
-      S_w, and \psi_w
+    # and
 
-    Note S_n = 1-S_w
+    # .. math::
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    TODO:
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    # .. math::
+
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #   r_m = r_m(\vec x,t)
+    
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_saturation_het_matType
     def __init__(self,
                  nd=1,
@@ -2514,7 +2587,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -2554,7 +2627,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             psiw = self.ebq_psiw
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -2624,84 +2697,98 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 
 class TwophaseDarcy_compressible_split_pressure(TwophaseDarcy_split_pressure_base):
+    """Total flow conservation equation in a split compressible
+    fractional flow formulation Right now, the options are
+
+    compressibility for the non-wetting phase (compressibleN) :
+    compressiblityFlag=1
+    
+    compressibility for both phases but with the slight compressiblity
+    assumption (spatial density gradients are negligible)
+    compressiblityFlag=2
+
     """
-    Total flow conservation equation in a split compressible fractional flow formulation
-    Right now, the options are
+    # Saturation equation
 
-        compressibility for the non-wetting phase (compressibleN) : compressiblityFlag=1
-        compressibility for both phases but with the slight
-          compressiblity assumption (spatial density gradients are negligible) compressiblityFlag=2
+    # .. math::
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-c-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-c-ff-mb-m}
-\pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    #     \begin{eqnarray}
+    #     \label{eq:2p-c-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-c-ff-mb-m}
+    #     \pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-\begin{table}[ht]
-\caption{Coefficient definitions for compressible two-phase fractional flow formulation flow, \eqn{2p-c-ff-mb-w} and \eqn{2p-c-ff-mb-m}
-\label{tab:2p-c-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$m_m$ & $\theta_s \rho_{w}S_w + \theta_s\rho_{n}(1-S_w)$  \\
-$\vec f_w^{\dagger}$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m^{\dagger}$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}^{\dagger}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\multicolumn{2}{l}
-{$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
-\end{tabular}
-\end{table}
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for compressible two-phase fractional flow formulation flow, \eqn{2p-c-ff-mb-w} and \eqn{2p-c-ff-mb-m}
+    #     \label{tab:2p-c-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $m_m$ & $\theta_s \rho_{w}S_w + \theta_s\rho_{n}(1-S_w)$  \\
+    #     $\vec f_w^{\dagger}$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m^{\dagger}$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}^{\dagger}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \multicolumn{2}{l}
+    #     {$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
+    #     \end{tabular}
+    #     \end{table}
 
+    #  Here :math:`S_i` is the saturation for each phase, :math:`\varrho_{i}` is the
+    #  density and :math:`\varrho_{i,0}` is a reference value
 
+    # (normalized) mass flux for each phase is
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    # .. math::
 
-    (normalized) mass flux for each phase is
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # and
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
-       \lambda_i= \rho k_{r,i}/\hat{\mu}_{i}
-       \lambda_t= \lambda_n + \lambda_w
+    # .. math::
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
+    #    \lambda_i= \rho k_{r,i}/\hat{\mu}_{i}
+    #    \lambda_t= \lambda_n + \lambda_w
 
-    The dependent variables are
-      S_w, and \psi_w
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-    Note S_n = 1-S_w
+    # .. math::
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    #    \psi_{c} = \psi_{n} - \psi_{w}
 
-    TODO:
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #   r_m = r_m(\vec x,t)
+
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_slightCompressible_split_sd_pressure_het_matType
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_compressibleN_split_sd_pressure_het_matType
     def __init__(self,
@@ -2756,7 +2843,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -2806,7 +2893,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         if self.compressibilityFlag == 2:
             self.twophaseDarcy_slightCompressible_split_sd_pressure_het_matType(self.psk_types[self.psk_model],
                                                                                   self.density_types[self.density_w_model],
@@ -2882,85 +2969,103 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 
 class TwophaseDarcy_compressible_split_saturation(TwophaseDarcy_split_saturation_base):
-    """
-    Aqueous phase mass conservation equation (saturation equation) in
-    a  compressible fractional flow formulation
+    """Aqueous phase mass conservation equation (saturation equation) in a
+    compressible fractional flow formulation
 
     Right now, the options are
 
-        compressibility for the non-wetting phase (compressibleN) : compressiblityFlag=1
-        compressibility for both phases but with the slight
-          compressiblity assumption (spatial density gradients are negligible) compressiblityFlag=2
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-c-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-c-ff-mb-m}
-\pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    compressibility for the non-wetting phase (compressibleN) :
+    compressiblityFlag=1
+    
+    compressibility for both phases but with the slight compressiblity
+    assumption (spatial density gradients are negligible)
+    compressiblityFlag=2
 
-\begin{table}[ht]
-\caption{Coefficient definitions for compressible two-phase fractional flow formulation flow, \eqn{2p-c-ff-mb-w} and \eqn{2p-c-ff-mb-m}
-\label{tab:2p-c-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$m_m$ & $\theta_s \rho_{w}S_w + \theta_s\rho_{n}(1-S_w)$  \\
-$\vec f_w^{\dagger}$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m^{\dagger}$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}^{\dagger}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\multicolumn{2}{l}
-{$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
-\end{tabular}
-\end{table}
-
-
-
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
-
-    (normalized) mass flux for each phase is
-
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
-       \lambda_i= \rho k_{r,i}/\hat{\mu}_{i}
-       \lambda_t= \lambda_n + \lambda_w
-
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
-
-    The dependent variables are
-      S_w, and \psi_w
-
-    Note S_n = 1-S_w
-
-    needs to be implemented
-    r_m = r_m(\vec x,t)
-
-    TODO:
-
-      Figure out if really need to evaluate potential interpolation points
     """
+    # Saturation equation
+
+    # .. math::
+
+    #     \begin{eqnarray}
+    #     \label{eq:2p-c-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+
+    # and total flow conservation equation
+
+    # .. math::
+    #     \begin{eqnarray}
+    #     \label{eq:2p-c-ff-mb-m}
+    #     \pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
+
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for compressible two-phase fractional flow formulation flow, \eqn{2p-c-ff-mb-w} and \eqn{2p-c-ff-mb-m}
+    #     \label{tab:2p-c-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $m_m$ & $\theta_s \rho_{w}S_w + \theta_s\rho_{n}(1-S_w)$  \\
+    #     $\vec f_w^{\dagger}$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m^{\dagger}$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}^{\dagger}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \multicolumn{2}{l}
+    #     {$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
+    #     \end{tabular}
+    #     \end{table}
+
+    #  Here :math:`S_i` is the saturation for each phase, :math:`\varrho_{i}` is the density and
+    #  :math:`\varrho_{i,0}` is a reference value
+
+    #  (normalized) mass flux for each phase is
+
+    # .. math::
+
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+
+    # and
+
+    # .. math::
+
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
+    #    \lambda_i= \rho k_{r,i}/\hat{\mu}_{i}
+    #    \lambda_t= \lambda_n + \lambda_w
+
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
+
+    # .. math::
+
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #     r_m = r_m(\vec x,t)
+
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_slightCompressible_split_sd_saturation_het_matType
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_compressibleN_split_sd_saturation_het_matType
     def __init__(self,
@@ -3013,7 +3118,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -3053,7 +3158,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             psiw = self.ebq_psiw
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3139,14 +3244,17 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 ###########
 class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
+    """Base class for 'pressure' or total flow conservation equation in
+    fractional flow formulations. This
+
+    The primary functionality of the base class is to handle
+    synchronization with a 'saturation' model to get the saturation,
+    :math:`S_w`, and capillary pressure (head), :math:`\psi_c`, variables
+
+    This version would allow for capillary pressure to be unknown for
+    saturation equation
+
     """
-    Base class for 'pressure' or total flow conservation equation in fractional flow formulations. This
-
-    The primary functionality of the base class is to handle synchronization with a 'saturation' model to
-    get the saturation, S_w, and capillary pressure (head), \psi_c, variables
-
-    This version would allow for capillary pressure to be unknown for saturation equation
-   """
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -3184,24 +3292,24 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
         self.swConstant=swConstant
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
     def attachModels(self,modelList):
-        if self.nSatModel == None:
-            print 'Warning TwophaseDarcy_split_pressure_base nSatModel == None returning in attachModels'
+        if self.nSatModel is None:
+            print('Warning TwophaseDarcy_split_pressure_base nSatModel is None returning in attachModels')
             return
         #not ideal, but need a way to force nonlinear potential to be evaluated in saturation model
         modelList[self.nSatModel].calculateElementCoefficients()
         self.q_s_w   = modelList[self.nSatModel].q['sw']
         self.ebqe_s_w = modelList[self.nSatModel].ebqe['sw']
-        if modelList[self.nSatModel].ebq.has_key('sw'):
+        if 'sw' in modelList[self.nSatModel].ebq:
             self.ebq_s_w = modelList[self.nSatModel].ebq['sw']
         self.q_grad_psic   = modelList[self.nSatModel].q[('grad(phi)',0)]
         self.ebqe_grad_psic = modelList[self.nSatModel].ebqe[('grad(phi)',0)]
-        if modelList[self.nSatModel].ebq.has_key(('grad(phi)',0)):
+        if ('grad(phi)',0) in modelList[self.nSatModel].ebq:
             self.ebq_grad_psic = modelList[self.nSatModel].ebq[('grad(phi)',0)]
         self.q_psic   = modelList[self.nSatModel].q[('phi',0)]
         self.ebqe_psic= modelList[self.nSatModel].ebqe[('phi',0)]
-        if modelList[self.nSatModel].ebq.has_key(('phi',0)):
+        if ('phi',0) in modelList[self.nSatModel].ebq:
             self.ebq_psic = modelList[self.nSatModel].ebq[('phi',0)]
-        assert modelList[self.nSatModel].phi_ip.has_key(('phi',0))
+        assert ('phi',0) in modelList[self.nSatModel].phi_ip
         assert self.ip_psic.shape ==  modelList[self.nSatModel].phi_ip[('phi',0)].shape
         self.ip_psic = modelList[self.nSatModel].phi_ip[('phi',0)]
 
@@ -3210,7 +3318,7 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
         #set up dummy values in case we're not running the other model
         self.q_s_w   = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_s_w[:] = self.swConstant
-        for i in range(len(self.q_s_w.flat)/2,len(self.q_s_w.flat)):
+        for i in range(old_div(len(self.q_s_w.flat),2),len(self.q_s_w.flat)):
             self.q_s_w.flat[i] = 1.0e-4
         self.q_grad_psic   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_psic        = numpy.zeros(cq[('u',0)].shape,'d')
@@ -3224,10 +3332,10 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
         self.ebq_s_w.fill(self.swConstant)
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_psic = numpy.zeros(cebq[('u',0)].shape,'d')
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)] = numpy.ones(cebq[('u',0)].shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.ones(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
@@ -3248,15 +3356,14 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
 
 #
 class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
-    """
-    Base class for aqueous phase mass conservation equation (saturation equation) in
-    a fractional flow formulation.
+    """Base class for aqueous phase mass conservation equation
+    (saturation equation) in a fractional flow formulation.
 
     The primary responsibility of the base class is to handle
     synchronization with the 'pressure' equation to get the total flow
-    velocity variable, q_t, and aqueous phase pressure head, psi_w
+    velocity variable, :math:`q_t`, and aqueous phase pressure head, :math:`psi_w`
 
-   """
+    """
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -3295,21 +3402,21 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
         self.advectionScaling=advectionScaling
     def attachModels(self,modelList):
-        if self.nPressModel == None:
-            print 'Warning TwophaseDarcy_split_saturation_base nPressModel == None returning in attachModels'
+        if self.nPressModel is None:
+            print('Warning TwophaseDarcy_split_saturation_base nPressModel is None returning in attachModels')
             return
         self.flowModel = modelList[self.nPressModel]
         #
         self.q_q_t    = modelList[self.nPressModel].q[('velocity',0)]
         self.ebqe_q_t  = modelList[self.nPressModel].ebqe[('velocity',0)]
-        if modelList[self.nPressModel].ebq.has_key(('velocity',0)):
+        if ('velocity',0) in modelList[self.nPressModel].ebq:
             self.ebq_q_t  = modelList[self.nPressModel].ebq[('velocity',0)]
         #do we really need other model values for q_t in potential calculation?
         assert self.ip_psiw.shape == modelList[self.nPressModel].phi_ip[('u',0)].shape
         self.ip_psiw = modelList[self.nPressModel].phi_ip[('u',0)]
         self.q_psiw    = modelList[self.nPressModel].q[('u',0)]
         self.ebqe_psiw = modelList[self.nPressModel].ebqe[('u',0)]
-        if modelList[self.nPressModel].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.nPressModel].ebq:
             self.ebq_psiw = modelList[self.nPressModel].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
@@ -3324,9 +3431,9 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
         self.ebq_q_t = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_q_t[:] = self.qScalarConstant
         self.ebq_psiw = numpy.ones(cebq[('u',0)].shape,'d')
-        if cebq.has_key(('u',0)):
+        if ('u',0) in cebq:
             cebq['sw'] = numpy.zeros(cebq[('u',0)].shape,'d')
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global['sw'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
@@ -3344,72 +3451,86 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
         cip['sw'] = numpy.zeros(cip[('u',0)].shape,'d')
 
 class TwophaseDarcy_incompressible_split_pp_pressure(TwophaseDarcy_split_pp_pressure_base):
+    """Total flow conservation equation in an incompressible fractional
+    flow formulation
+
     """
-    Total flow conservation equation in an incompressible fractional flow formulation
+    # Saturation equation
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    # .. math::
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-m}
+    #     \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-\begin{table}[ht]
-\caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
-\label{tab:2p-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\end{tabular}
-\end{table}
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
+    #     \label{tab:2p-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \end{tabular}
+    #     \end{table}
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    #  Here :math:`S_i` is the saturation for each phase,
+    #  :math:`\varrho_{i}` is the density and :math:`\varrho_{i,0}` is a
+    #  reference value
 
-    (normalized) mass flux for each phase is
+    # (normalized) mass flux for each phase is
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # .. math::
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    # and
 
-    The dependent variables are
-      S_w, and \psi_w
+    # .. math::
 
-    Note S_n = 1-S_w
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-    TODO:
+    # .. math::
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #     r_m = r_m(\vec x,t)
+
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_pressure_het_matType
     def __init__(self,
                  nd=1,
@@ -3454,7 +3575,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -3518,7 +3639,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf debug
         import pdb
         pdb.set_trace()
@@ -3562,73 +3683,86 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 #
 class TwophaseDarcy_incompressible_split_pp_saturation(TwophaseDarcy_split_pp_saturation_base):
-    """
-    Aqueous phase mass conservation equation (saturation equation) in
+    """Aqueous phase mass conservation equation (saturation equation) in
     an incompressible fractional flow formulation
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    """
+    # Saturation equation
 
-\begin{table}[ht]
-\caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
-\label{tab:2p-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\end{tabular}
-\end{table}
+    # .. math::
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-m}
+    #     \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-    (normalized) mass flux for each phase is
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
+    #     \label{tab:2p-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \end{tabular}
+    #     \end{table}
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    #  Here :math:`S_i` is the saturation for each phase, :math:`\varrho_{i}` is the density and
+    #  :math:`\varrho_{i,0}` is a reference value
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # (normalized) mass flux for each phase is
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    # .. math::
 
-    The dependent variables are
-      S_w, and \psi_w
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-    Note S_n = 1-S_w
+    # and
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    # .. math::
 
-    TODO:
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
+
+    # .. math::
+
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+    
+    #     r_m = r_m(\vec x,t)
+    
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_pp_sd_saturation_het_matType
     def __init__(self,
                  nd=1,
@@ -3674,7 +3808,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
         else: #full
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
 
 
         TC_base.__init__(self,
@@ -3714,7 +3848,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             psiw = self.ebq_psiw
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3756,8 +3890,9 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 #begin classes for specific psk models
 ########################################
 class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incompressible_split_pressure):
-    """
-    Total flow equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    """Total flow equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -3795,10 +3930,10 @@ class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incom
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3813,8 +3948,9 @@ class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incom
 
 #
 class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_incompressible_split_saturation):
-    """
-    Saturation equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    """Saturation equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -3854,10 +3990,10 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3872,9 +4008,10 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
 
 
 class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(IncompressibleFractionalFlowSaturationMualemVanGenuchten):
-    """
-    Saturation equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
-    and splitting of advection and capillary diffusion terms
+    """Saturation equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's and splitting of advection and
+    capillary diffusion terms
+
     """
     def __init__(self,
                  nd,
@@ -3944,7 +4081,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
                                                              self.u_ip[('v_other',0)])
 
     def preStep(self,t,firstStep=False):
-        if self.satModel_other != None:# and self.satModelIndex_me != 1:#mwf hack
+        if self.satModel_other is not None:# and self.satModelIndex_me != 1:#mwf hack
             #todo tLast is getting messed up
             #tLastSave =self.satModel_me.timeIntegration.tLast
             #todo need to do make sure mass conserved, handle projection from cg to dg correctly
@@ -3989,8 +4126,9 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
 
 #
 class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compressible_split_pressure):
-    """
-    Total flow equation coefficients for slight compressible flow assuming Mualem-Van Genuchten psk's
+    """Total flow equation coefficients for slight compressible flow
+    assuming Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -4034,10 +4172,10 @@ class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compres
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4053,8 +4191,9 @@ class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compres
 
 #
 class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compressible_split_saturation):
-    """
-    Saturation equation coefficients for slightly compressible flow assuming Mualem-Van Genuchten psk's
+    """Saturation equation coefficients for slightly compressible flow
+    assuming Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -4100,10 +4239,10 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4118,8 +4257,9 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
 
 #
 class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressible_split_pressure):
-    """
-    Total flow equation coefficients for incompressible flow assuming  'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """Total flow equation coefficients for incompressible flow assuming
+    'simp' quadratic rel-perm, linear capillary pressure psk relations
+
     """
     def __init__(self,
                  nd,
@@ -4155,7 +4295,7 @@ class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressibl
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4167,8 +4307,9 @@ class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressibl
 
 #
 class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressible_split_saturation):
-    """
-    Saturation equation coefficients for incompressible flow assuming  'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """Saturation equation coefficients for incompressible flow assuming
+    'simp' quadratic rel-perm, linear capillary pressure psk relations
+
     """
     def __init__(self,
                  nd,
@@ -4204,10 +4345,10 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
         for input in [thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4220,8 +4361,9 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
 
 
 class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incompressible_split_pp_pressure):
-    """
-    Total flow equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    """Total flow equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -4259,10 +4401,10 @@ class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(Two
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4277,8 +4419,9 @@ class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(Two
 
 #
 class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_incompressible_split_pp_saturation):
-    """
-    Saturation equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    """Saturation equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -4318,10 +4461,10 @@ class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(T
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-1.0/vgm_n_types
+        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = thetaR_types/thetaS_types
+        Sw_min_types   = old_div(thetaR_types,thetaS_types)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4339,10 +4482,8 @@ class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(T
 ########################################
 class GroundwaterTransportCoefficients(TC_base):
     from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate_hetMat
-    """
-    groundwater advection-dispersion equation with coefficients varying by material type and variable
-    velocity
-    """
+    """ groundwater advection-dispersion equation with coefficients
+    varying by material type and variable velocity """
     def __init__(self,nc=1,nd=2,
                  omega_types=numpy.array([0.3]),
                  alpha_L_types=numpy.array([1.0]),
@@ -4377,7 +4518,7 @@ class GroundwaterTransportCoefficients(TC_base):
         sparseDiffusionTensors = {}
         for ci in range(nc):
             sparseDiffusionTensors[(ci,ci)]=(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
-                                             numpy.array([range(nd) for row in range(nd)],dtype='i'))
+                                             numpy.array([list(range(nd)) for row in range(nd)],dtype='i'))
         names = ['C_%s' % ci for ci in range(nc)]
         TC_base.__init__(self,
                          nc,
@@ -4415,21 +4556,18 @@ class GroundwaterTransportCoefficients(TC_base):
             self.ebqe[('velocity',ci)] = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
     def attachModels(self,modelList):
         self.vt = modelList[self.meModelId]
-        if self.flowModelId != None:
+        if self.flowModelId is not None:
             self.flowModel = modelList[self.flowModelId]
             for ci in range(self.nc):
                 self.q[('velocity',ci)]    = self.flowModel.q[('velocity',ci)]
                 self.ebqe[('velocity',ci)] = self.flowModel.ebqe[('velocity',ci)]
-                if self.flowModel.ebq.has_key(('velocity',ci)):
+                if ('velocity',ci) in self.flowModel.ebq:
                     self.ebq[('velocity',ci)] = self.flowModel.ebq[('velocity',ci)]
-                if self.flowModel.ebq_global.has_key(('velocity',ci)):
+                if ('velocity',ci) in self.flowModel.ebq_global:
                     self.ebq_global[('velocity',ci)] = self.flowModel.ebq_global[('velocity',ci)]
 
     def evaluateVelocity(self,t,c):
-        """
-
-        """
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             for ci in range(self.nc):
                 if len(c['x'].shape) == 3:
                     for i in range(c['x'].shape[0]):
@@ -4442,15 +4580,13 @@ class GroundwaterTransportCoefficients(TC_base):
                                 c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
 
     def evaluate(self,t,c):
-        """
-        TODO
-          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
-          before evaluate is called with c=ebqe
-        """
+#        TODO
+#          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+#          before evaluate is called with c=ebqe
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             self.evaluateVelocity(t,c)
         #
         for ci in range(self.nc):
@@ -4464,8 +4600,8 @@ class GroundwaterTransportCoefficients(TC_base):
                 v = self.ebq[('velocity',ci)]
                 materialTypes = self.materialTypes_ebq
             else:
-                print c[('df',ci,ci)].shape
-                print "no v---------------------"
+                print(c[('df',ci,ci)].shape)
+                print("no v---------------------")
                 raise RuntimeError
 
             self.groundwaterTransportCoefficientsEvaluate_hetMat(self.d[ci],
@@ -4486,10 +4622,8 @@ class GroundwaterTransportCoefficients(TC_base):
 ########################################
 class MultiphaseGroundwaterTransportCoefficients(TC_base):
     from proteus.ctransportCoefficients import variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat
-    """
-    groundwater advection-dispersion equation with coefficients varying by material type and variable
-    velocity
-    """
+    """ groundwater advection-dispersion equation with coefficients
+    varying by material type and variable velocity """
     def __init__(self,nc=1,nd=2,
                  omega_types=numpy.array([0.3]),
                  alpha_L_types=numpy.array([1.0]),
@@ -4524,7 +4658,7 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
         sparseDiffusionTensors = {}
         for ci in range(nc):
             sparseDiffusionTensors[(ci,ci)]=(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
-                                             numpy.array([range(nd) for row in range(nd)],dtype='i'))
+                                             numpy.array([list(range(nd)) for row in range(nd)],dtype='i'))
         names = ['C_%s' % ci for ci in range(nc)]
         TC_base.__init__(self,
                          nc,
@@ -4566,22 +4700,19 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
             self.ebqe[('vol_frac',ci)] = numpy.ones((cebqe['x'].shape[0],cebqe['x'].shape[1]),'d')
     def attachModels(self,modelList):
         self.vt = modelList[self.meModelId]
-        if self.flowModelId != None:
+        if self.flowModelId is not None:
             self.flowModel = modelList[self.flowModelId]
             for ci in range(self.nc):
                 self.q[('velocity',ci)]    = self.flowModel.q[('velocity',ci)]
                 self.ebqe[('velocity',ci)] = self.flowModel.ebqe[('velocity',ci)]
-                if self.flowModel.ebq.has_key(('velocity',ci)):
+                if ('velocity',ci) in self.flowModel.ebq:
                     self.ebq[('velocity',ci)] = self.flowModel.ebq[('velocity',ci)]
-                if self.flowModel.ebq_global.has_key(('velocity',ci)):
+                if ('velocity',ci) in self.flowModel.ebq_global:
                     self.ebq_global[('velocity',ci)] = self.flowModel.ebq_global[('velocity',ci)]
                 self.q[('vol_frac',ci)]    = self.flowModel.coefficients.q[('vol_frac',ci)]
                 self.ebqe[('vol_frac',ci)] = self.flowModel.coefficients.ebqe[('vol_frac',ci)]
     def evaluateVelocity(self,t,c):
-        """
-
-        """
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             for ci in range(self.nc):
                 if len(c['x'].shape) == 3:
                     for i in range(c['x'].shape[0]):
@@ -4594,15 +4725,13 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                                 c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
 
     def evaluate(self,t,c):
-        """
-        TODO
-          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
-          before evaluate is called with c=ebqe
-        """
+#        TODO
+#          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+#          before evaluate is called with c=ebqe
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             self.evaluateVelocity(t,c)
         #
         for ci in range(self.nc):
@@ -4619,8 +4748,8 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                 materialTypes = self.materialTypes_ebq
                 vol_frac = self.ebq[('vol_frac',ci)]
             else:
-                print c[('df',ci,ci)].shape
-                print "no v---------------------"
+                print(c[('df',ci,ci)].shape)
+                print("no v---------------------")
                 raise RuntimeError
 
             self.variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat(self.d[ci],
@@ -4639,10 +4768,8 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
 
 class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwaterTransportCoefficients):
     from proteus.ctransportCoefficients import variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat
-    """
-    groundwater heat equation with coefficients varying by material type and variable
-    velocity
-    """
+    """ groundwater heat equation with coefficients varying by material
+    type and variable velocity """
     def __init__(self,nc=1,nd=2,
                  density_w=998.2, #kg/m^3
                  density_n=1.205, #kg/m^3
@@ -4680,15 +4807,13 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
         self.nd = nd
 
     def evaluate(self,t,c):
-        """
-        TODO
-          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
-          before evaluate is called with c=ebqe
-        """
+#        TODO
+#          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+#          before evaluate is called with c=ebqe
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             self.evaluateVelocity(t,c)
         #
         for ci in range(self.nc):
@@ -4705,8 +4830,8 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
                 materialTypes = self.materialTypes_ebq
                 vol_frac = self.ebq[('vol_frac',ci)]
             else:
-                print c[('df',ci,ci)].shape
-                print "no v---------------------"
+                print(c[('df',ci,ci)].shape)
+                print("no v---------------------")
                 raise RuntimeError
 
             self.variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat(self.density_w,

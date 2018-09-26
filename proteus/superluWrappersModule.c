@@ -296,6 +296,7 @@ typedef struct
   PyObject_HEAD
   superlu_options_t options;
   SuperMatrix A,AC,L,U,X;
+  GlobalLU_t Glu;
   NCformat storeA;
   DNformat storeX;
   SuperLUStat_t stat;
@@ -494,6 +495,7 @@ static PyObject* superluWrappersSparseFactorPrepare(PyObject* self,
          SFP(sparseFactor)->perm_r,
          &SFP(sparseFactor)->L,
          &SFP(sparseFactor)->U,
+	 &SFP(sparseFactor)->Glu,
          &SFP(sparseFactor)->stat,
          &info);
   Py_INCREF(Py_None); 

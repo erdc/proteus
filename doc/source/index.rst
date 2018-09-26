@@ -39,39 +39,32 @@ methods, both of which are described in more detail below
 Obtaining and Installing Proteus
 ================================
 
-For now, Proteus is only available as source from our public `GitHub
-<https://github.com/erdc-cm/proteus>`_ repository  because we haven't
-had the resources to devote to producing regular binary releases.  We
-use the `HashDist <https://hashdist.github.io/>`_ software environment
-installation tool to bootstrap any needed dependencies for you.  If
-you already have compilers and Git installed on your system, you can
-install Proteus with the following commands:
+For learning and experimenting there is an anonymous temporary Jupyter
+notebook server at `try.proteustoolkit.org:8000
+<http://try.proteustoolkit.org:8000>`_.
+
+Proteus is available as source from our public `GitHub
+<https://github.com/erdc-cm/proteus>`_ repository.  If you already
+have compilers (C,C++, and Fortran!) and Git installed on your system,
+you can install Proteus with the following commands.::
+
+  % git clone https://github.com/erdc-cm/proteus
+  % cd proteus
+  % make develop
+  % make test
 
 More information is available on our `Wiki <https://github.com/erdc-cm/proteus/wiki>`_, and you can ask for help on
 the `Developers' Mailing List <https://groups.google.com/forum/#!forum/proteus-dev>`_.
-
-.. _getting_start-sec:
-
-Getting Started
-===============
-
-The following IPython Notebooks provide a gentle introduction to
-getting started with Proteus, from setting up a model domain to
-solving your own problems with a comprehensive example.  The notebooks
-can all be downloaded as an `archive <https://github.com/erdc-cm/proteus-notebooks/archive/master.zip>`_.
-
-* `Defining the Model Equations <http://nbviewer.ipython.org/github/erdc-cm/proteus-notebooks/blob/master/Equation_Tutorial.ipynb>`_
-* `Defining a Model Domain <http://nbviewer.ipython.org/github/erdc-cm/proteus-notebooks/blob/master/Domain_Tutorial.ipynb>`_
 
 .. _running-sec:
 
 Running
 =======
 
-If you have successfully compiled Proteus then you should be able to do::
+If you have successfully compiled and tested Proteus then you should be able to do::
 
-   %cd $PROTEUS/test
-   %$PROTEUS_PREFIX/bin/parun poisson_3d_p.py poisson_3d_c0p1_n.py
+   % cd $PROTEUS/tests/ci
+   % $PROTEUS_PREFIX/bin/parun poisson_3d_p.py poisson_3d_c0p1_n.py
 
 The solution will be saved in a file ending in .xmf, which can be
 opened with ParaView or Ensight.
@@ -221,6 +214,5 @@ Source Code Documentation
    :maxdepth: 1
 
    api/modules
-   cfiles
    
 

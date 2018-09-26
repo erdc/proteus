@@ -4,6 +4,14 @@ Tools for high level profiling and event logging
 .. inheritance-diagram:: proteus.Profiling
    :parts: 1
 """
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import gc
 import inspect
 import pstats
@@ -61,16 +69,16 @@ def openLog(filename,level,logLocation=None):
     global logDir
     global procID
     global logAllProcesses
-    assert procID != None, "Initialize Comm and set Profiling.procID before opening log"
+    assert procID is not None, "Initialize Comm and set Profiling.procID before opening log"
     filename_full = filename
     import os
-    if logLocation != None:
+    if logLocation is not None:
         logDir = logLocation
         filename_full = os.path.join(logDir,filename)
     if  procID == 0:
         logFile=open(filename_full,'w')
     elif logAllProcesses:
-        logFile=open(filename_full+`procID`,'w')
+        logFile=open(filename_full+repr(procID),'w')
     logLevel = level
     for string,level,data in preInitBuffer:
         logEvent(string,level,data)
@@ -84,16 +92,16 @@ def closeLog():
 
 def logEvent(stringIn, level=1, data=None):
     global logLevel,procID,logAllProcesses,flushBuffer,preInitBuffer
-    if procID != None:
+    if procID is not None:
         if logAllProcesses or procID==0:
             if level < logLevel:
-                if logAllProcesses and procID != None and stringIn != None:
+                if logAllProcesses and procID is not None and stringIn is not None:
                     string = "Proc %d : " % procID
                     string += stringIn
                 else:
                     string = stringIn
-                if string!=None:
-                    if data!=None:
+                if string is not None:
+                    if data is not None:
                         string += repr(data)
                     string +='\n'
                     string = ("[%8d] " % (time() - startTime)) + string
@@ -106,7 +114,7 @@ def logEvent(stringIn, level=1, data=None):
                         sys.stdout.write(string)
                         if flushBuffer:
                             sys.stdout.flush()
-    elif procID==None:
+    elif procID is None:
         preInitBuffer.append((stringIn,level,data))
 
 def memory(message=None,className='',memSaved=None):
@@ -124,7 +132,7 @@ def memory(message=None,className='',memSaved=None):
         mem = memList[-1]
         if mem > memMax:
             memMax = mem
-        if memSaved != None:
+        if memSaved is not None:
             memInc = mem - memSaved
         else:
             memInc = mem-memLast
@@ -139,19 +147,19 @@ def memory(message=None,className='',memSaved=None):
             if mem > memHardLimit:
                 import sys
                 from mpi4py import MPI
-                if className == None:
+                if className is None:
                     className = "UnknownClass"
-                if caller == None:
+                if caller is None:
                     caller="UnknownCaller"
-                if line == None:
+                if line is None:
                     line = "Unknown Line"
-                if message == None:
+                if message is None:
                     message = ''
-                logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %f MB in routine, %f MB in program, %f MB is hard limit" % (memInc,mem,memHardLimit))
+                logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+repr(line)+": "+message+", %f MB in routine, %f MB in program, %f MB is hard limit" % (memInc,mem,memHardLimit))
                 MPI.COMM_WORLD.Abort(1)
                 sys.exit("MPI.COMM_WORLD.Abort(1); exit(1)")
         if message:
-            return "In "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %f MB in routine, %f MB in program" % (memInc,mem)
+            return "In "+filename.split("/")[-1]+", "+className+caller+", line "+repr(line)+": "+message+", %f MB in routine, %f MB in program" % (memInc,mem)
 
 def memorySummary():
     global memLog
@@ -163,10 +171,10 @@ def memorySummary():
         mem = memory_usage(-1)[0]
         if mem > 0:
             for pair in memList:
-                logEvent(`pair[0]`+"  %"+`100.0*pair[1]/memMax`)
+                logEvent(repr(pair[0])+"  %"+repr(100.0*pair[1]/memMax))
 
 
-class Dispatcher():
+class Dispatcher(object):
     """
     Profiles function calls.  Must be enabled like so:
 
@@ -211,8 +219,8 @@ class Dispatcher():
         comm.barrier()#ensure files are ready for master
         if comm.isMaster():
             import copy
-            import StringIO
-            profilingLog = StringIO.StringIO()
+            import io
+            profilingLog = io.StringIO()
             stats = pstats.Stats(profile_rank_name, stream=profilingLog)
             stats.__dict__['files']=['Maximum times across MPI tasks for',
                                      stats.__dict__['files'][0]]
@@ -221,7 +229,7 @@ class Dispatcher():
                 pstatsi = pstats.Stats(profile_name+str(i))
                 statsi = pstatsi.stats
                 stats.__dict__['files'].append(pstatsi.__dict__['files'][0])
-                for f,c in statsi.iteritems():
+                for f,c in statsi.items():
                     if f in statsm:
                         if c[2] > statsm[f][2]:
                             statsm[f] = c
@@ -236,23 +244,38 @@ class Dispatcher():
 Wall clock percentage of top 20 calls
 -------------------------------------
 """
+            total=0.0
             for f in stats.__dict__['fcn_list'][0:20]:
                 if f[0] == '~':
                     fname=f[-1].strip("<").strip(">")
                 else:
                     fname="function '{2:s}' at {0:s}:{1:d}".format(*f)
-                msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
+                msg+=("{0:11.1%} {1:s}\n".format(old_div(statsm[f][2],stats.__dict__['total_tt']),str(fname)))
+                total += old_div(statsm[f][2],stats.__dict__['total_tt'])
             logEvent(msg)
-
+            logEvent("Representing "+repr(total*100.)+"%")
         return func_return
 
 @atexit.register
 def ProfilingDtor():
     global procID, verbose
-    if procID == None:
-        verbose=True
+    if procID is None:
+        verbose=False
         logEvent(
             "Proteus.Profiling never initialized. Doing it at exit.")
         procID = 0
         openLog("proteus_default.log",level=11,logLocation=".")
     closeLog()
+
+
+def print_petsc_commandline_options(petsc_options):
+    """ Returns a formated string with PETSc command-line options 
+    
+    petsc_options : list
+        A list of the Petsc command line options and values.
+    """
+    str = ""
+    for i,j in zip(petsc_options[1::2], petsc_options[2::2]):
+        str += "NAHeader PETScOptions " + i + " " + j +  "\n"
+    return str
+    
