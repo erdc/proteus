@@ -1,3 +1,4 @@
+import numpy as np
 from proteus.defaults import (Physics_base,
                               Numerics_base,
                               System_base)
@@ -72,7 +73,6 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      forceStrongDirichlet=not opts.weak,
                                      turbulenceClosureModel=0,
                                      NONCONSERVATIVE_FORM=1.0)
-#boundaryCreatesNullSpace = True
 
 p.T = 100.0
 nsave=100
@@ -82,18 +82,24 @@ p.tnList = [0.0,dt_init]+[dt_init+i*DT for i in range(nsave)]
 
 eps=1.0e-8
 if opts.periodic:
-    def getPDBC(x,flag):
-        if (x[0] < eps or x[0] > p.L[0] - eps) and (x[1] < eps or x[1] > p.L[1] - eps) and (x[2] < eps or x[2] > p.L[2] - eps):#x,y,z corner
-            return numpy.array([0.0,0.0,0.0])
-        elif (x[0] < eps or x[0] > p.L[0] - eps) and (x[2] < eps or x[2] > p.L[2] - eps):#x-z edge
-            return numpy.array([0.0,round(x[1],5),0.0])
-        elif (x[0] < eps or x[0] > p.L[0] - eps) and (x[1] < eps or x[1] > p.L[1] - eps):#x-y edge
-            return numpy.array([0.0,0.0,round(x[2],5)])
-        elif (x[1] < eps) or (x[1] > p.L[1]-eps):#on front or back
-            return numpy.array([round(x[0],5),0.0,round(x[2],5)])
-        elif (x[0] < eps) or (x[0] > p.L[0]-eps):#on inflow or outflow (left/right)
-            return numpy.array([0.0,round(x[1],5),round(x[2],5)])
-
+    if opts.nd == 2:
+        def getPDBC(x,tag):
+            if (x[0] < eps or x[0] > p.L[0] - eps) and (x[1] < eps or x[1] > p.L[1] - eps):
+                return np.array([0.0,0.0,0.0])
+            elif x[0] < eps or x[0] > p.L[0] - eps:
+                return np.array([0.0,round(x[1],5),0.0])
+    else:
+        def getPDBC(x,flag):
+            if (x[0] < eps or x[0] > p.L[0] - eps) and (x[1] < eps or x[1] > p.L[1] - eps) and (x[2] < eps or x[2] > p.L[2] - eps):#x,y,z corner
+                return np.array([0.0,0.0,0.0])
+            elif (x[0] < eps or x[0] > p.L[0] - eps) and (x[2] < eps or x[2] > p.L[2] - eps):#x-z edge
+                return np.array([0.0,round(x[1],5),0.0])
+            elif (x[0] < eps or x[0] > p.L[0] - eps) and (x[1] < eps or x[1] > p.L[1] - eps):#x-y edge
+                return np.array([0.0,0.0,round(x[2],5)])
+            elif (x[1] < eps) or (x[1] > p.L[1]-eps):#on front or back
+                return np.array([round(x[0],5),0.0,round(x[2],5)])
+            elif (x[0] < eps) or (x[0] > p.L[0]-eps):#on inflow or outflow (left/right)
+                return np.array([0.0,round(x[1],5),round(x[2],5)])
     p.periodicDirichletConditions = {0:getPDBC,
                                      1:getPDBC,
                                      2:getPDBC,
@@ -105,85 +111,73 @@ else:
     else:
         inflow_v = Re*p.coefficients.nu/p.L[1]
 
+if  opts.coord:
+    if p.nd == 3:
+        def onLeft(x):
+            return x[0] < eps and x[2] > eps and x[2] < p.L[2] - eps
+        def onRight(x):
+            return x[0] > p.L[0] - eps and x[2] > eps and x[2] < p.L[2] - eps
+        def onFront(x):
+            return x[1] < eps and x[2] > eps and x[2] < p.L[2] - eps and x[0] > eps and x[0] < p.L[0] - eps
+        def onBack(x):
+            return x[1] > p.L[1] - eps and x[2] > eps and x[2] < p.L[2] - eps and x[0] > eps and x[0] < p.L[0] - eps
+        def onBottom(x):
+            return x[2] < eps
+        def onTop(x):
+            return x[2] > p.L[2] - eps
+    elif p.nd == 2:
+        def onLeft(x):
+            return x[0] < eps and x[1] > eps and x[1] < p.L[1] - eps
+        def onRight(x):
+            return x[0] > p.L[0] - eps and x[1] > eps and x[1] < p.L[1] - eps
+        def onBottom(x):
+            return x[1] < eps
+        def onTop(x):
+            return x[1] > p.L[1] - eps
+
 if opts.periodic:
     def getDBC_pressure_duct(x,flag):
-        if not opts.periodic:
-            if x[0] > p.L[0] - eps:
-                return lambda x,t: 0.0
+        pass
 
     def getDBC_u_duct(x,flag):
-        if not opts.periodic:
-            if x[0] < eps:
-                return lambda x,t: inflow_v
-            elif x[0] > p.L[0] - eps:
-                return lambda x,t: 0.0
-        if x[2] <  eps or x[2] > p.L[2] - eps:#top and bottom: no slip
+        if onTop(x) or onBottom(x):
             return lambda x,t: 0.0
 
     def getDBC_v_duct(x,flag):
-        if not opts.periodic:
-            if x[0] > p.L[0] - eps:
-                return lambda x,t: 0.0
-            elif x[0] < eps:
-                return lambda x,t: 0.0
-        if x[2] <  eps or x[2] > p.L[2] - eps:#top and bottom: no slip
+        if onTop(x) or onBottom(x):
             return lambda x,t: 0.0
 
     def getDBC_w_duct(x,flag):
-        if not opts.periodic:
-            if x[0] > p.L[0] - eps:
-                return lambda x,t: 0.0
-            elif x[0] < eps:
-                return lambda x,t: 0.0
-        if x[2] <  eps or x[2] > p.L[2] - eps:#top and bottom: no slip
+        if onTop(x) or onBottom(x):
             return lambda x,t: 0.0
 
     p.dirichletConditions = {0:getDBC_pressure_duct,
                              1:getDBC_u_duct,
-                             2:getDBC_v_duct,
-                             3:getDBC_w_duct}
+                             2:getDBC_v_duct}
+    if opts.nd==3:
+        p.dirichletConditions[3] = getDBC_w_duct
     
 
     def getAFBC_p_duct(x,flag):
-        if not opts.periodic:
-            if x[0] < eps:
-                return lambda x,t: -inflow_v
-            elif x[0] > p.L[0] - eps:
-                return None
-        if (x[2] < eps) or (x[2] > p.L[2] - eps):#top and bottom: no flow
+        if onTop(x) or onBottom(x):
             return lambda x,t: 0.0
         else:
             return lambda x,t: 0.0
 
     def getAFBC_u_duct(x,flag):
-        if not opts.periodic:
-            if x[0] < eps:
-                return None
-            elif x[0] > p.L[0] - eps:
-                return None
-        if (x[2] < eps) or (x[2] > p.L[2] - eps):#top and bottom: no flow
+        if onTop(x) or onBottom(x):
             return lambda x,t: 0.0
         else:
             return lambda x,t: 0.0
 
     def getAFBC_v_duct(x,flag):
-        if not opts.periodic:
-            if x[0] < eps:
-                return None
-            elif x[0] > p.L[0] - eps:
-                return None
-        if (x[2] < eps) or (x[2] > p.L[2] - eps):#top and bottom: no flow
+        if onTop(x) or onBottom(x):
             return lambda x,t: 0.0
         else:
             return lambda x,t: 0.0
 
     def getAFBC_w_duct(x,flag):
-        if not opts.periodic:
-            if x[0] < eps:
-                return None
-            elif x[0] > p.L[0] - eps:
-                return None
-        if (x[2] < eps) or (x[2] > p.L[2] - eps):#top and bottom: no flow
+        if onTop(x) or onBottom(x):
             return lambda x,t: 0.0
         else:
             return lambda x,t: 0.0
@@ -194,12 +188,7 @@ if opts.periodic:
                                           3:getAFBC_w_duct}
     
     def getDFBC_duct(x,flag):
-        if not opts.periodic:
-            if x[0] < eps:
-                return None
-            elif x[0] > p.L[0] - eps:
-                return lambda x,t: 0.0
-        if (x[2] < eps) or (x[2] > p.L[2] - eps):#top and bottom: no slip
+        if onTop(x) or onBottom(x):
             return None
         else:
             return lambda x,t: 0.0
@@ -208,32 +197,8 @@ if opts.periodic:
                                          1:{1:getDFBC_duct},
                                          2:{2:getDFBC_duct},
                                          3:{3:getDFBC_duct}}
-
 else:
     if  opts.coord:
-        if p.nd == 3:
-            def onLeft(x):
-                return x[0] < eps and x[2] > eps and x[2] < p.L[2] - eps
-            def onRight(x):
-                return x[0] > p.L[0] - eps and x[2] > eps and x[2] < p.L[2] - eps
-            def onFront(x):
-                return x[1] < eps and x[2] > eps and x[2] < p.L[2] - eps and x[0] > eps and x[0] < p.L[0] - eps
-            def onBack(x):
-                return x[1] > p.L[1] - eps and x[2] > eps and x[2] < p.L[2] - eps and x[0] > eps and x[0] < p.L[0] - eps
-            def onBottom(x):
-                return x[2] < eps
-            def onTop(x):
-                return x[2] > p.L[2] - eps
-        elif p.nd == 2:
-            def onLeft(x):
-                return x[0] < eps and x[1] > eps and x[1] < p.L[1] - eps
-            def onRight(x):
-                return x[0] > p.L[0] - eps and x[1] > eps and x[1] < p.L[1] - eps
-            def onBottom(x):
-                return x[1] < eps
-            def onTop(x):
-                return x[1] > p.L[1] - eps
-
         def getDBC_pressure_duct(x,flag):
             if onRight(x):
                 return lambda x,t: 0.0
@@ -482,6 +447,7 @@ else:
 n.numericalFluxType = RANS2P.NumericalFlux
 
 if opts.periodic:
+    n.periodicDirichletConditions = p.periodicDirichletConditions
     n.parallelPeriodic=True
 
 n.subgridError = RANS2P.SubgridError(coefficients=p.coefficients,
@@ -521,8 +487,10 @@ n.linTolFac = 0.001
 
 n.conservativeFlux = None
 
-#n.parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
-n.parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.node
+if opts.periodic:
+    n.parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+else:
+    n.parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.node
 n.nLayersOfOverlapForParallel = 0
 
 ##############
@@ -533,18 +501,18 @@ systemStepExact=n.systemStepExact
 tnList = p.tnList
 pnList=[(p,n)]
 if opts.periodic:
-    mesh_name = "rg"
+    mesh_name = "pg"
 else:
     if opts.grid:
         mesh_name = "rg"
     else:
         mesh_name = "ug"
 if opts.triangles:
-    space_name="P{0}".format(opts.spaceOrder)
+    space_name="p{0}".format(opts.spaceOrder)
 else:
-    space_name="Q{0}".format(opts.spaceOrder)
+    space_name="1{0}".format(opts.spaceOrder)
 
-name = "duct_{0}_BDF{1}_{2}D_{3}_he{4}".format(space_name,
+name = "duct{0}t{1}{2}d{3}he{4}".format(space_name,
                                                opts.timeOrder,
                                                opts.nd,
                                                mesh_name,
