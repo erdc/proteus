@@ -799,6 +799,14 @@ class SchurOperatorConstructor(object):
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
+        # ARB TODO : the Schur class should be refactored to avoid
+        # the follow expection statement
+        try:
+            self.L.pde
+            pass
+        except AttributeError:
+            return
+
         if isinstance(self.L.pde, RANS2P.LevelModel):
             self.opBuilder = OperatorConstructor_rans2p(self.L.pde)
         else:
@@ -1499,75 +1507,6 @@ class InterlacedDofOrderType(DofOrderInfo):
             Each element of this list corresponds to a component of
             the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
         """
-        import Comm
-        comm = Comm.get()
-        vel_comp_DOF = []
-        vel_comp_DOF_vel=[]
-        scaled_ownership_range = ownership_range[0] * (num_components-1) / num_components
-        for i in range(1,num_components):
-            vel_comp_DOF.append(self.create_IS(numpy.arange(start=ownership_range[0] + i,
-                                                            stop=ownership_range[0] + num_equations,
-                                                            step=num_components,
-                                                            dtype="i")))
-            vel_comp_DOF_vel.append(self.create_IS(numpy.arange(start=scaled_ownership_range + i - 1,
-                                                                stop=scaled_ownership_range + int( num_equations * (num_components-1) / num_components ),
-                                                                step=num_components-1,
-                                                                dtype="i")))
-        return vel_comp_DOF, vel_comp_DOF_vel
-
-    def create_no_dirichlet_bdy_nodes_is(self,
-                                         ownership_range,
-                                         num_equations,
-                                         num_components,
-                                         bdy_nodes):
-        """Build block velocity DOF arrays excluding Dirichlet bdy nodes.
-
-        Parameters
-        ----------
-        bdy_nodes : lst
-           This is a list of lists with the local dof index for strongly
-           enforced Dirichlet boundary conditions on the velocity
-           components.
-        """
-        strong_DOF , local_vel_DOF = self.create_vel_DOF_IS(ownership_range,
-                                                            num_equations,
-                                                            num_components)
-        strong_DOF = [ele.array for ele in strong_DOF]
-        local_vel_DOF = [ele.array for ele in local_vel_DOF]
-        mask = [numpy.ones(len(var), dtype=bool) for var in strong_DOF]
-        for i, bdy_node in enumerate(bdy_nodes):
-            mask[i][bdy_node] = False
-        strong_DOF = [strong_DOF[i][mask[i]] for i in range(len(strong_DOF))]
-        total_vars = int(0)
-        for var in strong_DOF:
-            total_vars += int(len(var))
-        strong_DOF_idx = numpy.empty((total_vars),dtype='int32')
-        for i, var_dof in enumerate(strong_DOF):
-            strong_DOF_idx[i::2] = var_dof
-        return self.create_IS(strong_DOF_idx)
-
-    def create_vel_DOF_IS(self,
-                          ownership_range,
-                          num_equations,
-                          num_components):
-        """
-        Build interlaced DOF arrays for the components of the velocity.
-
-        Parameters
-        ----------
-        ownership_range: tuple
-            Local ownership range of DOF
-        num_equations: int
-            Number of local equations
-        num_components: int
-            Number of pressure and velocity components
-
-        Returns
-        -------
-        DOF_output : lst of arrays
-            Each element of this list corresponds to a component of
-            the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
-        """
         from . import Comm
         comm = Comm.get()
         vel_comp_DOF = []
@@ -1889,8 +1828,13 @@ class NavierStokesSchur(SchurPrecon):
                  L,
                  prefix=None,
                  bdyNullSpace=False,
-                 velocity_block_preconditioner=True):
-        SchurPrecon.__init__(self,L,prefix)
+                 velocity_block_preconditioner=True,
+                 solver_info=None):
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix,
+                             bdyNullSpace,
+                             solver_info=solver_info)
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
         self.velocity_block_preconditioner = velocity_block_preconditioner
@@ -2001,12 +1945,13 @@ class Schur_Sp(NavierStokesSchur):
                  L,
                  prefix,
                  bdyNullSpace=False,
-                 velocity_block_preconditioner=False):
-        NavierStokesSchur.__init__(self,
-                                   L,
-                                   prefix,
-                                   bdyNullSpace,
-                                   velocity_block_preconditioner)
+                 velocity_block_preconditioner=False,
+                 solver_info=None):
+        super(Schur_Sp, self).__init__(L,
+                                       prefix,
+                                       bdyNullSpace,
+                                       velocity_block_preconditioner,
+                                       solver_info=solver_info)
         if self.velocity_block_preconditioner:
             self.velocity_block_preconditioner_set = False
 
@@ -2093,21 +2038,6 @@ class Schur_Qp(SchurPrecon) :
             self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokesSchur(SchurPrecon):
-    """ Schur complement preconditioners for Navier-Stokes problems.
-
-    This class is derived from SchurPrecond and serves as the base
-    class for all NavierStokes preconditioners which use the Schur complement
-    method.
-    """
-    def __init__(self,L,prefix=None,bdyNullSpace=False):
-        SchurPrecon.__init__(self,L,prefix)
-        self.operator_constructor = SchurOperatorConstructor(self,
-                                                             pde_type='navier_stokes')
-
-        if self.bdyNullSpace == True:
-            self._setConstantPressureNullSpace(global_ksp)
-
-class NavierStokesSchur(SchurPrecon):
     r""" Schur complement preconditioners for Navier-Stokes problems.
 
     This class is derived from SchurPrecond and serves as the base
@@ -2118,8 +2048,12 @@ class NavierStokesSchur(SchurPrecon):
                  L,
                  prefix=None,
                  bdyNullSpace=False,
-                 velocity_block_preconditioner=True):
-        SchurPrecon.__init__(self,L,prefix)
+                 velocity_block_preconditioner=True,
+                 solver_info=None):
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix,
+                             solver_info=solver_info)
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
         self.velocity_block_preconditioner = velocity_block_preconditioner
@@ -2449,6 +2383,7 @@ class NavierStokes3D(NavierStokesSchur):
                     self.kspList[1].setNullSpace(self.nsp)
         except:
             pass
+
 SimpleNavierStokes3D = NavierStokes3D
 
 class SimpleDarcyFC(object):
