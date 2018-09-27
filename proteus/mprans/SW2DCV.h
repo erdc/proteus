@@ -12,6 +12,8 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
+#define GLOBAL_FCT 1
+
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
@@ -74,8 +76,42 @@ namespace proteus
 			   double* hReg,
 			   int LUMPED_MASS_MATRIX,
 			   // LOCAL LIMITING
-			   double* hBT
+			   double* dLow,
+			   double* hBT,
+			   double* huBT,
+			   double* hvBT
 			   )=0;
+      virtual void convexLimiting(double dt,
+				  int NNZ, //number on non-zero entries on sparsity pattern
+				  int numDOFs, //number of DOFs
+				  double* lumped_mass_matrix, //lumped mass matrix (as vector)
+				  double* h_old, //DOFs of solution at last stage
+				  double* hu_old,
+				  double* hv_old,
+				  double* b_dof,
+				  double* high_order_hnp1, //DOFs of high order solution at tnp1
+				  double* high_order_hunp1,
+				  double* high_order_hvnp1,
+				  double* low_order_hnp1, //operators for low order solution
+				  double* low_order_hunp1,
+				  double* low_order_hvnp1,
+				  double* limited_hnp1,
+				  double* limited_hunp1,
+				  double* limited_hvnp1,
+				  int* csrRowIndeces_DofLoops, //csr row indeces
+				  int* csrColumnOffsets_DofLoops, //csr column offsets
+				  double* MassMatrix, //mass matrix
+				  double* dH_minus_dL,
+				  double* muH_minus_muL,
+				  double hEps,
+				  double* hReg,
+				  int LUMPED_MASS_MATRIX,
+				  // LOCAL LIMITING
+				  double* dLow,
+				  double* hBT,
+				  double* huBT,
+				  double* hvBT
+				  )=0;
       virtual double calculateEdgeBasedCFL(double g,
                                            int numDOFsPerEqn, //number of DOFs
                                            double* lumped_mass_matrix, //lumped mass matrix (as vector)
@@ -240,6 +276,8 @@ namespace proteus
                                    double* normaly,
                                    double* dLow,
 				   double* hBT,
+				   double* huBT,
+				   double* hvBT,
                                    int lstage
                                    )=0;
     virtual void calculateMassMatrix(//element
@@ -807,7 +845,10 @@ namespace proteus
 		 double hEps,
 		 double* hReg,
 		 int LUMPED_MASS_MATRIX,
-		 double* hBT)
+		 double* dLow,
+		 double* hBT,
+		 double* huBT,
+		 double* hvBT)
     {
       register double Rneg[numDOFs],Rpos[numDOFs];
       //////////////////
@@ -855,15 +896,11 @@ namespace proteus
               // UPDATE ij //
               ij+=1;
             }
-	  if (hiMin<0)
-	    {
-	      std::cout << "*****... NEGATIVE WATER HEIGHT ...*****" << hiMin << std::endl;
-	      abort();
-	    }
           ///////////////////////
           // COMPUTE Q VECTORS //
           ///////////////////////
-	  //hiMin=0;
+	  if (GLOBAL_FCT==1)
+	    hiMin=0;
           double Qnegi = mi*(hiMin-low_order_hnp1[i]);
 	  double Qposi = mi*(hiMax-low_order_hnp1[i]);
 
@@ -945,8 +982,9 @@ namespace proteus
 	      if (FluxCorrectionMatrix1 >= 0)
 		Lij = std::min(Rpos[i],Rneg[j]);
 	      else
-		Lij = std::min(Rneg[i],Rpos[j]);		
-	      //Lij = (FluxCorrectionMatrix1 >= 0. ? std::min(1.,Rneg[j]) : std::min(Rnegi,1.));
+		Lij = std::min(Rneg[i],Rpos[j]);
+	      if (GLOBAL_FCT==1)
+		Lij = (FluxCorrectionMatrix1 >= 0. ? std::min(1.,Rneg[j]) : std::min(Rnegi,1.));
 
               ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1;
               ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2;
@@ -977,6 +1015,248 @@ namespace proteus
             }
         }
     }
+
+    void convexLimiting(double dt,
+			int NNZ, //number on non-zero entries on sparsity pattern
+			int numDOFs, //number of DOFs
+			double* lumped_mass_matrix, //lumped mass matrix (as vector))
+			double* h_old, //DOFs of solution at last stage
+			double* hu_old,
+			double* hv_old,
+			double* b_dof,
+			double* high_order_hnp1, //DOFs of high order solution at tnp1
+			double* high_order_hunp1,
+			double* high_order_hvnp1,
+			double* low_order_hnp1, //operators to construct low order solution
+			double* low_order_hunp1,
+			double* low_order_hvnp1,
+			double* limited_hnp1,
+			double* limited_hunp1,
+			double* limited_hvnp1,
+			int* csrRowIndeces_DofLoops, //csr row indeces
+			int* csrColumnOffsets_DofLoops, //csr column offsets
+			double* MassMatrix, //mass matrix
+			double* dH_minus_dL,
+			double* muH_minus_muL,
+			double hEps,
+			double* hReg,
+			int LUMPED_MASS_MATRIX,
+			double* dLow,
+			double* hBT,
+			double* huBT,
+			double* hvBT)
+    {
+      register double Rneg[numDOFs],Rpos[numDOFs],Kmax[numDOFs],
+	hL[numDOFs],huL[numDOFs],hvL[numDOFs];
+      
+      //////////////////
+      // LOOP in DOFs //
+      //////////////////
+      int ij=0;
+      for (int i=0; i<numDOFs; i++)
+        {
+          //read some vectors
+          double high_order_hnp1i  = high_order_hnp1[i];
+          double hi = h_old[i];
+	  double hui = hu_old[i];
+	  double hvi = hv_old[i];
+          double Zi = b_dof[i];
+          double mi = lumped_mass_matrix[i];
+
+	  double hiMin = hi;
+	  double hiMax = hi;
+          double Pnegi=0., Pposi=0.;
+
+	  Kmax[i] = 0;
+          // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+          for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+            {
+              int j = csrColumnOffsets_DofLoops[offset];
+	      double psi_ij = 0;
+	      if (hBT != 0)
+		psi_ij = 1/(2*hBT[ij])*(huBT[ij]*huBT[ij] + huBT[ij]*huBT[ij]);
+	      
+	      Kmax[i] = fmax(psi_ij,Kmax[i]);
+	      
+              // read some vectors
+              double hj = h_old[j];
+              double Zj = b_dof[j];
+
+              // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
+              double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
+              double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
+
+              // i-th row of flux correction matrix
+              double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+              double FluxCorrectionMatrix1 =
+                ML_minus_MC*(high_order_hnp1[j]-hj - (high_order_hnp1i-hi))
+                + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hStarji-hStarij)
+                + dt*muH_minus_muL[ij]*(hj-hi);
+
+              // COMPUTE P VECTORS //
+              Pnegi += FluxCorrectionMatrix1*((FluxCorrectionMatrix1 < 0) ? 1. : 0.);
+	      Pposi += FluxCorrectionMatrix1*((FluxCorrectionMatrix1 > 0) ? 1. : 0.);
+	      
+	      // COMPUTE LOCAL BOUNDS //
+	      hiMin = std::min(hiMin, hBT[ij]);
+	      hiMax = std::max(hiMax, hBT[ij]);
+
+	      // COMPUTE LOW ORDER SOLUTION (WITHOUT EXTENDED SOURCE) //
+	      if (i!=j)
+		{
+		  hL[i] = hi*(1-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hBT[ij]);
+		  huL[i] = hui*(1-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*huBT[ij]);
+		  hvL[i] = hvi*(1-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hvBT[ij]);
+		}
+              // UPDATE ij //
+              ij+=1;
+            }
+          ///////////////////////
+          // COMPUTE Q VECTORS //
+          ///////////////////////
+          double Qnegi = mi*(hiMin-low_order_hnp1[i]);
+	  double Qposi = mi*(hiMax-low_order_hnp1[i]);
+
+          ///////////////////////
+          // COMPUTE R VECTORS //
+          ///////////////////////
+          if (high_order_hnp1[i] <= hReg[i]) //hEps
+	    {
+	      Rneg[i] = 0.;
+	      Rpos[i] = 0.;
+	    }
+          else
+	    {
+	      Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+	      Rpos[i] = ((Pposi==0) ? 1. : std::min(1.0,Qposi/Pposi));
+	    }
+        } // i DOFs
+	  
+      //////////////////////
+      // COMPUTE LIMITERS //
+      //////////////////////
+      ij=0;
+      for (int i=0; i<numDOFs; i++)
+        {
+          //read some vectors
+          double high_order_hnp1i  = high_order_hnp1[i];
+          double high_order_hunp1i = high_order_hunp1[i];
+          double high_order_hvnp1i = high_order_hvnp1[i];
+          double hi = h_old[i];
+          double huni = hu_old[i];
+          double hvni = hv_old[i];
+          double Zi = b_dof[i];
+          double mi = lumped_mass_matrix[i];
+          double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
+
+          double ith_Limiter_times_FluxCorrectionMatrix1 = 0.;
+          double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
+          double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
+          double Rnegi = Rneg[i];
+
+	  
+	  double ci = Kmax[i]*hL[i]-0.5*(huL[i]*huL[i]+hvL[i]*hvL[i]);
+
+	    
+          // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+          for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+            {
+	      double lambdaj = csrRowIndeces_DofLoops[i+1]-csrRowIndeces_DofLoops[i]-1;
+              int j = csrColumnOffsets_DofLoops[offset];
+
+	      double lambdai = csrRowIndeces_DofLoops[j+1]-csrRowIndeces_DofLoops[j]-1;
+	      double mj = lumped_mass_matrix[j];
+	      double cj = Kmax[j]*hL[j]-0.5*(huL[j]*huL[j]+hvL[j]*hvL[j]);
+	      
+              // read some vectors
+              double hj = h_old[j];
+              double hunj = hu_old[j];
+              double hvnj = hv_old[j];
+              double Zj = b_dof[j];
+              double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
+
+              // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
+              double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
+              double huStarij = huni*hStarij*one_over_hiReg;
+              double hvStarij = hvni*hStarij*one_over_hiReg;
+
+              double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
+              double huStarji = hunj*hStarji*one_over_hjReg;
+              double hvStarji = hvnj*hStarji*one_over_hjReg;
+
+              // COMPUTE FLUX CORRECTION MATRICES
+              double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+              double FluxCorrectionMatrix1 =
+                ML_minus_MC*(high_order_hnp1[j]-hj - (high_order_hnp1i-hi))
+                + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hStarji-hStarij)
+                + dt*muH_minus_muL[ij]*(hj-hi);
+
+              double FluxCorrectionMatrix2 =
+                ML_minus_MC*(high_order_hunp1[j]-hunj - (high_order_hunp1i-huni))
+                + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(huStarji-huStarij)
+                + dt*muH_minus_muL[ij]*(hunj-huni);
+
+              double FluxCorrectionMatrix3 =
+                ML_minus_MC*(high_order_hvnp1[j]-hvnj - (high_order_hvnp1i-hvni))
+                + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hvStarji-hvStarij)
+                + dt*muH_minus_muL[ij]*(hvnj-hvni);
+
+	      // compute limiter based on water height
+	      double Lij = 0.;
+	      if (FluxCorrectionMatrix1 >= 0)
+		Lij = std::min(Rpos[i],Rneg[j]);
+	      else
+		Lij = std::min(Rneg[i],Rpos[j]);		
+	      
+	      double Ph_ij = FluxCorrectionMatrix1/mi/lambdaj;
+	      double Phu_ij = FluxCorrectionMatrix2/mi/lambdaj;
+	      double Phv_ij = FluxCorrectionMatrix3/mi/lambdaj;
+
+	      double Ph_ji  = -FluxCorrectionMatrix1/mj/lambdai;
+	      double Phu_ji = -FluxCorrectionMatrix2/mj/lambdai;
+	      double Phv_ji = -FluxCorrectionMatrix3/mj/lambdai;
+	      
+	      double ai = -0.5*(Phu_ij*Phu_ij+Phv_ij*Phv_ij);
+	      double bi = Kmax[i]*Ph_ij-(huL[i]*Phu_ij + hvL[i]*Phv_ij);
+	    
+	      double r1 = ai==0 ? 1 : (-bi + std::sqrt(bi*bi-4*ai*ci))/2./ai;
+	      double r2 = ai==0 ? 1 : (-bi - std::sqrt(bi*bi-4*ai*ci))/2./ai;
+	      double ri = fabs(fmax(r1,r2));
+
+	      double aj = -0.5*(Phu_ji*Phu_ji+Phv_ji*Phv_ji);
+	      double bj = Kmax[j]*Ph_ji-(huL[j]*Phu_ji + hvL[j]*Phv_ji);
+	      
+	      r1 = aj==0 ? 1 : (-bj + std::sqrt(bj*bj-4*aj*cj))/2./aj;
+	      r2 = aj==0 ? 1 : (-bj - std::sqrt(bj*bj-4*aj*cj))/2./aj;
+	      double rj = fabs(fmax(r1,r2));
+	      
+	      Lij = fmin(fmin(ri,Lij),fmin(rj,Lij));
+	      
+              ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1;
+              ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2;
+              ith_Limiter_times_FluxCorrectionMatrix3 += Lij*FluxCorrectionMatrix3;
+              //update ij
+              ij+=1;
+            }
+
+          double one_over_mi = 1.0/lumped_mass_matrix[i];
+          limited_hnp1[i] = low_order_hnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+          limited_hunp1[i] = low_order_hunp1[i]+one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
+          limited_hvnp1[i] = low_order_hvnp1[i]+one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
+
+          if (limited_hnp1[i] < -1E-14 && dt < 1.0)
+	    {
+	      std::cout << "Limited water height is negative: "
+			<<  limited_hnp1[i]
+			<< " ... aborting!" << std::endl;
+	      abort();
+	    }
+          else
+	    {
+	      limited_hnp1[i] = fmax(limited_hnp1[i],0.);
+	    }
+        }
+    }    
 
     double calculateEdgeBasedCFL(double g,
                                  int numDOFsPerEqn, //number of DOFs
@@ -1286,6 +1566,8 @@ namespace proteus
                            double* dLow,
 			   // LOCAL LIMITING
 			   double* hBT,
+			   double* huBT,
+			   double* hvBT,
                            int lstage)
     {
       //FOR FRICTION//
@@ -1700,25 +1982,39 @@ namespace proteus
                                                                       hi,hui,hvi,
                                                                       hEps,hEps,false)*cji_norm); //hEps
                         }
-                      dLij = dLowij;//*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+                      dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
 		      
                       ///////////////////////////////////////
                       // WELL BALANCING DISSIPATIVE MATRIX //
                       ///////////////////////////////////////
                       muLowij = fmax(fmax(0.,-(ui*Cx[ij] + vi*Cy[ij])),
 				     fmax(0,(uj*Cx[ij] + vj*Cy[ij])));
-                      muLij = muLowij;//*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+                      muLij = muLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
 		      
 		      ////////////////////////
 		      // COMPUTE BAR STATES //
 		      ////////////////////////		      
-		      double hBar_ij = 0, hTilde_ij = 0;
+		      double hBar_ij = 0, hTilde_ij = 0,
+			huBar_ij = 0, huTilde_ij = 0,
+			hvBar_ij = 0, hvTilde_ij = 0;		      
 		      if (dLij != 0)
 			{
-			  hBar_ij = -1./(2*dLij)*((huj-hui)*Cx[ij] + (hvj-hvi)*Cy[ij]) + 0.5*(hj+hi);
+			  // h component
+			  hBar_ij = -1./(2*dLij)*((huj-hui)*Cx[ij] + (hvj-hvi)*Cy[ij])+0.5*(hj+hi);
 			  hTilde_ij = (dLij-muLij)/(2*dLij)*((hStarji-hj)-(hStarij-hi));
+			  // hu component 
+			  huBar_ij = -1./(2*dLij)*((uj*huj-ui*hui)*Cx[ij] +
+						   (uj*hvj-ui*hvi)*Cy[ij]) +0.5*(huj+hui);
+			  huTilde_ij = (dLij-muLij)/(2*dLij)*((huStarji-huj)-(huStarij-hui));
+			  // hv component
+			  hvBar_ij = -1./(2*dLij)*((vj*huj-vi*hui)*Cx[ij] +
+						   (vj*hvj-vi*hvi)*Cy[ij]) +0.5*(hvj+hvi);
+			  hvTilde_ij = (dLij-muLij)/(2*dLij)*((hvStarji-hvj)-(hvStarij-hvi));
+			  
 			}
 		      hBT[ij] = hBar_ij + hTilde_ij;
+		      huBT[ij] = hBar_ij + hTilde_ij;
+		      hvBT[ij] = hBar_ij + hTilde_ij;
 
                       ///////////////////////
                       // ENTROPY VISCOSITY //
@@ -1780,6 +2076,7 @@ namespace proteus
                                                 - ith_dLij_minus_muLij_times_hvStarStates
                                                 - ith_muLij_times_hvStates
                                                 + ith_friction_term3);
+
               // FIX LOW ORDER SOLUTION //
               if (low_order_hnp1[i] < -1E-14 && dt < 1.0)
                 {
@@ -2046,25 +2343,13 @@ namespace proteus
         {
           register double
             elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
-            elementJacobian_h_hu[nDOF_test_element][nDOF_trial_element],
-            elementJacobian_h_hv[nDOF_test_element][nDOF_trial_element],
-            elementJacobian_hu_h[nDOF_test_element][nDOF_trial_element],
             elementJacobian_hu_hu[nDOF_test_element][nDOF_trial_element],
-            elementJacobian_hu_hv[nDOF_test_element][nDOF_trial_element],
-            elementJacobian_hv_h[nDOF_test_element][nDOF_trial_element],
-            elementJacobian_hv_hu[nDOF_test_element][nDOF_trial_element],
             elementJacobian_hv_hv[nDOF_test_element][nDOF_trial_element];
           for (int i=0;i<nDOF_test_element;i++)
             for (int j=0;j<nDOF_trial_element;j++)
               {
                 elementJacobian_h_h[i][j]=0.0;
-                elementJacobian_h_hu[i][j]=0.0;
-                elementJacobian_h_hv[i][j]=0.0;
-                elementJacobian_hu_h[i][j]=0.0;
                 elementJacobian_hu_hu[i][j]=0.0;
-                elementJacobian_hu_hv[i][j]=0.0;
-                elementJacobian_hv_h[i][j]=0.0;
-                elementJacobian_hv_hu[i][j]=0.0;
                 elementJacobian_hv_hv[i][j]=0.0;
               }
           for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -2107,26 +2392,8 @@ namespace proteus
                   for(int j=0;j<nDOF_trial_element;j++)
                     {
                       register int j_nSpace = j*nSpace;
-                      //////////////////////
-                      // h: h_h, h_u, h_v //
-                      //////////////////////
-                      // EXPLICIT AND LUMPED
                       elementJacobian_h_h[i][j] += h_trial_ref[k*nDOF_trial_element+j]*h_test_dV[i];
-                      elementJacobian_h_hu[i][j] += 0;
-                      elementJacobian_h_hv[i][j] += 0;
-
-                      //////////////////////
-                      // u: u_h, u_u, u_v //
-                      //////////////////////
-                      elementJacobian_hu_h[i][j] += 0;
                       elementJacobian_hu_hu[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
-                      elementJacobian_hu_hv[i][j] += 0;
-
-                      //////////////////////
-                      // v: v_h, v_u, v_v //
-                      //////////////////////
-                      elementJacobian_hv_h[i][j] += 0;
-                      elementJacobian_hv_hu[i][j] += 0;
                       elementJacobian_hv_hv[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
                     }//j
                 }//i
@@ -2141,15 +2408,7 @@ namespace proteus
                 {
                   register int eN_i_j = eN_i*nDOF_trial_element+j;
                   globalJacobian[csrRowIndeces_h_h[eN_i] + csrColumnOffsets_h_h[eN_i_j]] += elementJacobian_h_h[i][j];
-                  globalJacobian[csrRowIndeces_h_hu[eN_i] + csrColumnOffsets_h_hu[eN_i_j]] += elementJacobian_h_hu[i][j];
-                  globalJacobian[csrRowIndeces_h_hv[eN_i] + csrColumnOffsets_h_hv[eN_i_j]] += elementJacobian_h_hv[i][j];
-
-                  globalJacobian[csrRowIndeces_hu_h[eN_i] + csrColumnOffsets_hu_h[eN_i_j]] += elementJacobian_hu_h[i][j];
                   globalJacobian[csrRowIndeces_hu_hu[eN_i] + csrColumnOffsets_hu_hu[eN_i_j]] += elementJacobian_hu_hu[i][j];
-                  globalJacobian[csrRowIndeces_hu_hv[eN_i] + csrColumnOffsets_hu_hv[eN_i_j]] += elementJacobian_hu_hv[i][j];
-
-                  globalJacobian[csrRowIndeces_hv_h[eN_i] + csrColumnOffsets_hv_h[eN_i_j]] += elementJacobian_hv_h[i][j];
-                  globalJacobian[csrRowIndeces_hv_hu[eN_i] + csrColumnOffsets_hv_hu[eN_i_j]] += elementJacobian_hv_hu[i][j];
                   globalJacobian[csrRowIndeces_hv_hv[eN_i] + csrColumnOffsets_hv_hv[eN_i_j]] += elementJacobian_hv_hv[i][j];
                 }//j
             }//i
