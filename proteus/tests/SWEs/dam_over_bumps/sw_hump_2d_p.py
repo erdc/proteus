@@ -1,3 +1,4 @@
+from builtins import object
 from proteus.default_p import *
 from proteus import Context
 from proteus.mprans import SW2D,SW2DCV
@@ -55,7 +56,7 @@ def bathymetry_function(X):
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
-class water_height_at_t0:
+class water_height_at_t0(object):
     def uOfXT(self,X,t):
         x = X[0]
         if (x <= 16):
@@ -66,7 +67,7 @@ class water_height_at_t0:
         z = bathymetry_function(X)
         return max(eta - z,0.)
 
-class Zero:
+class Zero(object):
     def uOfXT(self,x,t):
         return 0.0
 

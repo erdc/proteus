@@ -1,10 +1,11 @@
 """
 The default values for problem definition modules
 """
-from MeshTools import *
-from FemTools import *
-from TransportCoefficients import *
-from Transport import *
+from __future__ import absolute_import
+from .MeshTools import *
+from .FemTools import *
+from .TransportCoefficients import *
+from .Transport import *
 
 name = None
 """The name of the model

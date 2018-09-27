@@ -5,7 +5,7 @@ from proteus.mbd import ChRigidBody as crb
 import pytest
 
 class TestCable(unittest.TestCase):
-    @pytest.mark.skip(reason="unpredictable segfaults")
+    @pytest.mark.skip(reason="returning nans from getTensionBack")
     def testHangingCableANCF(self):
         g = np.array([0.,0.,-9.81])
         system = crb.ProtChSystem(gravity=g)

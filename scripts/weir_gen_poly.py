@@ -1,3 +1,5 @@
+from builtins import zip
+from builtins import range
 import math
 vertices = [ ('bottom_left' , (0.0,0.0)),
              ('weir_bottom_left' , (0.8 + 1.5 + 6.66,0.0)),
@@ -33,7 +35,7 @@ segments.append([nvertices-1,0])
 segmentGroups.append(nSegmentGroups)
 poly.write('%d %d \n' % (nvertices,1))
 poly.write("#segments \n")
-for sN,s,sG in zip(range(len(segments)),segments,segmentGroups):
+for sN,s,sG in zip(list(range(len(segments))),segments,segmentGroups):
     poly.write('%d %d %d %d \n' % (sN+1,s[0]+1,s[1]+1,sG))
 poly.write('%d' % (0,))
 poly.close()

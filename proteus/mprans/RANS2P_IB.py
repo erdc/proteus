@@ -1,9 +1,15 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import proteus
 import proteus.mprans.RANS2P as RANS2P
 from proteus.mprans.cRANS2P_IB import *
 import numpy as np
-import beamFEM
-from ArchiveBeams import *
+from . import beamFEM
+from .ArchiveBeams import *
 
 
 class Coefficients(proteus.mprans.RANS2P.Coefficients):
@@ -154,12 +160,12 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         else:
             self.updateBeamLoad()
         if self.comm.isMaster():
-            print "wettedAreas"
-            print self.wettedAreas[:]
-            print "Forces_p"
-            print self.netForces_p[:, :]
-            print "Forces_v"
-            print self.netForces_v[:, :]
+            print("wettedAreas")
+            print(self.wettedAreas[:])
+            print("Forces_p")
+            print(self.netForces_p[:, :])
+            print("Forces_v")
+            print(self.netForces_v[:, :])
             #self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             #self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
             # self.forceHistory_p.flush()
@@ -236,7 +242,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                     self.Beam_Solver[I].updateLoads(self.q3[I, :], self.q2[I, :], self.q1[I, :])
                 for j in range(loadSteps):
                     self.Beam_Solver[I].Phi.flat[:] = 0.0
-                    self.Beam_Solver[I].updateQs(endLoad=[0.0, 0.0, 0.0], scale=float(j) / float(loadSteps))
+                    self.Beam_Solver[I].updateQs(endLoad=[0.0, 0.0, 0.0], scale=old_div(float(j), float(loadSteps)))
                     counter = 0
                     go = True
                     Phi = np.copy(self.Beam_Solver[I].Phi)
@@ -308,9 +314,9 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             #        self.avgHeight+=self.zv[I,-1]
             #        self.avgDeflection += abs(self.xv[I,-1]-self.xv[I,0])
             #        self.avgAngle+= math.degrees(math.atan((self.zv[I,-1]-self.zv[I,-2])/(self.xv[I,-1]-self.xv[I,-2])))#self.Beam_Solver[I].Phi[-3]
-            self.avgHeight = np.sum(self.zv[:, -1]) / float(self.nBeams)
-            self.avgDeflection = np.sum(np.abs(self.xv[:, -1] - self.xv[:, 0])) / float(self.nBeams)
-            self.avgAngle = np.sum(np.rad2deg(np.arctan((self.zv[:, -1] - self.zv[:, -2]) / (self.xv[:, -1] - self.xv[:, -2])))) / float(self.nBeams)
+            self.avgHeight = old_div(np.sum(self.zv[:, -1]), float(self.nBeams))
+            self.avgDeflection = old_div(np.sum(np.abs(self.xv[:, -1] - self.xv[:, 0])), float(self.nBeams))
+            self.avgAngle = old_div(np.sum(np.rad2deg(np.arctan(old_div((self.zv[:, -1] - self.zv[:, -2]), (self.xv[:, -1] - self.xv[:, -2]))))), float(self.nBeams))
 
     def initializeBeams(self):
         comm = Comm.get()
@@ -390,7 +396,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                                   t=0.0,
                                   tStep=self.tStep)
             self.tStep += 1
-        print boxCount
+        print(boxCount)
 
     pass
 
@@ -532,29 +538,29 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         # cek come back
         if self.stabilization is not None:
             for ci in range(self.nc):
-                if coefficients.mass.has_key(ci):
-                    for flag in coefficients.mass[ci].values():
+                if ci in coefficients.mass:
+                    for flag in list(coefficients.mass[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.advection.has_key(ci):
-                    for flag in coefficients.advection[ci].values():
+                if ci in coefficients.advection:
+                    for flag in list(coefficients.advection[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.diffusion.has_key(ci):
-                    for diffusionDict in coefficients.diffusion[ci].values():
-                        for flag in diffusionDict.values():
+                if ci in coefficients.diffusion:
+                    for diffusionDict in list(coefficients.diffusion[ci].values()):
+                        for flag in list(diffusionDict.values()):
                             if flag != 'constant':
                                 self.stabilizationIsNonlinear = True
-                if coefficients.potential.has_key(ci):
-                    for flag in coefficients.potential[ci].values():
+                if ci in coefficients.potential:
+                    for flag in list(coefficients.potential[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.reaction.has_key(ci):
-                    for flag in coefficients.reaction[ci].values():
+                if ci in coefficients.reaction:
+                    for flag in list(coefficients.reaction[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.hamiltonian.has_key(ci):
-                    for flag in coefficients.hamiltonian[ci].values():
+                if ci in coefficients.hamiltonian:
+                    for flag in list(coefficients.hamiltonian[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
         # determine if we need element boundary storage
@@ -569,11 +575,11 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         # calculate some dimensions
         #
         self.nSpace_global = self.u[0].femSpace.nSpace_global  # assume same space dim for all variables
-        self.nDOF_trial_element = [u_j.femSpace.max_nDOF_element for u_j in self.u.values()]
-        self.nDOF_phi_trial_element = [phi_k.femSpace.max_nDOF_element for phi_k in self.phi.values()]
-        self.n_phi_ip_element = [phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in self.phi.values()]
-        self.nDOF_test_element = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
-        self.nFreeDOF_global = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
+        self.nDOF_trial_element = [u_j.femSpace.max_nDOF_element for u_j in list(self.u.values())]
+        self.nDOF_phi_trial_element = [phi_k.femSpace.max_nDOF_element for phi_k in list(self.phi.values())]
+        self.n_phi_ip_element = [phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in list(self.phi.values())]
+        self.nDOF_test_element = [femSpace.max_nDOF_element for femSpace in list(self.testSpace.values())]
+        self.nFreeDOF_global = [dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element = sum(self.nDOF_trial_element)
         self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
@@ -587,7 +593,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         elemQuadIsDict = isinstance(elementQuadrature, dict)
         if elemQuadIsDict:  # set terms manually
             for I in self.coefficients.elementIntegralKeys:
-                if elementQuadrature.has_key(I):
+                if I in elementQuadrature:
                     elementQuadratureDict[I] = elementQuadrature[I]
                 else:
                     elementQuadratureDict[I] = elementQuadrature['default']
@@ -597,7 +603,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(I):
+                    if I in elementQuadrature:
                         elementQuadratureDict[('stab',) + I[1:]] = elementQuadrature[I]
                     else:
                         elementQuadratureDict[('stab',) + I[1:]] = elementQuadrature['default']
@@ -606,26 +612,26 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(('numDiff', ci, ci)):
+                    if ('numDiff', ci, ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature[('numDiff', ci, ci)]
                     else:
                         elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature
         if massLumping:
-            for ci in self.coefficients.mass.keys():
+            for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('m', ci)] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global, 1)
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[('stab',) + I[1:]] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global, 1)
         if reactionLumping:
-            for ci in self.coefficients.mass.keys():
+            for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('r', ci)] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global, 1)
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[('stab',) + I[1:]] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global, 1)
         elementBoundaryQuadratureDict = {}
         if isinstance(elementBoundaryQuadrature, dict):  # set terms manually
             for I in self.coefficients.elementBoundaryIntegralKeys:
-                if elementBoundaryQuadrature.has_key(I):
+                if I in elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature[I]
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
@@ -678,9 +684,9 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.q[('mt', 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('mt', 2)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('mt', 3)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 1)] = (1.0 / self.mesh.nElements_global) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 2)] = (1.0 / self.mesh.nElements_global) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 3)] = (1.0 / self.mesh.nElements_global) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dV_u', 1)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dV_u', 2)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dV_u', 3)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('f', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q[('velocity', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q['velocity_solid'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
@@ -865,19 +871,19 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         #
         logEvent("Dumping quadrature shapes for model %s" % self.name, level=9)
         logEvent("Element quadrature array (q)", level=9)
-        for (k, v) in self.q.iteritems():
+        for (k, v) in list(self.q.items()):
             logEvent(str((k, v.shape)), level=9)
         logEvent("Element boundary quadrature (ebq)", level=9)
-        for (k, v) in self.ebq.iteritems():
+        for (k, v) in list(self.ebq.items()):
             logEvent(str((k, v.shape)), level=9)
         logEvent("Global element boundary quadrature (ebq_global)", level=9)
-        for (k, v) in self.ebq_global.iteritems():
+        for (k, v) in list(self.ebq_global.items()):
             logEvent(str((k, v.shape)), level=9)
         logEvent("Exterior element boundary quadrature (ebqe)", level=9)
-        for (k, v) in self.ebqe.iteritems():
+        for (k, v) in list(self.ebqe.items()):
             logEvent(str((k, v.shape)), level=9)
         logEvent("Interpolation points for nonlinear diffusion potential (phi_ip)", level=9)
-        for (k, v) in self.phi_ip.iteritems():
+        for (k, v) in list(self.phi_ip.items()):
             logEvent(str((k, v.shape)), level=9)
         #
         # allocate residual and Jacobian storage
@@ -957,19 +963,19 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         logEvent("initializing numerical flux penalty")
         self.numericalFlux.penalty_constant = self.coefficients.eb_penalty_constant
         # cek todo move into numerical flux initialization
-        if self.ebq_global.has_key('penalty'):
+        if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant / \
-                        (self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, \
+                        (self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
         # penalty term
         # cek move  to Numerical flux initialization
-        if self.ebqe.has_key('penalty'):
+        if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant / \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
+                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
+                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         logEvent(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         logEvent("setting up post-processing")
@@ -983,15 +989,15 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         logEvent("flux bc objects")
-        for ci, fbcObject in self.fluxBoundaryConditionsObjectsDict.iteritems():
+        for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
             self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
-            for t, g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
-                if self.coefficients.advection.has_key(ci):
+            for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
+                if ci in self.coefficients.advection:
                     self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                     self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
-            for ck, diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
+            for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
                 self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
-                for t, g in diffusiveFluxBoundaryConditionsDict.iteritems():
+                for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
                     self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                     self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
@@ -1071,13 +1077,13 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             # Dirichlet boundary conditions
             self.numericalFlux.setDirichletValues(self.ebqe)
             # Flux boundary conditions
-            for ci, fbcObject in self.fluxBoundaryConditionsObjectsDict.iteritems():
-                for t, g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
-                    if self.coefficients.advection.has_key(ci):
+            for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
+                for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
+                    if ci in self.coefficients.advection:
                         self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                         self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
-                for ck, diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
-                    for t, g in diffusiveFluxBoundaryConditionsDict.iteritems():
+                for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
+                    for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
                         self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                         self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
         r.fill(0.0)
@@ -1094,7 +1100,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
 
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
-                for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.r = r
         # self.beamStep()
@@ -1273,7 +1279,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                 self.coefficients.netMoments[i, I] = globalSum(self.coefficients.netMoments[i, I])
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
-                for dofN, g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     r[self.offset[cj] + self.stride[cj] * dofN] = 0
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax), level=2)
@@ -1488,7 +1494,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if self.forceStrongConditions:
             scaling = 1.0  # probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
-                for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                for dofN in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys()):
                     global_dofN = self.offset[cj] + self.stride[cj] * dofN
                     for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
                         if (self.colind[i] == global_dofN):
@@ -1708,5 +1714,5 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         for i in range(3):
             self.coefficients.vel_avg[i] = globalSum(self.coefficients.vel_avg[i])
 
-        self.coefficients.vel_avg = self.coefficients.vel_avg / 0.1472
+        self.coefficients.vel_avg = old_div(self.coefficients.vel_avg, 0.1472)
         self.coefficients.netBeamDrag[0] = globalSum(self.coefficients.netBeamDrag[0])

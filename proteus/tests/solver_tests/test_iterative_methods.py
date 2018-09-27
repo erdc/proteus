@@ -4,6 +4,9 @@
 Test module for solver shell operator.
 
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import proteus.test_utils.TestTools
 from proteus.iproteus import *
 from proteus import Comm
@@ -378,8 +381,8 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         '''  Tests the pcd_shell operators produce correct output. '''
         A = self.quad_mass_matrix
         n = self.quad_mass_matrix.shape[0]
-        alpha = 1./4
-        beta = 9./4
+        alpha = old_div(1.,4)
+        beta = old_div(9.,4)
         x0 = np.zeros(n)
         b1 = np.ones(n)
         for i in range(0,n,2):
@@ -399,10 +402,10 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
     @pytest.mark.LinearSolvers
     def test_chebyshev_iteration_2(self):
         '''  Tests the pcd_shell operators produce correct output. '''
-        A = np.diag(1./np.diag(self.quad_mass_matrix)).dot(self.quad_mass_matrix)
+        A = np.diag(old_div(1.,np.diag(self.quad_mass_matrix))).dot(self.quad_mass_matrix)
         n = self.quad_mass_matrix.shape[0]
-        alpha = 1./4
-        beta = 9./4
+        alpha = old_div(1.,4)
+        beta = old_div(9.,4)
         x0 = np.zeros(n)
         b1 = np.zeros(n)
         for i in range(0,n):

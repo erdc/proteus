@@ -1,3 +1,4 @@
+from builtins import object
 from proteus.default_p import *
 from proteus.mprans import MCorr
 from proteus import Context
@@ -26,7 +27,7 @@ coefficients = MCorr.Coefficients(LSModel_index=int(ct.movingDomain)+2,
                                   epsFactDirac=ct.epsFact_consrv_dirac,
                                   epsFactDiffusion=ct.epsFact_consrv_diffusion)
 
-class zero_phi:
+class zero_phi(object):
     def __init__(self):
         pass
     def uOfX(self, X):

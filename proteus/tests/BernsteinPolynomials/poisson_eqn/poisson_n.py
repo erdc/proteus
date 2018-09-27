@@ -1,7 +1,9 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from parameters_for_poisson import *
-from poisson_p import *
+from .parameters_for_poisson import *
+from .poisson_p import *
 
 parallel = False
 #0 there is no special treatment for time derivative
@@ -18,7 +20,7 @@ if ct.useHex:
         else:
             femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
-        print "pDegree = %s not recognized " % ct.pDegree_vof
+        print("pDegree = %s not recognized " % ct.pDegree_vof)
     elementQuadrature = CubeGaussQuadrature(nd,quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,quad_order)
 else:
@@ -32,7 +34,7 @@ else:
         else:
             femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
-        print "pDegree = %s not recognized " % ct.pDegree_vof
+        print("pDegree = %s not recognized " % ct.pDegree_vof)
     elementQuadrature = SimplexGaussQuadrature(nd,quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,quad_order)
 
