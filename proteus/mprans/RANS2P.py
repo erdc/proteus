@@ -904,7 +904,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi = phiDict
         self.dphi = {}
         self.matType = matType
-        # mwf try to reuse test and trial information across components if spaces are the same
         self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
         if self.reuse_test_trial_quadrature:
             for ci in range(1, coefficients.nc):
