@@ -18,7 +18,7 @@ import cython
 comm = Comm.init()
 Profiling.procID = comm.rank()
 def getpath():
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+    path = sys.path[0]+'/proteus/tests/wave_tests/'
     return path
 
 def remove_files(filenames):
