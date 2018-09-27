@@ -4014,15 +4014,15 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                     ar.create_dataset_async(u.name+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount), data = u.dof)
                 else:
                     values.text = ar.hdfFilename+":/{0:s}{1:d}".format(u.name, tCount)
-                    ar.hdfFile.createArray("/","{0:s}{0:d}".format(u.name, tCount),u.dof)
+                    ar.hdfFile.create_array("/","{0:s}{1:d}".format(u.name, tCount),u.dof)
             else:
-                numpy.savetxt(ar.textDataDir+"/"+"{0:s}{0:d}".format(u.name, tCount)+".txt",u.dof)
+                numpy.savetxt(ar.textDataDir+"/"+"{0:s}{1:d}".format(u.name, tCount)+".txt",u.dof)
                 SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"{0:s}{0:d}".format(u.name, tCount)+".txt"})
     def readFunctionXdmf(self,ar,u,tCount=0):
         if ar.hdfFile is not None:
             if ar.hdfFileGlb is not None:
                 map = self.mesh.globalMesh.nodeNumbering_subdomain2global
-                array=ar.hdfFileGlb.get_node("/","{0:s}{0:d}".format(u.name, tCount))
+                array=ar.hdfFileGlb.get_node("/","{0:s}{1:d}".format(u.name, tCount))
                 for i in range(len(map)):
                     u.dof[i] = array[map[i]]
                 del array
@@ -4074,7 +4074,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                data = velocity[:self.mesh.nNodes_owned,:])
                     else:
                         values.text = ar.hdfFilename+":/{0:s}{1:d}".format(vectorName, tCount)
-                        ar.hdfFile.createArray("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
+                        ar.hdfFile.create_array("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
             else:
                 attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
                                                                      "AttributeType":"Vector",
@@ -4100,7 +4100,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                         ar.create_dataset_async(vectorName+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount), data = velocity)
                     else:
                         values.text = ar.hdfFilename+":/{0:s}{1:d}".format(vectorName, tCount)
-                        ar.hdfFile.createArray("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
+                        ar.hdfFile.create_array("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
         else:
             attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
                                                         "AttributeType":"Vector",
@@ -4339,7 +4339,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                     ar.create_dataset_async(u.name+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount), data = u.dof)
                 else:
                     values.text = ar.hdfFilename+":/{0:s}{1:d}".format(u.name, tCount)
-                    ar.hdfFile.createArray("/","{0:s}{1:d}".format(u.name, tCount),u.dof)
+                    ar.hdfFile.create_array("/","{0:s}{1:d}".format(u.name, tCount),u.dof)
             else:
                 numpy.savetxt(ar.textDataDir+"/"+"{0:s}{1:d}".format(u.name, tCount)+".txt",u.dof)
                 SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"{0:s}{1:d}".format(u.name, tCount)+".txt"})
@@ -4399,7 +4399,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                         ar.create_dataset_async(vectorName+"_p"+repr(ar.comm.rank())+"_t{0:d}".format(tCount), data = velocity)
                     else:
                         values.text = ar.hdfFilename+":/{0:s}{1:d}".format(vectorName, tCount)
-                        ar.hdfFile.createArray("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
+                        ar.hdfFile.create_array("/","{0:s}{1:d}".format(vectorName, tCount),velocity)
 
         else:
             if ar.global_sync:
