@@ -414,8 +414,8 @@ class VerifySteadyCurrent(unittest.TestCase):
             SteadyCurrent(U,mwl,0.2)
         self.assertEqual(cm1.exception.code, 1)
 
-        
-        
+#Solitary wave equations from Boussinesq.        
+#Velocity equations from Chambers, "Numerical simulations of breaking waves and vehicle fording using OpenFOAM."         
 class VerifySolitaryWave(unittest.TestCase):
     def testSolitary(self):
         from proteus.WaveTools import SolitaryWave
@@ -423,18 +423,18 @@ class VerifySolitaryWave(unittest.TestCase):
         mwl = 0.
         dd = 1.5
         g = np.array([0,-9.81,0])
-        waveDir = np.array([5.,0.,0.])
-        trans = np.array([1. ,0., 0.])
+        waveDir = np.array([1.,0.,0.])
+        trans = np.array([0. ,0., 0.])
 
         #No translation        
-        aa = SolitaryWave(HH,mwl,dd,g,waveDir)
+        aa = SolitaryWave(waveHeight=HH,mwl=mwl,depth=dd,g=g,waveDir=waveDir,trans=trans, fast=False)
         
         x = 2.5
         t = 5.
 
         cc = np.sqrt(9.81*(dd+HH))
         eta_Ref = old_div(HH, np.cosh( np.sqrt(3.*HH/4./dd**3)*(x - cc*t))**2)
-        xx = x*waveDir/5. 
+        xx = x*waveDir
         self.assertAlmostEqual(eta_Ref, aa.eta(xx,t))
         
         def pow(a,b):
@@ -448,58 +448,19 @@ class VerifySolitaryWave(unittest.TestCase):
         Z = xx[1] - mwl
         sqrt = np.sqrt
         cosh = np.cosh
-
-# Formula taken from waves2Foam
-        Uhorz = 1.0/(4.0*pow(h_, 4.0) )*sqrt(G_*h_)*H_ *( 
-             2.*pow(h_, 3.0) + pow(h_, 2.0)*H_ 
-           + 12.0*h_*H_*Z + 6.0*H_*pow(Z, 2.0)
-           + (
-                 2*pow(h_, 3.0) - pow(h_, 2.0)*H_ 
-               - 6.0*h_*H_*Z - 3.0*H_*pow(Z, 2.0)
-             ) 
-             *cosh( 
-                 sqrt( 3*H_/pow(h_, 3.0))
-                *(
-                     sqrt( G_*(h_ + H_))*t
-                    - ( x )
-                 )
-             )
-        )/pow(
-            cosh(   sqrt( 3*H_/( 4.0*pow(h_, 3.0)))
-           *(
-                sqrt( G_*(h_ + H_))*t
-              - ((x)))
-            ), 4.0
-        )
-
-        Uvert = 1.0/( 4.0*sqrt( G_*h_) )*sqrt(3.0)*G_ *pow( old_div(H_,pow(h_,3.0)), 1.5 )*(h_ + Z)*(
-             2*pow(h_, 3.0) - 7.0*pow(h_, 2.0)*H_
-           + 10.0*h_*H_*Z + 5.0*H_*pow(Z, 2.0)
-           +(
-                2*pow(h_, 3.0) + pow(h_, 2.0)*H_
-              - 2.0*h_*H_*Z - H_*pow(Z, 2.0)
-            )
-           *cosh
-            (
-                sqrt( 3*H_/pow(h_, 3.0))*
-                (
-                    sqrt( G_*(h_ + H_))*t
-                  - ((x ) )
-                )
-            )
-        )/pow(
-            cosh(sqrt( 3*H_/( 4.0*pow(h_, 3.0)))
-          *(
-               sqrt( G_*(h_ + H_))*t
-              - ((x ))
-           )
-        ), 4.0 )*tanh( sqrt( 3*H_/( 4.0*pow(h_, 3.0)))*(
-             sqrt( G_*(h_ + H_))*t
-           - ((x ))
-         ));
-        self.assertAlmostEqual(Uhorz, aa.u(xx,t)[0])
-        self.assertAlmostEqual(-Uvert, aa.u(xx,t)[1])
+        tanh = np.tanh
+        K = old_div(sqrt(3. * H_ / (4. * h_)), h_)
+        c = sqrt( G_ * ( h_ + H_))
+        phase = ((x-trans[0])*waveDir[0])  - c * t
+        a1 = cosh( K * phase)
+        a2 = tanh( K * phase)
         
+        Uhorz = sqrt( G_ * h_) * ( H_ / h_) * ( 1. / ( a1**2.)) * ( 1. - ( H_ / ( 4. * h_)) * ( 1. / ( a1**2.)))
+        Uvert = -sqrt( G_ * h_) * ( Z / h_) * ( 1. - ( H_ / ( 4. * h_)) * ( 1. / ( a1**2. ))) * (( 2. * H_ / h_ ) * K * ( a2 / ( a1**2. ))) ;
+        
+        self.assertAlmostEqual(Uhorz, aa.u(xx,t)[0])
+        self.assertAlmostEqual(Uvert, aa.u(xx,t)[1])
+
 
 class CheckMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
