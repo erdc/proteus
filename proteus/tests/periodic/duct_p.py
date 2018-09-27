@@ -4,14 +4,14 @@ from proteus.mprans import RANS2P
 """
 Navier-Stokes flow in a periodic duct with square cross-section
 """
-nd = 3
+nd = 2
 
 L=(4.0, 1.0, 1.0)
 if nd == 2:
     L=(4.0, 1.0)
 domain = Domain.RectangularDomain(L)
 boundaryTags = domain.boundaryTags
-unstructured = True
+unstructured = False
 if unstructured:
     domain.writePoly("duct")
     if nd == 3:
@@ -21,8 +21,8 @@ if unstructured:
     domain.readPoly("duct")
 
 periodic = False
-weakBC=False
-
+weakBC=True
+coordBC=False
 if periodic:
     gravity = [1.0e-1, 0., 0.]
 else:
@@ -189,89 +189,181 @@ if periodic:
                                        3:{3:getDFBC_duct}}
 
 else:
-    def getDBC_pressure_duct(x,flag):
-        if flag == boundaryTags['right']:
-            return lambda x,t: 0.0
+    if  coordBC:
+        if nd == 3:
+            def onLeft(x):
+                return x[0] < eps and x[2] > eps and x[2] < L[2] - eps
+            def onRight(x):
+                return x[0] > L[0] - eps and x[2] > eps and x[2] < L[2] - eps
+            def onFront(x):
+                return x[1] < eps and x[2] > eps and x[2] < L[2] - eps and x[0] > eps and x[0] < L[0] - eps
+            def onBack(x):
+                return x[1] > L[1] - eps and x[2] > eps and x[2] < L[2] - eps and x[0] > eps and x[0] < L[0] - eps
+            def onBottom(x):
+                return x[2] < eps
+            def onTop(x):
+                return x[2] > L[2] - eps
+        elif nd == 2:
+            def onLeft(x):
+                return x[0] < eps and x[1] > eps and x[1] < L[1] - eps
+            def onRight(x):
+                return x[0] > L[0] - eps and x[1] > eps and x[1] < L[1] - eps
+            def onBottom(x):
+                return x[1] < eps
+            def onTop(x):
+                return x[1] > L[1] - eps
 
-    def getDBC_u_duct(x,flag):
-        if flag == boundaryTags['left']:
-            return lambda x,t: inflow_v
-        if weakBC and flag == boundaryTags['right']:
-            return lambda x,t: 0.0
-        if flag in [boundaryTags['top'], boundaryTags['bottom']]:
-            return lambda x,t: 0.0
-    def getDBC_v_duct(x,flag):
-        if flag in [boundaryTags['left'],
-                    boundaryTags['right'],
-                    boundaryTags['top'],
-                    boundaryTags['bottom']]:
-            return lambda x,t: 0.0
+        def getDBC_pressure_duct(x,flag):
+            if onRight(x):
+                return lambda x,t: 0.0
+            
+        def getDBC_u_duct(x,flag):
+            if onLeft(x):
+                return lambda x,t: inflow_v
+            if weakBC and onRight(x):
+                return lambda x,t: 0.0
+            if onTop(x) or onBottom(x):
+                return lambda x,t: 0.0
+            
+        def getDBC_v_duct(x,flag):
+            if onLeft(x) or onRight(x) or onTop(x) or onBottom(x):
+                return lambda x,t: 0.0
 
-    def getDBC_w_duct(x,flag):
-        if flag in [boundaryTags['left'],
-                    boundaryTags['right'],
-                    boundaryTags['top'],
-                    boundaryTags['bottom']]:
-            return lambda x,t: 0.0
-        
-    dirichletConditions = {0:getDBC_pressure_duct,
-                           1:getDBC_u_duct,
-                           2:getDBC_v_duct}
-    if nd == 3:
-        dirichletConditions[3] =  getDBC_w_duct
+        def getDBC_w_duct(x,flag):
+            if onLeft(x) or onRight(x) or onTop(x) or onBottom(x):
+                return lambda x,t: 0.0
+
+        dirichletConditions = {0:getDBC_pressure_duct,
+                               1:getDBC_u_duct,
+                               2:getDBC_v_duct}
+        if nd == 3:
+            dirichletConditions[3] =  getDBC_w_duct
 
 
-    def getAFBC_p_duct(x,flag):
-        if flag == boundaryTags['left']:
-            return lambda x,t: -inflow_v
-        if flag in [boundaryTags['top'],
-                    boundaryTags['bottom']]:
-            return lambda x,t: 0.0
-        if nd == 3 and flag in [boundaryTags['front'],
-                                boundaryTags['back'],
-                                0]:
-            return lambda x,t: 0.0
-        elif nd == 2 and flag == 0:
-            return lambda x,t: 0.0
+        def getAFBC_p_duct(x,flag):
+            if onLeft(x):
+                return lambda x,t: -inflow_v
+            if onTop(x) or onBottom(x):
+                return lambda x,t: 0.0
+            if nd == 3:
+                if onFront(x) or onBack(x):
+                    return lambda x,t: 0.0
 
-    def getAFBC_u_duct(x,flag):
-        if nd == 3 and flag in [boundaryTags['front'],
-                                boundaryTags['back'],
-                                0]:
-            return lambda x,t: 0.0
-        elif nd == 2 and flag == 0:
-            return lambda x,t: 0.0
+        def getAFBC_u_duct(x,flag):
+            if nd == 3:
+                if onFront(x) or onBack(x):
+                    return lambda x,t: 0.0
 
-    def getAFBC_v_duct(x,flag):
-        if nd == 3 and flag in [boundaryTags['front'],
-                                boundaryTags['back'],
-                                0]:
-            return lambda x,t: 0.0
-        elif nd == 2 and flag == 0:
-            return lambda x,t: 0.0
-    def getAFBC_w_duct(x,flag):
-        if flag in [boundaryTags['front'],
-                    boundaryTags['back'],
-                    0]:
-            return lambda x,t: 0.0
-    
-    advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
-                                        1:getAFBC_u_duct,
-                                        2:getAFBC_v_duct}
-    if nd == 3:
-        advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
-    
-    def getDFBC_duct(x,flag):
-        if flag == boundaryTags['right']:#outflow
-            return lambda x,t: 0.0
-        if nd == 3 and flag in [boundaryTags['front'],
-                                boundaryTags['back'],
-                                0]:
-            return lambda x,t: 0.0
-        elif nd == 2 and flag == 0:
-            return lambda x,t: 0.0
-    diffusiveFluxBoundaryConditions = {0:{},
-                                       1:{1:getDFBC_duct},
-                                       2:{2:getDFBC_duct}}
-    if nd == 3:
-        diffusiveFluxBoundaryConditions[3] = {3:getDFBC_duct}
+        def getAFBC_v_duct(x,flag):
+            if nd == 3:
+                if onFront(x) or onBack(x):
+                    return lambda x,t: 0.0
+
+        advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
+                                            1:getAFBC_u_duct,
+                                            2:getAFBC_v_duct}
+        if nd == 3:
+            def getAFBC_w_duct(x,flag):
+                if onFront(x) or onBack(x):
+                    return lambda x,t: 0.0
+            advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
+
+        def getDFBC_duct(x,flag):
+            if onRight(x):
+                return lambda x,t: 0.0
+            if nd == 3:
+                if onFront(x) or onBack(x):
+                    return lambda x,t: 0.0
+
+        diffusiveFluxBoundaryConditions = {0:{},
+                                           1:{1:getDFBC_duct},
+                                           2:{2:getDFBC_duct}}
+        if nd == 3:
+            diffusiveFluxBoundaryConditions[3] = {3:getDFBC_duct}
+    else:
+        def getDBC_pressure_duct(x,flag):
+            if flag == boundaryTags['right']:
+                return lambda x,t: 0.0
+
+        def getDBC_u_duct(x,flag):
+            if flag == boundaryTags['left']:
+                return lambda x,t: inflow_v
+            if weakBC and flag == boundaryTags['right']:
+                return lambda x,t: 0.0
+            if flag in [boundaryTags['top'], boundaryTags['bottom']]:
+                return lambda x,t: 0.0
+        def getDBC_v_duct(x,flag):
+            if flag in [boundaryTags['left'],
+                        boundaryTags['right'],
+                        boundaryTags['top'],
+                        boundaryTags['bottom']]:
+                return lambda x,t: 0.0
+
+        def getDBC_w_duct(x,flag):
+            if flag in [boundaryTags['left'],
+                        boundaryTags['right'],
+                        boundaryTags['top'],
+                        boundaryTags['bottom']]:
+                return lambda x,t: 0.0
+
+        dirichletConditions = {0:getDBC_pressure_duct,
+                               1:getDBC_u_duct,
+                               2:getDBC_v_duct}
+        if nd == 3:
+            dirichletConditions[3] =  getDBC_w_duct
+
+
+        def getAFBC_p_duct(x,flag):
+            if flag == boundaryTags['left']:
+                return lambda x,t: -inflow_v
+            if flag in [boundaryTags['top'],
+                        boundaryTags['bottom']]:
+                return lambda x,t: 0.0
+            if nd == 3 and flag in [boundaryTags['front'],
+                                    boundaryTags['back'],
+                                    0]:
+                return lambda x,t: 0.0
+            elif nd == 2 and flag == 0:
+                return lambda x,t: 0.0
+
+        def getAFBC_u_duct(x,flag):
+            if nd == 3 and flag in [boundaryTags['front'],
+                                    boundaryTags['back'],
+                                    0]:
+                return lambda x,t: 0.0
+            elif nd == 2 and flag == 0:
+                return lambda x,t: 0.0
+
+        def getAFBC_v_duct(x,flag):
+            if nd == 3 and flag in [boundaryTags['front'],
+                                    boundaryTags['back'],
+                                    0]:
+                return lambda x,t: 0.0
+            elif nd == 2 and flag == 0:
+                return lambda x,t: 0.0
+        def getAFBC_w_duct(x,flag):
+            if flag in [boundaryTags['front'],
+                        boundaryTags['back'],
+                        0]:
+                return lambda x,t: 0.0
+
+        advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
+                                            1:getAFBC_u_duct,
+                                            2:getAFBC_v_duct}
+        if nd == 3:
+            advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
+
+        def getDFBC_duct(x,flag):
+            if flag == boundaryTags['right']:#outflow
+                return lambda x,t: 0.0
+            if nd == 3 and flag in [boundaryTags['front'],
+                                    boundaryTags['back'],
+                                    0]:
+                return lambda x,t: 0.0
+            elif nd == 2 and flag == 0:
+                return lambda x,t: 0.0
+        diffusiveFluxBoundaryConditions = {0:{},
+                                           1:{1:getDFBC_duct},
+                                           2:{2:getDFBC_duct}}
+        if nd == 3:
+            diffusiveFluxBoundaryConditions[3] = {3:getDFBC_duct}

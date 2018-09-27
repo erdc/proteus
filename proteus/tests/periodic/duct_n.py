@@ -9,15 +9,39 @@ timeOrder = 2
 stepController  = StepControl.Min_dt_cfl_controller
 systemStepExact = False
 
-spaceOrder=2
+spaceOrder=1
+simplexMesh = True
+useTaylorHood = True
 if spaceOrder == 1:
-    femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis,
-                 1:C0_AffineLinearOnSimplexWithNodalBasis,
-                 2:C0_AffineLinearOnSimplexWithNodalBasis}
-    if nd == 3:
-        femSpaces[3] = C0_AffineLinearOnSimplexWithNodalBasis
-    elementQuadrature = SimplexGaussQuadrature(nd,3)
-    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+    if simplexMesh:
+        if useTaylorHood:
+            femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis,
+                         1:C0_AffineQuadraticOnSimplexWithNodalBasis,
+                         2:C0_AffineQuadraticOnSimplexWithNodalBasis}
+            if nd == 3:
+                femSpaces[3] = C0_AffineQuadraticOnSimplexWithNodalBasis
+            elementQuadrature = SimplexGaussQuadrature(nd,3)
+            elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+        else:
+            femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis,
+                         1:C0_AffineLinearOnSimplexWithNodalBasis,
+                         2:C0_AffineLinearOnSimplexWithNodalBasis}
+            if nd == 3:
+                femSpaces[3] = C0_AffineLinearOnSimplexWithNodalBasis
+            elementQuadrature = SimplexGaussQuadrature(nd,3)
+            elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+    else:
+        femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis,
+                     1:C0_AffineLinearOnCubeWithNodalBasis,
+                     2:C0_AffineLinearOnCubeWithNodalBasis}
+        if nd == 3:
+            hex = True
+            femSpaces[3] = C0_AffineLinearOnCubeWithNodalBasis
+        else:
+            quad = True
+        elementQuadrature = CubeGaussQuadrature(nd,2)
+        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)
+            
 elif spaceOrder == 2:    
     femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis,
                  1:C0_AffineQuadraticOnSimplexWithNodalBasis,
@@ -33,7 +57,9 @@ elif spaceOrder == 2:
 #nnx=41
 #nny=11
 #nnz=11
-nnx=21
+#nnx=21
+#nny=6
+nnx=11
 nny=6
 if nd == 3:
     nnz=6
@@ -86,5 +112,6 @@ linTolFac = 0.001
 
 conservativeFlux = None
 
-parallelPartitioningType = MeshParallelPartitioningTypes.element
+#parallelPartitioningType = MeshParallelPartitioningTypes.element
+parallelPartitioningType = MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 0
