@@ -339,6 +339,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.RD_modelIndex is not None:
             # print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
+            self.ebqe_rd_u = self.rdModel.ebqe[('u',0)]
 
     def initializeElementQuadrature(self, t, cq):
         if self.flowModelIndex is None:
