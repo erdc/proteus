@@ -15,10 +15,13 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
-nn=31
+nn=11
 nLevels = 1#4
 
-if useVOF:
+if useNCLS:
+    subgridError = NCLS.SubgridError(coefficients, nd)
+    numericalFluxType = NCLS.NumericalFlux
+elif useVOF:
     subgridError = VOF.SubgridError(coefficients, nd)
     numericalFluxType = VOF.NumericalFlux
 elif useHJ:
@@ -28,14 +31,14 @@ else:
     subgridError = AdvectionDiffusionReaction_ASGS(coefficients, nd, lag=False)
     numericalFluxType = DoNothing#None
 
-
-if useVOF:
+if useNCLS:
+    shockCapturing = NCLS.ShockCapturing(coefficients, nd, shockCapturingFactor=0.0, lag=True)
+elif useVOF:
     shockCapturing = VOF.ShockCapturing(coefficients, nd, shockCapturingFactor=0.0, lag=True)
 elif useHJ:
     shockCapturing = None#HamiltonJacobi_SC(coefficients,nd,lag=True)#None
 else:
     shockCapturing = None#ResGrad_SC(coefficients,nd,lag=True)#None
-    
 
 multilevelNonlinearSolver  = Newton
 

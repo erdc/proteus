@@ -4,7 +4,7 @@ from proteus.mprans import RANS2P
 """
 Navier-Stokes flow in a periodic duct with square cross-section
 """
-nd = 2
+nd = 3
 
 L=(4.0, 1.0, 1.0)
 if nd == 2:

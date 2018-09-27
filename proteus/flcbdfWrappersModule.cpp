@@ -2661,7 +2661,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       allocateGeometricInfo_quadrilateral(*mesh.subdomainp);
       computeGeometricInfo_quadrilateral(*mesh.subdomainp);
     }
-  else if (mesh.subdomainp->nNodes_element == 4 && mesh.subdomainp->nNodes_element == 3)
+  else if (mesh.subdomainp->nNodes_element == 4 && mesh.subdomainp->nNodes_elementBoundary == 3)
     {
       //constructElementBoundaryElementsArray_tetrahedron(*mesh.subdomainp);
       //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
@@ -2675,7 +2675,10 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       allocateGeometricInfo_hexahedron(*mesh.subdomainp);
       computeGeometricInfo_hexahedron(*mesh.subdomainp);
     }
-
+  else
+    {
+      assert(false);
+    }
 
   if (mesh.elementBoundaryMaterialTypes != NULL)
     {
@@ -5179,6 +5182,13 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       allocateGeometricInfo_triangle(*mesh.subdomainp);
       computeGeometricInfo_triangle(*mesh.subdomainp);
     }
+  else if (mesh.subdomainp->nNodes_element == 4 && mesh.subdomainp->nNodes_elementBoundary == 2)
+    {
+      //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
+      constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_quadrilateral(*mesh.subdomainp);
+      allocateGeometricInfo_quadrilateral(*mesh.subdomainp);
+      computeGeometricInfo_quadrilateral(*mesh.subdomainp);
+    }
   else if (mesh.subdomainp->nNodes_element == 4)
     {
       //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
@@ -5192,7 +5202,10 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       allocateGeometricInfo_hexahedron(*mesh.subdomainp);
       computeGeometricInfo_hexahedron(*mesh.subdomainp);
     }
- 
+  else
+    {
+      assert(false);
+    }
   if (mesh.elementBoundaryMaterialTypes != NULL)
     {
       assert(mesh.elementBoundariesArray != NULL);
