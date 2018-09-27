@@ -1618,9 +1618,9 @@ class NS_base(object):  # (HasTraits):
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
 
-                        logEvent("NumericalAnalytics Model %s " % (model.name), level=0)
+                        logEvent("NumericalAnalytics Model %s " % (model.name), level=5)
                         logEvent("Model: %s" % (model.name),level=1)
-                        logEvent("NumericalAnalytics Time Step " + repr(self.t_stepSequence), level=0)
+                        logEvent("NumericalAnalytics Time Step " + repr(self.t_stepSequence), level=7)
                         logEvent("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:

@@ -616,15 +616,15 @@ class KSP_petsc4py(LinearSolver):
         truenorm = self.r_work.norm()
         if its == 0:
             self.rnorm0 = truenorm
-            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
+            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm), level=7)
             if self.rnorm0 == 0.:
-                logEvent("NumericalAnalytics KSPOuterResidual(relative): N/A (residual vector is zero)" )
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): N/A (residual vector is zero)", level=7 )
                 logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = N/A (residual vector is zero) ; atol=%e rtol=%e " % (its,
                                                                                                                              truenorm,
                                                                                                                              ksp.atol,
                                                                                                                              ksp.rtol))
             else:
-                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7 )
                 logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                                   truenorm,
                                                                                                   (old_div(truenorm, self.rnorm0)),
@@ -632,8 +632,8 @@ class KSP_petsc4py(LinearSolver):
                                                                                                   ksp.rtol))
             return False
         else:
-            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
+            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm), level=7)
+            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7)
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
                                                                                               (old_div(truenorm, self.rnorm0)),
@@ -1729,8 +1729,8 @@ class SchurPrecon(KSP_Preconditioner):
         truenorm = r_work.norm()
         if its == 0:
             self.rnorm0 = truenorm
-            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
+            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm), level=7)
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7 )
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
                                                                                               (old_div(truenorm, self.rnorm0)),
@@ -1738,8 +1738,8 @@ class SchurPrecon(KSP_Preconditioner):
                                                                                               ksp.rtol))
             return False
         else:
-            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
+            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm), level=7)
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7)
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
                                                                                               (old_div(truenorm, self.rnorm0)),

@@ -2,12 +2,12 @@ import numpy
 from proteus import *
 from proteus.default_p import *
 from math import *
-from proteus.mprans import VOF
+from proteus.mprans import VOF, NCLS
 """
 Linear advection of a guassian with periodic bcs
 """
 
-nd = 3#number of space dimensions
+nd = 2#number of space dimensions
 
 #constant velocity
 velocity = numpy.array([1.0,1.0])
@@ -93,8 +93,12 @@ B = {0:velocity}
 C = {0:0.0}
 
 useVOF=True
-
-if useVOF:
+useNCLS=True
+if useNCLS:
+    LevelModelType = NCLS.LevelModel
+    coefficients = NCLS.Coefficients(V_model=None,RD_model=None,ME_model=0,checkMass=False,
+                                     epsFact=0.0,useMetrics=1.0)
+elif useVOF:
     LevelModelType = VOF.LevelModel
     coefficients = VOF.Coefficients(LS_model=None,V_model=None,RD_model=None,ME_model=0,checkMass=False,
                                     epsFact=0.0,useMetrics=1.0,FCT=False)
