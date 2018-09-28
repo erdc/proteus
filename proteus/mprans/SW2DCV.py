@@ -936,8 +936,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
         # Do some type of limitation
 
-        #self.sw2d.convexLimiting(self.timeIntegration.dt,
-        self.sw2d.FCTStep(self.timeIntegration.dt,
+        self.sw2d.convexLimiting(self.timeIntegration.dt,
+        #self.sw2d.FCTStep(self.timeIntegration.dt,
                           self.nnz,  # number of non zero entries
                           len(rowptr) - 1,  # number of DOFs
                           self.ML,  # Lumped mass matrix
