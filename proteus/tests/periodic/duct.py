@@ -24,7 +24,9 @@ opts = Context.Options([
     ("periodic", False, "Use periodic boundary conditions"),
     ("weak", True, "Use weak boundary conditions"),
     ("coord", False, "Use coordinates for setting boundary conditions"),
-    ("nnx", 21, "Number of grid nodes in x-direction")])
+    ("nnx", 21, "Number of grid nodes in x-direction"),
+    ("pc_type", 'LU', "Specify preconditioner type"),
+    ("A_block_AMG", False, "Specify whether a block-AMG should be used to solve A-block")])
 
 #########
 #Physics#
@@ -51,6 +53,7 @@ else:
     gravity = [0., 0., 0.]
 
 p.LevelModelType = RANS2P.LevelModel
+p.boundaryCreatesNullSpace = True
 
 p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      sigma=0.0,
@@ -476,10 +479,17 @@ n.matrix = LinearAlgebraTools.SparseMatrix
 
 n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 n.levelLinearSolver = LinearSolvers.KSP_petsc4py
-n.linearSmoother = LinearSolvers.SimpleNavierStokes3D
-n.multilevelLinearSolver = LinearSolvers.LU
-n.levelLinearSolver = LinearSolvers.LU
-n.linearSmoother = None
+if opts.pc_type is 'LU':
+    n.multilevelLinearSolver = LinearSolvers.LU
+    n.levelLinearSolver = LinearSolvers.LU
+    n.linearSmoother = None
+elif opts.pc_type == 'selfp_petsc':
+    if p.nd==3:
+        n.linearSmoother = LinearSolvers.SimpleNavierStokes3D
+        n.linearSmootherOptions = (opts.A_block_AMG,)
+    elif p.nd==2:
+        n.linearSmoother = LinearSolvers.SimpleNavierStokes2D
+        n.linearSmootherOptions = (opts.A_block_AMG,)
 
 n.linear_solver_options_prefix = 'rans2p_'
 
