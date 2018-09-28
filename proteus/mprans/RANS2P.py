@@ -874,7 +874,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reactionLumping=False,
                  options=None,
                  name='RANS2P',
-                 reuse_trial_and_test_quadrature=True,
+                 reuse_trial_and_test_quadrature=False,
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
@@ -904,10 +904,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi = phiDict
         self.dphi = {}
         self.matType = matType
-        self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
-        if self.reuse_test_trial_quadrature:
-            for ci in range(1, coefficients.nc):
-                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
+        #self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
+        #if self.reuse_test_trial_quadrature:
+        #    for ci in range(1, coefficients.nc):
+        #        assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         # Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh  # assume the same mesh for  all components for now
         self.par_info = LinearAlgebraTools.ParInfo_petsc4py()
@@ -1332,8 +1332,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent(memory("TimeIntegration", "OneLevelTransport"), level=4)
         logEvent("Calculating numerical quadrature formulas", 2)
         self.calculateQuadrature()
+        if numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions:
+            interleave_DOF=True
+            for nDOF_trial_element_ci in self.nDOF_trial_element:
+                if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
+                    interleave_DOF=False
+        else:
+            interleave_DOF=False
 
-        self.setupFieldStrides()
+        self.setupFieldStrides(interleave_DOF)
         comm = Comm.get()
         self.comm = comm
         if comm.size() > 1:
@@ -1446,6 +1453,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                          self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                          self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                          self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
+                                         self.u[1].femSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                         self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                                          compKernelFlag)
         else:
