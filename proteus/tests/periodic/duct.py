@@ -11,7 +11,8 @@ from proteus import (Domain,
                      LinearAlgebraTools,
                      LinearSolvers,
                      MeshTools,
-                     Context)
+                     Context,
+                     AnalyticalSolutions)
 from proteus.default_so import *
 from proteus.mprans import RANS2P
 
@@ -20,10 +21,11 @@ opts = Context.Options([
     ("grid", True, "Use a regular grid"),
     ("triangles", True, "Use triangular or tetrahedral elements"),
     ("spaceOrder", 1, "Use (bi-)linear or (bi-)quadratic spaces"),
-    ("timeOrder", 2, "Use (bi-)linear or (bi-)quadratic spaces"),
+    ("timeOrder", 1, "Use (bi-)linear or (bi-)quadratic spaces"),
     ("periodic", False, "Use periodic boundary conditions"),
     ("weak", True, "Use weak boundary conditions"),
     ("coord", False, "Use coordinates for setting boundary conditions"),
+    ("Re", 1.0, "Reynolds number for non-periodic problem"),
     ("nnx", 21, "Number of grid nodes in x-direction")])
 
 #########
@@ -108,11 +110,20 @@ if opts.periodic:
                                      2:getPDBC,
                                      3:getPDBC}
 else:
-    Re = 10000
     if p.nd == 3:
-        inflow_v = Re*p.coefficients.nu/p.L[2]
+        h = p.L[2]
+        inflow_v = opts.Re*p.coefficients.nu/p.L[2]
     else:
-        inflow_v = Re*p.coefficients.nu/p.L[1]
+        h = p.L[1]
+        inflow_v = opts.Re*p.coefficients.nu/p.L[1]
+    G = 8.0*opts.Re/(p.coefficients.rho*h)
+    mu = p.coefficients.nu*p.coefficients.rho
+    analyticalSolution = {0:AnalyticalSolutions.PlanePoiseuilleFlow_p(plateSeperation=h,
+                                                                      mu = mu,
+                                                                      grad_p = -G),
+                          1:AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
+                                                                      mu = mu,
+                                                                      grad_p = -G)}
 
 if  opts.coord:
     if p.nd == 3:
@@ -208,7 +219,7 @@ else:
             
         def getDBC_u_duct(x,flag):
             if onLeft(x):
-                return lambda x,t: inflow_v
+                return lambda x,t: analyticalSolution[1].uOfX(x)
             if opts.weak and onRight(x):
                 return lambda x,t: 0.0
             if onTop(x) or onBottom(x):
@@ -231,7 +242,7 @@ else:
 
         def getAFBC_p_duct(x,flag):
             if onLeft(x):
-                return lambda x,t: -inflow_v
+                return lambda x,t: -analyticalSolution[1].uOfX(x)
             if onTop(x) or onBottom(x):
                 return lambda x,t: 0.0
             if p.nd == 3:
@@ -258,9 +269,13 @@ else:
             advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
 
         def getDFBC_duct(x,flag):
-            if onRight(x):
+            if flag == boundaryTags['right']:
                 return lambda x,t: 0.0
-            if p.nd == 3:
+#            if onRight(x):
+#                return lambda x,t: 0.0
+            elif p.nd == 2 and flag == 0:
+                return lambda x,t: 0.0
+            elif p.nd == 3:
                 if onFront(x) or onBack(x):
                     return lambda x,t: 0.0
 
@@ -276,7 +291,7 @@ else:
 
         def getDBC_u_duct(x,flag):
             if flag == boundaryTags['left']:
-                return lambda x,t: inflow_v
+                return lambda x,t: analyticalSolution[1].uOfX(x)
             if opts.weak and flag == boundaryTags['right']:
                 return lambda x,t: 0.0
             if flag in [boundaryTags['top'], boundaryTags['bottom']]:
@@ -304,7 +319,7 @@ else:
 
         def getAFBC_p_duct(x,flag):
             if flag == boundaryTags['left']:
-                return lambda x,t: -inflow_v
+                return lambda x,t: -analyticalSolution[1].uOfX(x)
             if flag in [boundaryTags['top'],
                         boundaryTags['bottom']]:
                 return lambda x,t: 0.0
@@ -369,7 +384,7 @@ if opts.timeOrder == 2:
     n.timeIntegration = TimeIntegration.VBDF
     n.timeOrder = 2
 elif opts.timeOrder == 1:
-    n.timeIntegration = TimeIntegration.BackwardEulerCFL
+    n.timeIntegration = TimeIntegration.BackwardEuler
     n.timeOrder = 1
 
 n.stepController  = StepControl.Min_dt_cfl_controller
@@ -384,8 +399,8 @@ if opts.spaceOrder == 1:
                            2:FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis}
             if p.nd == 3:
                 n.femSpaces[3] = FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis
-            n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,3)
-            n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
+            n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,5)
+            n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,5)
         else:
             n.femSpaces = {0:FemTools.C0_AffineLinearOnSimplexWithNodalBasis,
                            1:FemTools.C0_AffineLinearOnSimplexWithNodalBasis,
@@ -445,6 +460,7 @@ he = p.L[0]/float(n.nnx-1)
 if p.nd == 3:
     n.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 else:
+    n.triangleFlag = 1#if regular triangulatio then alternate diagonals
     n.triangleOptions="pAq30.0Dena%f" % ((he**2)/4.0,)
 
 n.numericalFluxType = RANS2P.NumericalFlux
