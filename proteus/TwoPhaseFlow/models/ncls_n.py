@@ -21,6 +21,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = mparams.ncls
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -71,8 +72,8 @@ subgridError = NCLS.SubgridError(coefficients=physics.coefficients,
                                 nd=nd)
 shockCapturing = NCLS.ShockCapturing(coefficients=physics.coefficients,
                                      nd=nd,
-                                     shockCapturingFactor=mparams.ncls['shockCapturingFactor'],
-                                     lag=mparams.ncls['lag_shockCapturing'])
+                                     shockCapturingFactor=myparams.shockCapturingFactor,
+                                     lag=myparams.lag_shockCapturing)
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
@@ -91,7 +92,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(mparams.ncls.minTol, mparams.ncls['tolFac']*he**2)
+nl_atol_res = max(myparams.minTol, myparams.tolFac*he**2)
 linTolFac = 0.001
 l_atol_res = 0.001*nl_atol_res
 #
@@ -100,4 +101,4 @@ tolFac = 0.
 maxNonlinearIts = 50
 maxLineSearches = 0
 
-auxiliaryVariables = domain.auxiliaryVariables['ls']
+auxiliaryVariables = myparams.auxiliaryVariables

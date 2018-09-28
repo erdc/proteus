@@ -22,6 +22,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = mparams.mcorr
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -88,7 +89,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(mparams.mcorr.minTol, mparams.mcorr['tolFac']*he**2)
+nl_atol_res = max(myparams.minTol, myparams.tolFac*he**2)
 linTolFac = 0.
 l_atol_res = 0.001*nl_atol_res
 #
@@ -96,3 +97,5 @@ useEisenstatWalker = True
 tolFac = 0.
 maxNonlinearIts = 50
 maxLineSearches = 0
+
+auxiliaryVariables = myparams.auxiliaryVariables

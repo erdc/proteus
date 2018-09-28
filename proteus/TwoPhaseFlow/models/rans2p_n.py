@@ -21,6 +21,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = params.Models.rans2p
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -40,17 +41,17 @@ restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-ns_shockCapturingFactor = mparams.rans2p['ns_shockCapturingFactor']
-ns_lag_shockCapturing = mparams.rans2p['ns_lag_shockCapturing']
-ns_lag_subgridError = mparams.rans2p['ns_lag_subgridError']
+ns_shockCapturingFactor = myparams.ns_shockCapturingFactor
+ns_lag_shockCapturing = myparams.ns_lag_shockCapturing
+ns_lag_subgridError = myparams.ns_lag_subgridError
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeDiscretization=mparams.rans2p['timeDiscretization']
+timeDiscretization = myparams.timeDiscretization
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
-    timeOrder = mparams.rans2p['timeOrder']
+    timeOrder = myparams.timeOrder
     stepController  = Min_dt_cfl_controller
 else: #backward euler
     timeIntegration = BackwardEuler_cfl
@@ -115,7 +116,7 @@ linearSolverConvergenceTest             = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-ns_nl_atol_res = max(mparams.rans2p.minTol, mparams.rans2p['tolFac']*he**2)
+ns_nl_atol_res = max(myparams.minTol, myparams.tolFac*he**2)
 nl_atol_res = ns_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.01
@@ -124,3 +125,5 @@ l_atol_res = 0.01*ns_nl_atol_res
 useEisenstatWalker = False
 maxNonlinearIts = 50
 maxLineSearches = 0
+
+auxiliaryVariables = myparams.auxiliaryVariables

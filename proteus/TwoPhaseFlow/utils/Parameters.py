@@ -111,6 +111,7 @@ class ParametersModelBase(ParametersBase):
         self.index = index
         self.tolFac = 0.001
         self.minTol = 1e-8
+        self.auxiliaryVariables = []
 
 
 class ParametersModelRANS2P(ParametersModelBase):

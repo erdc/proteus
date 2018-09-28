@@ -21,6 +21,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = mparams.rans3p
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -40,14 +41,14 @@ restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-ns_shockCapturingFactor = mparams.rans3p['ns_shockCapturingFactor']
-ns_lag_shockCapturing = mparams.rans3p['ns_lag_shockCapturing']
-ns_lag_subgridError = mparams.rans3p['ns_lag_subgridError']
+ns_shockCapturingFactor = myparams.ns_shockCapturingFactor
+ns_lag_shockCapturing = myparams.ns_lag_shockCapturing
+ns_lag_subgridError = myparams.ns_lag_subgridError
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeDiscretization = mparams.rans3p['timeDiscretization']
+timeDiscretization = myparams.timeDiscretization
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
     timeOrder=2
@@ -122,3 +123,5 @@ l_atol_res = 0.01*ns_nl_atol_res
 useEisenstatWalker = False
 maxNonlinearIts = 50
 maxLineSearches = 0
+
+auxiliaryVariables = myparams.auxiliaryVariables

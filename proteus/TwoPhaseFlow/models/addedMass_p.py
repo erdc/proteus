@@ -23,15 +23,24 @@ domain = myTpFlowProblem.domain
 meshparams = params.mesh
 genMesh = meshparams.genMesh
 
+mparams = params.Models
+pparams = params.physical
+myparams = mparams.addedMass
+
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-flags_rigidbody = params.addedMass['flags_rigidbody']
+flags_rigidbody = myparams.flags_rigidbody
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-V_model = params.rans2p['index'] or params.rans3p['index']
+if mparams.rans2p.index is not None:
+    V_model = mparams.rans2p.index
+elif mparams.rans3p.index is not None:
+    V_model = mparams.rans3p.index
+else:
+    assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3P must be used with addedMass'
 
 LevelModelType = AddedMass.LevelModel
 

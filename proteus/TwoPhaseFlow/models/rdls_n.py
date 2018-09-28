@@ -22,6 +22,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = mparams.rdls
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -71,8 +72,8 @@ subgridError = RDLS.SubgridError(coefficients=physics.coefficients,
                                  nd=nd)
 shockCapturing = RDLS.ShockCapturing(coefficients=physics.coefficients,
                                      nd=nd,
-                                     shockCapturingFactor=mparams.rdls['shockCapturingFactor'],
-                                     lag=mparams.rdls['lag_shockCapturing'])
+                                     shockCapturingFactor=myparams.shockCapturingFactor,
+                                     lag=myparams.lag_shockCapturing)
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
@@ -99,7 +100,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(mparams.rdls.minTol, mparams.rdls['tolFac']*he**2)
+nl_atol_res = max(myparams.minTol, myparams.tolFac*he**2)
 linTolFac = 0.001
 l_atol_res = 0.001*nl_atol_res
 #
@@ -107,3 +108,5 @@ useEisenstatWalker = False#True
 tolFac = 0.
 maxNonlinearIts = 25
 maxLineSearches = 0
+
+auxiliaryVariables = myparams.auxiliaryVariables
