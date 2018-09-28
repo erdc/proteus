@@ -12,7 +12,7 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
-#define GLOBAL_FCT 1
+#define GLOBAL_FCT 0
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
@@ -126,7 +126,8 @@ namespace proteus
                                            double* CTy,
                                            double* dLow,
                                            double run_cfl,
-                                           double* edge_based_cfl
+                                           double* edge_based_cfl,
+					   int debug
                                            )=0;
     virtual void calculateResidual(// last EDGE BASED version
                                    double* mesh_trial_ref,
@@ -565,12 +566,17 @@ namespace proteus
         {
           lambda1 = velR-2*sqrt(g*hR);
           lambda3 = velR+sqrt(g*hR);
+          if (debugging)
+            {
+              std::cout << "hL=0" << std::endl;
+              std::cout << lambda1 << "\t" << lambda3 << std::endl;
+            }	  
         }
       else if (hR==0) // right dry state
         {
           lambda1 = velL-sqrt(g*hL);
           lambda3 = velL+2*sqrt(g*hL);
-          if (debugging && false)
+          if (debugging)
             {
               std::cout << "hR=0" << std::endl;
               std::cout << lambda1 << "\t" << lambda3 << std::endl;
@@ -586,7 +592,7 @@ namespace proteus
           double fMin = phi(g,x0*hMin,hL,hR,velL,velR);
           double fMax = phi(g,x0*hMax,hL,hR,velL,velR);
 
-          if (debugging && false)
+          if (debugging)
             std::cout << "hMin, hMax, fMin, fMax: "
                       << hMin << ", " << hMax << ", "
                       << fMin << ", " << fMax
@@ -614,8 +620,12 @@ namespace proteus
           lambda1 = nu1(g,hStar,hL,velL);
           lambda3 = nu3(g,hStar,hR,velR);
         }
-      if (debugging && false)
-        std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
+      if (debugging)
+	{
+	  std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
+	  if (isinf(lambda1)==1 || isinf(lambda3)==1)
+	    abort();
+	}
       //return fmax(fmax(0.,-lambda1), fmax(0,lambda3));
       return fmax(lambda1, lambda3);
     }
@@ -1088,9 +1098,9 @@ namespace proteus
           double Pnegi=0., Pposi=0.;
 
 	  // LOW ORDER SOLUTION without extended source term. Eqn 6.23
-	  hLow[i]  = 0.;
-	  huLow[i] = 0.;
-	  hvLow[i] = 0.;	  
+	  hLow[i]  = hi;
+	  huLow[i] = hui;
+	  hvLow[i] = hvi;	  
 	  Kmax[i] = 0;
 	  
           // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
@@ -1281,6 +1291,14 @@ namespace proteus
           else
 	    {
 	      limited_hnp1[i] = fmax(limited_hnp1[i],0.);
+              //double aux = fmax(limited_hnp1[i],hEps); // hEps
+              double aux = fmax(limited_hnp1[i],hReg[i]); // hReg makes the code more robust
+              limited_hunp1[i] *=
+		2*std::pow(limited_hnp1[i],VEL_FIX_POWER)
+		/(std::pow(limited_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
+              limited_hvnp1[i] *=
+		2*std::pow(limited_hnp1[i],VEL_FIX_POWER)
+		/(std::pow(limited_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));	      
 	    }
         }
     }    
@@ -1302,7 +1320,8 @@ namespace proteus
                                  double* CTy,
                                  double* dLow,
                                  double run_cfl,
-                                 double* edge_based_cfl)
+                                 double* edge_based_cfl,
+				 int debug)
     {
       register double psi[numDOFsPerEqn];
       double max_edge_based_cfl = 0.;
@@ -1336,11 +1355,11 @@ namespace proteus
                   dLow[ij] = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
                                                                 hi,hui,hvi,
                                                                 hj,huj,hvj,
-                                                                hEps,hEps,false)*cij_norm, //hEps
+                                                                hEps,hEps,debug)*cij_norm, //hEps
                                   maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
                                                                 hj,huj,hvj,
                                                                 hi,hui,hvi,
-                                                                hEps,hEps,false)*cji_norm); //hEps
+                                                                hEps,hEps,debug)*cji_norm); //hEps
                   dLowii -= dLow[ij];
 
                   // FOR SMOOTHNESS INDICATOR //
@@ -1374,7 +1393,7 @@ namespace proteus
           if (POWER_SMOOTHNESS_INDICATOR==0)
             psi[i] = 1.0;
           else
-            psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+            psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: alpha^2 in the paper
         }
 
       if (REESTIMATE_MAX_EDGE_BASED_CFL==1)
