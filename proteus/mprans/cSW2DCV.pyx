@@ -81,7 +81,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
             double * CTy,
             double * dLow,
             double run_cfl,
-            double * edge_based_cfl)
+            double * edge_based_cfl,
+            int debug)
         void calculateResidual(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -600,7 +601,8 @@ cdef class cSW2DCV_base:
                               numpy.ndarray CTy,
                               numpy.ndarray dLow,
                               double run_cfl,
-                              numpy.ndarray edge_based_cfl):
+                              numpy.ndarray edge_based_cfl,
+                              int debug):
         return self.thisptr.calculateEdgeBasedCFL(
             g,
             numDOFsPerEqn,
@@ -619,7 +621,8 @@ cdef class cSW2DCV_base:
             < double * > CTy.data,
             < double * > dLow.data,
             run_cfl,
-            < double * > edge_based_cfl.data)
+            < double * > edge_based_cfl.data,
+            debug)
     def calculateResidual(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,

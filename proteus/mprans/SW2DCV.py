@@ -147,7 +147,8 @@ class RKEV(proteus.TimeIntegration.SSP):
             CTy,
             self.transport.dLow,
             self.runCFL,
-            self.transport.edge_based_cfl)
+            self.transport.edge_based_cfl,
+            0)
 
         maxCFL = max(maxCFL, max(adjusted_maxCFL, globalMax(self.edge_based_cfl.max())))
         self.dt = old_div(self.runCFL, maxCFL)
@@ -157,7 +158,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         if old_div(self.dt, self.dtLast) > self.dtRatioMax:
             self.dt = self.dtLast * self.dtRatioMax
         self.t = self.tLast + self.dt
-        self.substeps = [self.t for i in range(self.nStages)]  # Manuel is ignoring different time step levels for now
+        self.substeps = [self.t for i in range(self.nStages)]  # Ignoring dif. time step levels 
 
     def initialize_dt(self, t0, tOut, q):
         """
