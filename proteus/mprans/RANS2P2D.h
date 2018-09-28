@@ -2215,7 +2215,7 @@ namespace proteus
                   jacDet,
                   jacInv[nSpace*nSpace],
                   p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_v_trial_element*nSpace],
-                  p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_v_trial_element],
+                  p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_v_test_element],
                   p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_v_test_element*nSpace],
                   dV,x,y,z,xt,yt,zt,
                   p_element_avg=0.0,
@@ -2277,7 +2277,7 @@ namespace proteus
 		if (PRESSURE_PROJECTION_STABILIZATION)
 		  ck.DOFaverage(p_dof, &p_l2g[eN_nDOF_trial_element],p_element_avg);
                 //precalculate test function products with integration weights
-                for (int j=0;j<nDOF_trial_element;j++)
+                for (int j=0;j<nDOF_test_element;j++)
                   {
                     p_test_dV[j] = p_test_ref[k*nDOF_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
@@ -2286,7 +2286,7 @@ namespace proteus
                       }
                   }
                 //precalculate test function products with integration weights
-                for (int j=0;j<nDOF_v_trial_element;j++)
+                for (int j=0;j<nDOF_v_test_element;j++)
                   {
                     vel_test_dV[j] = vel_test_ref[k*nDOF_v_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
@@ -2747,19 +2747,20 @@ namespace proteus
                       ck.Advection_weak(mesh_vel,&p_grad_test_dV[i_nSpace]);
 
                     elementResidual_p[i] += ck.Advection_weak(mass_adv,&p_grad_test_dV[i_nSpace])
-                            + ck.Hamiltonian_weak(mass_ham, p_test_dV[i])
-                            + DM*MOVING_DOMAIN*(ck.Reaction_weak(alphaBDF*1.0,p_test_dV[i]) -
-                                        ck.Reaction_weak(alphaBDF*1.0,p_test_dV[i]*q_dV_last[eN_k]/dV) -
-                                        ck.Advection_weak(mesh_vel,&p_grad_test_dV[i_nSpace])) +
+                      + ck.Hamiltonian_weak(mass_ham, p_test_dV[i])
+                      + DM*MOVING_DOMAIN*(ck.Reaction_weak(alphaBDF*1.0,p_test_dV[i]) -
+                                          ck.Reaction_weak(alphaBDF*1.0,p_test_dV[i]*q_dV_last[eN_k]/dV) -
+                                          ck.Advection_weak(mesh_vel,&p_grad_test_dV[i_nSpace])) +
                       //VRANS
                       ck.Reaction_weak(mass_source,p_test_dV[i]);  //VRANS source term for wave maker
                       //
                     if (nDOF_test_element == nDOF_v_test_element)
-                      elementResidual_p[i] +=
-                        PRESSURE_PROJECTION_STABILIZATION * ck.pressureProjection_weak(mom_uu_diff_ten[1], p, p_element_avg, p_test_ref[k*nDOF_test_element+i], dV) +
-                        (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) +
-                        (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_v,Lstar_v_p[i]);
-                    
+                      {
+                        elementResidual_p[i] +=
+                          PRESSURE_PROJECTION_STABILIZATION * ck.pressureProjection_weak(mom_uu_diff_ten[1], p, p_element_avg, p_test_ref[k*nDOF_test_element+i], dV) +
+                          (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) +
+                          (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_v,Lstar_v_p[i]);
+                      }
 		    if (PRESSURE_PROJECTION_STABILIZATION==1. && mom_uu_diff_ten[1]==0.){
 			printf("Warning the Bochev-Dohrnmann-Gunzburger stabilization cannot be applied to inviscid fluids.");
 		      }
@@ -3057,11 +3058,11 @@ namespace proteus
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_ext);
                 //precalculate test function products with integration weights
-                for (int j=0;j<nDOF_trial_element;j++)
+                for (int j=0;j<nDOF_test_element;j++)
                   {
                     p_test_dS[j] = p_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
                   }
-                for (int j=0;j<nDOF_v_trial_element;j++)
+                for (int j=0;j<nDOF_v_test_element;j++)
                   {
                     vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_v_test_element+j]*dS;
                     for (int I=0;I<nSpace;I++)
@@ -3999,7 +4000,7 @@ namespace proteus
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v);
                 //precalculate test function products with integration weights
-                for (int j=0;j<nDOF_trial_element;j++)
+                for (int j=0;j<nDOF_test_element;j++)
                   {
                     p_test_dV[j] = p_test_ref[k*nDOF_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
@@ -4007,7 +4008,7 @@ namespace proteus
                         p_grad_test_dV[j*nSpace+I]   = p_grad_trial[j*nSpace+I]*dV;//assume test_j == trial_j
                       }
                   }
-                for (int j=0;j<nDOF_v_trial_element;j++)
+                for (int j=0;j<nDOF_v_test_element;j++)
                   {
                     vel_test_dV[j] = vel_test_ref[k*nDOF_v_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
@@ -4487,9 +4488,10 @@ namespace proteus
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
                         register int j_nSpace = j*nSpace;
-                        elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]);
                         if (nDOF_test_element == nDOF_v_trial_element)
-			  elementJacobian_p_p[i][j] += PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
+                          {
+                            elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) + PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
+                          }
                       }
                   }
                 for(int i=0;i<nDOF_test_element;i++)
@@ -4515,8 +4517,7 @@ namespace proteus
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
                         register int j_nSpace = j*nSpace;
-                        elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i])
-                                        +
+                        elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i])+
                           MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);
                         elementJacobian_v_p[i][j] += ck.HamiltonianJacobian_weak(dmom_v_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i])+
                           MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_v[i]);
@@ -4850,12 +4851,12 @@ namespace proteus
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_ext);
                 //precalculate test function products with integration weights
-                for (int j=0;j<nDOF_trial_element;j++)
+                for (int j=0;j<nDOF_test_element;j++)
                   {
                     p_test_dS[j] = p_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
                   }
                 //precalculate test function products with integration weights
-                for (int j=0;j<nDOF_v_trial_element;j++)
+                for (int j=0;j<nDOF_v_test_element;j++)
                   {
                     vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_v_test_element+j]*dS;
                     for (int I=0;I<nSpace;I++)
