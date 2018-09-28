@@ -4,7 +4,8 @@ from proteus import (StepControl,
                      TimeIntegration,
                      NonlinearSolvers,
                      LinearSolvers,
-                     LinearAlgebraTools)
+                     LinearAlgebraTools,
+                     NumericalFlux)
 import moveMeshMonitor_p as physics
 
 # *********************************************** #
@@ -15,24 +16,25 @@ myTpFlowProblem = physics.myTpFlowProblem
 nd = myTpFlowProblem.nd
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
-he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models
+meshparams = params.mesh
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = myTpFlowProblem.triangleFlag
-nnx = myTpFlowProblem.nnx
-nny = myTpFlowProblem.nny
-nnz = myTpFlowProblem.nnz
-triangleOptions = domain.MeshOptions.triangleOptions
-parallelPartitioningType = myTpFlowProblem.parallelPartitioningType
-nLayersOfOverlapForParallel = myTpFlowProblem.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = myTpFlowProblem.restrictFineSolutionToAllMeshes
+he = meshparams.he
+triangleFlag = meshparams.triangleFlag
+nnx = meshparams.nnx
+nny = meshparams.nny
+nnz = meshparams.nnz
+triangleOptions = meshparams.triangleOptions
+parallelPartitioningType = meshparams.parallelPartitioningType
+nLayersOfOverlapForParallel = meshparams.nLayersOfOverlapForParallel
+restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
@@ -86,7 +88,7 @@ linearSolverConvergenceTest = 'r-true'
 # ********** TOLERANCES ********** #
 # ******************************** #
 nl_atol_res = max(mparams.moveMeshMonitor.minTol, mparams.moveMeshMonitor['tolFac']*ct.he**2)
-linTolFac = 0.001
+linTolFac = 0.
 l_atol_res = 0.001*nl_atol_res
 #
 # useEisenstatWalker = False#True

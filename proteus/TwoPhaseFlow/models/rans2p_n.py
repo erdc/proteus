@@ -16,25 +16,26 @@ myTpFlowProblem = physics.myTpFlowProblem
 nd = myTpFlowProblem.nd
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
-he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
 pparams = params.physical # physical parameters
+meshparams = params.mesh
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = myTpFlowProblem.triangleFlag
-nnx = myTpFlowProblem.nnx
-nny = myTpFlowProblem.nny
-nnz = myTpFlowProblem.nnz
-triangleOptions = domain.MeshOptions.triangleOptions
-parallelPartitioningType = myTpFlowProblem.parallelPartitioningType
-nLayersOfOverlapForParallel = myTpFlowProblem.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = myTpFlowProblem.restrictFineSolutionToAllMeshes
+he = meshparams.he
+triangleFlag = meshparams.triangleFlag
+nnx = meshparams.nnx
+nny = meshparams.nny
+nnz = meshparams.nnz
+triangleOptions = meshparams.triangleOptions
+parallelPartitioningType = meshparams.parallelPartitioningType
+nLayersOfOverlapForParallel = meshparams.nLayersOfOverlapForParallel
+restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 
 # ******************************** #
 # ********** PARAMETERS ********** #

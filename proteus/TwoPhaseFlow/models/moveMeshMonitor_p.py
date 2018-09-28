@@ -17,37 +17,43 @@ nd = myTpFlowProblem.nd
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
+movingDomain = myTpFlowProblem.movingDomain
 
 params = myTpFlowProblem.Parameters
-mparams = myTpFlowProblem.Models # model parameters
-pparams = myTpFlowProblem.physical # physical parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
+# MESH #
+meshparams = params.mesh
+genMesh = meshparams.genMesh
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-func = mparams.movemeshmonitor['func']
-he_max = mparams.movemeshmonitor['he_max']
-he_max = mparams.movemeshmonitor['he_min']
-ntimes_solved = mparams.movemeshmonitor['ntimes_solved']
-fixedNodeMaterialTypes = mparams.movemeshmonitor['fixedNodeMaterialTypes']
-fixedElementMaterialTypes = mparams.movemeshmonitor['fixedElementMaterialTypes']
-noNodeVelocityMaterialTypes = mparams.movemeshmonitor['noNodeVelocityMaterialTypes']
-nSmoothOut = mparams.movemeshmonitor['nSmoothOut']
-epsFact = mparams.movemeshmonitor['epsFact']
-epsTimeStep = mparams.movemeshmonitor['epsTimeStep']
-grading = mparams.movemeshmonitor['grading']
-grading_type = mparams.movemeshmonitor['grading_type']
-resetNodeVelocityArray = mparams.movemeshmonitor['resetNodeVelocityArray']
-useLS = mparams.movemeshmonitor['useLS']
-do_firstStep = mparams.movemeshmonitor['do_firstStep']
-func = mparams.movemeshmonitor['func']
+myparams = mparams.moveMeshMonitor
+func = myparams.func
+he_max = myparams.he_max
+he_min = myparams.he_min
+ntimes_solved = myparams.ntimes_solved
+fixedNodeMaterialTypes = myparams.fixedNodeMaterialTypes
+fixedElementMaterialTypes = myparams.fixedElementMaterialTypes
+noNodeVelocityNodeMaterialTypes = myparams.noNodeVelocityNodeMaterialTypes
+nSmoothOut = myparams.nSmoothOut
+epsFact = myparams.epsFact
+epsTimeStep = myparams.epsTimeStep
+grading = myparams.grading
+grading_type = myparams.grading_type
+resetNodeVelocityArray = myparams.resetNodeVelocityArray
+useLS = myparams.useLS
+do_firstStep = myparams.do_firstStep
+scale_with_nd = myparams.scale_with_nd
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_model = mparams.movemeshmonitor['index']
-assert ME_model is not None, 'vof model index was not set!'
-if mparams.movemeshmonitor['useLS'] is True:
+ME_MODEL = mparams.moveMeshMonitor['index']
+assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
+if mparams.moveMeshMonitor['useLS'] is True:
     LS_MODEL = mparams.ncls['index']
 else:
     LS_MODEL = None
@@ -59,7 +65,7 @@ coefficients = MoveMeshMonitor.Coefficients(func=func,
                                             nd=nd,
                                             he_max=he_max,
                                             he_min=he_min,
-                                            ntimes_solved=movemesh_ntimes,
+                                            ntimes_solved=ntimes_solved,
                                             LS_MODEL=LS_MODEL,
                                             ME_MODEL=ME_MODEL,
                                             fixedNodeMaterialTypes=fixedNodeMaterialTypes,

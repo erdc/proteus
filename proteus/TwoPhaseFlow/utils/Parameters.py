@@ -299,8 +299,9 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         self.fixedNodeMaterialTypes = None
         self.fixedElementMaterialTypes = None
         self.noNodeVelocityNodeMaterialTypes = None
-        self.scale_with_nd = None
+        self.scale_with_nd = False
         self.do_firstStep = False
+        self.ntimes_solved = 1
         # freeze attributes
         self._freeze()
 

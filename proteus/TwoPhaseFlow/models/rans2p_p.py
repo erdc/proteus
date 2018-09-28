@@ -25,6 +25,10 @@ params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
 pparams = params.physical # physical parameters
 
+# MESH #
+meshparams = params.mesh
+genMesh = meshparams.genMesh
+
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #

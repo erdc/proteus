@@ -19,6 +19,10 @@ movingDomain = myTpFlowProblem.movingDomain
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+# MESH #
+meshparams = params.mesh
+genMesh = meshparams.genMesh
+
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
