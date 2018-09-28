@@ -21,7 +21,7 @@ opts = Context.Options([
     ("grid", True, "Use a regular grid"),
     ("triangles", True, "Use triangular or tetrahedral elements"),
     ("spaceOrder", 1, "Use (bi-)linear or (bi-)quadratic spaces"),
-    ("timeOrder", 1, "Use bdf1 or bdf2"),
+    ("timeOrder", 2, "Use bdf1 or bdf2"),
     ("periodic", False, "Use periodic boundary conditions"),
     ("weak", True, "Use weak boundary conditions"),
     ("coord", False, "Use coordinates for setting boundary conditions"),
@@ -112,18 +112,25 @@ if opts.periodic:
 else:
     if p.nd == 3:
         h = p.L[2]
-        inflow_v = opts.Re*p.coefficients.nu/p.L[2]
+        umax = opts.Re*p.coefficients.nu/p.L[2]
     else:
         h = p.L[1]
-        inflow_v = opts.Re*p.coefficients.nu/p.L[1]
-    G = 8.0*opts.Re/(p.coefficients.rho*h)
+        umax = opts.Re*p.coefficients.nu/p.L[1]
     mu = p.coefficients.nu*p.coefficients.rho
+    G = (umax*8.0*mu)/(h**2)
     analyticalSolution = {0:AnalyticalSolutions.PlanePoiseuilleFlow_p(plateSeperation=h,
                                                                       mu = mu,
                                                                       grad_p = -G),
                           1:AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
                                                                       mu = mu,
+                                                                      grad_p = -G),
+                          2:AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
+                                                                      mu = mu,
                                                                       grad_p = -G)}
+    if p.nd == 3:
+        analyticalSolution[3] = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
+                                                                          mu = mu,
+                                                                          grad_p = -G)
 
 if  opts.coord:
     if p.nd == 3:
@@ -259,20 +266,18 @@ else:
                 if onFront(x) or onBack(x):
                     return lambda x,t: 0.0
 
-        advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
-                                            1:getAFBC_u_duct,
-                                            2:getAFBC_v_duct}
+        p.advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
+                                              1:getAFBC_u_duct,
+                                              2:getAFBC_v_duct}
         if p.nd == 3:
             def getAFBC_w_duct(x,flag):
                 if onFront(x) or onBack(x):
                     return lambda x,t: 0.0
-            advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
+            p.advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
 
         def getDFBC_duct(x,flag):
-            if flag == boundaryTags['right']:
+            if onRight(x):
                 return lambda x,t: 0.0
-#            if onRight(x):
-#                return lambda x,t: 0.0
             elif p.nd == 2 and flag == 0:
                 return lambda x,t: 0.0
             elif p.nd == 3:
