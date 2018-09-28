@@ -2570,23 +2570,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
         comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
         # comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),aceArea)
-        for i in range(self.coefficients.nParticles):
-            # for I in range(3):
-            #     self.coefficients.particle_netForces[i, I] = globalSum(
-            #         self.coefficients.particle_netForces[i, I])
-            #     self.coefficients.particle_netForces[i+self.coefficients.nParticles, I] = globalSum(
-            #         self.coefficients.particle_netForces[i+self.coefficients.nParticles, I])
-            #     self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I] = globalSum(
-            #         self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I])
-            #     self.coefficients.particle_netMoments[i, I] = globalSum(
-            #         self.coefficients.particle_netMoments[i, I])
-            # self.coefficients.particle_surfaceArea[i] = globalSum(
-            #     self.coefficients.particle_surfaceArea[i])
-            logEvent("particle i=" + `i`+ " force " + `self.coefficients.particle_netForces[i]`)
-            logEvent("particle i=" + `i`+ " moment " + `self.coefficients.particle_netMoments[i]`)
-            # logEvent("particle i=" + `i`+ " surfaceArea " + `self.coefficients.particle_surfaceArea[i]`)
-            logEvent("particle i=" + `i`+ " stress force " + `self.coefficients.particle_netForces[i+self.coefficients.nParticles]`)
-            logEvent("particle i=" + `i`+ " pressure force " + `self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]`)
+        # for i in range(self.coefficients.nParticles):
+        #     # for I in range(3):
+        #     #     self.coefficients.particle_netForces[i, I] = globalSum(
+        #     #         self.coefficients.particle_netForces[i, I])
+        #     #     self.coefficients.particle_netForces[i+self.coefficients.nParticles, I] = globalSum(
+        #     #         self.coefficients.particle_netForces[i+self.coefficients.nParticles, I])
+        #     #     self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I] = globalSum(
+        #     #         self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I])
+        #     #     self.coefficients.particle_netMoments[i, I] = globalSum(
+        #     #         self.coefficients.particle_netMoments[i, I])
+        #     # self.coefficients.particle_surfaceArea[i] = globalSum(
+        #     #     self.coefficients.particle_surfaceArea[i])
+        #     logEvent("particle i=" + `i`+ " force " + `self.coefficients.particle_netForces[i]`)
+        #     logEvent("particle i=" + `i`+ " moment " + `self.coefficients.particle_netMoments[i]`)
+        #     # logEvent("particle i=" + `i`+ " surfaceArea " + `self.coefficients.particle_surfaceArea[i]`)
+        #     logEvent("particle i=" + `i`+ " stress force " + `self.coefficients.particle_netForces[i+self.coefficients.nParticles]`)
+        #     logEvent("particle i=" + `i`+ " pressure force " + `self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]`)
 
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
