@@ -72,7 +72,10 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      eb_penalty_constant=100.0,
                                      forceStrongDirichlet=not opts.weak,
                                      turbulenceClosureModel=0,
-                                     NONCONSERVATIVE_FORM=1.0)
+                                     NONCONSERVATIVE_FORM=1.0,
+                                     MOMENTUM_SGE=0.0,
+                                     PRESSURE_SGE=0.0,
+                                     VELOCITY_SGE=0.0)
 
 p.T = 100.0
 nsave=100
@@ -372,7 +375,7 @@ elif opts.timeOrder == 1:
 n.stepController  = StepControl.Min_dt_cfl_controller
 n.systemStepExact = False
 
-useTaylorHood = False
+useTaylorHood = True
 if opts.spaceOrder == 1:
     if opts.triangles:
         if useTaylorHood:
