@@ -386,7 +386,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.b.dof = mesh.nodeArray[:, 2].copy()
         else:
             self.b.dof = self.bathymetry[0]([x, y])
-        # self.b.dof[:] = 0. #TMP
+        #self.b.dof[:] = 0. #TMP
 
     def initializeElementQuadrature(self, t, cq):
         pass
@@ -799,9 +799,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.cterm_global = None
         self.cterm_transpose_global = None
         # For FCT
-        self.low_order_hnp1 = None
-        self.low_order_hunp1 = None
-        self.low_order_hvnp1 = None
+        self.extendedSourceTerm_hu=None
+        self.extendedSourceTerm_hv=None
         self.dH_minus_dL = None
         self.muH_minus_muL = None
         # NORMALS
@@ -949,9 +948,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.timeIntegration.u[hIndex],  # high order solution
                           self.timeIntegration.u[huIndex],
                           self.timeIntegration.u[hvIndex],
-                          self.low_order_hnp1,  # low order solution
-                          self.low_order_hunp1,
-                          self.low_order_hvnp1,
+                          self.extendedSourceTerm_hu,
+                          self.extendedSourceTerm_hv,
                           limited_hnp1,
                           limited_hunp1,
                           limited_hvnp1,
@@ -1185,9 +1183,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dH_minus_dL = np.zeros(Cx.shape, 'd')
         self.muH_minus_muL = np.zeros(Cx.shape, 'd')
-        self.low_order_hnp1 = numpy.zeros(self.u[0].dof.shape, 'd')
-        self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape, 'd')
-        self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape, 'd')
+        self.extendedSourceTerm_hu = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.extendedSourceTerm_hv = numpy.zeros(self.u[0].dof.shape, 'd')
 
         # Allocate space for dLow (for the first stage in the SSP method)
         if self.dLow is None:
@@ -1361,9 +1358,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('u', 0)],
             self.q[('u', 1)],
             self.q[('u', 2)],
-            self.low_order_hnp1,
-            self.low_order_hunp1,
-            self.low_order_hvnp1,
+            self.extendedSourceTerm_hu,
+            self.extendedSourceTerm_hv,
             self.dH_minus_dL,
             self.muH_minus_muL,
             self.coefficients.cE,
