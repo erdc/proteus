@@ -209,14 +209,14 @@ class TwoPhaseFlowProblem:
         self.Parameters.initializeParameters()
         # mesh
         if self.Parameters.mesh.outputFiles['poly'] is True:
-            domain.writePoly(self.Parameters.mesh.outputFiles_name)
+            self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
         if self.Parameters.mesh.outputFiles['ply'] is True:
-            domain.writePLY(self.Parameters.mesh.outputFiles_name)
+            self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
         if self.Parameters.mesh.outputFiles['asymptote'] is True:
-            domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
-            domain.writeGeo(self.Parameters.mesh.outputFiles_name)
-            domain.use_gmsh = True
+            self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
+        if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
+            self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
+            self.domain.use_gmsh = True
         self.Parameters.mesh.setTriangleOptions()
 
 class OutputStepping:

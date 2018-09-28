@@ -143,6 +143,15 @@ else: #test_case=2
     physical_parameters['viscosityB'] = 0.1/physical_parameters['densityB']
     physical_parameters['surf_tension_coeff'] = 1.96    
 
+params = myTpFlowProblem.Parameters
+
+# MESH PARAMETERS
+params.mesh.genMesh = opts.genMesh
+params.mesh.he = he
+if structured:
+    params.mesh.nnx = nnx
+    params.mesh.nny = nny
+
 # if opts.ns_model == 0:
 #     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
 #     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1

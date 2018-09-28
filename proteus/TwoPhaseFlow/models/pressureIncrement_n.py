@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from pressureIncrement_p import *
+import pressureIncrement_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #

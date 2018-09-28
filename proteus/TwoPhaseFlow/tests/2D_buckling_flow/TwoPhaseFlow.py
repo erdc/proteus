@@ -208,3 +208,12 @@ myTpFlowProblem.Parameters.physical['densityB'] = 1.0
 myTpFlowProblem.Parameters.physical['viscosityB'] = 2.0E-5/1.0
 myTpFlowProblem.Parameters.physical['surf_tension_coeff'] = 0.
 myTpFlowProblem.Parameters.Models.rans3p['ns_forceStrongDirichlet'] = True
+
+params = myTpFlowProblem.Parameters
+
+# MESH PARAMETERS
+params.mesh.genMesh = opts.genMesh
+params.mesh.he = he
+if structured:
+    params.mesh.nnx = nnx
+    params.mesh.nny = nny

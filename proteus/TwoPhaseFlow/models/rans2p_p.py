@@ -13,8 +13,8 @@ nd = domain.nd
 mesh = domain.MeshOptions
 
 myTpFlowProblem = ct.myTpFlowProblem 
-initialConditions   = myTpFlowProblem.initialConditions
-boundaryConditions  = myTpFlowProblem.boundaryConditions
+IC = myTpFlowProblem.initialConditions
+boundaryConditions = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
 movingDomain = myTpFlowProblem.movingDomain
 
@@ -96,11 +96,11 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
-initialConditions = {0: initialConditions['pressure'],
-                     1: initialConditions['vel_u'],
-                     2: initialConditions['vel_v']}
+initialConditions = {0: IC['pressure'],
+                     1: IC['vel_u'],
+                     2: IC['vel_v']}
 if nd == 3:
-    initialConditions[3] = initialConditions['vel_w']
+    initialConditions[3] = IC['vel_w']
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #

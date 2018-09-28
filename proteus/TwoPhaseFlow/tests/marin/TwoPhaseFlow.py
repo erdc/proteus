@@ -281,6 +281,12 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              boundaryConditions=boundaryConditions)
 myTpFlowProblem.Parameters.physical['gravity'] = [0.0,0.0,-9.8]
 
+params = myTpFlowProblem.Parameters
+
+# MESH PARAMETERS
+params.mesh.genMesh = opts.genMesh
+params.mesh.he = he
+
 # if opts.ns_model == 0:
 #     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
 #     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
