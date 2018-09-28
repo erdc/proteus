@@ -223,7 +223,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_alpha=1000.0,
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
-                 particle_nitsche=1.0,):
+                 particle_nitsche=1.0,
+                 bdyNullSpace='NoNullSpace'):
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
@@ -317,6 +318,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
+        self.bdyNullSpace = bdyNullSpace
         mass = {}
         advection = {}
         diffusion = {}
@@ -876,8 +878,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='RANS2P',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False,
-                 bdyNullSpace=False):
+                 movingDomain=False):
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         useConstant_he = coefficients.useConstant_he  # this is a hack to test the effect of using a constant smoothing width
         self.postProcessing = True
@@ -914,7 +915,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList = None  # explicit Dirichlet  conditions for now, no Dirichlet BC constraints
-        self.bdyNullSpace = bdyNullSpace
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
