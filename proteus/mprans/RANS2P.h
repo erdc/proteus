@@ -95,6 +95,8 @@ namespace proteus
                                    double * ebqe_eddy_viscosity_last,
                                    int* p_l2g,
                                    int* vel_l2g,
+                                   int* rp_l2g,
+                                   int* rvel_l2g,
                                    double* p_dof,
                                    double* u_dof,
                                    double* v_dof,
@@ -2418,6 +2420,8 @@ namespace proteus
                              //
                              int *p_l2g,
                              int *vel_l2g,
+                             int *rp_l2g,
+                             int *rvel_l2g,
                              double *p_dof,
                              double *u_dof,
                              double *v_dof,
@@ -3286,10 +3290,10 @@ namespace proteus
 
                 elementResidual_p_save[eN_i] +=  elementResidual_p[i];
                 mesh_volume_conservation_element_weak += elementResidual_mesh[i];
-                globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i];
-                globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
-                globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
-                globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i];
+                globalResidual[offset_p+stride_p*rp_l2g[eN_i]]+=elementResidual_p[i];
+                globalResidual[offset_u+stride_u*rvel_l2g[eN_i]]+=elementResidual_u[i];
+                globalResidual[offset_v+stride_v*rvel_l2g[eN_i]]+=elementResidual_v[i];
+                globalResidual[offset_w+stride_w*rvel_l2g[eN_i]]+=elementResidual_w[i];
               }//i
             mesh_volume_conservation += mesh_volume_conservation_element;
             mesh_volume_conservation_weak += mesh_volume_conservation_element_weak;
@@ -4230,10 +4234,10 @@ namespace proteus
 
                 elementResidual_p_save[eN_i] +=  elementResidual_p[i];
                 mesh_volume_conservation_weak += elementResidual_mesh[i];
-                globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i];
-                globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
-                globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
-                globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i];
+                globalResidual[offset_p+stride_p*rp_l2g[eN_i]]+=elementResidual_p[i];
+                globalResidual[offset_u+stride_u*rvel_l2g[eN_i]]+=elementResidual_u[i];
+                globalResidual[offset_v+stride_v*rvel_l2g[eN_i]]+=elementResidual_v[i];
+                globalResidual[offset_w+stride_w*rvel_l2g[eN_i]]+=elementResidual_w[i];
               }//i
           }//ebNE
         /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
