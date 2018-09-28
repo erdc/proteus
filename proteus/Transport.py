@@ -1659,7 +1659,6 @@ class OneLevelTransport(NonlinearEquation):
         if analyticalSolutionsDict is None:
             return
         for cj,sol in analyticalSolutionsDict.items():
-            #pdb.set_trace()
             if cj not in self.ua:
                 self.ua[cj] = copy.deepcopy(self.u[cj])
                 self.ua[cj].name=self.u[cj].name+'_analytical'
@@ -1844,14 +1843,7 @@ class OneLevelTransport(NonlinearEquation):
                         raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+repr(global_dofN)+". You probably need add diagonal mass or reaction term")
                     #print "row = ",global_dofN,"\t",self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]].max()
         rowptr, colind, nzval = jacobian.getCSRrepresentation()
-        #for i in range(self.dim):
-        #   print "row i=",i,'\t',nzval[rowptr[i]:rowptr[i+1]].max()
-        #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
-        #cek debug
-        #jacobian.fwrite("jacobian"+`self.nonlinear_function_jacobian_evaluations`)
-        #don't leave this uncommented when you check it in
-        #jacobian.fwrite("jacdebug_p%s_%s.txt" % (self.comm.rank(),self.nonlinear_function_jacobian_evaluations))
         return jacobian
     def getJacobian_dense(self,jacobian):
         import copy
@@ -2382,13 +2374,9 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                              jacobian)
                     else:
                         raise RuntimeError("boundary adjoint terms with CSR jacobian and dense diffusion tensor not implemented")
-        #mwf debug
-        #jacobian.fwrite("matdebug_p%s.txt" % self.comm.rank())
         return jacobian
     def calculateElementResidual(self):
         """Calculate all the element residuals"""
-        import pdb
-        #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         for ci  in list(self.coefficients.advection.keys()):
@@ -2422,9 +2410,6 @@ class OneLevelTransport(NonlinearEquation):
                     else:
                         rho_split = 0
                     if self.sd:
-                        #tjp need to zero velocity because this just updates
-                        #import pdb
-                        #pdb.set_trace()
                         self.q[('velocity',ck)].fill(0.0)
                         cfemIntegrals.updateDiffusion_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                         self.numericalFlux.aTilde[(ci,ck)],
@@ -6318,6 +6303,8 @@ class MultilevelTransport(object):
                 trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned = mesh.nodeOffsets_subdomain_owned.copy()
                 trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()] = ownedDOF[0]
                 trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()+1] = ownedDOF[-1]+1
+                trialSpaceDict[0].dofMap.nDOF = trialSpaceDict[0].dofMap.nDOF_subdomain
+                trialSpaceDict[0].dofMap.range_nDOF = xrange(trialSpaceDict[0].dofMap.nDOF)
                 #build a mapping of the subdomain DOF to the free subdomain DOF
                 subdomain_global2freeGlobal={}
                 for nN_subdomain,nN_global in enumerate(trialSpaceDict[0].dofMap.subdomain2global):
@@ -6346,12 +6333,16 @@ class MultilevelTransport(object):
                     trialSpaceDict[ci].dofMap.dof_offsets_subdomain_owned = trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned
                     trialSpaceDict[ci].dofMap.nDOF_all_processes = trialSpaceDict[0].dofMap.nDOF_all_processes
                     trialSpaceDict[ci].dofMap.nDOF_subdomain_owned = trialSpaceDict[0].dofMap.nDOF_subdomain_owned
+                    trialSpaceDict[ci].dofMap.nDOF = trialSpaceDict[ci].dofMap.nDOF_subdomain
+                    trialSpaceDict[ci].dofMap.range_nDOF = xrange(trialSpaceDict[ci].dofMap.nDOF)
                 for ci in range(len(testSpaceDict)):
                     testSpaceDict[ci].dofMap.nDOF_subdomain = trialSpaceDict[0].dofMap.nDOF_subdomain
                     testSpaceDict[ci].dofMap.subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
                     testSpaceDict[ci].dofMap.dof_offsets_subdomain_owned = trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned
                     testSpaceDict[ci].dofMap.nDOF_all_processes = trialSpaceDict[0].dofMap.nDOF_all_processes
                     testSpaceDict[ci].dofMap.nDOF_subdomain_owned = trialSpaceDict[0].dofMap.nDOF_subdomain_owned
+                    testSpaceDict[ci].dofMap.nDOF = testSpaceDict[ci].dofMap.nDOF_subdomain
+                    testSpaceDict[ci].dofMap.range_nDOF = xrange(testSpaceDict[ci].dofMap.nDOF)
             #
             #
             logEvent(memory("boundary conditions","MultilevelTransport"),level=4)

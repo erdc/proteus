@@ -56,7 +56,7 @@ html: source/api/modules.rst $(BUILDDIR)/capi/html/files.html
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)."
 
 source/api/modules.rst:
-	sphinx-apidoc --output-dir=source/api ../proteus --separate -M
+	sphinx-apidoc --output-dir=source/api ../proteus "../proteus/tests" "../proteus/test_utils" "../proteus/config" --maxdepth=2 --separate --module-first
 
 $(BUILDDIR)/capi/html/files.html:
 	doxygen

@@ -9,6 +9,8 @@ from scipy import signal as sn
 import collections as cll
 import csv
 from proteus import WaveTools as WT
+import numpy as np
+import WaveTools as WT
 import math
        
 
@@ -151,7 +153,6 @@ def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e30
         period = mean(period)
     else:
         print("mode must be either 'period', 'mean' or an integer ")
-
 
     return [period,height]
                       
