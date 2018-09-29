@@ -90,6 +90,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   apf::Field* vmsErr = apf::createField(m,"VMSL2",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   //vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  apf::Field* vmsErr_nuErr = apf::createField(m,"VMSnuErr",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  apf::Field* vmsErr_residual = apf::createField(m,"VMSresidualVolume",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   
   if(PCU_Comm_Self()==0)
     std::cout<<"Created the error fields\n";
@@ -303,6 +305,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     info.gij = gij;
 
     double nu_err = get_nu_err(info);
+    apf::setScalar(vmsErr_nuErr,ent,0,nu_err);
+    apf::setScalar(vmsErr_residual,ent,0,tempVal*sqrt(apf::measure(m,ent)));
     double VMSerrH1 = nu_err*tempVal*sqrt(apf::measure(m,ent));
     if(localNumber(ent) == 5048){
 /*
