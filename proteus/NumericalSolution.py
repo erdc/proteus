@@ -1781,6 +1781,10 @@ class NS_base(object):  # (HasTraits):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                 self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
                    coef.vectorName, vector)
+                #Transfer dof_last
+                for vci in range(len(coef.vectorComponents)):
+                  vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
+                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(coef.vectorName+"_old", vector)
                 del vector
               for ci in range(coef.nc):
                 if coef.vectorComponents is None or \
@@ -1790,6 +1794,29 @@ class NS_base(object):  # (HasTraits):
                   self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
                       coef.variableNames[ci], scalar)
                   del scalar
+          #Get Physical Parameters
+          #Can we do this in a problem-independent  way?
+          rho = numpy.array([self.pList[0].rho_0,
+                           self.pList[0].rho_1])
+          nu = numpy.array([self.pList[0].nu_0,
+                            self.pList[0].nu_1])
+          g = numpy.asarray(self.pList[0].g)
+          if(hasattr(self,"tn")):
+              deltaT = self.tn-self.tn_last
+          else:
+              deltaT = 0
+          epsFact = self.pList[0].epsFact_density
+          self.pList[0].domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+          del rho, nu, g, epsFact
+
+          if (self.pList[0].domain.PUMIMesh.size_field_config() == 'finalError'):
+            errorTotalERM = self.pList[0].domain.PUMIMesh.get_local_error()
+            errorTotalVMS = self.pList[0].domain.PUMIMesh.get_VMS_error()
+
+            f = open('totalErrorEstimates.txt','w')
+            #f = open('totalErrorEstimates.txt','a')
+            f.write("%.15f %.15f\n" % (errorTotalERM,errorTotalVMS))
+            f.close()
           self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
 
         for index,model in enumerate(self.modelList):

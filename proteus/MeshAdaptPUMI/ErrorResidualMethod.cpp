@@ -661,6 +661,19 @@ void MeshAdaptPUMIDrvr::removeBCData()
   if(comm_rank==0) std::cerr<<"Destroyed BC and flux tags"<<std::endl;
 }
 
+apf::Field* MeshAdaptPUMIDrvr::createDummyVOFField()
+{
+  apf::Field* voff = apf::createLagrangeField(m,"vof",apf::SCALAR,1);
+  apf::MeshEntity* ent;
+  apf::MeshIterator* iter = m->begin(0);
+  while(ent = m->iterate(iter)){ //loop through all vertices
+    apf::setScalar(voff, ent, 0,1.0);
+  }
+  m->end(iter);
+  return voff;
+
+}
+
 void MeshAdaptPUMIDrvr::get_local_error(double &total_error) 
 /** 
  * @brief This function aims to compute error at each element via an Element Residual Method.
@@ -678,11 +691,17 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
 
   //***** Get Solution Fields First *****//
   apf::Field* voff = m->findField("vof");
-  assert(voff);
+  if(voff==0)
+    voff = createDummyVOFField(); //assumes there is single phase flow
+  //assert(voff);
+
   apf::Field* velf = m->findField("velocity");
   assert(velf);
   apf::Field* pref = m->findField("p");
   assert(pref);
+
+
+
   //*****               *****//
   
   //***** Compute the viscosity field *****//

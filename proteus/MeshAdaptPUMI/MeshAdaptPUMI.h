@@ -67,6 +67,7 @@ class MeshAdaptPUMIDrvr{
   //Functions that help facilitate computations
   double getMPvalue(double field_val,double val_0, double val_1); //get the multiphase value of physical properties
   apf::Field* getViscosityField(apf::Field* voff); //derive a field of viscosity based on VOF field
+  apf::Field* createDummyVOFField(); //create a dummy field of vof
 
 
   //Public Variables

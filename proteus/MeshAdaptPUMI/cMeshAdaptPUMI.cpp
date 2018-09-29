@@ -504,6 +504,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   apf::destroyField(adaptSize);
   if(adapt_type_config=="anisotropic")
     apf::destroyField(adaptFrame);
+
+  if(m->findField("viscosity") !=0)
+    apf::destroyField(m->findField("viscosity"));
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
@@ -567,5 +570,5 @@ double MeshAdaptPUMIDrvr::getTotalMass()
 
 void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile){
   m->writeNative(meshFile);
-  apf::writeVtkFiles(meshFile,m);
+  //apf::writeVtkFiles(meshFile,m);
 }
