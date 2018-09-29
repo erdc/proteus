@@ -6,36 +6,6 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cSW2DCV import *
 
-
-class SubgridError(proteus.SubgridError.SGE_base):
-    def __init__(self, coefficients, nd, lag=False, nStepsToDelay=0, hFactor=1.0):
-        proteus.SubgridError.SGE_base.__init__(self, coefficients, nd, lag)
-        self.hFactor = hFactor
-        self.nStepsToDelay = nStepsToDelay
-        self.nSteps = 0
-        if self.lag:
-            logEvent("SW2D.SubgridError: lagging requested but must lag the first step; switching lagging off and delaying")
-            self.nStepsToDelay = 1
-            self.lag = False
-
-    def initializeElementQuadrature(self, mesh, t, cq):
-        import copy
-        self.cq = cq
-        self.v_last = self.cq[('velocity', 0)]
-
-    def updateSubgridErrorHistory(self, initializationPhase=False):
-        self.nSteps += 1
-        if self.lag:
-            self.v_last[:] = self.cq[('velocity', 0)]
-        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-            logEvent("SW2D.SubgridError: switched to lagged subgrid error")
-            self.lag = True
-            self.v_last = self.cq[('velocity', 0)].copy()
-
-    def calculateSubgridError(self, q):
-        pass
-
-
 class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
     hasInterior = False
 
@@ -55,39 +25,6 @@ class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
         self.includeBoundaryAdjoint = True
         self.boundaryAdjoint_sigma = 1.0
         self.hasInterior = False
-
-
-class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
-    def __init__(self, coefficients, nd, shockCapturingFactor=0.25, lag=False, nStepsToDelay=3):
-        proteus.ShockCapturing.ShockCapturing_base.__init__(self, coefficients, nd, shockCapturingFactor, lag)
-        self.nStepsToDelay = nStepsToDelay
-        self.nSteps = 0
-        if self.lag:
-            logEvent("SW2DCV.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
-            self.nStepsToDelay = 1
-            self.lag = False
-
-    def initializeElementQuadrature(self, mesh, t, cq):
-        self.mesh = mesh
-        self.numDiff = {}
-        self.numDiff_last = {}
-        for ci in range(3):
-            self.numDiff[ci] = cq[('numDiff', ci, ci)]
-            self.numDiff_last[ci] = cq[('numDiff', ci, ci)]
-
-    def updateShockCapturingHistory(self):
-        self.nSteps += 1
-        if self.lag:
-            for ci in range(3):
-                self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-            logEvent("SW2DCV.ShockCapturing: switched to lagged shock capturing")
-            self.lag = True
-            for ci in range(3):
-                self.numDiff_last[ci] = self.numDiff[ci].copy()
-        logEvent("SW2DCV: max numDiff_0 %e numDiff_1 %e numDiff_2 %e" % (globalMax(self.numDiff_last[0].max()),
-                                                                         globalMax(self.numDiff_last[1].max()),
-                                                                         globalMax(self.numDiff_last[2].max())))
 
 
 class RKEV(proteus.TimeIntegration.SSP):
@@ -296,7 +233,6 @@ class RKEV(proteus.TimeIntegration.SSP):
                 if flag == 'timeOrder':
                     self.resetOrder(self.timeOrder)
 
-
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for the shallow water equations
@@ -412,7 +348,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         pass
 
-
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
 
@@ -494,36 +429,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.fluxBoundaryConditions = fluxBoundaryConditionsDict
         self.advectiveFluxBoundaryConditionsSetterDict = advectiveFluxBoundaryConditionsSetterDict
         self.diffusiveFluxBoundaryConditionsSetterDictDict = diffusiveFluxBoundaryConditionsSetterDictDict
-        # determine whether  the stabilization term is nonlinear
-        self.stabilizationIsNonlinear = False
-        # cek come back
-        if self.stabilization is not None:
-            for ci in range(self.nc):
-                if ci in coefficients.mass:
-                    for flag in list(coefficients.mass[ci].values()):
-                        if flag == 'nonlinear':
-                            self.stabilizationIsNonlinear = True
-                if ci in coefficients.advection:
-                    for flag in list(coefficients.advection[ci].values()):
-                        if flag == 'nonlinear':
-                            self.stabilizationIsNonlinear = True
-                if ci in coefficients.diffusion:
-                    for diffusionDict in list(coefficients.diffusion[ci].values()):
-                        for flag in list(diffusionDict.values()):
-                            if flag != 'constant':
-                                self.stabilizationIsNonlinear = True
-                if ci in coefficients.potential:
-                    for flag in list(coefficients.potential[ci].values()):
-                        if flag == 'nonlinear':
-                            self.stabilizationIsNonlinear = True
-                if ci in coefficients.reaction:
-                    for flag in list(coefficients.reaction[ci].values()):
-                        if flag == 'nonlinear':
-                            self.stabilizationIsNonlinear = True
-                if ci in coefficients.hamiltonian:
-                    for flag in list(coefficients.hamiltonian[ci].values()):
-                        if flag == 'nonlinear':
-                            self.stabilizationIsNonlinear = True
         # determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci in range(self.nc):
@@ -561,15 +466,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization is not None:
-            for I in self.coefficients.elementIntegralKeys:
-                if elemQuadIsDict:
-                    if I in elementQuadrature:
-                        elementQuadratureDict[('stab',) + I[1:]] = elementQuadrature[I]
-                    else:
-                        elementQuadratureDict[('stab',) + I[1:]] = elementQuadrature['default']
-                else:
-                    elementQuadratureDict[('stab',) + I[1:]] = elementQuadrature
         if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
@@ -619,22 +515,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                         self.mesh.nElementBoundaries_element *
                                                         self.nElementBoundaryQuadraturePoints_elementBoundary)
 
-#        if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
-#            print self.nQuadraturePoints_element
-#            if self.nSpace_global == 3:
-#                assert(self.nQuadraturePoints_element == 5)
-#            elif self.nSpace_global == 2:
-#                assert(self.nQuadraturePoints_element == 6)
-#            elif self.nSpace_global == 1:
-#                assert(self.nQuadraturePoints_element == 3)
-#
-#            print self.nElementBoundaryQuadraturePoints_elementBoundary
-#            if self.nSpace_global == 3:
-#                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
-#            elif self.nSpace_global == 2:
-#                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
-#            elif self.nSpace_global == 1:
-#                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
@@ -775,11 +655,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.updateLocal2Global()
         logEvent("Building time integration object", 2)
         logEvent(memory("inflowBC, internalNodes,updateLocal2Global", "OneLevelTransport"), level=4)
-        # mwf for interpolating subgrid error for gradients etc
-        if self.stabilization and self.stabilization.usesGradientStabilization:
-            self.timeIntegration = TimeIntegrationClass(self, integrateInterpolationPoints=True)
-        else:
-            self.timeIntegration = TimeIntegrationClass(self)
+        self.timeIntegration = TimeIntegrationClass(self)
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)
@@ -1293,7 +1169,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[0],
             self.timeIntegration.beta_bdf[1],
             self.timeIntegration.beta_bdf[2],
-            #self.stabilization.v_last,
             self.q[('cfl', 0)],
             self.coefficients.sdInfo[(1, 1)][0],
             self.coefficients.sdInfo[(1, 1)][1],
@@ -1384,8 +1259,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax), level=2)
             logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax), level=2)
 
-        if self.stabilization:
-            self.stabilization.accumulateSubgridMassHistory(self.q)
         logEvent("Global residual", level=9, data=r)
         # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
@@ -1442,7 +1315,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[0],
             self.timeIntegration.beta_bdf[1],
             self.timeIntegration.beta_bdf[2],
-            #self.stabilization.v_last,
             self.q[('cfl', 0)],
             self.coefficients.sdInfo[(1, 1)][0],
             self.coefficients.sdInfo[(1, 1)][1],
@@ -1535,11 +1407,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[1].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[1].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t, self.q)
-        if self.stabilization is not None:
-            self.stabilization.initializeElementQuadrature(self.mesh, self.timeIntegration.t, self.q)
-            self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing is not None:
-            self.shockCapturing.initializeElementQuadrature(self.mesh, self.timeIntegration.t, self.q)
 
     def calculateElementBoundaryQuadrature(self):
         """
