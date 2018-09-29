@@ -3,7 +3,6 @@ from builtins import object
 from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
-from proteus.mprans import SW2D
 from proteus.mprans import SW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
@@ -20,6 +19,7 @@ initialConditions = mySWFlowProblem.initialConditions
 boundaryConditions = mySWFlowProblem.boundaryConditions
 bathymetry = mySWFlowProblem.bathymetry
 reflecting_BCs = mySWFlowProblem.reflectingBCs
+analyticalSolution = mySWFlowProblem.analyticalSolution
 
 # DOMAIN #
 nd = 2
@@ -73,5 +73,4 @@ advectiveFluxBoundaryConditions =  {0: lambda x,flag: lambda x,t: 0.0,
 diffusiveFluxBoundaryConditions = {0:{},
                                    1:{1: lambda x,flag: lambda x,t: 0.0},
                                    2:{2: lambda x,flag: lambda x,t: 0.0}}
-
 
