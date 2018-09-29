@@ -10,11 +10,11 @@ import sys
 
 # (!) not the greatest for getting the file name but it works
 name = str(sys.argv[0][:-3])
-parun_passed = False
+file_name_passed = False
 for i in range(len(sys.argv)):
-    if 'parun' in sys.argv[i]:
-        parun_passed = True
-    if parun_passed is True and sys.argv[i][-3:] == '.py':
+    if '-f' in sys.argv[i]:
+        file_name_passed = True
+    if file_name_passed and sys.argv[i][-3:] == '.py':
         name = sys.argv[i][:-3]
     else:
         name = "SWFlow"
