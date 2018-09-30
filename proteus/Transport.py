@@ -6639,6 +6639,7 @@ class MultilevelTransport(object):
                     par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global,jacobian)
             elif  (options.multilevelLinearSolver == PETSc or
                    options.levelLinearSolver == PETSc):
+                assert(False)
                 assert trialSpaceDict[0].dofMap.subdomain2global is not None, "need trivial subdomain2global in dofMap for running PETSc"
                 assert trialSpaceDict[0].dofMap.max_dof_neighbors is not None, "need max_dof_neighbors in dofMap for running PETSc"
                 par_N = par_n =  trialSpaceDict[0].dofMap.nDOF_all_processes
