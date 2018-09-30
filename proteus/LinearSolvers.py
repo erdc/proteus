@@ -513,7 +513,7 @@ class KSP_petsc4py(LinearSolver):
         if self.matcontext is not None:
             self.matcontext.par_b = par_b
 
-        self.null_space.apply(par_b)
+        self.null_space.apply_ns(par_b)
 
         # ARB to do - checkout what this is doing exactly ?!?!
         if self.preconditioner:
@@ -4167,8 +4167,8 @@ class SolverNullSpace(object):
     def get_global_ksp(self):
         return self.proteus_ksp
 
-    def apply(self,
-              par_b):
+    def apply_ns(self,
+                 par_b):
         pass
 
 NoNullSpace = SolverNullSpace
@@ -4191,8 +4191,8 @@ class NavierStokesConstantPressure(SolverNullSpace):
         global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
         global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
 
-    def apply(self,
-              par_b):
+    def apply_ns(self,
+                 par_b):
         """
         Applies the global null space created from a pure Neumann boundary
         problem.
