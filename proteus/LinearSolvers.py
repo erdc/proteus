@@ -515,14 +515,6 @@ class KSP_petsc4py(LinearSolver):
 
         self.null_space.apply_ns(par_b)
 
-        # ARB to do - checkout what this is doing exactly ?!?!
-        if self.preconditioner:
-            try:
-                if self.preconditioner.hasNullSpace:
-                    self.preconditioner.nsp.remove(par_b)
-            except:
-                pass
-
         self.ksp.solve(par_b,par_u)
 
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
