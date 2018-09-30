@@ -11,7 +11,8 @@ from proteus import (Domain,
                      LinearAlgebraTools,
                      LinearSolvers,
                      MeshTools,
-                     Context)
+                     Context,
+                     AnalyticalSolutions)
 from proteus.default_so import *
 from proteus.mprans import RANS2P
 
@@ -20,10 +21,11 @@ opts = Context.Options([
     ("grid", True, "Use a regular grid"),
     ("triangles", True, "Use triangular or tetrahedral elements"),
     ("spaceOrder", 1, "Use (bi-)linear or (bi-)quadratic spaces"),
-    ("timeOrder", 2, "Use (bi-)linear or (bi-)quadratic spaces"),
+    ("timeOrder", 2, "Use bdf1 or bdf2"),
     ("periodic", False, "Use periodic boundary conditions"),
     ("weak", True, "Use weak boundary conditions"),
     ("coord", False, "Use coordinates for setting boundary conditions"),
+    ("Re", 1.0, "Reynolds number for non-periodic problem"),
     ("nnx", 21, "Number of grid nodes in x-direction"),
     ("pc_type", 'LU', "Specify preconditioner type"),
     ("A_block_AMG", False, "Specify whether a block-AMG should be used to solve A-block")])
@@ -47,8 +49,21 @@ if not opts.grid:
         p.domain = Domain.PlanarStraightLineGraphDomain()
     p.domain.readPoly("duct")
 
+nu = 1.004e-6
+rho = 998.2
+
+if p.nd == 3:
+    h = p.L[2]
+    umax = opts.Re*nu/p.L[2]
+else:
+    h = p.L[1]
+    umax = opts.Re*nu/p.L[1]
+p.T = 2.0*(p.L[0]/umax)
+mu = nu*rho
+G = (umax*8.0*mu)/(h**2)
+
 if opts.periodic:
-    gravity = [1.0e-1, 0., 0.]
+    gravity = [G/rho, 0., 0.]
 else:
     gravity = [0., 0., 0.]
 
@@ -56,8 +71,8 @@ p.LevelModelType = RANS2P.LevelModel
 
 p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      sigma=0.0,
-                                     rho_0=998.2,nu_0=1.004e-6,
-                                     rho_1=998.2,nu_1=1.004e-6,
+                                     rho_0=rho,nu_0=nu,
+                                     rho_1=rho,nu_1=nu,
                                      g=gravity,
                                      nd=p.nd,
                                      ME_model=0,
@@ -76,12 +91,10 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      turbulenceClosureModel=0,
                                      NONCONSERVATIVE_FORM=1.0,
                                      nullSpace='NavierStokesConstantPressure')
-
-p.T = 100.0
-nsave=100
-dt_init = 1.0e-3
-DT = (p.T-dt_init)/float(nsave-1)
-p.tnList = [0.0,dt_init]+[dt_init+i*DT for i in range(nsave)]
+                                     NONCONSERVATIVE_FORM=1.0,
+                                     MOMENTUM_SGE=1.0,
+                                     PRESSURE_SGE=1.0,
+                                     VELOCITY_SGE=1.0)
 
 eps=1.0e-8
 if opts.periodic:
@@ -107,12 +120,27 @@ if opts.periodic:
                                      1:getPDBC,
                                      2:getPDBC,
                                      3:getPDBC}
-else:
-    Re = 10000
-    if p.nd == 3:
-        inflow_v = Re*p.coefficients.nu/p.L[2]
-    else:
-        inflow_v = Re*p.coefficients.nu/p.L[1]
+
+pSol = AnalyticalSolutions.PlanePoiseuilleFlow_p(plateSeperation=h,
+                                                 mu = mu,
+                                                 grad_p = -G)
+uSol = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
+                                                 mu = mu,
+                                                 grad_p = -G)
+vSol = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
+                                                 mu = mu,
+                                                 grad_p = -G)
+
+p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol}
+if p.nd == 3:
+    p.analyticalSolution[3] = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
+                                                                        mu = mu,
+                                                                        grad_p = -G)
+
+nsave=100
+dt_init = 1.0e-3
+DT = (p.T-dt_init)/float(nsave-1)
+p.tnList = [0.0,dt_init]+[dt_init+i*DT for i in range(nsave)]
 
 if  opts.coord:
     if p.nd == 3:
@@ -208,11 +236,11 @@ else:
             
         def getDBC_u_duct(x,flag):
             if onLeft(x):
-                return lambda x,t: inflow_v
+                return lambda x,t: uSol.uOfX(x)
             if opts.weak and onRight(x):
-                return lambda x,t: 0.0
+                return lambda x,t: uSol.uOfX(x)
             if onTop(x) or onBottom(x):
-                return lambda x,t: 0.0
+                return lambda x,t: uSol.uOfX(x)
             
         def getDBC_v_duct(x,flag):
             if onLeft(x) or onRight(x) or onTop(x) or onBottom(x):
@@ -231,7 +259,7 @@ else:
 
         def getAFBC_p_duct(x,flag):
             if onLeft(x):
-                return lambda x,t: -inflow_v
+                return lambda x,t: -uSol.uOfX(x)
             if onTop(x) or onBottom(x):
                 return lambda x,t: 0.0
             if p.nd == 3:
@@ -248,27 +276,32 @@ else:
                 if onFront(x) or onBack(x):
                     return lambda x,t: 0.0
 
-        advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
-                                            1:getAFBC_u_duct,
-                                            2:getAFBC_v_duct}
+        p.advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
+                                              1:getAFBC_u_duct,
+                                              2:getAFBC_v_duct}
         if p.nd == 3:
             def getAFBC_w_duct(x,flag):
                 if onFront(x) or onBack(x):
                     return lambda x,t: 0.0
-            advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
+            p.advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
 
-        def getDFBC_duct(x,flag):
+        def getDFBC_u_duct(x,flag):
             if onRight(x):
                 return lambda x,t: 0.0
+            elif p.nd == 3:
+                if onFront(x) or onBack(x):
+                    return lambda x,t: 0.0
+
+        def getDFBC_vw_duct(x,flag):
             if p.nd == 3:
                 if onFront(x) or onBack(x):
                     return lambda x,t: 0.0
 
         p.diffusiveFluxBoundaryConditions = {0:{},
-                                             1:{1:getDFBC_duct},
-                                             2:{2:getDFBC_duct}}
+                                             1:{1:getDFBC_u_duct},
+                                             2:{2:getDFBC_vw_duct}}
         if p.nd == 3:
-            p.diffusiveFluxBoundaryConditions[3] = {3:getDFBC_duct}
+            p.diffusiveFluxBoundaryConditions[3] = {3:getDFBC_vw_duct}
     else:
         def getDBC_pressure_duct(x,flag):
             if flag == boundaryTags['right']:
@@ -276,7 +309,7 @@ else:
 
         def getDBC_u_duct(x,flag):
             if flag == boundaryTags['left']:
-                return lambda x,t: inflow_v
+                return lambda x,t: uSol.uOfX(x)
             if opts.weak and flag == boundaryTags['right']:
                 return lambda x,t: 0.0
             if flag in [boundaryTags['top'], boundaryTags['bottom']]:
@@ -304,7 +337,7 @@ else:
 
         def getAFBC_p_duct(x,flag):
             if flag == boundaryTags['left']:
-                return lambda x,t: -inflow_v
+                return lambda x,t: -uSol.uOfX(x)
             if flag in [boundaryTags['top'],
                         boundaryTags['bottom']]:
                 return lambda x,t: 0.0
@@ -364,13 +397,15 @@ else:
 n = Numerics_base()
 
 #time stepping
-n.runCFL = 0.33
+n.runCFL = 0.9
 if opts.timeOrder == 2:
     n.timeIntegration = TimeIntegration.VBDF
     n.timeOrder = 2
 elif opts.timeOrder == 1:
-    n.timeIntegration = TimeIntegration.BackwardEulerCFL
+    n.timeIntegration = TimeIntegration.BackwardEuler
     n.timeOrder = 1
+elif opts.timeOrder == 0:
+    n.timeIntegration = TimeIntegration.NoIntegration
 
 n.stepController  = StepControl.Min_dt_cfl_controller
 n.systemStepExact = False
@@ -384,8 +419,8 @@ if opts.spaceOrder == 1:
                            2:FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis}
             if p.nd == 3:
                 n.femSpaces[3] = FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis
-            n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,3)
-            n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
+            n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,5)
+            n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,5)
         else:
             n.femSpaces = {0:FemTools.C0_AffineLinearOnSimplexWithNodalBasis,
                            1:FemTools.C0_AffineLinearOnSimplexWithNodalBasis,
@@ -445,6 +480,7 @@ he = p.L[0]/float(n.nnx-1)
 if p.nd == 3:
     n.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 else:
+    n.triangleFlag = 1#if regular triangulatio then alternate diagonals
     n.triangleOptions="pAq30.0Dena%f" % ((he**2)/4.0,)
 
 n.numericalFluxType = RANS2P.NumericalFlux
@@ -454,9 +490,9 @@ if opts.periodic:
     n.parallelPeriodic=True
 
 n.subgridError = RANS2P.SubgridError(coefficients=p.coefficients,
-                                   nd=p.nd,
-                                   lag=True,
-                                   hFactor=1.0)
+                                     nd=p.nd,
+                                     lag=False,
+                                     hFactor=1.0)
 
 n.shockCapturing = RANS2P.ShockCapturing(coefficients=p.coefficients,
                                          nd=p.nd,
@@ -479,7 +515,7 @@ n.matrix = LinearAlgebraTools.SparseMatrix
 
 n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 n.levelLinearSolver = LinearSolvers.KSP_petsc4py
-if opts.pc_type is 'LU':
+if opts.pc_type == 'LU':
     n.multilevelLinearSolver = LinearSolvers.LU
     n.levelLinearSolver = LinearSolvers.LU
     n.linearSmoother = None
