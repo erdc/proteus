@@ -90,11 +90,10 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      forceStrongDirichlet=not opts.weak,
                                      turbulenceClosureModel=0,
                                      NONCONSERVATIVE_FORM=1.0,
-                                     nullSpace='NavierStokesConstantPressure')
-                                     NONCONSERVATIVE_FORM=1.0,
                                      MOMENTUM_SGE=1.0,
                                      PRESSURE_SGE=1.0,
-                                     VELOCITY_SGE=1.0)
+                                     VELOCITY_SGE=1.0,
+                                     nullSpace='NavierStokesConstantPressure')
 
 eps=1.0e-8
 if opts.periodic:
