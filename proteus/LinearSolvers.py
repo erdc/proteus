@@ -724,7 +724,7 @@ class KSP_petsc4py(LinearSolver):
 
     def _set_null_space_class(self):
         current_module = sys.modules[__name__]
-        null_space_cls_name = self.par_L.pde.coefficients.bdyNullSpace
+        null_space_cls_name = self.par_L.pde.coefficients.nullSpace
         null_space_cls = getattr(current_module,
                                  null_space_cls_name)
         return null_space_cls(self)
@@ -1228,7 +1228,7 @@ class SchurOperatorConstructor(object):
         self.opBuilder.attachMassOperator()
 
 class KSP_Preconditioner(object):
-    """ Base class for PETSCc KSP precondtioners. """
+    """ Base class for PETSc KSP precondtioners. """
     def __init__(self):
         pass
 
@@ -1514,8 +1514,8 @@ class ModelInfo(object):
         Number of pressure degrees of freedom (required for blocked
         dof_order_type)
     bdy_null_space : bool
-        Indicates whether boundary condition creates a global
-        null space
+        Indicates whether boundary condition creates a global null
+        space
     """
     def __init__(self,
                  dof_order_type,
@@ -1526,7 +1526,7 @@ class ModelInfo(object):
                  bdy_null_space = False):
         self.set_num_components(num_components)
         self.set_dof_order_type(dof_order_type)
-        self.bdy_null_space = bdy_null_space
+        self.const_null_space = bdy_null_space
         if dof_order_type=='blocked':
             assert n_DOF_pressure!=None, \
                 "need num of pressure unknowns for blocked dof order type"
@@ -1576,7 +1576,6 @@ class SchurPrecon(KSP_Preconditioner):
             self._initialize_without_solver_info()
         else:
             self.model_info = solver_info
-            self.bdyNullSpace = self.model_info.bdy_null_space
 
         self._initializeIS()
         self.pc.setFromOptions()
@@ -1713,6 +1712,22 @@ class SchurPrecon(KSP_Preconditioner):
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
 
+    def _get_null_space_cls(self):
+        current_module = sys.modules[__name__]
+        null_space_cls_name = self.L.pde.coefficients.nullSpace
+        null_space_cls = getattr(current_module,
+                                 null_space_cls_name)
+        return null_space_cls
+
+    def _is_const_pressure_null_space(self):
+        if self.model_info==None:
+            if self._get_null_space_cls().get_name == 'constant_pressure':
+                return True
+            else:
+                return False
+        else:
+            return self.model_info.const_null_space
+
 class Schur_Sp(SchurPrecon):
     """
     Implements the SIMPLE Schur complement approximation proposed
@@ -1758,11 +1773,12 @@ class Schur_Sp(SchurPrecon):
         self.SpInv_shell = p4pyPETSc.Mat().create()
         self.SpInv_shell.setSizes(L_sizes)
         self.SpInv_shell.setType('python')
+        constNullSpace = self._is_const_pressure_null_space()
         self.matcontext_inv = SpInv_shell(self.A00,
                                           self.A11,
                                           self.A01,
                                           self.A10,
-                                          constNullSpace = self.bdyNullSpace)
+                                          constNullSpace)
         self.SpInv_shell.setPythonContext(self.matcontext_inv)
         self.SpInv_shell.setUp()
         # Set PETSc Schur operator
@@ -1843,7 +1859,7 @@ class NavierStokesSchur(SchurPrecon):
         velocity_block_preconditioner : Bool
             Indicates whether the velocity block should be solved as
             a block preconditioner
-        """        
+        """
         SchurPrecon.__init__(self,
                              L,
                              prefix)
@@ -1866,7 +1882,7 @@ class NavierStokesSchur(SchurPrecon):
         neqns = self.L.getSizes()[0][0]
 
         vel_is_func = self.model_info.dof_order_class.create_vel_DOF_IS
-        
+
         velocity_DOF_full, velocity_DOF_local = vel_is_func(L_range,
                                                             neqns,
                                                             self.model_info.nc)
@@ -2026,7 +2042,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                                  lumped = self.lumped)
 
         isp = self.operator_constructor.linear_smoother.isp
-        isv = self.operator_constructor.linear_smoother.isv        
+        isv = self.operator_constructor.linear_smoother.isv
 
         self.Np_rho = self.N_rho.getSubMatrix(isp,
                                               isp)
@@ -2085,6 +2101,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.TP_PCDInv_shell.setSizes(L_sizes)
         self.TP_PCDInv_shell.setType('python')
         dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
+
         self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
                                                     self.Qp_rho,
                                                     self.Ap_invScaledRho,
@@ -2107,12 +2124,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         global_ksp.pc.getFieldSplitSubKSP()[0].pc.setUp()
 
         self._setSchurlog(global_ksp)
-        if self.bdyNullSpace == True:
-            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
-                                               vectors = (),
-                                               constant = True)
-            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
-            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
+        self._get_null_space_cls().apply_to_schur_block(global_ksp)
         self._setSchurlog(global_ksp)
 
 class Schur_LSC(SchurPrecon):
@@ -4140,6 +4152,14 @@ class SolverNullSpace(object):
                  proteus_ksp):
         self._set_global_ksp(proteus_ksp)
 
+    @staticmethod
+    def get_name():
+        return 'no_null_space'
+
+    @staticmethod
+    def apply_to_schur_block(global_ksp):
+        pass
+
     def _set_global_ksp(self,
                         proteus_ksp):
         self.proteus_ksp = proteus_ksp
@@ -4158,6 +4178,18 @@ class NavierStokesConstantPressure(SolverNullSpace):
     def __init__(self,
                  proteus_ksp):
         super(NavierStokesConstantPressure, self).__init__(proteus_ksp)
+
+    @staticmethod
+    def get_name():
+        return 'constant_pressure'
+
+    @staticmethod
+    def apply_to_schur_block(global_ksp):
+        nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                           vectors = (),
+                                           constant = True)
+        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
 
     def apply(self,
               par_b):
@@ -4188,14 +4220,12 @@ class NavierStokesConstantPressure(SolverNullSpace):
                             par_b):
         """ Setup a global null space vector.
 
-        TODO
-        ------
-        There are a few changes that need to be made to make this
-        compatible with a parallel implementation.  Notably, the
-        ghost nodes need to be handled correctly.
+        TODO (ARB)
+        ----------
+        This needs to be tested more throughly for parallel
+        implmentations.
         """
         ksp = self.get_global_ksp()
-        import pdb ; pdb.set_trace()
         stabilized = False
         if ksp.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes==ksp.par_L.pde.u[1].femSpace.dofMap.nDOF_all_processes:
             stabilized = True

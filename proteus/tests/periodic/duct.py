@@ -53,7 +53,6 @@ else:
     gravity = [0., 0., 0.]
 
 p.LevelModelType = RANS2P.LevelModel
-p.boundaryCreatesNullSpace = True
 
 p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      sigma=0.0,
@@ -75,7 +74,8 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      eb_penalty_constant=100.0,
                                      forceStrongDirichlet=not opts.weak,
                                      turbulenceClosureModel=0,
-                                     NONCONSERVATIVE_FORM=1.0)
+                                     NONCONSERVATIVE_FORM=1.0,
+                                     nullSpace='NavierStokesConstantPressure')
 
 p.T = 100.0
 nsave=100

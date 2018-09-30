@@ -6143,8 +6143,7 @@ class MultilevelTransport(object):
             numerics,
             problem.sd,
             problem.movingDomain,
-            PhiSpaceTypeDict=phiSpaces,
-            bdyNullSpace=problem.boundaryCreatesNullSpace)
+            PhiSpaceTypeDict=phiSpaces)
     def initialize(self,
                    nd,
                    mlMesh,
@@ -6170,8 +6169,7 @@ class MultilevelTransport(object):
                    options=None,
                    useSparseDiffusion=True,
                    movingDomain=False,
-                   PhiSpaceTypeDict=None,
-                   bdyNullSpace=False):
+                   PhiSpaceTypeDict=None):
         import copy
         """read in the multilevel mesh, mesh independent boundary
         conditions, and types for test and trial spaces and the
@@ -6372,8 +6370,7 @@ class MultilevelTransport(object):
                                             options,
                                             self.name + str(len(self.levelModelList)),
                                             sd=useSparseDiffusion,
-                                            movingDomain=movingDomain,
-                                            bdyNullSpace=bdyNullSpace)
+                                            movingDomain=movingDomain)
             self.offsetListList.append(transport.offset)
             self.strideListList.append(transport.stride)
             memory()

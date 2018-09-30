@@ -224,7 +224,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
-                 bdyNullSpace='NoNullSpace'):
+                 nullSpace='NoNullSpace'):
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
@@ -318,7 +318,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
-        self.bdyNullSpace = bdyNullSpace
+        self.nullSpace = nullSpace
         mass = {}
         advection = {}
         diffusion = {}
