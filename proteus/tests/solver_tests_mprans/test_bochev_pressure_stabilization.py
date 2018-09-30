@@ -37,18 +37,6 @@ def clean_up_directory():
     TestTools.removeFiles(prefix_ext_tuple=(FileList,mesh_ext))
 
 @pytest.fixture()
-def load_cavity_problem(request):
-    reload(cavity2d)
-    reload(twp_navier_stokes_cavity_2d_so)
-    reload(twp_navier_stokes_cavity_2d_p)
-    reload(twp_navier_stokes_cavity_2d_n)
-    pList = [twp_navier_stokes_cavity_2d_p]
-    nList = [twp_navier_stokes_cavity_2d_n]
-    so = twp_navier_stokes_cavity_2d_so
-    so.sList = [default_s]
-    yield pList, nList, so
-
-@pytest.fixture()
 def initialize_tp_pcd_options(request):
     petsc_options = p4pyPETSc.Options()
     petsc_options.setValue('rans2p_ksp_type','gmres')
@@ -80,13 +68,13 @@ def test_bochev_pressure_cavity(load_cavity_problem,
                                   load_cavity_problem[1],
                                   load_cavity_problem[2].sList,
                                   opts)
+    assert ns.modelList[0].solver.solverList[0].linearSolver.null_space.get_name() == 'constant_pressure'
     ns.calculateSolution('bochev_pressure')
     script_dir = os.path.dirname(__file__)
     relpath = 'comparison_files/twp_navier_stokes_cavity_2d.h5'
     expected = tables.open_file(os.path.join(script_dir,relpath))
     actual = tables.open_file('twp_navier_stokes_cavity_2d.h5','r')
-    numpy.allclose(expected.root.p_t1,
-                   actual.root.p_t1)
+#    assert numpy.allclose(expected.root.p_t1,actual.root.p_t1)
     expected.close()
     actual.close()
     clean_up_directory()
