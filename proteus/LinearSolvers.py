@@ -2199,14 +2199,8 @@ class NavierStokes3D(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
-        try:
-            if self.L.pde.pp_hasConstantNullSpace:
-                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                    self.kspList = self.pc.getFieldSplitSubKSP()
-                    self.kspList[1].setNullSpace(self.nsp)
-        except:
-            pass
+        self._get_null_space_cls().apply_to_schur_block(global_ksp)
+
 
 SimpleNavierStokes3D = NavierStokes3D
 
@@ -2269,14 +2263,8 @@ class NavierStokes2D(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
-        try:
-            if self.L.pde.pp_hasConstantNullSpace:
-                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                    self.kspList = self.pc.getFieldSplitSubKSP()
-                    self.kspList[1].setNullSpace(self.nsp)
-        except:
-            pass
+        self._get_null_space_cls().apply_to_schur_block(global_ksp)
+
 SimpleNavierStokes2D = NavierStokes2D
 
 class NavierStokesPressureCorrection(object):
