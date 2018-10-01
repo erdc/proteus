@@ -270,7 +270,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  lambda_coupez=0.1,
                  cfl_redistancing=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs=False):
+                 outputQuantDOFs=False,
+                 # NULLSPACE Info
+                 nullSpace='NoNullSpace'):
 
         self.PURE_BDF=PURE_BDF
         self.DO_SMOOTHING = DO_SMOOTHING
@@ -317,6 +319,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
         self.waterline_interval = waterline_interval
+        self.nullSpace = nullSpace
 
     def attachModels(self, modelList):
         # the level set model
