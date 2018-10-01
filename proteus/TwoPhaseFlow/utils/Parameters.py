@@ -42,14 +42,16 @@ class ParametersHolder:
         self.nModels = 0
         self.models_list = []
         for i in range(len(all_models)):
+            if i == 0:
+                logEvent('----------')
             model = all_models[i]
             if model['index'] >= 0:
-                print(model)
                 self.nModels += 1
                 self.models_list += [model]
                 logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
                 for key, value in model.__dict__.items():
-                    logEvent('{key}: {value}'. format(key=key, value=value))
+                    if key[0] != '_':  # do not print hidden attributes
+                        logEvent('{key}: {value}'. format(key=key, value=value))
                 logEvent('----------')
 
 
@@ -133,6 +135,8 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.ns_lag_subgridError = True
         self.timeDiscretization = None
         self.timeOrder = 2
+        self.stokes = False
+        self.eb_adjoint_sigma = 1.
         # freeze attributes
         self._freeze()
 
@@ -267,7 +271,7 @@ class ParametersModelMCorr(ParametersModelBase):
         self.applyCorrection = True
         self.epsFactHeaviside = epsFact
         self.epsFactDirac = epsFact
-        self.epsFactDiffusion = 0.1
+        self.epsFactDiffusion = 10.
         # freeze attributes
         self._freeze()
 

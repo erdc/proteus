@@ -21,30 +21,23 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = params.Models.rdls
 pparams = params.physical # physical parameters
-
-# ****************************************** #
-# ********** NUMERICAL PARAMETERS ********** #
-# ****************************************** #
-useMetrics = mparams.rdls['useMetrics']
-applyRedistancing = mparams.rdls['applyRedistancing']
-epsFact = mparams.rdls['epsFact']
-backgroundDiffusionFactor = mparams.rdls['backgroundDiffusionFactor']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-nModelId = mparams.ncls['index']
+nModelId = mparams.ncls.index
 assert nModelId is not None, 'redist model index was not set!'
-rdModelId = mparams.rdls['index']
+rdModelId = mparams.rdls.index
 
 LevelModelType = RDLS.LevelModel
-coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,
-                                 epsFact=epsFact,
+coefficients = RDLS.Coefficients(applyRedistancing=myparams.applyRedistancing,
+                                 epsFact=myparams.epsFact,
                                  nModelId=nModelId,
                                  rdModelId=rdModelId,
-                                 useMetrics=useMetrics,
-                                 backgroundDiffusionFactor=backgroundDiffusionFactor)
+                                 useMetrics=myparams.useMetrics,
+                                 backgroundDiffusionFactor=myparams.backgroundDiffusionFactor)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #

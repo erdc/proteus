@@ -38,18 +38,12 @@ smtypes[:, 1] = 0.3    # nu
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_model = mparams.movemeshmonitor['index']
+ME_model = mparams.movemeshmonitor.index
 assert ME_model is not None, 'vof model index was not set!'
-if mparams.movemeshmonitor['useLS'] is True:
-    LS_MODEL = mparams.ncls['index']
-else:
-    LS_MODEL = None
-initialConditions = None
-
-analyticalSolution = {}
+LS_MODEL = mparams.ncls.index
 
 LevelModelType = MoveMesh.LevelModel
-coefficients = MoveMesh.Coefficients(ndnd,
+coefficients = MoveMesh.Coefficients(nd=nd,
                                      V_model=V_model,
                                      modelType_block=smFlags,
                                      modelParams_block=smTypes,
@@ -60,6 +54,7 @@ coefficients = MoveMesh.Coefficients(ndnd,
 # ********** INITIAL CONDITIONS ********** #
 # **************************************** #
 initialConditions = None
+analyticalSolution = {}
 
 if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
     dirichletConditions = {0: boundaryConditions['hx'],

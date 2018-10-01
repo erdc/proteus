@@ -28,7 +28,6 @@ ct = Context.get()
 ct.myTpFlowProblem.initializeAll()
 
 params = ct.myTpFlowProblem.Parameters
-params.initializeParameters()
 
 # READ FROM myTpFlowProblem #
 assert hasattr(ct,'myTpFlowProblem'), "Create myTpFlowProblem from TwoPhaseFlowProblem"

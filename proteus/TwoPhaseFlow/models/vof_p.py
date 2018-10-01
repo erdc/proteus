@@ -20,45 +20,37 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = params.Models.vof
 pparams = params.physical # physical parameters
 
 # MESH #
 meshparams = params.mesh
 genMesh = meshparams.genMesh
 
-# ****************************************** #
-# ********** NUMERICAL PARAMETERS ********** #
-# ****************************************** #
-useMetrics = mparams.vof['useMetrics']
-checkMass = mparams.vof['checkMass']
-sc_uref = mparams.vof['sc_uref']
-sc_beta = mparams.vof['sc_beta']
-epsFact = mparams.vof['epsFact']
-
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_model = mparams.vof['index']
+ME_model = mparams.vof.index
 assert ME_model is not None, 'vof model index was not set!'
-LS_model = mparams.ncls['index']
-if mparams.rans2p['index'] is not None:
-    V_model = mparams.rans2p['index']
-elif mparams.rans3p['index'] is not None:
-    V_model = mparams.rans3p['index']
+LS_model = mparams.ncls.index
+if mparams.rans2p.index is not None:
+    V_model = mparams.rans2p.index
+elif mparams.rans3p.index is not None:
+    V_model = mparams.rans3p.index
 else:
-    assert mparams.rans2p['index'] is not None or params.rans3p['index'] is not None, 'RANS2P or RANS3P must be used with VOF'
-RD_model = mparams.rdls['index']
+    assert mparams.rans2p.index is not None or params.rans3p.index is not None, 'RANS2P or RANS3P must be used with VOF'
+RD_model = mparams.rdls.index
 
 LevelModelType = VOF.LevelModel
 coefficients = VOF.Coefficients(LS_model=LS_model,
                                 V_model=V_model,
                                 RD_model=RD_model,
                                 ME_model=ME_model,
-                                checkMass=checkMass,
-                                useMetrics=useMetrics,
-                                epsFact=epsFact,
-                                sc_uref=sc_uref,
-                                sc_beta=sc_beta,
+                                checkMass=myparams.checkMass,
+                                useMetrics=myparams.useMetrics,
+                                epsFact=myparams.epsFact,
+                                sc_uref=myparams.sc_uref,
+                                sc_beta=myparams.sc_beta,
                                 movingDomain=movingDomain)
 
 # **************************************** #

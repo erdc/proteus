@@ -21,63 +21,43 @@ movingDomain = myTpFlowProblem.movingDomain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = params.Models.moveMeshMonitor
 pparams = params.physical # physical parameters
 
 # MESH #
 meshparams = params.mesh
 genMesh = meshparams.genMesh
 
-# ****************************************** #
-# ********** NUMERICAL PARAMETERS ********** #
-# ****************************************** #
-myparams = mparams.moveMeshMonitor
-func = myparams.func
-he_max = myparams.he_max
-he_min = myparams.he_min
-ntimes_solved = myparams.ntimes_solved
-fixedNodeMaterialTypes = myparams.fixedNodeMaterialTypes
-fixedElementMaterialTypes = myparams.fixedElementMaterialTypes
-noNodeVelocityNodeMaterialTypes = myparams.noNodeVelocityNodeMaterialTypes
-nSmoothOut = myparams.nSmoothOut
-epsFact = myparams.epsFact
-epsTimeStep = myparams.epsTimeStep
-grading = myparams.grading
-grading_type = myparams.grading_type
-resetNodeVelocityArray = myparams.resetNodeVelocityArray
-useLS = myparams.useLS
-do_firstStep = myparams.do_firstStep
-scale_with_nd = myparams.scale_with_nd
-
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_MODEL = mparams.moveMeshMonitor['index']
+ME_MODEL = mparams.moveMeshMonitor.index
 assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
-if mparams.moveMeshMonitor['useLS'] is True:
-    LS_MODEL = mparams.ncls['index']
+if myparams.useLS is True:
+    LS_MODEL = mparams.ncls.index
 else:
     LS_MODEL = None
 initialConditions = None
 
 analyticalSolution = {}
 
-coefficients = MoveMeshMonitor.Coefficients(func=func,
+coefficients = MoveMeshMonitor.Coefficients(func=myparams.func,
                                             nd=nd,
-                                            he_max=he_max,
-                                            he_min=he_min,
-                                            ntimes_solved=ntimes_solved,
+                                            he_max=myparams.he_max,
+                                            he_min=myparams.he_min,
+                                            ntimes_solved=myparams.ntimes_solved,
                                             LS_MODEL=LS_MODEL,
                                             ME_MODEL=ME_MODEL,
-                                            fixedNodeMaterialTypes=fixedNodeMaterialTypes,
-                                            fixedElementMaterialTypes=fixedElementMaterialTypes,
-                                            noNodeVelocityNodeMaterialTypes=noNodeVelocityNodeMaterialTypes,
-                                            nSmoothOut=nSmoothOut,
-                                            epsTimeStep=epsTimeStep,
-                                            epsFact_density=epsFact,
-                                            grading=grading,
-                                            grading_type=grading_type,
-                                            scale_with_nd=scale_with_nd,
-                                            do_firstStep=do_firstStep)
+                                            fixedNodeMaterialTypes=myparams.fixedNodeMaterialTypes,
+                                            fixedElementMaterialTypes=myparams.fixedElementMaterialTypes,
+                                            noNodeVelocityNodeMaterialTypes=myparams.noNodeVelocityNodeMaterialTypes,
+                                            nSmoothOut=myparams.nSmoothOut,
+                                            epsTimeStep=myparams.epsTimeStep,
+                                            epsFact_density=myparams.epsFact,
+                                            grading=myparams.grading,
+                                            grading_type=myparams.grading_type,
+                                            scale_with_nd=myparams.scale_with_nd,
+                                            do_firstStep=myparams.do_firstStep)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #

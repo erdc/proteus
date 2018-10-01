@@ -92,8 +92,8 @@ linearSolverConvergenceTest = 'r-true'
 
 maxNonlinearIts = 25
 maxLineSearches = 0
-nonlinearSolverConvergenceTest = 'rits'
-levelNonlinearSolverConvergenceTest = 'rits'
+nonlinearSolverConvergenceTest = 'r'
+levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 
 

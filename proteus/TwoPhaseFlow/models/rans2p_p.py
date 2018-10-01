@@ -23,6 +23,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
+myparams = params.Models.rans2p # model parameters
 pparams = params.physical # physical parameters
 
 # MESH #
@@ -39,19 +40,6 @@ nu_1 = pparams['viscosityB']
 sigma_01 = pparams['surf_tension_coeff']
 g = pparams['gravity']
 
-# ****************************************** #
-# ********** NUMERICAL PARAMETERS ********** #
-# ****************************************** #
-useMetrics = mparams.rans2p['useMetrics']
-epsFact_viscosity = mparams.rans2p['epsFact_viscosity']
-epsFact_density = mparams.rans2p['epsFact_density']
-ns_forceStrongDirichlet = mparams.rans2p['ns_forceStrongDirichlet']
-weak_bc_penalty_constant = mparams.rans2p['weak_bc_penalty_constant']
-useRBLES = mparams.rans2p['useRBLES']
-useRANS = mparams.rans2p['useRANS']
-ns_closure = mparams.rans2p['ns_closure']
-useVF = mparams.rans2p['useVF']
-
 # *************************************** #
 # ********** TURBULENCE MODELS ********** #
 # *************************************** #
@@ -61,14 +49,14 @@ Closure_1_model = None
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-ME_model = mparams.rans2p['index']
+ME_model = mparams.rans2p.index
 assert ME_model is not None, 'rans2p model index was not set!'
-CLSVOF_model = mparams.clsvof['index']
-VF_model = mparams.vof['index']
-LS_model = mparams.ncls['index']
+CLSVOF_model = mparams.clsvof.index
+VF_model = mparams.vof.index
+LS_model = mparams.ncls.index
 
 LevelModelType = RANS2P.LevelModel
-coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
+coefficients = RANS2P.Coefficients(epsFact=myparams.epsFact_viscosity,
                                    sigma=sigma_01,
                                    rho_0=rho_0,
                                    nu_0=nu_0,
@@ -82,15 +70,15 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    LS_model=LS_model,
                                    Closure_0_model=Closure_0_model,
                                    Closure_1_model=Closure_1_model,
-                                   epsFact_density=epsFact_density,
-                                   stokes=False,
-                                   useVF=useVF,
-                                   useRBLES=useRBLES,
-                                   useMetrics=useMetrics,
-                                   eb_adjoint_sigma=1.,
-                                   eb_penalty_constant=weak_bc_penalty_constant,
-                                   forceStrongDirichlet=ns_forceStrongDirichlet,
-                                   turbulenceClosureModel=ns_closure,
+                                   epsFact_density=myparams.epsFact_density,
+                                   stokes=myparams.stokes,
+                                   useVF=myparams.useVF,
+                                   useRBLES=myparams.useRBLES,
+                                   useMetrics=myparams.useMetrics,
+                                   eb_adjoint_sigma=myparams.eb_adjoint_sigma,
+                                   eb_penalty_constant=myparams.weak_bc_penalty_constant,
+                                   forceStrongDirichlet=myparams.ns_forceStrongDirichlet,
+                                   turbulenceClosureModel=myparams.ns_closure,
                                    movingDomain=movingDomain)
 
 # **************************************** #
