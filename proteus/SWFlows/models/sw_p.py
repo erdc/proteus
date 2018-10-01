@@ -57,20 +57,19 @@ initialConditions = {0: initialConditions['water_height'],
                      1: initialConditions['x_mom'],
                      2: initialConditions['y_mom']}
 
-# ***************************************** #    
+# ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
 dirichletConditions = {0: boundaryConditions['water_height'],
                        1: boundaryConditions['x_mom'],
                        2: boundaryConditions['y_mom']}
-
 fluxBoundaryConditions = {0: 'outFlow',
                           1: 'outFlow',
                           2: 'outFlow'}
-advectiveFluxBoundaryConditions =  {0: lambda x,flag: lambda x,t: 0.0,
-                                    1: lambda x,flag: lambda x,t: 0.0,
-                                    2: lambda x,flag: lambda x,t: 0.0}
+advectiveFluxBoundaryConditions =  {0: lambda x,flag: None,
+                                    1: lambda x,flag: None,
+                                    2: lambda x,flag: None }
 diffusiveFluxBoundaryConditions = {0:{},
-                                   1:{1: lambda x,flag: lambda x,t: 0.0},
-                                   2:{2: lambda x,flag: lambda x,t: 0.0}}
+                                   1:{1: lambda x,flag: None},
+                                   2:{2: lambda x,flag: None}}
 

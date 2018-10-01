@@ -114,7 +114,7 @@ boundaryConditions = {'water_height': lambda x,flag: None,
                       'x_mom': lambda x,flag: None,
                       'y_mom': lambda x,flag: lambda x,t: 0.0}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
-                                              cfl=0.33,
+                                              cfl=opts.cfl,
                                               outputStepping=outputStepping,
                                               structured=True,
                                               triangleFlag=0,

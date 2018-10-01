@@ -42,7 +42,6 @@ stepController = Min_dt_controller
 # ******************************************* #
 elementQuadrature = FESpace['elementQuadrature']
 elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
-femSpaces = {0: FESpace['basis']}
 femSpaces = {0: FESpace['basis'],
              1: FESpace['basis'],
              2: FESpace['basis']}
