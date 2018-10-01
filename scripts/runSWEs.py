@@ -70,7 +70,7 @@ if opts.SWEsFileName != "":
 ##############
 # CALL PARUN #
 ##############
-os.system("parun --SWEs " +
+os.system("parun --SWFlows " +
           "-l" + str(opts.logLevel) +
           " -v SWEs_so.py " +
           dataDir +
