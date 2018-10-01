@@ -14,8 +14,7 @@ class TestSWFlows(object):
 
     def test_solitary(self):
         # call runSWEs
-        os.system("parun --SWEs solitary.py")
-
+        os.system("parun --SWFlows -f solitary.py -C 'final_time=2 dt_output=1.0 refinement=2'")
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/solitary.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
@@ -26,8 +25,7 @@ class TestSWFlows(object):
 
     def test_parab1D(self):
         # Call runSWEs
-        os.system("parun --SWEs parab1D.py")
-
+        os.system("parun --SWFlows -f parab1D.py -C 'final_time=100 dt_output=10 refinement=2'")
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/parab1D.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
@@ -38,8 +36,7 @@ class TestSWFlows(object):
 
     def test_dam3Bumps(self):
         # Call runSWEs
-        os.system("parun --SWEs dam3Bumps.py")
-
+        os.system("parun --SWFlows -f dam3Bumps.py -C 'final_time=3 dt_output=1 refinement=2'")
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/dam3Bumps.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))

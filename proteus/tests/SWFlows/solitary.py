@@ -18,10 +18,10 @@ from proteus import WaveTools as wt
 # *************************** #
 opts= Context.Options([
     ('sw_model',0,"sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time",2.0,"Final time for simulation"),
-    ("dt_output",1.0,"Time interval to output solution"),
+    ("final_time",9.0,"Final time for simulation"),
+    ("dt_output",0.1,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("refinement",2,"Refinement level")
+    ("refinement",4,"Refinement level")
     ])
 
 ###################
