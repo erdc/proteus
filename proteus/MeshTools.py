@@ -5009,10 +5009,14 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0,
+                 useC=True):
         from . import cmeshTools
         MultilevelMesh.__init__(self)
-        self.useC = True   # Implementing with C will take a bit more work. Disabling for now.
+        self.useC = useC  # Implementing with C will take a bit more work. Disabling for now.
+        if refinementLevels > 1:
+            logEvent("Quad refinement is not supported in C routines, switching off c-mesh");
+            self.useC = False  # Currently quad refinement is not supported in C routines.
         self.nLayersOfOverlap=nLayersOfOverlap ; self.parallelPartitioningType = parallelPartitioningType
         if not skipInit:
             if self.useC:

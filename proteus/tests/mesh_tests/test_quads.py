@@ -34,7 +34,8 @@ def simple_mesh():
                                                    refinementLevels,
                                                    skipInit,
                                                    nLayersOfOverlap,
-                                                   parallelPartitioningType)
+                                                   parallelPartitioningType,
+                                                   useC=False)
     yield mlMesh, nnx, nny
 
 @pytest.mark.MeshTools
