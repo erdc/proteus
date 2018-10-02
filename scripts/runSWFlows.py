@@ -36,7 +36,7 @@ parser.add_option("-f","--fileName",
                   help="Name of setup file",
                   action="store",
                   type="string",
-                  dest="SWEsFileName",
+                  dest="fileName",
                   default="")
 parser.add_option("-b","--batchFile",
                   help="Text file of commands to execute",
@@ -63,9 +63,9 @@ batch = ""
 if opts.batchFileName != "":
     batch = " -b " + opts.batchFileName
 
-SWEsFileName = ""
-if opts.SWEsFileName != "":
-    SWEsFileName = " -f " + opts.SWEsFileName
+fileName = ""
+if opts.fileName != "":
+    fileName = " -f " + opts.fileName
 
 ##############
 # CALL PARUN #
@@ -76,4 +76,4 @@ os.system("parun --SWFlows " +
           dataDir +
           " -C '" + opts.context + "'" +
           batch +
-          SWEsFileName)
+          fileName)
