@@ -206,6 +206,17 @@ parser.add_option("--TpFlowParallel",
                   dest="TpFlowParallel",
                   action="store_true",
                   help="To run TwoPhaseFlow problems in parallel")
+parser.add_option("--pumi",
+                  default=False,
+                  dest="pumi",
+                  action="store_true",
+                  help="Run with adaptivity")
+parser.add_option("--pumiStage",
+                  help="Stage during PUMI work flow",
+                  action="store",
+                  type="int",
+                  dest="pumiStage",
+                  default=1)
 
 (opts,args) = parser.parse_args()
 
@@ -314,7 +325,38 @@ if opts.TwoPhaseFlow:
     if args[0][-3:] == '.py':
         log("Loading so module = "+args[0])
         so = proteus.defaults.load_system(args[0][:-3],path=path_utils)
-        # useSuperlu ?
+        #################
+        # PUMI WORKFLOW #
+        #################
+        # create mesh #
+        if opts.pumi:
+            from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+            if opts.pumiStage == 1:
+                so.ct.myTpFlowProblem.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI()
+            else:
+                so.ct.myTpFlowProblem.domain = Domain.PUMIDomain(dim=so.ct.myTpFlowProblem.nd) #initialize the domain
+                he = so.ct.myTpFlowProblem.he #*float(spaceOrder)
+                adaptMeshFlag = 1
+                adaptMesh_nSteps = 5
+                adaptMesh_numIter = 3
+                hmax = he*12.0;
+                hmin = he/4.0;
+                hPhi = he
+                so.ct.myTpFlowProblem.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax,
+                                                                                  hmin=hmin,
+                                                                                  hPhi = hPhi,
+                                                                                  adaptMesh=adaptMeshFlag,
+                                                                                  numIter=adaptMesh_numIter,
+                                                                                  numAdaptSteps=adaptMesh_nSteps,
+                                                                                  sfConfig="isotropic",
+                                                                                  logType="on",
+                                                                                  reconstructedFlag=2)
+                #read the geometry and mesh
+                parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+                so.ct.myTpFlowProblem.domain.MeshOptions.setParallelPartitioningType('element')
+                so.ct.myTpFlowProblem.domain.PUMIMesh.loadModelAndMesh("Reconstructed.dmg","splitMesh/splitMesh.smb")
+                #domain.PUMIMesh.loadModelAndMesh("Reconstructed.dmg", "Reconstructed.smb")
+        # useSuperlu ? #
         if so.ct.myTpFlowProblem.useSuperlu is None: #if useSuperlu is None, then I decide
             if opts.TpFlowParallel:
                 so.ct.myTpFlowProblem.useSuperlu=False
@@ -505,7 +547,7 @@ while running:
         runName = so.name + str(runNumber)
         dispatch = Profiling.Dispatcher(comm, opts.profile)
         ns = dispatch(NumericalSolution.NS_base,
-                      (so, pList, nList, sList, opts, simFlagsList),
+                      (so, pList, nList, sList, opts, simFlagsList,opts.TwoPhaseFlow),
                       {},
                       runName + '_init_prof')
 
