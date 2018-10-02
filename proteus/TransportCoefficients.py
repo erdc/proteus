@@ -189,7 +189,10 @@ class TC_base(object):
                 which means the system defined by the coefficients is singular.""")
         self.vectorComponents=None
         self.vectorName="velocity"
-        self.nullSpace = 'NoNullSpace'
+        try:
+            self.nullSpace
+        except AttributeError:
+            self.nullSpace = 'NoNullSpace'
         #mwf append u integral key by default
         for ci in range(self.nc):
             self.elementIntegralKeys.append(('u',ci))
