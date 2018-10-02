@@ -73,6 +73,9 @@ class TwoPhaseFlowProblem:
         self.rans3p_parameters = default_rans3p_parameters
         self.clsvof_parameters = default_clsvof_parameters
 
+        # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
+        self.general = default_general
+
     def assert_initialConditions(self,ns_model,nd,initialConditions):
         assert 'pressure' in initialConditions, 'Provide pressure in ICs'
         assert 'vel_u' in initialConditions, 'Provide vel_u in ICs'
@@ -251,3 +254,5 @@ default_clsvof_parameters = {'useMetrics': 1.0,
                              'outputQuantDOFs': True,
                              'computeMetrics': 1,
                              'eps_tolerance_clsvof': False}
+default_general = {'nLevels': 1,
+                   'nLayersOfOverlapForParallel': 0}
