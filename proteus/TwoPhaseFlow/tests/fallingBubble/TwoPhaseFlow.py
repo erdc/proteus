@@ -18,8 +18,7 @@ opts= Context.Options([
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("genMesh",True,"Generate a new mesh"),
-    ("usePUMI",False,"usePUMI workflow")
+    ("refinement",3,"level of refinement")
     ])
 
 # ****************** #
@@ -32,7 +31,7 @@ opts= Context.Options([
 # ****************** #******* #
 tank_dim = (1.0,1.0) if opts.nd == 2 else (1.0,1.0,1.0)
 # MESH 
-refinement = 3
+refinement = opts.refinement
 structured=True
 boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
 boundaryTags = dict([(key, i + 1) for (i, key) in enumerate(boundaries)])
