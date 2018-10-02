@@ -19,9 +19,7 @@ opts= Context.Options([
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("refinement",3,"level of refinement"),
-    ("genMesh",True,"Generate a new mesh"),
-    ("usePUMI",False,"usePUMI workflow")
+    ("refinement",3,"level of refinement")
     ])
 
 assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"

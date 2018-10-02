@@ -21,9 +21,7 @@ opts= Context.Options([
     ("final_time",7.5,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("he",0.5,"Max mesh element diameter"),
-    ("genMesh",True,"Generate a new mesh"),
-    ("usePUMI",False,"usePUMI workflow")
+    ("he",0.5,"Max mesh element diameter")
     ])
 
 # ****************** #
