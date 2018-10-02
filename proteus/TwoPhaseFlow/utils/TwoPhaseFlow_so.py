@@ -6,11 +6,18 @@ from builtins import range
 import os
 from proteus.default_so import *
 from proteus import Context
+import sys
 
 # ***************************** #
 # ********** CONTEXT ********** #
 # ***************************** #
 name = "TwoPhaseFlow"
+for i in range(len(sys.argv)):
+    if '-f' in sys.argv[i]:
+        assert sys.argv[i+1][-3:], "fileName must end with .py"
+        name = sys.argv[i+1][:-3]
+        break
+
 case = __import__(name)
 Context.setFromModule(case)
 ct = Context.get()

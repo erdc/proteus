@@ -5,12 +5,6 @@ import sys
 import proteus
 
 parser = optparse.OptionParser()
-parser.add_option("-f", "--file_name",
-                  help="Name of file to run",
-                  action="store",
-                  type="string",
-                  dest="file_name",
-                  default=None)
 parser.add_option("-l", "--log",
                   help="Store information about what the code is doing, 0=none, 10=everything",
                   action="store",
@@ -43,6 +37,12 @@ parser.add_option("-n","--num_proc",
                   action="store",
                   default=1,
                   dest="num_proc")
+parser.add_option("-f","--fileName",
+                  help="Name of setup file",
+                  action="store",
+                  type="string",
+                  dest="fileName",
+                  default="")
 
 (opts,args) = parser.parse_args()
 
@@ -82,6 +82,13 @@ if opts.pumi:
     files = [f for f in listdir(path) if isfile(join(path, f))]
     [os.rename(path+f,path+"splitMesh"+str(counter)+".smb") for counter,f in enumerate(files)]
 
+#############
+# FILE NAME #
+#############
+fileName = ""
+if opts.fileName != "":
+    fileName = " -f " + opts.fileName
+
 ##############
 # CALL PARUN #
 ##############
@@ -93,7 +100,8 @@ if opts.num_proc==1:
               "-l" + str(opts.logLevel) +
               " -v TwoPhaseFlow_so.py " +
               dataDir +
-              " -C '" + opts.context + "'")
+              " -C '" + opts.context + "'" +
+              fileName)
 else:
     path_utils = proteus.__path__[0]+"/TwoPhaseFlow/utils/"
     petsc_options = path_utils + "petsc.options.asm"
@@ -104,6 +112,6 @@ else:
               " -v TwoPhaseFlow_so.py " +
               dataDir +
               " -O " + petsc_options +
-              " -C '" + opts.context + "'")
-
+              " -C '" + opts.context + "'" +
+              fileName)
 
