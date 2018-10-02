@@ -1420,10 +1420,10 @@ namespace proteus
                   ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
                   if (i != j)
                     {
-                      dLij = dLow[ij]*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+                      dLij = dLow[ij];//*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
 
                       muLowij = fmax(fmax(0.,-(ui*Cx[ij] + vi*Cy[ij])),fmax(0,(uj*Cx[ij] + vj*Cy[ij])));
-                      muLij = muLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+                      muLij = muLowij;//*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
                       // compute dissipative terms
                       ith_dLij_minus_muLij_times_hStarStates  += (dLij - muLij)*(hStarji-hStarij);
                       ith_muLij_times_hStates  += muLij*(hj-hi);
