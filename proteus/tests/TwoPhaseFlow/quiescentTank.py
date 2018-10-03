@@ -22,7 +22,10 @@ opts= Context.Options([
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
     ("refinement",12,"level of refinement")
-    ])
+    ],mutable=True)
+
+# Change parameters for automated testing #
+opts.refinement=6
 
 # ****************** #
 # ***** GAUGES ***** #

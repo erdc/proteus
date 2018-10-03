@@ -20,7 +20,10 @@ opts= Context.Options([
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
     ("refinement",3,"level of refinement")
-    ])
+    ],mutable=True)
+
+# Change parameters for automated testing #
+opts.refinement=2
 
 assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
 assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
