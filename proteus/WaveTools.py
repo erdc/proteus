@@ -850,7 +850,7 @@ class  SolitaryWave(object):
 
         """
 
-
+        """
         phase = sum( (x[:]-self.trans[:])*self.waveDir[:])  - self.c * t 
         a1 =  cosh(self.K*phase*2.)	
         a2 =  cosh(self.K*phase)
@@ -867,7 +867,19 @@ class  SolitaryWave(object):
                 cosh(np.sqrt( 3.0 * self.H / self.depth**3.0) * phase ))/(
                 cosh(np.sqrt( 3.0 * self.H / ( 4.0 * self.depth**3.0))*
                 phase )   )** 4.0*( tanh( np.sqrt( 3.0 * self.H / ( 4.0 * self.depth**3.0))*phase ))
+        """
+
+        phase = sum( (x[:]-self.trans[:])*self.waveDir[:])  - self.c * t
+        a1 = cosh(self.K * phase)
+        a2 = tanh( self.K * phase)
+
+        Z =  (self.vDir[0]*x[0] + self.vDir[1]*x[1]+ self.vDir[2]*x[2]) - self.mwl
+
+        Uhorz = np.sqrt( self.gAbs * self.depth) * ( self.H / self.depth) * ( 1 / ( a1**2)) * ( 1 - ( self.H / ( 4 * self.depth)) * ( 1 / ( a1**2)))
+
+        Uvert = -np.sqrt( self.gAbs * self.depth) * ( Z / self.depth) * ( 1 - ( self.H / ( 4 * self.depth)) * ( 1 / ( a1**2))) * ( ( 2 * self.H / self.depth) * self.K * ( a2 / ( a1**2)))
         return self.waveDir*Uhorz + self.vDir*Uvert
+
 
 
 
