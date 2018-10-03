@@ -6,68 +6,78 @@ import os
 import pytest
 import tables
 import numpy as np
+import proteus.defaults
+from proteus import Context
+from proteus import default_so
+from proteus.iproteus import *
+import sys
+
+Profiling.logLevel=1
+Profiling.verbose=True
 
 class TestTwoPhaseFlow(object):
 
     def setup_method(self,method):
         self._scriptdir = os.path.dirname(__file__)
 
-    def test_fallingBubble(self):
-        # call runSWEs
-        os.system("parun --TwoPhaseFlow -f fallingBubble.py -C 'final_time=0.1 dt_output=0.1 refinement=2'")
+    def runProblem(self,name):
+        sys.argv.append('-f')
+        sys.argv.append(name+'.py')
+
+        # paths
+        path_models = proteus.__path__[0]+"/TwoPhaseFlow/models/"
+        path_utils = proteus.__path__[0]+"/TwoPhaseFlow/utils/"
+        
+        # Load so file
+        so_name = "TwoPhaseFlow_so.py"
+        so = proteus.defaults.load_system(so_name[:-3],path=path_utils)
+        so.tnList=[0,0.001,0.1]
+
+        # Erase name from sys.argv
+        sys.argv = sys.argv[:-2]
+        
+        pList=[]
+        nList=[]
+        sList=[]
+        
+        # p and n lists
+        for (pModule,nModule) in so.pnList:
+            pList.append(proteus.defaults.load_physics(pModule,path=path_models))
+            if pList[-1].name == None:
+                pList[-1].name = pModule
+            nList.append(proteus.defaults.load_numerics(nModule,path=path_models))
+        # s list
+        if sList == []:
+            for i in range(len(so.pnList)):
+                s = default_s
+                sList.append(s)
+        else:
+            sList = sList
+        #
+        # Calculate solution
+        ns = proteus.NumericalSolution.NS_base(so,pList,nList,sList,opts)
+        ns.calculateSolution(name)
+
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/fallingBubble.h5'
+        expected_path = 'comparison_files/' + name + '.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('fallingBubble.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)
+        actual = tables.open_file(name + '.h5','r')
+        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8)
+        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-8)
         expected.close()
         actual.close()
+        
+    def test_fallingBubble(self):
+        self.runProblem("fallingBubble")
 
     def test_marin(self):
-        # call runSWEs
-        os.system("parun --TwoPhaseFlow -f marin.py -C 'final_time=0.1 dt_output=0.1'")
-        # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/marin.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('marin.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)
-        expected.close()
-        actual.close()
+        self.runProblem("marin")
 
     def test_quiescentTank(self):
-        # call runSWEs
-        os.system("parun --TwoPhaseFlow -f quiescentTank.py -C 'final_time=0.1 dt_output=0.1 refinement=6'")
-        # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/quiescentTank.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('quiescentTank.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)
-        expected.close()
-        actual.close()
+        self.runProblem("quiescentTank")
 
     def test_risingBubble(self):
-        # call runSWEs
-        os.system("parun --TwoPhaseFlow -f risingBubble.py -C 'final_time=0.1 dt_output=0.1 refinement=2'")
-        # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/risingBubble.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('risingBubble.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)
-        expected.close()
-        actual.close()
+        self.runProblem("risingBubble")
 
     def test_TwoDimBucklingFlow(self):
-        # call runSWEs
-        os.system("parun --TwoPhaseFlow -f TwoDimBucklingFlow.py -C 'final_time=0.1 dt_output=0.1 refinement=4'")
-        # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/TwoDimBucklingFlow.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('TwoDimBucklingFlow.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)
-        expected.close()
-        actual.close()
+        self.runProblem("TwoDimBucklingFlow")
