@@ -68,16 +68,21 @@ class TestTwoPhaseFlow(object):
         actual.close()
         
     def test_fallingBubble(self):
+        from . import fallingBubble
         self.runProblem("fallingBubble")
 
     def test_marin(self):
+        from . import marin
         self.runProblem("marin")
 
     def test_quiescentTank(self):
+        from . import quiescentTank
         self.runProblem("quiescentTank")
 
     def test_risingBubble(self):
+        from . import risingBubble
         self.runProblem("risingBubble")
 
     def test_TwoDimBucklingFlow(self):
+        from . import TwoDimBucklingFlow
         self.runProblem("TwoDimBucklingFlow")
