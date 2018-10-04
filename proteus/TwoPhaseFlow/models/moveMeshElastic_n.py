@@ -71,7 +71,7 @@ levelNonlinearSolverConvergenceTest = 'r'
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
 massLumping = False
-numericalFluxType = NumericalFlux.Diffusion_IIPG_exterior
+numericalFluxType = NumericalFlux.Stress_IIPG_exterior
 conservativeFlux = None
 subgridError = None
 shockCapturing = None
@@ -83,7 +83,7 @@ matrix = LinearAlgebraTools.SparseMatrix
 linearSmoother = None
 multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver = LinearSolvers.KSP_petsc4py
-if ct.opts.useSuperlu:
+if useSuperlu:
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
 #

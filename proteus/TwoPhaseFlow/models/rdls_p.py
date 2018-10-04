@@ -47,7 +47,7 @@ initialConditions  = {0: initialConditions['rdls']}
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-dirichletConditions     = {0: None}
+dirichletConditions     = {0: lambda x, flag: None}
 weakDirichletConditions = {0: RDLS.setZeroLSweakDirichletBCsSimple}
 advectiveFluxBoundaryConditions =  {}
 diffusiveFluxBoundaryConditions = {0:{}}

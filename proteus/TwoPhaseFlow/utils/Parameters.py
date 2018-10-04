@@ -265,7 +265,7 @@ class ParametersModelMCorr(ParametersModelBase):
     """
     def __init__(self):
         super(ParametersModelMCorr, self).__init__(name='mcorr', index=None)
-        self.tolFac = 0.001
+        self.tolFac = 0.0001
         self.useMetrics = True
         self.checkMass = False
         self.applyCorrection = True

@@ -60,7 +60,8 @@ levelNonlinearSolver = NonlinearSolvers.Newton
 fullNewtonFlag = True
 nonlinearSmoother = NonlinearSolvers.NLGaussSeidel
 #
-levelNonlinearSolverConvergenceTest = 'rits'
+nonlinearSolverConvergenceTest = 'r'
+levelNonlinearSolverConvergenceTest = 'r'
 
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
@@ -90,17 +91,10 @@ linear_solver_options_prefix = 'rdls_'
 linearSolverConvergenceTest = 'r-true'
 
 
-maxNonlinearIts = 25
-maxLineSearches = 0
-nonlinearSolverConvergenceTest = 'r'
-levelNonlinearSolverConvergenceTest = 'r'
-linearSolverConvergenceTest = 'r-true'
-
-
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = max(myparams.minTol, myparams.tolFac*he**2)
+nl_atol_res = max(myparams.minTol, myparams.tolFac*he)
 linTolFac = 0.001
 l_atol_res = 0.001*nl_atol_res
 #

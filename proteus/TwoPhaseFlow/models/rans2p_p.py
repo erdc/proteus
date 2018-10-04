@@ -55,6 +55,18 @@ CLSVOF_model = mparams.clsvof.index
 VF_model = mparams.vof.index
 LS_model = mparams.ncls.index
 
+# for absorption zones (defined as regions)
+if hasattr(domain, 'porosityTypes'):
+    porosityTypes = domain.porosityTypes
+    dragAlphaTypes = domain.dragAlphaTypes
+    dragBetaTypes = domain.dragBetaTypes
+    epsFact_solid = domain.epsFact_solid
+else:
+    porosityTypes = None
+    dragAlphaTypes = None
+    dragBetaTypes = None
+    epsFact_solid = None
+
 LevelModelType = RANS2P.LevelModel
 coefficients = RANS2P.Coefficients(epsFact=myparams.epsFact_viscosity,
                                    sigma=sigma_01,
@@ -79,7 +91,13 @@ coefficients = RANS2P.Coefficients(epsFact=myparams.epsFact_viscosity,
                                    eb_penalty_constant=myparams.weak_bc_penalty_constant,
                                    forceStrongDirichlet=myparams.ns_forceStrongDirichlet,
                                    turbulenceClosureModel=myparams.ns_closure,
-                                   movingDomain=movingDomain)
+                                   movingDomain=movingDomain,
+                                   porosityTypes=porosityTypes,
+                                   dragAlphaTypes=dragAlphaTypes,
+                                   dragBetaTypes=dragBetaTypes,
+                                   epsFact_solid=epsFact_solid,
+                                   barycenters=domain.barycenters
+)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
