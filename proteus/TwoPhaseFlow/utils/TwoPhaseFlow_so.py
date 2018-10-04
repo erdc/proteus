@@ -13,7 +13,7 @@ import sys
 # ***************************** #
 name = "TwoPhaseFlow"
 for i in range(len(sys.argv)):
-    if '-f' in sys.argv[i]:
+    if '-f' == sys.argv[i]:
         assert sys.argv[i+1][-3:], "fileName must end with .py"
         name = sys.argv[i+1][:-3]
         break
