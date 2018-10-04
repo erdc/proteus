@@ -18,8 +18,6 @@ for i in range(len(sys.argv)):
         name = sys.argv[i+1][:-3]
         break
 
-print (name)
-print (sys.argv)
 case = __import__(name)
 Context.setFromModule(case)
 ct = Context.get()
