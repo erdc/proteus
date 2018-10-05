@@ -25,7 +25,7 @@ class TwoPhaseFlowProblem:
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
                  # OTHERS #
-                 useSuperlu=None):
+                 useSuperlu=False):
         # ***** SET OF ASSERTS ***** #
         assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
         assert nd in [2,3], "nd={2,3}"
