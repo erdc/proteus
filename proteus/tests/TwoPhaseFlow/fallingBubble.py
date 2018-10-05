@@ -21,9 +21,6 @@ opts= Context.Options([
     ("refinement",3,"level of refinement")
     ],mutable=True)
 
-# Change parameters for automated testing #
-opts.refinement=2
-
 # ****************** #
 # ***** GAUGES ***** #
 # ****************** #

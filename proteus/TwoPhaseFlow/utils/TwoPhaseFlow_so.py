@@ -12,15 +12,24 @@ import sys
 # ********** CONTEXT ********** #
 # ***************************** #
 name = "TwoPhaseFlow"
+pathMyTpFlowProblem = None
+
 for i in range(len(sys.argv)):
     if '-f' == sys.argv[i]:
         assert sys.argv[i+1][-3:], "fileName must end with .py"
         name = sys.argv[i+1][:-3]
-        break
+    if '--path' == sys.argv[i]:
+        pathMyTpFlowProblem = sys.argv[i+1]
 
+# Load module
+if pathMyTpFlowProblem is not None:
+    sys.path.append(pathMyTpFlowProblem)
 case = __import__(name)
+
+# Create context
 Context.setFromModule(case)
 ct = Context.get()
+
 
 # READ FROM myTpFlowProblem #
 assert hasattr(ct,'myTpFlowProblem'), "Create myTpFlowProblem from TwoPhaseFlowProblem"
@@ -40,7 +49,7 @@ else: #rans3p
               ("pressureincrement_p", "pressureincrement_n"),#2
               ("pressure_p", "pressure_n"),#3
               ("pressureInitial_p", "pressureInitial_n")]#4
-    
+
 # ****************************************** #
 # ********** TIME STEP CONTROLLER ********** #
 # ****************************************** #

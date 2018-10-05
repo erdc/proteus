@@ -223,6 +223,12 @@ parser.add_option("-f","--fileName",
                   type="string",
                   dest="fileName",
                   default="")
+parser.add_option("--path",
+                  help="Path where TwoPhaseFlow problem is stored",
+                  action="store",
+                  type="string",
+                  dest="pathMyTpFlowProblem",
+                  default="")
 
 (opts,args) = parser.parse_args()
 
