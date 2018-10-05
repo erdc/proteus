@@ -168,8 +168,7 @@ where Zero, etc. are user defined python classes.
 where pressure\_DBC, etc. are user defined python functions.
 
 \item {\bf useSuperlu} (no default).
-  Use or not superlu. By default we use superlu only for serial runs but we allow
-  the user to override this.  
+  Use or not superlu. By default we don't use superlu but we allow the user to override this.  
   Note that superlu can't be used if the null space of the matrix is non empty
   (e.g. Poisson problem with Neumann boundary conditions).
   
