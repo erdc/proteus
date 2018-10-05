@@ -26,18 +26,19 @@ class TwoPhaseFlowProblem:
                  boundaryConditions=None,
                  # OTHERS #
                  useSuperlu=None):
-        """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
         assert nd in [2,3], "nd={2,3}"
         assert cfl <= 1, "Choose cfl <= 1"
         assert isinstance (outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
         assert type(he)==float , "Provide (float) he (characteristic mesh size)"
+        assert domain is not None, "Provide a domain"
         if structured:
             assert type(nnx)==int and type(nny)==int, "Provide (int) nnx and nny"
             if nd==3:
                 assert type(nnz)==int, "Provide (int) nnz"
-        assert domain is not None, "Provide a domain"
+        else:
+            assert domain.MeshOptions.triangleOptions != 'q30DenA', "Set domain.MeshOptions.triangleOptions"
         assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
         assert type(initialConditions)==dict, "Provide dict of initial conditions"
         assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
