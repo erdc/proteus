@@ -1,6 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from sShaped_block_2d_p import *
+from .sShaped_block_2d_p import *
 
 ######################################################
 
@@ -24,7 +26,7 @@ elif finiteElement=="dgp1":
 elif finiteElement=="c0p2":
     femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
 else:
-    print 'INVALID FINITE ELEMENT SELECTED'
+    print('INVALID FINITE ELEMENT SELECTED')
 
 #######################################################
 
@@ -43,7 +45,7 @@ elif conservativeFluxSchemeFlag=='dg-point-eval':
 elif conservativeFluxSchemeFlag=='none':
     pass
 else:
-    print 'INVALID CONSERVATIVE FLUX SCHEME'
+    print('INVALID CONSERVATIVE FLUX SCHEME')
 
 
 ######################################################
@@ -61,7 +63,7 @@ elif numericalFluxTypeFlag=='ldg':
 elif numericalFluxTypeFlag=='nipg':
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_NIPG
 else:
-    print 'INVALID NUMERICAL FLUX TYPE'
+    print('INVALID NUMERICAL FLUX TYPE')
 
 ######################################################
 

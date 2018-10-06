@@ -1,3 +1,4 @@
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
@@ -43,7 +44,7 @@ def getDiffusiveFlux_phi(x,flag):
     else:
         return lambda x,t: 0.0
 
-class getIBC_phi:
+class getIBC_phi(object):
     def uOfXT(self,x,t):
         return 0.0
 

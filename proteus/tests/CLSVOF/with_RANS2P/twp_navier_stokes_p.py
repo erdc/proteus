@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus.default_p import *
 from proteus.mprans import RANS2P
-from multiphase import *
+from .multiphase import *
 import numpy as np
 
 
@@ -44,7 +46,7 @@ diffusiveFluxBoundaryConditions = {0:{},
                                    1: {1: lambda x, flag: domain.bc[flag].u_diffusive.init_cython()},
                                    2: {2: lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
 
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

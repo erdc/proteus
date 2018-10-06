@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from NS_convergence import *
+from .NS_convergence import *
 from proteus.mprans import PresInit
 
 #domain = ctx.domain
@@ -24,7 +26,7 @@ def getAdvectiveFlux_pInit(x,flag):
 def getDiffusiveFlux_pInit(x,flag):
     None
 
-class getIBC_pInit:
+class getIBC_pInit(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

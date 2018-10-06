@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2D
@@ -18,8 +21,8 @@ h0=10.0
 a=3000.
 B=5.
 k=0.002
-p = np.sqrt(8*g*h0)/a
-s = np.sqrt(p**2 - k**2)/2.
+p = old_div(np.sqrt(8*g*h0),a)
+s = old_div(np.sqrt(p**2 - k**2),2.)
 mannings=k
 
 domain = RectangularDomain(L=L)
@@ -41,18 +44,18 @@ def bathymetry_function(X):
     import numpy as np
     x = X[0]
     y = X[1] 
-    r2 = (x-L[0]/2.)**2+(y-L[1]/2.)**2
+    r2 = (x-old_div(L[0],2.))**2+(y-old_div(L[1],2.))**2
     return h0*r2/a/a
 
 def eta_function(X,t):
     x = X[0]
     y = X[1]
 
-    coeff1 = -B/g
+    coeff1 = old_div(-B,g)
     coeff2 = -B**2/2./g
     
-    eta_part1 = coeff1*np.exp(-k*t/2.)*(k/2.*np.sin(s*t)+s*np.cos(s*t))*(x-L[0]/2.);
-    eta_part2 = coeff1*np.exp(-k*t/2.)*(k/2.*np.cos(s*t)-s*np.sin(s*t))*(y-L[1]/2.);
+    eta_part1 = coeff1*np.exp(-k*t/2.)*(k/2.*np.sin(s*t)+s*np.cos(s*t))*(x-old_div(L[0],2.));
+    eta_part2 = coeff1*np.exp(-k*t/2.)*(k/2.*np.cos(s*t)-s*np.sin(s*t))*(y-old_div(L[1],2.));
     eta_part3 = coeff2*np.exp(-k*t);
     
     return h0 + eta_part1 + eta_part2 + eta_part3
@@ -64,21 +67,21 @@ def water_height_function(X,t):
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
-class water_height_at_t0:
+class water_height_at_t0(object):
     def uOfXT(self,X,t):
         return water_height_function(X,0)
 
-class momX:
+class momX(object):
     def uOfXT(self,X,t):
         return 0.
 
-class momY:
+class momY(object):
     def uOfXT(self,X,t):
         h = water_height_function(X,0)
         v = B
         return h*v
 
-class Zero:
+class Zero(object):
     def uOfXT(self,x,t):
         return 0.0
 
@@ -89,7 +92,7 @@ initialConditions = {0:water_height_at_t0(),
 ##########################
 ##### EXACT SOLUTION #####
 ##########################
-class water_height:
+class water_height(object):
     def uOfXT(self,X,t):
         return water_height_function(X,t)
 

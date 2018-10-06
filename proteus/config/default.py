@@ -67,7 +67,7 @@ if sys.platform == 'darwin':
     PROTEUS_BLAS_LIB_DIR = PROTEUS_LIB_DIR
     PROTEUS_BLAS_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
     PROTEUS_EXTRA_LINK_ARGS=platform_extra_link_args
-else:
+elif sys.platform == 'linux2':
     PROTEUS_BLAS_LIB   ='openblas'
     PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
 
@@ -89,9 +89,7 @@ with open(os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','ChronoConfig.cmake'),'r')
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
 PROTEUS_EXTRA_FC_LINK_ARGS=platform_extra_link_args
 
-PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
-PROTEUS_EXTRA_LINK_ARGS=[]
-
+PROTEUS_NCURSES_INCLUDE_DIR, PROTEUS_NCURSES_LIB_DIR = get_flags('ncurses')
 
 if platform_blas_h:
     PROTEUS_BLAS_H = platform_blas_h
@@ -102,7 +100,7 @@ PROTEUS_LAPACK_INCLUDE_DIR, PROTEUS_LAPACK_LIB_DIR = get_flags('lapack')
 if platform_lapack_h:
     PROTEUS_LAPACK_H = platform_lapack_h
 else:
-    PROTEUS_LAPACK_H   = r'"clapack.h"'
+    PROTEUS_LAPACK_H   = r'"proteus_lapack.h"'
 
 if sys.platform == 'darwin':
     PROTEUS_LAPACK_LIB ='m'

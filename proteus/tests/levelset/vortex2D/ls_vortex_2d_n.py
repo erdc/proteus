@@ -1,7 +1,9 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from ls_vortex_2d_p import *
-from vortex2D import *
+from .ls_vortex_2d_p import *
+from .vortex2D import *
 nd = 2
 
 if timeIntegration_ls == "be":
@@ -30,7 +32,7 @@ if useHex:
     elif pDegree_ls == 2:
         femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}#this is hardwired to p2 right now
     else:
-        print "pDegree_ls = %s not recognized " % pDegree_ls
+        print("pDegree_ls = %s not recognized " % pDegree_ls)
     elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
 else:
@@ -39,7 +41,7 @@ else:
     elif pDegree_ls == 2:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
-        print "pDegree_ls = %s not recognized " % pDegree_ls
+        print("pDegree_ls = %s not recognized " % pDegree_ls)
     base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
     elementQuadrature = CompositeTriangle(base_quad_rule,hk)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
@@ -90,4 +92,4 @@ maxLineSearches = 0
 #checkMass = True
 
 if not applyCorrection and checkMass:
-   auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS("vortex2dnc"+`lRefinement`)]
+   auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryLS("vortex2dnc"+repr(lRefinement))]

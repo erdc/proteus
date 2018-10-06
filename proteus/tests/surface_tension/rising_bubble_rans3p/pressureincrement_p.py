@@ -1,7 +1,12 @@
+from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from risingBubble import *
+try:
+    from .risingBubble import *
+except:
+    from risingBubble import *
 
 name = "pressureincrement"
 
@@ -28,7 +33,7 @@ def getDiffusiveFlux_phi(x,flag):
     if not (flag == boundaryTags['top'] and openTop):
         return lambda x,t: 0.0
 
-class getIBC_phi:
+class getIBC_phi(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

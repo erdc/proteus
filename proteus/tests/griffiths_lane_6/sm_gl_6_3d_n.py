@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import range
 from proteus import *
 from proteus.default_n import *
-from sm_gl_6_3d_p import *
+from .sm_gl_6_3d_p import *
 
 timeIntegration = NoIntegration
 stepControl = Newton_controller
