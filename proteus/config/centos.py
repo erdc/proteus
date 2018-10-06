@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import os
-from default import *
+from .default import *
 
 
 PROTEUS_MPI_INCLUDE_DIR='/apps/openmpi/1.10.2/gcc/6.1.0/include'

@@ -1,3 +1,4 @@
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
@@ -27,7 +28,7 @@ def getDiffusiveFlux_pInit(x,flag):
     if flag not in [boundaryTags['right']]:# without boundaryTags['front'],boundaryTags['back'] becuase of slip-bc 
         return lambda x,t: 0.0
 
-class getIBC_pInit:
+class getIBC_pInit(object):
     def uOfXT(self,x,t):
         return 0.0
 

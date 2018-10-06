@@ -1,7 +1,14 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from math import *
 from proteus import *
 from proteus.default_p import *
-from cylinder import *
+try:
+    from .cylinder import *
+except:
+    from cylinder import *
 
 
 #domain = ctx.domain
@@ -33,7 +40,7 @@ from math import cos,pi
 #the advectiveFlux should be zero on any no-flow  boundaries
 def getAdvectiveFlux_qt(x,flag):
     if flag == boundaryTags['left']:
-        return lambda x,t: -Um*x[1]*(fl_H-x[1])/(fl_H/2.0)**2
+        return lambda x,t: -Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
     elif flag == boundaryTags['right']:
         return None
     else:
@@ -47,7 +54,7 @@ def getDiffusiveFlux_phi(x,flag):
     else:
         return lambda x,t: 0.0
 
-class getIBC_phi:
+class getIBC_phi(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

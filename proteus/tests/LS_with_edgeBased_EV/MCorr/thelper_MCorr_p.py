@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from thelper_cons_ls import *
+from .thelper_cons_ls import *
 name=soname+"_phicor"
 from proteus.mprans import MCorr
 
@@ -19,7 +21,7 @@ coefficients = MCorr.Coefficients(applyCorrection=applyCorrection,
                                   useQuadraticRegularization=ct.STABILIZATION_TYPE_vof>0,
                                   edgeBasedStabilizationMethods=ct.STABILIZATION_TYPE_vof>0)
 
-class zero_phi:
+class zero_phi(object):
     def __init__(self):
         pass
     def uOfX(self,X):

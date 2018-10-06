@@ -22,6 +22,7 @@ data*txt
 *.poly
 *.bak
 *.log.*
+*.swp
 install_*
 config_*
 build/
@@ -32,7 +33,5 @@ Cygwin
 proteus.egg-info/
 proteus/ADR.cpp
 proteus/subsurfaceTransportFunctions.c
-hashdist/
-stack/
 cygwin_bootstrap.done
 matlab_setup.done

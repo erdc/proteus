@@ -4,7 +4,12 @@ A stupid implementation of a heap for fast marching methods
 .. inheritance-diagram:: proteus.StupidHeap
    :parts: 1
 """
-class StupidHeap:
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
+class StupidHeap(object):
     """
     Min Heap
 
@@ -34,8 +39,8 @@ class StupidHeap:
         """
 
         """
-        if self.heapPos.has_key(key):
-            print """insertWithCheckForExistingKey found existing key=%s using updateNode!""" % key
+        if key in self.heapPos:
+            print("""insertWithCheckForExistingKey found existing key=%s using updateNode!""" % key)
             return self.updateNode(key,val)
         last = len(self.heap)
         self.heap.append((key,val))
@@ -89,7 +94,7 @@ class StupidHeap:
         """
         assert pos >= 0 and pos < len(self.heap)
         K = 0; V = 1;
-        Ppos = int((pos-1)/2)
+        Ppos = int(old_div((pos-1),2))
         if Ppos < 0 or self.heap[Ppos][V] < self.heap[pos][V]:
             return
         #switch with parent
@@ -139,7 +144,7 @@ class StupidHeap:
 
     def checkHeap(self):
         K = 0; V=1;
-        for i in range(len(self.heap)/2):
+        for i in range(old_div(len(self.heap),2)):
             assert self.heap[i][V] <= self.heap[2*i+1][V], "failed node %d = %s left child %d =  %s " (i,self.heap[i],
                                                                                                        2*i+1,
                                                                                                        self.heap[2*i+1])
@@ -153,8 +158,8 @@ class StupidHeap:
                                                                                               self.heapPos[self.heap[i][K]])
 
     def printHeap(self):
-        print "heap= %s " % self.heap
-        print "heapPos= %s " % self.heapPos
+        print("heap= %s " % self.heap)
+        print("heapPos= %s " % self.heapPos)
 
 if __name__ == "__main__":
     H = StupidHeap()
@@ -164,7 +169,7 @@ if __name__ == "__main__":
     a = [(i, 10.-i) for i in range(10)]
     a.append((11,5.)); a.append((-1,6.))
     for i in range(nn):
-        print "inserting a[%s]=%s " % (i,a[i])
+        print("inserting a[%s]=%s " % (i,a[i]))
 
         H.insert(a[i][0],a[i][1])
     H.printHeap()
@@ -173,11 +178,11 @@ if __name__ == "__main__":
 
     while not H.isempty():
         h = H.pop()
-        print "H.pop = (%s,%s) " % h
+        print("H.pop = (%s,%s) " % h)
         H.checkHeap()
 
     for i in range(nn):
-        print "re inserting a[%s]=%s " % (i,a[i])
+        print("re inserting a[%s]=%s " % (i,a[i]))
 
         H.insert(a[i][0],a[i][1])
 
@@ -186,5 +191,5 @@ if __name__ == "__main__":
     H.updateNode(7,100.); H.checkHeap()
     while not H.isempty():
         h = H.pop()
-        print "H.pop = (%s,%s) " % h
+        print("H.pop = (%s,%s) " % h)
         H.checkHeap()

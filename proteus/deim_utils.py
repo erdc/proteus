@@ -2,6 +2,9 @@
 """
 utility module for generating deim interpolants
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
 def read_from_hdf5(hdfFile,label,dof_map=None):
@@ -74,7 +77,7 @@ def calculate_deim_indices(Uin):
         Up=U[rho]#Up= np.dot(Pt,U)
         up=u[rho]#up= np.dot(Pt,u)
         if j==1:
-            c=up/Up
+            c=old_div(up,Up)
             r=u-U*c
         else:
             c =np.linalg.solve(Up,up)

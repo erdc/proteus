@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
-from redist_p import *
-from multiphase import *
+from .redist_p import *
+from .multiphase import *
 
 tolFac = 0.0
 nl_atol_res = rd_nl_atol_res

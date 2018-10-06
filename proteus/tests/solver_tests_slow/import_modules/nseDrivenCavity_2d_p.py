@@ -1,8 +1,15 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus import Domain
-import nseDrivenCavity_2d
-from TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
+try:
+    from . import nseDrivenCavity_2d
+    from .TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
+except:
+    import nseDrivenCavity_2d
+    from TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
+    
 ct = nseDrivenCavity_2d.opts
 
 """
@@ -33,7 +40,7 @@ if (numeric_scheme!= "C0Q1C0Q1" and numeric_scheme!="THQuads"):
 
 ##################################################
 
-class uTrue:
+class uTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):
@@ -41,7 +48,7 @@ class uTrue:
     def uOfXT(self,x,t):
         return 1. - x[0]**4
 
-class uTrue_RE_through_bdy:
+class uTrue_RE_through_bdy(object):
     def __init__(self):
         pass
     def uOfX(self,x):
@@ -49,7 +56,7 @@ class uTrue_RE_through_bdy:
     def uOfXT(self,x,t):
         return (10.0**max(0.0,t-1))*(1 - x[0]**4)
 
-class vTrue:
+class vTrue(object):
     def __init__(self):
         pass
     def vOfX(self,x):

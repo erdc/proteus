@@ -11,6 +11,7 @@
 #include <PCU.h>
 #include <samElementCount.h>
 #include <queue>
+#include <algorithm> 
 
 static void SmoothField(apf::Field *f);
 void gradeAnisoMesh(apf::Mesh* m,double gradingFactor);
@@ -18,92 +19,122 @@ void gradeAspectRatio(apf::Mesh* m, int idx, double gradingFactor);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
-static double isotropicFormula(double phi, double dphi, double verr, double hmin, double hmax, double phi_s = 0)
+static double isotropicFormula(double phi, double dphi, double verr, double hmin, double hmax, double phi_s = 0, double epsFact = 0)
 {
   double size;
   double dphi_size_factor;
   double v_size_factor;
-  //This is just a hack for now. This disable the refinement over phi and does it over phi_s
-  // if (phi_s != 0.0)
-  // {
-  if (fabs(phi_s) < 5.0 * hmin)
+  if (fabs(phi_s) < (epsFact*7.5) * hmin)
     return hmin;
   else
     return hmax;
-  // }
-  // else
-  // {
-  //   if (fabs(phi) < 5.0 * hmin)
-  //   {
-  //     dphi_size_factor = fmax(hmin / 10.0, fmin(1.0, pow(((hmin / 1000.0) / fabs(dphi + 1.0e-8)), 1.0 / 2.0)));
-  //     size = hmin * dphi_size_factor;
-  //   }
-  //   else
-  //     size = hmax;
-
-  //   size = fmax(hmin / 100.0, fmin(size, 0.001 / (verr + 1.0e-8)));
-
-  //   return size;
-  // }
 }
 
+static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::MeshTag *marker,apf::Field* sizeField)
+//helper function for banded interface to facilitate with setting the proper mesh size and parallel communication
+{
+  int isMarked=0;
+  if(m->hasTag(vertex,marker))
+    isMarked=1;
+  double h_new;
+  if(isMarked)
+    h_new = std::min(h,apf::getScalar(sizeField,vertex,0));
+  else
+  {
+    h_new = h;
+    int newMark = 1;
+    m->setIntTag(vertex,marker,&newMark);
+  }
+  apf::setScalar(sizeField,vertex,0,h_new);
+
+  //Parallel Communication with owning copy
+  if(!m->isOwned(vertex))
+  {
+    apf::Copies remotes;
+    m->getRemotes(vertex,remotes);
+    int owningPart=m->getOwner(vertex);
+    PCU_COMM_PACK(owningPart, remotes[owningPart]);
+    PCU_COMM_PACK(owningPart, h_new);
+  }
+}
+
+
 int MeshAdaptPUMIDrvr::calculateSizeField()
+//Implementation of banded interface, edge intersection algorithm
+//If mesh edge intersects the 0 level-set, then the adjacent edges need to be refined 
 {
   freeField(size_iso);
   size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
-  apf::MeshIterator *it = m->begin(0);
-  apf::MeshEntity *v;
   apf::Field *phif = m->findField("phi");
   assert(phif);
-  ////////////////////////////////////////
-  apf::Field *phisError = m->findField("phi_s");
-  assert(phisError);
-  /////////////////////////////////////////
-  apf::Field *phiCorr = m->findField("phiCorr");
-  assert(phiCorr);
-  apf::Field *velocityError = m->findField("velocityError");
-  assert(phiCorr);
-  while ((v = m->iterate(it)))
+
+  apf::MeshTag* vertexMarker = m->createIntTag("vertexMarker",1);
+  apf::MeshIterator *it = m->begin(1);
+  apf::MeshEntity *edge;
+
+  double safetyFactor = 2.0; //need to make this user defined
+  double L_band = N_interface_band*hPhi*safetyFactor;
+
+  PCU_Comm_Begin();
+  while ((edge = m->iterate(it)))
   {
-    double phi = apf::getScalar(phif, v, 0);
-    double phi_s = apf::getScalar(phisError, v, 0);
-    // double dphi = apf::getScalar(phiCorr, v, 0);
-    // double verr = apf::getScalar(velocityError, v, 0);
-    double size = isotropicFormula(0.0, 0.0, 0.0, hmin, hmax, phi_s);
-    apf::setScalar(size_iso, v, 0, size);
-  }
-  m->end(it);
-  /*
-    If you just smooth then hmax will just diffuse into the hmin band
-    and you won't really get a band around phi=0 with uniform diameter
-    hmin. Instead, reset to hmin after each smooth within the band in
-    order to ensure the band uses hmin. Iterate on that process until
-    changes in the smoothed size are less than 50% of hmin.
-   */
-/*
-  double err_h_max=hmax;
-  //int its=0;
-  //while (err_h_max > 0.5*hmin && its < 200)
-  for(int its=0;its<200;its++)
+    apf::Adjacent edge_adjVerts;
+    m->getAdjacent(edge,0,edge_adjVerts);
+    apf::MeshEntity *vertex1 = edge_adjVerts[0];
+    apf::MeshEntity *vertex2 = edge_adjVerts[1];
+    double phi1 = apf::getScalar(phif,vertex1,0);
+    double phi2 = apf::getScalar(phif,vertex2,0);
+    int caseNumber = 1;
+    if(std::fabs(phi1)>L_band)
+      caseNumber++;
+    if(std::fabs(phi2)>L_band)
+      caseNumber++;
+
+    if(caseNumber==1 || caseNumber == 2)
     {
-      its++;
-      SmoothField(size_iso);
-      err_h_max=0.0;
-      it = m->begin(0);
-      while ((v = m->iterate(it))) {
-	double phi = apf::getScalar(phif, v, 0);
-	double dphi = apf::getScalar(phiCorr, v, 0);
-	double verr = apf::getScalar(velocityError, v, 0);
-	double size_current = apf::getScalar(size_iso, v, 0);
-	double size = fmin(size_current,isotropicFormula(phi, dphi, verr, hmin, hmax));
-	err_h_max = fmax(err_h_max,fabs(size_current-size));
-	apf::setScalar(size_iso, v, 0, size);
-      }
-      m->end(it);
+      setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
+      setSizeField(m,vertex2,hPhi,vertexMarker,size_iso);
     }
-  PCU_Barrier();    
-*/
+    else
+    {
+      if (phi1*phi2 <0)
+      {
+        setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
+        setSizeField(m,vertex2,hPhi,vertexMarker,size_iso);
+      }
+      else
+      {
+        setSizeField(m,vertex1,hmax,vertexMarker,size_iso);
+        setSizeField(m,vertex2,hmax,vertexMarker,size_iso);
+      }
+    }
+
+  }//end while
+
+  PCU_Comm_Send();
+
+  //Take minimum between received value and current value
+  apf::MeshEntity *ent;
+  double h_received;
+  while(PCU_Comm_Receive())
+  {
+    //Note: the only receiving entities should be owning copies
+    PCU_COMM_UNPACK(ent);
+    PCU_COMM_UNPACK(h_received);
+    //take minimum of received values
+    double h_current = apf::getScalar(size_iso,ent,0);
+    double h_final = std::min(h_current,h_received);
+    apf::setScalar(size_iso,ent,0,h_final);
+  }
+
+  //Synchronization has all remote copies track the owning copy value
+  apf::synchronize(size_iso);
+  m->end(it);
+
+  //Grade the Mesh
   gradeMesh();
+  
+  m->destroyTag(vertexMarker);
   return 0;
 }
 
@@ -719,6 +750,7 @@ void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error,dou
     element = apf::createMeshElement(m, ent);
     vofElem = apf::createElement(interfaceField,element);
     double vofVal = apf::getScalar(vofElem,apf::Vector3(1./3.,1./3.,1./3.));
+
     if(vofVal < 0.9 && vofVal > 0.1){ //at the interface
       double errorValue = apf::getScalar(errField,ent,0);
       errVect.push_back(errorValue);    
@@ -799,7 +831,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       target_error = err_total/sqrt(m->count(nsd));
   }
    
-  
   // Get domain volume
   // should only need to be computed once unless geometry is complex
   if (domainVolume == 0)
@@ -1033,7 +1064,7 @@ int MeshAdaptPUMIDrvr::testIsotropicSizeField()
     return 0;
 }
 
-void gradeSizeModify(apf::Mesh* m, double gradingFactor, 
+int gradeSizeModify(apf::Mesh* m, double gradingFactor, 
     double size[2], apf::Adjacent edgAdjVert, 
     apf::Adjacent vertAdjEdg,
     std::queue<apf::MeshEntity*> &markedEdges,
@@ -1041,6 +1072,8 @@ void gradeSizeModify(apf::Mesh* m, double gradingFactor,
     int fieldType,
     int vecPos, //which idx of sizeVec to modify
     int idxFlag)
+
+//General function to actually modify sizes
 {
     //Determine a switching scheme depending on which vertex needs a modification
     int idx1,idx2;
@@ -1055,22 +1088,39 @@ void gradeSizeModify(apf::Mesh* m, double gradingFactor,
     
     int marker[3] = {0,1,0}; 
     double marginVal = 0.01;
+    int needsParallel=0;
 
     if(fieldType == apf::SCALAR){
       apf::Field* size_iso = m->findField("proteus_size");
-      if(size[idx1]>gradingFactor*size[idx2]){
-        size[idx1] = gradingFactor*size[idx2];
-        apf::setScalar(size_iso,edgAdjVert[idx1],0,size[idx1]);
-        m->getAdjacent(edgAdjVert[idx1], 1, vertAdjEdg);
-        for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
-          m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
-          //if edge is not already marked
-          if(!marker[2]){
-            m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
-            markedEdges.push(vertAdjEdg[i]);
+
+      if(size[idx1]>(gradingFactor*size[idx2])*(1+marginVal))
+      {
+        if(m->isOwned(edgAdjVert[idx1]))
+        {
+          size[idx1] = gradingFactor*size[idx2];
+          apf::setScalar(size_iso,edgAdjVert[idx1],0,size[idx1]);
+          m->getAdjacent(edgAdjVert[idx1], 1, vertAdjEdg);
+          for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
+            m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+            //if edge is not already marked
+            if(!marker[2]){
+              m->setIntTag(vertAdjEdg[i],isMarked,&marker[1]);
+              markedEdges.push(vertAdjEdg[i]);
+            }
           }
+        } //end isOwned
+        else
+        { //Pack information to owning processor
+          needsParallel=1;
+          apf::Copies remotes;
+          m->getRemotes(edgAdjVert[idx1],remotes);
+          double newSize = gradingFactor*size[idx2];
+          int owningPart=m->getOwner(edgAdjVert[idx1]);
+          PCU_COMM_PACK(owningPart, remotes[owningPart]);
+          PCU_COMM_PACK(owningPart,newSize);
         }
       }
+
     }//end if apf::SCALAR
     else{
       apf::Field* size_scale = m->findField("proteus_size_scale");
@@ -1096,27 +1146,21 @@ void gradeSizeModify(apf::Mesh* m, double gradingFactor,
         }
       }
     }
+  return needsParallel;
 }
 
-int MeshAdaptPUMIDrvr::gradeMesh()
-//Function to grade isotropic mesh through comparison of edge vertex size ratios
-//For simplicity, we do not bother with accounting for entities across partitions
+void markEdgesInitial(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,double gradingFactor)
+//Function used to initially determine which edges need to be considered for gradation
 {
-  //
-  if(comm_rank==0)
-    std::cout<<"Starting grading\n";
-  apf::MeshIterator* it = m->begin(1);
-  apf::MeshEntity* edge;
-  apf::Adjacent edgAdjVert;
-  apf::Adjacent vertAdjEdg;
-  //double gradingFactor = 1.5;
-  double size[2];
-  std::queue<apf::MeshEntity*> markedEdges;
-  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
-
   //marker structure for 0) not marked 1) marked 2)storage
   int marker[3] = {0,1,0}; 
 
+  double size[2];
+  apf::MeshTag* isMarked = m->findTag("isMarked");
+  apf::Field* size_iso = m->findField("proteus_size");
+  apf::Adjacent edgAdjVert;
+  apf::MeshEntity* edge;
+  apf::MeshIterator* it = m->begin(1);
   while((edge=m->iterate(it))){
     m->getAdjacent(edge, 0, edgAdjVert);
     for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
@@ -1133,16 +1177,236 @@ int MeshAdaptPUMIDrvr::gradeMesh()
     }
   }
   m->end(it); 
-  while(!markedEdges.empty()){
+}
+
+int serialGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,double gradingFactor)
+//Function used loop over the mesh edge queue for gradation and modify the sizes
+{
+  double size[2];
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+  apf::MeshTag* isMarked = m->findTag("isMarked");
+  apf::Field* size_iso = m->findField("proteus_size");
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  apf::MeshEntity* edge;
+  apf::MeshIterator* it = m->begin(1);
+  int needsParallel=0;
+
+  //perform serial gradation while packing necessary info for parallel
+  while(!markedEdges.empty()){ 
     edge = markedEdges.front();
     m->getAdjacent(edge, 0, edgAdjVert);
     for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
       size[i] = apf::getScalar(size_iso,edgAdjVert[i],0);
     }
-    //This can be simplified with one function call
+
+    needsParallel+=gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::SCALAR,0, 0);
+    needsParallel+=gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::SCALAR,0, 1);
+
+    m->setIntTag(edge,isMarked,&marker[0]);
+    markedEdges.pop();
+  }
+  return needsParallel;
+}
+
+int MeshAdaptPUMIDrvr::gradeMesh()
+//Function to grade isotropic mesh through comparison of edge vertex size ratios
+//This implementation accounts for parallel meshes as well
+//First do serial gradation. 
+//If a shared entity has its size modified, then send new size to owning copy.
+//After full loop over entities, have owning copy take minimum of all sizes received
+//Flag adjacent entities to owning copy.
+//Communicate to remote copies that a size was modified, and flag adjacent edges to remote copies for further gradation
+{
+  //
+  if(comm_rank==0)
+    std::cout<<"Starting grading\n";
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double size[2];
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  apf::MeshIterator* it;
+  markEdgesInitial(m,markedEdges,gradingFactor);
+
+  int needsParallel=1;
+  int nCount=1;
+  while(needsParallel)
+  {
+    PCU_Comm_Begin();
+    needsParallel = serialGradation(m,markedEdges,gradingFactor);
+
+    PCU_Add_Ints(&needsParallel,1);
+    if(comm_rank==0)
+      std::cerr<<"Sending size info for gradation"<<std::endl;
+    PCU_Comm_Send(); 
+
+    apf::MeshEntity* ent;
+    double receivedSize;
+    double currentSize;
+    double newSize;
+
+    //Need a container to get all entitites that need to be updated on remotes
+    std::queue<apf::MeshEntity*> updateRemoteVertices;
+
+    apf::Copies remotes;
+    //owning copies are receiving
+    while(PCU_Comm_Receive())
+    {
+      PCU_COMM_UNPACK(ent);
+      PCU_COMM_UNPACK(receivedSize);
+
+      if(!m->isOwned(ent)){
+        std::cout<<"THERE WAS AN ERROR"<<std::endl;
+        std::exit(1);
+      }
+
+      currentSize = apf::getScalar(size_iso,ent,0);
+      newSize = std::min(receivedSize,currentSize);
+      apf::setScalar(size_iso,ent,0,newSize);
+      
+      //add adjacent edges into Q
+      m->getAdjacent(ent, 1, vertAdjEdg);
+      for (std::size_t i=0; i<vertAdjEdg.getSize();++i)
+      {
+        edge = vertAdjEdg[i];
+        m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+        if(!marker[2])
+        {
+          markedEdges.push(edge);
+          //tag edge to indicate that it is part of queue 
+          m->setIntTag(edge,isMarked,&marker[1]);
+        }
+      }
+      updateRemoteVertices.push(ent);
+    }
+
+    PCU_Comm_Begin();
+
+    while(!updateRemoteVertices.empty())
+    { 
+      ent = updateRemoteVertices.front();
+      //get remote copies and send updated mesh sizes
+      m->getRemotes(ent,remotes);
+      currentSize = apf::getScalar(size_iso,ent,0);
+      for(apf::Copies::iterator iter=remotes.begin(); iter!=remotes.end();++iter)
+      {
+        PCU_COMM_PACK(iter->first, iter->second);
+      }
+      updateRemoteVertices.pop();
+    }
+
+    PCU_Comm_Send();
+    //while remote copies are receiving
+    while(PCU_Comm_Receive())
+    {
+      //unpack
+      PCU_COMM_UNPACK(ent);
+      //PCU_COMM_UNPACK(receivedSize);
+      assert(!m->isOwned(ent));
+
+      if(m->isOwned(ent)){
+        std::cout<<"Problem occurred\n";
+        std::exit(1);
+      }
+
+      //add adjacent edges into Q
+      m->getAdjacent(ent, 1, vertAdjEdg);
+      for (std::size_t i=0; i<vertAdjEdg.getSize();++i)
+      {
+        edge = vertAdjEdg[i];
+        m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
+        if(!marker[2])
+        {
+          markedEdges.push(edge);
+          //tag edge to indicate that it is part of queue 
+          m->setIntTag(edge,isMarked,&marker[1]);
+        }
+      }
+    }
+    apf::synchronize(size_iso);
+
+  } //end outer while
+
+  //Cleanup of edge marker field
+  it = m->begin(1);
+  while((edge=m->iterate(it))){
+    m->removeTag(edge,isMarked);
+  }
+  m->end(it); 
+  m->destroyTag(isMarked);
+
+  //apf::synchronize(size_iso);
+  if(comm_rank==0)
+    std::cout<<"Completed grading\n";
+  return needsParallel;
+}
+
+void gradeAnisoMesh(apf::Mesh* m)
+//Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
+//For simplicity, we do not bother with accounting for entities across partitions
+{
+  //
+  //if(comm_rank==0)
+  //  std::cout<<"Starting anisotropic grading\n";
+  apf::MeshIterator* it = m->begin(1);
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double gradingFactor = 1.3;
+  double size[2];
+  apf::Vector3 sizeVec;
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+  apf::Field* size_scale = m->findField("proteus_size_scale");
+
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  while((edge=m->iterate(it))){
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[0];
+    }
+    if( (size[0] > gradingFactor*size[1]) || (size[1] > gradingFactor*size[0]) ){
+      //add edge to a queue 
+      markedEdges.push(edge);
+      //tag edge to indicate that it is part of queue 
+      m->setIntTag(edge,isMarked,&marker[1]); 
+
+    }
+    else{
+      m->setIntTag(edge,isMarked,&marker[0]); 
+    }
+  }
+  m->end(it); 
+  while(!markedEdges.empty()){
+    edge = markedEdges.front();
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[0];
+    }
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR,0, 0);
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR,0, 1);
+
+/*
     if(size[0]>gradingFactor*size[1]){
       size[0] = gradingFactor*size[1];
-      apf::setScalar(size_iso,edgAdjVert[0],0,size[0]);
+      apf::getVector(size_scale,edgAdjVert[0],0,sizeVec);
+      sizeVec[0] = size[0];
+      apf::setVector(size_scale,edgAdjVert[0],0,sizeVec);
       m->getAdjacent(edgAdjVert[0], 1, vertAdjEdg);
       for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
         m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
@@ -1155,7 +1419,9 @@ int MeshAdaptPUMIDrvr::gradeMesh()
     }
     if(size[1]>gradingFactor*size[0]){
       size[1] = gradingFactor*size[0];
-      apf::setScalar(size_iso,edgAdjVert[1],0,size[1]);
+      apf::getVector(size_scale,edgAdjVert[1],0,sizeVec);
+      sizeVec[0] = size[1];
+      apf::setVector(size_scale,edgAdjVert[1],0,sizeVec);
       m->getAdjacent(edgAdjVert[1], 1, vertAdjEdg);
       for (std::size_t i=0; i<vertAdjEdg.getSize();++i){
         m->getIntTag(vertAdjEdg[i],isMarked,&marker[2]);
@@ -1166,19 +1432,82 @@ int MeshAdaptPUMIDrvr::gradeMesh()
         }
       }
     }
+*/
     m->setIntTag(edge,isMarked,&marker[0]);
     markedEdges.pop();
   }
-
   it = m->begin(1);
   while((edge=m->iterate(it))){
     m->removeTag(edge,isMarked);
   }
   m->end(it); 
   m->destroyTag(isMarked);
-  apf::synchronize(size_iso);
-  if(comm_rank==0)
-    std::cout<<"Completed grading\n";
+  apf::synchronize(size_scale);
+  //if(comm_rank==0)
+  //  std::cout<<"Completed minimum size grading\n";
+}
+
+void gradeAspectRatio(apf::Mesh* m,int idx)
+//Function to grade anisotropic mesh through comparison of edge vertex aspect ratios and minimum sizes
+//For simplicity, we do not bother with accounting for entities across partitions
+{
+  std::cout<<"Entered function\n"; 
+  apf::MeshIterator* it = m->begin(1);
+  apf::MeshEntity* edge;
+  apf::Adjacent edgAdjVert;
+  apf::Adjacent vertAdjEdg;
+  double gradingFactor = 1.3;
+  double size[2];
+  apf::Vector3 sizeVec;
+  std::queue<apf::MeshEntity*> markedEdges;
+  apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+  apf::Field* size_scale = m->findField("proteus_size_scale");
+
+  //marker structure for 0) not marked 1) marked 2)storage
+  int marker[3] = {0,1,0}; 
+
+  while((edge=m->iterate(it))){
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[idx]/sizeVec[0];
+    }
+    if( (size[0] > gradingFactor*size[1]) || (size[1] > gradingFactor*size[0]) ){
+      //add edge to a queue 
+      markedEdges.push(edge);
+      //tag edge to indicate that it is part of queue 
+      m->setIntTag(edge,isMarked,&marker[1]); 
+
+    }
+    else{
+      m->setIntTag(edge,isMarked,&marker[0]); 
+    }
+  }
+  m->end(it); 
+
+  std::cout<<"Got queue of size "<<markedEdges.size()<<std::endl; 
+  while(!markedEdges.empty()){
+    edge = markedEdges.front();
+    m->getAdjacent(edge, 0, edgAdjVert);
+    for (std::size_t i=0; i < edgAdjVert.getSize(); ++i){
+      apf::getVector(size_scale,edgAdjVert[i],0,sizeVec);
+      size[i]=sizeVec[idx]/sizeVec[0];
+    }
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR, idx, 0);
+    gradeSizeModify(m, gradingFactor, size, edgAdjVert, 
+      vertAdjEdg, markedEdges, isMarked, apf::VECTOR, idx, 1);
+
+    m->setIntTag(edge,isMarked,&marker[0]);
+    markedEdges.pop();
+  }
+  it = m->begin(1);
+  while((edge=m->iterate(it))){
+    m->removeTag(edge,isMarked);
+  }
+  m->end(it); 
+  m->destroyTag(isMarked);
+  apf::synchronize(size_scale);
 }
 
 void gradeAnisoMesh(apf::Mesh* m,double gradingFactor)

@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import print_function
+from builtins import range
 from numpy import *
 import proteus
 from proteus.MeshTools import *
@@ -48,11 +50,11 @@ def readFunLite():
         funFilename = args[1]
         funOutFilename = args[2]
     else:
-        print usage
+        print(usage)
         return
     #just get the nodes from the mesh file
     meshIn= open(meshFilename,'r')
-    print "Reading nodes of the mesh from file=%s" % (meshFilename)
+    print("Reading nodes of the mesh from file=%s" % (meshFilename))
     line = meshIn.readline()
     columns = line.split()
     nodes=[]
@@ -73,23 +75,23 @@ def readFunLite():
     fun = []
     for i in range(6):
         line = funIn.readline()
-        print line.strip()
+        print(line.strip())
         words = line.split()
         if words[0] == 'ND':
             nNodes = int(words[1])
             if nNodes != len(nodes):
-                print "the number of nodes in mesh and function files don't match"
+                print("the number of nodes in mesh and function files don't match")
     line = funIn.readline()
     while line.strip() != 'ENDDS':
-        print "Reading "+line.strip()
+        print("Reading "+line.strip())
         words = line.split()
         u = zeros(nNodes,Float)
         for i in range(nNodes):
             u[i] = float(funIn.readline())
         fun.append(u)
         line = funIn.readline()
-    print "Read %i timesteps" % len(fun)
-    print "Writing coordinate files x.grf, y.grf, and z.grf"
+    print("Read %i timesteps" % len(fun))
+    print("Writing coordinate files x.grf, y.grf, and z.grf")
     xiList={}
     xOut = open('x.grf','w')
     yOut = open('y.grf','w')
@@ -102,8 +104,8 @@ def readFunLite():
     yOut.close()
     zOut.close()
     for ts,f in enumerate(fun):
-        funOutFileTS = funOutFilename+`ts`+'.grf'
-        print "Writing time step=%i to file=%s" % (ts,funOutFileTS)
+        funOutFileTS = funOutFilename+repr(ts)+'.grf'
+        print("Writing time step=%i to file=%s" % (ts,funOutFileTS))
         funOut = open(funOutFileTS,'w')
         for v in f:
             funOut.write('%15.8e \n'% v)

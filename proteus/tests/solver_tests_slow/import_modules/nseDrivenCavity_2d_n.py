@@ -1,6 +1,11 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from nseDrivenCavity_2d_p import *
+try:
+    from .nseDrivenCavity_2d_p import *
+except:
+    from nseDrivenCavity_2d_p import *
 import petsc4py
 
 #######################################################
@@ -48,7 +53,7 @@ elif numeric_scheme=="THQuads":
                  1:Q2,
                  2:Q2}
 else:
-    print 'INVALID FINITE ELEMENT SELECTED'
+    print('INVALID FINITE ELEMENT SELECTED')
 #######################################################
 #              Mesh and Quadrature Options
 
@@ -138,4 +143,4 @@ elif schur_solver == 'selfp':
 elif schur_solver == 'petsc_LU':
     linearSmoother=petsc_LU
 else:
-    raise Exception, 'invalid solver type'
+    raise Exception('invalid solver type')

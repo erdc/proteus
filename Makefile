@@ -20,30 +20,28 @@ PROTEUS_DEVELOP_BUILD_CMD = python -c "print('Letting install handle build_ext')
 endif
 
 # shell hack for now to automatically detect Garnet front-end nodes
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print sys.platform")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print sys.platform")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = copper* ]] && echo "copper" || python -c "import sys; print sys.platform")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = excalibur* ]] && echo "excalibur" || python -c "import sys; print sys.platform")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = lightning* ]] && echo "lightning" || python -c "import sys; print sys.platform")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = spirit* ]] && echo "spirit" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = copper* ]] && echo "copper" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = excalibur* ]] && echo "excalibur" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = lightning* ]] && echo "lightning" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = spirit* ]] && echo "spirit" || python -c "import sys; print(sys.platform)")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
-HASHDIST_DEFAULT_VERSION := $(shell cat .hashdist_default)
-HASHSTACK_DEFAULT_VERSION := $(shell cat .hashstack_default)
-HASHDIST_VERSION := $(shell cd hashdist; ${VER_CMD})
-HASHSTACK_VERSION := $(shell cd stack; ${VER_CMD})
+HIT_VERSION := $(shell cd stack/hit; ${VER_CMD})
+STACK_VERSION := $(shell cd stack; ${VER_CMD})
 TEST_MARKER="' '"
 
 define show_info
 	@echo "Please include this information in all bug reports."
 	@echo "+======================================================================================================+"
-	@echo "PROTEUS          : ${PROTEUS}"
-	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
-	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
-	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
-	@echo "HASHDIST_VERSION : ${HASHDIST_VERSION}"
-	@echo "HASHSTACK_VERSION: ${HASHSTACK_VERSION}"
+	@echo "PROTEUS        : ${PROTEUS}"
+	@echo "PROTEUS_ARCH   : ${PROTEUS_ARCH}"
+	@echo "PROTEUS_PREFIX : ${PROTEUS_PREFIX}"
+	@echo "PROTEUS_VERSION: ${PROTEUS_VERSION}"
+	@echo "HIT_VERSION    : ${HIT_VERSION}"
+	@echo "STACK_VERSION  : ${STACK_VERSION}"
 	@echo "+======================================================================================================+"
 	@echo ""
 endef
@@ -73,21 +71,15 @@ ifeq ($(PROTEUS_ARCH), cygwin)
 BOOTSTRAP = cygwin_bootstrap.done
 endif
 
-ifdef MATLAB
-MATLAB_SETUP = matlab_setup.done
-endif
+FC ?= gfortran
+F77 ?= gfortran
+F90 ?= gfortran
 
 # The choice for default Fortran compiler needs to be overridden on the Garnet system
 ifeq ($(PROTEUS_ARCH), garnet.gnu)
 FC=ftn 
 F77=ftn 
 F90=ftn
-endif 
-
-ifeq ($(PROTEUS_ARCH), topaz)
-FC=gfortran
-F77=gfortran
-F90=gfortran
 endif 
 
 ifdef VERBOSE
@@ -110,61 +102,18 @@ distclean: clean
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
-update:
-	@echo "Manually trying to update all repositories"
-	git fetch origin; git checkout -q origin/master
-	@echo "Proteus repository updated to latest versions"
-	cd stack; git fetch origin; git checkout -q origin/master
-	@echo "Stack repository updated to latest versions"
-	cd hashdist; git fetch origin; git checkout -q origin/master
-	@echo "HashDist repository updated to latest versions"
-	@echo "+======================================================================================================+"
-	@echo "Warning, the HEAD has been detached in all repositories"
-	@echo "Type: git checkout -b branch_name to save changes" 
-	@echo "+======================================================================================================+"
+src_cache:
+	@echo "Adding source cache"
+	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 
-default_stack: stack hashdist
-	cd stack; git fetch origin; git checkout -q ${HASHSTACK_DEFAULT_VERSION}
-	@echo "Stack repository updated to .hashstack_default"
-	HASHSTACK_VERSION=${HASHSTACK_DEFAULT_VERSION}
-	@echo "hashdist repository updated to .hashdist_default"
-	cd hashdist; git fetch origin; git checkout -q ${HASHDIST_DEFAULT_VERSION}
-	HASHDIST_VERSION=${HASHDIST_DEFAULT_VERSION}
-
-hashdist: 
-	@echo "No hashdist found.  Cloning hashdist from GitHub"
-	git clone https://github.com/hashdist/hashdist.git 
-	cd hashdist && git checkout ${HASHDIST_DEFAULT_VERSION}
-
-hashdist_src:
-	@echo "Trying to add hashdist source cache"
-	./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
-
-hashdist_bld:
-	@echo "Trying to add hashdist build cache for your arch"
-	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print '{Distributor}_{Release}'.format(**rel)")
-	./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_${HASHSTACK_BLD} --objects="build"
-
-stack: 
-	@echo "No stack found.  Cloning stack from GitHub"
-	git clone https://github.com/hashdist/hashstack.git stack
-	cd  stack && git checkout ${HASHSTACK_DEFAULT_VERSION}
+bld_cache:
+	@echo "Trying to add build cache for your arch"
+	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
+	./stack/bin/hit remote add http://192.237.213.149/hashdist_${HASHSTACK_BLD} --objects="build"
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
-
-matlab_setup.done: stack stack/default.yaml hashdist
-	@echo "User requests MATLAB install"
-	@echo "MATLAB environment variable set to ${MATLAB}"
-	@python setupmatlab.py stack/default.yaml ${MATLAB}; if [ $$? -ne 0 ] ; then \
-	echo "+======================================================================================================+"; \
-	echo "Couldn't find matlab on PATH."; \
-	echo "Try"; \
-	echo "    MATLAB=/path/to/matlab make"; \
-	echo "+======================================================================================================+"; \
-	false; fi
-	touch matlab_setup.done
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
@@ -175,29 +124,18 @@ ${PWD}/stack/default.yaml:
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find stack -type f) ${BOOTSTRAP} ${MATLAB_SETUP}
+${PROTEUS_PREFIX}/artifact.json: src_cache stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"
 
 	$(call show_info)
 
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -j ${N} ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/stack/hit/bin/hit develop -j ${N} ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
 
 	@echo "************************"
 	@echo "Dependency build complete"
 	@echo "************************"
-
-versions: ${PROTEUS_PREFIX}/versions.txt
-	@echo "************************"
-	@echo "Installing hashdist/hashstack versions..."
-	@echo "************************"
-
-	echo ${HASHDIST_VERSION} > ${PROTEUS_PREFIX}/hashdist_version.txt
-	echo ${HASHSTACK_VERSION} > ${PROTEUS_PREFIX}/hashstack_version.txt
-
-# this always runs
-${PROTEUS_PREFIX}/versions.txt: ${PROTEUS_PREFIX}/artifact.json FORCE
 
 proteus: ${PROTEUS_PREFIX}/bin/proteus
 
@@ -278,7 +216,7 @@ check:
 
 	@echo "************************"
 	@echo "Hello world Check!"
-	${PROTEUS_PREFIX}/bin/python -c "print 'hello world'"
+	${PROTEUS_PREFIX}/bin/python -c "print('hello world')"
 	@echo "************************"
 	@echo "Proteus Partition Test"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
@@ -323,7 +261,7 @@ doc:
 test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
 	@echo "Tests complete "
 	@echo "************************************"
 
@@ -331,7 +269,7 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip install configparser==3.5.0 ipyparallel==6.1.1 ipython==5.5.0 terminado==0.8.1 jupyter==1.0.0 jupyterlab==0.31.12 ipywidgets==7.1.2 ipyleaflet==0.7.1 jupyter_dashboards==0.7.0 pythreejs==0.4.1 rise==5.2.0 cesiumpy==0.3.3 bqplot==0.10.5 hide_code==0.5.0 ipympl==0.1.0 sympy==1.1.1 transforms3d==0.3.1 ipymesh
+	pip install configparser==3.5.0 ipyparallel==6.1.1 ipython==5.5.0 terminado==0.8.1 jupyter==1.0.0 jupyterlab==0.31.12 ipywidgets==7.1.2 ipyleaflet==0.7.1 jupyter_dashboards==0.7.0 pythreejs==0.4.1 rise==5.2.0 cesiumpy==0.3.3 bqplot==0.10.5 hide_code==0.5.2 ipympl==0.1.0 sympy==1.1.1 transforms3d==0.3.1 ipymesh
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
@@ -363,11 +301,11 @@ lfs:
 	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
 	export PATH=${HOME}/bin:${PATH}
 
-hashdist_package:
+proteus_pkg:
 	cp stack/default.yaml stack/proteus_stack.yaml
 	echo "  proteus:" >> stack/proteus_stack.yaml
 	sed -i '/sources:/c\#sources:' stack/pkgs/proteus.yaml
 	sed -i '/- key:/c\# -key:' stack/pkgs/proteus.yaml
 	sed -i '/  url:/c\#  url:' stack/pkgs/proteus.yaml
-	./hashdist/bin/hit fetch https://github.com/erdc/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit build -j ${N} -v proteus_stack.yaml
+	./stack/hit/bin/hit fetch https://github.com/erdc/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
+	cd stack && ${PROTEUS}/stack/hit/bin/hit build -j ${N} -v proteus_stack.yaml

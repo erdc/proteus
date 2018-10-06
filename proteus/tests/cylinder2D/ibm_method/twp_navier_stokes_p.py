@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from cylinder import *
+from .cylinder import *
 from proteus.mprans import RANS3PF
 name="rans3p"
 LevelModelType = RANS3PF.LevelModel
@@ -47,12 +49,17 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     dragAlpha=dragAlpha,
                                     PSTAB=0.0,
                                     nParticles=1,
-                                    particle_epsFact=2.0,
+                                    particle_epsFact=1.5,
                                     particle_alpha=1e6,
                                     particle_beta=1e6,
-                                    particle_penalty_constant=1e16,
+                                    particle_penalty_constant=100.0,
                                     particle_sdfList=[particle_sdf],
-                                    particle_velocityList=[particle_vel])
+                                    particle_velocityList=[particle_vel],
+                                    use_ball_as_particle=1,
+                                    ball_center=numpy.array([[0.2,0.2,0.0]]),
+                                    ball_radius=numpy.array([0.05]),
+                                    ball_velocity=numpy.array([[0.0,0.0,0.0]]),
+                                    ball_angular_velocity=numpy.array([[0.0,0.0,0.0]]))
 
 
 def getDBC_u(x,flag):
@@ -100,7 +107,7 @@ advectiveFluxBoundaryConditions =  {0:getAFBC_u,
 diffusiveFluxBoundaryConditions = {0:{0:getDFBC_u},
                                    1:{1:getDFBC_v}}
 
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
