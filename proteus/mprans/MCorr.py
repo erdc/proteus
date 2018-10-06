@@ -27,7 +27,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useConstantH=False,
                  # mql. For edge based stabilization methods
                  useQuadraticRegularization=False,
-                 edgeBasedStabilizationMethods=False):
+                 edgeBasedStabilizationMethods=False,
+                 nullSpace='NoNullSpace'):
 
         self.useQuadraticRegularization = useQuadraticRegularization
         self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
@@ -77,6 +78,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.applyCorrectionToDOF = False
         self.massConservationError = 0.0
+        self.nullSpace = nullSpace
 
     def initializeMesh(self, mesh):
         self.h = mesh.h
