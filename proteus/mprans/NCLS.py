@@ -56,7 +56,8 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
 class NumericalFlux(proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart):
     def __init__(self, vt, getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions):
+                 getDiffusiveFluxBoundaryConditions,
+                 getPeriodicBoundaryConditions=None):
         proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.__init__(self, vt, getPointwiseBoundaryConditions,
                                                                              getAdvectiveFluxBoundaryConditions,
                                                                              getDiffusiveFluxBoundaryConditions)
@@ -269,7 +270,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  lambda_coupez=0.1,
                  cfl_redistancing=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs=False):
+                 outputQuantDOFs=False,
+                 # NULLSPACE Info
+                 nullSpace='NoNullSpace'):
 
         self.PURE_BDF=PURE_BDF
         self.DO_SMOOTHING = DO_SMOOTHING
@@ -316,6 +319,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
         self.waterline_interval = waterline_interval
+        self.nullSpace = nullSpace
 
     def attachModels(self, modelList):
         # the level set model
@@ -338,18 +342,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.RD_modelIndex is not None:
             # print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
+            self.ebqe_rd_u = self.rdModel.ebqe[('u',0)]
 
     def initializeElementQuadrature(self, t, cq):
         if self.flowModelIndex is None:
-            self.q_v = numpy.zeros(cq[('grad(u)', 0)].shape, 'd')
+            self.q_v = numpy.ones(cq[('grad(u)', 0)].shape, 'd')
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         if self.flowModelIndex is None:
-            self.ebq_v = numpy.zeros(cebq[('grad(u)', 0)].shape, 'd')
+            self.ebq_v = numpy.ones(cebq[('grad(u)', 0)].shape, 'd')
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         if self.flowModelIndex is None:
-            self.ebqe_v = numpy.zeros(cebqe[('grad(u)', 0)].shape, 'd')
+            self.ebqe_v = numpy.ones(cebqe[('grad(u)', 0)].shape, 'd')
+        if self.RD_modelIndex is None:
+            self.ebqe_rd_u = cebqe[('u',0)]
 
     def preStep(self, t, firstStep=False):
         # SAVE OLD SOLUTION #
@@ -928,6 +935,7 @@ class LevelModel(OneLevelTransport):
             # physics
             self.mesh.nElements_global,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
@@ -990,6 +998,7 @@ class LevelModel(OneLevelTransport):
             # physics
             self.mesh.nElements_global,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u_dof_old,  # This is u_lstage due to update stages in RKEV
@@ -1204,6 +1213,7 @@ class LevelModel(OneLevelTransport):
             self.coefficients.sc_uref,
             self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             degree_polynomial,
@@ -1230,7 +1240,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.ebqe_rd_u,
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
@@ -1338,6 +1348,7 @@ class LevelModel(OneLevelTransport):
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             degree_polynomial,
             self.u[0].dof,
@@ -1353,7 +1364,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.ebqe_rd_u,
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             self.mesh.h)
@@ -1403,6 +1414,7 @@ class LevelModel(OneLevelTransport):
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             degree_polynomial,
             self.u[0].dof,
@@ -1418,7 +1430,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.ebqe_rd_u,
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             self.coefficients.PURE_BDF,
@@ -1537,6 +1549,7 @@ class LevelModel(OneLevelTransport):
                 self.coefficients.sc_uref,
                 self.coefficients.sc_beta,
                 self.u[0].femSpace.dofMap.l2g,
+                self.l2g[0]['freeGlobal'],
                 self.mesh.elementDiametersArray,
                 self.u[0].dof,
                 self.u_dof_old,
