@@ -661,7 +661,11 @@ class Mesh(object):
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
         logEvent(memory("partitionMesh 2","MeshTools"),level=4)
         if parallelPartitioningType == MeshParallelPartitioningTypes.node:
-            #mwf for now always gives 1 layer of overlap
+            logEvent("Starting nodal partitioning")#mwf for now always gives 1 layer of overlap
+            logEvent("filebase"+`filebase`)
+            logEvent("base"+`base`)
+            logEvent("nLayersOfOverlap" +`nLayersOfOverlap`)
+            logEvent("parallelPartitioningType " +`parallelPartitioningType`)
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,
@@ -671,6 +675,7 @@ class Mesh(object):
              self.edgeOffsets_subdomain_owned,
              self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
+            logEvent("Starting element partitioning")
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,
@@ -3783,6 +3788,8 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
         from . import cmeshTools
+        if filebase==None:
+            filebase="mesh"
         assert(refinementLevels==1)
         assert(parallelPartitioningType==MeshParallelPartitioningTypes.node)
         assert(nLayersOfOverlap<=1)
