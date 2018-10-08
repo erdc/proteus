@@ -1180,8 +1180,8 @@ class NS_base:  # (HasTraits):
             #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
             p0.domain.PUMIMesh.adaptMesh() and
-            self.so.useOneMesh and
-            self.nSolveSteps%p0.domain.PUMIMesh.numAdaptSteps()==0):
+            self.so.useOneMesh): #and
+            #self.nSolveSteps%p0.domain.PUMIMesh.numAdaptSteps()==0):
             if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
                 p0.domain.PUMIMesh.transferFieldToPUMI("proteus_size",
                                                        self.modelList[0].levelModelList[0].mesh.size_field)
@@ -1218,6 +1218,11 @@ class NS_base:  # (HasTraits):
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
+            elif(sfConfig=='isotropic'):
+              if(p0.domain.PUMIMesh.willInterfaceAdapt()):
+                  adaptMeshNow=True
+                  logEvent("Need to Adapt")
+                  logEvent('numSolveSteps %f ' % self.nSolveSteps)
             elif(sfConfig=='meshQuality'):
               minQual = p0.domain.PUMIMesh.getMinimumQuality()
               if(minQual):

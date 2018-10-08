@@ -59,12 +59,10 @@ static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::Mes
 }
 
 
-int MeshAdaptPUMIDrvr::calculateSizeField()
+int MeshAdaptPUMIDrvr::calculateSizeField(double L_band)
 //Implementation of banded interface, edge intersection algorithm
 //If mesh edge intersects the 0 level-set, then the adjacent edges need to be refined 
 {
-  //freeField(size_iso);
-  //size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
   apf::Field* interfaceBand = apf::createLagrangeField(m, "interfaceBand", apf::SCALAR, 1);
   apf::Field *phif = m->findField("phi");
   assert(phif);
@@ -73,9 +71,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::MeshIterator *it = m->begin(1);
   apf::MeshEntity *edge;
 
-  double safetyFactor = 2.0; //need to make this user defined
-  //double L_band = N_interface_band*hPhi*safetyFactor;
-  double L_band = (numAdaptSteps+N_interface_band)*hPhi;
+  //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
 
   PCU_Comm_Begin();
   while ((edge = m->iterate(it)))
@@ -111,16 +107,6 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
       }
     }
 
-/*
-    apf::Vector3 pt1, pt2;
-    m->getPoint(vertex1,0,pt1);
-    m->getPoint(vertex2,0,pt2);
-    if(pt1[0]<2.40 && pt1[0]>2.25 && pt1[1]>0.2985 && pt1[1]<(0.2985+0.403) && pt1[2]<0.161)
-        setSizeField(m,vertex1,hPhi,vertexMarker,interfaceBand);
-    if(pt2[0]<2.40 && pt2[0]>2.25 && pt2[1]>0.2985 && pt2[1]<(0.2985+0.403) && pt2[2]<0.161 )
-        setSizeField(m,vertex2,hPhi,vertexMarker,interfaceBand);
-*/
-
   }//end while
 
   PCU_Comm_Send();
@@ -143,9 +129,6 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::synchronize(interfaceBand);
   m->end(it);
 
-  //Grade the Mesh
-  //gradeMesh();
-  
   m->destroyTag(vertexMarker);
 
   //add to queue

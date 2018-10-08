@@ -11,6 +11,8 @@
 #include <fstream>
 
 #include "MeshAdaptPUMI.h"
+#include <sam.h>
+#include <samSz.h>
 
 #ifdef PROTEUS_USE_SIMMETRIX
 //PROTEUS_USE_SIMMETRIX is a compiler macro that indicates whether Simmetrix libraries are used
@@ -317,8 +319,59 @@ int MeshAdaptPUMIDrvr::willAdapt()
   return adaptFlag;
 }
 
-#include <sam.h>
-#include <samSz.h>
+
+int MeshAdaptPUMIDrvr::willInterfaceAdapt() 
+//Does banded adapt need to happen for an isotropic mesh?
+//I need to loop over all mesh edges and determine if the edge intersects the blending region.
+//If so, need to check the size values on the edge-adjacent vertices.
+//If either size value is greater than h_interface*1.5, then we know we need to adapt
+{
+  int adaptFlag=0;
+  int assertFlag;
+
+  //get current size field
+  apf::Field* currentField = samSz::isoSize(m);
+
+  //get banded size field
+  double L_band = (N_interface_band)*hPhi;
+  calculateSizeField(L_band);
+  apf::Field* interfaceField = sizeFieldList.front();
+  sizeFieldList.pop(); //destroy this size field
+  //get previous size field
+  //size_iso 
+
+  //determine if edges are intersecting the banded region and apply logic
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+    double h_current = apf::getScalar(size_iso,ent,0);
+    double h_needed = apf::getScalar(interfaceField,ent,0);
+    if(h_current>h_needed){
+      adaptFlag=1;        
+    //  std::cout<<"h_current "<<h_current<<" h_needed "<<h_needed<<" id "<<localNumber(ent)<<std::endl;
+      break;
+      
+    }  
+  }//end while
+
+  assertFlag = adaptFlag;
+  PCU_Add_Ints(&assertFlag,1);
+  assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
+
+  /*
+  if(assertFlag>0)
+  {
+    apf::writeVtkFiles("currentSizeField2", m);
+    std::exit(1);
+  }
+  */
+  apf::destroyField(currentField);
+  apf::destroyField(interfaceField);
+  return adaptFlag;
+}
+
+
 
 int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 /**
@@ -356,7 +409,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     size_iso = samSz::isoSize(m);
   }
   else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
-    calculateSizeField();
+  {
+    double L_band = (numAdaptSteps+N_interface_band)*hPhi;
+    calculateSizeField(L_band);
+  }
   else if (size_field_config == "isotropicProteus")
     size_iso = m->findField("proteus_size");
   else if (size_field_config == "anisotropicProteus"){
@@ -374,7 +430,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   }
   else if(size_field_config == "combined" && std::string(inputString)==""){
     assert(vmsErrH1);
-    calculateSizeField();
+    double L_band = (numAdaptSteps+N_interface_band)*hPhi;
+    calculateSizeField(L_band);
     getERMSizeField(total_error);
   }
   else {
