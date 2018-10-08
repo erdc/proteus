@@ -67,7 +67,7 @@ if sys.platform == 'darwin':
     PROTEUS_BLAS_LIB_DIR = PROTEUS_LIB_DIR
     PROTEUS_BLAS_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
     PROTEUS_EXTRA_LINK_ARGS=platform_extra_link_args
-else:
+elif sys.platform == 'linux2':
     PROTEUS_BLAS_LIB   ='openblas'
     PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
 
