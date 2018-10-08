@@ -54,8 +54,9 @@ class MeshAdaptPUMIDrvr{
 
   //MeshAdapt functions
   int willAdapt();
+  int willInterfaceAdapt();
   int adaptPUMIMesh(const char* input);
-  int calculateSizeField();
+  int calculateSizeField(double L_band);
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
