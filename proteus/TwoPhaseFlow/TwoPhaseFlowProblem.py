@@ -29,7 +29,7 @@ class TwoPhaseFlowProblem:
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
                  # OTHERS #
-                 useSuperlu=None):
+                 useSuperlu=False):
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         if ns_model is not None:
@@ -60,34 +60,26 @@ class TwoPhaseFlowProblem:
         self.ls_model = ls_model
         self.nd=nd
         self.cfl=cfl
-        self.outputStepping=outputStepping.getOutputStepping()
-        self.he=he
-        self.nnx=nnx
-        self.nny=nny
-        self.nnz=nnz
-        self.triangleFlag = triangleFlag
+        self.outputStepping=outputStepping
+        self.outputStepping.setOutputStepping()
         self.Parameters.mesh.he = he
         self.Parameters.mesh.nnx = nnx
         self.Parameters.mesh.nny = nny
         self.Parameters.mesh.nnz = nnz
-        self.Parameters.mesh.triangleFlag
+        self.Parameters.mesh.triangleFlag = triangleFlag
         self.Parameters.mesh.setTriangleOptions()
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
-        self.restrictFineSolutionToAllMeshes = False
         self.useSuperlu = useSuperlu
         self.movingDomain = False
         # to use proteus.mprans.BoundaryConditions
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
-        # ***** CHOOSE SOME DEFAULT OPTIONS FOR PARALLEL RUNS ***** #
-        self.parallelPartitioningType = mt.MeshParallelPartitioningTypes.node
-        #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
-        self.nLayersOfOverlapForParallel = 0
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
-        self.FESpace = FESpace(self.ns_model,self.nd).getFESpace()
+        self.FESpace = FESpace(self.ns_model, self.nd)
+        self.FESpace.setFESpace()
 
         # ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
         self.physical_parameters = default_physical_parameters
@@ -235,20 +227,17 @@ class OutputStepping:
         self.dt_output=dt_output
         self.nDTout = nDTout
         self.dt_fixed = dt_fixed
-    #
-    def getOutputStepping(self):
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def setOutputStepping(self):
         # COMPUTE dt_init #
-        dt_init = min(0.1 * self.dt_output, self.dt_init)
+        self.dt_init = min(0.1 * self.dt_output, self.dt_init)
         if self.nDTout is None:
             self.nDTout = int(round(old_div(self.final_time, self.dt_output)))
         else:
             self.dt_output = float(self.final_time)/float(self.nDTout)
-        #
-        return {'final_time': self.final_time,
-                'dt_init': dt_init,
-                'dt_output': self.dt_output,
-                'nDTout': self.nDTout,
-                'dt_fixed': self.dt_fixed}
 #
 
 class FESpace:
@@ -269,43 +258,39 @@ class FESpace:
             self.velSpaceOrder=2
             self.pSpaceOrder=1
 
-    def getFESpace(self):
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def setFESpace(self):
         ##################
         # VELOCITY SPACE #
         ##################
         if self.velSpaceOrder == 1: # p1 space
-            hFactor = 1.0
-            velBasis = ft.C0_AffineLinearOnSimplexWithNodalBasis
+            self.hFactor = 1.0
+            self.velBasis = ft.C0_AffineLinearOnSimplexWithNodalBasis
         else: # p2 space
-            hFactor = 0.5
-            velBasis = ft.C0_AffineQuadraticOnSimplexWithNodalBasis
+            self.hFactor = 0.5
+            self.velBasis = ft.C0_AffineQuadraticOnSimplexWithNodalBasis
         ##################
         # PRESSURE SPACE #
         ##################
         if self.pSpaceOrder == 1: # p1 space
-            pBasis = ft.C0_AffineLinearOnSimplexWithNodalBasis
+            self.pBasis = ft.C0_AffineLinearOnSimplexWithNodalBasis
         else: # p2 space
-            pBasis = ft.C0_AffineQuadraticOnSimplexWithNodalBasis
+            self.pBasis = ft.C0_AffineQuadraticOnSimplexWithNodalBasis
         ###################
         # LEVEL SET SPACE #
         ###################
-        lsBasis = ft.C0_AffineLinearOnSimplexWithNodalBasis # p1 space
+        self.lsBasis = ft.C0_AffineLinearOnSimplexWithNodalBasis # p1 space
         ###################
         # QUADRATURE RULE #
         ###################
         if max(self.velSpaceOrder,self.pSpaceOrder)==1:
-            elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 3)
-            elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 3)
+            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 3)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 3)
         else:
-            elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 5)
-            elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 5)
-        #
-        return {'lsBasis': lsBasis,
-                'hFactor': hFactor,
-                'velBasis': velBasis,
-                'pBasis': pBasis,
-                'elementQuadrature': elementQuadrature,
-                'elementBoundaryQuadrature': elementBoundaryQuadrature}
+            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 5)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 5)
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #

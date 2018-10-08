@@ -39,6 +39,17 @@ class ParametersHolder:
                       self.Models.pressure,
                       self.Models.pressureIncrement,
                       self.Models.mcorr]
+        logEvent('----------')
+        logEvent('Mesh Options')
+        for key, value in self.mesh.__dict__.items():
+            if key[0] != '_':  # do not print hidden attributes
+                logEvent('{key}: {value}'. format(key=key, value=value))
+        logEvent('----------')
+        logEvent('Physical Parameters')
+        for key, value in self.physical.__dict__.items():
+            if key[0] != '_':  # do not print hidden attributes
+                logEvent('{key}: {value}'. format(key=key, value=value))
+        logEvent('----------')
         self.nModels = 0
         self.models_list = []
         for i in range(len(all_models)):
@@ -126,9 +137,9 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.epsFact_density = epsFact
         self.ns_forceStrongDirichlet = False
         self.weak_bc_penalty_constant = 1e6
-        self.useRBLES = 0.
+        self.useRBLES = 0
         self.useRANS = 0
-        self.ns_closure = 0.
+        self.ns_closure = 0
         self.useVF = 1
         self.ns_shockCapturingFactor = shockCapturingFactor
         self.ns_lag_shockCapturing = True
@@ -152,9 +163,9 @@ class ParametersModelRANS3P(ParametersModelBase):
         self.ns_forceStrongDirichlet = False
         self.ns_sed_forceStrongDirichlet = False
         self.weak_bc_penalty_constant = 1e6
-        self.useRBLES = 0.
+        self.useRBLES = 0
         self.useRANS = 0
-        self.ns_closure = 0.
+        self.ns_closure = 0
         self.useVF = 1
         self.ns_shockCapturingFactor = shockCapturingFactor
         self.ns_lag_shockCapturing = True

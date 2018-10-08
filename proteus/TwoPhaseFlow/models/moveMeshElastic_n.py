@@ -17,7 +17,6 @@ myTpFlowProblem = physics.myTpFlowProblem
 nd = myTpFlowProblem.nd
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
-he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
 
