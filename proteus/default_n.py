@@ -5,19 +5,20 @@ The default values for numerics modules
 
   Clean up default_n.py, finish documenting, decide on tolerance scheme
 """
-from TimeIntegration import *
-from Quadrature import *
-from FemTools import *
-from SubgridError import *
-from ShockCapturing import *
-from NumericalFlux import *
-from NonlinearSolvers import *
-from LinearAlgebraTools import *
-from LinearSolvers import *
-from lapackWrappers import *
-from StepControl import *
-from AuxiliaryVariables import *
-from MeshTools import *
+from __future__ import absolute_import
+from .TimeIntegration import *
+from .Quadrature import *
+from .FemTools import *
+from .SubgridError import *
+from .ShockCapturing import *
+from .NumericalFlux import *
+from .NonlinearSolvers import *
+from .LinearAlgebraTools import *
+from .LinearSolvers import *
+from .lapackWrappers import *
+from .StepControl import *
+from .AuxiliaryVariables import *
+from .MeshTools import *
 ## \todo clean up default_n module
 
 stepController = FixedStep
@@ -93,6 +94,14 @@ nnz = None
 
 triangleOptions="q30DenA"
 """Options string for triangle or tetGen"""
+
+triangleFlag=0
+"""Set the diagonal direction when triangulating a quadrilateral mesh
+
+0 - right leaning
+1 - alternating 'union jack'
+2 - left leaning
+"""
 
 nLevels = 1
 """Number of levels for multilevel mesh"""

@@ -2653,7 +2653,15 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       allocateGeometricInfo_triangle(*mesh.subdomainp);
       computeGeometricInfo_triangle(*mesh.subdomainp);
     }
-  else if (mesh.subdomainp->nNodes_element == 4)
+  else if (mesh.subdomainp->nNodes_element == 4 && mesh.subdomainp->nNodes_elementBoundary == 2)
+    {
+      //constructElementBoundaryElementsArray_tetrahedron(*mesh.subdomainp);
+      //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
+      constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_quadrilateral(*mesh.subdomainp);
+      allocateGeometricInfo_quadrilateral(*mesh.subdomainp);
+      computeGeometricInfo_quadrilateral(*mesh.subdomainp);
+    }
+  else if (mesh.subdomainp->nNodes_element == 4 && mesh.subdomainp->nNodes_elementBoundary == 3)
     {
       //constructElementBoundaryElementsArray_tetrahedron(*mesh.subdomainp);
       //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
@@ -2661,14 +2669,16 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
       computeGeometricInfo_tetrahedron(*mesh.subdomainp);
     }
-
   else if (mesh.subdomainp->nNodes_element == 8)
     {
       constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron(*mesh.subdomainp);
       allocateGeometricInfo_hexahedron(*mesh.subdomainp);
       computeGeometricInfo_hexahedron(*mesh.subdomainp);
     }
-
+  else
+    {
+      assert(false);
+    }
 
   if (mesh.elementBoundaryMaterialTypes != NULL)
     {
@@ -3000,7 +3010,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 			 weights_subdomain,
 			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   //const double max_rss_gb(0.75*3.25);//half max mem per  core  on topaz
-  const double max_rss_gb(0.75*990.0);//half max mem per  core  on topaz
+  const double max_rss_gb(0.9*3.25);//half max mem per  core  on topaz
   ierr = enforceMemoryLimit(rank, max_rss_gb,"Done allocating MPIAdj");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   MatPartitioning petscPartition;
   ierr = MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
@@ -5172,6 +5182,13 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       allocateGeometricInfo_triangle(*mesh.subdomainp);
       computeGeometricInfo_triangle(*mesh.subdomainp);
     }
+  else if (mesh.subdomainp->nNodes_element == 4 && mesh.subdomainp->nNodes_elementBoundary == 2)
+    {
+      //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
+      constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_quadrilateral(*mesh.subdomainp);
+      allocateGeometricInfo_quadrilateral(*mesh.subdomainp);
+      computeGeometricInfo_quadrilateral(*mesh.subdomainp);
+    }
   else if (mesh.subdomainp->nNodes_element == 4)
     {
       //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
@@ -5185,7 +5202,10 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       allocateGeometricInfo_hexahedron(*mesh.subdomainp);
       computeGeometricInfo_hexahedron(*mesh.subdomainp);
     }
- 
+  else
+    {
+      assert(false);
+    }
   if (mesh.elementBoundaryMaterialTypes != NULL)
     {
       assert(mesh.elementBoundariesArray != NULL);
@@ -7090,7 +7110,7 @@ DaetkPetscSys_init(DaetkPetscSys *self, PyObject *args, PyObject *kwds)
       argv[i] = PyString_AsString(PyList_GetItem(sys_argv,i));
     }
   argv[argc] = new char[1];
-  argv[argc] = '\0';
+  argv[argc][0] = '\0';
   //cek need to think more about how to handle petsc4py and daetk. 
   //if (isInitialized)
   //Daetk::Petsc::Sys::initialized=true;

@@ -1,14 +1,17 @@
+from builtins import range
+from builtins import object
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
 import pytest
+import os
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
 
-class MockMat():
+class MockMat(object):
     """ petsc4py-based mock SuperLU Matrix for testing.  Filled like this:
 
     [ 1 1     ]
@@ -37,7 +40,7 @@ class MockMat():
 
     def getSubMatCSRrepresentation(self, start, end):
         from petsc4py import PETSc
-        ids = range(start, end)
+        ids = list(range(start, end))
         isg = PETSc.IS().createGeneral(ids)
         B = self.A.getSubMatrix(isg)
         return B.getValuesCSR()
@@ -63,7 +66,7 @@ def test_vec_create():
         # All entries are zero
         eq(np.count_nonzero(x), 0)
         # Verify assignment works
-        x[:] = range(1, n+1)
+        x[:] = list(range(1, n+1))
         eq(np.count_nonzero(x), n)
 
 @pytest.mark.LinearAlgebraTools
@@ -87,9 +90,9 @@ def test_mat_create():
         # All entries are zero
         eq(np.count_nonzero(x), 0)
         # Assign a row
-        x[0, :] = range(1, n+1)
+        x[0, :] = list(range(1, n+1))
         # Assign a column
-        x[:, 0] = range(1, m+1)
+        x[:, 0] = list(range(1, m+1))
         eq(np.count_nonzero(x), m+n-1)
 
 @pytest.mark.LinearAlgebraTools
@@ -285,7 +288,7 @@ def test_petsc_binary_mat_io():
     par_n = n
     par_N = n
     par_nghost = 0
-    subdomain2global = range(n)
+    subdomain2global = list(range(n))
     ghosted_csr_mat = MockMat(n)
 
     M = ParMat_petsc4py(ghosted_csr_mat, par_bs, par_n, par_N, par_nghost, subdomain2global)
@@ -302,6 +305,50 @@ def test_petsc_binary_mat_io():
     npt.assert_equal(mi, ai)
     npt.assert_equal(mj, aj)
     npt.assert_equal(mv, av)
+
+@pytest.mark.LinearAlgebraTools
+def test_petsc_load_matrix(tmpdir):
+    """test petsc_load_matrix """
+    from petsc4py import PETSc as p4pyPETSc
+    from proteus import LinearAlgebraTools as LAT
+
+    vals_A =     [5.5,7.1,1.0]
+    col_idx_A =  [0 , 1 , 2  ]
+    row_idx_A =  [0, 1, 2, 3]
+    A = LAT.csr_2_petsc(size = (3,3),
+                        csr = (row_idx_A,col_idx_A,vals_A))
+
+    A_tmp = tmpdir.join('A.petsc_mat')
+    LAT._petsc_view(A,A_tmp.strpath)
+    A_test = LAT.petsc_load_matrix(A_tmp.strpath)
+    csr_values = A_test.getValuesCSR()
+
+    assert np.allclose(csr_values[0], row_idx_A)
+    assert np.allclose(csr_values[1], col_idx_A)
+    assert np.allclose(csr_values[2], vals_A)
+
+    A_test = LAT.petsc_load_matrix('dne.txt')
+    assert A_test is None
+
+@pytest.mark.LinearAlgebraTools
+def test_petsc_load_vec(tmpdir):
+    """test petsc_load_matrix """
+    from petsc4py import PETSc as p4pyPETSc
+    from proteus import LinearAlgebraTools as LAT
+
+    vals_A = np.array([5.5,7.1,1.0])
+    A = p4pyPETSc.Vec()
+    A.createWithArray(vals_A)
+
+    A_tmp = tmpdir.join('A.petsc_vec')
+    LAT._petsc_view(A,A_tmp.strpath)
+    A_test = LAT.petsc_load_vector(A_tmp.strpath)
+    vec_values = A_test.getArray()
+
+    assert np.allclose(vec_values, vals_A)
+
+    A_test = LAT.petsc_load_vector('dne.txt')
+    assert A_test is None
 
 if __name__ == '__main__':
     import nose

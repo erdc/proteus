@@ -1,9 +1,12 @@
 """
 The default values for so-files describing split operator formulations
 """
-from SplitOperator import *
+from __future__ import absolute_import
+from .SplitOperator import *
 
 name = None
+
+pnList = []
 
 systemStepControllerType = Sequential_MinModelStep
 
@@ -23,10 +26,13 @@ useOneArchive=True#False
 
 sList = []
 
-from Archiver import ArchiveFlags
+from .Archiver import ArchiveFlags
 
 archiveFlag = ArchiveFlags.EVERY_USER_STEP
 #CEK CHANGED DEFAULT FROM EVERY_SEQUENCE_STEP
 
 dt_system_fixed = None
 """A system-wide wide time step used by SplitOperator objects"""
+
+skipSpinupOnHotstart = False
+"""Use True if one wants to skip the spinup step when HotStart begins"""

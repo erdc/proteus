@@ -9,7 +9,7 @@ except ImportError:
     import pkgutil
     __path__ = pkgutil.extend_path(__path__, __name__)
 
-__version__ = '1.4.2'
+__version__ = '1.5.1'
 
 __all__ = ["Archiver",
            "Domain",
@@ -44,7 +44,6 @@ __all__ = ["Archiver",
            "TimeIntegration",
            "Transport",
            "TriangleTools",
-           "UnstructuredFMMandFSWsolvers",
            "Viewers",
            "AuxiliaryVariables",
            "deim_utils",
@@ -62,15 +61,38 @@ __all__ = ["Archiver",
            "lapackWrappers",
            "superluWrappers",
            "triangleWrappers",
-           "testStuff",
-           "testStuffImpl",
            "cmeshTools",
            "cnumericalFlux",
-           "cfmmfsw",
            "cTwophaseDarcyCoefficients",
            "ADR",
            "deim_utils",
            "WaveTools",
            "Context",
            "BoundaryConditions",
-           "SpatialTools"]
+           "SpatialTools",
+           "defaults"]
+
+def test(verbose=False, cleanup=True):
+    """Run all proteus tests
+
+    Parameters
+    ----------
+    verbose : bool
+              Print verbose testing information
+    cleanup : bool
+              Remove the temporary directory containing output
+    """
+    from os import path
+    from tempfile import mkdtemp
+    from shutil import rmtree
+    import pytest
+    flags="--boxed "
+    if verbose:
+        flags+="-v "
+    original_dir = os.get_cwd()
+    tmp_dir = mkdtemp()
+    os.chdir(tmp_dir)
+    pytest.main(flags+path.join(path.dirname(__file__),'tests'))
+    os.chdir(original_dir)
+    if cleanup:
+        rmtree(tmp_dir)

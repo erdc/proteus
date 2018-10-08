@@ -28,7 +28,13 @@ Example::
    :parts: 1
 
 """
+from __future__ import print_function
+from __future__ import division
 
+#from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from math import cos, sin, sqrt
 import math
 import sys
@@ -39,6 +45,7 @@ from .Profiling import logEvent
 from subprocess import check_call
 from proteus import Comm
 from copy import deepcopy
+from functools import reduce
 
 
 class Shape(object):
@@ -58,32 +65,42 @@ class Shape(object):
         proteus.BoundaryConditions.BC_Base or
         proteus.BoundaryConditions.mprans.BC_RANS).
     """
+    count_all = 0
 
     def __init__(self, domain, nd=None, BC_class=None):
         if nd != domain.nd:
-            logEvent('Shape ('+`nd`+'D) and Domain ('+`domain.nd`+'D)' \
+            logEvent('Shape ('+repr(nd)+'D) and Domain ('+repr(domain.nd)+'D)' \
                 ' have different dimensions!')
             sys.exit()
         self.Domain = domain
         domain.shape_list.append(self)
+        self.__class__.count_all += 1
+        self.name = 'shape'+str(self.__class__.count_all)
         self.nd = nd
         self.BC_class = BC_class or bc.BC_Base
         self.vertices = None
         self.vertexFlags = None
+        self.vertexFlags_global = None
         self.segments = None
+        self.segments_global = None
         self.segmentFlags = None
+        self.segmentFlags_global = None
         self.facets = None
+        self.facets_global = None
         self.facetFlags = None
+        self.facetFlags_global = None
         self.regions = None
         self.volumes = None
         self.regionFlags = None
+        self.regionFlags_global = None
         self.holes = None
         self.holes_ind = None
         self.barycenter = np.zeros(3)
         self.coords = None  # Only used for predefined shapes
                             # (can be different from barycenter)
         self.coords_system = np.eye(nd)
-        self.boundaryTags = None
+        self.boundaryTags = {}
+        self.boundaryTags_global = {}
         self.b_or = None  # boundary orientation
         self.volume = None
         self.children = {}
@@ -193,7 +210,7 @@ class Shape(object):
             parent (current) shape's local index of volume (3D) or facet (2D)
             containing the child shape
         """
-        if self.children.has_key(ind):
+        if ind in self.children:
             self.children[ind] += [shape]
         else:
             self.children[ind] = [shape]
@@ -212,12 +229,12 @@ class Shape(object):
             parent shape's local index of volume (3D) or facet (2D) containing
             the child (current) shape
         """
-        if shape.children.has_key(ind):
+        if ind in shape.children:
             shape.children[ind] += [self]
         else:
             shape.children[ind] = [self]
 
-    def setHoles(self, holes):
+    def setHoles(self, holes, indice=None):
         """
         Sets a 'hole' in the mesh. The region where the hole is defined will
         not be meshed.
@@ -226,9 +243,13 @@ class Shape(object):
         ----------
         holes: array_like
             Array of coordinates of holes (list/array).
+        indice: array_like
+            Array of index of region where hole is (list/array). Only for gmsh
         """
         self._checkListOfLists(holes)
         self.holes = np.array(holes)
+        if indice is not None:
+            self.holes_ind = indice
 
     def rotate(self, rot, axis=(0, 0, 1), pivot=None):
         """
@@ -425,9 +446,9 @@ class Cuboid(Shape):
                         self.BC['z+']]
         # self.BC = BCContainer(self.BC_dict)
         self.barycenter = np.array(barycenter) or np.array(coords)
-        self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
-                            [0, (L**2.+H**2.)/12., 0],
-                            [0, 0, (W**2.+L**2.)/12.]])
+        self.It = np.array([[old_div((W**2.+H**2.),12.), 0, 0],
+                            [0, old_div((L**2.+H**2.),12.), 0],
+                            [0, 0, old_div((W**2.+L**2.),12.)]])
 
     def setDimensions(self, dim):
         """
@@ -566,8 +587,8 @@ class Sphere(Shape):
         nN+=1
 
 
-        hxi = radius/(math.sqrt(2.0)*float(nSectors));
-        heta = radius/(math.sqrt(2.0)*float(nSectors));
+        hxi = old_div(radius,(math.sqrt(2.0)*float(nSectors)));
+        heta = old_div(radius,(math.sqrt(2.0)*float(nSectors)));
     #now loop over grains
         #top half  sphere nodes
         top_nodes = {}
@@ -590,7 +611,7 @@ class Sphere(Shape):
                     y0s = (ii-nSectors)*heta
                     r0s = math.sqrt(x0s**2 + y0s**2)
                     theta0s = math.atan2(y0s,x0s)
-                    theta1s = theta0s - math.pi/4.0
+                    theta1s = theta0s - old_div(math.pi,4.0)
                     r1s = r0s
                     x1s = r1s*math.cos(theta1s)
                     y1s = r1s*math.sin(theta1s)
@@ -645,7 +666,7 @@ class Sphere(Shape):
                     y0s = (ii-nSectors)*heta
                     r0s = math.sqrt(x0s**2 + y0s**2)
                     theta0s = math.atan2(y0s,x0s)
-                    theta1s = theta0s - math.pi/4.0
+                    theta1s = theta0s - old_div(math.pi,4.0)
                     r1s = r0s
                     x1s = r1s*math.cos(theta1s)
                     y1s = r1s*math.sin(theta1s)
@@ -768,7 +789,7 @@ class Rectangle(Shape):
                         self.BC['y+'],
                         self.BC['x-']]
         # self.BC = BCContainer(self.BC_dict)
-        self.It = (L**2+H**2)/12
+        self.It = old_div((L**2+H**2),12)
 
     def setDimensions(self, dim):
         """
@@ -820,7 +841,7 @@ class Cylinder(Shape):
     def constructShape(self):
         h_offset = np.array([0., 0., self.height])
         arc = 2.*np.pi*self.radius/self.nPoints
-        ang = arc/self.radius
+        ang = old_div(arc,self.radius)
         vert = []
         facets = []
         segs = []
@@ -841,7 +862,7 @@ class Cylinder(Shape):
         for i in range(len(vert_bottom)-1):
             facets += [[[i, i+1, i+nvb+1, i+nvb]]]
         facets += [[[i+1, 0, nvb, i+1+nvb]]]  # last facet
-        self.vertices = np.vstack((vert_bottom, vert_top))-h_offset/2.+np.array(self.coords)
+        self.vertices = np.vstack((vert_bottom, vert_top))-old_div(h_offset,2.)+np.array(self.coords)
         self.segments = np.vstack((segs_bottom, segs_top))
         self.segmentFlags = np.array([1 for i in range(len(segs_bottom))]+[2 for i in range(len(segs_top))])
         self.facets = facets
@@ -884,7 +905,7 @@ class Circle(Shape):
         self.coords = xc, yc = np.array(coords)
         self.nPoints = nPoints
         self.arc=2.0*pi*self.radius/self.nPoints
-        self.ang=self.arc/self.radius
+        self.ang=old_div(self.arc,self.radius)
         verti=[]
         segm=[]
 
@@ -994,7 +1015,7 @@ class CustomShape(Shape):
         super(CustomShape, self).__init__(domain, nd=len(vertices[0]))
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
-        self._checkFlags(boundaryTags.values())
+        self._checkFlags(list(boundaryTags.values()))
         self.boundaryTags = boundaryTags
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
@@ -1018,7 +1039,7 @@ class CustomShape(Shape):
         self.BC_list = [None]*len(boundaryTags)
         b_or = [None]*len(boundaryTags)
         self.b_or = b_or
-        for tag, flag in boundaryTags.iteritems():
+        for tag, flag in boundaryTags.items():
             b_i = flag-1  # start at index 0
             if boundaryOrientations is not None:
                 b_or[b_i] = boundaryOrientations[tag]
@@ -1041,9 +1062,12 @@ class ShapeSTL(Shape):
     filename: string
         Name of the stl file.
     """
+    count = 0
 
     def __init__(self, domain, filename):
         super(ShapeSTL, self).__init__(domain, nd=3)
+        self.__class__.count += 1
+        self.name = 'STL'+str(self.__class__.count)
         self.filename = filename
         self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
         self.facetFlags = np.ones(len(self.facets))
@@ -1204,15 +1228,15 @@ def rotation3D(points, rot, axis=(0., 0., 1.), pivot=(0., 0., 0.)):
     # make axis a unity vector
     axis = np.array(axis)
     r = np.linalg.norm(axis)
-    axis = axis/r
+    axis = old_div(axis,r)
     # get values for rotation matrix
     cx, cy, cz = axis
     d = sqrt(cy**2+cz**2)
     # rotation matrices
     if d != 0:
         Rx = np.array([[1,         0,        0,    0],
-                       [0,         cz/d,     cy/d, 0],
-                       [0,         -cy/d,    cz/d, 0],
+                       [0,         old_div(cz,d),     old_div(cy,d), 0],
+                       [0,         old_div(-cy,d),    old_div(cz,d), 0],
                        [0,         0,        0,    1]])
     else:  # special case: rotation axis aligned with x axis
         Rx = np.array([[1,         0,        0,    0],
@@ -1305,10 +1329,12 @@ def _assembleGeometry(domain, BC_class):
         start_segment = shape.start_segment = len(domain.segments)
         start_facet = shape.start_facet = len(domain.facets)
         if shape.boundaryTags:
-            for tag, value in shape.boundaryTags.iteritems():
+            shape.boundaryTags_global = {}
+            for tag, value in shape.boundaryTags.items():
                 new_tag = shape.name+'_'+str(tag)
                 new_flag = value+start_flag
                 domain.boundaryTags[new_tag] = new_flag
+                shape.boundaryTags_global[tag] = new_flag
                 domain.reversed_boundaryTags[new_flag] = new_tag
                 domain.BCbyFlag[new_flag] = shape.BC[tag]
                 domain.BC[new_tag] = shape.BC[tag]
@@ -1334,7 +1360,7 @@ def _assembleGeometry(domain, BC_class):
                 del_v += 1
                 i_d = domain.vertices.index(vertex.tolist())
                 if shape.segments is not None:
-                    for i in np.nditer(np.array(segments), op_flags=['readwrite']):
+                    for i in np.nditer(segments, op_flags=['readwrite']):
                         if i > i_s:
                             i[...] -= 1
                         elif i == i_s:
@@ -1350,14 +1376,18 @@ def _assembleGeometry(domain, BC_class):
         # adding shape geometry to domain
         domain.vertices += vertices.tolist()
         domain.vertexFlags += (vertexFlags+start_flag).tolist()
+        shape.vertexFlags_global = vertexFlags+start_flag
         barycenters = np.array([shape.barycenter for bco in shape.BC_list])
         domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
         if shape.segments is not None:
             domain.segments += (segments+start_vertex).tolist()
+            shape.segments_global = segments+start_vertex
             domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
+            shape.segmentFlags_global = segments+start_flag
         if shape.regions is not None:
             domain.regions += (shape.regions).tolist()
             domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
+            shape.regionFlags_global = shape.regionFlags+start_flag
         if shape.facets is not None:
             if type(facets) is np.ndarray:
                 facets = facets.tolist()
@@ -1368,13 +1398,17 @@ def _assembleGeometry(domain, BC_class):
                     for k, v_nb in enumerate(subf):
                         facets[i][j][k] = v_nb+shape.start_vertex
             domain.facets += facets
+            shape.facets_global = facets
             if shape.nd == 2:  # facet flags are actually region flags if 2D
                 domain.facetFlags += (shape.regionFlags+start_rflag).tolist()
+                shape.facetFlags_global = shape.regionFlags+start_rflag
             elif shape.nd == 3:
-              domain.facetFlags += (shape.facetFlags+start_flag).tolist()
+                domain.facetFlags += (shape.facetFlags+start_flag).tolist()
+                shape.facetFlags_global = shape.facetFlags+start_flag
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
     
+    # 2D holes (only for gmsh)
     domain.holes_ind = []
     if domain.nd == 2 and shape.facets is not None:
         domain.facets = []
@@ -1382,7 +1416,9 @@ def _assembleGeometry(domain, BC_class):
             if shape.holes_ind is not None:
                     domain.holes_ind += (np.array(shape.holes_ind)+shape.start_facet).tolist()
             if shape.facets is not None:
-                facets = deepcopy(shape.facets.tolist())
+                facets = deepcopy(shape.facets)
+                if type(facets) is np.ndarray:
+                    facets = facets.tolist()
                 for i, facet in enumerate(facets):
                     for j, subf in enumerate(facet):
                         for k, v_nb in enumerate(subf):
@@ -1390,17 +1426,22 @@ def _assembleGeometry(domain, BC_class):
                 # facets = (shape.facets+shape.start_vertex).tolist()
                 f_to_remove = []
                 f_to_add = []
-                for i, facet in enumerate(shape.facets):
-                    if i in shape.children.keys():
+                facets_again = deepcopy(shape.facets)
+                if type(facets_again) is np.ndarray:
+                    facets_again = facets_again.tolist()
+                for i, facet in enumerate(facets_again):
+                    if i in list(shape.children.keys()):
                         for child in shape.children[i]:
                             child_seg = {}
-                            child_facs = []
-                            for child_fac in child.facets:
-                                fac = child_fac[0].tolist()
+                            child_facs = deepcopy(child.facets)
+                            if type(child_facs) is np.ndarray:
+                                child_facs = child_facs.tolist()
+                            for child_fac in child_facs:
+                                fac = child_fac[0]
                                 for j, v in enumerate(fac):
                                     if (fac[j-1], fac[j]) in child_seg:
                                         fn = child_seg[(fac[j-1], fac[j])]
-                                        f_to_merge = child.facets[fn][0].tolist()
+                                        f_to_merge = child.facets[fn][0]
                                         # reverse list
                                         f_to_merge = f_to_merge[::-1] 
                                         # shift lists
@@ -1412,7 +1453,7 @@ def _assembleGeometry(domain, BC_class):
                                         f_to_add += [new_f]
                                     elif (fac[j], fac[j-1]) in child_seg:
                                         fn = child_seg[(fac[j], fac[i-1])]
-                                        f_to_merge = child.facets[fn][0].tolist()
+                                        f_to_merge = child.facets[fn][0]
                                         # shift lists
                                         f_to_merge = list(deque(f_to_merge).rotate(-f_to_merge.index(fac[j-1])))
                                         fac = list(deque(fac).rotate(-fac.index(fac[j])))
@@ -1422,14 +1463,22 @@ def _assembleGeometry(domain, BC_class):
                                         f_to_add += [new_f]
                                     else:
                                         child_seg[(fac[j-1], fac[j])] = j
-                            facets2 = [f.tolist()[0] for k, f in enumerate(child.facets) if k not in f_to_remove]
+                            child_facets = deepcopy(child.facets)
+                            if type(child_facets) is np.ndarray:
+                                child_facets = child_facets.tolist()
+                            facets2 = [f[0] for k, f in enumerate(child_facets) if k not in f_to_remove]
                             if f_to_add:
                                 facets2 += [f_to_add]
-                        new_facets = np.array(facets2)+child.start_vertex
-                        facets[i] += (new_facets).tolist()
+                        new_facets = facets2
+                        for facet_i in range(len(new_facets)):
+                            facet = new_facets[facet_i]
+                            for v_i in range(len(facet)):
+                                print(new_facets[facet_i][v_i])
+                                new_facets[facet_i][v_i] += child.start_vertex
+                        facets[i] += new_facets
                 domain.facets += facets
 
-
+    # 3D holes (only for gmsh)
     elif domain.nd == 3 and shape.volumes is not None:
         for shape in domain.shape_list:
             shape.start_volume = len(domain.volumes)
@@ -1444,7 +1493,7 @@ def _assembleGeometry(domain, BC_class):
                 volumes_to_remove = []
                 for i, volume in enumerate(volumes):
                     # add holes to volumes
-                    if shape.children.has_key(i):
+                    if i in shape.children:
                         for child in shape.children[i]:
                             child_vols = []
                             child_facets = []  # facets in volumes
@@ -1491,15 +1540,20 @@ def _generateMesh(domain):
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
+    from proteus import Comm
+    comm = Comm.get()
     mesh = domain.MeshOptions
-    if mesh.outputFiles['poly'] is True:
-        domain.writePoly(mesh.outputFiles_name)
-    if mesh.outputFiles['ply'] is True:
-        domain.writePLY(mesh.outputFiles_name)
-    if mesh.outputFiles['asymptote'] is True:
-        domain.writeAsymptote(mesh.outputFiles_name)
-    if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
-        domain.writeGeo(mesh.outputFiles_name)
+    if comm.isMaster():
+        if mesh.outputFiles['poly'] is True:
+            domain.writePoly(mesh.outputFiles_name)
+        if mesh.outputFiles['ply'] is True:
+            domain.writePLY(mesh.outputFiles_name)
+        if mesh.outputFiles['asymptote'] is True:
+            domain.writeAsymptote(mesh.outputFiles_name)
+        if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
+            domain.writeGeo(mesh.outputFiles_name)
+    else:
+        domain.polyfile=mesh.outputFiles_name
     mesh.setTriangleOptions()
 
 
@@ -1517,7 +1571,7 @@ def getGmshPhysicalGroups(geofile):
                     tag = str(tagflag[0][2:-2])
                     boundaryTags[tag] = None  # add empty BC holder
                     flag = int(tagflag[1])
-                    print tagflag
+                    print(tagflag)
                 else:
                     try:
                         flag = tag = int(tagflag[0])
@@ -1525,3 +1579,45 @@ def getGmshPhysicalGroups(geofile):
                         flag = tag = tagflag[0]
                 boundaryTags[tag] = flag  # add empty BC holder
     return boundaryTags
+
+def extrude2Dto3D(extrusion, vertices, segments, facets, regions=None):
+    """
+    Extrude 2D geometry attributes in 3D
+
+    Parameters
+    ----------
+    extrusion: array_like
+        value of the extrusion (e.g. [1.4, 0., 0.])
+    vertices: array_like
+        list of vertices of the 2D shape
+    segments: array_like
+        list of segments of the 2D shape
+    facets: array_like
+        list of facets of the 2D shape
+    regions: array_like
+        list of regions of the 2D shape
+    """
+    nv = len(vertices)
+    ns = len(segments)
+    vertices = np.array(vertices)
+    vertices = np.vstack((vertices, vertices+extrusion))
+    segments_side = [[i, i+nv] for i in range(nv)]
+    segments_extruded = copy.deepcopy(segments)
+    for segment in segments_extruded:
+        segment[0] += ns
+        segment[1] += ns
+    segments = np.vstack((segments, segments_side, segments_extruded))
+    facets_side = [[[i, i+1, i+nv+1, i+nv]] for i in range(nv)]
+    facets_side[-1][0][1] = 0
+    facets_side[-1][0][2] = nv
+    facets_extruded = copy.deepcopy(facets)
+    for facet in facets_extruded:
+        for subfacet in facet:
+            for i in range(len(subfacet)):
+                subfacet[i] += nv
+    facets = facets+facets_side+facets_extruded
+    regions_extruded = copy.deepcopy(regions)
+    if regions is not None:
+        for region in regions_extruded:
+            region += old_div(extrusion,2.)
+    return vertices, segments, facets, regions_extruded

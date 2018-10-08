@@ -17,20 +17,23 @@ cdef extern from "cmeshToolsModule.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double)
+        MeshAdaptPUMIDrvr(double, double, double, int, int, int, char*, char*,char*,double,double,int,double,double)
         int numIter, numAdaptSteps
         string size_field_config, adapt_type_config
-        bint isReconstructed
+        int adaptMesh
+        int isReconstructed
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
         int reconstructFromProteus(Mesh&,Mesh&,int)
+        int reconstructFromProteus2(Mesh&,int*,int*)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
         int updateMaterialArrays(Mesh&,int, int, int)
         int updateMaterialArrays(Mesh&)
+        int updateMaterialArrays2(Mesh&)
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
-        int transferPropertiesToPUMI(double*, double*,double*)
+        int transferPropertiesToPUMI(double*, double*,double*,double,double)
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
@@ -41,16 +44,19 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         double getMinimumQuality()
         double getTotalMass()
         double getMPvalue(double,double, double)
-        void get_local_error(double)
+        void get_local_error(double) 
+        void get_VMS_error(double) 
+        void writeMesh(char* )
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
-    cdef double hmax, hmin
+    cdef double hmax, hmin, hPhi
     cdef int numIter, numAdaptSteps
-    cdef bint isReconstructed
-    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0):
+    cdef int isReconstructed
+    cdef int adaptMesh 
+    def __cinit__(self, hmax=100.0, hmin=1e-8, hPhi=1e-2, adaptMesh=0, numIter=10, numAdaptSteps=10 ,sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0,reconstructedFlag=0,maxAspectRatio=100.0,gradingFact=1.5):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount)
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, hPhi, adaptMesh, numIter, numAdaptSteps, sfConfig,maType,logType,targetError,targetElementCount,reconstructedFlag,maxAspectRatio,gradingFact)
     def __dealloc__(self):
         del self.thisptr
     def size_field_config(self):
@@ -59,6 +65,10 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.adapt_type_config
     def numIter(self):
         return self.thisptr.numIter
+    def adaptMesh(self):
+        return self.thisptr.adaptMesh
+    def numAdaptSteps(self):
+        return self.thisptr.numAdaptSteps
     def isReconstructed(self):
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):
@@ -67,6 +77,11 @@ cdef class MeshAdaptPUMI:
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         cdef CMesh* global_cmesh_ptr = <CMesh*>global_cmesh
         return self.thisptr.reconstructFromProteus(cmesh_ptr.mesh,global_cmesh_ptr.mesh,hasModel)
+    def reconstructFromProteus2(self,cmesh,np.ndarray[int,ndim=1,mode="c"] isModelVert,
+                                np.ndarray[int,ndim=2,mode="c"] bFaces):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        isModelVert = np.ascontiguousarray(isModelVert)
+        return self.thisptr.reconstructFromProteus2(cmesh_ptr.mesh,&isModelVert[0], <int *> bFaces.data)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)
@@ -80,17 +95,20 @@ cdef class MeshAdaptPUMI:
             return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh)
         else:
             return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh,dim, bdryId, geomTag)
+    def updateMaterialArrays2(self, cmesh):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        return self.thisptr.updateMaterialArrays2(cmesh_ptr.mesh)
     def transferFieldToPUMI(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
         inArray = np.ascontiguousarray(inArray)
         return self.thisptr.transferFieldToPUMI(name, &inArray[0,0], inArray.shape[1], inArray.shape[0])
     def transferFieldToProteus(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
         outArray = np.ascontiguousarray(outArray)
         return self.thisptr.transferFieldToProteus(name, &outArray[0,0], outArray.shape[1], outArray.shape[0])
-    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu, np.ndarray[np.double_t,ndim=1,mode="c"] g):
+    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu, np.ndarray[np.double_t,ndim=1,mode="c"] g, double deltaT, double interfaceBandSize):
         rho = np.ascontiguousarray(rho)
         nu = np.ascontiguousarray(nu)
         g = np.ascontiguousarray(g)
-        return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0])
+        return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0],deltaT,interfaceBandSize)
     def transferModelInfo(self, np.ndarray[int,ndim=1,mode="c"] numModelEntities,
                                 np.ndarray[int,ndim=2,mode="c"] edges,
                                 np.ndarray[int,ndim=2,mode="c"] faces,
@@ -129,5 +147,11 @@ cdef class MeshAdaptPUMI:
         errTotal=0.0;
         self.thisptr.get_local_error(errTotal)
         return errTotal
+    def get_VMS_error(self):
+        errTotal=0.0;
+        self.thisptr.get_VMS_error(errTotal)
+        return errTotal
     def getMinimumQuality(self):
         return self.thisptr.getMinimumQuality()
+    def writeMesh(self,meshName):
+        return self.thisptr.writeMesh(meshName)

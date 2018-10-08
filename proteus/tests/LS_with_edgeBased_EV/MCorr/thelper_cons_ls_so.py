@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from builtins import range
 from proteus.default_so import *
-import thelper_cons_ls
-from thelper_cons_ls import *
+from . import thelper_cons_ls
+from .thelper_cons_ls import *
 
 thelper_cons_ls.LS_model = 0
 thelper_cons_ls.V_model = 0

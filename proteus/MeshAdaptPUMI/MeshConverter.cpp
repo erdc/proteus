@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "MeshAdaptPUMI.h"
+#include <PCU.h>
 #include "mesh.h"
 #include <apfShape.h>
 
@@ -505,6 +506,120 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
   return 0;
 }
 
+int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
+{
+  std::cout<<"Starting to update material arrays\n";
+  int geomTag;
+  apf::ModelEntity* geomEnt;
+  apf::MeshIterator* it;
+  apf::MeshEntity* f;
+
+  //first associate all nodes with a material tag and synchronize fields to avoid mismatches 
+  //The procedure is to have each vertex look for its classification.
+  //If it is classified in the region, then it is interior.
+  //Else, loop over adjacent faces and stop at first instance of mesh face classified on model boundary and take tag.
+    //If there are no such adjacent mesh faces, then set the value to be -1. This should only happen if the vertex is a shared entity.
+  //If the vertex is shared, communicate value to remote copies.
+  //When receiving values, if the current value is -1, write to field the received value. Otherwise, do nothing. 
+
+  apf::Field* nodeMaterials = apf::createLagrangeField(m, "nodeMaterials", apf::SCALAR, 1);
+  it = m->begin(0);
+  PCU_Comm_Begin();
+  while(f = m->iterate(it))
+  {
+    geomEnt = m->toModel(f);
+    //if classified in a region
+    if(m->getModelType(geomEnt) == m->getDimension())
+    {
+      apf::setScalar(nodeMaterials,f,0,0); 
+    }
+    else
+    {
+      apf::Adjacent vert_adjFace;
+      m->getAdjacent(f,m->getDimension()-1,vert_adjFace);
+      apf::MeshEntity* face;
+      for(int i =0; i<vert_adjFace.getSize();i++)
+      {
+        face=vert_adjFace[i];
+        geomEnt = m->toModel(face);
+
+        //IF mesh face is classified on boundary
+        if(m->getModelType(geomEnt) == m->getDimension()-1)
+        {
+          geomTag = m->getModelTag(geomEnt);
+          apf::setScalar(nodeMaterials,f,0,geomTag);
+          if(m->isShared(f))
+          {
+            apf::Copies remotes;
+            m->getRemotes(f,remotes);
+            for(apf::Copies::iterator iter = remotes.begin(); iter != remotes.end(); ++iter)
+            {
+              PCU_COMM_PACK(iter->first,iter->second);
+              PCU_COMM_PACK(iter->first,geomTag);
+            }
+          }  
+          break;
+        }
+        if(i == vert_adjFace.getSize()-1 )
+          apf::setScalar(nodeMaterials,f,0,-1);
+      }
+    }
+  }
+  PCU_Comm_Send();
+  while(PCU_Comm_Receive())
+  {
+    PCU_COMM_UNPACK(f);
+    PCU_COMM_UNPACK(geomTag);
+    int currentTag = apf::getScalar(nodeMaterials,f,0);
+    int newTag = std::min(currentTag,geomTag);
+    //if vertex is not interior and had no adjacent faces, take received values
+    //else take minimum value of all tags
+    if(currentTag==-1)
+      apf::setScalar(nodeMaterials,f,0,geomTag);
+    else
+      apf::setScalar(nodeMaterials,f,0,newTag);
+  }
+  //Ensure there are no mismatches across parts and then assign node materials
+  apf::synchronize(nodeMaterials);
+  it = m->begin(0);
+  while(f=m->iterate(it))
+  {
+    int vID = localNumber(f);
+    mesh.nodeMaterialTypes[vID] = apf::getScalar(nodeMaterials,f,0);
+  }
+
+  //First iterate over all faces in 3D, get the model tag and apply to all downward adjacencies
+  int dim = m->getDimension()-1;
+  it = m->begin(dim);
+  while(f = m->iterate(it))
+  {
+    int i = localNumber(f);
+    geomEnt = m->toModel(f);
+    geomTag = m->getModelTag(geomEnt);
+    if(m->getModelType(geomEnt) == dim)
+    {
+      mesh.elementBoundaryMaterialTypes[i] = geomTag;
+    }
+  }
+  m->end(it);
+
+  apf::destroyField(nodeMaterials);
+  std::cout<<"Finished faces and verts\n";
+
+  //Loop over regions
+  dim = m->getDimension();
+  it = m->begin(dim);
+  while( f = m->iterate(it)){
+    int i = localNumber(f);
+    geomEnt = m->toModel(f);
+    geomTag = m->getModelTag(geomEnt);
+    if(m->getModelType(geomEnt) == dim){
+      mesh.elementMaterialTypes[i] = 0;//geomTag;
+    }
+  }
+  m->end(it);
+  return 0;
+}
 
 
 /**************************************************************************/
@@ -513,7 +628,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
  * scorec/core. This may be added into scorec/core eventually and removed.
  */
 
-#include <PCU.h>
+//#include <PCU.h>
 #include "apfConvert.h"
 #include "apfMesh2.h"
 #include "apf.h"
@@ -1215,5 +1330,80 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     std::cout<<"FINISHING RECONSTRUCTION\n";
 }
 
+int MeshAdaptPUMIDrvr::reconstructFromProteus2(Mesh& mesh,int* isModelVert,int* bFaces){
 
+//This function only applies for 3D meshes
+
+    int dim;
+    int elementType;
+    if(mesh.nNodes_element == 3){
+      dim = 2;
+      elementType = apf::Mesh::TRIANGLE;
+    }
+    else{
+      dim = 3;
+      elementType = apf::Mesh::TET;
+    }
+
+    isReconstructed = 2;
+    int nBFaces = mesh.nExteriorElementBoundaries_global;
+    bool isModelVert_bool[mesh.nNodes_global];
+    for(int i=0;i<mesh.nNodes_global;i++){
+      isModelVert_bool[i] = isModelVert[i] != 0;
+    }
+    static int numEntries = 2+dim;
+
+    int bEdges_1D[nBFaces][4];    
+    int bFaces_2D[nBFaces][5];
+
+    if(dim==2){
+      for(int i=0;i<nBFaces;i++){
+        int idx = i*numEntries;
+        for(int j=0;j<numEntries;j++)
+          bEdges_1D[i][j] = bFaces[idx+j];
+      }
+    }
+    if(dim==3){
+      for(int i=0;i<nBFaces;i++){
+        int idx = i*numEntries;
+        for(int j=0;j<numEntries;j++)
+          bFaces_2D[i][j] = bFaces[idx+j];
+      }
+    }
+
+/*
+      bFaces_2D[i][0] = bFaces[idx+0];
+      bFaces_2D[i][1] = bFaces[idx+1];
+      bFaces_2D[i][2] = bFaces[idx+2];
+      bFaces_2D[i][3] = bFaces[idx+3];
+      bFaces_2D[i][4] = bFaces[idx+4];
+*/
+
+    apf::GlobalToVert outMap;
+
+    gmi_model* tempModel  = gmi_load(".null");
+    m = apf::makeEmptyMdsMesh(tempModel,dim,false);
+    apf::construct(m,mesh.elementNodesArray,mesh.nElements_global,elementType,outMap);
+
+    apf::setCoords(m,mesh.nodeArray,mesh.nNodes_global,outMap);
+
+    std::map<int,apf::MeshEntity*> globalToRegion;
+    apf::MeshIterator* it = m->begin(dim);
+    apf::MeshEntity* ent;
+    int counter = 0;
+    while( ent = m->iterate(it) ){
+      globalToRegion.insert(std::pair<int,apf::MeshEntity*> (counter,ent ));
+      counter++;
+    }
+    
+    if(dim == 2)
+      apf::derive2DMdlFromManifold(m,isModelVert_bool,nBFaces,bEdges_1D,outMap,globalToRegion);
+    else
+      apf::deriveMdlFromManifold(m,isModelVert_bool,nBFaces,bFaces_2D,outMap,globalToRegion);
+    m->writeNative("Reconstructed.smb");
+    gmi_write_dmg(m->getModel(),"Reconstructed.dmg");
+    std::cout<<"Finished Reconstruction, terminating program. Rerun with PUMI workflow\n";
+    std::exit(0);
+
+}
 

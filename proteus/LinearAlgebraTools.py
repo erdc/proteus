@@ -8,18 +8,34 @@ representations using PETSc.
 .. inheritance-diagram:: proteus.LinearAlgebraTools
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy
 import math
 import sys
-import superluWrappers
-import Comm
+from . import superluWrappers
+from . import Comm
 from .superluWrappers import *
 from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
 from . import flcbdfWrappers
 
+# PETSc Matrix Functions
+
 def _petsc_view(obj, filename):
-    """Saves object to disk using a PETSc binary viewer.
+    """Saves petsc object to disk using a PETSc binary viewer.
+
+    Parameters
+    ----------
+    obj : PETSc obj
+        PETSc4py object to be saved (e.g. vector, matrix, etc)
+    filename : str
+        String with PETSc filename
     """
     viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
     viewer(obj)
@@ -46,7 +62,8 @@ def petsc_load_matrix(filename):
         viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
         output = p4pyPETSc.Mat().load(viewer)
     except:
-        print("Either you've entered an invalid file name or your object is not a matrix (try petsc_load_vector).")
+        logEvent("Either you've entered an invalid file name or your object is not a matrix (try petsc_load_vector).")
+        output = None
     return output
 
 def petsc_load_vector(filename):
@@ -67,7 +84,30 @@ def petsc_load_vector(filename):
         viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
         output = p4pyPETSc.Vec().load(viewer)
     except:
-        print("Either you've entered an invalid file name or your object is not a vector (try petsc_load_matrix).")
+        logEvent("Either you've entered an invalid file name or your object is not a vector (try petsc_load_matrix).")
+        output = None
+    return output
+
+def petsc_load_IS(filename):
+    """ This function loads a PETSc index-set from a binary format.
+    (Eg. what is saved using the petsc_view function).
+
+    Parameters
+    ----------
+    filename : str
+        This is the name of the binary with the file stored.
+
+    Returns
+    -------
+    matrix : petsc4py IS
+        The index-set that is stored in the binary file.
+    """
+    try:
+        viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
+        output = p4pyPETSc.IS().load(viewer)
+    except:
+        logEvent("Either you've entered an invalid file name or your object is not an index set.")
+        output = None
     return output
 
 def csr_2_petsc(size,csr):
@@ -104,12 +144,108 @@ def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
         numpy.save(output,dense_matrix)
     return dense_matrix
 
+def superlu_get_rank(sparse_matrix):
+    """ Returns the rank of a superluWrapper sparse matrix.
+
+    Parameters
+    ----------
+    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+
+    Returns
+    -------
+    matrix_rank : int
+        The rank of the sparse_matrix
+
+    Notes
+    -----
+    This function is a tool for debugging and should only be used
+    for small matrices.
+    """
+    A = superlu_sparse_2_dense(sparse_matrix)
+    return numpy.linalg.matrix_rank(A)
+
+def petsc4py_get_rank(sparse_matrix):
+    """ Returns the rank of a superluWrapper sparse matrix.
+
+    Parameters
+    ----------
+    sparse_matrix : :class:`p4pyPETSc.Mat`
+
+    Returns
+    -------
+    matrix_rank : int
+        The rank of the sparse_matrix
+
+    Notes
+    -----
+    This function is a debugging tool and should only be used
+    for small matrices.
+    """
+    A = petsc4py_sparse_2_dense(sparse_matrix)
+    return numpy.linalg.matrix_rank(A)
+
+def superlu_has_pressure_null_space(sparse_matrix):
+    """
+    Checks whether a superluWrapper sparse matrix has a constant
+    pressure null space.
+
+    Parameters
+    ----------
+    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+
+    Returns
+    -------
+    does : bool
+       Boolean variable indicating whether the pressure term
+       creates a null space.
+
+    Notes
+    -----
+    Assumes interwoven dof.
+    This function was written mainly for debugging purposes and may be
+    slow for large matrices.
+    """
+    A = superlu_2_petsc4py(sparse_matrix)
+    return petsc4py_mat_has_pressure_null_space(A)
+
+def petsc4py_mat_has_pressure_null_space(A):
+    """
+    Checks whether a PETSc4Py sparse matrix has a constant
+    pressure null space.
+
+    Parameters
+    ----------
+    A : :class:`p4pyPETSc.Mat`
+
+    Returns
+    -------
+    does : bool
+       Boolean variable indicating whether the pressure term
+       creates a null space.
+
+    Notes
+    -----
+    Assumes interwoven dof.
+    This function was written mainly for debugging purposes and may be
+    slow for large matrices.
+    """
+    x = numpy.zeros(A.getSize()[1])
+    y = numpy.zeros(A.getSize()[1])
+    x[::3] = 1
+    x_petsc = p4pyPETSc.Vec().createWithArray(x)
+    y_petsc = p4pyPETSc.Vec().createWithArray(y)
+    A.mult(x_petsc,y_petsc)
+    if y_petsc.norm() < 1e-15:
+        return True
+    else:
+        return False
+
 def superlu_sparse_2_dense(sparse_matrix,output=False):
     """ Converts a sparse superluWrapper into a dense matrix.
 
     Parameters
     ----------
-    sparse_matrix : 
+    sparse_matrix :
     output : str
         Out file name to store the matrix.
 
@@ -142,7 +278,7 @@ def petsc4py_sparse_2_dense(sparse_matrix,output=False):
     -------
     dense_matrix : numpy array
         A numpy array with the dense matrix.
-    
+
     Notes
     -----
     This function is very inefficient for large matrices.
@@ -170,8 +306,8 @@ def superlu_2_petsc4py(sparse_superlu):
     if comm.size() > 1:
         rowptr,colind,nzval = sparse_superlu.getCSRrepresentation()
         A_petsc4py = ParMat_petsc4py.create_ParMat_from_OperatorConstructor(sparse_superlu)
-        
-    else:    
+
+    else:
         rowptr, colind, nzval = sparse_superlu.getCSRrepresentation()
         A_rowptr = rowptr.copy()
         A_colind = colind.copy()
@@ -186,7 +322,7 @@ def superlu_2_petsc4py(sparse_superlu):
 
 def petsc_create_diagonal_inv_matrix(sparse_petsc):
     """ Create an inverse diagonal petsc4py matrix from input matrix.
-    
+
     Parameters
     ----------
     sparse_petsc : :class:`p4pyPETSc.Mat`
@@ -199,18 +335,18 @@ def petsc_create_diagonal_inv_matrix(sparse_petsc):
     diag_inv.setSizes(sparse_petsc.getSizes())
     diag_inv.setType('aij')
     diag_inv.setUp()
-    diag_inv.setDiagonal(1./sparse_petsc.getDiagonal())
+    diag_inv.setDiagonal(old_div(1.,sparse_petsc.getDiagonal()))
     return diag_inv
 
 def dense_numpy_2_petsc4py(dense_numpy, eps = 1.e-12):
     """ Create a sparse petsc4py matrix from a dense numpy matrix.
 
-    Note - This routine has been built mainly to support testing.  
+    Note - This routine has been built mainly to support testing.
     It would be rare for this routine to be useful for most applications.
 
     Parameters
     ----------
-    dense_numpy : 
+    dense_numpy :
     eps : float
         Tolerance for non-zero values.
 
@@ -254,7 +390,34 @@ def csr_2_petsc_mpiaij(size,csr):
     mat.assemblyEnd()
     return mat
 
-class ParVec:
+def split_PETSc_Mat(mat):
+    """ Decompose a PETSc matrix into a symmetric and skew-symmetric
+        matrix
+
+    Parameters:
+    ----------
+    mat : :class: `PETSc4py Matrix`
+
+    Returns:
+    --------
+    H : :class: `PETSc4py Matrix`
+        Symmetric (or Hermitian) component of mat
+    S : :class: `PETSc4py Matrix`
+        Skew-Symmetric (or skew-Hermitian) component of mat
+    """
+    H = mat.copy()
+    H.zeroEntries()
+    H.axpy(1.0,mat)
+    H.axpy(1.0,mat.transpose())
+    H.scale(0.5)
+    S = mat.copy()
+    S.zeroEntries()
+    S.axpy(1.0,mat)
+    S.aypx(-1.0,mat.transpose())
+    S.scale(0.5)
+    return H, S
+
+class ParVec(object):
     """
     A parallel vector built on top of daetk's wrappers for petsc
     """
@@ -266,7 +429,7 @@ class ParVec:
                  nghosts=None,
                  subdomain2global=None,
                  blockVecType="simple"):#"block"
-        import flcbdfWrappers
+        from . import flcbdfWrappers
         self.dim_proc=n*blockSize
         if nghosts is None:
             if blockVecType=="simple":
@@ -387,7 +550,7 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         """Saves to disk using a PETSc binary viewer."""
         _petsc_view(self, filename)
 
-class ParInfo_petsc4py:
+class ParInfo_petsc4py(object):
     """
     ARB - this class is experimental.  My idea is to store the
     information need to constructor parallel vectors and matrices
@@ -411,23 +574,23 @@ class ParInfo_petsc4py:
         self.mixed = False
 
     def print_info(cls):
-        import Comm
+        from . import Comm
         comm = Comm.get()
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_bs = ' + `cls.par_bs`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_n = ' + `cls.par_n`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_n_lst = ' + `cls.par_n_lst`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_N = ' + `cls.par_N`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_nghost = ' + `cls.par_nghost`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' par_nghost_lst = ' + `cls.par_nghost_lst`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' petsc_subdomain2global_petsc = ' + `cls.petsc_subdomain2global_petsc`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' subdomain2global = ' + `cls.subdomain2global`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' proteus2petsc_subdomain = ' + `cls.proteus2petsc_subdomain`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' petsc2proteus_subomdain = ' + `cls.petsc2proteus_subdomain`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' dim = ' + `cls.dim`)
-        logEvent('comm.rank() = ' + `comm.rank()` + ' nzval_proteus2petsc = ' + `cls.nzval_proteus2petsc`)
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_bs = ' + repr(cls.par_bs))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_n = ' + repr(cls.par_n))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_n_lst = ' + repr(cls.par_n_lst))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_N = ' + repr(cls.par_N))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_nghost = ' + repr(cls.par_nghost))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' par_nghost_lst = ' + repr(cls.par_nghost_lst))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' petsc_subdomain2global_petsc = ' + repr(cls.petsc_subdomain2global_petsc))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' subdomain2global = ' + repr(cls.subdomain2global))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' proteus2petsc_subdomain = ' + repr(cls.proteus2petsc_subdomain))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' petsc2proteus_subomdain = ' + repr(cls.petsc2proteus_subdomain))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' dim = ' + repr(cls.dim))
+        logEvent('comm.rank() = ' + repr(comm.rank()) + ' nzval_proteus2petsc = ' + repr(cls.nzval_proteus2petsc))
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
-    """  Parallel matrix based on petsc4py's wrappers for PETSc. 
+    """  Parallel matrix based on petsc4py's wrappers for PETSc.
     ghosted_csr_mat : :class:`proteus.superluWrappers.SparseMatrix`
         Primary CSR information for the ParMat.
     par_bs : int
@@ -520,7 +683,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
     @classmethod
     def create_ParMat_from_OperatorConstructor(cls,
                                                operator):
-        """ Build a ParMat consistent with the problem from an Operator 
+        """ Build a ParMat consistent with the problem from an Operator
         constructor matrix.
 
         Arguments
@@ -540,11 +703,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         # ARB - this is largely copied from Transport.py,
         # a refactor should be done to elimate this duplication
         rowptr, colind, nzval = operator.getCSRrepresentation()
-        # if comm.rank()==1:
-        #     print 'subdomain2global = ' + `subdomain2global`
-        #     print 'rowptr = ' + `rowptr`
-        #     print 'comm.rank() = ' + `nzval[95:131]`
-        
+
         rowptr_petsc = rowptr.copy()
         colind_petsc = colind.copy()
         nzval_petsc = nzval.copy()
@@ -572,11 +731,11 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         petsc_a = {}
 
         for i in range(dim):
-            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
+            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],list(range(rowptr[i],rowptr[i+1]))):
                 proteus_a[i,j] = nzval[k]
                 petsc_a[proteus2petsc_subdomain[i],proteus2petsc_subdomain[j]] = nzval[k]
         for i in range(dim):
-            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
+            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],list(range(rowptr_petsc[i],rowptr_petsc[i+1]))):
                 nzval_petsc[k] = petsc_a[i,j]
 
         #additional stuff needed for petsc par mat
@@ -600,7 +759,7 @@ def Vec(n):
     Build a vector of length n (using numpy)
 
     For example::
-    
+
       >>> Vec(3)
       array([ 0.,  0.,  0.])
 
@@ -626,8 +785,8 @@ def SparseMatFromDict(nr,nc,aDict):
     """
     Build a nr x nc sparse matrix from a dictionary representation
     """
-    import superluWrappers
-    indeces = aDict.keys()
+    from . import superluWrappers
+    indeces = list(aDict.keys())
     indeces.sort()
     nnz     = len(indeces)
     nzval   = numpy.zeros((nnz,),'d')
@@ -681,7 +840,7 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
         sys.exit(1)
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
-class SparseMatShell:
+class SparseMatShell(object):
     """ Build a parallel matrix shell from CSR data structures.
 
     Parameters
@@ -710,16 +869,22 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
-class OperatorShell:
+class OperatorShell(object):
     """ A base class for operator shells """
     def __init__(self):
         pass
     def create(self,A):
         pass
+    def getSize(self):
+        """
+        Return the number of degrees of freedom for the operator.
+        """
+        raise NotImplementedError('You need to define a getSize ' \
+                                  'method for your shell')
 
 class ProductOperatorShell(OperatorShell):
-    """ A base class for shell operators that apply multiplcation. 
-    
+    """ A base class for shell operators that apply multiplcation.
+
     Operators derived from this class should have working multiplication
     functions.
     """
@@ -730,20 +895,18 @@ class ProductOperatorShell(OperatorShell):
                                   'function for your shell')
 
 class InvOperatorShell(OperatorShell):
-    """ A base class for inverse operator shells 
-    
+    """ A base class for inverse operator shells
+
     Operators derived from this class should have working apply
     functions.
     """
     def __init__(self):
         pass
-    def apply(self, A, x, y):
-        raise NotImplementedError('You need to define an apply' \
-                                  'function for your shell')
 
-    def _create_tmp_vec(self,size):
-        """ Creates an empty vector of given size. 
-        
+    @staticmethod
+    def _create_tmp_vec(size):
+        """ Creates an empty vector of given size.
+
         Arguments
         ---------
         size : int
@@ -758,9 +921,10 @@ class InvOperatorShell(OperatorShell):
         tmp.setSizes(size)
         return tmp
 
-    def _create_copy_vec(self,vec):
+    @staticmethod
+    def _create_copy_vec(vec):
         """ Creates a copy of a petsc4py vector.
-        
+
         Parameters
         ----------
         vec : :class:`petsc4py.Vec`
@@ -774,12 +938,110 @@ class InvOperatorShell(OperatorShell):
         tmp = vec.copy()
         return tmp
 
+    def apply(self, A, x, y):
+        raise NotImplementedError('You need to define an apply' \
+                                  'method for your shell')
+
+    def getSize(self):
+        """ Returns the size of InvOperatorShell.
+        
+        Notes
+        -----
+        This acts a virtual method and must be implemented for 
+        all inherited classes.
+        """
+        raise NotImplementedError()
+
+    def create_petsc_ksp_obj(self,
+                             petsc_option_prefix,
+                             matrix_operator,
+                             constant_null_space = False):
+        """ Create a PETSc4py KSP object.
+
+        Arguments
+        ---------
+        petsc_option_prefix : str
+            PETSc commandline option prefix.
+        matrix_operator : mat
+            PETSc matrix object for the ksp class.
+        null_space : bool
+            True if the KSP object has a constant null space.
+
+        Returns
+        -------
+        ksp_obj : PETSc ksp
+        """
+        ksp_obj = p4pyPETSc.KSP().create()
+        ksp_obj.setOperators(matrix_operator,
+                             matrix_operator)
+        ksp_obj.setOptionsPrefix(petsc_option_prefix)
+
+        if constant_null_space:
+            const_nullspace_str = ''.join([petsc_option_prefix,
+                                           'ksp_constant_null_space'])
+            self.options.setValue(const_nullspace_str,'')
+            matrix_operator.setNullSpace(self.const_null_space)
+        ksp_obj.setFromOptions()
+
+        ksp_obj.setUp()
+        return ksp_obj
+
     def _create_constant_nullspace(self):
         """Initialize a constant null space. """
         self.const_null_space = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
                                                              vectors = (),
                                                              constant = True)
-    
+
+    def _set_dirichlet_idx_set(self):
+        """
+        Initialize an index set of non-Dirichlet degrees of freedom.
+
+        When the value of some degrees of freedom are known in
+        advance it can be helfpul to remove these degrees of
+        freedom from the inverse operator.  This function
+        creates a PETSc4py index set of unknown degrees of freedom.
+        """
+        comm = Comm.get()
+        # Assign number of unknowns
+        num_dof = self.getSize()
+        self.strong_dirichlet_DOF = [i for i in self.strong_dirichlet_DOF if i< num_dof]
+        try:
+            num_known_dof = len(self.strong_dirichlet_DOF)
+        except AttributeError:
+            print("ERROR - strong_dirichlet_DOF have not been " \
+                  " assigned for this inverse operator object.")
+            exit()
+
+        num_unknown_dof = num_dof - num_known_dof
+        # Use boolean mask to collect unknown DOF indices
+        self.dof_indices = numpy.arange(num_dof,
+                                        dtype = 'int32')
+        known_dof_mask = numpy.ones(num_dof,
+                                    dtype = bool)
+        known_dof_mask[self.strong_dirichlet_DOF] = False
+
+        self.unknown_dof_indices = self.dof_indices[known_dof_mask]
+        self.known_dof_indices = self.dof_indices[~known_dof_mask]
+
+        if comm.size() == 1:
+            # Create PETSc4py index set of unknown DOF
+            self.known_dof_is = p4pyPETSc.IS()
+            self.known_dof_is.createGeneral(self.known_dof_indices,
+                                            comm=p4pyPETSc.COMM_WORLD)
+            self.unknown_dof_is = p4pyPETSc.IS()
+            self.unknown_dof_is.createGeneral(self.unknown_dof_indices,
+                                              comm=p4pyPETSc.COMM_WORLD)
+        elif comm.size() > 1:
+            self.global_known_dof_indices = [self.par_info.subdomain2global[i] for i in self.known_dof_indices]
+            self.global_unknown_dof_indices = [self.par_info.subdomain2global[i] for i in self.unknown_dof_indices]
+
+            self.known_dof_is = p4pyPETSc.IS()
+            self.known_dof_is.createGeneral(self.global_known_dof_indices,
+                                            comm=p4pyPETSc.COMM_WORLD)
+            self.unknown_dof_is = p4pyPETSc.IS()
+            self.unknown_dof_is.createGeneral(self.global_unknown_dof_indices,
+                                              comm=p4pyPETSc.COMM_WORLD)
+
     def _converged_trueRes(self,ksp,its,rnorm):
         """ Function handle to feed to ksp's setConvergenceTest  """
         ksp.buildResidual(self.r_work)
@@ -811,17 +1073,17 @@ class InvOperatorShell(OperatorShell):
         return False
 
 class LSCInv_shell(InvOperatorShell):
-    """ Shell class for the LSC Inverse Preconditioner 
-    
+    """ Shell class for the LSC Inverse Preconditioner
+
     This class creates a shell for the least-squares commutator (LSC)
-    preconditioner, where 
-    :math:`M_{s}= (B \hat{Q^{-1}_{v}} B^{'}) (B \hat{Q^{-1}_{v}} F 
-    \hat{Q^{-1}_{v}} B^{'})^{-1} (B \hat{Q^{-1}_{v}} B^{'})` 
+    preconditioner, where
+    :math:`M_{s}= (B \hat{Q^{-1}_{v}} B^{'}) (B \hat{Q^{-1}_{v}} F
+    \hat{Q^{-1}_{v}} B^{'})^{-1} (B \hat{Q^{-1}_{v}} B^{'})`
     is used to approximate the Schur complement.
     """
     def __init__(self, Qv, B, Bt, F):
         """Initializes the LSC inverse operator.
-        
+
         Parameters
         ----------
         Qv : petsc4py matrix object
@@ -839,10 +1101,10 @@ class LSCInv_shell(InvOperatorShell):
         self.B = B
         self.Bt = Bt
         self.F = F
-    
+
         self._constructBQinvBt()
         self._options = p4pyPETSc.Options()
-        
+
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self._create_constant_nullspace()
             self.BQinvBt.setNullSpace(self.const_null_space)
@@ -859,30 +1121,30 @@ class LSCInv_shell(InvOperatorShell):
         self.kspQv.setOperators(self.Qv,self.Qv)
         self.kspQv.setOptionsPrefix('innerLSCsolver_T_')
         self.kspQv.setFromOptions()
-        
+
         convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
             self.r_work = self.BQinvBt.getVecLeft()
             self.rnorm0 = None
             self.kspBQinvBt.setConvergenceTest(self._converged_trueRes)
         else:
-            self.r_work = None        
+            self.r_work = None
         self.kspBQinvBt.setUp()
 
     def apply(self,A,x,y):
-        """ Apply the LSC inverse operator 
-        
+        """ Apply the LSC inverse operator
+
         Parameters
         ----------
         A : NULL
-            A necessary PETSc4py placeholder for internal function operations.
-        x : PETSc4py vector
-            The incoming residual vector which the operator is applied to.
+            A placeholder for internal function PETSc functions.
+        x : :class:`p4pyPETSc.Vec`
+            Vector which LSC operator is being applied to.
 
         Returns
         --------
-        y : PETSc4py vector
-            The result of the preconditioners action on x.
+        y : :class:`p4pyPETSc.Vec`
+            Result of LSC acting on x.
         """
         # create temporary vectors
         B_sizes = self.B.getSizes()
@@ -903,14 +1165,15 @@ class LSCInv_shell(InvOperatorShell):
         if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
             self.const_null_space.remove(x_tmp)
         self.kspBQinvBt.solve(tmp1,y)
-        
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+resulted in not-a-number."
+
     def _constructBQinvBt(self):
         """ Private method repsonsible for building BQinvBt """
         self.Qv_inv = petsc_create_diagonal_inv_matrix(self.Qv)
         QinvBt = self.Qv_inv.matMult(self.Bt)
         self.BQinvBt = self.B.matMult(QinvBt)
 
-    
 class MatrixShell(ProductOperatorShell):
     """ A shell class for a matrix. """
     def __init__(self,A):
@@ -972,24 +1235,24 @@ class MatrixInvShell(InvOperatorShell):
         """
         self.ksp.solve(x,y)
 
-class Sp_shell(InvOperatorShell):
-    r""" Shell class for the SIMPLE preconditioner which applies the 
-    following action.
+class SpInv_shell(InvOperatorShell):
+    r""" Shell class for the SIMPLE preconditioner which applies the
+    following action:
 
     .. math::
-        \hat{S}^{-1} = (A_{11} - A_{01} \text{diag}(A_{00} A_{10})^{-1}
+        \hat{S}^{-1} = (A_{11} - A_{01} \text{diag}(A_{00}) A_{10})^{-1}
 
     where :math:`A_{ij}` are sub-blocks of the global saddle point system.
 
     Parameters
     ----------
-    A00 : petsc4py matrix
+    A00: :class:`p4pyPETSc.Mat`
         The A00 block of the global saddle point system.
-    A01 : petsc4py matrix
+    A01: :class:`p4pyPETSc.Mat`
         The A01 block of the global saddle point system.
-    A10 : petsc4py matrix
+    A10: :class:`p4pyPETSc.Mat`
         The A10 block of the global saddle point system.
-    A11 : petsc4py matrix
+    A11: :class:`p4pyPETSc.Mat`
         The A11 block of the global saddle point system.
     use_constant_null_space: bool
         Indicates whether a constant null space should be used.  See
@@ -997,16 +1260,17 @@ class Sp_shell(InvOperatorShell):
 
     Notes
     -----
-    For Stokes or Navier-Stokes systems, the :math:`S_{p}` operator
-    resembles a Laplcian matrix on the pressure.  As with other 
-    Laplacian type operators, `S_{p}` has a constant null space which 
-    must be accounted for when the operator is being applied.  As
-    such, this operator's default behavior is to use a constant null
-    space.  Should a circumstance arise in which a constant null 
-    space is not appropriate, it can be disabled with the 
-    use_constant_null_space flag.
+    For Stokes or Navier-Stokes systems, the :math:`S` operator
+    resembles a Laplcian matrix on the pressure.  In cases where the
+    global saddle point system uses pure Dirichlet boundary
+    conditions, the :math:`S^{-1}` operator has a constant null
+    space.  Since most saddle-point simulations of interest do not
+    have pure Dirichlet conditions, the `constNullSpace` flag defaults
+    to false.  Having the null space set to false when the global
+    problem uses pure Dirichlet boundary conditions will likely result
+    in poor solver performance or failure.
     """
-    def __init__(self, A00, A11, A01, A10, constNullSpace=True):
+    def __init__(self, A00, A11, A01, A10, constNullSpace):
         self.A00 = A00
         self.A11 = A11
         self.A01 = A01
@@ -1014,29 +1278,44 @@ class Sp_shell(InvOperatorShell):
         self.constNullSpace = constNullSpace
         self._create_Sp()
         self._options = p4pyPETSc.Options()
-        
+
         self.kspSp = p4pyPETSc.KSP().create()
         self.kspSp.setOperators(self.Sp,self.Sp)
-        self.kspSp.setOptionsPrefix('innerSp_solve_')
+        self.kspSp.setOptionsPrefix('innerSpsolver_')
         self.kspSp.setFromOptions()
         if self.constNullSpace:
-            self._create_constant_nullspace()            
+            self._create_constant_nullspace()
             self.Sp.setNullSpace(self.const_null_space)
         self.kspSp.setUp()
 
     def apply(self,A,x,y):
+        """ Applies the :math:`S_{p}` operator
+
+        Parameters
+        ----------
+        A : None
+            Dummy argument for PETSc interface
+        x : :class:`p4pyPETSc.Vec`
+            Vector to which :math:`S` is applied
+
+        Returns
+        -------
+        y : :class:`p4pyPETSc.Vec`
+            Result of :math:`S^{-1}x`
+        """
         tmp1 = p4pyPETSc.Vec().create()
         tmp1 = x.copy()
         if self.constNullSpace:
             self.const_null_space.remove(tmp1)
         self.kspSp.solve(tmp1,y)
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+resulted in not-a-number."
 
     def _create_Sp(self):
         self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
         A00_invBt = self.A00_inv.matMult(self.A01)
         self.Sp = self.A10.matMult(A00_invBt)
         self.Sp.aypx(-1.,self.A11)
-    
 
 class TwoPhase_PCDInv_shell(InvOperatorShell):
     r""" Shell class for the two-phase PCD preconditioner.  The
@@ -1045,15 +1324,15 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
     .. math::
 
         \hat{S}^{-1} = (Q^{(1 / \mu)})^{-1} + (A_{p}^{(1 / \rho)})^{-1}
-        (N_{p}^{(\rho)} + \dfrac{\alpha}{\Delta t} Q^{(\rho)} ) 
+        (N_{p}^{(\rho)} + \dfrac{\alpha}{\Delta t} Q^{(\rho)} )
         (Q^{(\rho)})^{-1}
 
-    where :math:`Q^{(1 / \mu)}` and :math:`Q^{(\rho)}` denote the pressure 
+    where :math:`Q^{(1 / \mu)}` and :math:`Q^{(\rho)}` denote the pressure
     mass matrix scaled by the inverse dynamic viscosity and density
     respectively, :math:`(A_{p}^{(1 / \rho)})^{-1}`
     denotes the pressure Laplacian scaled by inverse density, and
     :math:`N_{p}^{(\rho)}` denotes the pressure advection operator scaled by
-    the density, and :math:`\alpha` is a binary operator indicating 
+    the density, and :math:`\alpha` is a binary operator indicating
     whether the problem is temporal or steady state.
     """
     def __init__(self,
@@ -1063,66 +1342,63 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                  Np_rho,
                  alpha = False,
                  delta_t = 0,
-                 num_chebyshev_its = 0):
+                 num_chebyshev_its = 0,
+                 strong_dirichlet_DOF = [],
+                 laplace_null_space = False,
+                 par_info=None):
         """ Initialize the two-phase PCD inverse operator.
-        
+
         Parameters
         ----------
         Qp_visc : petsc4py matrix
-                  The pressure mass matrix with dynamic viscocity
-                  scaling.
+            The pressure mass matrix with dynamic viscocity
+            scaling.
         Qp_dens : petsc4py matrix
-                  The pressure mass matrix with density scaling.
+            The pressure mass matrix with density scaling.
         Ap_rho : petsc4py matrix
-                 The pressure Laplacian scaled with density scaling.
+            The pressure Laplacian scaled with density scaling.
         Np_rho : petsc4py matrix
-                 The pressure advection operator with inverse density
-                 scaling.
+            The pressure advection operator with inverse density
+            scaling.
         alpha : binary
-                True if problem is temporal, False if problem is steady
-                state.
+            True if problem is temporal, False if problem is steady
+            state.
         delta_t : float
-                Time step parameter.
+            Time step parameter.
         num_chebyshev_its : int
-                Number of chebyshev iteration steps to take. (0 indicates
-                the chebyshev semi iteration is not used)
+            Number of chebyshev iteration steps to take. (0 indicates
+            the chebyshev semi iteration is not used)
+        strong_dirichlet_DOF : lst
+            List of DOF with known, strongly enforced values.
+        laplace_null_space : binary
+            Indicates whether the pressure Laplace matrix has a
+            null space or not.
+        par_info : ParInfoClass
+            Provides parallel info.
         """
-        import LinearSolvers as LS
-        # ARB TODO : There should be an exception to ensure each of these
-        # matrices has non-zero elements along the diagonal.  I cannot
-        # think of a case where this would not be an error.
+        from . import LinearSolvers as LS
+
+        # Set attributes
         self.Qp_visc = Qp_visc
         self.Qp_dens = Qp_dens
         self.Ap_rho = Ap_rho
         self.Np_rho = Np_rho
         self.alpha = alpha
         self.delta_t = delta_t
-
         self.num_chebyshev_its = num_chebyshev_its
-        self._options = p4pyPETSc.Options()
+        self.strong_dirichlet_DOF = strong_dirichlet_DOF
+        self.laplace_null_space = laplace_null_space
+        self.par_info = par_info
+
+        self.options = p4pyPETSc.Options()
         self._create_constant_nullspace()
+        self._set_dirichlet_idx_set()
 
-        # Initialize mass matrix inverses.
-        self.kspQp_visc = p4pyPETSc.KSP().create()
-        self.kspQp_visc.setOperators(self.Qp_visc,self.Qp_visc)
-        self.kspQp_visc.setOptionsPrefix('innerTPPCDsolver_Qp_visc_')
-        self.kspQp_visc.setFromOptions()
-        self.kspQp_visc.setUp()
-        
-        self.kspQp_dens = p4pyPETSc.KSP().create()
-        self.kspQp_dens.setOperators(self.Qp_dens,self.Qp_dens)
-        self.kspQp_dens.setOptionsPrefix('innerTPPCDsolver_Qp_dens_')
-        self.kspQp_dens.setFromOptions()
-        self.kspQp_dens.setUp()
+        self.kspAp_rho = self.create_petsc_ksp_obj('innerTPPCDsolver_Ap_rho_',
+                                                   self.Ap_rho,
+                                                   self.laplace_null_space)
 
-        # Initialize Laplacian inverse.
-        self.kspAp_rho = p4pyPETSc.KSP().create()
-        self.kspAp_rho.setOperators(self.Ap_rho,self.Ap_rho)
-        self.kspAp_rho.setOptionsPrefix('innerTPPCDsolver_Ap_rho_')
-        self.kspAp_rho.setFromOptions()
-        if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
-            self.Ap_rho.setNullSpace(self.const_null_space)
-        self.kspAp_rho.setUp()
+        self.kspAp_rho.getOperators()[0].zeroRows(self.known_dof_is)
 
         if self.num_chebyshev_its:
             self.Qp_visc = LS.ChebyshevSemiIteration(self.Qp_visc,
@@ -1131,11 +1407,23 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
             self.Qp_dens = LS.ChebyshevSemiIteration(self.Qp_dens,
                                                      0.5,
                                                      2.0)
+        else:
+            pass
+            # Using ksp objects for the lumped mass matrices is much
+            # slower than pointwise division.
+            # self.kspQp_visc = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_visc_',
+            #                                             self.Qp_visc)
+            # self.kspQp_dens = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_dens_',
+            #                                             self.Qp_dens)
+
+    def getSize(self):
+        """ Return the total number of DOF for the shell problem. """
+        return self.Ap_rho.getSizes()[0][0]
 
     def apply(self,A,x,y):
         """
-        Applies the two-phase pressure-convection-diffusion 
-        preconditioner.
+        Applies the two-phase pressure-convection-diffusion
+        Schur complement approximation.
 
         Parameters
         ----------
@@ -1148,32 +1436,53 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         -------
         y : petsc4py vector
             Result of operator acting on x.
+
+        Notes
+        -----
+        When strong Dirichlet conditions are enforced on the pressure,
+        the PCD operator is applied to the set of unknowns that do not
+        have Dirichlet boundary conditions.  At the end, the solution
+        is then loaded into the original y-vector.
         """
-        tmp1 = self._create_copy_vec(x)
-        tmp2 = self._create_copy_vec(x)
-        tmp3 = self._create_copy_vec(x)
+        comm = Comm.get()
+        x_tmp = self._create_copy_vec(x)
+        tmp1 = self._create_copy_vec(x_tmp)
+        tmp2 = self._create_copy_vec(x_tmp)
 
         if self.num_chebyshev_its:
-            self.Qp_visc.apply(x,
+            self.Qp_visc.apply(x_tmp,
                                y,
                                self.num_chebyshev_its)
-            self.Qp_dens.apply(x,
+            self.Qp_dens.apply(x_tmp,
                                tmp1,
                                self.num_chebyshev_its)
         else:
-            self.kspQp_visc.solve(x,y)
-            self.kspQp_dens.solve(x,tmp1)
+            y.pointwiseDivide(x_tmp,self.Qp_visc.getDiagonal())
+            tmp1.pointwiseDivide(x_tmp,self.Qp_dens.getDiagonal())
+            # Pointwise divide appears to be much faster than ksp.
+            # self.kspQp_visc.solve(x_tmp,y)
+            # self.kspQp_dens.solve(x_tmp,tmp1)
 
         self.Np_rho.mult(tmp1,tmp2)
 
         if self.alpha is True:
-            tmp2.axpy(1./self.delta_t,x)
+            tmp2.axpy(old_div(1.,self.delta_t),x_tmp)
 
-        if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
+        if self.options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
             self.const_null_space.remove(tmp2)
 
-        self.kspAp_rho.solve(tmp2, tmp3)
-        y.axpy(1.,tmp3)
+        zero_array = numpy.zeros(len(self.known_dof_is.getIndices()))
+
+        tmp2.setValues(self.known_dof_is.getIndices(),zero_array)
+        tmp2.assemblyEnd()
+
+        self.kspAp_rho.solve(tmp2, tmp1)
+        y.axpy(1.,tmp1)
+        y.setValues(self.known_dof_is.getIndices(),zero_array)
+        y.assemblyEnd()
+
+        assert numpy.isnan(y.norm())==False, "Applying the schur complement \
+        resulted in not-a-number."
 
 def l2Norm(x):
     """
@@ -1185,21 +1494,21 @@ def l2Norm(x):
 def l1Norm(x):
     """
     Compute the parallel :math:`l_1` norm
-    
+
     The :math:`l_1` norm of a vector :math:`\mathbf{x} \in
     \mathbb{R}^n` is
-    
-    .. math:: 
-    
+
+    .. math::
+
        \| \mathbf{x} \|_{1} = \sum_{i=0} |x_i|
-    
+
     If Python is running in parallel, then the sum is over all
     dimensions on all processors so that the input must not contain
     "ghost" entries.
-    
+
     This implemtation works for a distributed array with no ghost
     components (each component must be on a single processor).
-    
+
     :param x: numpy array of length n
     :return: float
     """
@@ -1216,10 +1525,10 @@ def lInfNorm(x):
     .. math::
 
        \|x\|_{\infty} = \max_i |x_i|
-       
+
     This implemtation works for a distributed array with no ghost
     components (each component must be on a single processor).
-    
+
     :param x: numpy array of length n
     :return: float
     """
@@ -1230,17 +1539,17 @@ def wDot(x,y,h):
     """
     Compute the parallel weighted dot product of vectors x and y using
     weight vector h.
-    
+
     The weighted dot product is defined for a weight vector
     :math:`\mathbf{h}` as
 
-    .. math:: 
+    .. math::
 
        (\mathbf{x},\mathbf{y})_h = \sum_{i} h_{i} x_{i} y_{i}
-    
+
     All weight vector components should be positive.
 
-    :param x,y,h: numpy arrays for vectors and weight 
+    :param x,y,h: numpy arrays for vectors and weight
     :return: the weighted dot product
     """
     return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
@@ -1281,7 +1590,7 @@ def l2NormAvg(x):
     """
     Compute the arithmetic averaged l_2 norm (root mean squared norm)
     """
-    scale = 1.0/flcbdfWrappers.globalSum(len(x.flat))
+    scale = old_div(1.0,flcbdfWrappers.globalSum(len(x.flat)))
     return math.sqrt(scale*flcbdfWrappers.globalSum(numpy.dot(x,x)))
 
 
@@ -1295,7 +1604,7 @@ def l2Norm_local(x):
     return math.sqrt(numpy.dot(x,x))
 
 
-class WeightedNorm:
+class WeightedNorm(object):
     """
     Compute the weighted norm for time step control (not currently parallel)
     """
@@ -1314,13 +1623,13 @@ class WeightedNorm:
         self.tmp[:] = y
         self.tmp /= self.weight
         value = numpy.linalg.norm(self.tmp.flat,type)
-        return value/self.dim
+        return old_div(value,self.dim)
 
 
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-    
+
 
 # def test_MGV():
 #     n=2**8 + 1

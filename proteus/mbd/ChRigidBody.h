@@ -1,4 +1,7 @@
+//#pragma once
+
 #include "chrono/physics/ChSystemSMC.h"
+#include "chrono/physics/ChSystem.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/core/ChTransform.h"
@@ -6,20 +9,20 @@
 #include <fstream>
 
 using namespace chrono;
+using namespace chrono::collision;
 using namespace std;
 
 
 
 class cppSystem {
  public:
-  ChSystemSMC system;
+  ChSystem* system;
   double* gravity;
   double chrono_dt;
   std::string directory;
   cppSystem(double* gravity);
   void step(double proteus_dt, int n_substeps);
   void setChTimeStep(double dt);
-  void recordBodyList();
   void setGravity(double* gravity);
   void setDirectory(std::string dir);
   void setTimestepperType(std::string tstype, bool verbose);
@@ -33,6 +36,12 @@ class cppRigidBody {
   ChVector<> free_r;
   ChVector<> pos;
   ChVector<> pos_last;
+  ChVector<> pos0;
+  std::vector<ChVector<>> trimesh_pos;
+  std::vector<ChVector<>> trimesh_pos_last;
+  std::vector<ChVector<>> trimesh_pos0;
+  ChVector<> pos0_trimesh;
+  ChQuaternion<> rotq0_trimesh;
   ChVector<> vel;
   ChVector<> vel_last;
   ChVector<> acc;
@@ -45,6 +54,7 @@ class cppRigidBody {
   ChMatrix33<double> rotm_last;
   ChQuaternion<double> rotq;
   ChQuaternion<double> rotq_last;
+  ChQuaternion<double> rotq0;
   ChVector<> F;
   ChVector<> F_last;
   ChVector<> M;
@@ -56,6 +66,7 @@ class cppRigidBody {
   std::shared_ptr<ChLinkSpring> spring;
   /* ChVector <> inertia; */
   double* inertia;
+  ChTriangleMeshConnected trimesh;
   std::shared_ptr<ChBody> body;
   cppSystem* system;
   cppRigidBody(cppSystem* system);
@@ -63,6 +74,7 @@ class cppRigidBody {
   double hx(double* x, double t);
   double hy(double* x, double t);
   double hz(double* x, double t);
+  void calculate_init();
   void prestep(double* force, double* torque);
   void poststep();
   void setRotation(double* quat);
@@ -79,6 +91,7 @@ class cppRigidBody {
                                    double stiffness,
                                    double damping,
                                    double rest_length);
+  void addPrismaticLinkX(double* pris1);
   void setName(std::string name);
   void setPrescribedMotionPoly(double coeff1);
   void setPrescribedMotionSine(double a, double f);
@@ -86,37 +99,44 @@ class cppRigidBody {
                                  std::vector<double> y, std::vector<double> z,
                                  std::vector<double> ang, std::vector<double> ang2,
                                  std::vector<double> ang3, double t_max);
+  void getTriangleMeshSDF(ChVector<> pos_node,
+                          double* dist_n);
+  void getTriangleMeshVel(double *x,
+                          double dt,
+                          double *vel);
+  void updateTriangleMeshVisualisationPos();
 };
 
 cppSystem::cppSystem(double* gravity):
 gravity(gravity)
 {
+  system = new ChSystemSMC();
   chrono_dt = 0.000001;
-  system.Set_G_acc(ChVector<>(gravity[0], gravity[1], gravity[2]));
+  system->Set_G_acc(ChVector<>(gravity[0], gravity[1], gravity[2]));
   directory = "./";
   // SOLVER OPTIONS
-  system.SetSolverType(ChSolver::Type::MINRES);  // SOLVER_MINRES: good convergence, supports FEA, does not support DVI yet
-  auto msolver = std::static_pointer_cast<ChSolverMINRES>(system.GetSolver());
+  system->SetSolverType(ChSolver::Type::MINRES);  // SOLVER_MINRES: good convergence, supports FEA, does not support DVI yet
+  auto msolver = std::static_pointer_cast<ChSolverMINRES>(system->GetSolver());
   msolver->SetDiagonalPreconditioning(true);
-  system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
-  system.SetMaxItersSolverSpeed(100); // max iteration for iterative solvers
-  system.SetMaxItersSolverStab(100); // max iteration for stabilization (iterative solvers)
-  system.SetTolForce(1e-13);
-  //system.SetMaxItersSolverSpeed(100);  
-  //system.SetMaxItersSolverStab(100);  
-  //system.SetTolForce(1e-14); // default: 0.001
-  //system.SetMaxiter(200); // default: 6. Max constraints to reach tolerance on constraints.
-  //system.SetTol(1e-10); // default: 0.0002. Tolerance for keeping constraints together.
-  system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED); // used before: ChSystemSMC::INT_EULER_IMPLICIT_LINEARIZED
-  if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper())) {
+  system->SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
+  system->SetMaxItersSolverSpeed(100); // max iteration for iterative solvers
+  system->SetMaxItersSolverStab(100); // max iteration for stabilization (iterative solvers)
+  system->SetTolForce(1e-10);
+  //system->SetMaxItersSolverSpeed(100);  
+  //system->SetMaxItersSolverStab(100);  
+  //system->SetTolForce(1e-14); // default: 0.001
+  //system->SetMaxiter(200); // default: 6. Max constraints to reach tolerance on constraints.
+  //system->SetTol(1e-10); // default: 0.0002. Tolerance for keeping constraints together.
+  system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED); // used before: ChSystem::INT_EULER_IMPLICIT_LINEARIZED
+  if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper())) {
     mystepper->SetAlpha(-0.2);
   }
 }
 
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
   if (tstype == "HHT") {
-    system.SetTimestepperType(ChTimestepper::Type::HHT);
-      auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper());
+    system->SetTimestepperType(ChTimestepper::Type::HHT);
+      auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
       mystepper->SetAlpha(-0.2);
       mystepper->SetMaxiters(10);
       mystepper->SetAbsTolerances(1e-6);
@@ -126,64 +146,25 @@ void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
       mystepper->SetModifiedNewton(false);
     }
     else if (tstype == "Euler") {
-      system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
+      system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
     }
     else if (tstype == "Trapezoidal") {
-      system.SetTimestepperType(ChTimestepper::Type::TRAPEZOIDAL);
+      system->SetTimestepperType(ChTimestepper::Type::TRAPEZOIDAL);
     }
   }
 
 void cppSystem::setGravity(double* gravity)
 {
-  system.Set_G_acc(ChVector<>(gravity[0], gravity[1], gravity[2]));
+  system->Set_G_acc(ChVector<>(gravity[0], gravity[1], gravity[2]));
 }
 
 void cppSystem::step(double proteus_dt, int n_substeps=1)
 {
-  /* std::vector<std::shared_ptr<ChBody>>& bodylist = *system.Get_bodylist(); */
-  /* std::shared_ptr<ChBody> bod = bodylist[0]; */
-  /* GetLog() << "nan test2" << bod->GetPos() ; */
     double dt2 = proteus_dt/(double)n_substeps;
    for (int i = 0; i < n_substeps; ++i) {
-      /* GetLog() << dt2*i << " " << dt2 << " "  << i << " "<< n_substeps << bod->GetPos(); */
-     system.DoStepDynamics(dt2);
+     system->DoStepDynamics(dt2);
    }
 }
-
-void cppSystem::recordBodyList() {
-      std::vector<std::shared_ptr<ChBody>>& bodylist = *system.Get_bodylist();
-      double t = system.GetChTime();
-      if (t == 0) {
-          for (int i = 0; i<bodylist.size(); i++) {
-              std::shared_ptr<ChBody> bod = bodylist[i];
-              fstream myfile;
-              myfile.open (directory+bod->GetNameString()+".csv", std::ios_base::out);
-              myfile << "t,x,y,z,e0,e1,e2,e3,ux,uy,uz,ax,ay,az,Fx,Fy,Fz,Mx,My,Mz,\n";
-              myfile.close();
-          }
-      }
-      for (int i = 0; i<bodylist.size(); i++) {
-          std::shared_ptr<ChBody> bod = bodylist[i];
-          fstream myfile;
-          myfile.open (directory+bod->GetNameString()+".csv", std::ios_base::app);     
-          ChVector<> bpos = bod->GetPos();
-          ChVector<> bvel = bod->GetPos_dt();
-          ChVector<> bacc = bod->GetPos_dtdt();
-          ChVector<> bfor = bod->Get_Xforce();
-          ChVector<> btor = bod->Get_Xtorque();
-          ChQuaternion<> brot = bod->GetRot();
-          myfile << t << ",";     
-          myfile << bpos.x() << "," << bpos.y() << "," << bpos.z() << ",";     
-          myfile << brot.e0() << "," << brot.e1() << "," << brot.e2() << "," << brot.e3() << ",";     
-          myfile << bvel.x() << "," << bvel.y() << "," << bvel.z() << ",";     
-          myfile << bacc.x() << "," << bacc.y() << "," << bacc.z() << ",";     
-          myfile << bfor.x() << "," << bfor.y() << "," << bfor.z() << ",";     
-          myfile << btor.x() << "," << btor.y() << "," << btor.z() << ",";     
-          myfile << "\n";        
-          myfile.close();
-    }
-}
-
 
 void cppSystem::setChTimeStep(double dt) {
     chrono_dt = dt;
@@ -195,7 +176,7 @@ cppRigidBody::cppRigidBody(cppSystem* system):
 
   body = std::make_shared<ChBody>();
   // add body to system
-  /* system->system.AddBody(body); */ // now added externally in cython
+  /* system->system->AddBody(body); */ // now added externally in cython
   // basic attributes of body
   rotm = body->GetA();
   rotm_last = body->GetA();
@@ -204,11 +185,24 @@ cppRigidBody::cppRigidBody(cppSystem* system):
   body->SetMass(mass);
   free_x = {1., 1., 1.};
   free_r = {1., 1., 1.};
+  lock_motion_t_max = 0.;
 }
-
 
 void cppSystem::setDirectory(std::string dir) {
     directory = dir;
+}
+
+void cppRigidBody::updateTriangleMeshVisualisationPos() {
+  /* rotm = body->GetA(); */
+  for (int i = 0; i < trimesh_pos.size(); i++) {
+    ChVector<double> local = ChTransform<double>::TransformParentToLocal(trimesh_pos0[i],
+                                                                         pos0_trimesh,
+                                                                         rotq0_trimesh);
+    ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local,
+                                                                         pos,
+                                                                         rotq);
+    trimesh_pos[i].Set(xNew.x(), xNew.y(), xNew.z());
+  }
 }
 
 ChVector<double> cppRigidBody::hxyz(double* x, double t)
@@ -250,11 +244,28 @@ double cppRigidBody::hz(double* x, double t)
   return xNew.z() - x[2];
 }
 
+void cppRigidBody::calculate_init() {
+  pos0 = body->GetPos();
+  rotq0 = body->GetRot();
+  trimesh_pos.clear();
+  trimesh_pos0.clear();
+  auto trimesh_coords = trimesh.getCoordsVertices();
+  for (int i = 0; i < trimesh_coords.size(); i++) {
+  trimesh_pos0.push_back(ChVector<double>(trimesh_coords[i].x(),
+                                          trimesh_coords[i].y(),
+                                          trimesh_coords[i].z()));
+  trimesh_pos.push_back(ChVector<double>(trimesh_coords[i].x(),
+                                         trimesh_coords[i].y(),
+                                         trimesh_coords[i].z()));
+  }
+}
+
 void cppRigidBody::prestep(double* force, double* torque)
 {
   /* step to call before running chrono system step */
   pos_last = body->GetPos();
   vel_last = body->GetPos_dt();
+  trimesh_pos_last = trimesh.getCoordsVertices();
   acc_last = body->GetPos_dtdt();
   rotm_last = body->GetA();
   rotq_last = body->GetRot();
@@ -266,9 +277,9 @@ void cppRigidBody::prestep(double* force, double* torque)
   body->Empty_forces_accumulators();
   // calculate opposite force of gravity if free_x is 0
   double forceG[3]={0.,0.,0.};
-  if (free_x.x() == 0) {forceG[0] = -system->system.Get_G_acc().x()*body->GetMass();}
-  if (free_x.y() == 0) {forceG[1] = -system->system.Get_G_acc().y()*body->GetMass();}
-  if (free_x.z() == 0) {forceG[2] = -system->system.Get_G_acc().z()*body->GetMass();}
+  if (free_x.x() == 0) {forceG[0] = -system->system->Get_G_acc().x()*body->GetMass();}
+  if (free_x.y() == 0) {forceG[1] = -system->system->Get_G_acc().y()*body->GetMass();}
+  if (free_x.z() == 0) {forceG[2] = -system->system->Get_G_acc().z()*body->GetMass();}
   body->Accumulate_force(ChVector<double>(forceG[0]+force[0]*free_x.x(),
                                           forceG[1]+force[1]*free_x.y(),
                                           forceG[2]+force[2]*free_x.z()),
@@ -303,7 +314,7 @@ void cppRigidBody::poststep()
   F = body->Get_Xforce();
   M = body->Get_Xtorque();
   if (lock_motion_t_max > 0) {
-    double t = system->system.GetChTime();
+    double t = system->system->GetChTime();
     if (lock_motion_t_max < t && lock_motion->IsDisabled() == false) {
       lock_motion->SetDisabled(true);
     }
@@ -321,11 +332,11 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
   auto fixed_body = std::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
   fixed_body->SetBodyFixed(true);
-  system->system.Add(fixed_body);
+  system->system->Add(fixed_body);
   lock_motion = std::make_shared<ChLinkLockLock>();
   lock_motion_t_max = t_max;
   lock_motion->Initialize(body, fixed_body, fixed_body->GetCoord());
-  system->system.Add(lock_motion);
+  system->system->Add(lock_motion);
   if (x.size() > 0) {
     auto forced_motion = std::make_shared<ChFunction_Recorder>();
     for (int i = 0; i < x.size(); i++) {
@@ -380,10 +391,10 @@ void cppRigidBody::setPrescribedMotionPoly(double coeff1) {
   auto fixed_body = std::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
   fixed_body->SetBodyFixed(true);
-  system->system.Add(fixed_body);
+  system->system->Add(fixed_body);
   auto lock = std::make_shared<ChLinkLockLock>();
   lock->Initialize(body, fixed_body, fixed_body->GetCoord());
-  system->system.Add(lock);
+  system->system->Add(lock);
   auto forced_motion = std::make_shared<ChFunction_Poly>();
   forced_motion->Set_order(1);
   forced_motion->Set_coeff(coeff1, 1);
@@ -396,10 +407,10 @@ void cppRigidBody::setPrescribedMotionSine(double a, double f) {
   auto fixed_body = std::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
   fixed_body->SetBodyFixed(true);
-  system->system.Add(fixed_body);
+  system->system->Add(fixed_body);
   auto lock = std::make_shared<ChLinkLockLock>();
   lock->Initialize(body, fixed_body, fixed_body->GetCoord());
-  system->system.Add(lock);
+  system->system->Add(lock);
   auto forced_motion = std::make_shared<ChFunction_Sine>();
   forced_motion->Set_amp(a);
   forced_motion->Set_freq(f);
@@ -436,7 +447,7 @@ void cppRigidBody::addSpring(double stiffness,
   std::shared_ptr<ChBody> anchor_body = std::make_shared<ChBody>();
   anchor_body->SetPos(ChVector<>(anchor[0], anchor[1], anchor[2]));
   anchor_body->SetBodyFixed(true);
-  system->system.AddBody(anchor_body);
+  system->system->AddBody(anchor_body);
   spring->Initialize(body,
                      anchor_body,
                      true, // true for pos relative to bodies
@@ -446,7 +457,21 @@ void cppRigidBody::addSpring(double stiffness,
                      rest_length);
   spring->Set_SpringK(stiffness);
   spring->Set_SpringR(damping);
-  system->system.AddLink(spring);
+  system->system->AddLink(spring);
+}
+
+void cppRigidBody::addPrismaticLinkX(double* pris1)
+{
+  auto mybod2 = std::make_shared<ChBody>();
+  mybod2->SetName("PRIS1");
+  mybod2->SetPos(ChVector<>(pris1[0], pris1[1], pris1[2]));
+  mybod2->SetMass(0.00001);
+  mybod2->SetBodyFixed(true);
+  system->system->AddBody(mybod2);
+  auto mylink1 = std::make_shared<ChLinkLockPrismatic>();
+  auto mycoordsys1 = ChCoordsys<>(mybod2->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_Y));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+  mylink1->Initialize(mybod2, body, mycoordsys1);
+  system->system->AddLink(mylink1);
 }
 
 void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
@@ -460,36 +485,36 @@ void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
   fairlead->SetName("PRIS3");
   fairlead->SetPos(body->GetPos());
   fairlead->SetMass(0.00001);
-  system->system.AddBody(fairlead);
+  system->system->AddBody(fairlead);
   auto mybod2 = std::make_shared<ChBody>();
   mybod2->SetName("PRIS1");
   mybod2->SetPos(ChVector<>(pris1[0], pris1[1], pris1[2]));
   mybod2->SetMass(0.00001);
-  //mybod2->AddForce(-system->system.Get_G_acc());
+  //mybod2->AddForce(-system->system->Get_G_acc());
   //mybod2->SetBodyFixed(true);
-  system->system.AddBody(mybod2);
+  system->system->AddBody(mybod2);
   auto mybod3 = std::make_shared<ChBody>();
   mybod3->SetName("PRIS2");
   mybod3->SetPos(ChVector<>(pris2[0], pris2[1], pris2[2]));
   mybod3->SetBodyFixed(true);
-  system->system.AddBody(mybod3);
+  system->system->AddBody(mybod3);
 
   auto mylink1 = std::make_shared<ChLinkLockPrismatic>();
-  system->system.AddLink(mylink1);
+  system->system->AddLink(mylink1);
   auto mycoordsys1 = ChCoordsys<>(mybod2->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_Y));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   mylink1->Initialize(fairlead, mybod2, mycoordsys1);
 
 
 
   auto mylink2 = std::make_shared<ChLinkLockPrismatic>();
-  system->system.AddLink(mylink2);
+  system->system->AddLink(mylink2);
   auto mycoordsys2 = ChCoordsys<>(mybod3->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_X));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   mylink2->Initialize(mybod2, mybod3,mycoordsys2);
 
   auto mylink3 = std::make_shared<ChLinkLockSpherical>();
   //auto mylink3 = std::make_shared<ChLinkLockRevolute>();
   //mylink3->SetMotion_axis(ChVector<>(0.,1.,0.));
-  system->system.AddLink(mylink3);
+  system->system->AddLink(mylink3);
   mylink3->Initialize(fairlead, body, false, fairlead->GetCoord(), body->GetCoord());
 
 
@@ -505,11 +530,65 @@ void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
   spring->Set_SpringK(stiffness);
   spring->Set_SpringR(damping);
   spring->SetName("SPRING1");
-  system->system.AddLink(spring);
+  system->system->AddLink(spring);
 }
 
 void cppRigidBody::setName(std::string name) {
   body->SetNameString(name);
+}
+
+void cppRigidBody::getTriangleMeshSDF(ChVector<> pos,
+                                      double* dist_n) {
+  auto xxs = trimesh.getCoordsVertices();
+  auto nns = trimesh.getCoordsNormals();
+  ChVector<> dist_vec;
+  double min_dist=1e10;
+  double dist;
+  for (int i = 0; i < xxs.size(); i++) {
+    dist_vec = pos-xxs[i];
+    dist = dist_vec.Length();
+    if (dist < min_dist) {
+      min_dist = dist;
+    }
+    if (dist_vec.Dot(nns[i]) > 0) { // outside
+      min_dist = min_dist;
+    }
+    else {  // inside
+      min_dist = -min_dist;
+    }
+  }
+  dist_n[0] = min_dist;
+  // normal to shape
+  // actually just vector to closest node here
+  dist_n[1] = dist_vec[0];
+  dist_n[1] = dist_vec[1];
+  dist_n[2] = dist_vec[2];
+};
+
+void cppRigidBody::getTriangleMeshVel(double *x,
+                                      double dt,
+                                      double *vel) {
+  auto xxs = trimesh.getCoordsVertices();
+  auto nns = trimesh.getCoordsNormals();
+  double min_dist = 1e10;
+  ChVector<> p(x[0], x[1], x[2]);
+  ChVector<> d_vector(0.0);
+  ChVector<> ddlast;
+  // find closest node
+  int node_closest = -1;
+  for (int i = 0; i < xxs.size(); i++) {
+    double dist = (p - xxs[i]).Length();
+    if (dist < min_dist) {
+      min_dist = dist;
+      node_closest = i;
+    }
+  }
+  if (node_closest != -1) {
+    ddlast = xxs[node_closest]-trimesh_pos_last[node_closest];
+    vel[0] = ddlast.x()/dt;
+    vel[1] = ddlast.y()/dt;
+    vel[2] = ddlast.z()/dt;
+  }
 }
 
 
@@ -526,3 +605,42 @@ cppRigidBody * newRigidBody(cppSystem* system)
 }
 
 
+
+void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
+                      std::shared_ptr<ChBody> body2,
+                      ChSystem* system,
+                      ChCoordsys<> coordsys,
+                      double limit_X=0.,
+                      double limit_Y=0.,
+                      double limit_Z=0.,
+                      double limit_Rx=0.,
+                      double limit_Ry=0.,
+                      double limit_Rz=0.) {
+  auto mylink = std::make_shared<ChLinkLock>();
+  system->AddLink(mylink);
+  auto chlimit_X = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_X.Set_max(limit_X);
+  auto chlimit_Y = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_Y.Set_max(limit_Y);
+  auto chlimit_Z = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_Z.Set_max(limit_Z);
+  auto chlimit_Rx = ChLinkLimit();
+  chlimit_Rx.Set_max(limit_Rx);
+  chlimit_X.Set_active(true);
+  auto chlimit_Ry = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_Ry.Set_max(limit_Ry);
+  auto chlimit_Rz = ChLinkLimit();
+  chlimit_X.Set_active(true);
+  chlimit_Rz.Set_max(limit_Rz);
+  mylink->SetLimit_X(&chlimit_X);
+  mylink->SetLimit_Y(&chlimit_Y);
+  mylink->SetLimit_Z(&chlimit_Z);
+  mylink->SetLimit_Rx(&chlimit_Rx);
+  mylink->SetLimit_Ry(&chlimit_Ry);
+  mylink->SetLimit_Rz(&chlimit_Rz);
+  mylink->Initialize(body1, body2, coordsys);
+}

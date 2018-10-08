@@ -8,6 +8,12 @@ prefix = os.getenv('PROTEUS_PREFIX')
 if not prefix:
     prefix = sys.exec_prefix
 
+PROTEUS_OPT = os.getenv('PROTEUS_OPT')
+if not PROTEUS_OPT:
+    PROTEUS_OPT=['-O3','-DNDEBUG']
+else:
+    PROTEUS_OPT=PROTEUS_OPT.split()
+
 PROTEUS_INCLUDE_DIR = pjoin(prefix, 'include')
 PROTEUS_LIB_DIR = pjoin(prefix, 'lib')
 
@@ -61,7 +67,7 @@ if sys.platform == 'darwin':
     PROTEUS_BLAS_LIB_DIR = PROTEUS_LIB_DIR
     PROTEUS_BLAS_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
     PROTEUS_EXTRA_LINK_ARGS=platform_extra_link_args
-else:
+elif sys.platform == 'linux2':
     PROTEUS_BLAS_LIB   ='openblas'
     PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
 
@@ -69,10 +75,21 @@ PROTEUS_EXTRA_LINK_ARGS=[]
 
 PROTEUS_CHRONO_INCLUDE_DIR, PROTEUS_CHRONO_LIB_DIR = get_flags('chrono')
 
+PROTEUS_CHRONO_CXX_FLAGS = []
+with open(os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','ChronoConfig.cmake'),'r') as f:
+    for l in f:
+        if 'set(CHRONO_CXX_FLAGS' in l:
+            args = l.split()
+            for arg in args:
+                if arg[0] == '-':
+                    arg = arg.replace('"', '')
+                    arg = arg.replace(')', '')
+                    PROTEUS_CHRONO_CXX_FLAGS += [arg]
+
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
-PROTEUS_EXTRA_FC_LINK_ARGS=[]
+PROTEUS_EXTRA_FC_LINK_ARGS=platform_extra_link_args
 
-
+PROTEUS_NCURSES_INCLUDE_DIR, PROTEUS_NCURSES_LIB_DIR = get_flags('ncurses')
 
 if platform_blas_h:
     PROTEUS_BLAS_H = platform_blas_h
@@ -83,7 +100,7 @@ PROTEUS_LAPACK_INCLUDE_DIR, PROTEUS_LAPACK_LIB_DIR = get_flags('lapack')
 if platform_lapack_h:
     PROTEUS_LAPACK_H = platform_lapack_h
 else:
-    PROTEUS_LAPACK_H   = r'"clapack.h"'
+    PROTEUS_LAPACK_H   = r'"proteus_lapack.h"'
 
 if sys.platform == 'darwin':
     PROTEUS_LAPACK_LIB ='m'
@@ -141,11 +158,21 @@ PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = ['-g','-DMESH_INFO']
 if os.getenv('SIM_INCLUDE_DIR') is not None:
   PROTEUS_SCOREC_INCLUDE_DIRS = PROTEUS_SCOREC_INCLUDE_DIRS+[pjoin(prefix, 'include'), os.getenv('SIM_INCLUDE_DIR')]
   PROTEUS_SCOREC_LIB_DIRS = PROTEUS_SCOREC_LIB_DIRS+[pjoin(prefix, 'lib'), os.getenv('SIM_LIB_DIR')]
-  PROTEUS_SCOREC_LIBS = PROTEUS_SCOREC_LIBS
-  PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = PROTEUS_SCOREC_EXTRA_COMPILE_ARGS
+  PROTEUS_SCOREC_LIBS = PROTEUS_SCOREC_LIBS + ['gmi_sim',
+    'apf_sim',
+    'SimField',
+    'SimPartitionedMesh-mpi',
+    'SimPartitionWrapper-mpich3',
+    'SimMeshing',
+    'SimMeshTools',
+    'SimModel']
+
+  PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = PROTEUS_SCOREC_EXTRA_COMPILE_ARGS + ['-DPROTEUS_USE_SIMMETRIX']
+
+  PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = PROTEUS_SCOREC_EXTRA_COMPILE_ARGS + ['-DPROTEUS_USE_SIMMETRIX']
 
 PROTEUS_SUPERLU_INCLUDE_DIR = PROTEUS_PETSC_INCLUDE_DIR
-PROTEUS_SUPERLU_LIB_DIR = PROTEUS_PETSC_LIB_DIR
+PROTEUS_SUPERLU_LIB_DIR = pjoin(prefix, 'lib64')
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
 PROTEUS_SUPERLU_LIB = 'superlu'
 
@@ -162,3 +189,4 @@ if sys.platform == 'linux2':
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_ZOLTAN_LIB_DIR]
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_LAPACK_LIB_DIR]
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_BLAS_LIB_DIR]
+    PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_CHRONO_LIB_DIR]

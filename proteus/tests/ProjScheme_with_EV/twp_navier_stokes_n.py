@@ -1,8 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
-from twp_navier_stokes_p import *
-from NS_convergence import *
+from .twp_navier_stokes_p import *
+from .NS_convergence import *
 
-STABILIZATION_TYPE = STABILIZATION_TYPE 
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
     timeOrder=2
@@ -20,8 +20,6 @@ else:
 
 femSpaces = {0:basis,
 	     1:basis}
-#femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis,
-#             1:C0_AffineQuadraticOnSimplexWithNodalBasis}
 
 massLumping       = False
 numericalFluxType = None

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import traceback
 
@@ -10,8 +11,8 @@ def test_import():
             module = __import__('proteus.'+m,fromlist=['proteus'])
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print repr(traceback.extract_tb(exc_traceback))
-            print "Failed to import proteus.",m
+            print(repr(traceback.extract_tb(exc_traceback)))
+            print("Failed to import proteus.",m)
             successful_import=False
     assert(successful_import)
 

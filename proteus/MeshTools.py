@@ -4,14 +4,24 @@ Tools for creating and manipulating 1,2, and 3D meshes.
 .. inheritance-diagram:: proteus.MeshTools
    :parts: 1
 """
-from EGeometry import *
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import input
+from builtins import zip
+from builtins import next
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
+from .EGeometry import *
 import numpy as np
 import array
-from Archiver import *
-from LinearAlgebraTools import ParVec_petsc4py
+from .Archiver import *
+from .LinearAlgebraTools import ParVec_petsc4py
 from .Profiling import logEvent,memory
 
-class Node:
+class Node(object):
     """A numbered point in 3D Euclidean space
 
     :ivar N: node number
@@ -69,7 +79,7 @@ class Node:
         return  (self.p[X],self.p[Y],self.p[Z]) >= \
                (other.p[X],other.p[Y],other.p[Z])
 
-class Element:
+class Element(object):
     """An numbered polytope in R^n
 
     :ivar N: element number
@@ -112,23 +122,23 @@ class Edge(Element):
             self.basis = [self.nodes[1].p - self.nodes[0].p,
                           Edge.yUnitVector,
                           Edge.zUnitVector]
-            self.barycenter = (self.nodes[0].p + self.nodes[1].p)/2.0
+            self.barycenter = old_div((self.nodes[0].p + self.nodes[1].p),2.0)
             self.length = enorm(self.basis[0])
             self.normal = EVec(-self.basis[0][Y], self.basis[0][X],0.0)
             norm = enorm(self.normal)
             if  norm:
-                self.unitNormal = self.normal/norm
+                self.unitNormal = old_div(self.normal,norm)
             else:
                 #in 3D edge normals don't make sense in general so above
                 #may divide by zero if edge has zero projection onto x-y plane
                 self.normal = EVec(0.0, -self.basis[0][Z], self.basis[0][Y])
-                self.unitNormal = self.normal/enorm(self.normal)
+                self.unitNormal = old_div(self.normal,enorm(self.normal))
             self.diameter=self.length
             self.innerDiameter = self.length
             self.hasGeometricInfo = True
             self.nodeUnitNormalList=[]
-            self.nodeUnitNormalList.append(-self.basis[0]/self.length)
-            self.nodeUnitNormalList.append(self.basis[0]/self.length)
+            self.nodeUnitNormalList.append(old_div(-self.basis[0],self.length))
+            self.nodeUnitNormalList.append(old_div(self.basis[0],self.length))
             self.elementBoundaryUnitNormalList=self.nodeUnitNormalList
             self.elementBoundaryJacobianList=[Edge.xUnitVector,Edge.xUnitVector]
 def getNodesFromEdges(edges):
@@ -137,7 +147,7 @@ def getNodesFromEdges(edges):
     for e in edges:
         for n in e.nodes:
             nodes[n]=n
-    return nodes.values()
+    return list(nodes.values())
 
 class Polygon(Element):
     """An abstract 2D element--a closed set of Edges connecting a set of Nodes.
@@ -154,7 +164,7 @@ def getEdgesFromPolygons(polygons):
     for p in polygons:
         for e in p.edges:
             edges[e.nodes] = e
-    return edges.values()
+    return list(edges.values())
 
 class Triangle(Polygon):
     """A 2D triangular element"""
@@ -186,22 +196,22 @@ class Triangle(Polygon):
 
     def computeGeometricInfo(self):
         if not self.hasGeometricInfo:
-            self.barycenter = (self.nodes[0].p +
+            self.barycenter = old_div((self.nodes[0].p +
                                self.nodes[1].p +
-                               self.nodes[2].p)/3.0
+                               self.nodes[2].p),3.0)
             self.basis = [ n.p - self.nodes[0].p for n in self.nodes[1:]]
             self.basis.append(Triangle.zUnitVector)
             self.linearMap = ETen(self.basis[0],self.basis[1],self.basis[2])
             self.normal = ecross(self.basis[0],self.basis[1])
             normNormal = enorm(self.normal)
-            self.unitNormal = self.normal/normNormal
+            self.unitNormal = old_div(self.normal,normNormal)
             self.area = 0.5*normNormal
             for e in self.edges: e.computeGeometricInfo()
             self.diameter = max([e.length for e in self.edges])
             self.innerDiameter = 4.0*self.area/sum(
                 [e.length for e in self.edges])
             self.edgeUnitNormalList=[]
-            for nNt,eN in Triangle.edgeMap.iteritems():
+            for nNt,eN in Triangle.edgeMap.items():
                 unitNormal = self.edges[eN].unitNormal
                 if edot(unitNormal,self.nodes[nNt[0]].p - self.nodes[eN].p) < 0:
                     unitNormal*=-1.0
@@ -304,12 +314,9 @@ class Quadrilateral(Polygon):
             elif node.p[var1]==var1_max and node.p[var2]==var2_min:
                 newList[3] = node
 
-#        import pdb
-#        pdb.set_trace()
-
         for i,item in enumerate(newList):
             if not newList[i]:
-                assert 0,'Quadrialteral Mesh Generation Error '+`newList`+" i = "+`i`
+                assert 0,'Quadrialteral Mesh Generation Error '+str(newList)+" i = "+str(i)
         return newList
 
     def computeGeometricInfo(self):
@@ -366,8 +373,8 @@ class Quadrilateral(Polygon):
                         self.ymax = node.p[Y]
                     else:
                         pass
-                self.xmid = (self.xmin+self.xmax)/2.
-                self.ymid = (self.ymin+self.ymax)/2.
+                self.xmid = old_div((self.xmin+self.xmax),2.)
+                self.ymid = old_div((self.ymin+self.ymax),2.)
                 self.zmid = 0.
 
 class Polyhedron(Element):
@@ -444,19 +451,19 @@ class Tetrahedron(Polyhedron):
     def computeGeometricInfo(self):
         if not self.hasGeometricInfo:
             for t in self.triangles: t.computeGeometricInfo()
-            self.barycenter =(self.nodes[0].p +
+            self.barycenter =old_div((self.nodes[0].p +
                               self.nodes[1].p +
                               self.nodes[2].p +
-                              self.nodes[3].p)/4.0
+                              self.nodes[3].p),4.0)
             self.basis = [n.p - self.nodes[0].p for n in self.nodes[1:]]
             self.linearMap = ETen(self.basis[0],self.basis[1],self.basis[2])
-            self.volume = abs(edet(self.linearMap))/6.0
+            self.volume = old_div(abs(edet(self.linearMap)),6.0)
             self.diameter = max([t.diameter for t in self.triangles])
              #Zhang's formula for rho=innerDiameter of a simplex
             self.innerDiameter = 6.0*self.volume/sum([t.area for t in
                                                       self.triangles])
             self.triangleUnitNormalList=[]
-            for nNt,tN in Tetrahedron.triangleMap.iteritems():
+            for nNt,tN in Tetrahedron.triangleMap.items():
                 unitNormal = self.triangles[tN].unitNormal
                 if edot(unitNormal,self.nodes[nNt[0]].p - self.nodes[tN].p) < 0:
                     unitNormal *= -1.0
@@ -481,13 +488,13 @@ class Hexahedron(Polyhedron):
         self.elementBoundaries = self.quadrilaterals
 
 #todo add enum34 and replace with real Python enum
-class MeshParallelPartitioningTypes:
+class MeshParallelPartitioningTypes(object):
     """
     fake an enum for parallel partitioning options
     """
     element = 0 ;  node     = 1
 
-class Mesh:
+class Mesh(object):
     """A partition of a domain in R^n into elements.
 
     This is the base class for meshes. Contains routines for
@@ -574,9 +581,9 @@ class Mesh:
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
     def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
-        import Comm
-        import flcbdfWrappers
+        from . import cmeshTools
+        from . import Comm
+        from . import flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
         logEvent(memory("partitionMesh 1","MeshTools"),level=4)
@@ -641,9 +648,9 @@ class Mesh:
         # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
     def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
-        import Comm
-        import flcbdfWrappers
+        from . import cmeshTools
+        from . import Comm
+        from . import flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
         logEvent(memory("partitionMesh 1","MeshTools"),level=4)
@@ -654,7 +661,11 @@ class Mesh:
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
         logEvent(memory("partitionMesh 2","MeshTools"),level=4)
         if parallelPartitioningType == MeshParallelPartitioningTypes.node:
-            #mwf for now always gives 1 layer of overlap
+            logEvent("Starting nodal partitioning")#mwf for now always gives 1 layer of overlap
+            logEvent("filebase"+`filebase`)
+            logEvent("base"+`base`)
+            logEvent("nLayersOfOverlap" +`nLayersOfOverlap`)
+            logEvent("parallelPartitioningType " +`parallelPartitioningType`)
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,
@@ -664,6 +675,7 @@ class Mesh:
              self.edgeOffsets_subdomain_owned,
              self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
+            logEvent("Starting element partitioning")
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,
@@ -725,16 +737,16 @@ class Mesh:
                 self.arEBGridCollection = SubElement(ar.domain,"Grid",{"Name":"EBMesh "+name,
                                                                        "GridType":"Collection",
                                                                        "CollectionType":"Temporal"})
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             #
             #topology and geometry
             #
             if ar.global_sync:
                 self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":"%e" % (t,),"Name":"%i" % (tCount,)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                                       "NumberOfElements":"%i" % (self.globalMesh.nElements_global,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -747,13 +759,13 @@ class Mesh:
                                        "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+`tCount`,
+                            ar.create_dataset_sync('elements'+name+str(tCount),
                                                     offsets=self.globalMesh.elementOffsets_subdomain_owned,
                                                     data=self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+`tCount`,
+                            ar.create_dataset_sync('nodes'+name+str(tCount),
                                                    offsets=self.globalMesh.nodeOffsets_subdomain_owned,
                                                    data=self.nodeArray[:self.nNodes_owned])
                     else:
@@ -762,10 +774,10 @@ class Mesh:
                     assert False, "global_sync not  supported with text heavy data"
             else:
                 self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":"%e" % (t,),"Name":"%i" % (tCount,)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.nElements_owned)})
+                                       "NumberOfElements":"%i" % (self.nElements_owned,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -778,17 +790,17 @@ class Mesh:
                                        "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`,data=self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`,data=self.nodeArray)
+                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount),data=self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount),data=self.nodeArray)
                     else:
-                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -800,11 +812,11 @@ class Mesh:
             #
             if EB:
                 self.arEBGrid = SubElement(self.arEBGridCollection,"Grid",{"GridType":"Uniform"})
-                self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":"%e" % (t,),"Name":"%i" % (tCount,)})
                 Xdmf_ElementEBTopology = "Triangle" #cek hack
                 ebtopology = SubElement(self.arEBGrid,"Topology",
                                     {"Type":Xdmf_ElementEBTopology,
-                                     "NumberOfElements":str(self.nElementBoundaries_global)})
+                                     "NumberOfElements":"%i" % (self.nElementBoundaries_global,)})
                 ebelements = SubElement(ebtopology,"DataItem",
                                     {"Format":ar.dataItemFormat,
                                      "DataType":"Int",
@@ -817,16 +829,16 @@ class Mesh:
                                      "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+`ar.comm.rank()`+name+`tCount`
-                        ebnodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+str(ar.comm.rank())+name+str(tCount)
+                        ebnodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('elementBoundaries'+`ar.comm.rank()`+name+`tCount`, data = self.elementBoundaryNodesArray)
+                            ar.create_dataset_async('elementBoundaries'+str(ar.comm.rank())+name+str(tCount), data = self.elementBoundaryNodesArray)
                             #ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
                     else:
-                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+`tCount`
-                        ebnodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+str(tCount)
+                        ebnodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elementBoundaries'+name+`tCount`,self.elementBoundaryNodesArray)
+                            ar.hdfFile.createArray("/",'elementBoundaries'+name+str(tCount),self.elementBoundaryNodesArray)
                             #ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
                 else:
                     SubElement(ebelements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elementBoundaries"+name+".txt"})
@@ -845,7 +857,7 @@ class Mesh:
                                      {"Format":ar.dataItemFormat,
                                       "DataType":"Int",
                                       "Precision":"4",
-                                      "Dimensions":str(self.nNodes_global)})
+                                      "Dimensions":"%i" % (self.nNodes_global,)})
                 elemMapAtt = SubElement(self.arGrid,"Attribute",
                                         {"Name":"CellMapL2G",
                                          "AttributeType":"Scalar",
@@ -854,21 +866,21 @@ class Mesh:
                                      {"Format":ar.dataItemFormat,
                                       "DataType":"Int",
                                       "Precision":"4",
-                                      "Dimensions":str(self.nElements_owned)})
+                                      "Dimensions":"%i" % (self.nElements_owned,)})
 
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+`ar.comm.rank()`+name+`tCount`
-                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+`ar.comm.rank()`+name+`tCount`
+                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+str(ar.comm.rank())+name+str(tCount)
+                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+str(ar.comm.rank())+name+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('nodeMapL2G'+`ar.comm.rank()`+name+`tCount`, data=self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.create_dataset_async('cellMapL2G'+`ar.comm.rank()`+name+`tCount`, data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                            ar.create_dataset_async('nodeMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.nodeNumbering_subdomain2global)
+                            ar.create_dataset_async('cellMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                     else:
-                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+`tCount`
-                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+`tCount`
+                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+str(tCount)
+                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'nodeMapL2G'+name+`tCount`,self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.hdfFile.createArray("/",'cellMapL2G'+name+`tCount`,self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodeMapL2G'+name+str(tCount),self.globalMesh.nodeNumbering_subdomain2global)
+                            ar.hdfFile.createArray("/",'cellMapL2G'+name+str(tCount),self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                 else:
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodeMapL2G"+name+".txt"})
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/cellMapL2G"+name+".txt"})
@@ -954,14 +966,14 @@ class Mesh:
                                                            "Dimensions":"%i" % (self.nElementBoundaries_global,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                        ar.create_dataset_async("nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.nodeMaterialTypes)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                        ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
+                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                        ar.create_dataset_async("nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.nodeMaterialTypes)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
                         if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                            ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
+                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                            ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
                     else:
                         nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
                         ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
@@ -979,7 +991,7 @@ class Mesh:
                     SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
             #done with material types
     def buildFromC(self,cmesh):
-        import cmeshTools
+        from . import cmeshTools
         #
         logEvent(memory("buildFromC","MeshTools"),level=4)
         self.cmesh = cmesh
@@ -1029,6 +1041,45 @@ class Mesh:
          self.hMin,
          self.sigmaMax,
          self.volume) = cmeshTools.buildPythonMeshInterface(self.cmesh)
+        # print("from C")
+        # print  (self.nElements_global,
+        #  self.nNodes_global,
+        #  self.nNodes_element,
+        #  self.nNodes_elementBoundary,
+        #  self.nElementBoundaries_element,
+        #  self.nElementBoundaries_global,
+        #  self.nInteriorElementBoundaries_global,
+        #  self.nExteriorElementBoundaries_global,
+        #  self.max_nElements_node,
+        #  self.nEdges_global,
+        #  self.max_nNodeNeighbors_node,
+        #  self.elementNodesArray,
+        #  self.nodeElementsArray,
+        #  self.nodeElementOffsets,
+        #  self.elementNeighborsArray,
+        #  self.elementBoundariesArray,
+        #  self.elementBoundaryNodesArray,
+        #  self.elementBoundaryElementsArray,
+        #  self.elementBoundaryLocalElementBoundariesArray,
+        #  self.interiorElementBoundariesArray,
+        #  self.exteriorElementBoundariesArray,
+        #  self.edgeNodesArray,
+        #  self.nodeStarArray,
+        #  self.nodeStarOffsets,
+        #  self.elementMaterialTypes,
+        #  self.elementBoundaryMaterialTypes,
+        #  self.nodeMaterialTypes,
+        #  self.nodeArray,
+        #  self.elementDiametersArray,
+        #  self.elementInnerDiametersArray,
+        #  self.elementBoundaryDiametersArray,
+        #  self.elementBarycentersArray,
+        #  self.elementBoundaryBarycentersArray,
+        #  self.nodeDiametersArray,
+        #  self.nodeSupportArray,
+        #  self.h,
+        #  self.hMin,
+        #  self.volume)
         self.hasGeometricInfo = True
         #default to single processor
         self.nNodes_owned = self.nNodes_global
@@ -1037,7 +1088,7 @@ class Mesh:
         self.nEdges_owned = self.nEdges_global
         logEvent(memory("buildFromC","MeshTools"),level=4)
     def buildFromCNoArrays(self,cmesh):
-        import cmeshTools
+        from . import cmeshTools
         #
         logEvent(memory("buildFromC","MeshTools"),level=4)
         self.cmesh = cmesh
@@ -1059,23 +1110,20 @@ class Mesh:
         self.hasGeometricInfo = False
         logEvent(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
+        import itertools
         if self.nodeStarArray is None:
-            #cek old
             self.nodeStarList=[]
             for n in range(self.nNodes_global):
-                self.nodeStarList.append([])
-            for eNodes in self.edgeNodesArray:
-                self.nodeStarList[eNodes[0]].append(eNodes[1])
-                self.nodeStarList[eNodes[1]].append(eNodes[0])
-            #cek new
+                self.nodeStarList.append(set())
+            for i_ele in range(self.nElements_global): #: is this OK for parallel mesh?
+                for n1,n2 in itertools.permutations(self.elementNodesArray[i_ele],2):#: works for combination of triangle and quadrilateral 
+                    #: if n1<self.nNodes_global: #: Saving only locally owned node is not enough; should include ghost node
+                    self.nodeStarList[n1].add(n2) #: does not contain itself; use set() instead of list since each pair is visited 1 or 2 times for 2D mesh
             self.nodeStarOffsets = np.zeros((self.nNodes_global+1,),'i')
             lenNodeStarArray=0
             for nN in range(1,self.nNodes_global+1):
-                self.nodeStarOffsets[nN] = self.nodeStarOffsets[nN-1] + len(self.nodeStarList[nN])
-            self.nodeStarArray = np.array((self.nodeStarOffsets[-1],),'i')
-            for nN in range(self.nNodes_global):
-                for nN_star,offset in enumerate(range(self.nodeStarOffsets[nN],self.nodeStarOffsets[nN+1])):
-                    self.nodeStarArray[offset] = self.nodeStarList[nN][nN_star]
+                self.nodeStarOffsets[nN] = self.nodeStarOffsets[nN-1] + len(self.nodeStarList[nN-1])
+            self.nodeStarArray =np.fromiter(itertools.chain.from_iterable(self.nodeStarList),'i')
             del self.nodeStarList
     def buildArraysFromLists(self):
         #nodes
@@ -1100,7 +1148,7 @@ class Mesh:
         for eN in range(self.nElements_global):
             for nN_element in range(self.nNodes_element):
                 nN = self.elementNodesArray[eN,nN_element]
-                if nodeElementsDict.has_key(nN):
+                if nN in nodeElementsDict:
                     nodeElementsDict[nN].append(eN)
                 else:
                     nodeElementsDict[nN] = [eN]
@@ -1109,13 +1157,13 @@ class Mesh:
         #mwf make a 1d array now
         #self.nodeElementsArray = np.zeros((self.nNodes_global,self.max_nElements_node),'i')
         self.nodeElementOffsets = np.zeros((self.nNodes_global+1,),'i')
-        for nN,elementList in nodeElementsDict.iteritems():
+        for nN,elementList in nodeElementsDict.items():
             self.nElements_node[nN] = len(elementList)
             self.nodeElementOffsets[nN+1] = self.nodeElementOffsets[nN]+self.nElements_node[nN]
             #for eN_element,eN in enumerate(elementList):
             #    self.nodeElementsArray[nN,eN_element]=eN
         self.nodeElementsArray = np.zeros((self.nodeElementOffsets[self.nNodes_global],),'i')
-        for nN,elementList in nodeElementsDict.iteritems():
+        for nN,elementList in nodeElementsDict.items():
             for eN_element,eN in enumerate(elementList):
                 self.nodeElementsArray[self.nodeElementOffsets[nN]+eN_element]=eN
             #
@@ -1365,8 +1413,8 @@ class Mesh:
         xfile=filename+'_x.grf'
         yfile=filename+'_y.grf'
         zfile=filename+'_z.grf'
-        print 'Storing edge information in %s, %s, and %s' % \
-              (xfile,yfile,zfile)
+        print('Storing edge information in %s, %s, and %s' % \
+              (xfile,yfile,zfile))
         xOut = open(xfile,'w')
         yOut = open(yfile,'w')
         zOut = open(zfile,'w')
@@ -1398,24 +1446,24 @@ class Mesh:
         yedges=filename+'_y'
         zedges=filename+'_z'
         #the following is for debugging: plot each tet seperately
-        nT = len(self.edgeList)/6
+        nT = old_div(len(self.edgeList),6)
         plotcommand = "-r \"load " + xfile + \
                       ", load " + yfile + \
                       ", load " + zfile
         plots=''
         for i in range(nT):
             plots = plots + \
-                    ", figure(" +`i+1`+")" \
+                    ", figure(" +str(i+1)+")" \
                     ", axis([0 1 0 1 0 1]), plot3("+xedges+\
-                    "(:,"+`i`+"*6+1:("+`i`+"+1)*6),"+yedges+\
-                    "(:,"+`i`+"*6+1:("+`i`+"+1)*6),"+zedges+\
-                    "(:,"+`i`+"*6+1:("+`i`+"+1)*6),\'b-\') "
+                    "(:,"+str(i)+"*6+1:("+str(i)+"+1)*6),"+yedges+\
+                    "(:,"+str(i)+"*6+1:("+str(i)+"+1)*6),"+zedges+\
+                    "(:,"+str(i)+"*6+1:("+str(i)+"+1)*6),\'b-\') "
         plotcommand = plotcommand + plots +'\"'
         cmdOut = open(cmdfile,'w')
         cmdOut.write(plotcommand)
         cmdOut.close()
         import os
-        print 'Calling matlab to view mesh'
+        print('Calling matlab to view mesh')
         os.execlp('matlab',
                   'matlab',
                   '-nodesktop',
@@ -1440,12 +1488,12 @@ class Mesh:
                       ","+yedges+\
                       ","+zedges+\
                       ",\'b-\')"
-        print plotcommand
+        print(plotcommand)
         cmdOut = open(cmdfile,'w')
         cmdOut.write(plotcommand)
         cmdOut.close()
         import os
-        print 'Calling matlab to view mesh'
+        print('Calling matlab to view mesh')
         os.execlp('matlab',
                   'matlab',
                   '-nodesktop',
@@ -1461,7 +1509,7 @@ class Mesh:
     def writeEdgesGnuplot(self,filename):
         """store coordinates in files formatted for Matlab"""
         datfile=filename+'.dat'
-        print 'Storing edge information in %s' % datfile
+        print('Storing edge information in %s' % datfile)
         edgesOut = open(datfile,'w')
         for edge in self.edgeList:
             dataline = '%14.8e %14.8e %14.8e \n' % \
@@ -1478,7 +1526,7 @@ class Mesh:
     def writeEdgesGnuplot2(self,filename):
         """store coordinates in files formatted for Matlab"""
         datfile=filename+'.dat'
-        print 'Storing edge information in %s' % datfile
+        print('Storing edge information in %s' % datfile)
         edgesOut = open(datfile,'w')
         for n0,n1 in self.edgeNodesArray:
             dataline = '%14.8e %14.8e %14.8e \n' % \
@@ -1501,7 +1549,7 @@ class Mesh:
         cmdOut.write(cmd)
         cmdOut.close()
         from os import execlp
-        print 'Calling gnuplot to view mesh'
+        print('Calling gnuplot to view mesh')
         execlp('gnuplot','gnuplot',cmdfile,'-')
     def viewMeshGnuplotPipe(self,filename):
         cmdfile = filename +'.cmd'
@@ -1512,12 +1560,12 @@ class Mesh:
         cmdOut.write(cmd)
         cmdOut.close()
         from os import execlp
-        print 'Calling gnuplot to view mesh'
+        print('Calling gnuplot to view mesh')
         from os import popen
         gnuplot = popen('gnuplot','w')
         gnuplot.write(cmd+'\n')
         gnuplot.flush()
-        raw_input('Please press return to continue... \n')
+        input('Please press return to continue... \n')
     def viewMeshGnuplotPipePar(self,filenames):
         from os import popen
         gnuplot = popen('gnuplot','w')
@@ -1530,16 +1578,16 @@ class Mesh:
             cmdOut.write(cmd)
             cmdOut.close()
             from os import execlp
-            print 'Calling gnuplot to view mesh'
+            print('Calling gnuplot to view mesh')
             gnuplot.write(cmd+'\n')
             gnuplot.flush()
-        raw_input('Please press return to continue... \n')
+        input('Please press return to continue... \n')
 
     def convertFromPUMI(self, PUMIMesh, faceList,regList, parallel=False, dim=3):
-        import cmeshTools
-        import MeshAdaptPUMI
-        import flcbdfWrappers
-        import Comm
+        from . import cmeshTools
+        from . import MeshAdaptPUMI
+        from . import flcbdfWrappers
+        from . import Comm
         comm = Comm.get()
         self.cmesh = cmeshTools.CMesh()
         if parallel:
@@ -1548,9 +1596,12 @@ class Mesh:
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
-          if(PUMIMesh.isReconstructed()):
+          if(PUMIMesh.isReconstructed()==1):
             logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
+          elif(PUMIMesh.isReconstructed()==2):
+            logEvent("Material arrays updating based on better reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays2(self.subdomainMesh.cmesh);
           else:
               logEvent("Material arrays updating based on geometric model.\n")
               for i in range(len(faceList)):
@@ -1604,8 +1655,12 @@ class Mesh:
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          if(PUMIMesh.isReconstructed()):
+          if(PUMIMesh.isReconstructed()==1):
+            logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.cmesh);
+          elif(PUMIMesh.isReconstructed()==2):
+            logEvent("Material arrays updating based on better reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays2(self.cmesh);
           else:
               for i in range(len(faceList)):
                 for j in range(len(faceList[i])):
@@ -1628,7 +1683,7 @@ class MultilevelMesh(Mesh):
         self.meshList=[]
         self.elementParents=None
     def buildFromC(self,cmultilevelMesh):
-        import cmeshTools
+        from . import cmeshTools
         self.cmultilevelMesh = cmultilevelMesh
         (self.nLevels,
          self.cmeshList,
@@ -1648,7 +1703,7 @@ class MultilevelMesh(Mesh):
         for l in range(1,self.nLevels):
             self.elementParentsArrayList.append(self.elementParents[l])
             len_children=0
-            for children in self.elementChildren[l-1].values():
+            for children in list(self.elementChildren[l-1].values()):
                 len_children += len(children)
             self.elementChildrenArrayList.append(np.zeros((len_children,),'i'))
             self.elementChildrenOffsetsList.append(np.zeros((self.meshList[l-1].nElements_global+1,),'i'))
@@ -1706,11 +1761,11 @@ class EdgeGrid(Mesh):
         #dimensions and ranges
         self.nx=nx
         self.ex=nx-1
-        self.nRange_x = range(nx)
-        self.eRange_x = range(self.ex)
+        self.nRange_x = list(range(nx))
+        self.eRange_x = list(range(self.ex))
         #lengths
         self.Lx=Lx
-        self.dx = Lx/self.ex
+        self.dx = old_div(Lx,self.ex)
         #node coordinates
         self.nodeGridArray = np.zeros((self.nx,3),'d')
         for i in self.nRange_x:
@@ -1735,7 +1790,7 @@ class EdgeGrid(Mesh):
             #fine grid index of edge nodes
             for rn,rnii in enumerate(refEdge_nodeIndeces):
                 nii = rnii + ii
-                edgeNodeNumbers[rn]=nii/2
+                edgeNodeNumbers[rn]=old_div(nii,2)
             self.edgeNodesArray[eN,:]=edgeNodeNumbers
         #Mesh interface
         self.nNodes_global=self.nx
@@ -1771,15 +1826,15 @@ class QuadrilateralGrid(Mesh):
         self.qy = ny-1
         self.qxy = self.qx*self.qy
         #ranges
-        self.nRange_x = range(self.nx)
-        self.nRange_y = range(self.ny)
-        self.qRange_x = range(self.qx)
-        self.qRange_y = range(self.qx)
+        self.nRange_x = list(range(self.nx))
+        self.nRange_y = list(range(self.ny))
+        self.qRange_x = list(range(self.qx))
+        self.qRange_y = list(range(self.qx))
         #lengths
         self.Lx=Lx
         self.Ly=Ly
-        self.dx = Lx/self.eXx
-        self.dy = Ly/self.eYy
+        self.dx = old_div(Lx,self.eXx)
+        self.dy = old_div(Ly,self.eYy)
         #node coordinates
         self.nodeGridArray=np.zeros((nx,ny,3),'d')
         for i in self.nRange_x:
@@ -1836,14 +1891,14 @@ class QuadrilateralGrid(Mesh):
                 for rn,rniijj in enumerate(refQuad_NodeIndeces):
                     nii = rniijj[I] + ii
                     njj = rniijj[J] + jj
-                    nN = (nii/2)*self.ny + njj/2
+                    nN = (old_div(nii,2))*self.ny + old_div(njj,2)
                     quadNodeNumbers[rn]=nN
                 self.quadrilateralNodesArray[qN][:]=quadNodeNumbers
                 #edges
                 for re,reiijj in enumerate(refQuad_EdgeIndeces):
                     eii = reiijj[I] + ii
                     ejj = reiijj[J] + jj
-                    eN = (eii/2)*self.eXYy + (eii%2)*self.eYy + ejj/2
+                    eN = (old_div(eii,2))*self.eXYy + (eii%2)*self.eYy + old_div(ejj,2)
                     quadEdgeNumbers[re]=eN
                     #nodes
                     for n,rn in enumerate(refQuad_EdgeNodes[re]):
@@ -1952,15 +2007,15 @@ class RectangularGrid(Mesh):
 
         #dimensions of hexahedra
         if self.nHx>0:
-            hx = float(Lx)/(nx-1)
+            hx = old_div(float(Lx),(nx-1))
         else:
             hx = 1.0
         if self.nHy>0:
-            hy = float(Ly)/(ny-1)
+            hy = old_div(float(Ly),(ny-1))
         else:
             hy=1.0
         if self.nHz>0:
-            hz = float(Lz)/(nz-1)
+            hz = old_div(float(Lz),(nz-1))
         else:
             hz=1.0
         self.nodeDict={}
@@ -2145,7 +2200,7 @@ class RectangularGrid(Mesh):
         RectangularGrid.__init__(self,NX,NY,NZ,
                                  oldMesh.Lx,oldMesh.Ly,oldMesh.Lz)
         childrenDict={}
-        for IJK,e in oldMesh.elementDict.iteritems():
+        for IJK,e in oldMesh.elementDict.items():
             I = IJK[0]
             J = IJK[1]
             K = IJK[2]
@@ -2214,10 +2269,10 @@ class TetrahedralMesh(Mesh):
     def meshType(self):
         return 'simplex'
     def computeGeometricInfo(self):
-        import cmeshTools
+        from . import cmeshTools
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
     def generateTetrahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateTetrahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz,self.cmesh)
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
@@ -2312,7 +2367,7 @@ class TetrahedralMesh(Mesh):
             T.computeGeometricInfo()
             self.hMax = max(T.diameter,self.hMax)
             self.hMin = min(T.diameter,self.hMin)
-            self.sigmaMax = max(T.diameter/T.innerDiameter,self.sigmaMax)
+            self.sigmaMax = max(old_div(T.diameter,T.innerDiameter),self.sigmaMax)
             self.totalVolume += T.volume
     def buildLists(self):
         self.buildListsNodes()
@@ -2322,17 +2377,17 @@ class TetrahedralMesh(Mesh):
         self.elementList = self.tetrahedronList
         self.elementBoundaryList = self.triangleList
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -2340,7 +2395,7 @@ class TetrahedralMesh(Mesh):
             self.edgeList.append(self.edgeDict[k])
 
     def buildListsTriangles(self):
-        keyList = self.triangleDict.keys()
+        keyList = list(self.triangleDict.keys())
         keyList.sort()
         self.triangleList=[]
         for tN,k in enumerate(keyList):
@@ -2349,7 +2404,7 @@ class TetrahedralMesh(Mesh):
         self.polygonList = self.triangleList
 
     def buildListsTetrahedra(self):
-        keyList = self.tetrahedronDict.keys()
+        keyList = list(self.tetrahedronDict.keys())
         keyList.sort()
         self.tetrahedronList=[]
         for TN,k in enumerate(keyList):
@@ -2410,7 +2465,7 @@ class TetrahedralMesh(Mesh):
 
     def registerEdges(self,t):
         for en,e in enumerate(t.edges):
-            if self.edgeDict.has_key(e.nodes):
+            if e.nodes in self.edgeDict:
                 t.edges[en]=self.edgeDict[e.nodes]
             else:
                 eN=len(self.edgeDict)
@@ -2419,7 +2474,7 @@ class TetrahedralMesh(Mesh):
 
     def registerTriangles(self,T):
         for tn,t in enumerate(T.triangles):
-            if self.triangleDict.has_key(t.nodes):
+            if t.nodes in self.triangleDict:
                 T.triangles[tn]=self.triangleDict[t.nodes]
             else:
                 t.N=len(self.triangleDict)
@@ -2427,7 +2482,7 @@ class TetrahedralMesh(Mesh):
                 self.registerEdges(t)
 
     def registerNode(self,node):
-        if self.nodeDict.has_key(node):
+        if node in self.nodeDict:
             node = self.nodeDict[node]
         else:
             node.N = len(self.nodeDict)
@@ -2444,7 +2499,7 @@ class TetrahedralMesh(Mesh):
         tets = []
         tetEdges=set()
         tetTriangles=set()
-        logEvent("Reading "+`filename`+" and building node lists for tetrahedra,triangles, and edges")
+        logEvent("Reading "+str(filename)+" and building node lists for tetrahedra,triangles, and edges")
         #assume test are ordered by tet number
         while (columns[0] == 'E4T'):
             nodeNumbers = [int(c) - adhBase for c in columns[2:6]]
@@ -2462,7 +2517,7 @@ class TetrahedralMesh(Mesh):
                              (nodeNumbers[2],nodeNumbers[3])])
             line = meshIn.readline()
             columns = line.split()
-        print "Building node list and dict"
+        print("Building node list and dict")
         #assume nodes are ordered by node number
         while (len(columns) == 5):
             newNode = Node(int(columns[1]) - adhBase,
@@ -2473,22 +2528,22 @@ class TetrahedralMesh(Mesh):
             self.nodeDict[newNode]=newNode
             line = meshIn.readline()
             columns = line.split()
-        print "Number of tetrahedra:"+`len(tets)`
-        print "Number of triangles :"+`len(tetTriangles)`
-        print "Number of edges     :"+`len(tetEdges)`
-        print "Number of nodes     :"+`len(self.nodeList)`
-        print "Number of objects   :"+`len(tetEdges)+len(tetTriangles)+len(tets)+len(self.nodeList)`
-        print "Building edge list"
+        print("Number of tetrahedra:"+str(len(tets)))
+        print("Number of triangles :"+str(len(tetTriangles)))
+        print("Number of edges     :"+str(len(tetEdges)))
+        print("Number of nodes     :"+str(len(self.nodeList)))
+        print("Number of objects   :"+str(len(tetEdges)+len(tetTriangles)+len(tets)+len(self.nodeList)))
+        print("Building edge list")
         self.edgeList =[Edge(edgeNumber=eN,nodes=[self.nodeList[nN[0]],self.nodeList[nN[1]]]) \
                         for eN,nN in enumerate(tetEdges)]
-        print "Building edge dict"
+        print("Building edge dict")
         self.edgeDict = dict([(e.nodes,e) for e in self.edgeList])
-        print "Building triangle list"
+        print("Building triangle list")
         self.triangleList =[Triangle(triangleNumber=tN,nodes=[self.nodeList[nN[0]],self.nodeList[nN[1]],self.nodeList[nN[2]]],edgeDict=self.edgeDict) \
                             for tN,nN in enumerate(tetTriangles)]
-        print "Building triangle dict"
+        print("Building triangle dict")
         self.triangleDict = dict([(t.nodes,t) for t in self.triangleList])
-        print "Building tetredron list"
+        print("Building tetredron list")
         self.tetrahedronList = [Tetrahedron(tetrahedronNumber=TN,
                                             nodes=[self.nodeList[nN[0]],self.nodeList[nN[1]],self.nodeList[nN[2]],self.nodeList[nN[3]]],
                                             edgeDict=self.edgeDict,
@@ -2496,9 +2551,9 @@ class TetrahedralMesh(Mesh):
                                 for TN,nN in enumerate(tets)]
         self.elementList = self.tetrahedronList
         self.elementBoundaryList = self.triangleList
-        print "Building tetrahedron dict"
+        print("Building tetrahedron dict")
         self.tetrahedronDict = dict([(T.nodes,T) for T in self.tetrahedronList])
-        print "Building boundary maps"
+        print("Building boundary maps")
         self.buildBoundaryMaps()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0, EB=False):
         #print "Warning mwf hack for EB printing for tet writeMeshXdmf for now"
@@ -2575,7 +2630,7 @@ class TetrahedralMesh(Mesh):
         meshOut.close()
 
     def writeMeshADH(self,filename,adhBase=1):
-        import cmeshTools
+        from . import cmeshTools
         cmeshTools.write3dmFiles(self.cmesh,filename,adhBase)
 
     def writeBoundaryFacesADH(self,filename,adhBase=1):
@@ -2640,7 +2695,7 @@ class TetrahedralMesh(Mesh):
     def refineFreudenthalBey(self,oldMesh):
         logEvent("Refining the mesh using Freudenthal-Bey refinement")
         childrenDict={}
-        for T in oldMesh.tetrahedronDict.values():
+        for T in list(oldMesh.tetrahedronDict.values()):
             #deep copy old nodes because we'll renumber
             TNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in \
                       enumerate(T.nodes)]
@@ -2648,13 +2703,13 @@ class TetrahedralMesh(Mesh):
             #add new nodes (midpoints of edges)
             #use local edge tuples as keys
             newNodes={}
-            for et,en in T.edgeMap.iteritems():
+            for et,en in T.edgeMap.items():
                 T.edges[en].computeGeometricInfo()
                 p = T.edges[en].barycenter
                 newNodes[et] = Node(en,p[X],p[Y],p[Z])
 
             #set the global node numbers
-            for k,n in newNodes.iteritems(): newNodes[k]=self.registerNode(n)
+            for k,n in newNodes.items(): newNodes[k]=self.registerNode(n)
             #add corner tets
             T1=self.newTetrahedron([TNodes[0],
                                  newNodes[(0,1)],
@@ -2745,7 +2800,7 @@ class TetrahedralMesh(Mesh):
         return self.refineFreudenthalBey(oldMesh)
 
     def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
-        import cmeshTools
+        from . import cmeshTools
         logEvent(memory("declaring CMesh"),level=4)
         self.cmesh = cmeshTools.CMesh()
         logEvent(memory("Initializing CMesh"),level=4)
@@ -2760,14 +2815,14 @@ class TetrahedralMesh(Mesh):
         self.buildFromC(self.cmesh)
         logEvent(memory("calling buildFromC"),level=4)
     def generateFrom3DMFile(self,filebase,base=1):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFrom3DMFile(self.cmesh,filebase,base)
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
     def writeTetgenFiles(self,filebase,base):
-        import cmeshTools
+        from . import cmeshTools
         cmeshTools.writeTetgenFiles(self.cmesh,filebase,base)
     def meshInfo(self):
         minfo = """Number of tetrahedra : %d
@@ -2805,11 +2860,11 @@ class HexahedralMesh(Mesh):
     def meshType(self):
         return 'cuboid'
     def computeGeometricInfo(self):
-        import cmeshTools
-        print "no info yet for hexahedral mesh"
+        from . import cmeshTools
+        print("no info yet for hexahedral mesh")
         #cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
     def generateHexahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateHexahedralMeshFromRectangularGrid(nx,ny,nz,0,0,0,Lx,Ly,Lz,self.cmesh)
         cmeshTools.allocateGeometricInfo_hexahedron(self.cmesh)
@@ -2829,7 +2884,7 @@ class HexahedralMesh(Mesh):
             T.computeGeometricInfo()
             self.hMax = max(T.diameter,self.hMax)
             self.hMin = min(T.diameter,self.hMin)
-            self.sigmaMax = max(T.diameter/T.innerDiameter,self.sigmaMax)
+            self.sigmaMax = max(old_div(T.diameter,T.innerDiameter),self.sigmaMax)
             self.totalVolume += T.volume
 
     def buildLists(self):
@@ -2840,17 +2895,17 @@ class HexahedralMesh(Mesh):
         self.elementList = self.elemList
         self.elementBoundaryList = self.faceList
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -2858,7 +2913,7 @@ class HexahedralMesh(Mesh):
             self.edgeList.append(self.edgeDict[k])
 
     def buildListsFaces(self):
-        keyList = self.faceDict.keys()
+        keyList = list(self.faceDict.keys())
         keyList.sort()
         self.triangleList=[]
         for tN,k in enumerate(keyList):
@@ -2867,7 +2922,7 @@ class HexahedralMesh(Mesh):
         self.polygonList = self.faceList
 
     def buildListsElems(self):
-        keyList = self.elemDict.keys()
+        keyList = list(self.elemDict.keys())
         keyList.sort()
         self.elemList=[]
         for TN,k in enumerate(keyList):
@@ -2921,7 +2976,7 @@ class HexahedralMesh(Mesh):
 
     def registerEdges(self,t):
         for en,e in enumerate(t.edges):
-            if self.edgeDict.has_key(e.nodes):
+            if e.nodes in self.edgeDict:
                 t.edges[en]=self.edgeDict[e.nodes]
             else:
                 eN=len(self.edgeDict)
@@ -2930,7 +2985,7 @@ class HexahedralMesh(Mesh):
 
     def registerFaces(self,T):
         for tn,t in enumerate(T.faces):
-            if self.faceDict.has_key(t.nodes):
+            if t.nodes in self.faceDict:
                 T.faces[tn]=self.faceDict[t.nodes]
             else:
                 t.N=len(self.faceDict)
@@ -2938,7 +2993,7 @@ class HexahedralMesh(Mesh):
                 self.registerEdges(t)
 
     def registerNode(self,node):
-        if self.nodeDict.has_key(node):
+        if node in self.nodeDict:
             node = self.nodeDict[node]
         else:
             node.N = len(self.nodeDict)
@@ -2970,7 +3025,7 @@ min(h_k)             : %d\n""" % (self.nElements_global,
         Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Hexahedron",tCount,EB=EB)
 
     def generateFromHexFile(self,filebase,base=0):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFromHexFile(self.cmesh,filebase,base)
         cmeshTools.allocateGeometricInfo_hexahedron(self.cmesh)
@@ -2994,7 +3049,7 @@ class Mesh2DM(Mesh):
         nx  = array.array('d')
         ny  = array.array('d')
         nz  = array.array('d')
-        print "Reading "+`filename`
+        print("Reading "+str(filename))
         #assume tets are ordered by tet number
         while (len(columns) > 0 and (columns[0] == 'E3T' or columns[0] == 'GE3')):
             tn0.append(int(columns[2]))
@@ -3015,7 +3070,7 @@ class Mesh2DM(Mesh):
             line = meshIn.readline()
             columns = line.split()
         meshIn.close()
-        print "Allocating node and element arrays"
+        print("Allocating node and element arrays")
         self.nTriangles_global = len(tn0)
         self.triangleArray = np.zeros(
             (self.nTriangles_global,3),'i')
@@ -3034,20 +3089,20 @@ class Mesh2DM(Mesh):
             self.nodeArray[nN,0]= nx[nN]
             self.nodeArray[nN,1]= ny[nN]
             self.nodeArray[nN,2]= nz[nN]
-        print "Deleting temporary storage"
+        print("Deleting temporary storage")
         del tn0,tn1,tn2,nx,ny,nz
         self.nElements_global = self.nTriangles_global
         self.elementNodesArray = self.triangleArray
         self.elementMaterialTypes = self.triangleMaterialArray
-        print "Number of triangles:"+`self.nElements_global`
-        print "Number of nodes     :"+`self.nNodes_global`
+        print("Number of triangles:"+str(self.nElements_global))
+        print("Number of nodes     :"+str(self.nNodes_global))
         #archive with Xdmf
         self.nNodes_element = 3
         self.arGridCollection = None
         self.arGrid = None; self.arTime = None
 
     def buildEdgeArrays(self):
-        print "Extracting edges triangles dictionary"
+        print("Extracting edges triangles dictionary")
         edges_triangles={}
         t=self.triangleArray
         self.nInteriorEdges_global=0
@@ -3060,12 +3115,12 @@ class Mesh2DM(Mesh):
                      (n[0],n[2]),
                      (n[1],n[2])]
             for t in triangles:
-                if edges_triangles.has_key(t):
+                if t in edges_triangles:
                     edges_triangles[t].append(N)
                     self.nInteriorTriangles_global+=1
                 else:
                     edges_triangles[t]=[N]
-        print "Building edge and exterior arrays"
+        print("Building edge and exterior arrays")
         self.nEdges_global = len(edges_triangles)
         self.edgeArray = np.zeros(
             (self.nEdges_global,2),'i')
@@ -3084,7 +3139,7 @@ class Mesh2DM(Mesh):
         eA = self.edgeArray
         eMA = self.edgeMaterialArray
         tMA = self.triangleMaterialArray
-        for eNodes,tlist in edges_triangles.iteritems():
+        for eNodes,tlist in edges_triangles.items():
             eA[eN,0]=eNodes[0]
             eA[eN,1]=eNodes[1]
             if len(tlist)==2:
@@ -3106,10 +3161,10 @@ class Mesh2DM(Mesh):
         for nExtN,nN in enumerate(exteriorNodes):
             self.exteriorNodeArray[nExtN]=nN
             self.globalToExteriorNodeArray[nN]=nExtN
-        print "Number of edges         :"+`self.nEdges_global`
-        print "Number on interior      :"+`self.nInteriorEdges_global`
-        print "Number on exterior      :"+`self.nExteriorEdges_global`
-        print "Number of exterior nodes:"+`self.nExteriorNodes_global`
+        print("Number of edges         :"+str(self.nEdges_global))
+        print("Number on interior      :"+str(self.nInteriorEdges_global))
+        print("Number on exterior      :"+str(self.nExteriorEdges_global))
+        print("Number of exterior nodes:"+str(self.nExteriorNodes_global))
         #at this point we can easily build a boundary mesh by renumbering using
         #exteriorNodeArray and exteriorEdgeArray to renumber
         #and the info in nodeArray and edgeArray
@@ -3175,7 +3230,7 @@ class Mesh2DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                 "GridType":"Collection",
                                                                 "CollectionType":"Temporal"})
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             #
             #topology and geometry
             #
@@ -3184,7 +3239,7 @@ class Mesh2DM(Mesh):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                                       "NumberOfElements":"%i" % (self.globalMesh.nElements_global,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -3206,14 +3261,14 @@ class Mesh2DM(Mesh):
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+`tCount`,
+                            ar.create_dataset_sync('elements'+name+str(tCount),
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
                                                    data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+`tCount`,
+                            ar.create_dataset_sync('nodes'+name+str(tCount),
                                                    offsets = self.globalMesh.nodeOffsets_subdomain_owned,
                                                    data = self.nodeArray[:self.nNodes_owned])
                             ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
@@ -3228,7 +3283,7 @@ class Mesh2DM(Mesh):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.nElements_owned)})
+                                       "NumberOfElements":"%i" % (self.nElements_owned,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -3249,20 +3304,20 @@ class Mesh2DM(Mesh):
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`, data = self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
-                            ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
+                            ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
                     else:
-                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
                             ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
@@ -3282,7 +3337,7 @@ class Mesh3DM(Mesh):
         meshIn = open(filename+'.3dm','r')
         firstLine = meshIn.readline()
         firstWords = firstLine.split()
-        print "Reading object=%s from file=%s" % (firstWords[0],filename)
+        print("Reading object=%s from file=%s" % (firstWords[0],filename))
         line = meshIn.readline()
         columns = line.split()
         #read in the tetrahedra and nodes as memory-efficiently as possible
@@ -3294,7 +3349,7 @@ class Mesh3DM(Mesh):
         nx  = array.array('d')
         ny  = array.array('d')
         nz  = array.array('d')
-        print "Reading "+`filename`
+        print("Reading "+str(filename))
         #assume tets are ordered by tet number
         while (len(columns) > 0 and (columns[0] == 'E4T' or columns[0] == 'GE4')):
             Tn0.append(int(columns[2]))
@@ -3312,7 +3367,7 @@ class Mesh3DM(Mesh):
             line = meshIn.readline()
             columns = line.split()
         meshIn.close()
-        print "Allocating node and element arrays"
+        print("Allocating node and element arrays")
         self.nTetrahedra_global = len(Tn0)
         self.tetrahedronArray = np.zeros(
             (self.nTetrahedra_global,4),'i')
@@ -3332,17 +3387,17 @@ class Mesh3DM(Mesh):
             self.nodeArray[nN,0]= nx[nN]
             self.nodeArray[nN,1]= ny[nN]
             self.nodeArray[nN,2]= nz[nN]
-        print "Deleting temporary storage"
+        print("Deleting temporary storage")
         del Tn0,Tn1,Tn2,Tn3,nx,ny,nz
         self.nElements_global = self.nTetrahedra_global
         self.elementNodesArray = self.tetrahedronArray
         self.elementMaterialTypes = self.tetrahedronMaterialArray
         self.arGridCollection=None
-        print "Number of tetrahedra:"+`self.nElements_global`
-        print "Number of nodes     :"+`self.nNodes_global`
+        print("Number of tetrahedra:"+str(self.nElements_global))
+        print("Number of nodes     :"+str(self.nNodes_global))
 
     def buildTriangleArrays(self):
-        print "Extracting triangles tetrahedra dictionary"
+        print("Extracting triangles tetrahedra dictionary")
         triangles_tetrahedra={}
         T=self.tetrahedronArray
         self.nInteriorTriangles_global=0
@@ -3356,12 +3411,12 @@ class Mesh3DM(Mesh):
                          (n[0],n[2],n[3]),
                          (n[1],n[2],n[3])]
             for t in triangles:
-                if triangles_tetrahedra.has_key(t):
+                if t in triangles_tetrahedra:
                     triangles_tetrahedra[t].append(N)
                     self.nInteriorTriangles_global+=1
                 else:
                     triangles_tetrahedra[t]=[N]
-        print "Building triangle and exterior arrays"
+        print("Building triangle and exterior arrays")
         self.nTriangles_global = len(triangles_tetrahedra)
         self.triangleArray = np.zeros(
             (self.nTriangles_global,3),'i')
@@ -3380,7 +3435,7 @@ class Mesh3DM(Mesh):
         tA = self.triangleArray
         tMA = self.triangleMaterialArray
         TMA = self.tetrahedronMaterialArray
-        for tNodes,Tlist in triangles_tetrahedra.iteritems():
+        for tNodes,Tlist in triangles_tetrahedra.items():
             tA[tN,0]=tNodes[0]
             tA[tN,1]=tNodes[1]
             tA[tN,2]=tNodes[2]
@@ -3403,16 +3458,16 @@ class Mesh3DM(Mesh):
         for nExtN,nN in enumerate(exteriorNodes):
             self.exteriorNodeArray[nExtN]=nN
             self.globalToExteriorNodeArray[nN]=nExtN
-        print "Number of triangles     :"+`self.nTriangles_global`
-        print "Number on interior      :"+`self.nInteriorTriangles_global`
-        print "Number on exterior      :"+`self.nExteriorTriangles_global`
-        print "Number of exterior nodes:"+`self.nExteriorNodes_global`
+        print("Number of triangles     :"+str(self.nTriangles_global))
+        print("Number on interior      :"+str(self.nInteriorTriangles_global))
+        print("Number on exterior      :"+str(self.nExteriorTriangles_global))
+        print("Number of exterior nodes:"+str(self.nExteriorNodes_global))
         #at this point we can easily build a boundary mesh by renumbering using
         #exteriorNodeArray and exteriorTriangleArray to renumber
         #and the info in nodeArray and triangleArray
 
     def buildEdgeArray(self):
-        print "Extracting set of edges"
+        print("Extracting set of edges")
         edges = set()
         t=self.triangleArray
         for N in range(self.nTriangles_global):
@@ -3420,7 +3475,7 @@ class Mesh3DM(Mesh):
             edges.update([(t[N,0],t[N,1]),
                           (t[N,0],t[N,2]),
                           (t[N,1],t[N,2])])
-        print "Building edgeArray"
+        print("Building edgeArray")
         self.nEdges_global = len(edges)
         self.edgeArray = np.zeros(
             (self.nEdges_global,2),'i')
@@ -3429,7 +3484,7 @@ class Mesh3DM(Mesh):
             self.edgeArray[eN][0] = e[0]
             self.edgeArray[eN][1] = e[1]
         del edges
-        print "Number of edges     :"+`self.nEdges_global`
+        print("Number of edges     :"+str(self.nEdges_global))
 
     def writeBoundaryMeshADH(self,filename,adhBase=1):
         #I'll print it using node numbers from the 3D mesh
@@ -3542,7 +3597,7 @@ class Mesh3DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
-        if self.arGrid is None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != "{0:e}".format(t):
             if ar.global_sync:
                 #
                 #topology and geometry
@@ -3551,7 +3606,7 @@ class Mesh3DM(Mesh):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                                       "NumberOfElements":"%i" % (self.globalMesh.nElements_global,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -3573,14 +3628,14 @@ class Mesh3DM(Mesh):
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_owned,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+`tCount`,
+                            ar.create_dataset_sync('elements'+name+str(tCount),
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
                                                    data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+`tCount`,
+                            ar.create_dataset_sync('nodes'+name+str(tCount),
                                                    offsets = self.globalMesh.nodeOffsets_subdomain_owned,
                                                    data = self.nodeArray[:self.nNodes_owned])
                             ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
@@ -3598,7 +3653,7 @@ class Mesh3DM(Mesh):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(self.nElements_owned)})
+                                       "NumberOfElements":"%i" % (self.nElements_owned,)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
@@ -3619,20 +3674,20 @@ class Mesh3DM(Mesh):
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
                         if init or meshChanged:
-                            ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`, data = self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
-                            ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
+                            ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
                     else:
-                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
                             ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
@@ -3653,8 +3708,8 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                  skipInit=False,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
-        import Comm
+        from . import cmeshTools
+        from . import Comm
         MultilevelMesh.__init__(self)
         self.useC = True
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
@@ -3689,7 +3744,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
+        from . import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
         self.meshList = []
@@ -3722,7 +3777,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
             self.buildArrayLists()
 
     def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
-        import cmeshTools
+        from . import cmeshTools
         self.meshList = []
         self.meshList.append(mesh0)
         self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
@@ -3732,7 +3787,9 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
 
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
+        from . import cmeshTools
+        if filebase==None:
+            filebase="mesh"
         assert(refinementLevels==1)
         assert(parallelPartitioningType==MeshParallelPartitioningTypes.node)
         assert(nLayersOfOverlap<=1)
@@ -3768,8 +3825,8 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                  skipInit=False,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
-        import Comm
+        from . import cmeshTools
+        from . import Comm
         MultilevelMesh.__init__(self)
         if refinementLevels == 1:
             self.useC = True
@@ -3805,7 +3862,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
+        from . import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
         self.meshList = []
@@ -3897,10 +3954,10 @@ class TriangularMesh(Mesh):
     def meshType(self):
         return 'simplex'
     def computeGeometricInfo(self):
-        import cmeshTools
+        from . import cmeshTools
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
     def generateTriangularMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,self.cmesh,triangleFlag)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
@@ -3974,24 +4031,24 @@ class TriangularMesh(Mesh):
     #mwf debug switch to redblac
     rectangularToTriangular = rectangularToTriangularOrientedOtherWay#rectangularToTriangularOriented
     def generateFromTriangleMesh(self,ctrirep,base):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFromTriangleMesh(self.cmesh,ctrirep,base)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
         self.buildFromC(self.cmesh)
     def generateFromTriangleFiles(self,filebase,base):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFromTriangleFiles(self.cmesh,filebase,base)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
         self.buildFromC(self.cmesh)
     def writeTriangleFiles(self,filebase,base):
-        import cmeshTools
+        from . import cmeshTools
         cmeshTools.writeTriangleFiles(self.cmesh,filebase,base)
     def generateFrom2DMFile(self,filebase,base=1):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFrom2DMFile(self.cmesh,filebase,base)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
@@ -4056,17 +4113,17 @@ class TriangularMesh(Mesh):
         self.elementBoundaryList = self.edgeList
 
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -4074,7 +4131,7 @@ class TriangularMesh(Mesh):
             self.edgeList.append(self.edgeDict[k])
 
     def buildListsTriangles(self):
-        keyList = self.triangleDict.keys()
+        keyList = list(self.triangleDict.keys())
         keyList.sort()
         self.triangleList=[]
         for tN,k in enumerate(keyList):
@@ -4090,7 +4147,7 @@ class TriangularMesh(Mesh):
 
     def registerEdges(self,t):
         for en,e in enumerate(t.edges):
-            if self.edgeDict.has_key(e.nodes):
+            if e.nodes in self.edgeDict:
                 t.edges[en]=self.edgeDict[e.nodes]
             else:
                 eN=len(self.edgeDict)
@@ -4098,7 +4155,7 @@ class TriangularMesh(Mesh):
                 self.edgeDict[e.nodes]=e
 
     def registerNode(self,node):
-        if self.nodeDict.has_key(node):
+        if node in self.nodeDict:
             node = self.nodeDict[node]
         else:
             node.N = len(self.nodeDict)
@@ -4145,8 +4202,8 @@ class TriangularMesh(Mesh):
                         nodes[newNode] = newNode
                         self.levelSetNodeNumbers.add(nr.N)
                     else:
-                        wr = (value - vl) / (vr - vl)
-                        wl = (value - vr) / (vl - vr)
+                        wr = old_div((value - vl), (vr - vl))
+                        wl = old_div((value - vr), (vl - vr))
                         newPoint = nl.p*wl + nr.p*wr
                         newNode = Node(len(levelSetMesh.nodeDict),
                                        newPoint[X],
@@ -4162,25 +4219,25 @@ class TriangularMesh(Mesh):
             if len(nodes) == 0:
                 pass
             elif len(nodes) == 1:
-                print "singleton"
+                print("singleton")
             elif len(nodes) == 2:
                 newNodes=[]
-                for n in nodes.values():
+                for n in list(nodes.values()):
                     newNodes.append(levelSetMesh.registerNode(n))
                 levelSetMesh.newEdge(newNodes)
             else:
-                print "unexpected case in buildLevelSetMesh"
-                print t.N
+                print("unexpected case in buildLevelSetMesh")
+                print(t.N)
                 for e in t.edges:
-                    print e.N
+                    print(e.N)
                     for n in e.nodes:
-                        print n.N
-                        print n.p
-                print "level set triangle"
-                for n in nodes.values():
-                    print n.p
+                        print(n.N)
+                        print(n.p)
+                print("level set triangle")
+                for n in list(nodes.values()):
+                    print(n.p)
         if len(levelSetMesh.edgeDict) == 0:
-            print "level set does not cross any edges"
+            print("level set does not cross any edges")
             return None
         else:
             levelSetMesh.finalize()
@@ -4209,7 +4266,7 @@ class TriangularMesh(Mesh):
     def refineFreudenthalBey(self,oldMesh):
         logEvent("Refining the mesh using Freudenthal-Bey refinement")
         childrenDict={}
-        for t in oldMesh.triangleDict.values():
+        for t in list(oldMesh.triangleDict.values()):
             #deep copy old nodes because we'll renumber
             tNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z])
                       for nN,n in enumerate(t.nodes)]
@@ -4217,13 +4274,13 @@ class TriangularMesh(Mesh):
             #add new nodes (midpoints of edges)
             #use local edge tuples as keys
             newNodes={}
-            for et,en in t.edgeMap.iteritems():
+            for et,en in t.edgeMap.items():
                 t.edges[en].computeGeometricInfo()
                 p = t.edges[en].barycenter
                 newNodes[et] = Node(en,p[X],p[Y],p[Z])
 
             #set the global node numbers
-            for k,n in newNodes.iteritems(): newNodes[k]=self.registerNode(n)
+            for k,n in newNodes.items(): newNodes[k]=self.registerNode(n)
             #add corner triangles
             t1=self.newTriangle([tNodes[0],
                               newNodes[(0,1)],
@@ -4266,12 +4323,12 @@ Number of nodes : %d\n""" % (self.nElements_global,
         meshIn = open(filename+'.'+suffix,'r')
         firstLine = meshIn.readline()
         firstWords = firstLine.split()
-        print "Reading object=%s from file=%s" % (firstWords[0],filename)
+        print("Reading object=%s from file=%s" % (firstWords[0],filename))
         line = meshIn.readline()
         columns = line.split()
         triangles = []
         triangleEdges=set()
-        logEvent("Reading "+`filename`+ \
+        logEvent("Reading "+str(filename)+ \
                 " and building node lists for triangles, and edges")
         #assume triangles are ordered by triangle number
         while (columns[0] == 'E3T'):
@@ -4283,7 +4340,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
                                   (nodeNumbers[1],nodeNumbers[2])])
             line = meshIn.readline()
             columns = line.split()
-        print "Building node list and dict"
+        print("Building node list and dict")
         #assume nodes are ordered by node number
         while (len(columns) == 5):
             newNode = Node(int(columns[1]) - adhBase,
@@ -4294,25 +4351,25 @@ Number of nodes : %d\n""" % (self.nElements_global,
             self.nodeDict[newNode]=newNode
             line = meshIn.readline()
             columns = line.split()
-        print "Number of triangles :"+`len(triangles)`
-        print "Number of edges     :"+`len(triangleEdges)`
-        print "Number of nodes     :"+`len(self.nodeList)`
-        print "Number of objects   :"+\
-              `len(triangleEdges)+len(triangles)+len(self.nodeList)`
-        print "Building edge list"
+        print("Number of triangles :"+str(len(triangles)))
+        print("Number of edges     :"+str(len(triangleEdges)))
+        print("Number of nodes     :"+str(len(self.nodeList)))
+        print("Number of objects   :"+\
+              str(len(triangleEdges)+len(triangles)+len(self.nodeList)))
+        print("Building edge list")
         self.edgeList =[Edge(edgeNumber=eN,nodes=[self.nodeList[nN[0]],
                                                   self.nodeList[nN[1]]])
                         for eN,nN in enumerate(triangleEdges)]
-        print "Building edge dict"
+        print("Building edge dict")
         self.edgeDict = dict([(e.nodes,e) for e in self.edgeList])
-        print "Building triangle list"
+        print("Building triangle list")
         self.triangleList =[Triangle(triangleNumber=tN,
                                      nodes=[self.nodeList[nN[0]],
                                             self.nodeList[nN[1]],
                                             self.nodeList[nN[2]]],
                                      edgeDict=self.edgeDict)
                             for tN,nN in enumerate(triangles)]
-        print "Building triangle dict"
+        print("Building triangle dict")
         self.triangleDict = dict([(t.nodes,t) for t in self.triangleList])
         self.elementList = self.triangleList
         self.elementBoundaryList = self.edgeList
@@ -4386,13 +4443,13 @@ Number of nodes : %d\n""" % (self.nElements_global,
         meshOut.close()
 
     def writeMeshADH(self,filename,adhBase=1):
-        import cmeshTools
+        from . import cmeshTools
         cmeshTools.write2dmFiles(self.cmesh,filename,adhBase)
     def writeAsymptote(self,fileprefix,L,x,units="m"):
         """
         Write a representation of the triangular mesh in the Asymptote vector graphics language
         """
-        unitsize=4.0/L[0]
+        unitsize=old_div(4.0,L[0])
         f = open(fileprefix+".asy",'w')
         fileString="""
 unitsize(4.0 inches / %(Lx)f);
@@ -4574,7 +4631,15 @@ class QuadrilateralMesh(Mesh):
                 e3 = Edge(nodes=[n3,n0])
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
+        self.buildNodeDiameterArray()
 
+    def generateQuadrilateralMeshFromRectangularGrid(self,nx,ny,Lx,Ly):
+        from . import cmeshTools
+        self.cmesh = cmeshTools.CMesh()
+        cmeshTools.generateQuadrilateralMeshFromRectangularGrid(nx,ny,0,0,Lx,Ly,self.cmesh)
+        cmeshTools.allocateGeometricInfo_quadrilateral(self.cmesh)
+        cmeshTools.computeGeometricInfo_quadrilateral(self.cmesh)
+        self.buildFromC(self.cmesh)
         
     def generateFromQuadFileIFISS(self,meshfile):
         ''' WIP - read a matlab.mat file containing IFISS vertices
@@ -4600,7 +4665,6 @@ class QuadrilateralMesh(Mesh):
             n0,n1 = self.elementBoundaryNodesArray[ebN]
             self.elementBoundaryMaterialTypes[ebN]=max(self.nodeMaterialTypes[n0],
                                                        self.nodeMaterialTypes[n1])
-
 
     def meshType(self):
         return 'cuboid'
@@ -4629,7 +4693,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
            otherwise, create a new entry
         '''
         for en,e in enumerate(q.edges):
-            if self.edgeDict.has_key(e.nodes):
+            if e.nodes in self.edgeDict:
                 q.edges[en]=self.edgeDict[e.nodes]
             else:
                 eN=len(self.edgeDict)
@@ -4641,7 +4705,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
             if it is, point to existing entry
             otherwise, create a new entry
         '''
-        if self.nodeDict.has_key(node):
+        if node in self.nodeDict:
             node = self.nodeDict[node]
         else:
             node.N = len(self.nodeDict)
@@ -4650,10 +4714,8 @@ Number of nodes : %d\n""" % (self.nElements_global,
 
     def refine(self,oldMesh):
         logEvent("Refining Using Standard Quadrilateral Refinement")
-        import pdb
-#        pdb.set_trace()
         childrenDict={}
-        for q in oldMesh.quadDict.values():
+        for q in list(oldMesh.quadDict.values()):
             qNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in enumerate(q.nodes)]
             for lnN,n in enumerate(qNodes): qNodes[lnN] = self.registerNode(n)
             q.computeGeometricInfo()
@@ -4716,17 +4778,17 @@ Number of nodes : %d\n""" % (self.nElements_global,
         self.elementBoundaryList = self.edgeList
 
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -4734,7 +4796,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
             self.edgeList.append(self.edgeDict[k])
 
     def buildListsQuadrilaterals(self):
-        keyList = self.quadDict.keys()
+        keyList = list(self.quadDict.keys())
         keyList.sort()
         self.quadList = []
         for qN,q in enumerate(keyList):
@@ -4745,10 +4807,90 @@ Number of nodes : %d\n""" % (self.nElements_global,
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0,EB=False):
         Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Quadrilateral",tCount,EB=EB)
 
+    def buildNodeDiameterArray(self):
+        nNodes = len(self.nodeArray)
+        self.nodeDiametersArray = np.zeros(nNodes)
+        self.nodeSupportArray = np.zeros(nNodes)
+        self.volume = 0.
+
+        for eN in range(self.nElements_global):
+            area = self._calc_quad_area(eN)
+            self.volume += area
+            hMax = self.elementDiametersArray[eN]
+
+            for nN in range(self.nNodes_element):
+                nodeDiameter = hMax*area
+                idx = self.elementNodesArray[eN][nN]
+                self.nodeDiametersArray[idx]+=nodeDiameter
+                self.nodeSupportArray[idx]+=area
+
+        for nN in range(nNodes):
+            self.nodeDiametersArray[nN] /= self.nodeSupportArray[nN]
+
+    @staticmethod
+    def _calc_pt_distance(pt1,pt2):
+        """ Calculate the distance between two points.
+
+        Arguments
+        ---------
+        pt1: lst
+            Coordinates of the first point
+        pt2: lst
+            Coordinates of the second point
+
+        Returns
+        -------
+        distance : float
+        """
+        d = 0.
+        for i,j in zip(pt1,pt2):
+            d += (i-j)**2
+        return math.sqrt(d)
+
+    def _calc_hmax(self,i):
+        """ Find the largest edge length of an element.
+
+        Arguments
+        ---------
+        i : int
+            Element number
+
+        Returns
+        -------
+        hmax : float
+            The largest edge length of element i
+        """
+        hMax = 0.
+        element_nodes = self.nodeArray[self.elementNodesArray[i]]
+        for j, nN_L in enumerate(element_nodes):
+            print('nN_L = ' + str(nN_L))
+            for nN_R in element_nodes[j+1:]:
+                print('nN_R = ' + str(nN_R))
+                hMax = max(hMax,self._calc_pt_distance(nN_L,nN_R))
+        return hMax
+
+    def _calc_quad_area(self,i):
+        """ Calculates the area of a quadrilateral.
+
+        Arguments
+        ---------
+        i : int
+            The quadrilateral whose volume is being calculated.
+
+        Returns
+        -------
+        A : float
+            The quadrilateral's area
+        """
+        n = [n0,n1,n2,n3] = self.nodeArray[self.elementNodesArray[0]]
+        d = [self._calc_pt_distance(n0,n[1]),
+             self._calc_pt_distance(n0,n[-1])]
+        A = d[0]*d[1]
+        return A
 
 class MultilevelTriangularMesh(MultilevelMesh):
     """A hierarchical  multilevel mesh of triangular cells"""
-    import cmeshTools
+    from . import cmeshTools
     def __init__(self,
                  nx, ny, nz,
                  x=0.0, y=0.0, z=0.0,
@@ -4757,7 +4899,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
                  skipInit=False,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
-        import cmeshTools
+        from . import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = True
         self.nLayersOfOverlap=nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
@@ -4796,7 +4938,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
     #mwf what's the best way to build from an existing mesh
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
+        from . import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
         self.meshList = []
@@ -4825,7 +4967,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
                 logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
     def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
-        import cmeshTools
+        from . import cmeshTools
         self.meshList = []
         self.meshList.append(mesh0)
         self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
@@ -4861,7 +5003,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
             self.meshList[self.nLevels-1].buildFromC(self.meshList[self.nLevels-1].cmesh)
             self.meshList[self.nLevels-1].partitionMesh(nLayersOfOverlap=self.nLayersOfOverlap,parallelPartitioningType=self.parallelPartitioningType)
         else:
-            print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
+            print("""locallyRefine not implemented for self.useC= %s """ % (self.useC))
         #
 
 class MultilevelQuadrilateralMesh(MultilevelMesh):
@@ -4874,14 +5016,29 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
-        import cmeshTools
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0,
+                 useC=True):
+        from . import cmeshTools
         MultilevelMesh.__init__(self)
-        self.useC = False   # Implementing with C will take a bit more work. Disabling for now.
+        self.useC = useC  # Implementing with C will take a bit more work. Disabling for now.
+        if refinementLevels > 1:
+            logEvent("Quad refinement is not supported in C routines, switching off c-mesh");
+            self.useC = False  # Currently quad refinement is not supported in C routines.
         self.nLayersOfOverlap=nLayersOfOverlap ; self.parallelPartitioningType = parallelPartitioningType
         if not skipInit:
             if self.useC:
-                raise NotImplementedError ("C functionality sill not enabled for 2D quads")
+                self.meshList.append(QuadrilateralMesh())
+                self.meshList[0].generateQuadrilateralMeshFromRectangularGrid(nx,ny,Lx,Ly)
+                self.meshList[0].nodeArray[:,0] += x
+                self.meshList[0].nodeArray[:,1] += y
+                self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+                self.buildFromC(self.cmultilevelMesh)
+                self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+                for l in range(1,refinementLevels):
+                    self.meshList.append(QuadrilateralMesh())
+                    self.meshList[l].cmesh = self.cmeshList[l]
+                    self.meshList[l].buildFromC(self.cmeshList[l])
+                    self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             else:
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(QuadrilateralMesh())
@@ -4904,11 +5061,53 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                     self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
                 for element in range(self.meshList[0].nElements_global):
                     self.meshList[0].elementNumbering_subdomain2global.itemset(element,element)
+
+                self.meshList[0].buildNodeStarArrays()
                 for l in range(1,refinementLevels):
                     self.refine()
                     self.meshList[l].subdomainMesh = self.meshList[l]
                     logEvent(self.meshList[-1].meshInfo())
+                    self.meshList[l].buildNodeStarArrays()
                 self.buildArrayLists()
+                # print("from Python")
+                # print  (self.meshList[0].nElements_global,
+                #         self.meshList[0].nNodes_global,
+                #         self.meshList[0].nNodes_element,
+                #         self.meshList[0].nNodes_elementBoundary,
+                #         self.meshList[0].nElementBoundaries_element,
+                #         self.meshList[0].nElementBoundaries_global,
+                #         self.meshList[0].nInteriorElementBoundaries_global,
+                #         self.meshList[0].nExteriorElementBoundaries_global,
+                #         self.meshList[0].max_nElements_node,
+                #         self.meshList[0].nEdges_global,
+                #         self.meshList[0].max_nNodeNeighbors_node,
+                #         self.meshList[0].elementNodesArray,
+                #         self.meshList[0].nodeElementsArray,
+                #         self.meshList[0].nodeElementOffsets,
+                #         self.meshList[0].elementNeighborsArray,
+                #         self.meshList[0].elementBoundariesArray,
+                #         self.meshList[0].elementBoundaryNodesArray,
+                #         self.meshList[0].elementBoundaryElementsArray,
+                #         self.meshList[0].elementBoundaryLocalElementBoundariesArray,
+                #         self.meshList[0].interiorElementBoundariesArray,
+                #         self.meshList[0].exteriorElementBoundariesArray,
+                #         self.meshList[0].edgeNodesArray,
+                #         self.meshList[0].nodeStarArray,
+                #         self.meshList[0].nodeStarOffsets,
+                #         self.meshList[0].elementMaterialTypes,
+                #         self.meshList[0].elementBoundaryMaterialTypes,
+                #         self.meshList[0].nodeMaterialTypes,
+                #         self.meshList[0].nodeArray,
+                #         self.meshList[0].elementDiametersArray,
+                #         self.meshList[0].elementInnerDiametersArray,
+                #         self.meshList[0].elementBoundaryDiametersArray,
+                #         self.meshList[0].elementBarycentersArray,
+                #         self.meshList[0].elementBoundaryBarycentersArray,
+                #         self.meshList[0].nodeDiametersArray,
+                #         self.meshList[0].nodeSupportArray,
+                #         self.meshList[0].h,
+                #         self.meshList[0].hMin,
+                #         self.meshList[0].volume)
 
     def refine(self):
         self.meshList.append(QuadrilateralMesh())
@@ -4948,7 +5147,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                  ):
         from matplotlib import tri as mpl_tri
         from scipy import interpolate as scipy_interpolate
-        import TriangleTools
+        from . import TriangleTools
         if maxElementDiameter:
             self.maxElementDiameter = maxElementDiameter
         else:
@@ -4976,7 +5175,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         self.generateFromExistingCoarseMesh(self.coarseMesh,1,
                                             parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.computeGeometricInfo()
-        print self.meshList[-1].volume
+        print(self.meshList[-1].volume)
         #allocate some arrays based on the bathymetry data
         logEvent("InterpolatedBathymetryMesh:Allocating data structures for bathymetry interpolation algorithm")
         if bathyType == "points":
@@ -5041,7 +5240,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         """
         calculate the arithmetic mean bathymetry of points inside each triangle and then assign the area-weighted average of the element means to each node
         """
-        from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
+        from .FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
         interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
         #maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
         #maps.useC = True
@@ -5052,7 +5251,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             eN = self.pointElementsArray[pN]
             if eN >= 0:
                 if mesh.nPoints_element[eN] > 0:
-                    mesh.elementMeanZ[eN] += self.domain.bathy[pN,2]/float(mesh.nPoints_element[eN])
+                    mesh.elementMeanZ[eN] += old_div(self.domain.bathy[pN,2],float(mesh.nPoints_element[eN]))
                     mesh.nodeArray[mesh.elementNodesArray[eN,0],2] = 0.0
                     mesh.nodeArray[mesh.elementNodesArray[eN,1],2] = 0.0
                     mesh.nodeArray[mesh.elementNodesArray[eN,2],2] = 0.0
@@ -5087,9 +5286,9 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                 J = mesh.elementNodesArray[eN,0]
                 inverseJacobian = inv(jacobian)
                 area = 0.5*det(jacobian)
-                sumArray[mesh.elementNodesArray[eN,0]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]]
-                sumArray[mesh.elementNodesArray[eN,1]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]]
-                sumArray[mesh.elementNodesArray[eN,2]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]]
+                sumArray[mesh.elementNodesArray[eN,0]] += old_div(area,mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]])
+                sumArray[mesh.elementNodesArray[eN,1]] += old_div(area,mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]])
+                sumArray[mesh.elementNodesArray[eN,2]] += old_div(area,mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]])
                 mesh.nodeArray[mesh.elementNodesArray[eN,0],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]]
                 mesh.nodeArray[mesh.elementNodesArray[eN,1],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]]
                 mesh.nodeArray[mesh.elementNodesArray[eN,2],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]]
@@ -5101,7 +5300,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
 
         this should only be used on very coarse meshes
         """
-        from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
+        from .FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
         interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
         #maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
         #maps.useC = False
@@ -5175,7 +5374,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
 
         this should only be used on very coarse meshes
         """
-        from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
+        from .FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
         interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
         #maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
         #maps.useC = False
@@ -5250,7 +5449,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         first find the nearest node, then loop over that node's  elements
         """
         from scipy.spatial import cKDTree
-        from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
+        from .FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
         interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
         #find the elements that contain bathymetry points and calculate:
         # - for each element, the number of bathmetry points in that element
@@ -5330,8 +5529,8 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         mlMeshTemp.elementChildrenOffsetsList = self.elementChildrenOffsetsList[-1:]
         nd=2
         TrialSpaceTypeDict = {0:C0_AffineLinearOnSimplexWithNodalBasis}
-        trialSpaceDictParent = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[0],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
-        trialSpaceDictChild = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[1],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
+        trialSpaceDictParent = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[0],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.items()])
+        trialSpaceDictChild = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[1],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.items()])
         trialSpaceDictList  = [trialSpaceDictParent,trialSpaceDictChild]
         offsetListList=[[0],[0]]
         strideListList=[[1],[1]]
@@ -5359,7 +5558,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         mesh.errorAverage_element =  np.zeros((mesh.nElements_global,),'d')
         errorInfty = 0.0
         mesh.elementTags[mesh.elementDiametersArray > self.maxElementDiameter ] = 1
-        print mesh.elementTags
+        print(mesh.elementTags)
         for pN in range(self.nPoints_global):
             eN = self.pointElementsArray[pN]
             if eN >= 0:
@@ -5367,10 +5566,10 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                 zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
                           self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
                           self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2]
-                errorPointwise = fabs(zInterp - self.domain.bathy[pN,2]) / (fabs(self.domain.bathy[pN,2])*self.rtol + self.atol)
+                errorPointwise = old_div(fabs(zInterp - self.domain.bathy[pN,2]), (fabs(self.domain.bathy[pN,2])*self.rtol + self.atol))
                 #print "error ",errorPointwise
                 errorInfty = max(errorPointwise,errorInfty)
-                mesh.errorAverage_element[eN] += (errorPointwise/float(mesh.nPoints_element[eN]))
+                mesh.errorAverage_element[eN] += (old_div(errorPointwise,float(mesh.nPoints_element[eN])))
                 #print "error average",mesh.errorAverage_element[eN]
                 if errorPointwise >= 1.0:
                     mesh.elementTags[eN] = 1
@@ -5390,7 +5589,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                 errorL2 += (mesh.errorAverage_element[eN])**2 * mesh.area_element[eN]
                 if mesh.errorAverage_element[eN] >= 1.0:
                     mesh.elementTags[eN] = 1
-            errorL2 = sqrt(errorL2)/self.totalArea#normalize by domain error to make error have units of length
+            errorL2 = old_div(sqrt(errorL2),self.totalArea)#normalize by domain error to make error have units of length
             return errorL2
         else:
             #print "finished"
@@ -5411,10 +5610,10 @@ class EdgeMesh(Mesh):
         self.edgeDict={}
         self.oldToNewNode=[]
     def computeGeometricInfo(self):
-        import cmeshTools
+        from . import cmeshTools
         cmeshTools.computeGeometricInfo_edge(self.cmesh)
     def generateEdgeMeshFromRectangularGrid(self,nx,Lx):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateEdgeMeshFromRectangularGrid(nx,Lx,self.cmesh)
         cmeshTools.allocateGeometricInfo_edge(self.cmesh)
@@ -5445,17 +5644,17 @@ class EdgeMesh(Mesh):
         self.elementBoundaryList = self.nodeList
 
     def buildListsNodes(self):
-        keyList = self.nodeDict.keys()
+        keyList = list(self.nodeDict.keys())
         keyList.sort()
         self.nodeList=[]
-        self.oldToNewNode=range(len(self.nodeDict))
+        self.oldToNewNode=list(range(len(self.nodeDict)))
         for nN,k in enumerate(keyList):
             self.oldToNewNode[self.nodeDict[k].N]=nN
             self.nodeDict[k].N = nN
             self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        keyList = self.edgeDict.keys()
+        keyList = list(self.edgeDict.keys())
         keyList.sort()
         self.edgeList=[]
         for eN,k in enumerate(keyList):
@@ -5468,7 +5667,7 @@ class EdgeMesh(Mesh):
         return e
 
     def registerNode(self,node):
-        if self.nodeDict.has_key(node):
+        if node in self.nodeDict:
             node = self.nodeDict[node]
         else:
             node.N = len(self.nodeDict)
@@ -5546,7 +5745,7 @@ Number of nodes : %d\n""" % (self.nElements_global,self.nNodes_global)
 
 class MultilevelEdgeMesh(MultilevelMesh):
     """A hierarchical multilevel mesh of intervals (edges)"""
-    import cmeshTools
+    from . import cmeshTools
     def __init__(self,
                  nx, ny, nz,
                  x=0.0, y=0.0, z=0.0,
@@ -5554,7 +5753,7 @@ class MultilevelEdgeMesh(MultilevelMesh):
                  refinementLevels=1,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
+        from . import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC=True
         self.nLayersOfOverlap=nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
@@ -5580,10 +5779,10 @@ class MultilevelEdgeMesh(MultilevelMesh):
             self.meshList[0].nodeArray[:,1] += y
             self.meshList[0].nodeArray[:,2] += z
             self.elementChildren=[]
-            print self.meshList[0].meshInfo()
+            print(self.meshList[0].meshInfo())
             for l in range(1,refinementLevels):
                 self.refine()
-                print self.meshList[-1].meshInfo()
+                print(self.meshList[-1].meshInfo())
     def refine(self):
         self.meshList.append(EdgeMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
@@ -5603,7 +5802,7 @@ class MultilevelEdgeMesh(MultilevelMesh):
             self.meshList[self.nLevels-1].buildFromC(self.meshList[self.nLevels-1].cmesh)
             self.meshList[self.nLevels-1].partitionMesh(nLayersOfOverlap=self.nLayersOfOverlap,parallelPartitioningType=self.parallelPartitioningType)
         else:
-            print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
+            print("""locallyRefine not implemented for self.useC= %s """ % (self.useC))
         #
     #
 class MultilevelSimplicialMesh(MultilevelMesh):
@@ -5798,7 +5997,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     topology2nodes = {'Polyline':2,'Triangle':3,'Quadrilateral':4,'Tetrahedron':4,'Wedge':6,'Hexahedron':8}
 
     #for output
-    class BasicMeshInfo:
+    class BasicMeshInfo(object):
         def __init__(self):
             self.nNodes_global     = None
             self.nodeArray         = None
@@ -5845,7 +6044,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     assert MeshInfo.elementTopologyName is not None
 
     logEvent("elementTopologyName= %s " % MeshInfo.elementTopologyName,3)
-    assert MeshInfo.elementTopologyName in topologyid2name.values()
+    assert MeshInfo.elementTopologyName in list(topologyid2name.values())
 
     if MeshInfo.elementTopologyName != 'Mixed':
         MeshInfo.nElements_global, MeshInfo.nNodes_element, \
@@ -5909,8 +6108,8 @@ class MultilevelNURBSMesh(MultilevelMesh):
                  skipInit=False,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
-        import Comm
+        from . import cmeshTools
+        from . import Comm
         MultilevelMesh.__init__(self)
         self.useC = True
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
@@ -5932,7 +6131,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
 
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        import cmeshTools
+        from . import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
         self.meshList = []
@@ -5973,7 +6172,7 @@ class NURBSMesh(HexahedralMesh):
         generateNURBSMeshFromRectangularGrid(self,nx,ny,nz,1,1,1,Lx,Ly,Lz)
 
     def generateNURBSMeshFromRectangularGrid(self,nx,ny,nz,px,py,pz,Lx,Ly,Lz):
-        import cmeshTools
+        from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateNURBSMeshFromRectangularGrid(nx,ny,nz,px,py,pz,Lx,Ly,Lz,self.cmesh)
         cmeshTools.allocateGeometricInfo_NURBS(self.cmesh)
@@ -6114,7 +6313,7 @@ def intersectEdges(line, edges):
             return None
 
         # two lines are parallel, solve for x
-        x = norm(x_vl_cross_ve)/norm(vl_cross_ve)
+        x = old_div(norm(x_vl_cross_ve),norm(vl_cross_ve))
 
         intersect = a + x*(b-a)
 
@@ -6162,7 +6361,7 @@ def intersectPolyhedron(line, polyhedron):
             else:
                 # the line is in or on the face, ignore this face
                 continue
-        t = ndotba / float(d)
+        t = old_div(ndotba, float(d))
         if d < 0:
             # segment is entering polyhedron across this facet
             t_e = max(t_e, t)
@@ -6277,7 +6476,7 @@ def genMeshWithTetgen(polyfile,
                                 base=nbase)
    return mesh
 
-class MeshOptions:
+class MeshOptions(object):
     """
     Mesh options for the domain
 
@@ -6355,10 +6554,10 @@ class MeshOptions:
             assert self.triangle_string is not None, 'triangle_string must be set before setting triangle options'
             if self.nd == 2:
                 self.triangleOptions = self.triangle_string + '%8.8f' \
-                                       % (self.he**2/2.,)
+                                       % (old_div(self.he**2,2.),)
             elif self.nd == 3:
                 self.triangleOptions = self.triangle_string + '%21.16e' \
-                                       % (self.he**3/6.,)
+                                       % (old_div(self.he**3,6.),)
 
     def setMeshGenerator(self, generator):
         """

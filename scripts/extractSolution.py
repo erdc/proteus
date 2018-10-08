@@ -1,38 +1,41 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from builtins import str
+from builtins import range
 import tables
 import os
 import sys
 
 def splitH5all(basename1,basename2,size,start,finaltime,stride):
 
-    print "=================="
-    print "   Extracting"
-    print "=================="
+    print("==================")
+    print("   Extracting")
+    print("==================")
 
     for proc in range(0,size):
-        print "Processor", proc
+        print("Processor", proc)
         splitH5single(basename1,basename2,proc,start,finaltime,stride)
 
-    print "=================="
-    print "   Composing"
-    print "=================="
+    print("==================")
+    print("   Composing")
+    print("==================")
     H5toXMF("solution",size,start,finaltime,stride)
 
 def splitH5single(basename1,basename2,proc,start,finaltime,stride):
 
 # Loop over entries and put in appropriate file
     filename=basename1+str(proc)+".h5"
-    print " Open:",filename
+    print(" Open:",filename)
     f1 = tables.open_file(filename)
     filename=basename2+str(proc)+".h5"
-    print " Open:",filename
+    print(" Open:",filename)
     f2 = tables.open_file(filename)
 
-    print "   Step:",
+    print("   Step:", end=' ')
 
     for step in range(start,finaltime+1,stride):
-        print  step,
+        print(step, end=' ')
         sys.stdout.flush()
 
         filename="sol.p"+str(proc)+"."+str(step)+".h5"
@@ -67,7 +70,7 @@ def splitH5single(basename1,basename2,proc,start,finaltime,stride):
     f1.close()
     f2.close()
 
-    print "finished"
+    print("finished")
 
 def H5toXMF(basename,size,start,finaltime,stride):
 
@@ -87,9 +90,9 @@ def H5toXMF(basename,size,start,finaltime,stride):
     XMFfile1.write(t1 + '<Grid GridType="Collection"   CollectionType="Temporal">'+"\n")
 
     string=""
-    print "   Step:",
+    print("   Step:", end=' ')
     for step in range(start,finaltime+1,stride):
-        print step,
+        print(step, end=' ')
         sys.stdout.flush()
 
         filename = basename+"."+str(step)+".h5"

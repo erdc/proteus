@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from pressureincrement_p import *
+from .pressureincrement_p import *
 
 triangleOptions = triangleOptions
 
@@ -11,14 +12,9 @@ stepController=FixedStep
 numericalFluxType = PresInc.NumericalFlux
 matrix = LinearAlgebraTools.SparseMatrix
 
-if openTop:
-    linearSmoother    = None
-    multilevelLinearSolver = LinearSolvers.LU
-    levelLinearSolver = LinearSolvers.LU
-else:
-    linearSmoother    = LinearSolvers.NavierStokesPressureCorrection # pure neumann laplacian solver
-    multilevelLinearSolver = LinearSolvers.KSP_petsc4py
-    levelLinearSolver = LinearSolvers.KSP_petsc4py
+linearSmoother    = None
+multilevelLinearSolver = LinearSolvers.LU
+levelLinearSolver = LinearSolvers.LU
 
 linear_solver_options_prefix = 'phi_'
 

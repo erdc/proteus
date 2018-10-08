@@ -1,16 +1,17 @@
+from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from NS_convergence import *
+from .NS_convergence import *
 from proteus.mprans import Pres
 
 name = "pressure"
-
+#LevelModelType = Pres.LevelModel
 coefficients=Pres.Coefficients(modelIndex=PRESSURE_model,
                                fluidModelIndex=V_model,
                                pressureIncrementModelIndex=PINC_model,
                                useRotationalForm=False)
-LevelModelType = Pres.LevelModel
 
 def getDBC_p(x,flag):
     None
@@ -18,7 +19,7 @@ def getDBC_p(x,flag):
 def getFlux(x,flag):
     None
 
-class getIBC_p:
+class getIBC_p(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

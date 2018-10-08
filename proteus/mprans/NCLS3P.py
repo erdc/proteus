@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import proteus
 import numpy
 from math import fabs
@@ -14,7 +19,8 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
-import cNCLS3P
+from . import cNCLS3P
+
 
 class SubgridError(proteus.SubgridError.SGE_base):
 
@@ -72,7 +78,6 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         log("NCLS3P: max numDiff %e" %
             (globalMax(self.numDiff_last[0].max()),))
 
-
 class NumericalFlux(
         proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart):
 
@@ -89,18 +94,21 @@ class NumericalFlux(
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import ncLevelSetCoefficientsEvaluate
-    from proteus.UnstructuredFMMandFSWsolvers import FMMEikonalSolver, FSWEikonalSolver
-    from proteus.NonlinearSolvers import EikonalSolver
-
     def __init__(self,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
-                 EikonalSolverFlag=0,
                  checkMass=True, epsFact=1.5,
                  useMetrics=0.0, sc_uref=1.0, sc_beta=1.0,
                  waterline_interval=-1,
-                 movingDomain=False):
+                 movingDomain=False,
+                 PURE_BDF=False,
+                 EXPLICIT_METHOD=False,
+                 outputQuantDOFs=False):
+        
+        self.EXPLICIT_METHOD=EXPLICIT_METHOD
+        self.outputQuantDOFs=outputQuantDOFs
+        self.PURE_BDF=PURE_BDF
         self.movingDomain = movingDomain
         self.useMetrics = useMetrics
         self.epsFact = epsFact
@@ -125,10 +133,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.flowModelIndex = V_model
         self.modelIndex = ME_model
         self.RD_modelIndex = RD_model
-        # mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1:  # FMM
-            assert self.RD_modelIndex is None, "no redistance with eikonal solver too"
         self.checkMass = checkMass
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
@@ -138,27 +142,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # the level set model
         self.model = modelList[self.modelIndex]
 
-        #self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-        self.u_old_dof = self.model.u[0].dof.copy()
         # the velocity
         if self.flowModelIndex >= 0:
             self.flowModel = modelList[self.flowModelIndex]
             self.q_v = modelList[self.flowModelIndex].q[('velocity', 0)]
             self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity', 0)]
-            if modelList[self.flowModelIndex].ebq.has_key(('velocity', 0)):
+            if ('velocity', 0) in modelList[self.flowModelIndex].ebq:
                 self.ebq_v = modelList[
                     self.flowModelIndex].ebq[
                     ('velocity', 0)]
             else:
                 self.ebq_v = None
-            if not self.model.ebq.has_key(
-                    ('u', 0)) and self.flowModel.ebq.has_key(
-                    ('u', 0)):
+            if ('u', 0) not in self.model.ebq and ('u', 0) in self.flowModel.ebq:
                 self.model.ebq[('u', 0)] = numpy.zeros(
                     self.flowModel.ebq[('u', 0)].shape, 'd')
                 self.model.ebq[('grad(u)', 0)] = numpy.zeros(
                     self.flowModel.ebq[('grad(u)', 0)].shape, 'd')
-            if self.flowModel.ebq.has_key(('v', 1)):
+            if ('v', 1) in self.flowModel.ebq:
                 self.model.u[0].getValuesTrace(
                     self.flowModel.ebq[
                         ('v', 1)], self.model.ebq[
@@ -168,38 +168,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         ('grad(v)', 1)], self.model.ebq[
                         ('grad(u)', 0)])
         if self.RD_modelIndex is not None:
-            # print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
-        if self.eikonalSolverFlag == 2:  # FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape, 'd')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0, absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-8,  # default 1.0e-4
-                                                    frontInitType='frontIntersection')
-#,#'frontIntersection',#or 'magnitudeOnly'
-        elif self.eikonalSolverFlag == 1:  # FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape, 'd')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-8,  # default 1.0e-4
-                                                    frontInitType='frontIntersection')
-#,#'frontIntersection',#or 'magnitudeOnly'
-        # if self.checkMass:
-        #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
-        #                                                              self.model.mesh.elementDiametersArray,
-        #                                                              self.model.q['dV'],
-        #                                                              self.model.q[('u',0)],
-        #                                                              self.model.mesh.nElements_owned)
-        #     log("Attach Models NCLS3P: Phase  0 mass before NCLS3P step = %12.5e" % (self.m_pre,),level=2)
-        #     self.totalFluxGlobal=0.0
-        #     self.lsGlobalMassArray = [self.m_pre]
-        #     self.lsGlobalMassErrorArray = [0.0]
-        #     self.fluxArray = [0.0]
-        #     self.timeArray = [self.model.timeIntegration.t]
-
+            self.rdModel_ebqe = self.rdModel.ebqe[('u',0)]
+        else:
+            self.rdModel = None
+            self.rdModel_ebqe = numpy.copy(self.model.ebqe[('u',0)])
+            
     def initializeElementQuadrature(self, t, cq):
         if self.flowModelIndex is None:
             self.q_v = numpy.zeros(cq[('grad(u)', 0)].shape, 'd')
@@ -213,6 +187,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)', 0)].shape, 'd')
 
     def preStep(self, t, firstStep=False):
+        # BOUNDARY CONDITION FROM re-distancing model
+        if self.rdModel is None:
+            self.rdModel_ebqe[:] = self.model.ebqe[('u',0)]
+            
+        # Restart flags for stages of taylor galerkin
+        self.model.stage = 1
+        self.model.auxTaylorGalerkinFlag = 1
+
+        # SAVE OLD SOLUTION #
+        self.model.u_dof_old[:] = self.model.u[0].dof
+
+        # COMPUTE NEW VELOCITY (if given by user) #
+        if self.model.hasVelocityFieldAsFunction:
+            self.model.updateVelocityFieldAsFunction()
+
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -234,7 +223,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
-        self.u_old_dof[:] = self.model.u[0].dof
         self.model.q['dV_last'][:] = self.model.q['dV']
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
@@ -277,8 +265,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         elif self.ebq_v is not None and c[('dH', 0, 0)].shape == self.ebq_v.shape:
             v = self.ebq_v
         else:
-            raise RuntimeError, "don't have v for NC Level set of shape = " + \
-                `c[('dH', 0, 0)].shape`
+            raise RuntimeError("don't have v for NC Level set of shape = " + \
+                repr(c[('dH', 0, 0)].shape))
         if v is not None:
             self.ncLevelSetCoefficientsEvaluate(v,
                                                 c[('u', 0)],
@@ -319,7 +307,7 @@ class LevelModel(OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
-        self.bdyNullSpace=bdyNullSpace
+        self.bdyNullSpace = bdyNullSpace
         #
         # set the objects describing the method and boundary conditions
         #
@@ -346,6 +334,8 @@ class LevelModel(OneLevelTransport):
             for ci in range(1, coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[
                     0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
+        self.u_dof_old = None
+
         # Simplicial Mesh
         # assume the same mesh for  all components for now
         self.mesh = self.u[0].femSpace.mesh
@@ -368,29 +358,29 @@ class LevelModel(OneLevelTransport):
         # cek come back
         if self.stabilization is not None:
             for ci in range(self.nc):
-                if coefficients.mass.has_key(ci):
-                    for flag in coefficients.mass[ci].values():
+                if ci in coefficients.mass:
+                    for flag in list(coefficients.mass[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.advection.has_key(ci):
-                    for flag in coefficients.advection[ci].values():
+                if ci in coefficients.advection:
+                    for flag in list(coefficients.advection[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.diffusion.has_key(ci):
-                    for diffusionDict in coefficients.diffusion[ci].values():
-                        for flag in diffusionDict.values():
+                if ci in coefficients.diffusion:
+                    for diffusionDict in list(coefficients.diffusion[ci].values()):
+                        for flag in list(diffusionDict.values()):
                             if flag != 'constant':
                                 self.stabilizationIsNonlinear = True
-                if coefficients.potential.has_key(ci):
-                    for flag in coefficients.potential[ci].values():
+                if ci in coefficients.potential:
+                    for flag in list(coefficients.potential[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.reaction.has_key(ci):
-                    for flag in coefficients.reaction[ci].values():
+                if ci in coefficients.reaction:
+                    for flag in list(coefficients.reaction[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.hamiltonian.has_key(ci):
-                    for flag in coefficients.hamiltonian[ci].values():
+                if ci in coefficients.hamiltonian:
+                    for flag in list(coefficients.hamiltonian[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
         # determine if we need element boundary storage
@@ -408,15 +398,15 @@ class LevelModel(OneLevelTransport):
         # assume same space dim for all variables
         self.nSpace_global = self.u[0].femSpace.nSpace_global
         self.nDOF_trial_element = [
-            u_j.femSpace.max_nDOF_element for u_j in self.u.values()]
+            u_j.femSpace.max_nDOF_element for u_j in list(self.u.values())]
         self.nDOF_phi_trial_element = [
-            phi_k.femSpace.max_nDOF_element for phi_k in self.phi.values()]
+            phi_k.femSpace.max_nDOF_element for phi_k in list(self.phi.values())]
         self.n_phi_ip_element = [
-            phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in self.phi.values()]
+            phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in list(self.phi.values())]
         self.nDOF_test_element = [
-            femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
+            femSpace.max_nDOF_element for femSpace in list(self.testSpace.values())]
         self.nFreeDOF_global = [
-            dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
+            dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element = sum(self.nDOF_trial_element)
         self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
@@ -430,7 +420,7 @@ class LevelModel(OneLevelTransport):
         elemQuadIsDict = isinstance(elementQuadrature, dict)
         if elemQuadIsDict:  # set terms manually
             for I in self.coefficients.elementIntegralKeys:
-                if elementQuadrature.has_key(I):
+                if I in elementQuadrature:
                     elementQuadratureDict[I] = elementQuadrature[I]
                 else:
                     elementQuadratureDict[I] = elementQuadrature['default']
@@ -440,7 +430,7 @@ class LevelModel(OneLevelTransport):
         if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(I):
+                    if I in elementQuadrature:
                         elementQuadratureDict[
                             ('stab',) + I[1:]] = elementQuadrature[I]
                     else:
@@ -452,7 +442,7 @@ class LevelModel(OneLevelTransport):
         if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(('numDiff', ci, ci)):
+                    if ('numDiff', ci, ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature[
                             ('numDiff', ci, ci)]
                     else:
@@ -462,14 +452,14 @@ class LevelModel(OneLevelTransport):
                     elementQuadratureDict[
                         ('numDiff', ci, ci)] = elementQuadrature
         if massLumping:
-            for ci in self.coefficients.mass.keys():
+            for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('m', ci)] = Quadrature.SimplexLobattoQuadrature(
                     self.nSpace_global, 1)
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[
                     ('stab',) + I[1:]] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global, 1)
         if reactionLumping:
-            for ci in self.coefficients.mass.keys():
+            for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('r', ci)] = Quadrature.SimplexLobattoQuadrature(
                     self.nSpace_global, 1)
             for I in self.coefficients.elementIntegralKeys:
@@ -478,7 +468,7 @@ class LevelModel(OneLevelTransport):
         elementBoundaryQuadratureDict = {}
         if isinstance(elementBoundaryQuadrature, dict):  # set terms manually
             for I in self.coefficients.elementBoundaryIntegralKeys:
-                if elementBoundaryQuadrature.has_key(I):
+                if I in elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[
                         I] = elementBoundaryQuadrature[I]
                 else:
@@ -540,7 +530,7 @@ class LevelModel(OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.q[('dV_u', 0)] = (1.0 / self.mesh.nElements_global) * \
+        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * \
             numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -688,21 +678,21 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux = None
         # set penalty terms
         # cek todo move into numerical flux initialization
-        if self.ebq_global.has_key('penalty'):
+        if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant / (
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, (
+                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
         # penalty term
         # cek move  to Numerical flux initialization
-        if self.ebqe.has_key('penalty'):
+        if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant / \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
+                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
+                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         log(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default
@@ -762,9 +752,51 @@ class LevelModel(OneLevelTransport):
         self.waterline_calls = 0
         self.waterline_prints = 0
 
+        # mql. Allow the user to provide functions to define the velocity field
+        self.hasVelocityFieldAsFunction = False
+        if ('velocityField') in dir(options):
+            self.velocityField = options.velocityField
+            self.hasVelocityFieldAsFunction = True
+
+        # interface locator
+        self.cell_interface_locator = numpy.zeros(self.mesh.nElements_global,'d')
+        self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+
+        # For Taylor Galerkin methods
+        self.stage = 1
+        self.auxTaylorGalerkinFlag = 1
+        self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
+        if self.coefficients.EXPLICIT_METHOD==True:
+            self.useTwoStageNewton = True
+        
+        # Some asserts for NCLS with Taylor Galerkin
+        if self.coefficients.EXPLICIT_METHOD==True:
+            assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "If EXPLICIT_METHOD=True, use BackwardEuler_cfl"
+            assert options.levelNonlinearSolver == proteus.NonlinearSolvers.TwoStageNewton, "If EXPLICIT_METHOD=True, use levelNonlinearSolver=TwoStageNewton"
+            
     # mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
+
+    def updateVelocityFieldAsFunction(self):
+        X = {0: self.q[('x')][:, :, 0],
+             1: self.q[('x')][:, :, 1],
+             2: self.q[('x')][:, :, 2]}
+        t = self.timeIntegration.t
+        self.coefficients.q_v[..., 0] = self.velocityField[0](X, t)
+        self.coefficients.q_v[..., 1] = self.velocityField[1](X, t)
+        if (self.nSpace_global == 3):
+            self.coefficients.q_v[..., 2] = self.velocityField[2](X, t)
+
+        # BOUNDARY
+        ebqe_X = {0: self.ebqe['x'][:, :, 0],
+                  1: self.ebqe['x'][:, :, 1],
+                  2: self.ebqe['x'][:, :, 2]}
+        self.coefficients.ebqe_v[..., 0] = self.velocityField[0](ebqe_X, t)
+        self.coefficients.ebqe_v[..., 1] = self.velocityField[1](ebqe_X, t)
+        if (self.nSpace_global == 3):
+            self.coefficients.ebqe_v[..., 2] = self.velocityField[2](ebqe_X, t)
 
     def calculateElementResidual(self):
         if self.globalResidualDummy is not None:
@@ -778,7 +810,14 @@ class LevelModel(OneLevelTransport):
         """
         # mwf debug
         # pdb.set_trace()
+
+        if self.u_dof_old is None:
+            # Pass initial condition to u_dof_old
+            self.u_dof_old = numpy.copy(self.u[0].dof)
+
         r.fill(0.0)
+        self.cell_interface_locator.fill(0.0) 
+        self.interface_locator.fill(0.0) 
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -786,16 +825,21 @@ class LevelModel(OneLevelTransport):
         # cek can put in logic to skip of BC's don't depend on t or u
         # Dirichlet boundary conditions
         # if hasattr(self.numericalFlux,'setDirichletValues'):
-        self.numericalFlux.setDirichletValues(self.ebqe)
+        if (self.stage!=2):
+            self.numericalFlux.setDirichletValues(self.ebqe)
         # flux boundary conditions, SHOULDN'T HAVE
         # cNCLS3P.calculateResidual(self.mesh.nElements_global,
         # try to use 1d,2d,3d specific modules
 
         if self.forceStrongConditions:
-            for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+            for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 self.u[0].dof[dofN] = g(
                     self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                     self.timeIntegration.t)
+        
+        if (self.stage==2 and self.auxTaylorGalerkinFlag==1):
+            self.uTilde_dof[:] = self.u[0].dof
+            self.auxTaylorGalerkinFlag=0
 
         self.ncls3p.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -830,7 +874,7 @@ class LevelModel(OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-            self.coefficients.u_old_dof,
+            self.u_dof_old,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
@@ -851,12 +895,26 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            #self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.rdModel_ebqe,
             self.numericalFlux.ebqe[('u', 0)],
-            self.ebqe[('u', 0)])
+            self.ebqe[('u', 0)],
+            self.cell_interface_locator,
+            self.interface_locator,            
+            self.coefficients.EXPLICIT_METHOD,
+            self.u[0].femSpace.order,
+            self.stage,
+            self.uTilde_dof,
+            self.timeIntegration.dt,
+            self.coefficients.PURE_BDF)
 
+        #if self.coefficients.EXPLICIT_METHOD:
+        #    self.taylorGalerkinStage = 2
+        
+        self.quantDOFs[:] = self.interface_locator
+        
         if self.forceStrongConditions:
-            for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
+            for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 r[dofN] = 0
 
         # print "velocity in ncls",self.coefficients.q_v,
@@ -880,6 +938,7 @@ class LevelModel(OneLevelTransport):
         # mwf debug
         # pdb.set_trace()
         # cNCLS3P.calculateJacobian(self.mesh.nElements_global,
+
         self.ncls3p.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -923,14 +982,17 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            #self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.rdModel_ebqe,
             self.numericalFlux.ebqe[('u', 0)],
-            self.csrColumnOffsets_eb[(0, 0)])
+            self.csrColumnOffsets_eb[(0, 0)],
+            self.coefficients.EXPLICIT_METHOD,
+            self.coefficients.PURE_BDF)
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0  # probably want to add some scaling to match non-dirichlet diagonals in linear system
-            for dofN in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys():
+            for dofN in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys()):
                 global_dofN = dofN
                 for i in range(
                     self.rowptr[global_dofN],
@@ -1006,7 +1068,7 @@ class LevelModel(OneLevelTransport):
                                                                                    self.ebqe[('x')],
                                                                                    self.advectiveFluxBoundaryConditionsSetterDict[cj],
                                                                                    self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
-                                                       for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
+                                                       for cj in list(self.advectiveFluxBoundaryConditionsSetterDict.keys())])
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(
             self.timeIntegration.t, self.ebqe)
 
@@ -1060,7 +1122,7 @@ class LevelModel(OneLevelTransport):
                 self.u[0].femSpace.dofMap.l2g,
                 self.mesh.elementDiametersArray,
                 self.u[0].dof,
-                self.coefficients.u_old_dof,
+                self.u_dof_old,
                 self.coefficients.q_v,
                 self.timeIntegration.m_tmp[0],
                 self.q[('u', 0)],
