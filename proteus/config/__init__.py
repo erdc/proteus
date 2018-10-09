@@ -9,6 +9,8 @@ elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('thu
     from .thunder import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('onyx'):
     from .onyx import *
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('gordon'):
+    from .gordon import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('spirit'):
     from .spirit import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('stampede'):
