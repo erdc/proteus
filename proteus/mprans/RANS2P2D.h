@@ -675,7 +675,7 @@ namespace proteus
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_mu = (1.0-useVF)*smoothedDirac(eps_mu,phi);
-
+        const int in_fluid = (phi>0.0)?1:0;
         //calculate eddy viscosity
         switch (turbulenceClosureModel)
           {
@@ -816,24 +816,24 @@ namespace proteus
             dmass_adv_v[1]=porosity;
 
             //u momentum advective flux
-            mom_u_adv[0]=porosity*u*u;
-            mom_u_adv[1]=porosity*u*v;
+            mom_u_adv[0]=in_fluid*porosity*u*u;
+            mom_u_adv[1]=in_fluid*porosity*u*v;
 
-            dmom_u_adv_u[0]=2.0*porosity*u;
-            dmom_u_adv_u[1]=porosity*v;
+            dmom_u_adv_u[0]=in_fluid*2.0*porosity*u;
+            dmom_u_adv_u[1]=in_fluid*porosity*v;
 
             dmom_u_adv_v[0]=0.0;
-            dmom_u_adv_v[1]=porosity*u;
+            dmom_u_adv_v[1]=in_fluid*porosity*u;
 
             //v momentum advective_flux
-            mom_v_adv[0]=porosity*v*u;
-            mom_v_adv[1]=porosity*v*v;
+            mom_v_adv[0]=in_fluid*porosity*v*u;
+            mom_v_adv[1]=in_fluid*porosity*v*v;
 
-            dmom_v_adv_u[0]=porosity*v;
+            dmom_v_adv_u[0]=in_fluid*porosity*v;
             dmom_v_adv_u[1]=0.0;
 
-            dmom_v_adv_v[0]=porosity*u;
-            dmom_v_adv_v[1]=2.0*porosity*v;
+            dmom_v_adv_v[0]=in_fluid*porosity*u;
+            dmom_v_adv_v[1]=in_fluid*2.0*porosity*v;
 
             //u momentum diffusion tensor
             mom_uu_diff_ten[0] = 2.0*porosity*nu;
@@ -849,8 +849,8 @@ namespace proteus
 
             //momentum sources
             norm_n = sqrt(n[0]*n[0]+n[1]*n[1]);//+n[2]*n[2]);
-            mom_u_source = -porosity*g[0];// - porosity*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
-            mom_v_source = -porosity*g[1];// - porosity*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
+            mom_u_source = -in_fluid*porosity*g[0];// - porosity*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
+            mom_v_source = -in_fluid*porosity*g[1];// - porosity*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
 
             //u momentum Hamiltonian (pressure)
             mom_u_ham = porosity*grad_p[0]/rho;
@@ -2311,7 +2311,7 @@ namespace proteus
 
                 if (use_ball_as_particle == 1)
                 {
-                    get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,phi[eN_k]);
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,phi[eN_k]);//since phi is used in evaluateCoefficients
                 }
                 //
                 //calculate pde coefficients at quadrature points
