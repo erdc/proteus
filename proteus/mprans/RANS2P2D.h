@@ -1098,7 +1098,7 @@ namespace proteus
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
-
+            if(0)
             if (NONCONSERVATIVE_FORM > 0.0)
             {
                 //(2)
