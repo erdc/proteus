@@ -54,6 +54,7 @@ class MeshAdaptPUMIDrvr{
 
   //MeshAdapt functions
   int willAdapt();
+  int willErrorAdapt();
   int willInterfaceAdapt();
   int adaptPUMIMesh(const char* input);
   int calculateSizeField(double L_band);

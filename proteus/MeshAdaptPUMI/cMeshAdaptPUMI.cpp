@@ -282,7 +282,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   return 0;
 } 
 
-int MeshAdaptPUMIDrvr::willAdapt() 
+int MeshAdaptPUMIDrvr::willErrorAdapt() 
 /**
  * @brief Looks at the estimated error and determines if mesh adaptation is necessary.
  *
@@ -292,30 +292,68 @@ int MeshAdaptPUMIDrvr::willAdapt()
  * Assertion is set to ensure that all ranks in a parallel execution will enter the adapt stage
  */
 {
-  if(THRESHOLD==0){
-    THRESHOLD = total_error;
-  }
   int adaptFlag=0;
   int assertFlag;
 
-  if(total_error >= THRESHOLD || size_field_config=="combined"){
-    adaptFlag = 1;
+  //get current size field
+  apf::Field* currentField;
+
+  if(!size_iso) //if no previous size field
+  {
+    currentField = samSz::isoSize(m);
   }
-/*
-  else{
-    apf::MeshEntity* reg;
-    apf::MeshIterator* iter= m->begin(nsd);
-    while(reg = m->iterate(iter)){
-      if(apf::getScalar(err_reg,reg,0)>target_error)
-        adaptFlag=1;
-    }
-    m->end(iter);
+  else //otherwise use previous size field, remember to reflect this in interfaceAdapt or collapse to a single function
+  {
+    currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
+    apf::copyData(currentField,size_iso);
   }
-*/
+
+  //get error-based size field
+  getERMSizeField(total_error);
+  apf::Field* errorField = sizeFieldList.front();
+  sizeFieldList.pop(); //remove this size field from the queue
+
+
+  //determine if desired mesh is contained in current mesh
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+    double h_current = apf::getScalar(currentField,ent,0);
+    double h_needed = apf::getScalar(errorField,ent,0);
+    if(h_current>h_needed){
+      adaptFlag=1;        
+      //apf::writeVtkFiles("willErrorAdapt", m);
+      //std::cout<<"What is the ent? "<<localNumber(ent)<<std::endl;
+      //std::exit(1);
+      break;
+      
+    }  
+  }//end while
 
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
   assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
+
+  apf::destroyField(currentField);
+  apf::destroyField(errorField);
+
+  return adaptFlag;
+}
+
+
+int MeshAdaptPUMIDrvr::willAdapt() 
+//Master function that calls other adapt-trigger functions
+{
+  int adaptFlag = 0;
+  if(size_field_config == "combined" or size_field_config == "isotropic")
+    adaptFlag += willInterfaceAdapt(); 
+  if(size_field_config == "combined" or size_field_config == "VMS")
+    adaptFlag += willErrorAdapt();
+
+  if(adaptFlag > 0)
+    adaptFlag = 1;
+  
   return adaptFlag;
 }
 
@@ -330,22 +368,31 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
   int assertFlag;
 
   //get current size field
-  apf::Field* currentField = samSz::isoSize(m);
+  apf::Field* currentField;
+  if(!size_iso) //if no previous size field
+  {
+    currentField = samSz::isoSize(m);
+  }
+  else //otherwise use previous size field, remember to reflect this in interfaceAdapt or collapse to a single function
+  {
+    currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
+    apf::copyData(currentField,size_iso);
+  }
+
 
   //get banded size field
   double L_band = (N_interface_band)*hPhi;
   calculateSizeField(L_band);
   apf::Field* interfaceField = sizeFieldList.front();
   sizeFieldList.pop(); //destroy this size field
-  //get previous size field
-  //size_iso 
 
-  //determine if edges are intersecting the banded region and apply logic
+
+  //determine if desired mesh is contained in current mesh
   apf::MeshEntity* ent;
   apf::MeshIterator* it = m->begin(0);
   while( (ent = m->iterate(it)) )
   {
-    double h_current = apf::getScalar(size_iso,ent,0);
+    double h_current = apf::getScalar(currentField,ent,0);
     double h_needed = apf::getScalar(interfaceField,ent,0);
     if(h_current>h_needed){
       adaptFlag=1;        
