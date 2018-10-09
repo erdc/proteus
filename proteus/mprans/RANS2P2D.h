@@ -2306,8 +2306,13 @@ namespace proteus
                 //save velocity at quadrature points for other models to use
                 q_velocity[eN_k_nSpace+0]=u;
                 q_velocity[eN_k_nSpace+1]=v;
-                q_x[eN_k_3d+0]=x;
-                q_x[eN_k_3d+1]=y;
+                q_x[eN_k_3d + 0] = x;
+                q_x[eN_k_3d + 1] = y;
+
+                if (use_ball_as_particle == 1)
+                {
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,phi[eN_k]);
+                }
                 //
                 //calculate pde coefficients at quadrature points
                 //
