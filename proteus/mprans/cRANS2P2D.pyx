@@ -86,6 +86,10 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double * u_dof,
                                double * v_dof,
                                double * w_dof,
+                               double * p_old_dof,
+                               double * u_old_dof,
+                               double * v_old_dof,
+                               double * w_old_dof,
                                double * g,
                                double useVF,
                                double * rho,
@@ -186,7 +190,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double particle_alpha,
                                double particle_beta,
                                double particle_penalty_constant,
-                               double *phi_solid_nodes)
+                               double *phi_solid_nodes,
+                               int use_pseudo_penalty)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
@@ -259,6 +264,10 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                int * p_l2g,
                                int * vel_l2g,
                                double * p_dof, double * u_dof, double * v_dof, double * w_dof,
+                               double * p_old_dof,
+                               double * u_old_dof,
+                               double * v_old_dof,
+                               double * w_old_dof,
                                double * g,
                                double useVF,
                                double * vf,
@@ -364,7 +373,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double particle_epsFact,
                                double particle_alpha,
                                double particle_beta,
-                               double particle_penalty_constant)
+                               double particle_penalty_constant,
+                               int use_pseudo_penalty)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -590,6 +600,10 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
                           numpy.ndarray w_dof,
+                          numpy.ndarray p_old_dof,
+                          numpy.ndarray u_old_dof,
+                          numpy.ndarray v_old_dof,
+                          numpy.ndarray w_old_dof,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray rho,
@@ -690,7 +704,8 @@ cdef class cRANS2P2D_base:
                           double particle_alpha,
                           double particle_beta,
                           double particle_penalty_constant,
-                          numpy.ndarray phi_solid_nodes):
+                          numpy.ndarray phi_solid_nodes,
+                          int use_pseudo_penalty):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
@@ -770,6 +785,10 @@ cdef class cRANS2P2D_base:
                                        < double * > u_dof.data,
                                        < double * > v_dof.data,
                                        < double * > w_dof.data,
+                                       < double * > p_old_dof.data,
+                                       < double * > u_old_dof.data,
+                                       < double * > v_old_dof.data,
+                                       < double * > w_old_dof.data,
                                        < double * > g.data,
                                        useVF,
                                        < double * > rho.data,
@@ -870,7 +889,8 @@ cdef class cRANS2P2D_base:
                                        particle_alpha,
                                        particle_beta,
                                        particle_penalty_constant,
-                                       < double * > phi_solid_nodes.data)
+                                       < double * > phi_solid_nodes.data,
+                                       use_pseudo_penalty)
 
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
@@ -945,6 +965,10 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray p_l2g,
                           numpy.ndarray vel_l2g,
                           numpy.ndarray p_dof, numpy.ndarray u_dof, numpy.ndarray v_dof, numpy.ndarray w_dof,
+                          numpy.ndarray p_old_dof,
+                          numpy.ndarray u_old_dof,
+                          numpy.ndarray v_old_dof,
+                          numpy.ndarray w_old_dof,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -1050,7 +1074,8 @@ cdef class cRANS2P2D_base:
                           double particle_epsFact,
                           double particle_alpha,
                           double particle_beta,
-                          double particle_penalty_constant):
+                          double particle_penalty_constant,
+                          int use_pseudo_penalty):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
@@ -1125,6 +1150,10 @@ cdef class cRANS2P2D_base:
                                        < int * > p_l2g.data,
                                        < int * > vel_l2g.data,
                                        < double * > p_dof.data, < double * > u_dof.data, < double * > v_dof.data, < double * > w_dof.data,
+                                       < double * > p_old_dof.data,
+                                       < double * > u_old_dof.data,
+                                       < double * > v_old_dof.data,
+                                       < double * > w_old_dof.data,
                                        < double * > g.data,
                                        useVF,
                                        < double * > vf.data,
@@ -1230,7 +1259,8 @@ cdef class cRANS2P2D_base:
                                        particle_epsFact,
                                        particle_alpha,
                                        particle_beta,
-                                       particle_penalty_constant)
+                                       particle_penalty_constant,
+                                       use_pseudo_penalty)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
