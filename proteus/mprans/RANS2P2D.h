@@ -2610,6 +2610,14 @@ namespace proteus
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
+                if(phi[eN_k]<0.0)//One does not have to change Jacobian
+                {
+                  double distance,vx,vy;
+                  int index_ball = get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance);
+                  get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,ball_velocity,ball_angular_velocity,index_ball,x,y,z,vx,vy);
+                  mom_u_acc_t = alphaBDF*(mom_u_acc - vx);
+                  mom_v_acc_t = alphaBDF*(mom_v_acc - vy);
+                }
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
                     mom_u_acc_t *= dmom_u_acc_u;
