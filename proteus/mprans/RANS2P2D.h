@@ -836,25 +836,67 @@ namespace proteus
             dmass_adv_v[1]=porosity;
 
             //u momentum advective flux
-            mom_u_adv[0]=in_fluid*porosity*u*u;
-            mom_u_adv[1]=in_fluid*porosity*u*v;
+            mom_u_adv[0]=porosity*u*u;
+            mom_u_adv[1]=porosity*u*v;
 
-            dmom_u_adv_u[0]=in_fluid*2.0*porosity*u;
-            dmom_u_adv_u[1]=in_fluid*porosity*v;
+            dmom_u_adv_u[0]=2.0*porosity*u;
+            dmom_u_adv_u[1]=porosity*v;
 
             dmom_u_adv_v[0]=0.0;
-            dmom_u_adv_v[1]=in_fluid*porosity*u;
+            dmom_u_adv_v[1]=porosity*u;
 
             //v momentum advective_flux
-            mom_v_adv[0]=in_fluid*porosity*v*u;
-            mom_v_adv[1]=in_fluid*porosity*v*v;
+            mom_v_adv[0]=porosity*v*u;
+            mom_v_adv[1]=porosity*v*v;
 
-            dmom_v_adv_u[0]=in_fluid*porosity*v;
+            dmom_v_adv_u[0]=porosity*v;
             dmom_v_adv_u[1]=0.0;
 
-            dmom_v_adv_v[0]=in_fluid*porosity*u;
-            dmom_v_adv_v[1]=in_fluid*2.0*porosity*v;
+            dmom_v_adv_v[0]=porosity*u;
+            dmom_v_adv_v[1]=2.0*porosity*v;
 
+            if(use_pseudo_penalty==1)///////////treat nonlinear term implicitly but only inside solid domain
+            {
+              //u momentum advective flux
+              mom_u_adv[0]=in_fluid*porosity*u*u;
+              mom_u_adv[1]=in_fluid*porosity*u*v;
+
+              dmom_u_adv_u[0]=in_fluid*2.0*porosity*u;
+              dmom_u_adv_u[1]=in_fluid*porosity*v;
+
+              dmom_u_adv_v[0]=0.0;
+              dmom_u_adv_v[1]=in_fluid*porosity*u;
+
+              //v momentum advective_flux
+              mom_v_adv[0]=in_fluid*porosity*v*u;
+              mom_v_adv[1]=in_fluid*porosity*v*v;
+
+              dmom_v_adv_u[0]=in_fluid*porosity*v;
+              dmom_v_adv_u[1]=0.0;
+
+              dmom_v_adv_v[0]=in_fluid*porosity*u;
+              dmom_v_adv_v[1]=in_fluid*2.0*porosity*v;
+            }else if(use_pseudo_penalty==2){///////////treat nonlinear term explicitly
+              //u momentum advective flux
+              mom_u_adv[0]=in_fluid*porosity*u_old*u_old;
+              mom_u_adv[1]=in_fluid*porosity*u_old*v_old;
+
+              dmom_u_adv_u[0]=0.0;
+              dmom_u_adv_u[1]=0.0;
+
+              dmom_u_adv_v[0]=0.0;
+              dmom_u_adv_v[1]=0.0;
+
+              //v momentum advective_flux
+              mom_v_adv[0]=in_fluid*porosity*v_old*u_old;
+              mom_v_adv[1]=in_fluid*porosity*v_old*v_old;
+
+              dmom_v_adv_u[0]=0.0;
+              dmom_v_adv_u[1]=0.0;
+
+              dmom_v_adv_v[0]=0.0;
+              dmom_v_adv_v[1]=0.0;
+            }
             //u momentum diffusion tensor
             mom_uu_diff_ten[0] = 2.0*porosity*nu;
             mom_uu_diff_ten[1] = porosity*nu;
@@ -869,9 +911,13 @@ namespace proteus
 
             //momentum sources
             norm_n = sqrt(n[0]*n[0]+n[1]*n[1]);//+n[2]*n[2]);
-            mom_u_source = -in_fluid*porosity*g[0];// - porosity*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
-            mom_v_source = -in_fluid*porosity*g[1];// - porosity*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
-
+            mom_u_source = -porosity*g[0];
+            mom_v_source = -porosity*g[1];
+            if(use_pseudo_penalty>0)
+            {
+              mom_u_source = -in_fluid*porosity*g[0];
+              mom_v_source = -in_fluid*porosity*g[1];
+            }
             //u momentum Hamiltonian (pressure)
             mom_u_ham = porosity*grad_p[0]/rho;
             dmom_u_ham_grad_p[0]=porosity/rho;
@@ -1024,7 +1070,8 @@ namespace proteus
                                            double &dmass_ham_w,
                                            double *particle_netForces,
                                            double *particle_netMoments,
-                                           double *particle_surfaceArea)
+                                           double *particle_surfaceArea,
+                                           const double use_pseudo_penalty)
     {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s;
         double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
@@ -1118,7 +1165,7 @@ namespace proteus
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
-            if(0)
+            if(use_pseudo_penalty==0)// not pseudo-penalty method == IBM
             if (NONCONSERVATIVE_FORM > 0.0)
             {
                 //(2)
@@ -2560,7 +2607,8 @@ namespace proteus
                                             dmass_ham_w,
                                             &particle_netForces[0],
                                             &particle_netMoments[0],
-                                            &particle_surfaceArea[0]);
+                                            &particle_surfaceArea[0],
+                                            use_pseudo_penalty);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -2653,7 +2701,7 @@ namespace proteus
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
-                if(use_pseudo_penalty==1 && phi[eN_k]<0.0)//One does not have to change Jacobian
+                if(use_pseudo_penalty>0 && phi[eN_k]<0.0)//One does not have to change Jacobian
                 {
                   double distance,vx,vy;
                   int index_ball = get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance);
@@ -4297,7 +4345,8 @@ namespace proteus
                                             dmass_ham_w,
                                             &particle_netForces[0],
                                             &particle_netMoments[0],
-                                            &particle_surfaceArea[0]);
+                                            &particle_surfaceArea[0],
+                                            use_pseudo_penalty);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
