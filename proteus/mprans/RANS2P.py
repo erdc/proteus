@@ -220,6 +220,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,):
+        self.use_pseudo_penalty = 0
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
@@ -1602,6 +1603,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.u[1].dof,
                                       self.u[2].dof,
                                       self.u[3].dof,
+                                      self.coefficients.p_old_dof,
+                                      self.coefficients.u_old_dof,
+                                      self.coefficients.v_old_dof,
+                                      self.coefficients.w_old_dof,
                                       self.coefficients.g,
                                       self.coefficients.useVF,
                                       self.q['rho'],
@@ -1708,7 +1713,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant,
-                                      self.coefficients.phi_s)
+                                      self.coefficients.phi_s,
+                                      self.coefficients.use_pseudo_penalty)
         # from proteus.flcbdfWrappers import globalSum
         # for i in range(self.coefficients.netForces_p.shape[0]):
         #     self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1879,6 +1885,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.u[1].dof,
                                       self.u[2].dof,
                                       self.u[3].dof,
+                                      self.coefficients.p_old_dof,
+                                      self.coefficients.u_old_dof,
+                                      self.coefficients.v_old_dof,
+                                      self.coefficients.w_old_dof,
                                       self.coefficients.g,
                                       self.coefficients.useVF,
                                       self.coefficients.q_vf,
@@ -1988,7 +1998,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_epsFact,
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
-                                      self.coefficients.particle_penalty_constant)
+                                      self.coefficients.particle_penalty_constant,
+                                      self.coefficients.use_pseudo_penalty)
         
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
