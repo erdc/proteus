@@ -76,7 +76,7 @@ else:
     stressFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].u_stress.init_cython(),
                                     1: lambda x, flag: domain.bc[flag].v_stress.init_cython()}
     if nd == 3:
-        dirichletConditions[2] = lambda x, flag: domain.bc[flag].hz_dirichlet.init_cyhton()
+        dirichletConditions[2] = lambda x, flag: domain.bc[flag].hz_dirichlet.init_cython()
         stressFluxBoundaryConditions[2] = lambda x, flag: domain.bc[flag].w_stress.init_cython()
 
 fluxBoundaryConditions = {0: 'noFlow',
