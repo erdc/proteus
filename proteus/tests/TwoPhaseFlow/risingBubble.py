@@ -16,14 +16,14 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 opts= Context.Options([
     ("test_case",1,"Rising bubble test cases"),
     ('ns_model',1,"ns_model = {rans2p,rans3p}"),
-    ('ls_model',1,"ls_model = {ncls,clsvof}"),
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("refinement",3,"level of refinement"),
-    ("genMesh",True,"Generate a new mesh"),
-    ("usePUMI",False,"usePUMI workflow")
-    ])
+    ("refinement",3,"level of refinement")
+    ],mutable=True)
+
+# Change parameters for automated testing #
+opts.refinement=2
 
 assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
 assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
@@ -114,7 +114,6 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
-                                             ls_model=opts.ls_model,
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -127,7 +126,7 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=False)
-physical_parameters = myTpFlowProblem.Parameters.physical
+physical_parameters = myTpFlowProblem.physical_parameters
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
 if opts.test_case==1:
     physical_parameters['densityA'] = 1000.0
@@ -142,22 +141,3 @@ else: #test_case=2
     physical_parameters['densityB'] = 1.0
     physical_parameters['viscosityB'] = 0.1/physical_parameters['densityB']
     physical_parameters['surf_tension_coeff'] = 1.96    
-
-params = myTpFlowProblem.Parameters
-
-# MESH PARAMETERS
-params.mesh.genMesh = opts.genMesh
-params.mesh.he = he
-if structured:
-    params.mesh.nnx = nnx
-    params.mesh.nny = nny
-
-# if opts.ns_model == 0:
-#     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
-#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
-# elif opts.ns_model == 1:
-#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
-#     myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
-#     myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
-#     myTpFlowProblem.Parameters.Models.pressure['index'] = 3
-#     myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4

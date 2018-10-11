@@ -30,7 +30,6 @@ class TwoPhaseFlowProblem:
                  boundaryConditions=None,
                  # OTHERS #
                  useSuperlu=False):
-        """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         if ns_model is not None:
             assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
@@ -40,11 +39,13 @@ class TwoPhaseFlowProblem:
         assert cfl <= 1, "Choose cfl <= 1"
         assert isinstance (outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
         assert type(he)==float , "Provide (float) he (characteristic mesh size)"
+        assert domain is not None, "Provide a domain"
         if structured:
             assert type(nnx)==int and type(nny)==int, "Provide (int) nnx and nny"
             if nd==3:
                 assert type(nnz)==int, "Provide (int) nnz"
-        assert domain is not None, "Provide a domain"
+        else:
+            assert domain.MeshOptions.triangleOptions != 'q30DenA', "Set domain.MeshOptions.triangleOptions"
         assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
         if initialConditions is not None:
             assert type(initialConditions)==dict, "Provide dict of initial conditions"
@@ -125,6 +126,8 @@ class TwoPhaseFlowProblem:
                 ind += 1
                 self.Parameters.Models.pressureInitial.index = ind
                 ind += 1
+        # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
+        self.general = default_general
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
@@ -347,3 +350,5 @@ default_clsvof_parameters = {'useMetrics': 1.0,
                              'outputQuantDOFs': True,
                              'computeMetrics': 1,
                              'eps_tolerance_clsvof': False}
+default_general = {'nLevels': 1,
+                   'nLayersOfOverlapForParallel': 0}

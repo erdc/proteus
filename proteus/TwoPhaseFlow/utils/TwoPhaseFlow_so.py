@@ -23,11 +23,14 @@ for i in range(len(sys.argv)):
 # ***************************** #
 # name = "TwoPhaseFlow"
 case = __import__(name)
+
+# Create context
 Context.setFromModule(case)
 ct = Context.get()
 ct.myTpFlowProblem.initializeAll()
 
 params = ct.myTpFlowProblem.Parameters
+
 
 # READ FROM myTpFlowProblem #
 assert hasattr(ct,'myTpFlowProblem'), "Create myTpFlowProblem from TwoPhaseFlowProblem"
