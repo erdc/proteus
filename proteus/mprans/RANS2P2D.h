@@ -854,6 +854,23 @@ namespace proteus
               dmom_v_ham_u = 0.0;
               dmom_v_ham_v = 0.0;
             }
+            else if (use_pseudo_penalty == 3)
+            {
+
+              //u momentum Hamiltonian (advection)
+              mom_u_ham += 0.0;
+              dmom_u_ham_grad_u[0] = 0.0;
+              dmom_u_ham_grad_u[1] = 0.0;
+              dmom_u_ham_u = 0.0;
+              dmom_u_ham_v = 0.0;
+
+              //v momentum Hamiltonian (advection)
+              mom_v_ham += 0.0;
+              dmom_v_ham_grad_v[0] = 0.0;
+              dmom_v_ham_grad_v[1] = 0.0;
+              dmom_v_ham_u = 0.0;
+              dmom_v_ham_v = 0.0;
+            }
           }
           else
           {
@@ -930,6 +947,26 @@ namespace proteus
               //v momentum advective_flux
               mom_v_adv[0]=in_fluid*porosity*v_old*u_old;
               mom_v_adv[1]=in_fluid*porosity*v_old*v_old;
+
+              dmom_v_adv_u[0]=0.0;
+              dmom_v_adv_u[1]=0.0;
+
+              dmom_v_adv_v[0]=0.0;
+              dmom_v_adv_v[1]=0.0;
+            }else if(use_pseudo_penalty==3){///////////treat nonlinear term explicitly
+              //u momentum advective flux
+              mom_u_adv[0]=0.0;
+              mom_u_adv[1]=0.0;
+
+              dmom_u_adv_u[0]=0.0;
+              dmom_u_adv_u[1]=0.0;
+
+              dmom_u_adv_v[0]=0.0;
+              dmom_u_adv_v[1]=0.0;
+
+              //v momentum advective_flux
+              mom_v_adv[0]=0.0;
+              mom_v_adv[1]=0.0;
 
               dmom_v_adv_u[0]=0.0;
               dmom_v_adv_u[1]=0.0;
