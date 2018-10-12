@@ -789,7 +789,11 @@ namespace proteus
             norm_n = sqrt(n[0]*n[0]+n[1]*n[1]);
             mom_u_source = -porosity*rho*g[0];// - porosity*d_mu*sigma*kappa*n[0];
             mom_v_source = -porosity*rho*g[1];// - porosity*d_mu*sigma*kappa*n[1];
-
+            if(use_pseudo_penalty>0)
+            {
+              mom_u_source = -in_fluid*porosity*rho*g[0];
+              mom_v_source = -in_fluid*porosity*rho*g[1];
+            }
 
             //u momentum Hamiltonian (pressure)
             mom_u_ham = porosity*grad_p[0];
@@ -799,23 +803,59 @@ namespace proteus
             //v momentum Hamiltonian (pressure)
             mom_v_ham = porosity*grad_p[1];
             dmom_v_ham_grad_p[0]=0.0;
-            dmom_v_ham_grad_p[1]=porosity;
+            dmom_v_ham_grad_p[1] = porosity;
+            if (use_pseudo_penalty == 0)
+            {
+              //u momentum Hamiltonian (advection)
+              mom_u_ham += rho * porosity * (u * grad_u[0] + v * grad_u[1]);
+              dmom_u_ham_grad_u[0] = rho * porosity * u;
+              dmom_u_ham_grad_u[1] = rho * porosity * v;
+              dmom_u_ham_u = rho * porosity * grad_u[0];
+              dmom_u_ham_v = rho * porosity * grad_u[1];
 
-            //u momentum Hamiltonian (advection)
-            mom_u_ham += rho*porosity*(u*grad_u[0]+v*grad_u[1]);
-            dmom_u_ham_grad_u[0]=rho*porosity*u;
-            dmom_u_ham_grad_u[1]=rho*porosity*v;
-            dmom_u_ham_u =rho*porosity*grad_u[0];
-            dmom_u_ham_v =rho*porosity*grad_u[1];
+              //v momentum Hamiltonian (advection)
+              mom_v_ham += rho * porosity * (u * grad_v[0] + v * grad_v[1]);
+              dmom_v_ham_grad_v[0] = rho * porosity * u;
+              dmom_v_ham_grad_v[1] = rho * porosity * v;
+              dmom_v_ham_u = rho * porosity * grad_v[0];
+              dmom_v_ham_v = rho * porosity * grad_v[1];
+            }
+            else if (use_pseudo_penalty == 1)
+            {
 
-            //v momentum Hamiltonian (advection)
-            mom_v_ham += rho*porosity*(u*grad_v[0]+v*grad_v[1]);
-            dmom_v_ham_grad_v[0]=rho*porosity*u;
-            dmom_v_ham_grad_v[1]=rho*porosity*v;
-            dmom_v_ham_u =rho*porosity*grad_v[0];
-            dmom_v_ham_v =rho*porosity*grad_v[1];
+              //u momentum Hamiltonian (advection)
+              mom_u_ham += in_fluid * rho * porosity * (u * grad_u[0] + v * grad_u[1]);
+              dmom_u_ham_grad_u[0] = in_fluid * rho * porosity * u;
+              dmom_u_ham_grad_u[1] = in_fluid * rho * porosity * v;
+              dmom_u_ham_u = in_fluid * rho * porosity * grad_u[0];
+              dmom_u_ham_v = in_fluid * rho * porosity * grad_u[1];
+
+              //v momentum Hamiltonian (advection)
+              mom_v_ham += in_fluid * rho * porosity * (u * grad_v[0] + v * grad_v[1]);
+              dmom_v_ham_grad_v[0] = in_fluid * rho * porosity * u;
+              dmom_v_ham_grad_v[1] = in_fluid * rho * porosity * v;
+              dmom_v_ham_u = in_fluid * rho * porosity * grad_v[0];
+              dmom_v_ham_v = in_fluid * rho * porosity * grad_v[1];
+            }
+            else if (use_pseudo_penalty == 2)
+            {
+
+              //u momentum Hamiltonian (advection)
+              mom_u_ham += in_fluid * rho * porosity * (u_old * grad_u_old[0] + v * grad_u_old[1]);
+              dmom_u_ham_grad_u[0] = 0.0;
+              dmom_u_ham_grad_u[1] = 0.0;
+              dmom_u_ham_u = 0.0;
+              dmom_u_ham_v = 0.0;
+
+              //v momentum Hamiltonian (advection)
+              mom_v_ham += in_fluid * rho * porosity * (u_old * grad_v_old[0] + v_old * grad_v_old[1]);
+              dmom_v_ham_grad_v[0] = 0.0;
+              dmom_v_ham_grad_v[1] = 0.0;
+              dmom_v_ham_u = 0.0;
+              dmom_v_ham_v = 0.0;
+            }
           }
-        else
+          else
           {
             //u momentum accumulation
             mom_u_acc=porosity*u;
@@ -1556,117 +1596,117 @@ namespace proteus
         flux_umom = 0.0;
         flux_vmom = 0.0;
         if (NONCONSERVATIVE_FORM > 0.0)
-          {
-            flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for  moving and fixed domains
-            flowSpeedNormal+=n[0]*dham_grad[0]+n[1]*dham_grad[1];
-          }
+        {
+          flowSpeedNormal = n[0] * df_vmom_dv[0] + n[1] * df_umom_du[1]; //tricky, works for  moving and fixed domains
+          flowSpeedNormal += n[0] * dham_grad[0] + n[1] * dham_grad[1];
+        }
         else
-          flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for  moving and fixed domains
+          flowSpeedNormal = n[0] * df_vmom_dv[0] + n[1] * df_umom_du[1]; //tricky, works for  moving and fixed domains
         if (isDOFBoundary_u != 1)
+        {
+          flux_mass += n[0] * f_mass[0];
+          velocity[0] = f_mass[0];
+          if (flowSpeedNormal >= 0.0)
           {
-            flux_mass += n[0]*f_mass[0];
-            velocity[0] = f_mass[0];
-            if (flowSpeedNormal >= 0.0)
-              {
-                flux_umom += n[0]*f_umom[0];
-                flux_vmom += n[0]*f_vmom[0];
-              }
-            else
-              {
-                if (NONCONSERVATIVE_FORM > 0.0)
-                  {
-                    flux_umom+=(0.0-u)*flowSpeedNormal;
-                  }
-	      }
+            flux_umom += n[0] * f_umom[0];
+            flux_vmom += n[0] * f_vmom[0];
           }
-        else
-          {
-            flux_mass += n[0]*f_mass[0];
-            velocity[0] = f_mass[0];
-            if (flowSpeedNormal >= 0.0)
-              {
-                flux_umom += n[0]*f_umom[0];
-                flux_vmom += n[0]*f_vmom[0];
-              }
-            else
-	      {
-	      if (NONCONSERVATIVE_FORM > 0.0)
-		{
-		  flux_umom+=(bc_u-u)*flowSpeedNormal;
-		}
-	      else
-		{
-		  flux_umom+=n[0]*bc_f_umom[0];
-		  flux_vmom+=n[0]*bc_f_vmom[0];
-		}
-	      }
-          }
-        if (isDOFBoundary_v != 1)
-          {
-            flux_mass+=n[1]*f_mass[1];
-            velocity[1] = f_mass[1];
-            if (flowSpeedNormal >= 0.0)
-              {
-                flux_umom+=n[1]*f_umom[1];
-                flux_vmom+=n[1]*f_vmom[1];
-              }
-            else
-              {
-		if (NONCONSERVATIVE_FORM > 0.0)
-		  {
-		    flux_vmom+=(0.0-v)*flowSpeedNormal;
-		  }
-              }
-          }
-        else
-          {
-            flux_mass+=n[1]*f_mass[1];
-            velocity[1] = f_mass[1];
-            if (flowSpeedNormal >= 0.0)
-              {
-                flux_umom+=n[1]*f_umom[1];
-                flux_vmom+=n[1]*f_vmom[1];
-              }
-            else
-              {
-		if (NONCONSERVATIVE_FORM > 0.0)
-		  {
-		    flux_vmom+=(bc_v-v)*flowSpeedNormal;
-		  }
-		else
-		  {
-                    flux_umom+=n[1]*bc_f_umom[1];
-                    flux_vmom+=n[1]*bc_f_vmom[1];
-		  }
-              }
-          }
-        if (isDOFBoundary_p == 1)
+          else
           {
             if (NONCONSERVATIVE_FORM > 0.0)
-              {
-                flux_umom+= n[0]*(bc_p - p);
-                flux_vmom+= n[1]*(bc_p - p);
-              }
+            {
+              flux_umom += (0.0 - u) * flowSpeedNormal;
+            }
+          }
+        }
+        else
+        {
+          flux_mass += n[0] * f_mass[0];
+          velocity[0] = f_mass[0];
+          if (flowSpeedNormal >= 0.0)
+          {
+            flux_umom += n[0] * f_umom[0];
+            flux_vmom += n[0] * f_vmom[0];
+          }
+          else
+          {
+            if (NONCONSERVATIVE_FORM > 0.0)
+            {
+              flux_umom += (bc_u - u) * flowSpeedNormal;
+            }
             else
-              {
-                flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho);
-                flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho);
-              }
+            {
+              flux_umom += n[0] * bc_f_umom[0];
+              flux_vmom += n[0] * bc_f_vmom[0];
+            }
           }
+        }
+        if (isDOFBoundary_v != 1)
+        {
+          flux_mass += n[1] * f_mass[1];
+          velocity[1] = f_mass[1];
+          if (flowSpeedNormal >= 0.0)
+          {
+            flux_umom += n[1] * f_umom[1];
+            flux_vmom += n[1] * f_vmom[1];
+          }
+          else
+          {
+            if (NONCONSERVATIVE_FORM > 0.0)
+            {
+              flux_vmom += (0.0 - v) * flowSpeedNormal;
+            }
+          }
+        }
+        else
+        {
+          flux_mass += n[1] * f_mass[1];
+          velocity[1] = f_mass[1];
+          if (flowSpeedNormal >= 0.0)
+          {
+            flux_umom += n[1] * f_umom[1];
+            flux_vmom += n[1] * f_vmom[1];
+          }
+          else
+          {
+            if (NONCONSERVATIVE_FORM > 0.0)
+            {
+              flux_vmom += (bc_v - v) * flowSpeedNormal;
+            }
+            else
+            {
+              flux_umom += n[1] * bc_f_umom[1];
+              flux_vmom += n[1] * bc_f_vmom[1];
+            }
+          }
+        }
+        if (isDOFBoundary_p == 1)
+        {
+          if (NONCONSERVATIVE_FORM > 0.0)
+          {
+            flux_umom += n[0] * (bc_p - p);
+            flux_vmom += n[1] * (bc_p - p);
+          }
+          else
+          {
+            flux_umom += n[0] * (bc_p * bc_oneByRho - p * oneByRho);
+            flux_vmom += n[1] * (bc_p * bc_oneByRho - p * oneByRho);
+          }
+        }
         if (isFluxBoundary_p == 1)
-          {
-            velocity[0] += (bc_flux_mass - flux_mass)*n[0];
-            velocity[1] += (bc_flux_mass - flux_mass)*n[1];
-            flux_mass = bc_flux_mass;
-          }
+        {
+          velocity[0] += (bc_flux_mass - flux_mass) * n[0];
+          velocity[1] += (bc_flux_mass - flux_mass) * n[1];
+          flux_mass = bc_flux_mass;
+        }
         if (isFluxBoundary_u == 1)
-          {
-            flux_umom = bc_flux_umom;
-          }
+        {
+          flux_umom = bc_flux_umom;
+        }
         if (isFluxBoundary_v == 1)
-          {
-            flux_vmom = bc_flux_vmom;
-          }
+        {
+          flux_vmom = bc_flux_vmom;
+        }
       }
 
       inline
@@ -1748,130 +1788,130 @@ namespace proteus
         dflux_wmom_du = 0.0;
         dflux_wmom_dv = 0.0;
 
-        flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for moving and fixed  domains
-        flowSpeedNormal+=NONCONSERVATIVE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]);//tricky, works for moving and fixed  domains
+        flowSpeedNormal = n[0] * df_vmom_dv[0] + n[1] * df_umom_du[1];                         //tricky, works for moving and fixed  domains
+        flowSpeedNormal += NONCONSERVATIVE_FORM * (n[0] * dham_grad[0] + n[1] * dham_grad[1]); //tricky, works for moving and fixed  domains
         if (isDOFBoundary_u != 1)
+        {
+          dflux_mass_du += n[0] * df_mass_du[0];
+          if (flowSpeedNormal >= 0.0)
           {
-            dflux_mass_du += n[0]*df_mass_du[0];
-            if (flowSpeedNormal >= 0.0)
-              {
-                dflux_umom_du += n[0]*df_umom_du[0];
-                dflux_umom_dv += n[0]*df_umom_dv[0];
+            dflux_umom_du += n[0] * df_umom_du[0];
+            dflux_umom_dv += n[0] * df_umom_dv[0];
 
-                dflux_vmom_du += n[0]*df_vmom_du[0];
-                dflux_vmom_dv += n[0]*df_vmom_dv[0];
-              }
-            else
-              {
-		if (NONCONSERVATIVE_FORM > 0.0)
-		  {
-		    dflux_umom_du+=(  dmom_u_acc_u*n[0]*(0.0 - u) - flowSpeedNormal ) ;
-		    dflux_umom_dv+= dmom_u_acc_u * (0.0 - u) * n[1];
-		  }
-              }
+            dflux_vmom_du += n[0] * df_vmom_du[0];
+            dflux_vmom_dv += n[0] * df_vmom_dv[0];
           }
-        else
-          {
-            //cek still upwind the advection for Dirichlet?
-            dflux_mass_du += n[0]*df_mass_du[0];
-            if (flowSpeedNormal >= 0.0)
-              {
-                dflux_umom_du += n[0]*df_umom_du[0];
-                dflux_umom_dv += n[0]*df_umom_dv[0];
-
-                dflux_vmom_du += n[0]*df_vmom_du[0];
-                dflux_vmom_dv += n[0]*df_vmom_dv[0];
-              }
-            else
-              {
-		if (NONCONSERVATIVE_FORM > 0.0)
-		  {
-		    dflux_umom_du+=(  dmom_u_acc_u*n[0]*(bc_u-u) - flowSpeedNormal ) ;
-		    dflux_umom_dv+= dmom_u_acc_u * (bc_u - u) * n[1];
-		  }
-		else
-		  {
-		    if (isDOFBoundary_v != 1)
-		      dflux_vmom_dv += n[0]*df_vmom_dv[0];
-		  }
-              }
-          }
-        if (isDOFBoundary_v != 1)
-          {
-            dflux_mass_dv += n[1]*df_mass_dv[1];
-            if (flowSpeedNormal >= 0.0)
-              {
-                dflux_umom_du += n[1]*df_umom_du[1];
-                dflux_umom_dv += n[1]*df_umom_dv[1];
-
-                dflux_vmom_du += n[1]*df_vmom_du[1];
-                dflux_vmom_dv += n[1]*df_vmom_dv[1];
-              }
-            else
-              {
-		if (NONCONSERVATIVE_FORM > 0.0)
-		  {
-		    dflux_vmom_du += dmom_u_acc_u * n[0] * (0.0 - v);
-		    dflux_vmom_dv += ( dmom_u_acc_u * n[1] * (0.0 - v) - flowSpeedNormal) ;
-		  }
-              }
-          }
-        else
-          {
-            //cek still upwind the advection for Dirichlet?
-            dflux_mass_dv += n[1]*df_mass_dv[1];
-            if (flowSpeedNormal >= 0.0)
-              {
-                dflux_umom_du += n[1]*df_umom_du[1];
-                dflux_umom_dv += n[1]*df_umom_dv[1];
-
-                dflux_vmom_du += n[1]*df_vmom_du[1];
-                dflux_vmom_dv += n[1]*df_vmom_dv[1];
-              }
-            else
-              {
-		if (NONCONSERVATIVE_FORM > 0.0)
-		  {
-		    dflux_vmom_du += dmom_u_acc_u * n[0] * (bc_v - v);
-		    dflux_vmom_dv += ( dmom_u_acc_u * n[1] * (bc_v - v) - flowSpeedNormal) ;
-		  }
-		else
-		  {
-		  if (isDOFBoundary_u != 1)
-		    dflux_umom_du += n[1]*df_umom_du[1];
-		  }
-              }
-          }
-        if (isDOFBoundary_p == 1)
+          else
           {
             if (NONCONSERVATIVE_FORM > 0.0)
-              {
-                dflux_umom_dp= -n[0];
-                dflux_vmom_dp= -n[1];
-              }
+            {
+              dflux_umom_du += (dmom_u_acc_u * n[0] * (0.0 - u) - flowSpeedNormal);
+              dflux_umom_dv += dmom_u_acc_u * (0.0 - u) * n[1];
+            }
+          }
+        }
+        else
+        {
+          //cek still upwind the advection for Dirichlet?
+          dflux_mass_du += n[0] * df_mass_du[0];
+          if (flowSpeedNormal >= 0.0)
+          {
+            dflux_umom_du += n[0] * df_umom_du[0];
+            dflux_umom_dv += n[0] * df_umom_dv[0];
+
+            dflux_vmom_du += n[0] * df_vmom_du[0];
+            dflux_vmom_dv += n[0] * df_vmom_dv[0];
+          }
+          else
+          {
+            if (NONCONSERVATIVE_FORM > 0.0)
+            {
+              dflux_umom_du += (dmom_u_acc_u * n[0] * (bc_u - u) - flowSpeedNormal);
+              dflux_umom_dv += dmom_u_acc_u * (bc_u - u) * n[1];
+            }
             else
-              {
-                dflux_umom_dp= -n[0]*oneByRho;
-                dflux_vmom_dp= -n[1]*oneByRho;
-              }
+            {
+              if (isDOFBoundary_v != 1)
+                dflux_vmom_dv += n[0] * df_vmom_dv[0];
+            }
           }
+        }
+        if (isDOFBoundary_v != 1)
+        {
+          dflux_mass_dv += n[1] * df_mass_dv[1];
+          if (flowSpeedNormal >= 0.0)
+          {
+            dflux_umom_du += n[1] * df_umom_du[1];
+            dflux_umom_dv += n[1] * df_umom_dv[1];
+
+            dflux_vmom_du += n[1] * df_vmom_du[1];
+            dflux_vmom_dv += n[1] * df_vmom_dv[1];
+          }
+          else
+          {
+            if (NONCONSERVATIVE_FORM > 0.0)
+            {
+              dflux_vmom_du += dmom_u_acc_u * n[0] * (0.0 - v);
+              dflux_vmom_dv += (dmom_u_acc_u * n[1] * (0.0 - v) - flowSpeedNormal);
+            }
+          }
+        }
+        else
+        {
+          //cek still upwind the advection for Dirichlet?
+          dflux_mass_dv += n[1] * df_mass_dv[1];
+          if (flowSpeedNormal >= 0.0)
+          {
+            dflux_umom_du += n[1] * df_umom_du[1];
+            dflux_umom_dv += n[1] * df_umom_dv[1];
+
+            dflux_vmom_du += n[1] * df_vmom_du[1];
+            dflux_vmom_dv += n[1] * df_vmom_dv[1];
+          }
+          else
+          {
+            if (NONCONSERVATIVE_FORM > 0.0)
+            {
+              dflux_vmom_du += dmom_u_acc_u * n[0] * (bc_v - v);
+              dflux_vmom_dv += (dmom_u_acc_u * n[1] * (bc_v - v) - flowSpeedNormal);
+            }
+            else
+            {
+              if (isDOFBoundary_u != 1)
+                dflux_umom_du += n[1] * df_umom_du[1];
+            }
+          }
+        }
+        if (isDOFBoundary_p == 1)
+        {
+          if (NONCONSERVATIVE_FORM > 0.0)
+          {
+            dflux_umom_dp = -n[0];
+            dflux_vmom_dp = -n[1];
+          }
+          else
+          {
+            dflux_umom_dp = -n[0] * oneByRho;
+            dflux_vmom_dp = -n[1] * oneByRho;
+          }
+        }
         if (isFluxBoundary_p == 1)
-          {
-            dflux_mass_du = 0.0;
-            dflux_mass_dv = 0.0;
-          }
+        {
+          dflux_mass_du = 0.0;
+          dflux_mass_dv = 0.0;
+        }
         if (isFluxBoundary_u == 1)
-          {
-            dflux_umom_dp = 0.0;
-            dflux_umom_du = 0.0;
-            dflux_umom_dv = 0.0;
-          }
+        {
+          dflux_umom_dp = 0.0;
+          dflux_umom_du = 0.0;
+          dflux_umom_dv = 0.0;
+        }
         if (isFluxBoundary_v == 1)
-          {
-            dflux_vmom_dp = 0.0;
-            dflux_vmom_du = 0.0;
-            dflux_vmom_dv = 0.0;
-          }
+        {
+          dflux_vmom_dp = 0.0;
+          dflux_vmom_du = 0.0;
+          dflux_vmom_dv = 0.0;
+        }
       }
 
       inline
