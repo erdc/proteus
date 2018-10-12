@@ -8,43 +8,51 @@ from proteus.mprans import RANS3PF
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
+
 myTpFlowProblem = ct.myTpFlowProblem 
-physical_parameters = myTpFlowProblem.physical_parameters
-rans3p_parameters   = myTpFlowProblem.rans3p_parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
+movingDomain = myTpFlowProblem.movingDomain
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
+# MESH #
+meshparams = params.mesh
+genMesh = meshparams.genMesh
+
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-rho_0 = physical_parameters['densityA']
-nu_0 = physical_parameters['viscosityA']
-rho_1 = physical_parameters['densityB']
-nu_1 = physical_parameters['viscosityB']
-sigma_01 = physical_parameters['surf_tension_coeff']
-g = physical_parameters['gravity']
+rho_0 = pparams['densityA']
+nu_0 = pparams['viscosityA']
+rho_1 = pparams['densityB']
+nu_1 = pparams['viscosityB']
+sigma_01 = pparams['surf_tension_coeff']
+g = pparams['gravity']
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-useMetrics = rans3p_parameters['useMetrics']
-epsFact_viscosity = rans3p_parameters['epsFact_viscosity']
-epsFact_density = rans3p_parameters['epsFact_density']
-ns_forceStrongDirichlet = rans3p_parameters['ns_forceStrongDirichlet']
-weak_bc_penalty_constant = rans3p_parameters['weak_bc_penalty_constant']
-useRBLES = rans3p_parameters['useRBLES']
-useRANS = rans3p_parameters['useRANS']
-ns_closure = rans3p_parameters['ns_closure']
-useVF = rans3p_parameters['useVF']
-PSTAB = rans3p_parameters['PSTAB']
-USE_SUPG = rans3p_parameters['USE_SUPG']
-ARTIFICIAL_VISCOSITY = rans3p_parameters['ARTIFICIAL_VISCOSITY']
-cE = rans3p_parameters['cE']
-cMax = rans3p_parameters['cMax']
+useMetrics = mparams.rans3p['useMetrics']
+epsFact_viscosity = mparams.rans3p['epsFact_viscosity']
+epsFact_density = mparams.rans3p['epsFact_density']
+ns_forceStrongDirichlet = mparams.rans3p['ns_forceStrongDirichlet']
+weak_bc_penalty_constant = mparams.rans3p['weak_bc_penalty_constant']
+useRBLES = mparams.rans3p['useRBLES']
+useRANS = mparams.rans3p['useRANS']
+ns_closure = mparams.rans3p['ns_closure']
+useVF = mparams.rans3p['useVF']
+PSTAB = mparams.rans3p['PSTAB']
+USE_SUPG = mparams.rans3p['USE_SUPG']
+ARTIFICIAL_VISCOSITY = mparams.rans3p['ARTIFICIAL_VISCOSITY']
+cE = mparams.rans3p['cE']
+cMax = mparams.rans3p['cMax']
 
 # *************************************** #
 # ********** TURBULENCE MODELS ********** #
@@ -61,10 +69,10 @@ RD_model=None
 MCORR_model=None
 SED_model=None
 VOS_model=None
-CLSVOF_model=0
-V_model=1
-PINC_model=2
-PRESSURE_model=3
+CLSVOF_model = mparams.clsvof['index']
+V_model = mparams.rans3p['index']
+PINC_model = mparams.pressureIncrement['index']
+PRESSURE_model = mparams.pressure['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #
@@ -116,20 +124,26 @@ else:
 # ***************************************** #    
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-if nd==2:
+
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
     dirichletConditions = {0: boundaryConditions['vel_u_DBC'],
                            1: boundaryConditions['vel_v_DBC']}
-    advectiveFluxBoundaryConditions =  {0: boundaryConditions['vel_u_AFBC'],
-                                        1: boundaryConditions['vel_v_AFBC']}
-    diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['vel_u_DFBC']},
-                                       1:{1: boundaryConditions['vel_v_DFBC']}}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['vel_u_AFBC'],
+                                       1: boundaryConditions['vel_v_AFBC']}
+    diffusiveFluxBoundaryConditions = {0: {0: boundaryConditions['vel_u_DFBC']},
+                                       1: {1: boundaryConditions['vel_v_DFBC']}}
+    if nd == 3:
+        dirichletConditions[2] = boundaryConditions['vel_w_DBC']
+        advectiveFluxBoundaryConditions[2] = boundaryConditions['vel_w_AFBC']
+        diffusiveFluxBoundaryConditions[2] = {2: boundaryConditions['vel_w_AFBC']}
 else:
-    dirichletConditions = {0: boundaryConditions['vel_u_DBC'],
-                           1: boundaryConditions['vel_v_DBC'],
-                           2: boundaryConditions['vel_w_DBC']}
-    advectiveFluxBoundaryConditions =  {0: boundaryConditions['vel_u_AFBC'],
-                                        1: boundaryConditions['vel_v_AFBC'],
-                                        2: boundaryConditions['vel_w_AFBC']}
-    diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['vel_u_DFBC']},
-                                       1:{1: boundaryConditions['vel_v_DFBC']},
-                                       2:{2: boundaryConditions['vel_w_DFBC']}}
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
+                           1: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].u_advective.init_cython(),
+                                       1: lambda x, flag: domain.bc[flag].v_advective.init_cython()}
+    diffusiveFluxBoundaryConditions = {0: {0:lambda x, flag: domain.bc[flag].u_diffusive.init_cython()},
+                                       1: {1:lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
+    if nd == 3:
+        dirichletConditions[2] = lambda x, flag: domain.bc[flag].w_dirichlet.init_cython()
+        advectiveFLuxBoundaryConditions[2] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
+        diffusiveFluxBoundaryConditions[2] = {2: lambda x, flag: domain.bc[flag].w_diffusive.init_cython()}

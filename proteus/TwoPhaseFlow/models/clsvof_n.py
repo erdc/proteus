@@ -2,24 +2,36 @@ from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from clsvof_p import *
+import clsvof_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
+ct = physics.ct
+myTpFlowProblem = physics.myTpFlowProblem
+nd = myTpFlowProblem.nd
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
-he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+meshparams = params.mesh
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = myTpFlowProblem.triangleFlag
-nnx = myTpFlowProblem.nnx
-nny = myTpFlowProblem.nny
-nnz = myTpFlowProblem.nnz
-triangleOptions = domain.MeshOptions.triangleOptions
+he = meshparams.he
+triangleFlag = meshparams.triangleFlag
+nnx = meshparams.nnx
+nny = meshparams.nny
+nnz = meshparams.nnz
+triangleOptions = meshparams.triangleOptions
+parallelPartitioningType = meshparams.parallelPartitioningType
+nLayersOfOverlapForParallel = meshparams.nLayersOfOverlapForParallel
+restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
@@ -67,7 +79,7 @@ linearSolverConvergenceTest = 'r-true'
 # ********** TOLERANCES ********** #
 # ******************************** #
 clsvof_nl_atol_res = max(1.0e-8, 0.001 * he ** 2)
-eps_tolerance_clsvof = clsvof_parameters['eps_tolerance_clsvof']
+eps_tolerance_clsvof = mparams.clsvof['eps_tolerance_clsvof']
 if eps_tolerance_clsvof:
     nl_atol_res = 1E-12
 else:

@@ -1,8 +1,13 @@
 from __future__ import absolute_import
-from proteus import *
 from proteus.default_n import *
-from pressureInitial_p import *
-import pressureInitial_p as physics
+from proteus import (StepControl,
+                     TimeIntegration,
+                     NonlinearSolvers,
+                     LinearSolvers,
+                     LinearAlgebraTools,
+                     NumericalFlux)
+from proteus.mprans import RDLS
+import rdls_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
@@ -17,7 +22,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
-myparams = mparams.pressure
+myparams = mparams.rdls
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -37,52 +42,65 @@ restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-stepController=FixedStep
+timeIntegration = TimeIntegration.NoIntegration
+stepController = StepControl.Newton_controller
 
 # ******************************************* #
-# ********** FINITE ELEMENT SAPCES ********** #
+# ********** FINITE ELEMENT SPACES ********** #
 # ******************************************* #
 elementQuadrature = FESpace['elementQuadrature']
 elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
-femSpaces = {0:FESpace['pBasis']}
+femSpaces = {0: FESpace['lsBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
 multilevelNonlinearSolver = NonlinearSolvers.Newton
 levelNonlinearSolver = NonlinearSolvers.Newton
+fullNewtonFlag = True
+nonlinearSmoother = NonlinearSolvers.NLGaussSeidel
+#
 nonlinearSolverConvergenceTest = 'r'
 levelNonlinearSolverConvergenceTest = 'r'
 
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
-numericalFluxType = NumericalFlux.ConstantAdvection_exterior
-conservativeFlux=None
+massLumping = False
+numericalFluxType = NumericalFlux.DoNothing
+conservativeFlux = None
+subgridError = RDLS.SubgridError(coefficients=physics.coefficients,
+                                 nd=nd)
+shockCapturing = RDLS.ShockCapturing(coefficients=physics.coefficients,
+                                     nd=nd,
+                                     shockCapturingFactor=myparams.shockCapturingFactor,
+                                     lag=myparams.lag_shockCapturing)
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
 # ************************************ #
 matrix = LinearAlgebraTools.SparseMatrix
-linearSmoother    = LinearSolvers.NavierStokesPressureCorrection # pure neumann laplacian solver
+linearSmoother = None
 multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver = LinearSolvers.KSP_petsc4py
 if useSuperlu:
-    linearSmoother    = None
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
 #
-linear_solver_options_prefix = 'pinit_'
+linear_solver_options_prefix = 'rdls_'
 linearSolverConvergenceTest = 'r-true'
-maxLineSearches=0
+
 
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-pressure_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
-nl_atol_res = pressure_nl_atol_res
-tolFac = 0.0
-linTolFac = 0.0
-l_atol_res = 0.01*pressure_nl_atol_res
+nl_atol_res = max(myparams.minTol, myparams.tolFac*he)
+linTolFac = 0.001
+l_atol_res = 0.001*nl_atol_res
+#
+useEisenstatWalker = False#True
+tolFac = 0.
+maxNonlinearIts = 25
+maxLineSearches = 0
 
 auxiliaryVariables = myparams.auxiliaryVariables

@@ -302,7 +302,7 @@ if opts.logLevel > 0:
     if len(args)==0:
         assert opts.TwoPhaseFlow, "Pass arguments to parun or run with --TwoPhaseFlow -f fileName.py"
         assert opts.fileName, "Pass setup problem as -f fileName.py"
-        Profiling.openLog(opts.fileName+".log",opts.logLevel,logLocation=logDir)    
+        Profiling.openLog(opts.fileName+".log",opts.logLevel,logLocation=logDir)
     elif len(args[0].split(' ')) == 1:
         Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel,logLocation=logDir)
     else:
