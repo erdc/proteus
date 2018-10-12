@@ -1083,8 +1083,12 @@ class NS_base:  # (HasTraits):
         nu = numpy.array([self.pList[0].ct.nu_0,
                           self.pList[0].ct.nu_1])
         g = numpy.asarray(self.pList[0].ct.g)
+
+        #This condition is to account for adapting before the simulation started
         if(hasattr(self,"tn")):
-            deltaT = self.tn-self.tn_last
+            #deltaT = self.tn-self.tn_last
+            #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
+            deltaT = self.systemStepController.dt_system 
         else:
             deltaT = 0
         epsFact = p0.epsFact_density 
