@@ -8,36 +8,44 @@ from proteus.mprans import CLSVOF
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
-myTpFlowProblem = ct.myTpFlowProblem 
-clsvof_parameters   = myTpFlowProblem.clsvof_parameters
+
+myTpFlowProblem = ct.myTpFlowProblem
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
-ns_model = myTpFlowProblem.ns_model
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+ns_model = myTpFlowProblem.ns_model
+
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
+# MESH #
+meshparams = params.mesh
+genMesh = meshparams.genMesh
+
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-useMetrics = clsvof_parameters['useMetrics']
-epsFactHeaviside = clsvof_parameters['epsFactHeaviside']
-epsFactDiract = clsvof_parameters['epsFactDirac']
-epsFactRedist = clsvof_parameters['epsFactRedist']
-lambdaFact = clsvof_parameters['lambdaFact']
-outputQuantDOFs = clsvof_parameters['outputQuantDOFs']
-computeMetrics = clsvof_parameters['computeMetrics']
+useMetrics = mparams.clsvof['useMetrics']
+epsFactHeaviside = mparams.clsvof['epsFactHeaviside']
+epsFactDiract = mparams.clsvof['epsFactDirac']
+epsFactRedist = mparams.clsvof['epsFactRedist']
+lambdaFact = mparams.clsvof['lambdaFact']
+outputQuantDOFs = mparams.clsvof['outputQuantDOFs']
+computeMetrics = mparams.clsvof['computeMetrics']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
+CLSVOF_model = mparams.clsvof['index']
 if ns_model==0: #rans2p
-    CLSVOF_model=1
-    V_model=0
+    V_model = mparams.rans2p['index']
 else:
-    CLSVOF_model=0
-    V_model=1
+    V_model = mparams.rans3p['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #
@@ -60,9 +68,14 @@ name="clsvof"
 # **************************************** #
 initialConditions  = {0: initialConditions['clsvof']}
 
-# ***************************************** #    
+# ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-dirichletConditions = {0: boundaryConditions['clsvof_DBC']}
-advectiveFluxBoundaryConditions = {0: boundaryConditions['clsvof_AFBC']}
-diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['clsvof_DFBC']}}
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
+    dirichletConditions = {0: boundaryConditions['clsvof_DBC']}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['clsvof_AFBC']}
+    diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['clsvof_DFBC']}}
+else:
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].clsvof_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].clsvof_advective.init_cython()}
+    diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.bc[flag].clsvof_diffusive.init_cython()}}

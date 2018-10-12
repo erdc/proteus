@@ -18,6 +18,7 @@ import math
 # *************************** #
 opts= Context.Options([
     ('ns_model',0,"ns_model = {rans2p,rans3p}"),
+    ('ls_model',1,"ls_model = {ncls,clsvof}"),
     ("final_time",7.5,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
@@ -264,6 +265,7 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: lambda x,t: 0.,
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+                                             ls_model=opts.ls_model,
                                              nd=3,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -275,4 +277,20 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
-myTpFlowProblem.physical_parameters['gravity'] = [0.0,0.0,-9.8]
+myTpFlowProblem.Parameters.physical['gravity'] = [0.0,0.0,-9.8]
+
+params = myTpFlowProblem.Parameters
+
+# MESH PARAMETERS
+params.mesh.genMesh = opts.genMesh
+params.mesh.he = he
+
+# if opts.ns_model == 0:
+#     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
+# elif opts.ns_model == 1:
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+#     myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+#     myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+#     myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+#     myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4

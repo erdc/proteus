@@ -9,7 +9,6 @@ from proteus.mprans import PresInc
 # *********************************************** #
 ct = Context.get()
 myTpFlowProblem = ct.myTpFlowProblem 
-physical_parameters   = myTpFlowProblem.physical_parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -17,17 +16,25 @@ nd = myTpFlowProblem.nd
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
+# MESH #
+meshparams = params.mesh
+genMesh = meshparams.genMesh
+
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-rho_0 = physical_parameters['densityA']
-rho_1 = physical_parameters['densityB']
+rho_0 = pparams['densityA']
+rho_1 = pparams['densityB']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-PINC_model=2
-V_model=1
+PINC_model = mparams.pressureIncrement['index']
+V_model = mparams.rans3p['index']
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #
@@ -39,7 +46,7 @@ coefficients=PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*rho_1,
                                   modelIndex=PINC_model,
                                   fluidModelIndex=V_model,
                                   fixNullSpace=False)
-name = "pressureincrement"
+name = "pressureIncrement"
 
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
@@ -49,6 +56,11 @@ initialConditions = {0: initialConditions['pressure_increment']}
 # ******************************* #
 # ***** BOUNDARY CONDITIONS ***** #
 # ******************************* #
-dirichletConditions = {0: boundaryConditions['pressure_increment_DBC']}
-advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_increment_AFBC']}
-diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['pressure_increment_DFBC']}}
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
+    dirichletConditions = {0: boundaryConditions['pressure_increment_DBC']}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_increment_AFBC']}
+    diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['pressure_increment_DFBC']}}
+else:
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].pInc_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].pInc_advective.init_cython()}
+    diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.bc[flag].pInc_diffusive.init_cython()}}

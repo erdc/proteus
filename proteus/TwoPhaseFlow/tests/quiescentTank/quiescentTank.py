@@ -18,6 +18,7 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 opts= Context.Options([
     ('nd',2,"Num of dimensions"),
     ('ns_model',0,"ns_model = {rans2p,rans3p}"),
+    ('ls_model',1,"ls_model = {ncls,clsvof}"),
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
@@ -113,6 +114,7 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+                                             ls_model=opts.ls_model,
                                              nd=opts.nd,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -124,3 +126,22 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
+
+params = myTpFlowProblem.Parameters
+
+# MESH PARAMETERS
+params.mesh.genMesh = opts.genMesh
+params.mesh.he = he
+if structured:
+    params.mesh.nnx = nnx
+    params.mesh.nny = nny
+
+# if opts.ns_model == 0:
+#     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
+# elif opts.ns_model == 1:
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+#     myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+#     myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+#     myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+#     myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4

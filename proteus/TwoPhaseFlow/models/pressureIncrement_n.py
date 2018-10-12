@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from pressureInitial_p import *
-import pressureInitial_p as physics
+from pressureIncrement_p import *
+import pressureIncrement_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
@@ -57,23 +57,24 @@ levelNonlinearSolverConvergenceTest = 'r'
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
-numericalFluxType = NumericalFlux.ConstantAdvection_exterior
+numericalFluxType = PresInc.NumericalFlux
 conservativeFlux=None
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
 # ************************************ #
 matrix = LinearAlgebraTools.SparseMatrix
-linearSmoother    = LinearSolvers.NavierStokesPressureCorrection # pure neumann laplacian solver
 multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver = LinearSolvers.KSP_petsc4py
+
+linearSmoother = None
 if useSuperlu:
     linearSmoother    = None
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
 #
-linear_solver_options_prefix = 'pinit_'
-linearSolverConvergenceTest = 'r-true'
+linear_solver_options_prefix = 'phi_'
+linearSolverConvergenceTest             = 'r-true'
 maxLineSearches=0
 
 # ******************************** #
@@ -84,5 +85,6 @@ nl_atol_res = pressure_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.0
 l_atol_res = 0.01*pressure_nl_atol_res
+maxNonlinearIts = 50
 
 auxiliaryVariables = myparams.auxiliaryVariables
