@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile proteus update FORCE
+.PHONY: all check clean distclean doc install profile proteus update hashdist FORCE 
 
 all: develop
 
@@ -113,6 +113,9 @@ ${PWD}/stack:
 	git submodule init && git submodule update
 
 default_stack: ${PWD}/stack/hit ${PWD}/stack
+
+hashdist: default_stack
+	@echo "hashdist is now the hit submodule of stack"
 
 bld_cache: ${PWD}/stack/hit
 	@echo "Trying to add build cache for your arch"
