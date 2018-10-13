@@ -386,7 +386,6 @@ class KSP_petsc4py(LinearSolver):
                  Preconditioner=None,
                  connectionList=None,
                  linearSolverLocalBlockSize=1,
-                 bdyNullSpace=False,
                  preconditionerOptions = None):
         """ Initialize a petsc4py KSP object.
 
@@ -405,7 +404,6 @@ class KSP_petsc4py(LinearSolver):
         Preconditioner : :class: `.LinearSolvers.KSP_Preconditioner`
         connectionList :
         linearSolverLocalBlockSize : int
-        bdyNullSpace : bool
         preconditionerOptions : tuple
             A list of optional preconditioner settings.
         """
@@ -431,7 +429,6 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L = par_L
         self.csr_rep_local = self.petsc_L.csr_rep_local
         self.csr_rep = self.petsc_L.csr_rep
-        self.bdyNullSpace = self.petsc_L.pde.bdyNullSpace
 
         # create petsc4py KSP object and attach operators
         self.ksp = p4pyPETSc.KSP().create()
@@ -455,6 +452,8 @@ class KSP_petsc4py(LinearSolver):
             self.ksp.setPC(self.pc)
         self.ksp.max_it = self.maxIts
         self.ksp.setFromOptions()
+        # set null space class
+        self.null_space = self._set_null_space_class()
 
     def setResTol(self,rtol,atol):
         """ Set the ksp object's residual and maximum interations. """
@@ -514,15 +513,7 @@ class KSP_petsc4py(LinearSolver):
         if self.matcontext is not None:
             self.matcontext.par_b = par_b
 
-        if self.bdyNullSpace is True:
-            self._setNullSpace(par_b)
-
-        if self.preconditioner:
-            try:
-                if self.preconditioner.hasNullSpace:
-                    self.preconditioner.nsp.remove(par_b)
-            except:
-                pass
+        self.null_space.apply_ns(par_b)
 
         self.ksp.solve(par_b,par_u)
 
@@ -553,53 +544,6 @@ class KSP_petsc4py(LinearSolver):
     def info(self):
         self.ksp.view()
 
-    def _defineNullSpaceVec(self,par_b):
-        """ Setup a global null space vector.
-
-        TODO
-        ------
-        There are a few changes that need to be made to make this
-        compatible with a parallel implementation.  Notably, the
-        ghost nodes need to be handled correctly.
-        """
-        stabilized = False
-        if self.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes==self.par_L.pde.u[1].femSpace.dofMap.nDOF_all_processes:
-            stabilized = True
-
-        rank = p4pyPETSc.COMM_WORLD.rank
-        size = p4pyPETSc.COMM_WORLD.size
-        null_space_vector = par_b.copy()
-        null_space_vector.getArray().fill(0.)
-        N_DOF_pressure = self.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes
-
-        if stabilized:
-            tmp = null_space_vector.getArray()[::3]
-            tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
-        else:
-            n_DOF_pressure = self.par_L.pde.u[0].femSpace.dofMap.nDOF
-            tmp = null_space_vector.getArray()[0:n_DOF_pressure]
-            tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
-        self.global_null_space = [null_space_vector]
-
-
-    def _setNullSpace(self,par_b):
-        """ Set up the boundary null space for the KSP solves.
-
-        Parameters
-        ----------
-        par_b : proteus.LinearAlgebraTools.ParVec_petsc4py
-            The problem's RHS vector.
-        """
-        try:
-            self.pressure_null_space
-        except AttributeError:
-            self._defineNullSpaceVec(par_b)
-            self.pressure_null_space = p4pyPETSc.NullSpace().create(constant=False,
-                                                                    vectors=self.global_null_space,
-                                                                    comm=p4pyPETSc.COMM_WORLD)
-        self.ksp.getOperators()[0].setNullSpace(self.pressure_null_space)
-        self.pressure_null_space.remove(par_b)
-
     def _setMatOperators(self):
         """ Initializes python context for the ksp matrix operator """
         self.Lshell = p4pyPETSc.Mat().create()
@@ -616,15 +560,15 @@ class KSP_petsc4py(LinearSolver):
         truenorm = self.r_work.norm()
         if its == 0:
             self.rnorm0 = truenorm
-            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
+            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm), level=7)
             if self.rnorm0 == 0.:
-                logEvent("NumericalAnalytics KSPOuterResidual(relative): N/A (residual vector is zero)" )
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): N/A (residual vector is zero)", level=7 )
                 logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = N/A (residual vector is zero) ; atol=%e rtol=%e " % (its,
                                                                                                                              truenorm,
                                                                                                                              ksp.atol,
                                                                                                                              ksp.rtol))
             else:
-                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7 )
                 logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                                   truenorm,
                                                                                                   (old_div(truenorm, self.rnorm0)),
@@ -632,8 +576,8 @@ class KSP_petsc4py(LinearSolver):
                                                                                                   ksp.rtol))
             return False
         else:
-            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
+            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm), level=7)
+            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7)
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
                                                                                               (old_div(truenorm, self.rnorm0)),
@@ -733,18 +677,19 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Sp:
                 logEvent("NAHeader Preconditioner selfp" )
-                self.preconditioner = Schur_Sp(par_L,prefix,self.bdyNullSpace)
+                self.preconditioner = Schur_Sp(par_L,
+                                               prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Qp:
                 logEvent("NAHeader Preconditioner Qp" )
-                self.preconditioner = Schur_Qp(par_L,prefix,self.bdyNullSpace)
+                self.preconditioner = Schur_Qp(par_L,
+                                               prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes_TwoPhasePCD:
                 logEvent("NAHeader Preconditioner TwoPhasePCD")
                 try:
                     self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
                                                                    prefix,
-                                                                   self.bdyNullSpace,
                                                                    density_scaling=self.preconditionerOptions[0],
                                                                    numerical_viscosity=self.preconditionerOptions[1],
                                                                    lumped=self.preconditionerOptions[2],
@@ -754,19 +699,27 @@ class KSP_petsc4py(LinearSolver):
                 except IndexError:
                     logEvent("Preconditioner options not specified, using defaults")
                     self.preconditioner = NavierStokes_TwoPhasePCD(par_L,
-                                                                   prefix,
-                                                                   self.bdyNullSpace)
+                                                                   prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_LSC:
                 logEvent("NAHeader Preconditioner LSC")
-                self.preconditioner = Schur_LSC(par_L,prefix,self.bdyNullSpace)
+                self.preconditioner = Schur_LSC(par_L,
+                                                prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleDarcyFC:
                 self.preconditioner = SimpleDarcyFC(par_L)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokesPressureCorrection:
-                self.preconditioner = NavierStokesPressureCorrection(par_L, prefix)
+                self.preconditioner = NavierStokesPressureCorrection(par_L,
+                                                                     prefix)
                 self.pc = self.preconditioner.pc
+
+    def _set_null_space_class(self):
+        current_module = sys.modules[__name__]
+        null_space_cls_name = self.par_L.pde.coefficients.nullSpace
+        null_space_cls = getattr(current_module,
+                                 null_space_cls_name)
+        return null_space_cls(self)
 
 class SchurOperatorConstructor(object):
     """
@@ -1267,7 +1220,7 @@ class SchurOperatorConstructor(object):
         self.opBuilder.attachMassOperator()
 
 class KSP_Preconditioner(object):
-    """ Base class for PETSCc KSP precondtioners. """
+    """ Base class for PETSc KSP precondtioners. """
     def __init__(self):
         pass
 
@@ -1552,15 +1505,20 @@ class ModelInfo(object):
     n_DOF_pressure: int
         Number of pressure degrees of freedom (required for blocked
         dof_order_type)
+    bdy_null_space : bool
+        Indicates whether boundary condition creates a global null
+        space
     """
     def __init__(self,
                  dof_order_type,
                  num_components,
                  L_range = None,
                  neqns = None,
-                 n_DOF_pressure=None):
+                 n_DOF_pressure = None,
+                 bdy_null_space = False):
         self.set_num_components(num_components)
         self.set_dof_order_type(dof_order_type)
+        self.const_null_space = bdy_null_space
         if dof_order_type=='blocked':
             assert n_DOF_pressure!=None, \
                 "need num of pressure unknowns for blocked dof order type"
@@ -1588,7 +1546,6 @@ class SchurPrecon(KSP_Preconditioner):
     def __init__(self,
                  L,
                  prefix=None,
-                 bdyNullSpace=False,
                  solver_info=None):
         """
         Initializes the Schur complement preconditioner for use with PETSc.
@@ -1601,8 +1558,6 @@ class SchurPrecon(KSP_Preconditioner):
         L : provides the definition of the problem.
         prefix : str
             Prefix identifier for command line PETSc options.
-        bdyNullSpace : bool
-            Flag indicating whether boundary creates nullspace.
         solver_info: :class:`ModelInfo`
         """
         self.PCType = 'schur'
@@ -1615,7 +1570,6 @@ class SchurPrecon(KSP_Preconditioner):
             self.model_info = solver_info
 
         self._initializeIS()
-        self.bdyNullSpace = bdyNullSpace
         self.pc.setFromOptions()
         if self.model_info.get_dof_order_type() == 'interlaced':
             ## TODO: ARB - this should be extended to blocked types
@@ -1640,6 +1594,7 @@ class SchurPrecon(KSP_Preconditioner):
                                         L_range,
                                         neqns,
                                         self.L.pde.u[0].dof.size)
+        # ARB - this will come from coefficients, not pde.
 
     def get_num_components(self):
         val = int(self.isv.size / self.isp.size + 1)
@@ -1660,8 +1615,6 @@ class SchurPrecon(KSP_Preconditioner):
         Nothing needs to be done here for a generic NSE preconditioner.
         Preconditioner arguments can be set with PETSc command line.
         """
-        if self.bdyNullSpace == True:
-            self._setConstantPressureNullSpace(global_ksp)
         self._setSchurlog(global_ksp)
 
     def _setSchurlog(self,global_ksp):
@@ -1729,8 +1682,8 @@ class SchurPrecon(KSP_Preconditioner):
         truenorm = r_work.norm()
         if its == 0:
             self.rnorm0 = truenorm
-            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
+            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm), level=7)
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7 )
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
                                                                                               (old_div(truenorm, self.rnorm0)),
@@ -1738,8 +1691,8 @@ class SchurPrecon(KSP_Preconditioner):
                                                                                               ksp.rtol))
             return False
         else:
-            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
+            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm), level=7)
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7)
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
                                                                                               (old_div(truenorm, self.rnorm0)),
@@ -1751,9 +1704,21 @@ class SchurPrecon(KSP_Preconditioner):
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
 
-    def _setConstantPressureNullSpace(self,global_ksp):
-        nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
-        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+    def _get_null_space_cls(self):
+        current_module = sys.modules[__name__]
+        null_space_cls_name = self.L.pde.coefficients.nullSpace
+        null_space_cls = getattr(current_module,
+                                 null_space_cls_name)
+        return null_space_cls
+
+    def _is_const_pressure_null_space(self):
+        if self.model_info==None:
+            if self._get_null_space_cls().get_name == 'constant_pressure':
+                return True
+            else:
+                return False
+        else:
+            return self.model_info.const_null_space
 
 class Schur_Sp(SchurPrecon):
     """
@@ -1764,9 +1729,7 @@ class Schur_Sp(SchurPrecon):
     ----------
     L: :class:`p4pyPETSc.Mat`
     prefix: str
-    bdyNullSpace: bool
-        Indicates the models boundary conditions create a global
-        null space. (see Notes)
+        Specifies PETSc preconditioner prefix for setting options
 
     Notes
     -----
@@ -1778,28 +1741,18 @@ class Schur_Sp(SchurPrecon):
     but for large problems this process may not scale well and often
     a pure Laplace operator will prove a more effective choice of
     preconditioner.
-
-    The `bdyNullSpace` parameter indicates if the model has a
-    global null space because the saddle point problem uses pure
-    Dirichlet boundary conditions.  When the global saddle point
-    system model has a null space, it is necessary apply a constant
-    null space to this operator.
     """
     def __init__(self,
                  L,
-                 prefix,
-                 bdyNullSpace=False,
+                 prefix=None,
                  solver_info = None):
         SchurPrecon.__init__(self,
                              L,
                              prefix,
-                             bdyNullSpace,
                              solver_info=solver_info)
 
     def setUp(self,global_ksp):
         self._setSchurlog(global_ksp)
-        if self.bdyNullSpace is True:
-            self._setConstantPressureNullSpace(global_ksp)
         self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
                                                              self.isv)
         self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
@@ -1812,11 +1765,12 @@ class Schur_Sp(SchurPrecon):
         self.SpInv_shell = p4pyPETSc.Mat().create()
         self.SpInv_shell.setSizes(L_sizes)
         self.SpInv_shell.setType('python')
+        constNullSpace = self._is_const_pressure_null_space()
         self.matcontext_inv = SpInv_shell(self.A00,
                                           self.A11,
                                           self.A01,
                                           self.A10,
-                                          constNullSpace = self.bdyNullSpace)
+                                          constNullSpace)
         self.SpInv_shell.setPythonContext(self.matcontext_inv)
         self.SpInv_shell.setUp()
         # Set PETSc Schur operator
@@ -1829,7 +1783,9 @@ class Schur_Qp(SchurPrecon) :
     A Navier-Stokes (or Stokes) preconditioner which uses the
     viscosity scaled pressure mass matrix.
     """
-    def __init__(self,L,prefix=None,bdyNullSpace=False):
+    def __init__(self,
+                 L,
+                 prefix=None):
         """
         Initializes the pressure mass matrix class.
 
@@ -1837,8 +1793,12 @@ class Schur_Qp(SchurPrecon) :
         ---------
         L : petsc4py matrix
             Defines the problem's operator.
+        prefix : str
+            Specifies PETSc preconditioner prefix for setting options
         """
-        SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix)
         self.operator_constructor = SchurOperatorConstructor(self)
         self.Q = self.operator_constructor.initializeQ()
 
@@ -1866,8 +1826,6 @@ class Schur_Qp(SchurPrecon) :
         # Set PETSc Schur operator
         self._setSchurApproximation(global_ksp)
         self._setSchurlog(global_ksp)
-        if self.bdyNullSpace == True:
-            self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokesSchur(SchurPrecon):
     r""" Schur complement preconditioners for Navier-Stokes problems.
@@ -1879,9 +1837,24 @@ class NavierStokesSchur(SchurPrecon):
     def __init__(self,
                  L,
                  prefix=None,
-                 bdyNullSpace=False,
                  velocity_block_preconditioner=True):
-        SchurPrecon.__init__(self,L,prefix)
+        """
+        Initializes a base class for Navier-Stokes Schur complement
+        preconditioners.
+
+        Parameters
+        ---------
+        L : petsc4py matrix
+            Defines the problem's operator
+        prefix : str
+            Specifies PETSc preconditioner prefix for setting options
+        velocity_block_preconditioner : Bool
+            Indicates whether the velocity block should be solved as
+            a block preconditioner
+        """
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix)
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
         self.velocity_block_preconditioner = velocity_block_preconditioner
@@ -1901,7 +1874,7 @@ class NavierStokesSchur(SchurPrecon):
         neqns = self.L.getSizes()[0][0]
 
         vel_is_func = self.model_info.dof_order_class.create_vel_DOF_IS
-        
+
         velocity_DOF_full, velocity_DOF_local = vel_is_func(L_range,
                                                             neqns,
                                                             self.model_info.nc)
@@ -1989,7 +1962,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
     def __init__(self,
                  L,
                  prefix = None,
-                 bdyNullSpace = False,
                  density_scaling = True,
                  numerical_viscosity = True,
                  lumped = True,
@@ -2005,8 +1977,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             Defines the problem's operator.
         prefix : str
             String allowing PETSc4py options.
-        bdyNullSpace : bool
-            Indicates whether there is a global null space.
         density_scaling : bool
             Indicates whether mass and advection terms should be
             scaled with the density (True) or 1 (False).
@@ -2029,7 +1999,10 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             Indicates whether to use a block preconditioner for the
             velocity solve.
         """
-        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace, velocity_block_preconditioner)
+        NavierStokesSchur.__init__(self,
+                                   L,
+                                   prefix,
+                                   velocity_block_preconditioner)
         # Initialize the discrete operators
         self.N_rho = self.operator_constructor.initializeTwoPhaseCp_rho()
         self.A_invScaledRho = self.operator_constructor.initializeTwoPhaseInvScaledAp()
@@ -2060,17 +2033,18 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
                                                                  lumped = self.lumped)
 
-        self.Np_rho = self.N_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                              self.operator_constructor.linear_smoother.isp)
-        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                self.operator_constructor.linear_smoother.isp)
-        self.Qp_rho = self.Q_rho.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                              self.operator_constructor.linear_smoother.isp)
-        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                                                self.operator_constructor.linear_smoother.isp)
-
         isp = self.operator_constructor.linear_smoother.isp
         isv = self.operator_constructor.linear_smoother.isv
+
+        self.Np_rho = self.N_rho.getSubMatrix(isp,
+                                              isp)
+        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(isp,
+                                                                isp)
+        self.Qp_rho = self.Q_rho.getSubMatrix(isp,
+                                              isp)
+        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
+                                                                isp)
+
 
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
@@ -2119,6 +2093,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.TP_PCDInv_shell.setSizes(L_sizes)
         self.TP_PCDInv_shell.setType('python')
         dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
+
         self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
                                                     self.Qp_rho,
                                                     self.Ap_invScaledRho,
@@ -2141,23 +2116,30 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         global_ksp.pc.getFieldSplitSubKSP()[0].pc.setUp()
 
         self._setSchurlog(global_ksp)
-        if self.bdyNullSpace == True:
-            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
-                                               vectors = (),
-                                               constant = True)
-            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
-            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
+        self._get_null_space_cls().apply_to_schur_block(global_ksp)
         self._setSchurlog(global_ksp)
-        if self.bdyNullSpace == True:
-            self._setConstantPressureNullSpace(global_ksp)
 
 class Schur_LSC(SchurPrecon):
     """
     The Least-Squares Communtator preconditioner for saddle
     point problems.
     """
-    def __init__(self,L,prefix=None, bdyNullSpace=False):
-        SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
+    def __init__(self,
+                 L,
+                 prefix=None):
+        """
+        Initializes the pressure mass matrix class.
+
+        Parameters
+        ---------
+        L : petsc4py matrix
+            Defines the problem's operator.
+        prefix : str
+            Specifies PETSc preconditioner prefix for setting options
+        """        
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix)
         self.operator_constructor = SchurOperatorConstructor(self)
         self.Q = self.operator_constructor.initializeQ()
 
@@ -2185,6 +2167,20 @@ class NavierStokes3D(NavierStokesSchur):
                  L,
                  prefix=None,
                  velocity_block_preconditioner=False):
+        """
+        Initializes a base class for Navier-Stokes Schur complement
+        preconditioners.
+
+        Parameters
+        ---------
+        L : petsc4py matrix
+            Defines the problem's operator
+        prefix : str
+            Specifies PETSc preconditioner prefix for setting options
+        velocity_block_preconditioner : Bool
+            Indicates whether the velocity block should be solved as
+            a block preconditioner
+        """                
         NavierStokesSchur.__init__(self,
                                    L,
                                    prefix,
@@ -2203,14 +2199,8 @@ class NavierStokes3D(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
-        try:
-            if self.L.pde.pp_hasConstantNullSpace:
-                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                    self.kspList = self.pc.getFieldSplitSubKSP()
-                    self.kspList[1].setNullSpace(self.nsp)
-        except:
-            pass
+        self._get_null_space_cls().apply_to_schur_block(global_ksp)
+
 
 SimpleNavierStokes3D = NavierStokes3D
 
@@ -2241,6 +2231,20 @@ class NavierStokes2D(NavierStokesSchur):
                  L,
                  prefix=None,
                  velocity_block_preconditioner=False):
+        """
+        Initializes a base class for Navier-Stokes Schur complement
+        preconditioners.
+
+        Parameters
+        ---------
+        L : petsc4py matrix
+            Defines the problem's operator
+        prefix : str
+            Specifies PETSc preconditioner prefix for setting options
+        velocity_block_preconditioner : Bool
+            Indicates whether the velocity block should be solved as
+            a block preconditioner
+        """        
         NavierStokesSchur.__init__(self,
                                    L,
                                    prefix,
@@ -2259,14 +2263,8 @@ class NavierStokes2D(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
-        try:
-            if self.L.pde.pp_hasConstantNullSpace:
-                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                    self.kspList = self.pc.getFieldSplitSubKSP()
-                    self.kspList[1].setNullSpace(self.nsp)
-        except:
-            pass
+        self._get_null_space_cls().apply_to_schur_block(global_ksp)
+
 SimpleNavierStokes2D = NavierStokes2D
 
 class NavierStokesPressureCorrection(object):
@@ -4127,3 +4125,102 @@ class ChebyshevSemiIteration(LinearSolver):
     #             self.x_k.axpy(-tau, resid)
     #             if self.save_iterations:
     #                 self.iteration_results.append(self.x_k.getArray().reshape(self.n,1).copy())
+
+class SolverNullSpace(object):
+
+    def __init__(self,
+                 proteus_ksp):
+        self._set_global_ksp(proteus_ksp)
+
+    @staticmethod
+    def get_name():
+        return 'no_null_space'
+
+    @staticmethod
+    def apply_to_schur_block(global_ksp):
+        pass
+
+    def _set_global_ksp(self,
+                        proteus_ksp):
+        self.proteus_ksp = proteus_ksp
+
+    def get_global_ksp(self):
+        return self.proteus_ksp
+
+    def apply_ns(self,
+                 par_b):
+        pass
+
+NoNullSpace = SolverNullSpace
+
+class NavierStokesConstantPressure(SolverNullSpace):
+
+    def __init__(self,
+                 proteus_ksp):
+        super(NavierStokesConstantPressure, self).__init__(proteus_ksp)
+
+    @staticmethod
+    def get_name():
+        return 'constant_pressure'
+
+    @staticmethod
+    def apply_to_schur_block(global_ksp):
+        nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                           vectors = (),
+                                           constant = True)
+        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
+
+    def apply_ns(self,
+                 par_b):
+        """
+        Applies the global null space created from a pure Neumann boundary
+        problem.
+
+        Arguments
+        ---------
+        par_b : :vec:`petsc4py_vec`
+        """
+        # Check whether a global null space vector for a constant
+        # pressure has been created.  If not, create one.
+        try:
+            self.pressure_null_space
+        except AttributeError:
+            self._defineNullSpaceVec(par_b)
+            self.pressure_null_space = p4pyPETSc.NullSpace().create(constant=False,
+                                                                    vectors=self.global_null_space,
+                                                                    comm=p4pyPETSc.COMM_WORLD)
+
+        # Using the global constant pressure null space, assign it to
+        # the global ksp object and remove it from the RHS vector.
+        self.get_global_ksp().ksp.getOperators()[0].setNullSpace(self.pressure_null_space)
+        self.pressure_null_space.remove(par_b)
+
+    def _defineNullSpaceVec(self,
+                            par_b):
+        """ Setup a global null space vector.
+
+        TODO (ARB)
+        ----------
+        This needs to be tested more throughly for parallel
+        implmentations.
+        """
+        ksp = self.get_global_ksp()
+        stabilized = False
+        if ksp.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes==ksp.par_L.pde.u[1].femSpace.dofMap.nDOF_all_processes:
+            stabilized = True
+
+        rank = p4pyPETSc.COMM_WORLD.rank
+        size = p4pyPETSc.COMM_WORLD.size
+        null_space_vector = par_b.copy()
+        null_space_vector.getArray().fill(0.)
+        N_DOF_pressure = ksp.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes
+
+        if stabilized:
+            tmp = null_space_vector.getArray()[::3]
+            tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
+        else:
+            n_DOF_pressure = ksp.par_L.pde.u[0].femSpace.dofMap.nDOF
+            tmp = null_space_vector.getArray()[0:n_DOF_pressure]
+            tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
+        self.global_null_space = [null_space_vector]
