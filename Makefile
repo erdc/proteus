@@ -106,6 +106,7 @@ src_cache: ${PWD}/stack/hit
 	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 
 ${PWD}/stack/hit: ${PWD}/stack
+	git submodule init && git submodule update
 	cd stack && git submodule init && git submodule update
 
 ${PWD}/stack:  
