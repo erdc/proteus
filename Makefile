@@ -112,12 +112,12 @@ src_cache: ${PWD}/stack/hit
 ${PWD}/stack/hit: ${PWD}/stack
 	cd stack && git submodule init && git submodule update
 
-${PWD}/stack: 
+${PWD}/stack:  
 	git submodule init && git submodule update
 
 default_stack: ${PWD}/stack
 
-bld_cache:
+bld_cache: ${PWD}/stack/hit
 	@echo "Trying to add build cache for your arch"
 	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
 	./stack/bin/hit remote add http://192.237.213.149/hashdist_${HASHSTACK_BLD} --objects="build"
@@ -130,7 +130,7 @@ profile: ${PROTEUS_PREFIX}/artifact.json
 
 stack/default.yaml: ${PWD}/stack/default.yaml
 
-${PWD}/stack/default.yaml: ${PWD}/stack
+${PWD}/stack/default.yaml: ${PWD}/stack/hit ${PWD}/stack
 	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
