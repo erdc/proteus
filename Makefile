@@ -31,8 +31,6 @@ PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python 
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
-HIT_VERSION := $(shell cd stack/hit; ${VER_CMD})
-STACK_VERSION := $(shell cd stack; ${VER_CMD})
 TEST_MARKER="' '"
 
 define show_info
@@ -42,8 +40,6 @@ define show_info
 	@echo "PROTEUS_ARCH   : ${PROTEUS_ARCH}"
 	@echo "PROTEUS_PREFIX : ${PROTEUS_PREFIX}"
 	@echo "PROTEUS_VERSION: ${PROTEUS_VERSION}"
-	@echo "HIT_VERSION    : ${HIT_VERSION}"
-	@echo "STACK_VERSION  : ${STACK_VERSION}"
 	@echo "+======================================================================================================+"
 	@echo ""
 endef
@@ -115,7 +111,7 @@ ${PWD}/stack/hit: ${PWD}/stack
 ${PWD}/stack:  
 	git submodule init && git submodule update
 
-default_stack: ${PWD}/stack
+default_stack: ${PWD}/stack/hit ${PWD}/stack
 
 bld_cache: ${PWD}/stack/hit
 	@echo "Trying to add build cache for your arch"
