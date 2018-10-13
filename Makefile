@@ -19,13 +19,15 @@ PROTEUS_BUILD_CMD = python -c "print('Letting install handle build_ext')"
 PROTEUS_DEVELOP_BUILD_CMD = python -c "print('Letting install handle build_ext')"
 endif
 
-# shell hack for now to automatically detect Garnet front-end nodes
+# automatically detect hpcmp machines
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = copper* ]] && echo "copper" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = excalibur* ]] && echo "excalibur" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = lightning* ]] && echo "lightning" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = spirit* ]] && echo "spirit" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python -c "import sys; print(sys.platform)")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
@@ -102,9 +104,15 @@ distclean: clean
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
-src_cache:
+src_cache: ${PWD}/stack/hit
 	@echo "Adding source cache"
 	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+
+${PWD}/stack/hit: ${PWD}/stack
+	cd stack && git submodule init && git submodule update
+
+${PWD}/stack: 
+	git submodule init && git submodule update
 
 bld_cache:
 	@echo "Trying to add build cache for your arch"
@@ -119,7 +127,7 @@ profile: ${PROTEUS_PREFIX}/artifact.json
 
 stack/default.yaml: ${PWD}/stack/default.yaml
 
-${PWD}/stack/default.yaml:
+${PWD}/stack/default.yaml: ${PWD}/stack
 	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
