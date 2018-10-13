@@ -35,9 +35,9 @@ install:
 - make hashdist
 - make stack
 - make stack/default.yaml
-- ./hashdist/bin/hit init-home
-- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
-- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- ./stack/hit/bin/hit init-home
+- ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+- ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
 - pushd $HOME
 - mkdir -p hashdist_src
 - mkdir -p hashdist_bld
@@ -49,7 +49,7 @@ install:
 - ls bld src
 - popd
 - cd stack
-- ../hashdist/bin/hit build -j 2 -v default.yaml
+- ../stack/hit/bin/hit build -j 2 -v default.yaml
 - cd ..
 - git submodule init
 - git submodule update --recursive --remote --force 
