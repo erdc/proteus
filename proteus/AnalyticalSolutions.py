@@ -788,21 +788,6 @@ class PlaneBase(SteadyState):
                         maxZ = (Z, x)
         self.Zshift = minZ[0]
         self.Zsep = maxZ[0] - minZ[0]
-        print(self.Zshift)
-        # allocated iwork and rwork arrays and load in values
-#         self.iwork = numpy.zeros((1,),'i') #( (shape_0,shape_1,...), typecode)
-#         self.rwork = numpy.array([mu,
-#                                   grad_p,
-#                                   v_norm,
-#                                   self.plane_n[0],
-#                                   self.plane_n[1],
-#                                   self.plane_n[2],
-#                                   self.v_n[0],
-#                                   self.v_n[1],
-#                                   self.v_n[2],
-#                                   minZ[1][0],
-#                                   minZ[1][1],
-#                                   minZ[1][2]])
         self.mu = mu
         self.grad_p = grad_p
         self.v_norm = v_norm
