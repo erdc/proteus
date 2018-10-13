@@ -35,9 +35,9 @@ install:
 - make hashdist
 - make stack
 - make stack/default.yaml
-- ./hashdist/bin/hit init-home
-- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
-- ./hashdist/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- ./stack/hit/bin/hit init-home
+- ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+- ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
 - pushd $HOME
 - mkdir -p hashdist_src
 - mkdir -p hashdist_bld
@@ -49,7 +49,7 @@ install:
 - ls bld src
 - popd
 - cd stack
-- ../hashdist/bin/hit build -j 2 -v default.yaml
+- ../stack/hit/bin/hit build -j 2 -v default.yaml
 - cd ..
 - git submodule init
 - git submodule update --recursive --remote --force 
@@ -73,6 +73,7 @@ script:
   - python -c "import sys; print sys.path"
   - python -c "import backports"
   - python -c "import backports.functools_lru_cache"
+  - export MPLBACKEND="AGG"
   - python -c "import matplotlib"
   - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
   
