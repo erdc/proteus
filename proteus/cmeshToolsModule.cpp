@@ -471,7 +471,21 @@ CMultilevelMesh_init(CMultilevelMesh *self, PyObject *args, PyObject *kwds)
 						       2);
         }
     }
-  else
+  else if (MESH(cmesh).nNodes_element == 4  && MESH(cmesh).nNodes_elementBoundary == 2)
+    {
+      globallyRefineQuadrilateralMesh(nLevels,MESH(cmesh),self->multilevelMesh);
+      for (int i=1;i<nLevels;i++)
+        {
+          constructElementBoundaryElementsArray_quadrilateral(self->multilevelMesh.meshArray[i]);
+          allocateGeometricInfo_quadrilateral(self->multilevelMesh.meshArray[i]);
+          computeGeometricInfo_quadrilateral(self->multilevelMesh.meshArray[i]);
+	  assignElementBoundaryMaterialTypesFromParent(self->multilevelMesh.meshArray[i-1],
+						       self->multilevelMesh.meshArray[i],
+						       self->multilevelMesh.elementParentsArray[i],
+						       2);
+        }
+    }
+  else if (MESH(cmesh).nNodes_element == 4 && MESH(cmesh).nNodes_elementBoundary == 3)
     {
       globallyRefineTetrahedralMesh(nLevels,MESH(cmesh),self->multilevelMesh);
       for (int i=1;i<nLevels;i++)
@@ -483,6 +497,20 @@ CMultilevelMesh_init(CMultilevelMesh *self, PyObject *args, PyObject *kwds)
 						       self->multilevelMesh.meshArray[i],
 						       self->multilevelMesh.elementParentsArray[i],
 						       3);
+        }
+    }
+  else if (MESH(cmesh).nNodes_element == 8 && MESH(cmesh).nNodes_elementBoundary == 4)
+    {
+      globallyRefineHexahedralMesh(nLevels,MESH(cmesh),self->multilevelMesh);
+      for (int i=1;i<nLevels;i++)
+        {
+          constructElementBoundaryElementsArray_hexahedron(self->multilevelMesh.meshArray[i]);
+          allocateGeometricInfo_hexahedron(self->multilevelMesh.meshArray[i]);
+          computeGeometricInfo_hexahedron(self->multilevelMesh.meshArray[i]);
+	  assignElementBoundaryMaterialTypesFromParent(self->multilevelMesh.meshArray[i-1],
+						       self->multilevelMesh.meshArray[i],
+						       self->multilevelMesh.elementParentsArray[i],
+						       4);
         }
     }
   return 0;
@@ -704,6 +732,7 @@ static PyObject* cmeshToolsGenerateTetrahedralMeshFromRectangularGrid(PyObject* 
   regularHexahedralToTetrahedralMeshElements(nx,ny,nz,MESH(cmesh));
   regularHexahedralToTetrahedralMeshNodes(nx,ny,nz,Lx,Ly,Lz,MESH(cmesh));
   constructElementBoundaryElementsArray_tetrahedron(MESH(cmesh));
+  regularHexahedralToTetrahedralElementBoundaryMaterials(Lx,Ly,Lz,MESH(cmesh));
   Py_INCREF(Py_None); 
   return Py_None;
 }
@@ -820,7 +849,31 @@ static PyObject* cmeshToolsGenerateHexahedralMeshFromRectangularGrid(PyObject* s
   regularHexahedralMeshElements(nx,ny,nz,px,py,pz,MESH(cmesh));
   regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,MESH(cmesh));
   constructElementBoundaryElementsArray_hexahedron(MESH(cmesh));
-  regularHexahedralToTetrahedralElementBoundaryMaterials(Lx,Ly,Lz,MESH(cmesh));
+  regularHexahedralMeshElementBoundaryMaterials(Lx,Ly,Lz,MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* cmeshToolsGenerateQuadrilateralMeshFromRectangularGrid(PyObject* self,
+                                                                        PyObject* args)
+{
+  int nx,ny,px,py;
+  double Lx,Ly;
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "iiiiddO",
+                        &nx,
+                        &ny,
+			&px,
+			&py,
+                        &Lx,
+                        &Ly,
+                        &cmesh))
+    return NULL;
+  regularQuadrilateralMeshElements(nx,ny,MESH(cmesh));
+  regularMeshNodes2D(nx,ny,Lx,Ly,MESH(cmesh));
+  constructElementBoundaryElementsArray_quadrilateral(MESH(cmesh));
+  regularQuadrilateralMeshElementBoundaryMaterials(Lx,Ly,MESH(cmesh));
   Py_INCREF(Py_None); 
   return Py_None;
 }
@@ -1142,6 +1195,19 @@ static PyObject* cmeshToolsComputeGeometricInfo_hexahedron(PyObject* self,
   return Py_None;
 }
 
+static PyObject* cmeshToolsComputeGeometricInfo_quadrilateral(PyObject* self,
+                                                     PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  computeGeometricInfo_quadrilateral(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
 static PyObject* cmeshToolsAllocateGeometricInfo_hexahedron(PyObject* self,
                                                      PyObject* args)
 {
@@ -1151,6 +1217,19 @@ static PyObject* cmeshToolsAllocateGeometricInfo_hexahedron(PyObject* self,
                         &cmesh))
     return NULL;
   allocateGeometricInfo_hexahedron(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* cmeshToolsAllocateGeometricInfo_quadrilateral(PyObject* self,
+                                                     PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  allocateGeometricInfo_quadrilateral(MESH(cmesh));
   Py_INCREF(Py_None); 
   return Py_None;
 }
@@ -2059,14 +2138,26 @@ static PyMethodDef cmeshToolsMethods[] = {
     cmeshToolsBuildLevel0PythonMeshInterface,
     METH_VARARGS, 
     "Provide handles to the simplest 'level 0' mesh representation in C "},   
+  { "generateQuadrilateralMeshFromRectangularGrid",
+    cmeshToolsGenerateQuadrilateralMeshFromRectangularGrid,
+    METH_VARARGS, 
+    "Generates a structured quadrilateral"},            
   { "generateHexahedralMeshFromRectangularGrid",
     cmeshToolsGenerateHexahedralMeshFromRectangularGrid,
     METH_VARARGS, 
-    "Generates a structured hexahedron"},            
+    "Generates a structured hexahedron"},
+  { "computeGeometricInfo_quadrilateral",
+    cmeshToolsComputeGeometricInfo_quadrilateral,
+    METH_VARARGS, 
+    "Compute h, etc."},
   { "computeGeometricInfo_hexahedron",
     cmeshToolsComputeGeometricInfo_hexahedron,
     METH_VARARGS, 
     "Compute h, etc."},
+  { "allocateGeometricInfo_quadrilateral",
+    cmeshToolsAllocateGeometricInfo_quadrilateral,
+    METH_VARARGS, 
+    "Allocate h, etc."},
   { "allocateGeometricInfo_hexahedron",
     cmeshToolsAllocateGeometricInfo_hexahedron,
     METH_VARARGS, 

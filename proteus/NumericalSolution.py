@@ -460,7 +460,7 @@ class NS_base(object):  # (HasTraits):
                                                            os.path.exists(p.domain.polyfile+".node") and
                                                            os.path.exists(p.domain.polyfile+".face"))):
                     logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
-                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f} -clscale {2:f}".format(p.domain.geofile, p.domain.name+".mesh", p.domain.he)
+                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f}".format(p.domain.geofile, p.domain.name+".mesh", 0.5*p.domain.he)
 
                     logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
 
@@ -471,7 +471,7 @@ class NS_base(object):  # (HasTraits):
                     gmsh2tetgen_cmd = "gmsh2tetgen {0} {1:f} {2:d} {3:d} {4:d}".format(
                         p.domain.name+".mesh",
                         p.domain.length_scale,
-                        p.domain.permute_dims[0]+1,
+                        p.domain.permute_dims[0]+1,#switch to base 1 index...
                         p.domain.permute_dims[1]+1,
                         p.domain.permute_dims[2]+1)
 
@@ -1618,9 +1618,9 @@ class NS_base(object):  # (HasTraits):
                     self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
 
-                        logEvent("NumericalAnalytics Model %s " % (model.name), level=0)
+                        logEvent("NumericalAnalytics Model %s " % (model.name), level=5)
                         logEvent("Model: %s" % (model.name),level=1)
-                        logEvent("NumericalAnalytics Time Step " + repr(self.t_stepSequence), level=0)
+                        logEvent("NumericalAnalytics Time Step " + repr(self.t_stepSequence), level=7)
                         logEvent("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:

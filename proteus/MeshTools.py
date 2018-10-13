@@ -661,7 +661,11 @@ class Mesh(object):
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
         logEvent(memory("partitionMesh 2","MeshTools"),level=4)
         if parallelPartitioningType == MeshParallelPartitioningTypes.node:
-            #mwf for now always gives 1 layer of overlap
+            logEvent("Starting nodal partitioning")#mwf for now always gives 1 layer of overlap
+            logEvent("filebase"+`filebase`)
+            logEvent("base"+`base`)
+            logEvent("nLayersOfOverlap" +`nLayersOfOverlap`)
+            logEvent("parallelPartitioningType " +`parallelPartitioningType`)
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,
@@ -671,6 +675,7 @@ class Mesh(object):
              self.edgeOffsets_subdomain_owned,
              self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
+            logEvent("Starting element partitioning")
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,
@@ -1036,6 +1041,45 @@ class Mesh(object):
          self.hMin,
          self.sigmaMax,
          self.volume) = cmeshTools.buildPythonMeshInterface(self.cmesh)
+        # print("from C")
+        # print  (self.nElements_global,
+        #  self.nNodes_global,
+        #  self.nNodes_element,
+        #  self.nNodes_elementBoundary,
+        #  self.nElementBoundaries_element,
+        #  self.nElementBoundaries_global,
+        #  self.nInteriorElementBoundaries_global,
+        #  self.nExteriorElementBoundaries_global,
+        #  self.max_nElements_node,
+        #  self.nEdges_global,
+        #  self.max_nNodeNeighbors_node,
+        #  self.elementNodesArray,
+        #  self.nodeElementsArray,
+        #  self.nodeElementOffsets,
+        #  self.elementNeighborsArray,
+        #  self.elementBoundariesArray,
+        #  self.elementBoundaryNodesArray,
+        #  self.elementBoundaryElementsArray,
+        #  self.elementBoundaryLocalElementBoundariesArray,
+        #  self.interiorElementBoundariesArray,
+        #  self.exteriorElementBoundariesArray,
+        #  self.edgeNodesArray,
+        #  self.nodeStarArray,
+        #  self.nodeStarOffsets,
+        #  self.elementMaterialTypes,
+        #  self.elementBoundaryMaterialTypes,
+        #  self.nodeMaterialTypes,
+        #  self.nodeArray,
+        #  self.elementDiametersArray,
+        #  self.elementInnerDiametersArray,
+        #  self.elementBoundaryDiametersArray,
+        #  self.elementBarycentersArray,
+        #  self.elementBoundaryBarycentersArray,
+        #  self.nodeDiametersArray,
+        #  self.nodeSupportArray,
+        #  self.h,
+        #  self.hMin,
+        #  self.volume)
         self.hasGeometricInfo = True
         #default to single processor
         self.nNodes_owned = self.nNodes_global
@@ -3744,6 +3788,8 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
         from . import cmeshTools
+        if filebase==None:
+            filebase="mesh"
         assert(refinementLevels==1)
         assert(parallelPartitioningType==MeshParallelPartitioningTypes.node)
         assert(nLayersOfOverlap<=1)
@@ -4587,6 +4633,13 @@ class QuadrilateralMesh(Mesh):
         self.finalize()
         self.buildNodeDiameterArray()
 
+    def generateQuadrilateralMeshFromRectangularGrid(self,nx,ny,Lx,Ly):
+        from . import cmeshTools
+        self.cmesh = cmeshTools.CMesh()
+        cmeshTools.generateQuadrilateralMeshFromRectangularGrid(nx,ny,0,0,Lx,Ly,self.cmesh)
+        cmeshTools.allocateGeometricInfo_quadrilateral(self.cmesh)
+        cmeshTools.computeGeometricInfo_quadrilateral(self.cmesh)
+        self.buildFromC(self.cmesh)
         
     def generateFromQuadFileIFISS(self,meshfile):
         ''' WIP - read a matlab.mat file containing IFISS vertices
@@ -4963,14 +5016,29 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0,
+                 useC=True):
         from . import cmeshTools
         MultilevelMesh.__init__(self)
-        self.useC = False   # Implementing with C will take a bit more work. Disabling for now.
+        self.useC = useC  # Implementing with C will take a bit more work. Disabling for now.
+        if refinementLevels > 1:
+            logEvent("Quad refinement is not supported in C routines, switching off c-mesh");
+            self.useC = False  # Currently quad refinement is not supported in C routines.
         self.nLayersOfOverlap=nLayersOfOverlap ; self.parallelPartitioningType = parallelPartitioningType
         if not skipInit:
             if self.useC:
-                raise NotImplementedError ("C functionality sill not enabled for 2D quads")
+                self.meshList.append(QuadrilateralMesh())
+                self.meshList[0].generateQuadrilateralMeshFromRectangularGrid(nx,ny,Lx,Ly)
+                self.meshList[0].nodeArray[:,0] += x
+                self.meshList[0].nodeArray[:,1] += y
+                self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+                self.buildFromC(self.cmultilevelMesh)
+                self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+                for l in range(1,refinementLevels):
+                    self.meshList.append(QuadrilateralMesh())
+                    self.meshList[l].cmesh = self.cmeshList[l]
+                    self.meshList[l].buildFromC(self.cmeshList[l])
+                    self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             else:
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(QuadrilateralMesh())
@@ -5001,6 +5069,45 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                     logEvent(self.meshList[-1].meshInfo())
                     self.meshList[l].buildNodeStarArrays()
                 self.buildArrayLists()
+                # print("from Python")
+                # print  (self.meshList[0].nElements_global,
+                #         self.meshList[0].nNodes_global,
+                #         self.meshList[0].nNodes_element,
+                #         self.meshList[0].nNodes_elementBoundary,
+                #         self.meshList[0].nElementBoundaries_element,
+                #         self.meshList[0].nElementBoundaries_global,
+                #         self.meshList[0].nInteriorElementBoundaries_global,
+                #         self.meshList[0].nExteriorElementBoundaries_global,
+                #         self.meshList[0].max_nElements_node,
+                #         self.meshList[0].nEdges_global,
+                #         self.meshList[0].max_nNodeNeighbors_node,
+                #         self.meshList[0].elementNodesArray,
+                #         self.meshList[0].nodeElementsArray,
+                #         self.meshList[0].nodeElementOffsets,
+                #         self.meshList[0].elementNeighborsArray,
+                #         self.meshList[0].elementBoundariesArray,
+                #         self.meshList[0].elementBoundaryNodesArray,
+                #         self.meshList[0].elementBoundaryElementsArray,
+                #         self.meshList[0].elementBoundaryLocalElementBoundariesArray,
+                #         self.meshList[0].interiorElementBoundariesArray,
+                #         self.meshList[0].exteriorElementBoundariesArray,
+                #         self.meshList[0].edgeNodesArray,
+                #         self.meshList[0].nodeStarArray,
+                #         self.meshList[0].nodeStarOffsets,
+                #         self.meshList[0].elementMaterialTypes,
+                #         self.meshList[0].elementBoundaryMaterialTypes,
+                #         self.meshList[0].nodeMaterialTypes,
+                #         self.meshList[0].nodeArray,
+                #         self.meshList[0].elementDiametersArray,
+                #         self.meshList[0].elementInnerDiametersArray,
+                #         self.meshList[0].elementBoundaryDiametersArray,
+                #         self.meshList[0].elementBarycentersArray,
+                #         self.meshList[0].elementBoundaryBarycentersArray,
+                #         self.meshList[0].nodeDiametersArray,
+                #         self.meshList[0].nodeSupportArray,
+                #         self.meshList[0].h,
+                #         self.meshList[0].hMin,
+                #         self.meshList[0].volume)
 
     def refine(self):
         self.meshList.append(QuadrilateralMesh())

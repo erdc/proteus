@@ -55,8 +55,10 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self, vt, getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions):
-        proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.__init__(self, vt, getPointwiseBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions,
+                 getPeriodicBoundaryConditions=None):
+        proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.__init__(self, vt,
+                                                                                        getPointwiseBoundaryConditions,
                                                                                         getAdvectiveFluxBoundaryConditions,
                                                                                         getDiffusiveFluxBoundaryConditions)
 
@@ -124,9 +126,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         Need to switch to use coefficients
         """
-        # mwf debug
-        #import pdb
-        # pdb.set_trace()
         self.lstage += 1
         assert self.timeOrder in [1, 2, 3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
@@ -273,7 +272,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # FOR ARTIFICIAL COMPRESSION
                  cK=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs=False):
+                 outputQuantDOFs=False,
+                 #NULLSPACE INFO
+                 nullSpace='NoNullSpace'):
 
         self.useMetrics = useMetrics
         self.variableNames = ['vof']
@@ -321,6 +322,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.forceStrongConditions = forceStrongConditions
         self.cE = cE
         self.outputQuantDOFs = outputQuantDOFs
+        self.nullSpace = nullSpace
 
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
@@ -360,8 +362,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 if ('f', 0) in modelList[self.flowModelIndex].ebq:
                     self.ebq_v = modelList[self.flowModelIndex].ebq[('f', 0)]
+        else:
+            self.q_v = np.ones(self.model.q[('u',0)].shape+(self.model.nSpace_global,),'d')
+            self.ebqe_v = np.ones(self.model.ebqe[('u',0)].shape+(self.model.nSpace_global,),'d')
         # VRANS
-        self.flowCoefficients = modelList[self.flowModelIndex].coefficients
+        if self.flowModelIndex is not None:
+            self.flowCoefficients = modelList[self.flowModelIndex].coefficients
+        else:
+            self.flowCoefficients= None
         if hasattr(self.flowCoefficients, 'q_porosity'):
             self.q_porosity = self.flowCoefficients.q_porosity
             if self.STABILIZATION_TYPE > 0:  # edge based stabilization: EV or smoothness based
@@ -390,7 +398,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if hasattr(self.flowCoefficients, 'ebqe_porosity'):
             self.ebqe_porosity = self.flowCoefficients.ebqe_porosity
         else:
-            self.ebqe_porosity = numpy.ones(modelList[self.LS_modelIndex].ebqe[('u', 0)].shape,
+            self.ebqe_porosity = numpy.ones(self.model.ebqe[('u', 0)].shape,
                                             'd')
             if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.LS_modelIndex].ebqe['x'], self.ebqe_porosity)
@@ -398,20 +406,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #
 
     def initializeElementQuadrature(self, t, cq):
-        if self.flowModelIndex is None:
-            self.q_v = numpy.ones(cq[('f', 0)].shape, 'd')
         # VRANS
         self.q_porosity = numpy.ones(cq[('u', 0)].shape, 'd')
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
-        if self.flowModelIndex is None:
-            self.ebq_v = numpy.ones(cebq[('f', 0)].shape, 'd')
         # VRANS
         self.ebq_porosity = numpy.ones(cebq[('u', 0)].shape, 'd')
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
-        if self.flowModelIndex is None:
-            self.ebqe_v = numpy.ones(cebqe[('f', 0)].shape, 'd')
         # VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u', 0)].shape, 'd')
 
@@ -1189,7 +1191,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.vof.calculateMassMatrix
-
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1226,6 +1227,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.porosity_dof,  # I need this for edge based methods
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             degree_polynomial,
             self.u[0].dof,
@@ -1304,7 +1306,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
         logEvent("Global residual", level=9, data=r)
-
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape, 'd')
@@ -1351,6 +1352,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_porosity,
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             degree_polynomial,
             self.u[0].dof,
@@ -1389,6 +1391,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
+        jacobian.fwrite("matdebug_p%s.vof.txt" % self.comm.rank())
         return jacobian
 
     def calculateElementQuadrature(self):
