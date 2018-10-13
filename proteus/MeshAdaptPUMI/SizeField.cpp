@@ -136,6 +136,208 @@ int MeshAdaptPUMIDrvr::calculateSizeField(double L_band)
   return 0;
 }
 
+/*
+void recursiveFunction(apf::MeshEntity* vert, double N_predict_base,apf::Field* velocity, double h_base, apf::Field* predictInterfaceField)
+{
+  apf::Mesh* m = apf::getMesh(velocity);
+  if(N_predict_base<=0)
+    return;
+  else
+  {
+    //get N_predict
+    //get current vertex info
+    apf::Vector3 pt_A, pt_B;
+    m->getPoint(vert,0,pt_A);
+    //get adjacency
+    apf::Adjacent vertexAdjacentVertex;
+    apf::getBridgeAdjacent(m,vert,1,0,vertexAdjacentVertex);
+    apf::Vector3 vel_vect;
+    apf::getVector(velocity,vert,0,vel_vect);
+    for(int i =0; i<vertexAdjacentVertex.getSize();i++)
+    {
+      m->getPoint(vertexAdjacentVertex[i],0,pt_B);
+      apf::Vector3 edgeVector = pt_B-pt_A;
+      //std::cout<<"What is the projection? "<<vel_vect*edgeVector<<" vel_vect "<<vel_vect<<" edgeVector "<<edgeVector<<std::endl;;
+      //std::exit(1);
+      //set new mesh size
+      double h_current = apf::getScalar(predictInterfaceField,vertexAdjacentVertex[i],0);
+      double h_new = std::min(h_base,apf::getScalar(predictInterfaceField,vertexAdjacentVertex[i],0));
+      if(edgeVector*vel_vect > 0 && h_new < h_current) //if h_new < h_base, then no need to continue since we only care about being conservative
+      {
+        //set new mesh size
+        //double h_new = std::min(h_base,apf::getScalar(predictInterfaceField,vertexAdjacentVertex[i],0));
+        apf::setScalar(predictInterfaceField,vertexAdjacentVertex[i],0,h_new);
+        //double N_predict_new = N_predict_base - edgeVector.getLength()/h_new;
+        double N_predict_new = N_predict_base - edgeVector.getLength();
+        std::cout<<"N_predict base"<<N_predict_base<<" N_predict_new "<<N_predict_new<<" length "<<edgeVector.getLength()<<" h_new "<<h_new<<std::endl;
+        recursiveFunction(vertexAdjacentVertex[i],N_predict_new,velocity,h_new,predictInterfaceField);
+      }
+    }
+  }
+
+}//end function
+
+void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
+//compute Lband
+//edge walk
+{
+  apf::Field * L_local_field = apf::createLagrangeField(m, "predictiveLength", apf::SCALAR, 1);
+  apf::Field * N_predict_field = apf::createLagrangeField(m, "N_predict", apf::SCALAR, 1);
+  apf::MeshEntity* vert;
+  apf::MeshIterator* it = m->begin(0);
+  apf::Field* interfaceBand = m->findField("interfaceBand");
+  apf::Field* velocity = m->findField("velocity");
+  while( (vert = m->iterate(it)) )
+  {
+      apf::Vector3 vel_vect;
+      apf::getVector(velocity,vert,0,vel_vect);
+      double speed_local = vel_vect.getLength();
+      double L_local= numAdaptSteps*speed_local*delta_T;
+      //if(nAdapt > 1)
+      //{
+      //  std::cout<<"L_local "<<L_local<<" numAdaptSteps "<<numAdaptSteps<<" speed_local "<<speed_local<<" delta_T "<<delta_T<<std::endl;
+      //  exit(1);
+      //}
+      //int N_predict = ceil(L_local/hPhi);
+      int N_predict = ceil(L_local/apf::getScalar(interfaceBand,vert,0));
+      apf::setScalar(L_local_field,vert,0,L_local);
+      apf::setScalar(N_predict_field,vert,0,N_predict);
+  }
+  m->end(it);
+  apf::writeVtkFiles("beforePredictivePropagation", m);
+
+  //edge-walk to predict
+  apf::Field* predictInterfaceBand = apf::createLagrangeField(m,"predictInterfaceBand",apf::SCALAR,1);
+  apf::copyData(predictInterfaceBand,interfaceBand);
+  it = m->begin(0);
+  while( (vert = m->iterate(it)) )
+  {
+      //get N_predict
+      //int N_predict = apf::getScalar(N_predict_field,vert,0);
+      //recursiveFunction(vert,N_predict,velocity,apf::getScalar(interfaceBand,vert,0),predictInterfaceBand);
+      double L_local = apf::getScalar(L_local_field,vert,0);
+      recursiveFunction(vert,L_local,velocity,apf::getScalar(interfaceBand,vert,0),predictInterfaceBand);
+  }
+  m->end(it);
+  apf::writeVtkFiles("afterPredictivePropagation", m);
+  apf::copyData(interfaceBand,predictInterfaceBand);
+  apf::destroyField(L_local_field);
+  apf::destroyField(N_predict_field);
+  apf::destroyField(predictInterfaceBand);
+}
+*/
+
+int intersectsInterface(apf::MeshEntity* edge, apf::Field* levelSet)
+{
+    apf::Mesh* m = apf::getMesh(levelSet);
+    apf::Adjacent edge_adjVerts;
+    m->getAdjacent(edge,0,edge_adjVerts);
+    apf::MeshEntity *vertex1 = edge_adjVerts[0];
+    apf::MeshEntity *vertex2 = edge_adjVerts[1];
+    double phi1 = apf::getScalar(levelSet,vertex1,0);
+    double phi2 = apf::getScalar(levelSet,vertex2,0);
+    int doesIntersect = 0;
+    if(phi1*phi2 < 0) //implies different signs and therefore intersects interface
+        doesIntersect = 1;
+    return doesIntersect;
+}
+
+void edgeWalkPropagation(apf::Mesh* m, apf::MeshEntity* vert, double L_local, apf::Vector3 actualPosition)
+//need to set mesh sizes
+//the first call to this function doesnt need to set a mesh size because it should be set to hPhi at the interface already
+{
+    apf::Vector3 pt_vert;
+    m->getPoint(vert,0,pt_vert);
+    apf::Vector3 difference_vect = pt_vert-actualPosition;
+    if(difference_vect.getLength() > L_local)
+        return;
+    else
+    {
+        apf::Adjacent vertex_adjVerts; 
+        apf::getBridgeAdjacent(m,vert,1,0,vertex_adjVerts);
+        apf::MeshTag* isMarked = m->findTag("isMarked");
+        for(int i=0;i<vertex_adjVerts.getSize();i++)
+        {
+            if(!m->hasTag(vertex_adjVerts[i],isMarked))
+            {
+                int marked = 1;
+                m->setIntTag(vertex_adjVerts[i],isMarked,&marked);
+                apf::Field* predictInterfaceBand = m->findField("predictInterfaceBand");
+                apf::setScalar(predictInterfaceBand,vertex_adjVerts[i],0,apf::getScalar(predictInterfaceBand,vert,0));
+                edgeWalkPropagation(m,vertex_adjVerts[i],L_local,actualPosition);
+            }
+        }
+    }
+}
+
+void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
+//compute Lband
+//edge walk
+{
+    apf::Field* interfaceBand = m->findField("interfaceBand");
+    apf::Field* velocity = m->findField("velocity");
+    apf::Field* levelSet = m->findField("phi");
+    apf::writeVtkFiles("beforePredictivePropagation", m);
+
+    apf::Field* predictInterfaceBand = apf::createLagrangeField(m,"predictInterfaceBand",apf::SCALAR,1);
+    apf::copyData(predictInterfaceBand,interfaceBand);
+    //edge-walk to predict
+
+    apf::MeshEntity* edge;
+    apf::MeshIterator* it = m->begin(1);
+    int counter = 0;
+    while( (edge = m->iterate(it)) )
+    {
+        if( intersectsInterface(edge,levelSet) )
+        {
+            //get the parameterized position of interface along edge
+            apf::Adjacent edge_adjVerts;
+            m->getAdjacent(edge,0,edge_adjVerts);
+            apf::MeshEntity *vertex1 = edge_adjVerts[0];
+            apf::MeshEntity *vertex2 = edge_adjVerts[1];
+            double phi1 = apf::getScalar(levelSet,vertex1,0);
+            double phi2 = apf::getScalar(levelSet,vertex2,0);
+            apf::Vector3 pt_1, pt_2;
+            m->getPoint(vertex1,0,pt_1);
+            m->getPoint(vertex2,0,pt_2);
+            apf::Vector3 edgeVector = pt_2-pt_1;
+            double edgeLength = apf::measure(m,edge);
+            //std::cout<<"edge Length "<<edgeLength<<" another "<<edgeVector.getLength()<<std::endl;
+            double zeroPosition =  2*(-phi1/(phi2-phi1))-1.0; //parametric position of interface on the edge
+            double relativePosition = -phi1/(phi2-phi1); //same as zeroPosition but in interval of [0,1]
+            apf::Vector3 actualPosition = (pt_2-pt_1)*relativePosition + pt_1;           
+
+            //std::cout<<"actual Position "<<actualPosition<<std::endl;
+            apf::Vector3 edgePoint(zeroPosition,0.0,0.0);
+            apf::Element* phiElem = apf::createElement(levelSet,edge);
+            apf::Element* velocityElem = apf::createElement(velocity,edge);
+            apf::Vector3 localVelocity;
+            apf::getVector(velocityElem,edgePoint,localVelocity);
+            //std::cout<<"value at zeroPosition 0"<<apf::getScalar(phiElem, apf::Vector3(zeroPosition,0,0))<<std::endl;;
+            apf::destroyElement(phiElem);
+            apf::destroyElement(velocityElem);
+
+            //get L_local 
+            double L_local = localVelocity.getLength()*numAdaptSteps*delta_T;
+            L_local += (N_interface_band)*hPhi; //add blending region
+            
+            //define tag for each edge
+            apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+            for(int i=0; i<2;i++)
+                edgeWalkPropagation(m,edge_adjVerts[i],L_local,actualPosition);
+            m->destroyTag(isMarked);
+            counter++;
+        }
+    }
+    std::cout<<"counter "<<counter<<std::endl;
+    m->end(it);
+    apf::writeVtkFiles("afterPredictivePropagation", m);
+    apf::copyData(interfaceBand,predictInterfaceBand);
+    apf::destroyField(predictInterfaceBand);
+    //if(nAdapt>2)
+    //    std::exit(1);
+}
+
 void MeshAdaptPUMIDrvr::isotropicIntersect()
 {
   freeField(size_iso);
