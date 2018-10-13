@@ -106,6 +106,7 @@ distclean: clean
 
 src_cache: ${PWD}/stack/hit
 	@echo "Adding source cache"
+	-./stack/hit/bin/hit init-home
 	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 
 ${PWD}/stack/hit: ${PWD}/stack
@@ -132,7 +133,7 @@ ${PWD}/stack/default.yaml: ${PWD}/stack
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: src_cache stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"
