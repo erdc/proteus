@@ -115,6 +115,8 @@ ${PWD}/stack/hit: ${PWD}/stack
 ${PWD}/stack: 
 	git submodule init && git submodule update
 
+default_stack: ${PWD}/stack
+
 bld_cache:
 	@echo "Trying to add build cache for your arch"
 	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
