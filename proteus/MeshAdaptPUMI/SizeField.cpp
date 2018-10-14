@@ -264,9 +264,20 @@ void edgeWalkPropagation(apf::Mesh* m, apf::MeshEntity* vert, double L_local, ap
                 m->setIntTag(vertex_adjVerts[i],isMarked,&marked);
                 apf::Field* predictInterfaceBand = m->findField("predictInterfaceBand");
                 apf::setScalar(predictInterfaceBand,vertex_adjVerts[i],0,apf::getScalar(predictInterfaceBand,vert,0));
+                //DEBUG
+/*
+                apf::setScalar(m->findField("markerField"),vertex_adjVerts[i],0,1);
+                char namebuffer[50];
+                sprintf(namebuffer,"midPredictivePropagation_%i",counter);
+                apf::writeVtkFiles(namebuffer, m);
+                counter++;
+                edgeWalkPropagation(m,vertex_adjVerts[i],L_local,actualPosition,counter);
+*/
+                //
                 edgeWalkPropagation(m,vertex_adjVerts[i],L_local,actualPosition);
             }
         }
+
     }
 }
 
@@ -285,7 +296,6 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
 
     apf::MeshEntity* edge;
     apf::MeshIterator* it = m->begin(1);
-    int counter = 0;
     while( (edge = m->iterate(it)) )
     {
         if( intersectsInterface(edge,levelSet) )
@@ -321,21 +331,42 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
             double L_local = localVelocity.getLength()*numAdaptSteps*delta_T;
             L_local += (N_interface_band)*hPhi; //add blending region
             
-            //define tag for each edge
+            //define tag field for each edge
             apf::MeshTag* isMarked = m->createIntTag("isMarked",1);
+
+            //DEBUG
+/*
+            int counter2=0;
+            L_local = 0.2;
+            apf::Field* markerField = apf::createLagrangeField(m,"markerField",apf::SCALAR,1);
+            apf::MeshIterator* it2 = m->begin(0);
+            apf::MeshEntity* ent2;
+            while((ent2 = m->iterate(it2)) )
+            {
+                apf::setScalar(markerField,ent2,0,0);
+            }
+            m->end(it2);
+*/
+            //
             for(int i=0; i<2;i++)
+            {
+                int marked = 1;
+                m->setIntTag(edge_adjVerts[i],isMarked,&marked);
                 edgeWalkPropagation(m,edge_adjVerts[i],L_local,actualPosition);
+            }
+            //
+/*
+            apf::destroyField(markerField);
+            std::exit(1);
+*/
+            //
             m->destroyTag(isMarked);
-            counter++;
         }
     }
-    std::cout<<"counter "<<counter<<std::endl;
     m->end(it);
     apf::writeVtkFiles("afterPredictivePropagation", m);
     apf::copyData(interfaceBand,predictInterfaceBand);
     apf::destroyField(predictInterfaceBand);
-    //if(nAdapt>2)
-    //    std::exit(1);
 }
 
 void MeshAdaptPUMIDrvr::isotropicIntersect()
