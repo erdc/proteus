@@ -18,7 +18,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double,int,double,double); 
+  MeshAdaptPUMIDrvr(double, double, double, int, int, int, const char*, const char*,const char*,double,double,int,double,double); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
@@ -47,7 +47,7 @@ class MeshAdaptPUMIDrvr{
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double interfaceBandSize);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 
@@ -70,12 +70,15 @@ class MeshAdaptPUMIDrvr{
 
 
   //Public Variables
-  double hmax, hmin; //bounds on mesh size
+  double hmax, hmin, hPhi; //bounds on mesh size
   int numIter; //number of iterations for MeshAdapt
   int nAdapt; //counter for number of adapt steps
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
   int maxAspect; //maximum aspect ratio
+  int adaptMesh; //is adaptivity turned on?
+  int numAdaptSteps; //Number adaptivity
+  double N_interface_band; //number of elements in half-band around interface
   double gradingFactor;
 
   //User Inputs

@@ -9,6 +9,7 @@ This module solves equations of the form
   u_t + \nabla \cdot \left( u \mathbf{v} - a(x) \nabla u \right) = 0
 
 """
+from __future__ import absolute_import
 import pytest
 from proteus.iproteus import *
 from proteus import Comm
@@ -21,8 +22,12 @@ Profiling.verbose=False
 from petsc4py import PETSc
 import numpy as np
 import numpy.testing as npt
-import ladr_2d_p
-import ladr_2d_n
+try:
+    from . import ladr_2d_p
+    from . import ladr_2d_n
+except:
+    import ladr_2d_p
+    import ladr_2d_n
 import os
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
@@ -45,8 +50,8 @@ def test_minModelStep_stepExactTrue():
     nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('ladr_minModelStep_stepExactTrue')
-    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps "+`ns.tCount`
-    assert ns.modelList[0].solver.solverList[0].solveCalls == 40, "wrong number of steps "+`ns.modelList[0].solver.solverList[0].solveCalls`
+    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps "+repr(ns.tCount)
+    assert ns.modelList[0].solver.solverList[0].solveCalls == 40, "wrong number of steps "+repr(ns.modelList[0].solver.solverList[0].solveCalls)
     archiveTimes=[]
     for t in ns.ar[0].treeGlobal.iter('Time'):
         archiveTimes.append(t.attrib['Value'])
@@ -72,8 +77,8 @@ def test_minModelStep_stepExactFalse():
     nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('ladr_minModelStep_stepExactFalse')
-    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps " +`ns.tCount`
-    assert ns.modelList[0].solver.solverList[0].solveCalls == 34, "wrong number of steps "+`ns.modelList[0].solver.solverList[0].solveCalls`
+    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps " +repr(ns.tCount)
+    assert ns.modelList[0].solver.solverList[0].solveCalls == 34, "wrong number of steps "+repr(ns.modelList[0].solver.solverList[0].solveCalls)
     archiveTimes=[]
     for t in ns.ar[0].treeGlobal.iter('Time'):
         archiveTimes.append(t.attrib['Value'])
@@ -100,8 +105,8 @@ def test_fixedStep_stepExactFalse():
     nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('ladr_minModelStep_stepExactFalse')
-    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps " +`ns.tCount`
-    assert ns.modelList[0].solver.solverList[0].solveCalls == 25, "wrong number of steps "+`ns.modelList[0].solver.solverList[0].solveCalls`
+    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps " +repr(ns.tCount)
+    assert ns.modelList[0].solver.solverList[0].solveCalls == 25, "wrong number of steps "+repr(ns.modelList[0].solver.solverList[0].solveCalls)
     archiveTimes=[]
     for t in ns.ar[0].treeGlobal.iter('Time'):
         archiveTimes.append(t.attrib['Value'])
@@ -137,8 +142,8 @@ def test_fixedStep_stepExactTrue():
     nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('ladr_minModelStep_stepExactFalse')
-    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps " +`ns.tCount`
-    assert ns.modelList[0].solver.solverList[0].solveCalls == 30, "wrong number of steps "+`ns.modelList[0].solver.solverList[0].solveCalls`
+    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps " +repr(ns.tCount)
+    assert ns.modelList[0].solver.solverList[0].solveCalls == 30, "wrong number of steps "+repr(ns.modelList[0].solver.solverList[0].solveCalls)
     archiveTimes=[]
     for t in ns.ar[0].treeGlobal.iter('Time'):
         archiveTimes.append(t.attrib['Value'])
@@ -165,8 +170,8 @@ def test_fixedStep_stepSimple():
     nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('ladr_minModelStep_stepExactFalse')
-    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps " +`ns.tCount`
-    assert ns.modelList[0].solver.solverList[0].solveCalls == len(so.tnList)-1, "wrong number of steps "+`ns.modelList[0].solver.solverList[0].solveCalls`
+    assert ns.tCount + 1 == len(so.tnList), "wrong number of archvie steps " +repr(ns.tCount)
+    assert ns.modelList[0].solver.solverList[0].solveCalls == len(so.tnList)-1, "wrong number of steps "+repr(ns.modelList[0].solver.solverList[0].solveCalls)
     archiveTimes=[]
     for t in ns.ar[0].treeGlobal.iter('Time'):
         archiveTimes.append(t.attrib['Value'])

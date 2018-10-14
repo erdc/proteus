@@ -10,8 +10,11 @@ setHydrostaticPressureOutlet()
 setHydrostaticPressureOutletWithDepth()
 wallFunctions()
 """
+from __future__ import division
 
 
+from past.utils import old_div
+from builtins import object
 import os, sys
 import random
 import unittest
@@ -43,7 +46,7 @@ def get_random_x(start=0., stop=10.):
 def get_time_array(start=0, stop=5, steps=100):
     return np.linspace(0, 5, 100)
 
-class PseudoContext:
+class PseudoContext(object):
     def __init__(self):
         from proteus import Domain
         self.ecH = 3.
@@ -399,11 +402,11 @@ class TestBC(unittest.TestCase):
             U = H*wind_speed + (1-H)*wave_u
             u_calc += [U]
             p_calc += [np.sum(U*b_or[b_i])]
-            if wavePhi >= smoothing/2.:
+            if wavePhi >= old_div(smoothing,2.):
                 Hvof = 1.
-            elif smoothing > 0 and -smoothing/2. < wavePhi < smoothing/2.:
+            elif smoothing > 0 and old_div(-smoothing,2.) < wavePhi < old_div(smoothing,2.):
                 Hvof = smoothedHeaviside(smoothing, wavePhi)
-            elif wavePhi <= -smoothing/2.:
+            elif wavePhi <= old_div(-smoothing,2.):
                 Hvof = 0.
             vof_calc += [Hvof]
         u_calc = np.array(u_calc)
@@ -458,8 +461,8 @@ class TestBC(unittest.TestCase):
         water = 0.
         kInflow = 0.00005
         dissipationInflow = 0.00001
-        kInflowAir = kInflow / 10.
-        dissipationInflowAir = dissipationInflow / 10.
+        kInflowAir = old_div(kInflow, 10.)
+        dissipationInflowAir = old_div(dissipationInflow, 10.)
         BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
         # setting variables
         uDir, vDir, wDir, vofDir, pAdv, kDir, dissipationDir = [],[],[],[],[],[],[]
@@ -484,7 +487,7 @@ class TestBC(unittest.TestCase):
             if phiCalc <= 0.: 
                 Heav = 0.
             elif 0. < phiCalc <= smoothing: 
-                Heav = smoothedHeaviside(smoothing/2., phiCalc - smoothing/2.)
+                Heav = smoothedHeaviside(old_div(smoothing,2.), phiCalc - old_div(smoothing,2.))
             else: 
                 Heav = 1.
             u, v, w = Heav*np.array(Uwind) + (1.-Heav)*np.array(U0)
@@ -590,26 +593,26 @@ class TestBC(unittest.TestCase):
         Cmu = 0.09
         B = 5.57
         # Normal and tangential vectors
-        nV = -b_or_wall/np.sqrt(np.sum(b_or_wall**2))
+        nV = old_div(-b_or_wall,np.sqrt(np.sum(b_or_wall**2)))
         uTan = U0 - U0*(nV**2)
-        tV = uTan/np.sqrt(np.sum(uTan**2))
+        tV = old_div(uTan,np.sqrt(np.sum(uTan**2)))
         uTanAbs = np.sqrt(np.sum(uTan**2))
         # Calculation of turbulent variables
         Re0 = U0abs * Y / 1.004e-6
-        cf = 0.045 / (Re0**0.25)
-        ut = U0abs * np.sqrt(cf/2.)
+        cf = old_div(0.045, (Re0**0.25))
+        ut = U0abs * np.sqrt(old_div(cf,2.))
         Yplus = Y*ut/1.004e-6
         turbModel = 'ke' # 'kw'
-        kappaP = (ut**2) / (Cmu**0.5)
+        kappaP = old_div((ut**2), (Cmu**0.5))
         if turbModel is 'ke':
-            dissipationP = (ut**3) / (0.41*Y) # ke model
+            dissipationP = old_div((ut**3), (0.41*Y)) # ke model
         elif turbModel is 'kw':
-            dissipationP = np.sqrt(kappaP) / (0.41*Y*(Cmu**0.25)) # kw model
+            dissipationP = old_div(np.sqrt(kappaP), (0.41*Y*(Cmu**0.25))) # kw model
         # Log law
         E = np.exp(0.41*B)
         utStar = (kappaP**0.5)*(0.09**0.25)
         uStar = utStar * np.log(E*Yplus) / 0.41
-        ut = utStar * np.sqrt(uTanAbs/uStar)
+        ut = utStar * np.sqrt(old_div(uTanAbs,uStar))
         gradU = (ut/0.41/Y) * tV
         uDir = uTan - gradU*Y
         # Wall objects

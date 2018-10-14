@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pytest import approx
 
 def test_wdot():
@@ -22,5 +23,5 @@ def test_wdot():
 
 if __name__ == '__main__':
     for test, v1, v2 in test_wdot():
-        print test.description
+        print(test.description)
         test(v1,v2)

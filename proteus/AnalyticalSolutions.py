@@ -4,12 +4,18 @@ Classes representing analytical solutions of differential and partial differenti
 .. inheritance-diagram:: proteus.AnalyticalSolutions
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from math import *
-from EGeometry import *
-from LinearAlgebraTools import *
-from Profiling import logEvent
+from .EGeometry import *
+from .LinearAlgebraTools import *
+from .Profiling import logEvent
 
-class AS_base:
+class AS_base(object):
     """
     The base class for general analytical solutions, u(x,y,z,t)
 
@@ -132,7 +138,7 @@ class NonlinearDAE(DAE_base):
         if self.p_ == 1:
             self.func = lambda t : exp(-self.a_*t)
         else:
-            q = 1.0/(1.0 - self.p_)
+            q = old_div(1.0,(1.0 - self.p_))
             self.func = lambda t : max(1.0 - (1.0 - self.p_)*self.a_*t,0.0)**q
     def uOfT(self,t):
         return self.func(t)
@@ -162,10 +168,10 @@ class LinearAD_SteadyState(SteadyState):
         self.b_ = b
         self.a_ = a
         if b!=0.0:
-            self.D_ = (1.0/(exp(b/a)-1.0))
+            self.D_ = (old_div(1.0,(exp(old_div(b,a))-1.0)))
         else:
             self.D_ = 0.0
-        self.C_ = -self.D_*exp(b/a)
+        self.C_ = -self.D_*exp(old_div(b,a))
     def uOfX(self,X):
         x=X[0]
         if self.D_ !=0.0:
@@ -192,12 +198,12 @@ class NonlinearAD_SteadyState(LinearAD_SteadyState):
                 def f(rtmC):
                     return rtmC*tanh(b*rtmC/a) - 1.0
                 def df(rtmC):
-                    return rtmC*(1.0/cosh(b*rtmC/a)**2)*(b/a) + tanh(b*rtmC/a)
+                    return rtmC*(old_div(1.0,cosh(b*rtmC/a)**2))*(old_div(b,a)) + tanh(b*rtmC/a)
                 logEvent("Solving for sqrt(-C) for q=2,r=1")
                 rtmC = sqrt(1.5)
                 while abs(f(rtmC)) > 1.0e-8:
-                    rtmC -= f(rtmC)/df(rtmC)
-                logEvent("sqrt(-C)="+`rtmC`)
+                    rtmC -= old_div(f(rtmC),df(rtmC))
+                logEvent("sqrt(-C)="+repr(rtmC))
                 self.rtmC_ = rtmC
                 self.sol_ = lambda x : self.rtmC_* \
                             tanh((-self.b_*self.rtmC_/self.a_)*(x - 1.0))
@@ -206,34 +212,34 @@ class NonlinearAD_SteadyState(LinearAD_SteadyState):
         elif (q==1 and r==2):
             logEvent("Solving for C in q=1,r=2")
             def f(C):
-                return 2.0*C*(log(C-1.0) - log(C)) + 2.0 + self.b_/self.a_
+                return 2.0*C*(log(C-1.0) - log(C)) + 2.0 + old_div(self.b_,self.a_)
             def df(C):
-                return 2.0*(log(C-1.0) - log(C)) + 2.0*C*(1.0/(C-1.0) - 1.0/C)
+                return 2.0*(log(C-1.0) - log(C)) + 2.0*C*(old_div(1.0,(C-1.0)) - old_div(1.0,C))
             C = 1.0 + 1.0e-10
             f0 = f(C)
-            print f0
+            print(f0)
             while abs(f(C)) > (1.0e-7*abs(f0) + 1.0e-7):
-                dC = -f(C)/df(C)
+                dC = old_div(-f(C),df(C))
                 logEvent("dc")
-                print dC
+                print(dC)
                 Ctmp = C + dC
                 while (abs(f(Ctmp)) > 0.99*abs(f(C))
                        or Ctmp <= 1.0):
-                    print f(Ctmp)
-                    print f(C)
+                    print(f(Ctmp))
+                    print(f(C))
                     logEvent("ls")
                     dC*=0.9
                     Ctmp = C + dC
                 logEvent("out")
-                print Ctmp
-                print f(Ctmp)
-                print df(Ctmp)
+                print(Ctmp)
+                print(f(Ctmp))
+                print(df(Ctmp))
                 C=Ctmp
-            logEvent("C="+`C`)
+            logEvent("C="+repr(C))
             self.nlC_ = C
             self.nlD_ = 0.5*(2.0*C*log(C*(C-1)) - \
-                             4.0*C + 2.0 - self.b_/self.a_)
-            logEvent("D="+`self.nlD_`)
+                             4.0*C + 2.0 - old_div(self.b_,self.a_))
+            logEvent("D="+repr(self.nlD_))
 #              def f(C):
 #                  return (2.0*self.a_/self.b_)*(1.0 +
 #                                                C*log((C-1.0)/C))
@@ -264,7 +270,7 @@ class NonlinearAD_SteadyState(LinearAD_SteadyState):
             u=LinearAD_SteadyState.uOfX(self,X)
             f0 = f(u)
             while abs(f(u)) > 1.0e-6*abs(f0) + 1.0e-6:
-                u-=f(u)/df(u)
+                u-=old_div(f(u),df(u))
             return u
 #              def f(u):
 #                  return ((2.0*self.a_/self.b_**2)*
@@ -427,11 +433,11 @@ class LinearAD_DiracIC(AS_base):
     def uOfXT(self,x,T):
         t = T + self.tStart
         y = (x[:self.b_.shape[0]] - self.x0_[:self.b_.shape[0]] - self.b_*t)
-        exp_arg=numpy.dot(y,y) / (4.0 * self.a_ * t)
+        exp_arg=old_div(numpy.dot(y,y), (4.0 * self.a_ * t))
         if exp_arg > 100:
             return 0.0
         else:
-            return self.u0_*exp(-exp_arg) / (4.0*self.a_*pi*t)**(self.n_/2.0)
+            return self.u0_*exp(-exp_arg) / (4.0*self.a_*pi*t)**(old_div(self.n_,2.0))
 
     def duOfXT(self,x,T):
         t = T + self.tStart
@@ -503,7 +509,7 @@ class NonlinearADR_Decay_DiracIC(LinearADR_Decay_DiracIC):
         t = T + self.tStart
         u1=LinearAD_DiracIC.uOfXT(self,x,T)
         if u1 > 0.0:
-            return u1*exp(-(2.0*self.c_*t*pow(u1,self.d_-1.0))/(self.d_+1.0))
+            return u1*exp(old_div(-(2.0*self.c_*t*pow(u1,self.d_-1.0)),(self.d_+1.0)))
         else:
             return u1
 
@@ -517,7 +523,7 @@ class PlaneCouetteFlow_u(SteadyState):
     """
     The exact solution for the u component of  velocity in plane Couette Flow
     """
-    from canalyticalSolutions import PlaneCouetteFlow_u
+    from .canalyticalSolutions import PlaneCouetteFlow_u
     def __init__(self,
                  plateSeperation=1.0,
                  upperPlateVelocity=0.01,
@@ -561,7 +567,7 @@ class PlaneCouetteFlow_p(SteadyState):
         return 0.0
 
 class PlanePoiseuilleFlow_u(SteadyState):
-    from canalyticalSolutions import PlanePoiseuilleFlow_u
+    from .canalyticalSolutions import PlanePoiseuilleFlow_u
     """
     The exact solution for the u component of  velocity in plane Poiseuille Flow
     """
@@ -639,7 +645,7 @@ class Buckley_Leverett_RiemannSoln(AS_base):
             if x[0]-self.x0 <= 0.0:
                 return self.uL
             return self.uR
-        self.riemF.xi = (x[0]-self.x0)/(t-self.t0)
+        self.riemF.xi = old_div((x[0]-self.x0),(t-self.t0))
         u,f = self.solver.solve(Guess_x = 0.5*(self.uL+self.uR))
         return u
     def uOfX(self,x):
@@ -648,7 +654,7 @@ class Buckley_Leverett_RiemannSoln(AS_base):
         """
         save exact solution to a file
         """
-        dx = (xRight-xLeft)/(nnx-1.)
+        dx = old_div((xRight-xLeft),(nnx-1.))
         fout = open(filename,'w')
         for i in range(nnx):
             x = (xLeft+dx*i,0.0,0.0)
@@ -663,8 +669,8 @@ class PlaneBase(SteadyState):
     #constructor or initializer function, reads in parameters needed in the iwork and rwork arrays
     def __init__(self,
                  plane_theta=0.0,
-                 plane_phi=math.pi/2.0,
-                 v_theta=math.pi/2.0,
+                 plane_phi=old_div(math.pi,2.0),
+                 v_theta=old_div(math.pi,2.0),
                  v_phi=None,
                  v_norm=1.0,
                  mu=1.0,
@@ -673,15 +679,15 @@ class PlaneBase(SteadyState):
         self.plane_n = numpy.array([cos(plane_theta)*sin(plane_phi),
                                     sin(plane_theta)*sin(plane_phi),
                                     cos(plane_phi)])
-        if (plane_phi > -pi/2.0 and plane_phi < pi/2.0):
+        if (plane_phi > old_div(-pi,2.0) and plane_phi < old_div(pi,2.0)):
             if plane_phi == 0.0:
                 logEvent("plate is in x-y plane")
-                v_phi = pi/2.0
+                v_phi = old_div(pi,2.0)
             else:
-                v_phi = atan(-1.0/(tan(plane_phi)*cos(v_theta-plane_theta)))
+                v_phi = atan(old_div(-1.0,(tan(plane_phi)*cos(v_theta-plane_theta))))
         else:
             logEvent("plate is is parallel to z-axis, using angle of velocity with z-axis instead of angle with x-axis")
-            v_theta = plane_theta - pi/2.0
+            v_theta = plane_theta - old_div(pi,2.0)
         self.v_n = numpy.array([cos(v_theta)*sin(v_phi),
                                 sin(v_theta)*sin(v_phi),
                                 cos(v_phi)])
@@ -698,7 +704,7 @@ class PlaneBase(SteadyState):
                         maxZ = (Z,x)
         self.Zshift = minZ[0]
         self.Zsep = maxZ[0] - minZ[0]
-        print self.Zshift
+        print(self.Zshift)
         #allocated iwork and rwork arrays and load in values
 #         self.iwork = numpy.zeros((1,),'i') #( (shape_0,shape_1,...), typecode)
 #         self.rwork = numpy.array([mu,
@@ -731,8 +737,8 @@ class PlanePoiseuilleFlow_u2(PlaneBase):
     #constructor or initializer function, reads in parameters needed in the iwork and rwork arrays
     def __init__(self,
                  plane_theta=0.0,
-                 plane_phi=math.pi/2.0,
-                 v_theta=math.pi/2.0,
+                 plane_phi=old_div(math.pi,2.0),
+                 v_theta=old_div(math.pi,2.0),
                  v_phi=None,
                  v_norm=1.0,
                  mu=1.0,
@@ -756,8 +762,8 @@ class PlanePoiseuilleFlow_v2(PlaneBase):
     """
     def __init__(self,
                  plane_theta=0.0,
-                 plane_phi=math.pi/2.0,
-                 v_theta=math.pi/2.0,
+                 plane_phi=old_div(math.pi,2.0),
+                 v_theta=old_div(math.pi,2.0),
                  v_phi=None,
                  v_norm=1.0,
                  mu=1.0,
@@ -781,8 +787,8 @@ class PlanePoiseuilleFlow_w2(PlaneBase):
     """
     def __init__(self,
                  plane_theta=0.0,
-                 plane_phi=math.pi/2.0,
-                 v_theta=math.pi/2.0,
+                 plane_phi=old_div(math.pi,2.0),
+                 v_theta=old_div(math.pi,2.0),
                  v_phi=None,
                  v_norm=1.0,
                  mu=1.0,
@@ -806,8 +812,8 @@ class PlanePoiseuilleFlow_p2(PlaneBase):
     """
     def __init__(self,
                  plane_theta=0.0,
-                 plane_phi=math.pi/2.0,
-                 v_theta=math.pi/2.0,
+                 plane_phi=old_div(math.pi,2.0),
+                 v_theta=old_div(math.pi,2.0),
                  v_phi=None,
                  v_norm=1.0,
                  mu=1.0,
@@ -875,9 +881,9 @@ if __name__ == '__main__':
             for k in range(5):
                 for l in range(5):
                     p = PlaneBase(plane_theta=i*math.pi/4.0,
-                                  plane_phi=j*math.pi/4.0-pi/2.0,
+                                  plane_phi=j*math.pi/4.0-old_div(pi,2.0),
                                   v_theta=k*math.pi/4.0,
-                                  v_phi=l*math.pi/4.0-pi/2.0,
+                                  v_phi=l*math.pi/4.0-old_div(pi,2.0),
                                   v_norm=1.0,
                                   mu=1.0,
                                   grad_p=1.0)

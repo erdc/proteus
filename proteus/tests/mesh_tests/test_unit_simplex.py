@@ -4,6 +4,8 @@
 Test module for generating unit_simplex elements
 
 """
+from __future__ import print_function
+from builtins import object
 import pytest
 
 from proteus.iproteus import *
@@ -13,7 +15,7 @@ Profiling.logLevel=7
 Profiling.verbose=True
 
 @pytest.mark.MeshTools
-class TestReferenceSimplex():
+class TestReferenceSimplex(object):
 
     @classmethod
     def setup_class(cls):
@@ -34,7 +36,7 @@ class TestReferenceSimplex():
             if os.path.exists(file):
                 try:
                     os.remove(file)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s." %(e.filename,e.strerror))
             else:
                 pass

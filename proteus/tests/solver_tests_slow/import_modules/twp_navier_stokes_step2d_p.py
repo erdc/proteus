@@ -1,12 +1,21 @@
 """
 Incompressible Navier-Stokes flow around a cylinder in 2D.
 """
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 import sys
-import step2d
+try:
+    from . import step2d
+except:
+    import step2d
 reload(step2d)
-from step2d import *
+try:
+    from .step2d import *
+except:
+    from step2d import *
+
 from proteus.mprans import RANS2P
 
 from proteus import Context
@@ -43,7 +52,7 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    PRESSURE_PROJECTION_STABILIZATION=1.0,
                                    phaseFunction=phase_func)
 
-class uTrue:
+class uTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):
@@ -51,7 +60,7 @@ class uTrue:
     def uOfXT(self,x,t):
         return 4.0*x[1]*(1-x[1])
 
-class vTrue:
+class vTrue(object):
     def __init__(self):
         pass
     def vOfX(self,x):
@@ -205,19 +214,19 @@ elif boundary_condition_type == 'ns':
                                              1:{},
                                              2:{}}
 
-class Steady_p:
+class Steady_p(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-class Steady_u:
+class Steady_u(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-class Steady_v:
+class Steady_v(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

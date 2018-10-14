@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from ls_consrv_vortex_3d_p import *
-from vortex import *
+from .ls_consrv_vortex_3d_p import *
+from .vortex import *
 
 
 timeIntegrator = ForwardIntegrator
@@ -84,4 +85,4 @@ linTolFac = 1.0e-6
 
 conservativeFlux = {}
 if checkMass:
-    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex3d"+`lRefinement`+"p"+`pDegree_ls`)]
+    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex3d"+repr(lRefinement)+"p"+repr(pDegree_ls))]

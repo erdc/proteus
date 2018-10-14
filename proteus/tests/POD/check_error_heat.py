@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from read_hdf5 import *
 
 T = 1.0
 nDTout = 100
-DT = T/float(nDTout)
+DT = old_div(T,float(nDTout))
 
 def uex0(x,t):
     """
@@ -15,7 +19,7 @@ def uex0(x,t):
 archive = Archiver.XdmfArchive(".","heat_3d",readOnly=True)
 
 label="/%s%d" % ('nodesSpatial_Domain',0)
-print 'trying to read from %s ' % label
+print('trying to read from %s ' % label)
 coord = read_from_hdf5(archive.hdfFile,label)
 
 import numpy as np
@@ -25,12 +29,12 @@ uex_vals = np.zeros(u.shape,'d')
 for i in range(0,nDTout+1):
     time_level_to_read=i
     label="/%s%d" % ('u',time_level_to_read)
-    print 'trying to read from %s ' % label
+    print('trying to read from %s ' % label)
     u = read_from_hdf5(archive.hdfFile,label)
     uex_vals = uex0(coord,i*DT)
     err = u-uex_vals
     err *= err
-    err *= 1.0/9261.0 #9261 = 21^3
+    err *= old_div(1.0,9261.0) #9261 = 21^3
     L2approx = np.sqrt(err.sum())
-    print "Trapezoidal approximation for error at dofs for nx=21 ny=21 nz=21 is %s " % L2approx
+    print("Trapezoidal approximation for error at dofs for nx=21 ny=21 nz=21 is %s " % L2approx)
 

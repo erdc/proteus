@@ -4,20 +4,28 @@ A hierarchy of classes for linear algebraic system solvers.
 .. inheritance-diagram:: proteus.LinearSolvers
    :parts: 1
 """
-from LinearAlgebraTools import *
-import LinearAlgebraTools as LAT
-import FemTools
-import lapackWrappers
-import superluWrappers
-import TransportCoefficients
-import cfemIntegrals
-import Quadrature
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import input
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
+from .LinearAlgebraTools import *
+from . import LinearAlgebraTools as LAT
+from . import FemTools
+from . import lapackWrappers
+from . import superluWrappers
+from . import TransportCoefficients
+from . import cfemIntegrals
+from . import Quadrature
 from petsc4py import PETSc as p4pyPETSc
 from math import *
 import math
 from .Profiling import logEvent
 
-class LinearSolver():
+class LinearSolver(object):
     """ The base class for linear solvers.
 
     Arugments
@@ -131,7 +139,7 @@ class LinearSolver():
         else:
             if self.its > 0:
                 if self.norm_r < self.lastNorm_r:
-                    self.ratio_r_current = self.norm_r/self.lastNorm_r
+                    self.ratio_r_current = old_div(self.norm_r,self.lastNorm_r)
                 else:
                     self.convergenceHistoryIsCorrupt=True
                     return
@@ -141,12 +149,12 @@ class LinearSolver():
                     self.convergenceHistoryIsCorrupt
                     return
                 self.ratio_r_solve *= self.ratio_r_current
-                self.rReductionFactor = pow(self.ratio_r_solve,1.0/self.its)
+                self.rReductionFactor = pow(self.ratio_r_solve,old_div(1.0,self.its))
                 if self.its > 1:
-                    self.rReductionOrder = log_ratio_r_current/ \
-                                           self.last_log_ratio_r
+                    self.rReductionOrder = old_div(log_ratio_r_current, \
+                                           self.last_log_ratio_r)
                     if self.norm_du < self.lastNorm_du:
-                        ratio_du_current = self.norm_du/self.lastNorm_du
+                        ratio_du_current = old_div(self.norm_du,self.lastNorm_du)
                     else:
                         self.convergenceHistoryIsCorrupt=True
                         return
@@ -157,10 +165,10 @@ class LinearSolver():
                         return
                     self.ratio_du_solve *= ratio_du_current
                     self.duReductionFactor = pow(self.ratio_du_solve,
-                                                 1.0/(self.its-1))
+                                                 old_div(1.0,(self.its-1)))
                     if self.its > 2:
-                        self.duReductionOrder = log_ratio_du_current/ \
-                                                self.last_log_ratio_du
+                        self.duReductionOrder = old_div(log_ratio_du_current, \
+                                                self.last_log_ratio_du)
                     self.last_log_ratio_du = log_ratio_du_current
                 self.last_log_ratio_r = log_ratio_r_current
                 self.lastNorm_du = self.norm_du
@@ -181,7 +189,7 @@ class LinearSolver():
         if convergedFlag == True and self.computeRates == True:
             self.computeAverages()
         if self.printInfo == True:
-            print self.info()
+            print(self.info())
         return convergedFlag
     def failed(self):
         failedFlag = False
@@ -329,15 +337,15 @@ class LU(LinearSolver):
                                                      self.work,
                                                      5*self.n)
             eigen_mags = numpy.sqrt(self.eigenvalues_r**2 + self.eigenvalues_i**2)
-            logEvent("Minimum eigenvalue magnitude"+`eigen_mags.min()`)
-            logEvent("Maximum eigenvalue magnitude"+`eigen_mags.max()`)
-            logEvent("Minimum real part of eigenvalue "+`self.eigenvalues_r.min()`)
-            logEvent("Maximum real part of eigenvalue "+`self.eigenvalues_r.max()`)
-            logEvent("Minimum complex part of eigenvalue "+`self.eigenvalues_i.min()`)
-            logEvent("Maximum complex part of eigenvalue "+`self.eigenvalues_i.max()`)
+            logEvent("Minimum eigenvalue magnitude"+repr(eigen_mags.min()))
+            logEvent("Maximum eigenvalue magnitude"+repr(eigen_mags.max()))
+            logEvent("Minimum real part of eigenvalue "+repr(self.eigenvalues_r.min()))
+            logEvent("Maximum real part of eigenvalue "+repr(self.eigenvalues_r.max()))
+            logEvent("Minimum complex part of eigenvalue "+repr(self.eigenvalues_i.min()))
+            logEvent("Maximum complex part of eigenvalue "+repr(self.eigenvalues_i.max()))
 class PETSc(LinearSolver):
     def __init__(self,L,par_L,prefix=None):
-        import flcbdfWrappers
+        from . import flcbdfWrappers
         LinearSolver.__init__(self,L)
         assert type(L).__name__ == 'SparseMatrix', "PETSc can only be called with a local sparse matrix"
         self.solverName  = "PETSc"
@@ -566,11 +574,11 @@ class KSP_petsc4py(LinearSolver):
 
         if stabilized:
             tmp = null_space_vector.getArray()[::3]
-            tmp[:] = 1.0 / (sqrt(N_DOF_pressure))
+            tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
         else:
             n_DOF_pressure = self.par_L.pde.u[0].femSpace.dofMap.nDOF
             tmp = null_space_vector.getArray()[0:n_DOF_pressure]
-            tmp[:] = 1.0 / (sqrt(N_DOF_pressure))
+            tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
         self.global_null_space = [null_space_vector]
 
 
@@ -616,19 +624,19 @@ class KSP_petsc4py(LinearSolver):
                                                                                                                              ksp.atol,
                                                                                                                              ksp.rtol))
             else:
-                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
                 logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                                   truenorm,
-                                                                                                  (truenorm/ self.rnorm0),
+                                                                                                  (old_div(truenorm, self.rnorm0)),
                                                                                                   ksp.atol,
                                                                                                   ksp.rtol))
             return False
         else:
             logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
-                                                                                              (truenorm/ self.rnorm0),
+                                                                                              (old_div(truenorm, self.rnorm0)),
                                                                                               ksp.atol,
                                                                                               ksp.rtol))
             if truenorm < self.rnorm0*ksp.rtol:
@@ -760,7 +768,7 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner = NavierStokesPressureCorrection(par_L, prefix)
                 self.pc = self.preconditioner.pc
 
-class SchurOperatorConstructor:
+class SchurOperatorConstructor(object):
     """
     Generate matrices for use in Schur complement preconditioner operators.
     """
@@ -777,8 +785,8 @@ class SchurOperatorConstructor:
         """
         from proteus.mprans import RANS2P
         if linear_smoother.PCType!='schur':
-            raise Exception, 'This function only works with the' \
-                'LinearSmoothers for Schur Complements.'
+            raise Exception('This function only works with the' \
+                'LinearSmoothers for Schur Complements.')
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
@@ -792,7 +800,7 @@ class SchurOperatorConstructor:
                 pass
 
     def _initializeMat(self,jacobian):
-        import Comm
+        from . import Comm
         comm = Comm.get()
         transport = self.L.pde
         rowptr, colind, nzval = jacobian.getCSRrepresentation()
@@ -824,12 +832,12 @@ class SchurOperatorConstructor:
         petsc_a = {}
         proteus_a = {}
         for i in range(transport.dim):
-            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
+            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],list(range(rowptr[i],rowptr[i+1]))):
                 nzval[k] = i*transport.dim+j
                 proteus_a[i,j] = nzval[k]
                 petsc_a[LAT.ParInfo_petsc4py.proteus2petsc_subdomain[i],LAT.ParInfo_petsc4py.proteus2petsc_subdomain[j]] = nzval[k]
         for i in range(transport.dim):
-            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
+            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],list(range(rowptr_petsc[i],rowptr_petsc[i+1]))):
                 nzval_petsc[k] = petsc_a[i,j]
         return SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
 
@@ -840,7 +848,7 @@ class SchurOperatorConstructor:
         -------
         two_phase_Cp_rho : matrix
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachTPAdvectionOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -883,7 +891,7 @@ class SchurOperatorConstructor:
         -------
         two_phase_Ap_inv : matrix
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachLaplaceOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -926,7 +934,7 @@ class SchurOperatorConstructor:
         -------
         two_phase_Ap_inv : matrix
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachScaledMassOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -968,7 +976,7 @@ class SchurOperatorConstructor:
         -------
         two_phase_Ap_inv : matrix
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachInvScaledMassOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -1011,7 +1019,7 @@ class SchurOperatorConstructor:
         Q : matrix
             The mass matrix.
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         self.opBuilder.attachMassOperator()
         par_info = self.linear_smoother.L.pde.par_info
@@ -1258,7 +1266,7 @@ class SchurOperatorConstructor:
         """
         self.opBuilder.attachMassOperator()
 
-class KSP_Preconditioner:
+class KSP_Preconditioner(object):
     """ Base class for PETSCc KSP precondtioners. """
     def __init__(self):
         pass
@@ -1482,7 +1490,7 @@ class InterlacedDofOrderType(DofOrderInfo):
             Each element of this list corresponds to a component of
             the velocity.  E.g. for u, v, w : [vel_u,vel_v,vel_w].
         """
-        import Comm
+        from . import Comm
         comm = Comm.get()
         vel_comp_DOF = []
         vel_comp_DOF_vel=[]
@@ -1722,19 +1730,19 @@ class SchurPrecon(KSP_Preconditioner):
         if its == 0:
             self.rnorm0 = truenorm
             logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
-                                                                                              (truenorm/ self.rnorm0),
+                                                                                              (old_div(truenorm, self.rnorm0)),
                                                                                               ksp.atol,
                                                                                               ksp.rtol))
             return False
         else:
             logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)) )
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
-                                                                                              (truenorm/ self.rnorm0),
+                                                                                              (old_div(truenorm, self.rnorm0)),
                                                                                               ksp.atol,
                                                                                               ksp.rtol))
             if truenorm < self.rnorm0*ksp.rtol:
@@ -1845,7 +1853,7 @@ class Schur_Qp(SchurPrecon) :
         self.operator_constructor.updateQ()
         self.Qp = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isp,
                                       self.operator_constructor.linear_smoother.isp)
-        self.Qp.scale(1./self.L.pde.coefficients.nu)
+        self.Qp.scale(old_div(1.,self.L.pde.coefficients.nu))
         L_sizes = self.Qp.size
 
         # Setup a PETSc shell for the inverse Qp operator
@@ -2035,14 +2043,14 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.laplace_null_space = laplace_null_space
         # Strong Dirichlet Pressure DOF
         try:
-            self.strongPressureDOF = L.pde.dirichletConditionsForceDOF[0].DOFBoundaryPointDict.keys()
+            self.strongPressureDOF = list(L.pde.dirichletConditionsForceDOF[0].DOFBoundaryPointDict.keys())
         except KeyError:
             self.strongPressureDOF = []
         if self.velocity_block_preconditioner:
             self.velocity_block_preconditioner_set = False
 
     def setUp(self, global_ksp):
-        import Comm
+        from . import Comm
         comm = Comm.get()
 
         self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
@@ -2203,18 +2211,19 @@ class NavierStokes3D(NavierStokesSchur):
                     self.kspList[1].setNullSpace(self.nsp)
         except:
             pass
+
 SimpleNavierStokes3D = NavierStokes3D
 
-class SimpleDarcyFC:
+class SimpleDarcyFC(object):
     def __init__(self,L):
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
-        print "L_sizes",L_sizes
+        print("L_sizes",L_sizes)
         neqns = L_sizes[0][0]
-        print "neqns",neqns
-        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
+        print("neqns",neqns)
+        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+old_div(neqns,2),dtype="i")
         #print "saturation",self.saturationDOF
-        self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
+        self.pressureDOF = numpy.arange(L_range[0]+old_div(neqns,2),L_range[0]+neqns,dtype="i")
         #print "pressure",self.pressureDOF
         self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
@@ -2260,7 +2269,7 @@ class NavierStokes2D(NavierStokesSchur):
             pass
 SimpleNavierStokes2D = NavierStokes2D
 
-class NavierStokesPressureCorrection:
+class NavierStokesPressureCorrection(object):
     def __init__(self,L,prefix=None):
         self.L=L
         self.pc = p4pyPETSc.PC().create()
@@ -2275,13 +2284,13 @@ class NavierStokesPressureCorrection:
     def setUp(self, global_ksp=None):
         pass
 
-class SimpleDarcyFC:
+class SimpleDarcyFC(object):
     def __init__(self,L):
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
         neqns = L_sizes[0][0]
-        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
-        self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
+        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+old_div(neqns,2),dtype="i")
+        self.pressureDOF = numpy.arange(L_range[0]+old_div(neqns,2),L_range[0]+neqns,dtype="i")
         self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
         self.isp = p4pyPETSc.IS()
@@ -2297,7 +2306,7 @@ class Jacobi(LinearSolver):
     """
     Damped Jacobi iteration.
     """
-    import csmoothers
+    from . import csmoothers
     def __init__(self,
                  L,
                  weight=1.0,
@@ -2326,7 +2335,7 @@ class Jacobi(LinearSolver):
         self.node_order=numpy.arange(self.n,dtype="i")
     def prepare(self,b=None):
         if type(self.L).__name__ == 'ndarray':
-            self.M = self.w/numpy.diagonal(self.L)
+            self.M = old_div(self.w,numpy.diagonal(self.L))
         elif type(self.L).__name__ == 'SparseMatrix':
             self.csmoothers.jacobi_NR_prepare(self.L,self.w,1.0e-16,self.M)
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
@@ -2345,7 +2354,7 @@ class GaussSeidel(LinearSolver):
     """
     Damped Gauss-Seidel.
     """
-    import csmoothers
+    from . import csmoothers
     def __init__(self,
                  connectionList,
                  L,
@@ -2378,7 +2387,7 @@ class GaussSeidel(LinearSolver):
         self.sym=sym
     def prepare(self,b=None):
         if type(self.L).__name__ == 'ndarray':
-            self.M = self.w/numpy.diagonal(self.L)
+            self.M = old_div(self.w,numpy.diagonal(self.L))
         elif type(self.L).__name__ == 'SparseMatrix':
             self.csmoothers.gauss_seidel_NR_prepare(self.L,self.w,1.0e-16,self.M)
             #self.csmoothers.jacobi_NR_prepare(self.L,self.w,1.0e-16,self.M)
@@ -2412,7 +2421,7 @@ class StarILU(LinearSolver):
     """
     Alternating Schwarz Method on node stars.
     """
-    import csmoothers
+    from . import csmoothers
     def __init__(self,
                  connectionList,
                  L,
@@ -2515,7 +2524,7 @@ class StarBILU(LinearSolver):
     """
     Alternating Schwarz Method on 'blocks' consisting of consectutive rows in system for things like dg ...
     """
-    import csmoothers
+    from . import csmoothers
     def __init__(self,
                  connectionList,
                  L,
@@ -2630,7 +2639,7 @@ class TwoLevel(LinearSolver):
             self.computeResidual(u,r,b)
             self.postSmoother.solve(u,r,b,initialGuessIsZero=False)
 
-class MultilevelLinearSolver:
+class MultilevelLinearSolver(object):
     """
     A generic multilevel solver.
     """
@@ -2871,7 +2880,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
             if l > 0:
                 if smootherType == Jacobi:
                     if relaxationFactor is None:
-                        relaxationFactor = 4.0/5.0
+                        relaxationFactor = old_div(4.0,5.0)
                     preSmootherList.append(Jacobi(L=linearOperatorList[l],
                                                   weight=relaxationFactor,
                                                   maxIts=preSmooths,
@@ -2983,7 +2992,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == Jacobi:
         if relaxationFactor is None:
-            relaxationFactor = 4.0/5.0
+            relaxationFactor = old_div(4.0,5.0)
         for l in range(nLevels):
             levelLinearSolverList.append(Jacobi(L=linearOperatorList[l],
                                                 weight=relaxationFactor,
@@ -3038,7 +3047,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                   printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     else:
-        raise RuntimeError,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Unknown level linear solver "+ levelLinearSolverType
+        raise RuntimeError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Unknown level linear solver "+ levelLinearSolverType)
     if multilevelLinearSolverType == NI:
         multilevelLinearSolver = NI(solverList = levelLinearSolverList,
                                     prolongList = prolongList,
@@ -3060,7 +3069,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                         computeRates = computeSolverRates,
                                                         printInfo=printSolverInfo)
     else:
-        raise RuntimeError,"Unknown linear solver %s" % multilevelLinearSolverType
+        raise RuntimeError("Unknown linear solver %s" % multilevelLinearSolverType)
     if (levelLinearSolverType == LU):
         directSolverFlag=True
     else:
@@ -3073,8 +3082,8 @@ def multilevelLinearSolverChooser(linearOperatorList,
 
 if __name__ == '__main__':
     from LinearAlgebra import *
-    import LinearSolvers
-    from LinearSolvers import *
+    from . import LinearSolvers
+    from .LinearSolvers import *
     import Gnuplot
     from Gnuplot import *
     from math import *
@@ -3091,7 +3100,7 @@ if __name__ == '__main__':
     gres("set terminal x11")
     levels = 7
     n=2**levels + 1
-    h =1.0/(n-1.0)
+    h =old_div(1.0,(n-1.0))
     freq=10
     uFine = uniform(0,1,(n))
     uFine[0]=0.0
@@ -3115,7 +3124,7 @@ if __name__ == '__main__':
         N = 2**(l+1) + 1
         L = SparseMat_old(N-2,N-2,3*(N-2),sym=True)
         LD = Mat(N-2,N-2)
-        H = 1.0/(N-1.0)
+        H = old_div(1.0,(N-1.0))
         hList.append(H)
         mgItsList.append(6)
         meshList.append(numpy.arange(0,1.0+H,H,dtype='d')[1:N-1])
@@ -3127,35 +3136,35 @@ if __name__ == '__main__':
         bList.append(b)
         beginAssembly(L)
         for i in range(N-2):
-            L[i,i] = 2.0/H**2
-            LD[i,i] = 2.0/H**2
+            L[i,i] = old_div(2.0,H**2)
+            LD[i,i] = old_div(2.0,H**2)
             if i > 0:
-                L[i,i-1] = -1.0/H**2
-                LD[i,i-1] = -1.0/H**2
+                L[i,i-1] = old_div(-1.0,H**2)
+                LD[i,i-1] = old_div(-1.0,H**2)
             if i < N-3:
-                L[i,i+1] = -1.0/H**2
-                LD[i,i+1] = -1.0/H**2
+                L[i,i+1] = old_div(-1.0,H**2)
+                LD[i,i+1] = old_div(-1.0,H**2)
             endAssembly(L)
         LList.append(L)
         LDList.append(LD)
         if l > 0:
-            cN = (N - 1)/2 + 1
+            cN = old_div((N - 1),2) + 1
             restrict = SparseMat_old(cN-2,N-2,3*(N-2))
             prolong = SparseMat_old(N-2,cN-2,3*(N-2))
             for i in range(cN-2):
-                restrict[i,2*i]   = 1.0/4.0
-                restrict[i,2*i+1] = 2.0/4.0
-                restrict[i,2*i+2] = 1.0/4.0
-                prolong[2*i,i] = 1.0/2.0
-                prolong[2*i+1,i]= 2.0/2.0
-                prolong[2*i+2,i]= 1.0/2.0
+                restrict[i,2*i]   = old_div(1.0,4.0)
+                restrict[i,2*i+1] = old_div(2.0,4.0)
+                restrict[i,2*i+2] = old_div(1.0,4.0)
+                prolong[2*i,i] = old_div(1.0,2.0)
+                prolong[2*i+1,i]= old_div(2.0,2.0)
+                prolong[2*i+2,i]= old_div(1.0,2.0)
             restrict.to_csr()
             restrictList.append(restrict)
             prolong.to_csr()
             prolongList.append(prolong)
             N = cN
-            preSmootherList.append(Jacobi(L,2.0/3.0,3))
-            postSmootherList.append(Jacobi(L,2.0/3.0,3))
+            preSmootherList.append(Jacobi(L,old_div(2.0,3.0),3))
+            postSmootherList.append(Jacobi(L,old_div(2.0,3.0),3))
         else:
             restrictList.append([])
             prolongList.append([])
@@ -3189,14 +3198,14 @@ if __name__ == '__main__':
         dev = DenseEigenvalues(a)
         dev.computeEigenvalues()
         evals.append(dev.eigenvalues)
-        ratio = (max(abs(dev.eigenvalues))/min(abs(dev.eigenvalues)))*(h**2)
-        print "k*h**2 %12.5E" % ratio
+        ratio = (old_div(max(abs(dev.eigenvalues)),min(abs(dev.eigenvalues))))*(h**2)
+        print("k*h**2 %12.5E" % ratio)
     gevals = Gnuplot.Gnuplot()
     gevals("set terminal x11")
     gevals.plot(Gnuplot.Data(evals[0],title='eigenvalues'))
     for ev in evals[1:]:
         gevals.replot(Gnuplot.Data(ev,title='eigenvalues'))
-    raw_input('Please press return to continue... \n')
+    input('Please press return to continue... \n')
 
 class StorageSet(set):
     def __init__(self,initializer=[],shape=(0,),storageType='d'):
@@ -3207,7 +3216,7 @@ class StorageSet(set):
         for k in self:
             storageDict[k] = numpy.zeros(self.shape,self.storageType)
 
-class OperatorConstructor:
+class OperatorConstructor(object):
     """ Base class for operator constructors. """
     def __init__(self,model):
         self.model = model
@@ -3503,7 +3512,7 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
         self._allocateMatrixSpace(self.MassOperatorCoeff,
                                   Mass_Jacobian)
 
-        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+        for ci,cjDict in self.MassOperatorCoeff.mass.items():
             for cj in cjDict:
                 cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
                                                       Mass_q[('vXw*dV_m',cj,ci)],
@@ -3553,7 +3562,7 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
         self._allocateMatrixSpace(self.AdvectionOperatorCoeff,
                                   Advection_Jacobian)
 
-        for ci,ckDict in self.AdvectionOperatorCoeff.advection.iteritems():
+        for ci,ckDict in self.AdvectionOperatorCoeff.advection.items():
             for ck in ckDict:
                 cfemIntegrals.updateAdvectionJacobian_weak_lowmem(Advection_q[('df',ci,ck)],
                                                                   self._operatorQ[('v',ck)],
@@ -3607,9 +3616,9 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
         self._allocateMatrixSpace(self.LaplaceOperatorCoeff,
                                   Laplace_Jacobian)
 
-        for ci,ckDict in self.LaplaceOperatorCoeff.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
-                for cj in set(cjDict.keys()+self.LaplaceOperatorCoeff.potential[ck].keys()):
+        for ci,ckDict in self.LaplaceOperatorCoeff.diffusion.items():
+            for ck,cjDict in ckDict.items():
+                for cj in set(list(cjDict.keys())+list(self.LaplaceOperatorCoeff.potential[ck].keys())):
                     cfemIntegrals.updateDiffusionJacobian_weak_sd(self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][0],
                                                                   self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][1],
                                                                   self.OLT.phi[ck].femSpace.dofMap.l2g, #??!!??
@@ -3668,7 +3677,7 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
         self._allocateMatrixSpace(self.MassOperatorCoeff,
                                   Mass_Jacobian)
 
-        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+        for ci,cjDict in self.MassOperatorCoeff.mass.items():
             for cj in cjDict:
                 cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
                                                       Mass_q[('vXw*dV_m',cj,ci)],
@@ -3758,10 +3767,10 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                 'd')
 
         for ci in range(self.model.nc):
-            if Q.has_key(('w',ci)):
+            if ('w',ci) in Q:
                 self.model.testSpace[ci].getBasisValues(self.model.elementQuadraturePoints,
                                                       Q[('w',ci)])
-            if Q.has_key(('grad(w)',ci)):
+            if ('grad(w)',ci) in Q:
                 self.model.testSpace[ci].getBasisGradientValues(self.model.elementQuadraturePoints,
                                                               Q[('inverse(J)')],
                                                               Q[('grad(w)',ci)])
@@ -3796,10 +3805,10 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                 'd')
 
         for ci in range(self.model.nc):
-            if Q.has_key(('v',ci)):
+            if ('v',ci) in Q:
                 self.model.testSpace[ci].getBasisValues(self.model.elementQuadraturePoints,
                                                       Q[('v',ci)])
-            if Q.has_key(('grad(v)',ci)):
+            if ('grad(v)',ci) in Q:
                 self.model.testSpace[ci].getBasisGradientValues(self.model.elementQuadraturePoints,
                                                               Q[('inverse(J)')],
                                                               Q[('grad(v)',ci)])
@@ -3817,15 +3826,15 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                                         3))
 
         scalar_quad |= set([('u',ci) for ci in range(self.model.nc)])
-        scalar_quad |= set([('m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+        scalar_quad |= set([('m',ci) for ci in list(self.MassOperatorCoeff.mass.keys())])
 
-        test_shape_quad |= set([('w*dV_m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+        test_shape_quad |= set([('w*dV_m',ci) for ci in list(self.MassOperatorCoeff.mass.keys())])
 
-        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
-            trial_shape_X_test_shape_quad |= set([('vXw*dV_m',cj,ci) for cj in cjDict.keys()])
+        for ci,cjDict in self.MassOperatorCoeff.mass.items():
+            trial_shape_X_test_shape_quad |= set([('vXw*dV_m',cj,ci) for cj in list(cjDict.keys())])
 
-        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
-            scalar_quad |= set([('dm',ci,cj) for cj in cjDict.keys()])
+        for ci,cjDict in self.MassOperatorCoeff.mass.items():
+            scalar_quad |= set([('dm',ci,cj) for cj in list(cjDict.keys())])
 
         for k in tensor_quad:
             Q[k] = numpy.zeros(
@@ -3854,19 +3863,19 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
         """ Calculate values for mass operator. """
         elementQuadratureDict = {}
 
-        for ci in self.MassOperatorCoeff.mass.keys():
+        for ci in list(self.MassOperatorCoeff.mass.keys()):
             elementQuadratureDict[('m',ci)] = self._elementQuadrature
 
         (elementQuadraturePoints,elementQuadratureWeights,
          elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
         for ci in range(self.model.nc):
-            if Q.has_key(('w*dV_m',ci)):
+            if ('w*dV_m',ci) in Q:
                 cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('m',ci)],
                                                      self._operatorQ['abs(det(J))'],
                                                      self._operatorQ[('w',ci)],
                                                      Q[('w*dV_m',ci)])
 
-        for ci in zip(range(self.model.nc),range(self.model.nc)):
+        for ci in zip(list(range(self.model.nc)),list(range(self.model.nc))):
                 cfemIntegrals.calculateShape_X_weightedShape(self._operatorQ[('v',ci[1])],
                                                              Q[('w*dV_m',ci[0])],
                                                              Q[('vXw*dV_m',ci[1],ci[0])])
@@ -3927,7 +3936,7 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                for j in range(1,self.model.nc):
                    tensor_quad |= set([('df',i,j)])
 
-           gradients |= set([('grad(w)*dV_f',ci) for ci in self.AdvectionOperatorCoeff.advection.keys()])
+           gradients |= set([('grad(w)*dV_f',ci) for ci in list(self.AdvectionOperatorCoeff.advection.keys())])
 
            scalar_quad.allocate(Q)
            vector_quad.allocate(Q)
@@ -4024,8 +4033,8 @@ class ChebyshevSemiIteration(LinearSolver):
 
         self.alpha = alpha
         self.beta = beta
-        self.relax_parameter = (self.alpha + self.beta) / 2.
-        self.rho = (self.beta - self.alpha) / (self.alpha + self.beta)
+        self.relax_parameter = old_div((self.alpha + self.beta), 2.)
+        self.rho = old_div((self.beta - self.alpha), (self.alpha + self.beta))
 
         self.diag = self.A_petsc.getDiagonal().copy()
         self.diag.scale(self.relax_parameter)
@@ -4073,7 +4082,7 @@ class ChebyshevSemiIteration(LinearSolver):
         b_copy = b.copy()
 
         for i in range(k):
-            w = 1./(1-(self.rho**2)/4.)
+            w = old_div(1.,(1-old_div((self.rho**2),4.)))
             self.r_petsc_array.fill(0.)
             self.computeResidual(self.x_k_array,
                                  self.r_petsc_array,

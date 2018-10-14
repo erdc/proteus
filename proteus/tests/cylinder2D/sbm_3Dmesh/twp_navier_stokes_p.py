@@ -1,3 +1,4 @@
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from cylinder import *
@@ -54,7 +55,8 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     particle_penalty_constant=1e16,
                                     particle_sdfList=[particle_sdf],
                                     particle_velocityList=[particle_vel],
-                                    use_sbm=USE_SBM)
+                                    use_sbm=USE_SBM,
+                                    use_ball_as_particle = 0)
 
 
 def getDBC_u(x,flag):
@@ -124,7 +126,7 @@ diffusiveFluxBoundaryConditions = {0:{0:getDFBC_u},
                                    1:{1:getDFBC_v},
                                    2:{2:getDFBC_w}}
 
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
