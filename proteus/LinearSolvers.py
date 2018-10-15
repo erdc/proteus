@@ -1238,7 +1238,9 @@ class petsc_ASM(KSP_Preconditioner):
     This class provides an ASM preconditioners for PETSc4py KSP
     objects.
     """
-    def __init__(self,L,prefix=None):
+    def __init__(self, 
+                 L,
+                 prefix=None):
         """
         Initializes the ASMpreconditioner for use with PETSc.
 
@@ -1250,17 +1252,18 @@ class petsc_ASM(KSP_Preconditioner):
         """
         self.PCType = 'asm'
         self.L = L
-        self._create_preconditioner()
-        self.pc.setOptionsPrefix(prefix)
+        self._initializePC(prefix)
         self.pc.setFromOptions()
 
-    def _create_preconditioner(self):
+    def _initializePC(self,
+                      prefix=None):
         """ Create the pc object. """
         self.pc = p4pyPETSc.PC().create()
+        self.pc.setOptionsPrefix(prefix)
+        self.pc.setType('asm')
 
     def setUp(self,global_ksp=None):
         self.pc.setUp()
-#        self.pc.getASMSubKSP()[0].setUp()
 
 class petsc_LU(KSP_Preconditioner):
     """ LU PETSc preconditioner class.
