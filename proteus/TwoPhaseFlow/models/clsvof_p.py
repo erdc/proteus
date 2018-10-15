@@ -22,21 +22,11 @@ ns_model = myTpFlowProblem.ns_model
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
 pparams = params.physical # physical parameters
+myparams = params.Models.clsvof # model parameters
 
 # MESH #
 meshparams = params.mesh
 genMesh = meshparams.genMesh
-
-# ******************************** #
-# ********** PARAMETERS ********** #
-# ******************************** #
-useMetrics = mparams.clsvof['useMetrics']
-epsFactHeaviside = mparams.clsvof['epsFactHeaviside']
-epsFactDiract = mparams.clsvof['epsFactDirac']
-epsFactRedist = mparams.clsvof['epsFactRedist']
-lambdaFact = mparams.clsvof['lambdaFact']
-outputQuantDOFs = mparams.clsvof['outputQuantDOFs']
-computeMetrics = mparams.clsvof['computeMetrics']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
@@ -53,13 +43,13 @@ else:
 LevelModelType = CLSVOF.LevelModel
 coefficients = CLSVOF.Coefficients(V_model=V_model,
                                    ME_model=CLSVOF_model,
-                                   useMetrics=useMetrics,
-                                   epsFactHeaviside=epsFactHeaviside,
-                                   epsFactDirac=epsFactHeaviside,
-                                   epsFactRedist=epsFactRedist,
-                                   lambdaFact=lambdaFact,
-                                   outputQuantDOFs=outputQuantDOFs,
-                                   computeMetrics=computeMetrics)
+                                   useMetrics=myparams.useMetrics,
+                                   epsFactHeaviside=myparams.epsFactHeaviside,
+                                   epsFactDirac=myparams.epsFactDirac,
+                                   epsFactRedist=myparams.epsFactRedist,
+                                   lambdaFact=myparams.lambdaFact,
+                                   outputQuantDOFs=myparams.outputQuantDOFs,
+                                   computeMetrics=myparams.computeMetrics)
 coefficients.variableNames=['phi']
 name="clsvof"
 

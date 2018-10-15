@@ -73,6 +73,7 @@ class TwoPhaseFlowProblem:
         self.boundaryConditions=boundaryConditions
         self.useSuperlu = useSuperlu
         self.movingDomain = False
+        self.archiveAllSteps = False
         # to use proteus.mprans.BoundaryConditions
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
@@ -112,12 +113,14 @@ class TwoPhaseFlowProblem:
             self.Parameters.Models.mcorr.index = ind
             ind += 1
         elif self.ls_model == 1:
-            self.Parameters.Models.clsvof.index = ind
-            ind += 1
             if self.ns_model == 0:
                 self.Parameters.Models.rans2p.index = ind
                 ind += 1
+                self.Parameters.Models.clsvof.index = ind
+                ind += 1
             else:
+                self.Parameters.Models.clsvof.index = ind
+                ind += 1
                 self.Parameters.Models.rans3p.index = ind
                 ind += 1
                 self.Parameters.Models.pressureIncrement.index = ind
@@ -212,7 +215,6 @@ class TwoPhaseFlowProblem:
         if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
             self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
             self.domain.use_gmsh = True
-        self.Parameters.mesh.setTriangleOptions()
 
 class OutputStepping:
     """
@@ -230,6 +232,7 @@ class OutputStepping:
         self.dt_output=dt_output
         self.nDTout = nDTout
         self.dt_fixed = dt_fixed
+        self.systemStepExact = False
 
     def __getitem__(self, key):
         return self.__dict__[key]

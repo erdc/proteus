@@ -87,7 +87,8 @@ levelNonlinearSolverConvergenceTest = 'r'
 # ********** NUMERICAL FLUXES AND STABILIZATION ********** #
 # ******************************************************** #
 numericalFluxType = RANS2P.NumericalFlux
-conservativeFlux = {0:'pwl-bdm-opt'}
+# conservativeFlux = {0:'pwl-bdm-opt'}
+conservativeFlux = None
 subgridError = RANS2P.SubgridError(coefficients=physics.coefficients,
                                    nd=nd,
                                    lag=ns_lag_subgridError,

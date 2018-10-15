@@ -8,15 +8,20 @@ from proteus.default_so import *
 from proteus import Context
 import sys
 
-# (!) not the greatest for getting the file name but it works
-name = str(sys.argv[0][:-3])
-parun_passed = False
+pathMyTpFlowProblem = None
+name = 'TwoPhaseFlow'
+
+
 for i in range(len(sys.argv)):
-    if 'parun' in sys.argv[i]:
-        parun_passed = True
-    if parun_passed is True and sys.argv[i][-3:] == '.py':
-        name = sys.argv[i][:-3]
-        break
+    if '-f' == sys.argv[i]:
+        assert sys.argv[i+1][-3:], "fileName must end with .py"
+        name = sys.argv[i+1][:-3]
+    if '--path' == sys.argv[i]:
+        pathMyTpFlowProblem = sys.argv[i+1]
+
+# Load module
+if pathMyTpFlowProblem is not None:
+    sys.path.append(pathMyTpFlowProblem)
 
 # ***************************** #
 # ********** CONTEXT ********** #
@@ -81,7 +86,8 @@ if outputStepping['dt_output'] is None:
             tnList = [0., outputStepping['dt_fixed'], outputStepping['final_time']]
     else:
         tnList = [0., outputStepping['dt_init'], outputStepping['final_time']]
-systemStepExact = False
+systemStepExact = ct.myTpFlowProblem.outputStepping.systemStepExact
+
 archiveFlag = ArchiveFlags.EVERY_USER_STEP
-# if ct.opts.archiveAllSteps is True:
-#     archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
+if ct.myTpFlowProblem.archiveAllSteps is True:
+    archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
