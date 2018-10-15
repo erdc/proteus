@@ -6390,7 +6390,7 @@ class MeshOptions(object):
         self.restrictFineSolutionToAllMeshes = False
         self.parallelPartitioningType = MeshParallelPartitioningTypes.node
         self.nLayersOfOverlapForParallel = 1
-        self.triangleOptions = "q30DenA" # defined when setTriangleOptions called
+        self.triangleOptions = None # defined when setTriangleOptions called
         self.nLevels = 1
         self.nnx = None
         self.nny = None
@@ -6433,7 +6433,7 @@ class MeshOptions(object):
             self.parallelPartitioningType = MeshParallelPartitioningTypes.node
         self.nLayersOfOverlapForParallel = layers_overlap
 
-    def setTriangleOptions(self, triangle_options=None):
+    def setTriangleOptions(self, triangleOptions=None):
         """
         Sets the trangle options
 
@@ -6444,17 +6444,18 @@ class MeshOptions(object):
             set with triangle_string attribute and 'he' value, with
             default for 2D: he**2/2; default for 3D: he**3/6
         """
-        if triangle_options is not None:
-            self.triangleOptions = triangle_options
+        if triangleOptions is not None:
+            self.triangleOptions = triangleOptions
         else:
-            assert self.he is not None, 'Element size (he) must be set before setting triangle options'
-            assert self.triangle_string is not None, 'triangle_string must be set before setting triangle options'
-            if self.nd == 2:
-                self.triangleOptions = self.triangle_string + '%8.8f' \
-                                       % (old_div(self.he**2,2.),)
-            elif self.nd == 3:
-                self.triangleOptions = self.triangle_string + '%21.16e' \
-                                       % (old_div(self.he**3,6.),)
+            if self.triangleOptions is None:
+                assert self.he is not None, 'Element size (he) must be set before setting triangle options'
+                assert self.triangle_string is not None, 'triangle_string must be set before setting triangle options'
+                if self.nd == 2:
+                    self.triangleOptions = self.triangle_string + '%8.8f' \
+                                        % (old_div(self.he**2,2.),)
+                elif self.nd == 3:
+                    self.triangleOptions = self.triangle_string + '%21.16e' \
+                                        % (old_div(self.he**3,6.),)
 
     def setMeshGenerator(self, generator):
         """

@@ -66,6 +66,8 @@ class D_base(object):
         # automatically set to True when proteus.SpatialTools.assembleDomain()
         # is called
         self.useSpatialTools = False
+        # default value for barycenters (compatibility with TwoPhaseFlow)
+        self.barycenters = None
 
     #Get the mesh entity to model entity classification for every entity
     def isOnLine(self,pointA,pointB,testPoint):

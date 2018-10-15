@@ -170,7 +170,7 @@ class ParametersModelRANS3P(ParametersModelBase):
         self.ns_shockCapturingFactor = shockCapturingFactor
         self.ns_lag_shockCapturing = True
         self.ns_lag_subgridError = True
-        self.timeDiscretization = 'vdbf'
+        self.timeDiscretization = 'vbdf'
         self.timeOrder = 2
         self.PSTAB = 0
         self.USE_SUPG = True
