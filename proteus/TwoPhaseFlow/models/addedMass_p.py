@@ -60,7 +60,7 @@ initialConditions = {0: dp_IC()}
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-dirichletConditions = {0: lambda x, flag: None}
+dirichletConditions = {0: lambda x, flag: domain.bc[flag].pAddedMass_dirichlet.init_cython()}
 advectiveFluxBoundaryConditions = {}
 def getFlux_am(x, flag):
     #the unit rigid motions will applied internally

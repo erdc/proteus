@@ -83,6 +83,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.clsvof_dirichlet = BoundaryCondition()
         self.clsvof_advective = BoundaryCondition()
         self.clsvof_diffusive = BoundaryCondition()
+        # added mass
+        self.pAddedMass_dirichlet = BoundaryCondition()
 
     def reset(self):
         """
@@ -282,6 +284,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.k_dirichlet.setConstantBC(1e-30)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
+        self.pAddedMass_dirichlet.setConstantBC(0.)
 
     def setRigidBodyMoveMesh(self, body):
         """

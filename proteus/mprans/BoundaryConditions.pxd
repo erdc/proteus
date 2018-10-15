@@ -75,6 +75,8 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition clsvof_dirichlet
         cdef BoundaryCondition clsvof_advective
         cdef BoundaryCondition clsvof_diffusive
+        # added mass
+        cdef BoundaryCondition pAddedMass_dirichlet
 
 
         # functions
