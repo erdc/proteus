@@ -3206,7 +3206,7 @@ namespace proteus
                   }//i
               }
 	    // End computation of cell based EV coeff //
-	    if (CELL_BASED_EV_COEFF)
+	    if (CELL_BASED_EV_COEFF && ARTIFICIAL_VISCOSITY==2)
 	      {
 		double hK = elementDiameter[eN];
 		double artVisc = fmin(cMax*hK*linVisc_eN,
