@@ -589,16 +589,21 @@ class KSP_petsc4py(LinearSolver):
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
 
-    def _setPreconditioner(self,Preconditioner,par_L,prefix):
+    def _setPreconditioner(self,
+                           Preconditioner,
+                           par_L,
+                           prefix):
         """ Sets the preconditioner type used in the KSP object """
         if Preconditioner is not None:
             if Preconditioner == petsc_LU:
                 logEvent("NAHeader Precondtioner LU")
-                self.preconditioner = petsc_LU(par_L)
+                self.preconditioner = petsc_LU(par_L,
+                                               prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == petsc_ASM:
                 logEvent("NAHead Preconditioner ASM")
-                self.preconditioner = petsc_ASM(par_L,prefix)
+                self.preconditioner = petsc_ASM(par_L,
+                                                prefix)
                 self.pc = self.preconditioner.pc
             if Preconditioner == Jacobi:
                 self.pccontext= Preconditioner(L,
@@ -1276,12 +1281,21 @@ class petsc_LU(KSP_Preconditioner):
         """
         self.PCType = 'lu'
         self.L = L
-        self._create_preconditioner()
+        self._initializePC(prefix)
         self.pc.setFromOptions()
 
-    def _create_preconditioner(self):
-        """ Create the ksp preconditioner object.  """
+    def _initializePC(self,
+                      prefix):
+        r"""
+        Intiailizes the PETSc precondition.
+
+        Parameters
+        ----------
+        prefix : str
+            Prefix identifier for command line PETSc options.
+        """
         self.pc = p4pyPETSc.PC().create()
+        self.pc.setOptionsPrefix(prefix)
         self.pc.setType('lu')
 
     def setUp(self,global_ksp=None):
