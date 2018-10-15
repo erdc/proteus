@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile proteus update FORCE
+.PHONY: all check clean distclean doc install profile proteus update hashdist FORCE 
 
 all: develop
 
@@ -19,18 +19,18 @@ PROTEUS_BUILD_CMD = python -c "print('Letting install handle build_ext')"
 PROTEUS_DEVELOP_BUILD_CMD = python -c "print('Letting install handle build_ext')"
 endif
 
-# shell hack for now to automatically detect Garnet front-end nodes
+# automatically detect hpcmp machines
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = copper* ]] && echo "copper" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = excalibur* ]] && echo "excalibur" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = lightning* ]] && echo "lightning" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = spirit* ]] && echo "spirit" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python -c "import sys; print(sys.platform)")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
-HIT_VERSION := $(shell cd stack/hit; ${VER_CMD})
-STACK_VERSION := $(shell cd stack; ${VER_CMD})
 TEST_MARKER="' '"
 
 define show_info
@@ -40,8 +40,6 @@ define show_info
 	@echo "PROTEUS_ARCH   : ${PROTEUS_ARCH}"
 	@echo "PROTEUS_PREFIX : ${PROTEUS_PREFIX}"
 	@echo "PROTEUS_VERSION: ${PROTEUS_VERSION}"
-	@echo "HIT_VERSION    : ${HIT_VERSION}"
-	@echo "STACK_VERSION  : ${STACK_VERSION}"
 	@echo "+======================================================================================================+"
 	@echo ""
 endef
@@ -102,11 +100,24 @@ distclean: clean
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
-src_cache:
+src_cache: ${PWD}/stack/hit
 	@echo "Adding source cache"
+	-./stack/hit/bin/hit init-home
 	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 
-bld_cache:
+${PWD}/stack/hit: ${PWD}/stack
+	git submodule init && git submodule update
+	cd stack && git submodule init && git submodule update
+
+${PWD}/stack:  
+	git submodule init && git submodule update
+
+default_stack: ${PWD}/stack/hit ${PWD}/stack
+
+hashdist: default_stack
+	@echo "hashdist is now the hit submodule of stack"
+
+bld_cache: ${PWD}/stack/hit
 	@echo "Trying to add build cache for your arch"
 	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
 	./stack/bin/hit remote add http://192.237.213.149/hashdist_${HASHSTACK_BLD} --objects="build"
@@ -119,12 +130,12 @@ profile: ${PROTEUS_PREFIX}/artifact.json
 
 stack/default.yaml: ${PWD}/stack/default.yaml
 
-${PWD}/stack/default.yaml:
+${PWD}/stack/default.yaml: ${PWD}/stack/hit ${PWD}/stack
 	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: src_cache stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"
