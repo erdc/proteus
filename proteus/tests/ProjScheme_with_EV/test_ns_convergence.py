@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test module for surface tension
+Test module for projection scheme
 """
 from builtins import range
 from builtins import object
@@ -24,7 +24,7 @@ from . import (parameters,
                pressureInitial_n)
 
 
-class TestSurfaceTension(object):
+class TestProjScheme(object):
 
     @classmethod
     def setup_class(cls):
