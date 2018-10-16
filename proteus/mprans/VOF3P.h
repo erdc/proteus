@@ -24,8 +24,6 @@ namespace proteus
     return (1.0-2*u)/(u*(1.0-u)+1E-14);
   }
 }
-using proteus::ENTROPY;
-using proteus::DENTROPY;
 
 namespace proteus
 {

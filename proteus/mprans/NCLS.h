@@ -28,11 +28,6 @@ namespace proteus
     return (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14);
   }
 }
-using proteus::Sign;
-using proteus::ENTROPY;
-using proteus::DENTROPY;
-using proteus::ENTROPY_LOG;
-using proteus::DENTROPY_LOG;
 
 namespace proteus
 {

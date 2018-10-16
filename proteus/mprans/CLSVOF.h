@@ -19,8 +19,6 @@ namespace proteus
     return (z>0 ? 1. : (z<0 ? -1. : 0.));
   }
 }
-using proteus::heaviside;
-using proteus::Sign;
 
 namespace proteus
 {

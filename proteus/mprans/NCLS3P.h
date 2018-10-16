@@ -20,9 +20,6 @@ namespace proteus
     return (z >= 0.0 ? 1.0 : -1.0);
   }
 }
-using proteus::ENTROPY;
-using proteus::DENTROPY;
-using proteus::Sign;
 
 namespace proteus
 {

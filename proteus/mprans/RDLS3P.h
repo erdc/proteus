@@ -13,7 +13,6 @@ namespace proteus
     return (z>0 ? 1. : (z<0 ? 0. : 0.5));
   }
 }
-using proteus::heaviside;
 
 namespace proteus
 {
