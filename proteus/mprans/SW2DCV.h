@@ -1318,7 +1318,6 @@ namespace proteus
 
           if (limited_hnp1[i] < -hEps && dt < 1.0)
 	    {
-	      std::cout << ri_aux << "\t" << rj_aux << std::endl;
               std::cout << "Limited water height is negative: "
 			<< "hLow: " << hLow[i] << "\t"
                         << "hHigh: " << limited_hnp1[i] << "\t"
