@@ -39,16 +39,12 @@ namespace proteus
     return (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hv*one_over_hReg;
   }
   // FOR ESTIMATING MAX WAVE SPEEDS
-
-#define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
-  //inline double f(const double& g, const double& h, const double& hZ){
-  //return ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) );
-  //}
-  
-#define phi(g,h,hL,hR,uL,uR) ( f(g,h,hL) + f(g,h,hR) + uR - uL )
-  //inline double phi(const double& g, const double& h, const double& hL, const double& hR, const double& uL, const double& uR){
-  //return ( f(g,h,hL) + f(g,h,hR) + uR - uL );
-  //}
+  inline double f(const double& g, const double& h, const double& hZ){
+    return ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) );
+  }
+  inline double phi(const double& g, const double& h, const double& hL, const double& hR, const double& uL, const double& uR){
+    return ( f(g,h,hL) + f(g,h,hR) + uR - uL );
+  }
   inline double fp(const double& g, const double& h, const double& hZ){
     return ( (h <= hZ) ? sqrt(g/h) : g*(2*h*h+h*hZ+hZ*hZ)/(2*sqrt(2*g)*h*h*hZ*sqrt(1/h+1/hZ)) );
   }
@@ -62,7 +58,7 @@ namespace proteus
     return ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0.0)) * (1+fmax((hStar-hR)/hR,0.)) ) );
   }
   inline double phiDiff(const double& g, const double& h1k, const double& h2k, const double& hL, const double& hR, const double& uL, const double& uR){
-  return ( (phi(g,h2k,hL,hR,uL,uR) - phi(g,h1k,hL,hR,uL,uR))/(h2k-h1k) );
+    return ( (phi(g,h2k,hL,hR,uL,uR) - phi(g,h1k,hL,hR,uL,uR))/(h2k-h1k) );
   }
   inline double phiDDiff1(const double& g, const double& h1k, const double& h2k, const double& hL, const double& hR, const double& uL, const double& uR){
   return ( (phiDiff(g,h1k,h2k,hL,hR,uL,uR) - phip(g,h1k,hL,hR))/(h2k-h1k) );
@@ -938,7 +934,10 @@ namespace proteus
 		}
               //update ij
               ij+=1;
-            }	  
+            }
+	  // clean up hLow from round off error
+	  if (hLow[i] < hEps)
+	    hLow[i]=0;
           ///////////////////////
           // COMPUTE Q VECTORS //
           ///////////////////////
@@ -1045,7 +1044,7 @@ namespace proteus
           limited_hvnp1[i] = ((hvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
 			      +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3);	  
 
-          if (limited_hnp1[i] < -1E-14 && dt < 1.0)
+          if (limited_hnp1[i] < -hEps && dt < 1.0)
             {
               std::cout << "Limited water height is negative: "
                         <<  limited_hnp1[i]
@@ -1054,7 +1053,9 @@ namespace proteus
             }
           else
             {
-              limited_hnp1[i] = fmax(limited_hnp1[i],0.);
+	      // clean up uHigh from round off error
+	      if (limited_hnp1[i] < hEps)
+		limited_hnp1[i] = 0;
               //double aux = fmax(limited_hnp1[i],hEps); // hEps
               double aux = fmax(limited_hnp1[i],hReg[i]); // hReg makes the code more robust
               limited_hunp1[i] *=
@@ -1166,6 +1167,9 @@ namespace proteus
               // UPDATE ij //
               ij+=1;
             }
+	  // clean up hLow from round off error
+	  if (hLow[i] < hEps)
+	    hLow[i]=0;
           ///////////////////////
           // COMPUTE Q VECTORS //
           ///////////////////////
@@ -1301,7 +1305,7 @@ namespace proteus
           limited_hvnp1[i] = ((hvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
 			      +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3);
 
-          if (limited_hnp1[i] < -1E-14 && dt < 1.0)
+          if (limited_hnp1[i] < -hEps && dt < 1.0)
 	    {
 	      std::cout << "Limited water height is negative: "
 			<<  limited_hnp1[i]
@@ -1310,7 +1314,9 @@ namespace proteus
 	    }
           else
 	    {
-	      limited_hnp1[i] = fmax(limited_hnp1[i],0.);
+	      // clean up uHigh from round off error
+	      if (limited_hnp1[i] < hEps)
+		limited_hnp1[i] = 0;
               //double aux = fmax(limited_hnp1[i],hEps); // hEps
               double aux = fmax(limited_hnp1[i],hReg[i]); // hReg makes the code more robust
               limited_hunp1[i] *=
@@ -2059,9 +2065,8 @@ namespace proteus
 				   - ith_dHij_minus_muHij_times_hvStarStates
 				   - ith_muHij_times_hvStates);
 		  // clean up potential negative water height due to machine precision
-		  if (globalResidual[offset_h+stride_h*i] >= -1E-14)
-		    globalResidual[offset_h+stride_h*i]
-		      = fmax(globalResidual[offset_h+stride_h*i],0.);
+		  if (globalResidual[offset_h+stride_h*i] >= -hEps && globalResidual[offset_h+stride_h*i] < hEps)
+		    globalResidual[offset_h+stride_h*i] = 0;
 		}
 	      else
 		{		      
