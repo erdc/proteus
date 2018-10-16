@@ -26,8 +26,8 @@
 #define ENTROPY_FLUX2(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hv*one_over_hReg
 
 // FOR ESTIMATING MAX WAVE SPEEDS
-#define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
-#define phi(g,h,hL,hR,uL,uR) ( f(g,h,hL) + f(g,h,hR) + uR - uL )
+#define ff(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
+#define phi(g,h,hL,hR,uL,uR) ( ff(g,h,hL) + ff(g,h,hR) + uR - uL )
 
 #define fp(g,h,hZ) ( (h <= hZ) ? sqrt(g/h) : g*(2*h*h+h*hZ+hZ*hZ)/(2*sqrt(2*g)*h*h*hZ*sqrt(1/h+1/hZ)) )
 #define phip(g,h,hL,hR) ( fp(g,h,hL) + fp(g,h,hR) )
