@@ -169,7 +169,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                     # update solution to u[0].dof
                     self.transport.u[ci].dof[:] = self.u_dof_lstage[ci]
                 # Update u_dof_old
-                self.transport.h_dof_old[:] = self.u_dof_last[0]  # HHHEEEEEREEEEE!!!
+                self.transport.h_dof_old[:] = self.u_dof_last[0]
                 self.transport.hu_dof_old[:] = self.u_dof_last[1]
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
         else:

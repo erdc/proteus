@@ -17,31 +17,66 @@
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 
-// FOR CELL BASED ENTROPY VISCOSITY
-#define ENTROPY(g,h,hu,hv,z,one_over_hReg) 0.5*(g*h*h + one_over_hReg*(hu*hu+hv*hv) + 2.*g*h*z)
-#define DENTROPY_DH(g,h,hu,hv,z,one_over_hReg) g*h - 0.5*(hu*hu+hv*hv)*std::pow(one_over_hReg,2) + g*z
-#define DENTROPY_DHU(g,h,hu,hv,z,one_over_hReg) hu*one_over_hReg
-#define DENTROPY_DHV(g,h,hu,hv,z,one_over_hReg) hv*one_over_hReg
+namespace proteus
+{
+  // FOR CELL BASED ENTROPY VISCOSITY
+  inline double ENTROPY(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+    return 0.5*(g*h*h + one_over_hReg*(hu*hu+hv*hv) + 2.*g*h*z);
+  }
+  inline double DENTROPY_DH(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+    return g*h - 0.5*(hu*hu+hv*hv)*std::pow(one_over_hReg,2) + g*z;
+  }
+  inline double DENTROPY_DHU(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+    return hu*one_over_hReg;
+  }
+  inline double DENTROPY_DHV(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+    return hv*one_over_hReg;
+  }
+  inline double ENTROPY_FLUX1(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+    return (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hu*one_over_hReg;
+  }
+  inline double ENTROPY_FLUX2(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+    return (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hv*one_over_hReg;
+  }
+  // FOR ESTIMATING MAX WAVE SPEEDS
 
-#define ENTROPY_FLUX1(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hu*one_over_hReg
-#define ENTROPY_FLUX2(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hv*one_over_hReg
-
-// FOR ESTIMATING MAX WAVE SPEEDS
 #define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
+  //inline double f(const double& g, const double& h, const double& hZ){
+  //return ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) );
+  //}
+  
 #define phi(g,h,hL,hR,uL,uR) ( f(g,h,hL) + f(g,h,hR) + uR - uL )
-
-#define fp(g,h,hZ) ( (h <= hZ) ? sqrt(g/h) : g*(2*h*h+h*hZ+hZ*hZ)/(2*sqrt(2*g)*h*h*hZ*sqrt(1/h+1/hZ)) )
-#define phip(g,h,hL,hR) ( fp(g,h,hL) + fp(g,h,hR) )
-
-#define nu1(g,hStar,hL,uL) ( uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0.0)) * (1+fmax((hStar-hL)/hL,0.)) ) )
-#define nu3(g,hStar,hR,uR) ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0.0)) * (1+fmax((hStar-hR)/hR,0.)) ) )
-
-#define phiDiff(g,h1k,h2k,hL,hR,uL,uR)   ( (phi(g,h2k,hL,hR,uL,uR) - phi(g,h1k,hL,hR,uL,uR))/(h2k-h1k)    )
-#define phiDDiff1(g,h1k,h2k,hL,hR,uL,uR) ( (phiDiff(g,h1k,h2k,hL,hR,uL,uR) - phip(g,h1k,hL,hR))/(h2k-h1k) )
-#define phiDDiff2(g,h1k,h2k,hL,hR,uL,uR) ( (phip(g,h2k,hL,hR) - phiDiff(g,h1k,h2k,hL,hR,uL,uR))/(h2k-h1k) )
-
-#define hStarLFromQuadPhiFromAbove(g,hStarL,hStarR,hL,hR,uL,uR) ( hStarL-2*phi(g,hStarL,hL,hR,uL,uR)/(phip(g,hStarL,hL,hR)+sqrt(std::pow(phip(g,hStarL,hL,hR),2)-4*phi(g,hStarL,hL,hR,uL,uR)*phiDDiff1(g,hStarL,hStarR,hL,hR,uL,uR))) )
-#define hStarRFromQuadPhiFromBelow(g,hStarL,hStarR,hL,hR,uL,uR) ( hStarR-2*phi(g,hStarR,hL,hR,uL,uR)/(phip(g,hStarR,hL,hR)+sqrt(std::pow(phip(g,hStarR,hL,hR),2)-4*phi(g,hStarR,hL,hR,uL,uR)*phiDDiff2(g,hStarL,hStarR,hL,hR,uL,uR))) )
+  //inline double phi(const double& g, const double& h, const double& hL, const double& hR, const double& uL, const double& uR){
+  //return ( f(g,h,hL) + f(g,h,hR) + uR - uL );
+  //}
+  inline double fp(const double& g, const double& h, const double& hZ){
+    return ( (h <= hZ) ? sqrt(g/h) : g*(2*h*h+h*hZ+hZ*hZ)/(2*sqrt(2*g)*h*h*hZ*sqrt(1/h+1/hZ)) );
+  }
+  inline double phip(const double& g, const double& h, const double& hL, const double& hR){
+    return ( fp(g,h,hL) + fp(g,h,hR) );
+  }
+  inline double nu1(const double& g, const double& hStar, const double& hL, const double& uL){
+    return ( uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0.0)) * (1+fmax((hStar-hL)/hL,0.)) ) );
+  }
+  inline double nu3(const double& g, const double& hStar, const double& hR, const double& uR){
+    return ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0.0)) * (1+fmax((hStar-hR)/hR,0.)) ) );
+  }
+  inline double phiDiff(const double& g, const double& h1k, const double& h2k, const double& hL, const double& hR, const double& uL, const double& uR){
+  return ( (phi(g,h2k,hL,hR,uL,uR) - phi(g,h1k,hL,hR,uL,uR))/(h2k-h1k) );
+  }
+  inline double phiDDiff1(const double& g, const double& h1k, const double& h2k, const double& hL, const double& hR, const double& uL, const double& uR){
+  return ( (phiDiff(g,h1k,h2k,hL,hR,uL,uR) - phip(g,h1k,hL,hR))/(h2k-h1k) );
+  }
+  inline double phiDDiff2(const double& g, const double& h1k, const double& h2k, const double& hL, const double& hR, const double& uL, const double& uR){
+  return ( (phip(g,h2k,hL,hR) - phiDiff(g,h1k,h2k,hL,hR,uL,uR))/(h2k-h1k) );
+  }
+  inline double hStarLFromQuadPhiFromAbove(const double& g, const double& hStarL, const double& hStarR, const double& hL, const double& hR, const double& uL, const double& uR){
+    return ( hStarL-2*phi(g,hStarL,hL,hR,uL,uR)/(phip(g,hStarL,hL,hR)+sqrt(std::pow(phip(g,hStarL,hL,hR),2)-4*phi(g,hStarL,hL,hR,uL,uR)*phiDDiff1(g,hStarL,hStarR,hL,hR,uL,uR))) );
+  }
+  inline double hStarRFromQuadPhiFromBelow(const double& g, const double& hStarL, const double& hStarR, const double& hL, const double& hR, const double& uL, const double& uR){
+    return ( hStarR-2*phi(g,hStarR,hL,hR,uL,uR)/(phip(g,hStarR,hL,hR)+sqrt(std::pow(phip(g,hStarR,hL,hR),2)-4*phi(g,hStarR,hL,hR,uL,uR)*phiDDiff2(g,hStarL,hStarR,hL,hR,uL,uR))) );
+  }  
+}
 
 namespace proteus
 {
