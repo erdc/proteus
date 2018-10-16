@@ -707,6 +707,7 @@ namespace proteus
         nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         nu += (1.0-LAG_LES)*nu_t + LAG_LES*eddy_viscosity_last;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+        mu += ((1.0-LAG_LES)*nu_t + LAG_LES*eddy_viscosity_last)*rho;
 
         if (NONCONSERVATIVE_FORM > 0.0)
           {
