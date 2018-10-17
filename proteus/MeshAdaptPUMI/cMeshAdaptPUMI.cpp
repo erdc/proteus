@@ -396,7 +396,9 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
     double h_needed = apf::getScalar(interfaceField,ent,0);
     if(h_current>h_needed){
       adaptFlag=1;        
-    //  std::cout<<"h_current "<<h_current<<" h_needed "<<h_needed<<" id "<<localNumber(ent)<<std::endl;
+      //std::cout<<"h_current "<<h_current<<" h_needed "<<h_needed<<" id "<<localNumber(ent)<<std::endl;
+      //apf::writeVtkFiles("testTrigger",m);
+      //std::exit(1);
       break;
       
     }  
@@ -457,8 +459,15 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   }
   else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
   {
-    double L_band = (numAdaptSteps+N_interface_band)*hPhi;
+    //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
+    double L_band = N_interface_band*hPhi;
     calculateSizeField(L_band);
+    //predictive propagation of size field
+    //first measure L_local
+    //then determine N_predict
+    //then edge-walk
+    if(nAdapt>2)
+        predictiveInterfacePropagation();
   }
   else if (size_field_config == "isotropicProteus")
     size_iso = m->findField("proteus_size");
