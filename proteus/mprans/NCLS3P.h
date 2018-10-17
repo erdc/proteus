@@ -5,12 +5,21 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define ENTROPY(u)  u
-#define DENTROPY(u) 1.0
 #define cE 0.1
 #define cMax 0.1
 
-#define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
+namespace proteus
+{
+  inline double ENTROPY(const double& u){
+    return u;
+  }
+  inline double DENTROPY(const double& u){
+    return 1.0;
+  }
+  inline double Sign(const double& z){
+    return (z >= 0.0 ? 1.0 : -1.0);
+  }
+}
 
 namespace proteus
 {
