@@ -29,7 +29,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  outputQuantDOFs = True, # mql. I use it to visualize H(u) at the DOFs
                  computeMetrics = 0, #0, 1, 2 or 3
                  # SPIN UP STEP #
-                 doSpinUpStep=False, #To achieve high order with Bernstein polynomials
+                 doSpinUpStep=False, # To achieve high order with Bernstein polynomials
+                 disc_ICs=False, # Is the init condition a characteristic function?
                  # NONLINEAR CLSVOF
                  timeOrder=1,
                  epsFactHeaviside=1.5,
@@ -46,6 +47,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # 3: compute metrics at EOS (end of simulations). Needs an exact solution
         self.useMetrics=useMetrics
         self.doSpinUpStep=doSpinUpStep
+        self.disc_ICs=disc_ICs
         self.timeOrder=timeOrder
         self.computeMetrics=computeMetrics
         self.epsFactHeaviside=epsFactHeaviside
@@ -626,6 +628,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Aux quantity at DOFs
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
+        #############################
+        # L2 PROJECTION OF SOLUTION #
+        #############################
+        self.rhs_l2_proj = numpy.zeros(self.u[0].dof.shape,'d')
+        self.projected_disc_ICs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.par_projected_disc_ICs = None
+
+        from proteus.flcbdfWrappers import globalMax
+        self.he_for_disc_ICs = 0.5*(-globalMax(-self.mesh.elementDiametersArray.min()) +
+                                    globalMax(self.mesh.elementDiametersArray.max()))
         ###################################
         # PROJECTED NORMAL RECONSTRUCTION #
         ###################################
@@ -706,6 +718,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       bs=1,
                                                                       n=n,N=N,nghosts=nghosts,
                                                                       subdomain2global=subdomain2global)
+        self.par_projected_disc_ICs = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_disc_ICs,
+                                                                                 bs=1,
+                                                                                 n=n,N=N,nghosts=nghosts,
+                                                                                 subdomain2global=subdomain2global)
+
         ################
         # SPIN UP STEP #
         ################
@@ -1001,6 +1018,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
             weighted_mass_matrix)
 
+    def getRhsL2Proj(self):
+        self.clsvof.calculateRhsL2Proj(
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.he_for_disc_ICs,
+            self.u[0].dof,
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.rhs_l2_proj)
+
     def getLumpedMassMatrix(self):
         self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
         self.clsvof.calculateLumpedMassMatrix(#element
@@ -1060,11 +1096,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         volume_domain = numpy.zeros(1)
 
         # FREEZE INTERFACE #
-        if (self.preRedistancingStage==1
-            and self.coefficients.freeze_interface_during_preRedistancing==True):
-            for gi in range(len(self.u[0].dof)):
-                if self.interface_locator[gi] == 1.0:
-                    self.u[0].dof[gi] = self.u_dof_old[gi]
+        if self.preRedistancingStage==1:
+            if self.coefficients.freeze_interface_during_preRedistancing==True:
+                for gi in range(len(self.u[0].dof)):
+                    if self.interface_locator[gi] == 1.0:
+                        self.u[0].dof[gi] = self.u_dof_old[gi]
         # END OF FREEZING INTERFACE #
         else:
             self.interface_locator[:]=0
@@ -1163,7 +1199,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.alpha/self.mesh.elementDiametersArray.min())
 
         # RELATED TO EIKONAL EQUATION #
-        if (self.preRedistancingStage == 1):
+        if self.preRedistancingStage == 1:
             # FREEZE INTERFACE #
             if (self.coefficients.freeze_interface_during_preRedistancing==True):
                 for gi in range(len(self.u[0].dof)):
@@ -1261,9 +1297,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.alpha/self.mesh.elementDiametersArray.min())
 
         # RELATED TO EIKONAL EQUATION #
-        if (self.preRedistancingStage == 1):
+        if self.preRedistancingStage == 1:
             # FREEZING INTERFACE #
-            if (self.coefficients.freeze_interface_during_preRedistancing==True):
+            if self.coefficients.freeze_interface_during_preRedistancing==True:
                 for gi in range(len(self.u[0].dof)):
                     if self.interface_locator[gi] == 1.0:
                         for i in range(self.rowptr[gi], self.rowptr[gi + 1]):
