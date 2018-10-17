@@ -5145,7 +5145,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                  errorNormType="L2", #L1,Linfty
                  refineType=0,
                  ):
-        from matplotlib import tri as mpl_tri
         from scipy import interpolate as scipy_interpolate
         from . import TriangleTools
         if maxElementDiameter:
