@@ -24,6 +24,8 @@
 //      * Turbulence: double check eddy_viscosity within evaluateCoefficients
 // ***** END OF TODO *****
 
+#define CELL_BASED_EV_COEFF 1
+
 namespace proteus
 {
   class cppRANS3PF2D_base
@@ -2263,6 +2265,8 @@ namespace proteus
             double element_active=1.0;//use 1 since by default it is ibm
             double mesh_volume_conservation_element=0.0,
               mesh_volume_conservation_element_weak=0.0;
+	    // for entropy viscosity
+	    double linVisc_eN = 0, nlinVisc_eN_num = 0, nlinVisc_eN_den = 0;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
@@ -3071,13 +3075,20 @@ namespace proteus
 		      - mu*(hess_u[1] + hess_v[3]); // u_xy + v_yy
 		    
 		    // compute entropy residual
-		    double entRes = Res_in_x*u + Res_in_y*v;
+		    double entRes_times_u = Res_in_x*u + Res_in_y*v;
 
 		    double hK = elementDiameter[eN]/order_polynomial;
 		    q_numDiff_u[eN_k] = fmin(cMax*porosity*rho*hK*std::sqrt(vel2),
-					     cE*hK*hK*fabs(entRes)/(vel2+1E-10));
+					     cE*hK*hK*fabs(entRes_times_u)/(vel2+1E-10));
 		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+
+		    if (CELL_BASED_EV_COEFF)
+		      {
+			linVisc_eN  = fmax(porosity*rho*std::sqrt(vel2),linVisc_eN);
+			nlinVisc_eN_num = fmax(fabs(entRes_times_u),nlinVisc_eN_num);
+			nlinVisc_eN_den = fmax(vel2,nlinVisc_eN_den);
+		      }
 		  }
 		   
 		//
@@ -3194,6 +3205,20 @@ namespace proteus
                     /*   ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]);  */
                   }//i
               }
+	    // End computation of cell based EV coeff //
+	    if (CELL_BASED_EV_COEFF && ARTIFICIAL_VISCOSITY==2)
+	      {
+		double hK = elementDiameter[eN];
+		double artVisc = fmin(cMax*hK*linVisc_eN,
+				      cE*hK*hK*nlinVisc_eN_num/(nlinVisc_eN_den+1E-10));
+		for(int k=0;k<nQuadraturePoints_element;k++)
+		  {
+		    register int eN_k = eN*nQuadraturePoints_element+k;
+		    q_numDiff_u[eN_k] = artVisc;
+		    q_numDiff_v[eN_k] = artVisc;
+		    q_numDiff_w[eN_k] = artVisc;
+		  }
+	      }
             //
             //load element into global residual and save element residual
             //
