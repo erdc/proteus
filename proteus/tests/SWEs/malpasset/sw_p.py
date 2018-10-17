@@ -12,35 +12,36 @@ import math
 opts=Context.Options([
     ("T", 3000, "Length of simulation in seconds"),
     ("nDTout", 3000, "number of time steps to archive"),
-    ("refinement",4,"Level of refinement"),
     ("reflecting_BCs",1,"Use reflecting BCs")
 ])
-
-nd=2
 
 T=opts.T
 nDTout=opts.nDTout
 
+######################
+##### PARAMETERS #####
+######################
+# PHYSICAL PARAMETERS #
 g = 9.81
-# PARAMETERS #
+LINEAR_FRICTION = 0
 mannings=0.033 #0.025 #0.025#m^{-1/3} after Ying etal 2009
-cE=1
-LUMPED_MASS_MATRIX=0
 
-domain = None#RectangularDomain(L=L)
+# NUMERICAL PARAMETERS #
+cE = 1
+LUMPED_MASS_MATRIX = 0
+SSPOrder = 1
+runCFL=0.25
+useSuperlu = True
+triangleFlag = 1
+reflecting_BCs = opts.reflecting_BCs
+
+##################
+##### DOMAIN #####
+##################
+nd=2
+domain = None
 meshfile = "mal_50sec"
-#
-#set bathmetry to zero for debugging
-#
-#domainTmp = Domain.Mesh2DMDomain(meshfile)
-#meshTmp = TriangularMesh()
-#meshTmp.generateFrom2DMFile(domainTmp.meshfile)
-#meshTmp.nodeArray[:,2]=0.0
-#meshTmp.writeMeshADH("mal_50sec_flat")
-#meshfile = "mal_50sec_flat"
-#
-#end debug
-#
+he=None
 
 ######################
 ##### BATHYMETRY #####
@@ -48,11 +49,11 @@ meshfile = "mal_50sec"
 #
 #using mesh z coord
 #
+
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
-
-class water_height_at_t0(object):
+class IC_h(object):
     """set the water level to 100m behind the dam and dry elsewhere"""
     def uOfXT(self,X,t):
         x = X[0]
@@ -82,9 +83,8 @@ class Zero(object):
     def uOfXT(self,x,t):
         return 0.0
 
-initialConditions = {0:water_height_at_t0(),
-                     1:Zero(),
-                     2:Zero()}
+IC_hu=Zero
+IC_hv=Zero
 
 ###################################
 ##### FOR BOUNDARY CONDITIONS #####
@@ -92,51 +92,47 @@ initialConditions = {0:water_height_at_t0(),
 def getDBC_h(x,flag):
     return None
 
-def getDBC_u(x,flag):
+def getDBC_hu(x,flag):
     return None
 
-def getDBC_v(x,flag):
+def getDBC_hv(x,flag):
     return None
 
-dirichletConditions = {0:getDBC_h,
-                       1:getDBC_u,
-                       2:getDBC_v}
+# ************************************************ #
+# ********** GENERIC PORTION OF _p FILE ********** #
+# ************************************************ #
 
-fluxBoundaryConditions = {0:'outFlow',
-                          1:'outFlow',
-                          2:'outFlow'}
-
-def getAFBC_h(x,flag):
-    return lambda x,t: 0.0
-
-def getAFBC_u(x,flag):
-    return lambda x,t: 0.0
-
-def getAFBC_v(x,flag):
-    return lambda x,t: 0.0
-
-advectiveFluxBoundaryConditions =  {0:getAFBC_h,
-                                    1:getAFBC_u,
-                                    2:getAFBC_v}
-
-def getDFBC_u(x,flag):
-    return lambda x,t: 0.0
-
-def getDFBC_v(x,flag):
-    return lambda x,t: 0.0
-
-diffusiveFluxBoundaryConditions = {0:{},
-                                   1:{1:getDFBC_u},
-                                   2:{2:getDFBC_v}}
-
-#cek todo, add gauges
-
-#########################################
-##### CREATE MODEL AND COEFFICIENTS #####
-#########################################
+# ********************************** #
+# ********** COEFFICIENTS ********** #
+# ********************************** #
 LevelModelType = SW2DCV.LevelModel
 coefficients = SW2DCV.Coefficients(g=g,
                                    bathymetry=None,
                                    cE=cE,
                                    LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
+                                   LINEAR_FRICTION=LINEAR_FRICTION,
                                    mannings=mannings)
+
+
+# **************************************** #
+# ********** INITIAL CONDITIONS ********** #
+# **************************************** #
+initialConditions = {0: IC_h(),
+                     1: IC_hu(),
+                     2: IC_hv()}
+
+# ***************************************** #
+# ********** BOUNDARY CONDITIONS ********** #
+# ***************************************** #
+dirichletConditions = {0:getDBC_h,
+                       1:getDBC_hu,
+                       2:getDBC_hv}
+fluxBoundaryConditions = {0:'outFlow',
+                          1:'outFlow',
+                          2:'outFlow'}
+advectiveFluxBoundaryConditions =  {0: lambda x,flag: None,
+                                    1: lambda x,flag: None,
+                                    2: lambda x,flag: None }
+diffusiveFluxBoundaryConditions = {0:{},
+                                   1:{1: lambda x,flag: None},
+                                   2:{2: lambda x,flag: None}}

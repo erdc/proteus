@@ -5,13 +5,20 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-// True characteristic functions
-#define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
-#define Sign(z) (z>0 ? 1. : (z<0 ? -1. : 0.))
-
 #define USE_SIGN_FUNCTION 1
 #define IMPLICIT_BCs 0
 #define LAMBDA_SCALING 0
+
+namespace proteus
+{
+// True characteristic functions
+  inline double heaviside(const double& z){
+    return (z>0 ? 1. : (z<0 ? 0. : 0.5));
+  }
+  inline double Sign(const double& z){
+    return (z>0 ? 1. : (z<0 ? -1. : 0.));
+  }
+}
 
 namespace proteus
 {
