@@ -1897,7 +1897,7 @@ class NS_base(object):  # (HasTraits):
         except:
             pass
 
-        if model.name=='clsvof':
+        if 'clsvof' in model.name:
             vofDOFs = {}
             vofDOFs[0] = model.levelModelList[-1].vofDOFs
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
@@ -2026,7 +2026,7 @@ class NS_base(object):  # (HasTraits):
         except:
             pass
 
-        if model.name=='clsvof':
+        if 'clsvof' in model.name:
             vofDOFs = {}
             vofDOFs[0] = model.levelModelList[-1].vofDOFs
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
