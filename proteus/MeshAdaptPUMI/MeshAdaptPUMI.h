@@ -59,6 +59,8 @@ class MeshAdaptPUMIDrvr{
   int adaptPUMIMesh(const char* input);
   int calculateSizeField(double L_band);
   void predictiveInterfacePropagation();
+  void edgeWalkPropagation(apf::Mesh* m, apf::MeshEntity* vert, double L_local, apf::Vector3 actualPosition,double direction);
+
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
