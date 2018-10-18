@@ -3341,12 +3341,14 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                        self.model.u[1].femSpace.dofMap.l2g,
                                                        self.model.u[1].dof,
                                                        self.model.u[2].dof,
+                                                       self.model.u[3].dof,
                                                        self.model.coefficients.useVF,
                                                        self.model.coefficients.q_vf,
                                                        self.model.coefficients.q_phi,
                                                        self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
                                                        self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                        self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
+                                                       self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
                                                        self.TPScaledAdvectionOperator)
 
     def updateTPInvScaledLaplaceOperator(self):
@@ -3374,15 +3376,18 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                               self.model.u[0].dof,
                                                               self.model.u[1].dof,
                                                               self.model.u[2].dof,
+                                                              self.model.u[3].dof,
                                                               self.model.coefficients.useVF,
                                                               self.model.coefficients.q_vf,
                                                               self.model.coefficients.q_phi,
-                                                              self.model.coefficients.sdInfo[(1,1)][0],self.model.coefficients.sdInfo[(1,1)][1], # ARB - this should work..?
+                                                              self.model.coefficients.sdInfo[(1,1)][0],self.model.coefficients.sdInfo[(1,1)][1],
                                                               self.model.coefficients.sdInfo[(1,1)][0],self.model.coefficients.sdInfo[(1,1)][1],
                                                               self.model.coefficients.sdInfo[(2,2)][0],self.model.coefficients.sdInfo[(2,2)][1],
+                                                              self.model.coefficients.sdInfo[(3,3)][0],self.model.coefficients.sdInfo[(3,3)][1],
                                                               self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
                                                               self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                               self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
+                                                              self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
                                                               self.TPInvScaledLaplaceOperator)
 
     def updateTwoPhaseMassOperator_rho(self,
@@ -3435,12 +3440,14 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                         self.model.u[0].dof,
                                                         self.model.u[1].dof,
                                                         self.model.u[2].dof,
+                                                        self.model.u[3].dof,
                                                         self.model.coefficients.useVF,
                                                         self.model.coefficients.q_vf,
                                                         self.model.coefficients.q_phi,
                                                         self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
                                                         self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                         self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
+                                                        self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
                                                         self.TPScaledMassOperator)
 
     def updateTwoPhaseInvScaledMassOperator(self,
@@ -3484,12 +3491,14 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                         self.model.u[0].dof,
                                                         self.model.u[1].dof,
                                                         self.model.u[2].dof,
+                                                        self.model.u[3].dof,
                                                         self.model.coefficients.useVF,
                                                         self.model.coefficients.q_vf,
                                                         self.model.coefficients.q_phi,
                                                         self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
                                                         self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                         self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
+                                                        self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
                                                         self.TPInvScaledMassOperator)
 
 class OperatorConstructor_oneLevel(OperatorConstructor):
