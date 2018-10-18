@@ -293,9 +293,10 @@ void MeshAdaptPUMIDrvr::edgeWalkPropagation(apf::Mesh* m, apf::MeshEntity* vert,
     }
 }
 
-void BFS_propagation(apf::Mesh* m, apf::MeshEntity* vert, double L_local, apf::Vector3 actualPosition,double direction,std::queue<apf::MeshEntity*> &markedVertices)
+void BFS_propagation(apf::Mesh* m, apf::MeshEntity* vert, double L_local, apf::Vector3 actualPosition,double direction,std::queue<apf::MeshEntity*> &markedVertices,const char* tagName)
 {   
-    apf::MeshTag* isMarkedVert = m->findTag("isMarkedVert");
+    //apf::MeshTag* isMarkedVert = m->findTag("isMarkedVert");
+    apf::MeshTag* isMarkedVert = m->findTag(tagName);
     apf::MeshTag* vertexMaxTraverse = m->findTag("maximumTraversal");
     int marked=1;
     m->setIntTag(vert,isMarkedVert,&marked);
@@ -313,8 +314,12 @@ void BFS_propagation(apf::Mesh* m, apf::MeshEntity* vert, double L_local, apf::V
             dontContinue=1;
     } 
 
+    //directionality
+    apf::Field* levelSet = m->findField("phi");
+    double phiCurrent = apf::getScalar(levelSet,vert,0);
+
     //need to continue search?
-    if((difference_vect.getLength() > L_local) || dontContinue)
+    if((difference_vect.getLength() > L_local) || dontContinue || (phiCurrent*direction<=0))
         return;
     else
     {
@@ -345,7 +350,10 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
     apf::Field* interfaceBand = m->findField("interfaceBand");
     apf::Field* velocity = m->findField("velocity");
     apf::Field* levelSet = m->findField("phi");
-    apf::writeVtkFiles("beforePredictivePropagation", m);
+
+    char namebuffer[40];
+    sprintf(namebuffer,"beforePredictivePropagation_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
 
     //get gradient field
     apf::Field *gradphi = apf::recoverGradientByVolume(levelSet);
@@ -406,22 +414,45 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
 
             //get L_local 
             double L_local = localVelocity.getLength()*numAdaptSteps*delta_T;
+        
+            //if velocity is too low, take second order approximation assuming gravity is the only acceleration
+/*
+            if(L_local < (N_interface_band+1)*hPhi)
+            {
+                double gravity;
+                if(nsd==2)
+                    gravity = g[1];
+                else
+                    gravity = g[2];
+                //L_local = N_interface_band*hPhi+localVelocity.getLength()*numAdaptSteps*delta_T+0.5*(delta_T*numAdaptSteps)*(delta_T*numAdaptSteps)*std::abs(gravity);   
+                //L_local = (N_interface_band+2)*hPhi;
+            }
+*/
+
             L_local += (N_interface_band)*hPhi; //add blending region
 
             //get direction, multiply this with levelSet value to determine if in same direction
             double signValue = localVelocity*localInterfaceNormal;
-            std::cout<<"actual position "<< actualPosition<<std::endl;
-            std::cout<<"sign value "<<signValue<<" localVelocity "<<localVelocity<<" interfaceNormal "<<localInterfaceNormal<<" product "<<localVelocity*localInterfaceNormal<<std::endl;
+            //std::cout<<"actual position "<< actualPosition<<std::endl;
+            //std::cout<<"sign value "<<signValue<<" localVelocity "<<localVelocity<<" interfaceNormal "<<localInterfaceNormal<<" product "<<localVelocity*localInterfaceNormal<<std::endl;
 
             std::queue <apf::MeshEntity*> markedVertices;
             //I should generalize tag names to test out ability to collect all tag names and destroy at the end
-            apf::MeshTag* isMarkedVert = m->createIntTag("isMarkedVert",1); //define tag field for each vertex
+            //char namebuffer[40];
+            //sprintf(namebuffer,"isMarkedVert_%i_%i",PCU_Comm_Self(),localNumber(edge));
+            std::stringstream tagStream;
+            tagStream << "isMarkedVert_"<<PCU_Comm_Self()<<"_"<<localNumber(edge);
+            std::string tagName = tagStream.str();
+            //apf::MeshTag* isMarkedVert = m->createIntTag("isMarkedVert",1); //define tag field for each vertex
+            //apf::MeshTag* isMarkedVert = m->createIntTag(namebuffer,1); //define tag field for each vertex
+            apf::MeshTag* isMarkedVert = m->createIntTag(tagName.c_str(),1); //define tag field for each vertex
+            
             int marked = 1;
 
             //find adjacent vertices and their adjacent edges
             for(int i=0; i<edge_adjVerts.getSize();i++)
             {
-            //    m->setIntTag(edge_adjVerts[i],isMarkedVert,&marked); //mark vertices
+                apf::setScalar(L_local_field,edge_adjVerts[i],0,L_local);
                 apf::Adjacent vert_adjVerts;
                 apf::getBridgeAdjacent(m,edge_adjVerts[i],1,0,vert_adjVerts);
                 for(int j=0; j < vert_adjVerts.getSize();j++)
@@ -431,20 +462,39 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
             {
                 apf::MeshEntity* queueVert = markedVertices.front();
                 markedVertices.pop();
-                BFS_propagation(m, queueVert, L_local, actualPosition, signValue, markedVertices);
-                //std::cout<<"size of queue "<<markedVertices.size()<<std::endl;
+                //BFS_propagation(m, queueVert, L_local, actualPosition, signValue, markedVertices);
+                //BFS_propagation(m, queueVert, L_local, actualPosition, signValue, markedVertices,namebuffer);
+                BFS_propagation(m, queueVert, L_local, actualPosition, signValue, markedVertices,tagName.c_str());
             }
             
-            m->destroyTag(isMarkedVert);
+            //m->destroyTag(isMarkedVert);
         } //end if interface edge
     }
     m->end(it);
-    apf::writeVtkFiles("afterPredictivePropagation", m);
+    char namebuffer2[40];
+    sprintf(namebuffer2,"afterPredictivePropagation_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer2, m);
+    //apf::writeVtkFiles("afterPredictivePropagation", m);
     apf::copyData(interfaceBand,predictInterfaceBand);
     apf::destroyField(predictInterfaceBand);
     apf::destroyField(gradphi);
     apf::destroyField(L_local_field);
     m->destroyTag(vertexMaxTraverse);
+
+    //get all tags
+    apf::DynamicArray<apf::MeshTag*> allTags;
+    m->getTags(allTags);
+    for(int i =0;i<allTags.getSize();i++)
+    {
+        std::string tagName = m->getTagName(allTags[i]);
+        if(tagName.substr(0,12) == "isMarkedVert")
+        {
+            //std::cout<<"name is "<<m->getTagName(allTags[i])<<std::endl;
+            m->destroyTag(allTags[i]);
+        }
+    }
+    
+    //std::exit(1);
 }
 
 void MeshAdaptPUMIDrvr::isotropicIntersect()

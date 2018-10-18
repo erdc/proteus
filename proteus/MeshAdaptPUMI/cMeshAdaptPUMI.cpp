@@ -460,7 +460,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
   {
     //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
-    double L_band = N_interface_band*hPhi;
+    double L_band = (N_interface_band+1)*hPhi;
     calculateSizeField(L_band);
     //predictive propagation of size field
     //first measure L_local
