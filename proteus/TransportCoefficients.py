@@ -2309,13 +2309,6 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
             phi   = self.ebq_phi
             n     = self.ebq_n
             kappa = self.ebq_kappa
-        #mwf debug
-        #waterLevelBase = 0.529
-        #for i in range(len(phi.flat)):
-            #if abs(phi.flat[i]) > 0.0:
-            #    assert abs(phi.flat[i] - (c['x'].flat[3*i+1] - waterLevelBase)) <= 1.0e-5, "Problem with phi t=%s phi.shape=%s i=%s phi=%s y=%s wl=%s " % (t,phi.shape,i,phi.flat[i],c['x'].flat[3*i+1],waterLevelBase)
-            #phi.flat[i] = c['x'].flat[3*i+1] - waterLevelBase#self.waterLevel
-        #self.sd=False
         if self.nd==2:
             if self.sd:
                 self.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.eps_density,
@@ -2989,10 +2982,6 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                 c[('df',3,1)].flat[:] = 0.0
                 c[('df',3,2)].flat[:] = 0.0
                 c[('df',3,3)].flat[:] = 0.0
-        #cek hack to look at signed distance to dem particles
-        #for i in range(len(c[('u',0)].flat)):
-        #    c[('m',1)].flat[i] = self.signedDistance(c['x'].flat[3*i : (3*i+3)])
-        #mwf hack for visuzlization
         c[('phis_viz')] = phi_s
         c[('phi_viz')]  = phi
 ##\brief Two-phase, Incompressible Navier-Stokes equations (level-set formulation)
@@ -4005,8 +3994,6 @@ class VOFCoefficients(TC_base):
         #in a moving domain simulation the velocity coming in is already for the moving domain
         pass
     def evaluate(self,t,c):
-        #mwf debug
-        #print "VOFcoeficients eval t=%s " % t
         if c[('f',0)].shape == self.q_v.shape:
             v = self.q_v
             phi = self.q_phi
@@ -4441,13 +4428,6 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
         self.m = m
     def evaluate(self,t,c):
         if ('dV_u',0) in c:
-            #mwf debug
-            #print """ReL2proj f.shape= %s a.shape= %s da.shape= %s dV_u.shape= %s """ % (c[('f',0)].shape,
-            #                                                                             c[('a',0,0)].shape,
-            #                                                                             c[('da',0,0,0)].shape,
-            #                                                                             c[('dV_u',0)].shape)
-            #raw_input('L2proj eval: hit return to continue')
-            #mwf debug
             volFact = 1.0;
             if c[('f',0)].shape[2] == 2:
                 volFact =0.5
@@ -4478,18 +4458,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
                                                                              c[('a',0,0)],
                                                                              c[('da',0,0,0)])
 
-            #mwf debug
-            #for eN in range(c[('m',0)].shape[0]):
-            #    print """out of L2proj elm m[%d,:]=%s """ % (eN,c[('m',0)][eN,:])
-            #    print """out of L2proj elm dm[%d,:]=%s """ % (eN,c[('dm',0,0)][eN,:])
-            #    print """out of L2proj elm a[%d,:,0,0]=%s """ % (eN,c[('a',0,0)][eN,:])
         elif ('dS_u',0) in c:
-            #mwf debug
-            #print """ReL2proj f.shape= %s a.shape= %s da.shape = %s dS_u.shape= %s """ % (c[('f',0)].shape,
-            #                                                                              c[('a',0,0)].shape,
-            #                                                                              c[('da',0,0,0)].shape,
-            #                                                                              c[('dS_u',0)].shape)
-            #raw_input('L2proj eval: hit return to continue')
             volFact = 1.0;
             if c[('f',0)].shape[-1] == 3:
                 volFact =0.5
@@ -5311,9 +5280,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
 #        for em in materialTypes:
 #            print em
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
                                                                      self.rho,
                                                                      self.beta,
@@ -5330,7 +5296,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
                                                                      c[('df',0,0)],
                                                                      c[('a',0,0)],
                                                                      c[('da',0,0,0)])
-#         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5341,9 +5306,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             import pdb
             pdb.set_trace()
 
-#         #mwf debug
-#         if c[('u',0)].shape == self.q_shape:
-#             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class SeepageBrezis(TC_base):
     """
     version of Re where element material type id's used in evals
@@ -5566,7 +5528,6 @@ class ConservativeHeadRichardsJLeverett(TC_base):
                                                c[('df',0,0)],
                                                c[('a',0,0)],
                                                c[('da',0,0,0)])
-        #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5577,7 +5538,6 @@ class ConservativeHeadRichardsJLeverett(TC_base):
             import pdb
             pdb.set_trace()
 
-        #mwf debug
         if c[('u',0)].shape == self.q_shape:
             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class ConservativeHeadRichardsJLeverettAni(TC_base):
@@ -5690,7 +5650,6 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
                                                c[('df',0,0)],
                                                c[('a',0,0)],
                                                c[('da',0,0,0)])
-        #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5701,7 +5660,6 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
             import pdb
             pdb.set_trace()
 
-        #mwf debug
         if c[('u',0)].shape == self.q_shape:
             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class ConstantVelocityLevelSet(TC_base):
@@ -5729,7 +5687,6 @@ class ConstantVelocityLevelSet(TC_base):
         if len(modelList) > 1:
             self.lsModel = modelList[self.lsModelId]
     def evaluate(self,t,c):
-        #mwf appears to work when have f,
         self.constantVelocityLevelSetEvaluate(self.b,
                                               c['x'],
                                               c[('u',0)],
@@ -5905,8 +5862,6 @@ class RedistanceLevelSet(TC_base):
                 for i in range(len(cebqe[('u',0)].flat)):
                     self.ebqe_u0.flat[i]=self.u0.uOfXT(cebqe['x'].flat[3*i:3*(i+1)],0.)
     def preStep(self,t,firstStep=False):
-        import pdb
-        #pdb.set_trace()
         if self.nModel is not None:
             logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
@@ -6785,11 +6740,6 @@ class kEpsilon(TC_base):
                     if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
     def initializeMesh(self,mesh):
         pass
@@ -6837,8 +6787,6 @@ class kEpsilon(TC_base):
         elif c['x'].shape[:-1] == self.ebq_gradu.shape[:-1]:
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
         else:
-            #import pdb
-            #pdb.set_trace()
             raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
@@ -6957,9 +6905,6 @@ class kEpsilon(TC_base):
                                              c[('dr',1,1)])
             else:
                 assert False, "k-epsilon 3d non sd not implemented"
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
             if hackSourceTerm:
                 c[('r',0)].flat[:] = 0.0
@@ -7108,11 +7053,6 @@ class kEpsilon_k(TC_base):
                     if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
         if self.epsilonModelID is not None:
             terms = ['epsilon']
@@ -7193,8 +7133,6 @@ class kEpsilon_k(TC_base):
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
             epsilon = self.ebq_epsilon
         else:
-            #import pdb
-            #pdb.set_trace()
             raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
@@ -7244,9 +7182,6 @@ class kEpsilon_k(TC_base):
 
             else:
                 raise NotImplementedError
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
         if hackSourceTerm:
             c[('r',0)].flat[:] = 0.0
@@ -7394,11 +7329,6 @@ class kEpsilon_epsilon(TC_base):
                     if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
         if self.kModelID is not None:
             terms = ['k']
@@ -7479,8 +7409,6 @@ class kEpsilon_epsilon(TC_base):
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
             k = self.ebq_k
         else:
-            #import pdb
-            #pdb.set_trace()
             raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
@@ -7536,9 +7464,6 @@ class kEpsilon_epsilon(TC_base):
 
             else:
                 raise NotImplementedError
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
         if hackSourceTerm:
             c[('r',0)].flat[:] = 0.0
@@ -8403,10 +8328,6 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
                                                                      c[('H',2)],
                                                                      c[('dH',2,0)])
 
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-            #
             if self.stokesOnly:
                 c[('f',1)].flat[:]=0.0; c[('f',2)].flat[:]=0.0;
                 c[('df',1,1)].flat[:]=0.0;c[('df',1,2)].flat[:]=0.0;
@@ -8695,9 +8616,6 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
     def evaluateForcingTerms(self,t,c,mesh=None,mesh_trial_ref=None,mesh_l2g=None):
         if 'x' in c and len(c['x'].shape) == 3:
             if self.nd == 2:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
                 if self.waveFlag == 1:#secondOrderStokes:
@@ -8746,15 +8664,10 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                     c['x'],
                                                     c[('r',0)],
                                                     t)
-
-                #mwf debug
                 if numpy.isnan(c[('r',0)].any()):
                     import pdb
                     pdb.set_trace()
             else:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
                 if self.waveFlag == 1:#secondOrderStokes:
@@ -8854,10 +8767,8 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
             porosity = self.ebq_porosity
             meanGrain= self.ebq_meanGrain
         #
-        #mwf debug
         if phi is None or n is None or kappa is None or porosity is None or meanGrain is None:
             pdb.set_trace()
-        #pdb.set_trace()
         if self.nd==2:
             if self.sd:
                 self.VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.killNonlinearDrag,
@@ -9151,9 +9062,6 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                     assert False, "nd != 2,3 not done yet"
         if 'x' in c and len(c['x'].shape) == 3:
             if self.nd == 2:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
                 if self.waveFlag == 1:#secondOrderStokes:
@@ -9202,15 +9110,10 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                     c['x'],
                                                     c[('r',0)],
                                                     t)
-
-                #mwf debug
                 if numpy.isnan(c[('r',0)].any()):
                     import pdb
                     pdb.set_trace()
             else:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
                 if self.waveFlag == 1:#secondOrderStokes:
@@ -9266,16 +9169,6 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                       c[('r',0)],
                                                       t)
 
-        #mwf debug
-        #if numpy.absolute(c[('r',0)]).max() > 1.0e-4:
-        #    pdb.set_trace()
-        #print "c[('r',0)]= [%s, %s] p=[%s,%s] u= [%s,%s] v=[%s,%s] por=[%s,%s] " % (c[('r',0)].min(),c[('r',0)].max(),
-        #                                                                            c[('u',0)].min(),c[('u',0)].max(),
-        #                                                                            c[('u',1)].min(),c[('u',1)].max(),
-        #                                                                            c[('u',2)].min(),c[('u',2)].max(),
-        #                                                                            porosity.min(),porosity.max())
-
-    #
 ########################################################################
 #VOF coefficients when have variable porosity term
 ########################################################################
@@ -9442,7 +9335,6 @@ class GroundwaterTransportCoefficients(TC_base):
                                                           c[('f',0)],
                                                           c[('df',0,0)],
                                                           c[('a',0,0)])
-            #mwf debug
             if v.shape == self.q_v.shape:
                 for i in range(len(c[('u',0)].flat)):
                     if c['x'].flat[3*i+0] > 100.0-2.5 and c['x'].flat[3*i+1] < 2.5 and c[('u',0)].flat[i] < -1.0e-1:
@@ -9530,13 +9422,7 @@ class GroundwaterBiodegradation01Coefficients(TC_base):
             print(self.ebqe_v.shape)
             print(self.ebq_global_v.shape)
             raise RuntimeError("no v---------------------")
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
         if self.useC:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.groundwaterBiodegradation01EvaluateFC(self.omega,
                                                        self.d_c,
                                                        self.d_e,
@@ -9653,9 +9539,6 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
             print(self.ebq_global_v.shape)
             raise RuntimeError("no v---------------------")
         if self.useC:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.groundwaterBryantDawsonIonExEvaluateFC(self.omega,
                                                         self.d_m,
                                                         self.d_h,
@@ -9748,11 +9631,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
         self.ebq_global_n = None
         self.quadraturePointToElementBoundary = {}
         self.useOrigUpwind = False
-        #mwf debug
-        #import gc
-        #gc.set_debug(gc.DEBUG_LEAK)
-        #import pdb
-        #pdb.set_trace()
     def initializeMesh(self,mesh):
         self.elementMaterialTypes = mesh.elementMaterialTypes
         #want element boundary material types for evaluating heterogeneity
@@ -9853,11 +9731,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
                                                                          c[('a',0,0)],
                                                                          c[('da',0,0,0)])
         elif self.upwindFlag >= 1:
-            #mwf debug
-            #print "REv2 calling collect here 1 u.shape= ", c[('u',0)].shape
-            #import gc
-            #gc.collect()
-
             quad_avg = None; quad2bnd = None; dV = None
             computeAverages = 0;
             useUpwindApprox = 0; #second style upwinding only works for elements quad
@@ -9963,30 +9836,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
                                                                                                   c[('df',0,0)],
                                                                                                   c[('a',0,0)],
                                                                                                   c[('da',0,0,0)])
-
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-        #
-        #mwf debug
-        #print "REv2 calling collect here 2 u.shape = ", c[('u',0)].shape
-        #import gc
-        #gc.collect()
-#         #mwf debug
-#         if (numpy.isnan(c[('da',0,0,0)]).any() or
-#             numpy.isnan(c[('a',0,0)]).any() or
-#             numpy.isnan(c[('df',0,0)]).any() or
-#             numpy.isnan(c[('f',0)]).any() or
-#             numpy.isnan(c[('u',0)]).any() or
-#             numpy.isnan(c[('m',0)]).any() or
-#             numpy.isnan(c[('dm',0,0)]).any()):
-#             import pdb
-#             pdb.set_trace()
-
-#         #mwf debug
-#         if c[('u',0)].shape == self.q_shape:
-#             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
-
 
 class DiffusiveWave_1D(TC_base):
     from .ctransportCoefficients import diffusiveWave1DCoefficientsEvaluate
@@ -10259,9 +10108,6 @@ class TwophaseNavierStokesWithWaveMaker(TwophaseReynoldsAveragedNavierStokes_Alg
     def evaluate(self,t,c):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.evaluate(self,t,c)
         if 'x' in c and len(c['x'].shape) == 3:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             c[('r',0)].fill(0.0)
             eps_source=self.eps_source
             if self.waveFlag == 1:#secondOrderStokes:
@@ -10310,10 +10156,7 @@ class TwophaseNavierStokesWithWaveMaker(TwophaseReynoldsAveragedNavierStokes_Alg
                                                 c['x'],
                                                 c[('r',0)],
                                                 t)
-            #
-            #mwf debug
-            #print "TwpWaveMaker waveFlag= %s t=%s factor= %s c[('r',0)].max()= %s  c[('r',0)].min()= %s " % (self.waveFlag,t,self.waveHeight*self.waveCelerity*sin(self.waveFrequency*t),
-            #                                                                                                 c[('r',0)].max(),c[('r',0)].min())
+
 
 class SinglePhaseDarcyCoefficients(TC_base):
     """
@@ -10566,7 +10409,6 @@ class DiscreteTwoPhaseAdvectionOperator(TC_base):
         self.rho_1 = rho_1
         self.nu_1 = nu_1
         self.LS_model = LS_model
-        import pdb ; pdb.set_trace()
         self.phase_function = phase_function
         mass = {}
         advection = {}

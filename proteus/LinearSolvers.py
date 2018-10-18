@@ -4241,3 +4241,35 @@ class NavierStokesConstantPressure(SolverNullSpace):
             tmp = null_space_vector.getArray()[0:n_DOF_pressure]
             tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
         self.global_null_space = [null_space_vector]
+
+class ConstantNullSpace(SolverNullSpace):
+    def __init__(self,
+                 proteus_ksp):
+        super(ConstantNullSpace, self).__init__(proteus_ksp)
+
+    @staticmethod
+    def get_name():
+        return 'constant'
+
+    def apply_ns(self,
+                 par_b):
+        """
+        Applies the global null space created from a pure Neumann boundary
+        problem.
+
+        Arguments
+        ---------
+        par_b : :vec:`petsc4py_vec`
+        """
+        # Check whether a global null space vector for a constant
+        # has been created.  If not, create one.
+        try:
+            self.constant_null_space
+        except AttributeError:
+            self.constant_null_space = p4pyPETSc.NullSpace().create(constant=True,
+                                                                    comm=p4pyPETSc.COMM_WORLD)
+
+        # Using the global constant pressure null space, assign it to
+        # the global ksp object and remove it from the RHS vector.
+        self.get_global_ksp().ksp.getOperators()[0].setNullSpace(self.constant_null_space)
+        self.constant_null_space.remove(par_b)

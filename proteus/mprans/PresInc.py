@@ -57,12 +57,17 @@ class Coefficients(TC_base):
                  fluidModelIndex = None, 
                  sedModelIndex = None, 
                  fixNullSpace=False,
-                 INTEGRATE_BY_PARTS_DIV_U=True):
+                 INTEGRATE_BY_PARTS_DIV_U=True,
+                 nullSpace="ConstantNullSpace"):
         """Construct a coefficients object
 
         :param modelIndex: This model's index into the model list
         :param fluidModelIndex: The fluid momentum model's index
         """
+        """
+        TODO
+        """
+        self.nullSpace = nullSpace
         self.fixNullSpace=fixNullSpace
         self.INTEGRATE_BY_PARTS_DIV_U=INTEGRATE_BY_PARTS_DIV_U
         self.VOS_model=VOS_model
@@ -281,9 +286,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False,
-                 bdyNullSpace=False):
-        self.bdyNullSpace = bdyNullSpace
+                 movingDomain=False):
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
