@@ -1025,6 +1025,9 @@ class NS_base:  # (HasTraits):
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
 
+        #self.postStep(self.modelList[3])
+        #self.postStep(self.modelList[4])
+
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
             self.tCount+=1
