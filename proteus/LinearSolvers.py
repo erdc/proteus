@@ -1177,8 +1177,8 @@ class SchurOperatorConstructor(object):
             The pressure mass matrix.
         """
         Qsys_petsc4py = self._massMatrix(recalculate = recalculate)
-        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
-                                             self.linear_smoother.isv)
+        self.Qv = Qsys_petsc4py.createSubMatrix(self.linear_smoother.isv,
+                                                self.linear_smoother.isv)
         if output_matrix is True:
             self._exportMatrix(self.Qv,"Qv")
         return self.Qv
@@ -1199,8 +1199,8 @@ class SchurOperatorConstructor(object):
             The pressure mass matrix.
         """
         Qsys_petsc4py = self._massMatrix(recalculate = recalculate)
-        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
-                                             self.linear_smoother.isv)
+        self.Qv = Qsys_petsc4py.createSubMatrix(self.linear_smoother.isv,
+                                                self.linear_smoother.isv)
         if output_matrix is True:
             self._exportMatrix(self.Qv,"Qv")
         return self.Qv
@@ -1770,14 +1770,16 @@ class Schur_Sp(SchurPrecon):
 
     def setUp(self,global_ksp):
         self._setSchurlog(global_ksp)
-        self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
-                                                             self.isv)
-        self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
-                                                             self.isp)
-        self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
-                                                             self.isv)
-        self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.isp,
-                                                             self.isp)
+        if self.bdyNullSpace is True:
+            self._setConstantPressureNullSpace(global_ksp)
+        self.A00 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
+                                                                self.isv)
+        self.A01 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
+                                                                self.isp)
+        self.A10 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
+                                                                self.isv)
+        self.A11 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
+                                                                self.isp)
         L_sizes = self.isp.sizes
         self.SpInv_shell = p4pyPETSc.Mat().create()
         self.SpInv_shell.setSizes(L_sizes)
@@ -1828,8 +1830,8 @@ class Schur_Qp(SchurPrecon) :
         """
         # Create the pressure mass matrix and scaxle by the viscosity.
         self.operator_constructor.updateQ()
-        self.Qp = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                      self.operator_constructor.linear_smoother.isp)
+        self.Qp = self.Q.createSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                         self.operator_constructor.linear_smoother.isp)
         self.Qp.scale(old_div(1.,self.L.pde.coefficients.nu))
         L_sizes = self.Qp.size
 
@@ -1931,14 +1933,14 @@ class NavierStokesSchur(SchurPrecon):
         -----
         This is currently only set up for interlaced DOF ordering.
         """
-        self.velocity_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+        self.velocity_sub_matrix = global_ksp.getOperators()[0].createSubMatrix(self.isv,self.isv)
 
         for i, var in enumerate(self.get_velocity_var_names()):
             name_str = "is_vel_" + var
             name_str_mat = "velocity_" + var + "_sub_matrix"
             is_set = getattr(self, name_str)
-            setattr(self,name_str_mat, global_ksp.getOperators()[0].getSubMatrix(is_set,
-                                                                                 is_set))
+            setattr(self,name_str_mat, global_ksp.getOperators()[0].createSubMatrix(is_set,
+                                                                                    is_set))
             global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setOperators(getattr(self,name_str_mat),
                                                                                             getattr(self,name_str_mat))
             global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setFromOptions()
@@ -2053,28 +2055,18 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         isp = self.operator_constructor.linear_smoother.isp
         isv = self.operator_constructor.linear_smoother.isv
 
-        self.Np_rho = self.N_rho.getSubMatrix(isp,
-                                              isp)
-        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(isp,
-                                                                isp)
-        self.Qp_rho = self.Q_rho.getSubMatrix(isp,
-                                              isp)
-        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
-                                                                isp)
-
-
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
         #        time steps.
         # A_mat = global_ksp.getOperators()[0]
-        # self.A00 = A_mat.getSubMatrix(isv,
-        #                               isv)
-        # self.A01 = A_mat.getSubMatrix(isv,
-        #                               isp)
-        # self.A10 = A_mat.getSubMatrix(isp,
-        #                               isv)
-        # self.A11 = A_mat.getSubMatrix(isp,
-        #                               isp)
+        # self.A00 = A_mat.createSubMatrix(isv,
+        #                                  isv)
+        # self.A01 = A_mat.createSubMatrix(isv,
+        #                                  isp)
+        # self.A10 = A_mat.createSubMatrix(isp,
+        #                                  isv)
+        # self.A11 = A_mat.createSubMatrix(isp,
+        #                                  isp)
 
         # dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
         # self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
@@ -2085,21 +2077,21 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
 
         # End ******** Sp for Ap ***********
 
-        self.Np_rho = self.N_rho.getSubMatrix(isp,
-                                              isp)
+        self.Np_rho = self.N_rho.createSubMatrix(isp,
+                                                 isp)
 
-        self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(isp,
-                                                                isp)
-        self.Qp_rho = self.Q_rho.getSubMatrix(isp,
-                                              isp)
+        self.Ap_invScaledRho = self.A_invScaledRho.createSubMatrix(isp,
+                                                                   isp)
+        self.Qp_rho = self.Q_rho.createSubMatrix(isp,
+                                                 isp)
         try:
             if self.velocity_block_preconditioner_set is False:
                 self._initialize_velocity_block_preconditioner(global_ksp)
                 self.velocity_block_preconditioner_set = True
         except AttributeError:
             pass
-        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
-                                                                isp)
+        self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(isp,
+                                                                   isp)
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
@@ -2162,17 +2154,17 @@ class Schur_LSC(SchurPrecon):
 
     def setUp(self,global_ksp):
         self.operator_constructor.updateQ()
-        self.Qv = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isv,
-                                      self.operator_constructor.linear_smoother.isv)
+        self.Qv = self.Q.createSubMatrix(self.isv,
+                                         self.isv)
         self.Qv_hat = p4pyPETSc.Mat().create()
         self.Qv_hat.setSizes(self.Qv.getSizes())
         self.Qv_hat.setType('aij')
         self.Qv_hat.setUp()
         self.Qv_hat.setDiagonal(self.Qv.getDiagonal())
 
-        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
-        self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
-        self.Bt = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isp)
+        self.B = global_ksp.getOperators()[0].createSubMatrix(self.isp,self.isv)
+        self.F = global_ksp.getOperators()[0].createSubMatrix(self.isv,self.isv)
+        self.Bt = global_ksp.getOperators()[0].createSubMatrix(self.isv,self.isp)
 
         self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.Bt,self.F)
 
