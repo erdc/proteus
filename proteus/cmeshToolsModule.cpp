@@ -513,6 +513,12 @@ CMultilevelMesh_init(CMultilevelMesh *self, PyObject *args, PyObject *kwds)
 						       4);
         }
     }
+  else
+    {
+      //this should only happen for empty mesh e.g. when partitioning from files
+      assert(nLevels==1);
+      globallyRefineTetrahedralMesh(nLevels,MESH(cmesh),self->multilevelMesh);
+    }
   return 0;
 }
 

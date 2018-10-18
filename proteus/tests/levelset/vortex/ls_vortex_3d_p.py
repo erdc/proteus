@@ -106,6 +106,7 @@ class UnitSquareVortex(NCLS.Coefficients):
         if self.RD_modelIndex != None:
             #print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
+            self.ebqe_rd_u = self.rdModel.ebqe[('u',0)]
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
