@@ -5,21 +5,29 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
-
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define IS_BETAij_ONE 0
 
-/////////////////////
-//ENTROPY FUNCTION //
-/////////////////////
-// Power entropy //
-#define entropy_power 2. // phiL and phiR are dummy variables
-#define ENTROPY(phi,dummyL,dummyR) 1./entropy_power*std::pow(fabs(phi),entropy_power)
-#define DENTROPY(phi,dummyL,dummyR) entropy_power == 1. ? 0. : std::pow(fabs(phi),entropy_power-1.)*(phi >= 0. ? 1. : -1.)
-
-#define ENTROPY_LOG(phi,phiL,phiR) std::log(fabs((phi-phiL)*(phiR-phi))+1E-14)
-#define DENTROPY_LOG(phi,phiL,phiR) (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14)
+namespace proteus
+{
+  inline double Sign(const double& z){
+    return (z >= 0.0 ? 1.0 : -1.0);
+  }
+  // Power entropy //
+  inline double ENTROPY(const double& phi, const double& dummyL, const double& dummyR){
+    return 1./2.*std::pow(fabs(phi),2.);
+  }
+  inline double DENTROPY(const double& phi, const double& dummyL, const double& dummyR){
+    return fabs(phi)*(phi >= 0. ? 1. : -1.);
+  }
+  // Log entropy //
+  inline double ENTROPY_LOG(const double& phi, const double& phiL, const double& phiR){
+    return std::log(fabs((phi-phiL)*(phiR-phi))+1E-14);
+  }
+  inline double DENTROPY_LOG(const double& phi, const double& phiL, const double& phiR){
+    return (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14);
+  }
+}
 
 namespace proteus
 {

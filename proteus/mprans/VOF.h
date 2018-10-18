@@ -9,17 +9,23 @@
 #define IS_BETAij_ONE 0
 #define GLOBAL_FCT 0
 
-/////////////////////
-//ENTROPY FUNCTION //
-/////////////////////
-// Power entropy //
-#define entropy_power 2. // phiL and phiR are dummy variables
-#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(fabs(phi),entropy_power)
-#define DENTROPY(phi,phiL,phiR) std::pow(fabs(phi),entropy_power-1.)*(phi>=0 ? 1 : -1)
-// Log entropy //
-// LOG ENTROPY FOR LEVEL SET FROM 0 to 1
-#define ENTROPY_LOG(phi,phiL,phiR) std::log(fabs((phi-phiL)*(phiR-phi))+1E-14)
-#define DENTROPY_LOG(phi,phiL,phiR) (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14)
+namespace proteus
+{
+  // Power entropy //
+  inline double ENTROPY(const double& phi, const double& phiL, const double& phiR){
+    return 1./2.*std::pow(fabs(phi),2.);
+  }
+  inline double DENTROPY(const double& phi, const double& phiL, const double& phiR){
+    return fabs(phi)*(phi>=0 ? 1 : -1);
+  }
+  // Log entropy // for level set from 0 to 1
+  inline double ENTROPY_LOG(const double& phi, const double& phiL, const double& phiR){
+    return std::log(fabs((phi-phiL)*(phiR-phi))+1E-14);
+  }
+  inline double DENTROPY_LOG(const double& phi, const double& phiL, const double& phiR){
+    return (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14);
+  }
+}
 
 namespace proteus
 {
