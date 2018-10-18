@@ -419,13 +419,14 @@ namespace proteus
                                               double rho_1,
                                               double nu_1,
                                               int* vel_l2g,
-                                              double* u_dof, double* v_dof,
+                                              double* u_dof, double* v_dof, double* w_dof,
                                               const double useVF,
                                               double *vf,
                                               double *phi,
                                               int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
                                               int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
                                               int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
+                                              int* csrRowIndeces_w_w, int* csrColumnOffsets_w_w,
                                               double* advection_matrix) = 0;
     virtual void getTwoPhaseInvScaledLaplaceOperator(double* mesh_trial_ref,
                                                      double* mesh_grad_trial_ref,
@@ -446,16 +447,18 @@ namespace proteus
                                                      double nu_1,
                                                      int* p_l2g,
                                                      int* vel_l2g,
-                                                     double* p_dof, double* u_dof, double* v_dof,
+                                                     double* p_dof, double* u_dof, double* v_dof, double* w_dof,
                                                      const double useVF,
                                                      double* vf,
                                                      double* phi,
                                                      int* sdInfo_p_p_rowptr, int* sdInfo_p_p_colind,
                                                      int* sdInfo_u_u_rowptr, int* sdInfo_u_u_colind,
                                                      int* sdInfo_v_v_rowptr, int* sdInfo_v_v_colind,
+                                                     int* sdInfo_w_w_rowptr, int* sdInfo_w_w_colind,						     
                                                      int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
                                                      int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
                                                      int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
+                                                     int* csrRowIndeces_w_w, int* csrColumnOffsets_w_w,						     
                                                      double* laplace_matrix)=0;
     virtual void getTwoPhaseScaledMassOperator(int scale_type,
                                                int use_numerical_viscosity,
@@ -482,7 +485,7 @@ namespace proteus
                                                double nu_1,
                                                int* p_l2g,
                                                int* vel_l2g,
-                                               double* p_dof, double* u_dof, double* v_dof,
+                                               double* p_dof, double* u_dof, double* v_dof, double* w_dof,
                                                const double useVF,
                                                double* vf,
                                                double* phi,
@@ -492,6 +495,8 @@ namespace proteus
                                                int* csrColumnOffsets_u_u,
                                                int* csrRowIndeces_v_v,
                                                int* csrColumnOffsets_v_v,
+                                               int* csrRowIndeces_w_w,
+                                               int* csrColumnOffsets_w_w,					       
                                                double* mass_matrix)=0;
   };
 
@@ -5532,13 +5537,14 @@ namespace proteus
                                         double rho_1,
                                         double nu_1,
                                         int* vel_l2g,
-                                        double* u_dof, double* v_dof,
+                                        double* u_dof, double* v_dof, double* w_dof,
                                         const double useVF,
                                         double *vf,
                                         double *phi,
                                         int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
                                         int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
                                         int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
+                                        int* csrRowIndeces_w_w, int* csrColumnOffsets_w_w,					
                                         double* advection_matrix)
       {
         for (int eN=0 ; eN < nElements_global ; ++eN)
@@ -5678,16 +5684,18 @@ namespace proteus
                                                double nu_1,
                                                int* p_l2g,
                                                int* vel_l2g,
-                                               double* p_dof, double* u_dof, double* v_dof,
+                                               double* p_dof, double* u_dof, double* v_dof, double* w_dof,
                                                const double useVF,
                                                double* vf,
                                                double* phi,
                                                int* sdInfo_p_p_rowptr, int* sdInfo_p_p_colind,
                                                int* sdInfo_u_u_rowptr, int* sdInfo_u_u_colind,
                                                int* sdInfo_v_v_rowptr, int* sdInfo_v_v_colind,
+                                               int* sdInfo_w_w_rowptr, int* sdInfo_w_w_colind,					       
                                                int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
                                                int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
                                                int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
+                                               int* csrRowIndeces_w_w, int* csrColumnOffsets_w_w,					       
                                                double* laplace_matrix)
       {
         for (int eN=0 ; eN < nElements_global ; ++eN)
@@ -5854,13 +5862,14 @@ namespace proteus
                                          double nu_1,
                                          int* p_l2g,
                                          int* vel_l2g,
-                                         double* p_dof, double* u_dof, double* v_dof,
+                                         double* p_dof, double* u_dof, double* v_dof, double* w_dof,
                                          const double useVF,
                                          double* vf,
                                          double* phi,
                                          int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
                                          int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
                                          int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
+                                         int* csrRowIndeces_w_w, int* csrColumnOffsets_w_w,					 
                                          double* mass_matrix)
       {
         // Step 1.1 - Initialize local matrix
