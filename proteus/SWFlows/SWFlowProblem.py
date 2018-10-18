@@ -17,16 +17,18 @@ class SWFlowProblem:
                  nnx=None,
                  nny=None,
                  domain=None,
+                 AdH_file=None,
+                 # BATHYMETRY #
+                 bathymetry=None,
                  triangleFlag=1,
                  # INITIAL CONDITIONS #
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
                  reflectingBCs=False,
-                 # BATHYMETRY #
-                 bathymetry=None,
                  # OTHERS #
-                 useSuperlu=None):
+                 useSuperlu=None,
+                 analyticalSolution=None):
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         assert sw_model in [0,1], "sw_model={0,1} for shallow water equations or dispersive shallow water equations respectively"
@@ -35,11 +37,13 @@ class SWFlowProblem:
         assert type(he)==float , "Provide (float) he (characteristic mesh size)"
         if structured:
             assert type(nnx)==int and type(nny)==int, "Provide (int) nnx and nny"
-        assert domain is not None, "Provide a domain"
+        if domain is None:
+            assert AdH_file is not None, "If domain is None then provide an AdH File"
+        else:
+            assert callable(bathymetry), "Bathymetry must be a function"
         assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
         assert type(initialConditions)==dict, "Provide dict of initial conditions"
         assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
-        assert callable(bathymetry), "Bathymetry must be a function"
         self.assert_initialConditions(sw_model,initialConditions)
         self.assert_boundaryConditions(sw_model,boundaryConditions)
 
@@ -52,12 +56,14 @@ class SWFlowProblem:
         self.nny=nny
         self.nnz=1
         self.domain=domain
+        self.AdH_file=AdH_file
+        self.bathymetry=bathymetry
         self.triangleFlag=triangleFlag
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
         self.reflectingBCs=reflectingBCs
-        self.bathymetry=bathymetry
         self.useSuperlu = useSuperlu
+        self.analyticalSolution=analyticalSolution
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace().getFESpace()
@@ -131,7 +137,7 @@ class FESpace:
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-default_physical_parameters ={'gravity': 9.8,
+default_physical_parameters ={'gravity': 9.81,
                               'LINEAR_FRICTION': 0,
                               'mannings': 0.0}
 
@@ -139,7 +145,6 @@ default_physical_parameters ={'gravity': 9.8,
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
 default_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
-                          'cfl': 0.33,
                           'SSPOrder': 3,
                           'cE': 1}
 default_dswe_parameters = {}

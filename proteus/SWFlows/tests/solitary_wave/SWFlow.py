@@ -3,7 +3,6 @@ from builtins import object
 from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
-from proteus.mprans import SW2D
 from proteus.mprans import SW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
@@ -43,20 +42,33 @@ triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
 # SOLITARY WAVE #
 #################
 h1=0.1
-sw = wt.FGSolitaryWave(h1=h1,amp=0.01,x0=-2.0, g=9.81)
+h2=0.11
+x0=-2.0
+g=9.81
+
+def soliton(x,t):
+    D = np.sqrt(g * h2)
+    z = np.sqrt(old_div( 3.0*(h2-h1), h2 * h1**2 ))    
+    phase = x - D * t - x0
+    a1 = z * phase/2.0
+    return  h1 + (h2-h1) * 1.0/ np.cosh(a1)**2
+
+def u(x,t):
+    D = np.sqrt(g * h2)
+    return D*(1.0 - old_div(h1,soliton(x,t)))
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
 def water_height_DBC(X,flag):
     if X[0]==0:
-        return lambda x,t: sw.eta(X[0],t) 
+        return lambda x,t: soliton(X[0],t)
     elif X[0]==L[0]:
         return lambda X,t: h1
     
 def x_mom_DBC(X,flag):
     if X[0]==0:
-        return lambda X,t: sw.eta(X[0],t)*sw.u(X[0],t) 
+        return lambda X,t: soliton(X[0],t)*u(X[0],t)
     elif X[0]==L[0]:
         return lambda X,t: 0.0
     

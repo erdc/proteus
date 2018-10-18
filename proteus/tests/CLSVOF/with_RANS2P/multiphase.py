@@ -18,7 +18,6 @@ AUTOMATED_TEST=True
 
 # ----- PARAMETERS FOR CLSVOF ----- #
 useCLSVOF=True
-timeOrder_clsvof=2
 epsFactHeaviside_clsvof=1.5
 lambdaFact_clsvof=10.0
 computeMetrics_clsvof=0
