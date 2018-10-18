@@ -18,11 +18,12 @@ LUMPED_MASS_MATRIX = mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX']
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = mySWFlowProblem.triangleFlag
-nnx = mySWFlowProblem.nnx
-nny = mySWFlowProblem.nny
-nnz = mySWFlowProblem.nnz
-triangleOptions = domain.MeshOptions.triangleOptions
+if domain is not None:
+    triangleFlag = mySWFlowProblem.triangleFlag
+    nnx = mySWFlowProblem.nnx
+    nny = mySWFlowProblem.nny
+    nnz = mySWFlowProblem.nnz
+    triangleOptions = domain.MeshOptions.triangleOptions
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
@@ -41,7 +42,6 @@ stepController = Min_dt_controller
 # ******************************************* #
 elementQuadrature = FESpace['elementQuadrature']
 elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
-femSpaces = {0: FESpace['basis']}
 femSpaces = {0: FESpace['basis'],
              1: FESpace['basis'],
              2: FESpace['basis']}
@@ -59,10 +59,7 @@ else:
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
-try_supg_stabilization = True
-subgridError = SW2D.SubgridError(coefficients,nd,lag=True)
-shockCapturing = SW2D.ShockCapturing(coefficients,nd,shockCapturingFactor=0.1,lag=True)
-numericalFluxType = SW2D.NumericalFlux
+numericalFluxType = SW2DCV.NumericalFlux
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #

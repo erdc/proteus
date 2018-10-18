@@ -32,6 +32,18 @@ parser.add_option("-n","--num_proc",
                   action="store",
                   default=1,
                   dest="num_proc")
+parser.add_option("-f","--fileName",
+                  help="Name of setup file",
+                  action="store",
+                  type="string",
+                  dest="fileName",
+                  default="")
+parser.add_option("-b","--batchFile",
+                  help="Text file of commands to execute",
+                  action="store",
+                  type="string",
+                  dest="batchFileName",
+                  default="")
 
 (opts,args) = parser.parse_args()
 
@@ -45,13 +57,23 @@ if opts.clean is not None:
 ############
 # DATA DIR #
 ############
-dataDir = "" if opts.dataDir is None else "-D " + opts.dataDir 
+dataDir = "" if opts.dataDir is None else "-D " + opts.dataDir
+
+batch = ""
+if opts.batchFileName != "":
+    batch = " -b " + opts.batchFileName
+
+fileName = ""
+if opts.fileName != "":
+    fileName = " -f " + opts.fileName
 
 ##############
 # CALL PARUN #
 ##############
-os.system("parun --SWEs " +
+os.system("parun --SWFlows " +
           "-l" + str(opts.logLevel) +
           " -v SWEs_so.py " +
           dataDir +
-          " -C '" + opts.context + "'")
+          " -C '" + opts.context + "'" +
+          batch +
+          fileName)

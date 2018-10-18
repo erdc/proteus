@@ -196,11 +196,17 @@ parser.add_option("--setupOnly",
                   dest="setupOnly",
                   action="store_true",
                   help="Don't actually compute a solution, just initialize the Numerical Solution")
-parser.add_option("--SWEs",
+parser.add_option("--SWFlows",
                   default=False,
-                  dest="SWEs",
+                  dest="SWFlows",
                   action="store_true",
-                  help="To consider SWEs applications")
+                  help="To consider SWFlows applications")
+parser.add_option("-f","--fileName",
+                  help="Name of setup file",
+                  action="store",
+                  type="string",
+                  dest="fileName",
+                  default="")
 
 (opts,args) = parser.parse_args()
 
@@ -270,8 +276,13 @@ if opts.dataDir != '':
     Profiling.logDir = opts.dataDir
 # Initialise datafile
 Profiling.procID=comm.rank()
+
 if opts.logLevel > 0:
-    if len(args[0].split(' ')) == 1:
+    if len(args)==0:
+        assert opts.SWFlows, "Pass arguments to parun or run with --SWFlows -f fileName.py"
+        assert opts.fileName, "Pass setup problem as -f fileName.py"
+        Profiling.openLog(opts.fileName+".log",opts.logLevel,logLocation=logDir)
+    elif len(args[0].split(' ')) == 1:
         Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel,logLocation=logDir)
     else:
         Profiling.openLog(args[0][-3:]+".log",opts.logLevel,logLocation=logDir)
@@ -299,32 +310,32 @@ elif opts.contextOptionsFile != None:
 pList = []
 nList = []
 sList = []
-if len(args) < 1:
+if len(args) < 1 and not opts.SWFlows:
     raise RuntimeError("No input file specified")
 log("Importing input modules")
 
-if opts.SWEs:
+if opts.SWFlows:
     path_models = proteus.__path__[0]+"/SWFlows/models/"
     path_utils = proteus.__path__[0]+"/SWFlows/utils/"
-    if args[0][-3:] == '.py':
-        log("Loading so module = "+args[0])
-        so = proteus.defaults.load_system(args[0][:-3],path=path_utils)
-        for (pModule,nModule) in so.pnList:
-            log("Loading p module = "+pModule)
-            #pList.append(__import__(pModule))
-            pList.append(proteus.defaults.load_physics(pModule,path=path_models))
-            if pList[-1].name == None:
-                pList[-1].name = pModule
-            log("Loading n module = "+nModule)
-            #nList.append(__import__(nModule))
-            nList.append(proteus.defaults.load_numerics(nModule,path=path_models))
-        #
-        if so.sList == []:
-            for i in range(len(so.pnList)):
-                s = default_s
-                sList.append(s)
-        else:
-            sList = so.sList
+    so_name = "SWEs_so.py"
+    if opts.fileName != "":
+        log("Loading module = {so_name}; with case file = {case_name}".format(so_name=so_name,
+                                                                              case_name=opts.fileName))
+    so = proteus.defaults.load_system(so_name[:-3],path=path_utils)
+    for (pModule,nModule) in so.pnList:
+        log("Loading p module = "+pModule)
+        pList.append(proteus.defaults.load_physics(pModule,path=path_models))
+        if pList[-1].name == None:
+            pList[-1].name = pModule
+        log("Loading n module = "+nModule)
+        nList.append(proteus.defaults.load_numerics(nModule,path=path_models))
+    #
+    if so.sList == []:
+        for i in range(len(so.pnList)):
+            s = default_s
+            sList.append(s)
+    else:
+        sList = so.sList
 elif len(args) == 1:#arg should be an sso file or an so module
     if args[0][-3:] == '.py':
         log("Loading so module = "+args[0])
@@ -381,6 +392,7 @@ else:
 if sList[0].logAllProcesses or opts.logAllProcesses:
     Profiling.logAllProcesses = True
 Profiling.flushBuffer=sList[0].flushBuffer
+
 if opts.batchFileName != "":
     log("Attaching input stream to batch file = "+opts.batchFileName)
     inputStream = open(opts.batchFileName,'r')

@@ -10,81 +10,103 @@ from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.SWFlows.SWFlowProblem as SWFlowProblem 
+from proteus import WaveTools as wt
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
     ('sw_model',0,"sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time",100.0,"Final time for simulation"),
+    ("final_time",25.0,"Final time for simulation"),
     ("dt_output",0.1,"Time interval to output solution"),
-    ("refinement",5,"Level of refinement"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("reflecting_BCs",True,"Use reflecting BCs")
+    ("refinement",4,"Refinement level")
     ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L=(75.0,30.0)
+L=(100.0,10.) #45,4.5
+L0=[-90,0,0]  #-35,0,0
 refinement = opts.refinement
-domain = RectangularDomain(L=L)
+domain = RectangularDomain(L=L,x=L0)
 
 # CREATE REFINEMENT #
 nnx0=6
 nnx = (nnx0-1)*(2**refinement)+1
-nny = old_div((nnx-1),2)+1
+nny = old_div((nnx-1),10)+1
+
 he = old_div(L[0],float(nnx-1))
 triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
 
-######################
-##### BATHYMETRY #####
-######################
-h0=10
-a=3000
-B=5
-k=0.002
+#################
+# SOLITARY WAVE #
+#################
 g = SWFlowProblem.default_physical_parameters['gravity']
-p = old_div(np.sqrt(8*g*h0),a)
-s = old_div(np.sqrt(p**2 - k**2),2.)
-mannings = k
+h0 = 1.0
+a = 0.30  # amplitude
+slope = 1.0 / 19.850
+k_wavenumber = np.sqrt(3.0 * a/(4.0 * h0**3))  # wavenumber
+z = np.sqrt(3.0 * a * h0) / (2.0 * h0 * np.sqrt(h0 * (1.0 + a)))
+wavelength = 2.0 / k_wavenumber * np.arccosh(np.sqrt(1.0 / 0.050))  # wavelength of solitary wave
+c = np.sqrt(g * (1.0 + a) * h0)
+x0 = -50.0 - h0/slope - wavelength/2.0  # location of the toe of the beach
 
-def bathymetry_function(X):
-    x = X[0]
-    y = X[1] 
-    bump1 = 1-1./8*np.sqrt((x-30)**2+(y-6)**2)
-    bump2 = 1-1./8*np.sqrt((x-30)**2+(y-24)**2)
-    bump3 = 3-3./10*np.sqrt((x-47.5)**2+(y-15)**2)
-    return np.maximum(np.maximum(np.maximum(0.,bump1),bump2),bump3)
+def soliton(x,t): #
+    sechSqd = (1.00/np.cosh( z*(x-x0-c*t)))**2.00
+    return a * h0 * sechSqd
 
+def u(x,t):
+    eta = soliton(X[0],t)
+    return c * eta / (h0 + eta)
+
+def bathymetry(X):
+    x=X[0]
+    return numpy.maximum(slope*x,-h0)
+                                                                           
+###############################
+##### BOUNDARY CONDITIONS #####
+###############################
+def water_height_DBC(X,flag):
+    if X[0]==L0[0]:
+        return lambda x,t: h0
+    
+def x_mom_DBC(X,flag):
+    if X[0]==L0[0]:
+        return lambda X,t: 0.0
+    
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
 class water_height_at_t0(object):
     def uOfXT(self,X,t):
-        x = X[0]
-        if (x <= 16):
-            eta=1.875
-        else:
-            eta=0.
+        eta = soliton(X[0],0)
+        h = eta-bathymetry(X)
+        hp = max(h,0.)
+        return hp
 
-        z = bathymetry_function(X)
-        return max(eta - z,0.)
-
-class Zero(object):
-    def uOfXT(self,x,t):
+class x_mom_at_t0(object):
+    def uOfXT(self,X,t):
+        eta = soliton(X[0],0)
+        h = eta-bathymetry(X)
+        hp = max(h,0.)
+        Umom = hp * c * eta / (h0 + eta)
+        return Umom
+    
+class Zero():
+    def uOfXT(self,X,t):
         return 0.0
-
+    
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
 outputStepping = SWFlowProblem.OutputStepping(opts.final_time,dt_output=opts.dt_output)
 initialConditions = {'water_height': water_height_at_t0(),
-                     'x_mom': Zero(),
+                     'x_mom': x_mom_at_t0(),
                      'y_mom': Zero()}
-boundaryConditions = {'water_height': lambda x,flag: None,
-                      'x_mom': lambda x,flag: None,
-                      'y_mom': lambda x,flag: None}
+boundaryConditions = {'water_height': water_height_DBC,
+                      'x_mom': x_mom_DBC,
+                      'y_mom': lambda x,flag: lambda x,t: 0.0}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
                                               cfl=0.33,
                                               outputStepping=outputStepping,
@@ -95,7 +117,6 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              reflectingBCs=opts.reflecting_BCs,
-                                              bathymetry=bathymetry_function)
+                                              bathymetry=bathymetry)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION']=0
-mySWFlowProblem.physical_parameters['mannings']=0.02
+mySWFlowProblem.physical_parameters['mannings']=0
