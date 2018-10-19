@@ -433,18 +433,11 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
 
             //get direction, multiply this with levelSet value to determine if in same direction
             double signValue = localVelocity*localInterfaceNormal;
-            //std::cout<<"actual position "<< actualPosition<<std::endl;
-            //std::cout<<"sign value "<<signValue<<" localVelocity "<<localVelocity<<" interfaceNormal "<<localInterfaceNormal<<" product "<<localVelocity*localInterfaceNormal<<std::endl;
 
             std::queue <apf::MeshEntity*> markedVertices;
-            //I should generalize tag names to test out ability to collect all tag names and destroy at the end
-            //char namebuffer[40];
-            //sprintf(namebuffer,"isMarkedVert_%i_%i",PCU_Comm_Self(),localNumber(edge));
             std::stringstream tagStream;
             tagStream << "isMarkedVert_"<<PCU_Comm_Self()<<"_"<<localNumber(edge);
             std::string tagName = tagStream.str();
-            //apf::MeshTag* isMarkedVert = m->createIntTag("isMarkedVert",1); //define tag field for each vertex
-            //apf::MeshTag* isMarkedVert = m->createIntTag(namebuffer,1); //define tag field for each vertex
             apf::MeshTag* isMarkedVert = m->createIntTag(tagName.c_str(),1); //define tag field for each vertex
             
             int marked = 1;
