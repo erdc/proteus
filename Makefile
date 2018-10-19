@@ -135,7 +135,7 @@ ${PWD}/stack/default.yaml: ${PWD}/stack/hit ${PWD}/stack
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP} src_cache
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"
