@@ -55,7 +55,7 @@ install:
 - git submodule update --recursive --remote --force 
 - make profile
 - make distclean
-- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=2
+- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=1
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
