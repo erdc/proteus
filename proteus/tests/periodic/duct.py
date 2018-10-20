@@ -69,6 +69,12 @@ else:
 
 p.LevelModelType = RANS2P.LevelModel
 
+if opts.periodic:
+    nullSpace="NavierStokesConstantPressure"
+else:
+    nullSpace="NoNullSpace"
+
+
 p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      sigma=0.0,
                                      rho_0=rho,nu_0=nu,
@@ -93,7 +99,7 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      MOMENTUM_SGE=1.0,
                                      PRESSURE_SGE=1.0,
                                      VELOCITY_SGE=1.0,
-                                     nullSpace='NavierStokesConstantPressure')
+                                     nullSpace=nullSpace)
 
 eps=1.0e-8
 if opts.periodic:
@@ -132,9 +138,11 @@ vSol = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
 
 p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol}
 if p.nd == 3:
-    p.analyticalSolution[3] = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
+    p.analyticalSolution[3] = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
                                                                         mu = mu,
                                                                         grad_p = -G)
+
+initialConditions = p.analyticalSolution
 
 nsave=100
 dt_init = 1.0e-3
@@ -214,9 +222,11 @@ if opts.periodic:
 
     p.advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
                                           1:getAFBC_u_duct,
-                                          2:getAFBC_v_duct,
-                                          3:getAFBC_w_duct}
-    
+                                          2:getAFBC_v_duct}
+
+    if opts.nd==3:
+        p.advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
+
     def getDFBC_duct(x,flag):
         if onTop(x) or onBottom(x):
             return None
@@ -225,8 +235,11 @@ if opts.periodic:
 
     p.diffusiveFluxBoundaryConditions = {0:{},
                                          1:{1:getDFBC_duct},
-                                         2:{2:getDFBC_duct},
-                                         3:{3:getDFBC_duct}}
+                                         2:{2:getDFBC_duct}}
+
+    if opts.nd==3:
+        p.diffusiveFluxBoundaryConditions[3] = {3:getDFBC_duct}
+
 else:
     if  opts.coord:
         def getDBC_pressure_duct(x,flag):
