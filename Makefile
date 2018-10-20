@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile proteus update hashdist FORCE 
+.PHONY: all check clean distclean doc install FORCE
 
 all: develop
 
@@ -100,42 +100,35 @@ distclean: clean
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
-src_cache: ${PWD}/stack/hit
-	@echo "Adding source cache"
-	-./stack/hit/bin/hit init-home
-	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
-
-${PWD}/stack/hit: ${PWD}/stack
+stack/hit/bin/hit:
+	@echo "Updating stack submodule"
 	git submodule init && git submodule update
+	@echo "Updating stack/hit submodule"
 	cd stack && git submodule init && git submodule update
+	@echo "Adding source cache if not done already"
+	-./stack/hit/bin/hit init-home
+	-./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 
-${PWD}/stack:  
+stack:
+	@echo "Updating stack submodule"
 	git submodule init && git submodule update
 
-default_stack: ${PWD}/stack/hit ${PWD}/stack
-
-hashdist: default_stack
-	@echo "hashdist is now the hit submodule of stack"
-
-bld_cache: ${PWD}/stack/hit
+bld_cache: stack/hit/bin/hit
 	@echo "Trying to add build cache for your arch"
 	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
-	./stack/bin/hit remote add http://192.237.213.149/hashdist_${HASHSTACK_BLD} --objects="build"
+	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_${HASHSTACK_BLD} --objects="build"
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
-profile: ${PROTEUS_PREFIX}/artifact.json
-
-stack/default.yaml: ${PWD}/stack/default.yaml
-
-${PWD}/stack/default.yaml: ${PWD}/stack/hit ${PWD}/stack
-	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
+stack/default.yaml: stack/hit/bin/hit
+	@echo "Linking stack/default.yaml for this arch"
+	-ln -s stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP} src_cache
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"
@@ -148,24 +141,13 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) 
 	@echo "Dependency build complete"
 	@echo "************************"
 
-proteus: ${PROTEUS_PREFIX}/bin/proteus
-
-${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
+${PROTEUS_PREFIX}/bin/proteus_env.sh: ${PROTEUS_PREFIX}/artifact.json
 	@echo "************************"
-	@echo "Installing proteus scripts..."
+	@echo "Installing proteus_env.sh"
 	@echo "************************"
-
-	echo "#!/usr/bin/env bash" > ${PROTEUS_PREFIX}/bin/proteus
-	echo '${PROTEUS_ENV} python "$${@:1}"' >> ${PROTEUS_PREFIX}/bin/proteus
-	chmod a+x ${PROTEUS_PREFIX}/bin/proteus
-
 	echo "#!/usr/bin/env sh" > ${PROTEUS_PREFIX}/bin/proteus_env.sh
 	echo '${PROTEUS_ENV}' >> ${PROTEUS_PREFIX}/bin/proteus_env.sh
 	chmod a+x ${PROTEUS_PREFIX}/bin/proteus_env.sh
-
-	@echo "************************"
-	@echo "Proteus script successfully installed"
-	@echo "************************"
 
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
 install: profile $(wildcard *.py) proteus
@@ -193,7 +175,7 @@ install: profile $(wildcard *.py) proteus
 	$(call show_info)
 	$(call howto)
 
-develop: proteus profile 
+develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh ${PROTEUS_PREFIX}/artifact.json
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/cmake/* ${PROTEUS}/${PROTEUS_ARCH}/lib/cmake
 	@echo "************************"
