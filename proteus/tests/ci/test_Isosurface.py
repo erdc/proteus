@@ -33,7 +33,8 @@ class TestIsosurface(object):
         import subprocess
         import os
         subprocess.check_call(['povgen.py',
-                               os.path.join('comparison_files',
+                               os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                            'comparison_files',
                                             'floating_bar'),
                                '-s',
                                '3'])
@@ -42,7 +43,8 @@ class TestIsosurface(object):
             filename = 'phi_t_0.000000_{0:04d}.pov'.format(i)
             with open(filename, 'r') as f:
                 povfiles.append(f.readlines())
-        subprocess.check_call(['tar', 'xzf', os.path.join('comparison_files',
+        subprocess.check_call(['tar', 'xzf', os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                          'comparison_files',
                                                           'phi_t_0.000000_000.tgz')])
         saved_povfiles = []
         for i in range(3):
