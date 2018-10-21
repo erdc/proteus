@@ -35,6 +35,7 @@ install:
 - ./stack/hit/bin/hit init-home
 - ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 - ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- make stack/default.yaml
 - pushd $HOME
 - mkdir -p hashdist_src
 - mkdir -p hashdist_bld
