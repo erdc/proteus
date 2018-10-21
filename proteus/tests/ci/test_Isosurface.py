@@ -32,8 +32,6 @@ class TestIsosurface(object):
         import difflib
         import subprocess
         import os
-        import pdb
-        pdb.set_trace()
         subprocess.check_call(['povgen.py',
                                os.path.join('comparison_files',
                                             'floating_bar'),
