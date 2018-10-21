@@ -562,6 +562,10 @@ def setup_given_extensions(extensions):
                       'proteus.tests.SWEs.paraboloid_with_friction.twoD',
                       'proteus.tests.SWEs.test_gauges',
                       'proteus.tests.SWEs.test_reflecting_BCs',
+                      'proteus.TwoPhaseFlow',
+                      'proteus.TwoPhaseFlow.models',
+                      'proteus.TwoPhaseFlow.utils',
+                      'proteus.tests.TwoPhaseFlow',
                       'proteus.tests.matrix_constructor',
                       'proteus.tests.matrix_constructor.import_modules',
                       'proteus.MeshAdaptPUMI',
@@ -660,6 +664,12 @@ def setup_given_extensions(extensions):
                        ['proteus/tests/SWEs/test_gauges/comparison_files/SWEs_test_gauges.h5']),
                       (os.path.join(proteus_install_path,'tests','SWEs','test_reflecting_BCs','comparison_files'),
                        ['proteus/tests/SWEs/test_reflecting_BCs/comparison_files/SWEs_test_reflecting_BCs.h5']),
+                      (os.path.join(proteus_install_path,'tests','TwoPhaseFlow','comparison_files'),
+                       ['proteus/tests/TwoPhaseFlow/comparison_files/fallingBubble.h5',
+                        'proteus/tests/TwoPhaseFlow/comparison_files/marin.h5',
+                        'proteus/tests/TwoPhaseFlow/comparison_files/quiescentTank.h5',
+                        'proteus/tests/TwoPhaseFlow/comparison_files/risingBubble.h5',
+                        'proteus/tests/TwoPhaseFlow/comparison_files/TwoDimBucklingFlow.h5']),
                       (os.path.join(proteus_install_path,'tests','solver_tests','import_modules'),
                        ['proteus/tests/solver_tests/import_modules/quad_mass_matrix.npy',
                         'proteus/tests/solver_tests/import_modules/sol_10.npy',
@@ -771,7 +781,8 @@ def setup_given_extensions(extensions):
          ],
           scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                      'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
-                     'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py'],
+                     'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py',
+                     'scripts/runTwoPhaseFlow.py'],
           requires=['numpy']
     )
 
