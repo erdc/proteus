@@ -102,16 +102,20 @@ distclean: clean
 
 stack/hit/bin/hit:
 	@echo "Updating stack submodule"
-	git submodule init && git submodule update
+	git submodule update --init stack
 	@echo "Updating stack/hit submodule"
-	cd stack && git submodule init && git submodule update
+	cd stack && git submodule update --init
 	@echo "Adding source cache if not done already"
 	-./stack/hit/bin/hit init-home
 	-./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 
 stack:
 	@echo "Updating stack submodule"
-	git submodule init && git submodule update
+	git submodule update --init stack
+
+air-water-vv:
+	@echo "Updating air-water-vv submodule"
+	git submodule update --init air-water-vv
 
 bld_cache: stack/hit/bin/hit
 	@echo "Trying to add build cache for your arch"
@@ -124,7 +128,7 @@ cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.tx
 
 stack/default.yaml: stack/hit/bin/hit
 	@echo "Linking stack/default.yaml for this arch"
-	-ln -s stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
+	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
@@ -175,7 +179,7 @@ install: profile $(wildcard *.py) proteus
 	$(call show_info)
 	$(call howto)
 
-develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh ${PROTEUS_PREFIX}/artifact.json
+develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFIX}/artifact.json
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/cmake/* ${PROTEUS}/${PROTEUS_ARCH}/lib/cmake
 	@echo "************************"
@@ -251,12 +255,23 @@ doc:
 	@echo "**********************************"
 	-sensible-browser ../proteus-website/index.html &
 
-test: check
+test: air-water-vv check
+	@echo "**************************************************"
+	@echo "Running git-lfs to get regression test data files."
+	-git lfs fetch
+	-git lfs checkout
+	@echo "If git-lfs failed to download data, then some tests will fail, and"
+	@echo "you should install git-lfs or try 'make lfs', passing all tests is needed"
+	@echo "**************************************************************************"
+	@echo "Running basic test suite"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	@echo "Basic tests complete "
 	@echo "************************************"
-	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
-	@echo "Tests complete "
+	@echo "Running air-water-vv test set 1"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
 	@echo "************************************"
+	@echo "Running air-water-vv test set 2"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 
 jupyter:
 	@echo "************************************"
