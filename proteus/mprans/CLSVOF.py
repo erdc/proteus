@@ -189,6 +189,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # Compute metrics at end of time step
         if self.computeMetrics == 1 or self.computeMetrics == 2: #compute metrics at ETS
             self.model.getMetricsAtETS()
+            self.model.getMetricsForBubble()
             if self.model.comm.isMaster():
                 if self.computeMetrics == 1:
                     self.model.metricsAtETS.write(repr(self.model.timeIntegration.t)[:4]+",\t"+
@@ -207,6 +208,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                   repr(self.model.global_D_err)+
                                                   "\n")
                     self.model.metricsAtETS.flush()
+                # Metrics for Bubble
+                self.model.metricsForBubble.write(repr(self.model.timeIntegration.dt)+","+
+                                                  repr(self.model.timeIntegration.t)+","+
+                                                  repr(self.model.global_Xy)+","+
+                                                  repr(self.model.global_Uy)+
+                                                  "\n")
+                self.model.metricsForBubble.flush()            
         #
         self.model.q['dV_last'][:] = self.model.q['dV']
         copyInstructions = {}
@@ -766,6 +774,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_L2_err = 0.0
         self.global_L2Banded_err = 0.0
         self.global_sH_L2_err = 0.0
+        # For bubble
+        self.global_Xy = 0.0
+        self.global_Uy = 0.0        
         if self.coefficients.computeMetrics > 0 and self.comm.isMaster():
             if self.hasExactSolution and self.coefficients.computeMetrics==3: # at EOS
                 self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
@@ -794,6 +805,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                             'global_sV_err'+","+
                                             'global_D_err'+
                                             "\n")
+            # for metrics for bubble
+            self.metricsForBubble = open(self.name+"_metricsForBubble.csv","w")
+            self.metricsForBubble.write('time_step'+","+
+                                        'time'+","+
+                                        'global_Xy'+","+
+                                        'global_Uy'+
+                                        "\n")                                    
 
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -860,6 +878,37 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.metricsAtEOS.flush()
 
     ####################################3
+
+    def getMetricsForBubble(self):
+        (global_Xy,
+         global_Uy,
+         global_Bubble) = self.clsvof.calculateMetricsForBubble(#element
+             self.u[0].femSpace.elementMaps.psi,
+             self.u[0].femSpace.elementMaps.grad_psi,
+             self.mesh.nodeArray,
+             self.mesh.elementNodesArray,
+             self.elementQuadratureWeights[('u',0)],
+             self.u[0].femSpace.psi,
+             self.u[0].femSpace.grad_psi,
+             self.u[0].femSpace.psi,
+             #physics
+             self.mesh.nElements_global,
+             self.mesh.nElements_owned,
+             self.coefficients.useMetrics,
+             self.u[0].femSpace.dofMap.l2g,
+             self.mesh.elementDiametersArray,
+             self.mesh.nodeDiametersArray,
+             self.degree_polynomial,
+             self.coefficients.epsFactHeaviside,
+             self.u[0].dof, 
+             self.coefficients.q_v,
+             self.offset[0],self.stride[0])
+
+        from proteus.flcbdfWrappers import globalSum
+        # metrics about conservation
+        self.global_Xy = globalSum(global_Xy)/globalSum(global_Bubble)
+        self.global_Uy = globalSum(global_Uy)/globalSum(global_Bubble)
+        
     def getMetricsAtETS(self): #ETS=Every Time Step
         """
         Calculate some metrics at ETS (Every Time Step)
