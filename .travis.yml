@@ -32,9 +32,8 @@ before_install:
 install:
 - git lfs fetch
 - git lfs checkout
-- make stack
-- make stack/default.yaml
-- make stack/hit/bin/hit
+- ./stack/hit/bin/hit init-home
+- ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 - ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
 - pushd $HOME
 - mkdir -p hashdist_src
@@ -49,11 +48,8 @@ install:
 - cd stack
 - ../stack/hit/bin/hit build -j 2 -v default.yaml
 - cd ..
-- git submodule init
-- git submodule update --recursive --remote --force 
-- make profile
 - make distclean
-- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=1
+- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=2
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
