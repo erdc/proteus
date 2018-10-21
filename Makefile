@@ -154,7 +154,7 @@ ${PROTEUS_PREFIX}/bin/proteus_env.sh: ${PROTEUS_PREFIX}/artifact.json
 	chmod a+x ${PROTEUS_PREFIX}/bin/proteus_env.sh
 
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
-install: profile $(wildcard *.py) proteus
+install: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFIX}/artifact.json
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
