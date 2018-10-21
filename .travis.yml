@@ -32,11 +32,9 @@ before_install:
 install:
 - git lfs fetch
 - git lfs checkout
-- make hashdist
 - make stack
 - make stack/default.yaml
-- ./stack/hit/bin/hit init-home
-- ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+- make stack/hit/bin/hit
 - ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
 - pushd $HOME
 - mkdir -p hashdist_src
