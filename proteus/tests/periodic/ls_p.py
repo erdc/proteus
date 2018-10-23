@@ -17,7 +17,7 @@ LevelModelType = NCLS.LevelModel
 coefficients = NCLS.Coefficients(V_model=int(ct.movingDomain)+0,
                                  RD_model=int(ct.movingDomain)+3,
                                  ME_model=int(ct.movingDomain)+2,
-                                 checkMass=False,
+                                 checkMass=True,
                                  useMetrics=ct.useMetrics,
                                  epsFact=ct.epsFact_consrv_heaviside,
                                  sc_uref=ct.ls_sc_uref,
@@ -29,6 +29,8 @@ dirichletConditions = {0: lambda x, flag: None}
 advectiveFluxBoundaryConditions = {}
 
 diffusiveFluxBoundaryConditions = {0: {}}
+
+periodicDirichletConditions = {0:ct.getPDBC}
 
 class PHI_IC:
     def uOfXT(self, x, t):

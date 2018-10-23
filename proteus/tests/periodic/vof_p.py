@@ -7,6 +7,7 @@ ct = Context.get()
 domain = ct.domain
 nd = domain.nd
 mesh = domain.MeshOptions
+parallelPeriodic=True
 
 
 genMesh = mesh.genMesh
@@ -32,11 +33,16 @@ coefficients = VOF.Coefficients(LS_model=int(ct.movingDomain)+LS_model,
                                 sc_beta=ct.vof_sc_beta,
                                 movingDomain=ct.movingDomain)
 
-dirichletConditions = {0: lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython()}
+def zero(x, t):
+    return 0.0
 
-advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].vof_advective.init_cython()}
+dirichletConditions = {0: lambda x, flag: None}
+
+advectiveFluxBoundaryConditions = {0: lambda x, flag: zero}
 
 diffusiveFluxBoundaryConditions = {0: {}}
+
+periodicDirichletConditions = {0:ct.getPDBC}
 
 class VF_IC:
     def uOfXT(self, x, t):
