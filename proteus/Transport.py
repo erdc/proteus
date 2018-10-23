@@ -1652,7 +1652,6 @@ class OneLevelTransport(NonlinearEquation):
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def archiveAnalyticalSolutions(self,archive,analyticalSolutionsDict,T=0.0,tCount=0):
         import copy
-        import pdb
         #
         #set the initial conditions for the DOF based on the generalized interpolation conditions
         #

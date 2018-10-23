@@ -959,8 +959,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
 
         # try to use 1d,2d,3d specific modules
-        # mwf debug
-        # pdb.set_trace()
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -1281,9 +1279,6 @@ def setZeroLSweakDirichletBCs(RDLSvt):
                     RDLSvt.weakDirichletConditionFlags[J] = 1
     else:
         #
-        # mwf debug
-        #import pdb
-        # pdb.set_trace()
         # use c directly
         ctransportCoefficients.setWeakDirichletConditionsForLevelSet(RDLSvt.mesh.nElements_global,
                                                                      RDLSvt.nDOF_trial_element[0],
@@ -1317,9 +1312,6 @@ def setZeroLSweakDirichletBCsSimple(RDLSvt):
                     RDLSvt.weakDirichletConditionFlags[J] = 1
     else:
         #
-        # mwf debug
-        #import pdb
-        # pdb.set_trace()
         # use c directly
         ctransportCoefficients.setSimpleWeakDirichletConditionsForLevelSet(RDLSvt.mesh.nElements_global,
                                                                            RDLSvt.nDOF_trial_element[0],

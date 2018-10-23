@@ -7,7 +7,8 @@ from proteus import (StepControl,
                      NumericalFlux)
 import ls_consrv_p as physics
 from proteus import Context
-
+periodicDirichletConditions = physics.periodicDirichletConditions
+parallelPeriodic=True
 ct = Context.get()
 domain = ct.domain
 nd = ct.domain.nd
