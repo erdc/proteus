@@ -39,6 +39,7 @@ namespace proteus
                                    double epsFactDirac,
                                    double epsFactDiffusion,
                                    int* u_l2g,
+                                   int* r_l2g,
                                    double* elementDiameter,
                                    double* nodeDiametersArray,
                                    double* u_dof,
@@ -704,6 +705,7 @@ namespace proteus
 			     double epsFactDirac,
 			     double epsFactDiffusion,
 			     int* u_l2g,
+			     int* r_l2g,
 			     double* elementDiameter,
 			     double* nodeDiametersArray,
 			     double* u_dof,
@@ -797,7 +799,7 @@ namespace proteus
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
 
-		globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
+		globalResidual[offset_u+stride_u*r_l2g[eN_i]]+=elementResidual_u[i];
 	      }//i
 	  }//elements
 	//
@@ -1067,7 +1069,7 @@ namespace proteus
 			     double epsFactDirac,
 			     double epsFactDiffusion,
 			     int* u_l2g,
-			     double* elementDiameter,
+                             double* elementDiameter,
 			     double* nodeDiametersArray,
 			     double* u_dof,
 			     // double* u_trial,
