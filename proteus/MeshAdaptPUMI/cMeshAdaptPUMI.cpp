@@ -417,7 +417,7 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
   */
   apf::destroyField(currentField);
   apf::destroyField(interfaceField);
-  return adaptFlag;
+  return assertFlag;
 }
 
 
