@@ -49,16 +49,7 @@ def load_periodic_opts_2D(request):
     opts.contextOptions = "periodic=True grid=True nd=2 nnx=42 triangles=False spaceOrder=1 weak=True coord=True pc_type='selfp_petsc'" 
     proteus.Context.contextOptionsString=opts.contextOptions   
     opts.petscOptionsFile = './petsc/petsc.options.schur.selfp_petsc.superlu'
-    petsc_argv = [sys.argv[0]]
-    with open(opts.petscOptionsFile) as petsc_file:
-        data = petsc_file.readlines()
-    def strip_comments(line):
-        if '#' in line:
-            line = line[:line.index('#')]
-        return line
-    stripped_data = [strip_comments(line) for line in data]
-    petsc_argv += '\n'.join(stripped_data).split()
-    proteus.Comm.argv = petsc_argv
+    proteus.Comm.argv = TestTools.fixture_set_petsc_options_from_file(opts.petscOptionsFile)
     comm = Comm.init()
 
 @pytest.fixture()
@@ -66,16 +57,7 @@ def load_periodic_opts_3D(request):
     opts.contextOptions = "periodic=True nd=3 coord=True pc_type='selfp_petsc'" 
     proteus.Context.contextOptionsString=opts.contextOptions
     opts.petscOptionsFile = './petsc/petsc.options.schur.selfp_petsc.superlu'
-    petsc_argv = [sys.argv[0]]
-    with open(opts.petscOptionsFile) as petsc_file:
-        data = petsc_file.readlines()
-    def strip_comments(line):
-        if '#' in line:
-            line = line[:line.index('#')]
-        return line
-    stripped_data = [strip_comments(line) for line in data]
-    petsc_argv += '\n'.join(stripped_data).split()
-    proteus.Comm.argv = petsc_argv
+    proteus.Comm.argv = TestTools.fixture_set_petsc_options_from_file(opts.petscOptionsFile)
     comm = Comm.init()
 
 def test_periodic_2D(load_periodic_opts_2D,
@@ -95,4 +77,3 @@ def test_periodic_3D(load_periodic_opts_3D,
                                    load_periodic_duct[3],
                                    opts)
     ns.calculateSolution('test_run')
-
