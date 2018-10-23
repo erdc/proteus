@@ -649,6 +649,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.elementDiameter,  # self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,

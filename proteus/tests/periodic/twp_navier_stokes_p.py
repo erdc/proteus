@@ -69,20 +69,27 @@ coefficients = RANS2P.Coefficients(epsFact=ct.epsFact_viscosity,
                                    dragAlphaTypes=dragAlphaTypes,
                                    dragBetaTypes=dragBetaTypes,
                                    epsFact_solid=epsFact_solid,
-                                   barycenters=ct.domain.barycenters)
+                                   nullSpace="NavierStokesConstantPressure")
 
 
-dirichletConditions = {0: lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
-                       1: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
-                       2: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}
+dirichletConditions = {0: lambda x, flag: None,
+                       1: lambda x, flag: None,
+                       2: lambda x, flag: None}
 
-advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].p_advective.init_cython(),
-                                   1: lambda x, flag: domain.bc[flag].u_advective.init_cython(),
-                                   2: lambda x, flag: domain.bc[flag].v_advective.init_cython()}
+def zero(x, t):
+    return 0.0
+
+advectiveFluxBoundaryConditions = {0: lambda x, flag: zero,
+                                   1: lambda x, flag: zero,
+                                   2: lambda x, flag: zero}
 
 diffusiveFluxBoundaryConditions = {0: {},
-                                   1: {1: lambda x, flag: domain.bc[flag].u_diffusive.init_cython()},
-                                   2: {2: lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
+                                   1: {1: lambda x, flag: zero},
+                                   2: {2: lambda x, flag: zero}}
+
+periodicDirichletConditions = {0:ct.getPDBC,
+                               1:ct.getPDBC,
+                               2:ct.getPDBC}
 
 if nd == 3:
     dirichletConditions[3] = lambda x, flag: domain.bc[flag].w_dirichlet.init_cython()

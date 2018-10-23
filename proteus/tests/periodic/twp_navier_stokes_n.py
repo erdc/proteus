@@ -6,8 +6,10 @@ from proteus import Context
 ct = Context.get()
 domain = ct.domain
 nd = ct.domain.nd
-mesh = domain.MeshOptions
-
+nnx = ct.nnx
+nny = ct.nny
+parallelPeriodic=True
+triangleFlag=1
 #time stepping
 runCFL = ct.runCFL
 if ct.timeIntegration == "VBDF":
@@ -61,16 +63,8 @@ elif nd == 3:
 
 matrix = SparseMatrix
 
-if ct.useOldPETSc:
-    multilevelLinearSolver = LinearSolvers.PETSc
-    levelLinearSolver      = LinearSolvers.PETSc
-else:
-    multilevelLinearSolver = LinearSolvers.KSP_petsc4py
-    levelLinearSolver      = LinearSolvers.KSP_petsc4py
-
-if ct.useSuperlu:
-    multilevelLinearSolver = LinearSolvers.LU
-    levelLinearSolver      = LinearSolvers.LU
+multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+levelLinearSolver      = LinearSolvers.KSP_petsc4py
 
 linear_solver_options_prefix = 'rans2p_'
 levelNonlinearSolverConvergenceTest = 'r'
@@ -83,5 +77,4 @@ nl_atol_res = ct.ns_nl_atol_res
 useEisenstatWalker = False#True
 maxNonlinearIts = 50
 maxLineSearches = 0
-conservativeFlux = {0:'pwl-bdm-opt'}
-auxiliaryVariables = ct.domain.auxiliaryVariables['twp']
+#conservativeFlux = {0:'pwl-bdm-opt'}
