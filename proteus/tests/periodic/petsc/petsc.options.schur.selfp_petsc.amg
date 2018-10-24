@@ -3,8 +3,6 @@
 #set petsc ksp object and preconditioner
 -rans2p_ksp_type fgmres
 -rans2p_ksp_gmres_restart 500
--rans2p_ksp_atol 1e-20
--rans2p_ksp_rtol 1e-6
 -rans2p_ksp_gmres_modifiedgramschmidt
 -rans2p_ksp_pc_side right
 #-help
