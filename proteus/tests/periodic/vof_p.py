@@ -45,7 +45,7 @@ class VF_SOL:
     def uOfXT(self, x, t):
         return smoothedHeaviside(ct.epsFact_consrv_heaviside*ct.opts.he,
                                  (x[nd-1] - (max(ct.wave.eta(x, t%(ct.tank_dim[0]/ct.wave.c)),
-                                                 ct.wave.eta(x-ct.tank_dim[0], t%(ct.tank_dim[0]/ct.wave.c)))
+                                                 ct.wave.eta(x+ct.tank_dim[0], t%(ct.tank_dim[0]/ct.wave.c)))
                                              +
                                              ct.opts.water_level)))
 initialConditions = {0: VF_SOL()}

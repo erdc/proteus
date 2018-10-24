@@ -208,11 +208,11 @@ if useMetrics:
     vof_lag_shockCapturing = True
     vof_sc_uref = 1.0
     vof_sc_beta = sc_beta
-    rd_shockCapturingFactor  =0.9
+    rd_shockCapturingFactor  =sc
     rd_lag_shockCapturing = False
-    epsFact_density    = 1.5
+    epsFact_density    = 3.0
     epsFact_viscosity  = epsFact_curvature  = epsFact_vof = epsFact_consrv_heaviside = epsFact_consrv_dirac = epsFact_density
-    epsFact_redistance = 0.75
+    epsFact_redistance = 1.5
     epsFact_consrv_diffusion = epsFact_consrv_diffusion
     redist_Newton = True#False
     kappa_shockCapturingFactor = sc
