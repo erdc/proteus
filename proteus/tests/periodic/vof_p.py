@@ -6,11 +6,8 @@ from proteus import Context
 ct = Context.get()
 domain = ct.domain
 nd = domain.nd
-mesh = domain.MeshOptions
 parallelPeriodic=True
 
-
-genMesh = mesh.genMesh
 movingDomain = ct.movingDomain
 T = ct.T
 
@@ -44,8 +41,12 @@ diffusiveFluxBoundaryConditions = {0: {}}
 
 periodicDirichletConditions = {0:ct.getPDBC}
 
-class VF_IC:
+class VF_SOL:
     def uOfXT(self, x, t):
-        return smoothedHeaviside(ct.epsFact_consrv_heaviside*ct.opts.he,x[nd-1]-(ct.wave.eta(x,t)+ct.opts.water_level))
-
-initialConditions = {0: VF_IC()}
+        return smoothedHeaviside(ct.epsFact_consrv_heaviside*ct.opts.he,
+                                 (x[nd-1] - (max(ct.wave.eta(x, t%(ct.tank_dim[0]/ct.wave.c)),
+                                                 ct.wave.eta(x-ct.tank_dim[0], t%(ct.tank_dim[0]/ct.wave.c)))
+                                             +
+                                             ct.opts.water_level)))
+initialConditions = {0: VF_SOL()}
+analyticalSolution = {0: VF_SOL()}

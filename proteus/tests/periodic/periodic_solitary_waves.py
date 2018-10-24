@@ -39,7 +39,7 @@ opts=Context.Options([
     ("T", 12.0, "Simulation time in s"),
     ("dt_init", 0.001, "Initial time step in s"),
     ("dt_fixed", None, "Fixed (maximum) time step"),
-    ("timeIntegration", "backwardEuler", "Time integration scheme (backwardEuler/VBDF)"),
+    ("timeIntegration", "BackwardEuler", "Time integration scheme (backwardEuler/VBDF)"),
     ("cfl", 0.5 , "Target cfl"),
     ("nsave",  5, "Number of time steps to save per second"),
     ("useRANS", 0, "RANS model"),
@@ -127,7 +127,7 @@ freezeLevelSet=True
 #----------------------------------------------------
 weak_bc_penalty_constant = 10.0/nu_0#Re
 dt_init = opts.dt_init
-T = 3.0*(tank_dim[0]/wave.c)
+T = 1.0*(tank_dim[0]/wave.c)
 nDTout = int(opts.T*opts.nsave)
 timeIntegration = opts.timeIntegration
 if nDTout > 0:
@@ -143,10 +143,10 @@ dt_fixed = opts.dt_fixed
 useOldPETSc=False
 useSuperlu = not True
 spaceOrder = 1
-useHex     = False
+useHex     = True#False
 useRBLES   = 0.0
 useMetrics = 1.0
-useVF = 1.0
+useVF = 0.0
 useOnlyVF = False
 useRANS = opts.useRANS # 0 -- None
             # 1 -- K-Epsilon
@@ -171,8 +171,8 @@ if spaceOrder == 1:
     hFactor=1.0
     if useHex:
 	 basis=C0_AffineLinearOnCubeWithNodalBasis
-         elementQuadrature = CubeGaussQuadrature(nd,3)
-         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,3)
+         elementQuadrature = CubeGaussQuadrature(nd,2)
+         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)
     else:
     	 basis=C0_AffineLinearOnSimplexWithNodalBasis
          elementQuadrature = SimplexGaussQuadrature(nd,3)
@@ -191,7 +191,7 @@ elif spaceOrder == 2:
 
 
 # Numerical parameters
-sc = 0.5 # default: 0.5. Test: 0.25
+sc = 0.75 # default: 0.5. Test: 0.25
 sc_beta = 1.5 # default: 1.5. Test: 1.
 epsFact_consrv_diffusion = 1. # default: 1.0. Test: 0.1
 ns_forceStrongDirichlet = False

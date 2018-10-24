@@ -12,21 +12,11 @@ parallelPeriodic=True
 ct = Context.get()
 domain = ct.domain
 nd = ct.domain.nd
-mesh = domain.MeshOptions
 
 #time stepping
 runCFL = ct.runCFL
 timeIntegrator  = TimeIntegration.ForwardIntegrator
 timeIntegration = TimeIntegration.NoIntegration
-
-#mesh options
-nLevels = ct.nLevels
-parallelPartitioningType = mesh.parallelPartitioningType
-nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
-triangleOptions = mesh.triangleOptions
-
-
 
 elementQuadrature = ct.elementQuadrature
 elementBoundaryQuadrature = ct.elementBoundaryQuadrature

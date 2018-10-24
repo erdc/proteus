@@ -2,10 +2,11 @@ from proteus import *
 from proteus.default_n import *
 from la_periodicGauss_p import *
 
-timeIntegration = VBDF
+timeIntegration = BackwardEuler_cfl
 stepController = Min_dt_controller
-timeOrder=2
+timeOrder=1
 runCFL=0.33
+triangleFlag = 1#if regular triangulatio then alternate diagonals
 
 DT = None
 
@@ -15,7 +16,7 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
-nn=11
+nn=81
 nLevels = 1#4
 
 if useNCLS:
@@ -54,7 +55,7 @@ nl_atol_res = 1.0e-8
 linTolFac = 0.0
 l_atol_res = 1.0e-8
 
-maxNonlinearIts =3
+maxNonlinearIts =1
 maxLineSearches = 0
 
 matrix = SparseMatrix
