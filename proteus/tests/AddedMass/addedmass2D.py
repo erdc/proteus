@@ -198,7 +198,7 @@ mcorr_nl_atol_res = max(1.0e-6,0.1*tolfac*he**2)
 rd_nl_atol_res = max(1.0e-6,tolfac*he)
 kappa_nl_atol_res = max(1.0e-6,tolfac*he**2)
 dissipation_nl_atol_res = max(1.0e-6,tolfac*he**2)
-mesh_nl_atol_res = max(1.0e-6,tolfac*he**2)
+mesh_nl_atol_res = 1.0e-10#max(1.0e-6,tolfac*he**2)
 am_nl_atol_res = max(1.0e-6,tolfac*he**2)
 
 #turbulence

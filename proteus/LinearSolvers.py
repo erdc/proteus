@@ -4296,4 +4296,3 @@ class ConstantNullSpace(SolverNullSpace):
         # Using the global constant pressure null space, assign it to
         # the global ksp object and remove it from the RHS vector.
         self.get_global_ksp().ksp.getOperators()[0].setNullSpace(self.constant_null_space)
-        self.constant_null_space.remove(par_b)
