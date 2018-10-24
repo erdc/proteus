@@ -541,7 +541,8 @@ elif opts.pc_type == 'selfp_petsc':
 
 n.linear_solver_options_prefix = 'rans2p_'
 
-n.linTolFac = 0.001
+n.linTolFac = 0.1
+n.l_atol_res = 0.1*n.nl_atol_res
 
 n.conservativeFlux = None
 
