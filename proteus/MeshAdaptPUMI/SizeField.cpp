@@ -242,128 +242,6 @@ int intersectsInterface(apf::MeshEntity* edge, apf::Field* levelSet)
     return doesIntersect;
 }
 
-void MeshAdaptPUMIDrvr::edgeWalkPropagation(apf::Mesh* m, apf::MeshEntity* vert, double L_local, apf::Vector3 actualPosition,double direction)
-//need to set mesh sizes
-//the first call to this function doesnt need to set a mesh size because it should be set to hPhi at the interface already
-{
-    apf::Vector3 pt_vert;
-    m->getPoint(vert,0,pt_vert);
-    apf::Vector3 difference_vect = pt_vert-actualPosition;
-
-    //directionality
-    apf::Field* levelSet = m->findField("phi");
-    double phiCurrent = apf::getScalar(levelSet,vert,0);
-    //
-/*
-    if(localNumber(vert)==692)
-    {
-        std::cout<<"POINT OF INTEREST\n";
-    }
-*/
-    //if(difference_vect.getLength() > L_local || (phiCurrent*direction <= 0))
-    if(difference_vect.getLength() > L_local)
-        return;
-    else
-    {
-        apf::Adjacent vertex_adjVerts; 
-        apf::getBridgeAdjacent(m,vert,1,0,vertex_adjVerts);
-        apf::MeshTag* isMarked = m->findTag("isMarked");
-        for(int i=0;i<vertex_adjVerts.getSize();i++)
-        {
-            if(!m->hasTag(vertex_adjVerts[i],isMarked))
-            {
-                int marked = 1;
-                m->setIntTag(vertex_adjVerts[i],isMarked,&marked);
-                apf::Field* predictInterfaceBand = m->findField("predictInterfaceBand");
-                apf::setScalar(predictInterfaceBand,vertex_adjVerts[i],0,apf::getScalar(predictInterfaceBand,vert,0));
-                //DEBUG
-/*
-                apf::setScalar(m->findField("markerField"),vertex_adjVerts[i],0,1);
-                char namebuffer[50];
-                sprintf(namebuffer,"midPredictivePropagation_%i",counter);
-                apf::writeVtkFiles(namebuffer, m);
-                counter++;
-                edgeWalkPropagation(m,vertex_adjVerts[i],L_local,actualPosition,counter);
-*/
-                //
-                edgeWalkPropagation(m,vertex_adjVerts[i],L_local,actualPosition,direction);
-            }
-        }
-
-    }
-}
-
-int BFS_propagation(apf::Mesh* m, apf::MeshEntity* vert, double L_local, apf::Vector3 actualPosition,double direction,std::queue<apf::MeshEntity*> &markedVertices,const char* tagName)
-{   
-    //apf::MeshTag* isMarkedVert = m->findTag("isMarkedVert");
-    //std::cout<<"comm rank "<<PCU_Comm_Self()<<" "<<tagName<<" hasTag "<<m->findTag(tagName)<<std::endl;
-    apf::MeshTag* isMarkedVert = m->findTag(tagName);
-    apf::MeshTag* vertexMaxTraverse = m->findTag("maximumTraversal");
-    int marked=1;
-    m->setIntTag(vert,isMarkedVert,&marked);
-    apf::Vector3 pt_vert;
-    m->getPoint(vert,0,pt_vert);
-    apf::Vector3 difference_vect = pt_vert-actualPosition;
-
-    //check if vertex needs to be added to queue based on traversal distance
-    int dontContinue = 0;
-    if(m->hasTag(vert,vertexMaxTraverse))
-    {
-        double traversalDistance;
-        m->getDoubleTag(vert,vertexMaxTraverse,&traversalDistance);    
-        if((L_local-difference_vect.getLength()) < traversalDistance)
-            dontContinue=1;
-    } 
-
-    //directionality
-    apf::Field* levelSet = m->findField("phi");
-    double phiCurrent = apf::getScalar(levelSet,vert,0);
-
-    int needsParallel=0;
-
-    //need to continue search?
-    if((difference_vect.getLength() > L_local) || dontContinue || (phiCurrent*direction<=0))
-        return 0;
-    else
-    {
-        //set new traversal distance
-        double traversalDistance = L_local-difference_vect.getLength();
-        m->setDoubleTag(vert,vertexMaxTraverse,&traversalDistance);
-
-        apf::Adjacent vertex_adjVerts; 
-        apf::getBridgeAdjacent(m,vert,1,0,vertex_adjVerts);
-        for(int i=0;i<vertex_adjVerts.getSize();i++)
-        {
-            if(!m->hasTag(vertex_adjVerts[i],isMarkedVert)) //if doesn't have tag
-            {
-                //set size
-                apf::Field* predictInterfaceBand = m->findField("predictInterfaceBand");
-                apf::setScalar(predictInterfaceBand,vertex_adjVerts[i],0,apf::getScalar(predictInterfaceBand,vert,0));
-                //add vertex to queue 
-                markedVertices.push(vertex_adjVerts[i]);
-            }
-        }
-        if(m->isShared(vert))
-        {
-            apf::Copies remotes;
-            m->getRemotes(vert,remotes);
-            for(apf::Copies::iterator iter=remotes.begin(); iter!=remotes.end();++iter)
-            {
-                PCU_COMM_PACK(iter->first, iter->second);
-                PCU_COMM_PACK(iter->first, L_local);
-                PCU_COMM_PACK(iter->first, actualPosition);
-                PCU_COMM_PACK(iter->first, direction);
-                
-                //std::string tagName_str(tagName);
-                //PCU_COMM_PACK(iter->first, tagName_str);
-                //PCU_Comm_Pack(iter->first,&tagName_str[0],tagName_str.length());
-            }
-            needsParallel++;
-        }
-    }
-    return needsParallel;
-}
-
 //Struct definition
 struct edgeWalkerInfo{
     apf::MeshEntity* vertex;  
@@ -373,22 +251,28 @@ struct edgeWalkerInfo{
     apf::MeshTag* trackerTag;
     //const char* tagName;
     int edgeID;
+    int initialRank;
 };
 
+int track7200_counter;
+int track7373_counter;
+int track2189_counter;
 
-int BFS_propagation2(apf::Mesh* m, std::queue<edgeWalkerInfo> &markedVertices)
+int BFS_propagation(apf::Mesh* m, std::queue<edgeWalkerInfo> &markedVertices)
 {   
 
     //get the latest object
     edgeWalkerInfo inputObject = markedVertices.front();
     markedVertices.pop();
 
+    //set the variables from the inputObject
     apf::MeshEntity* vert = inputObject.vertex;
     apf::Vector3 actualPosition = inputObject.actualPosition;
     double L_local = inputObject.L_local;
     double direction = inputObject.direction;
 
-    apf::MeshTag* isMarkedVert =inputObject.trackerTag;// m->findTag(inputObject.tagName);
+    //get necessary fields
+    apf::MeshTag* isMarkedVert =inputObject.trackerTag;
     apf::MeshTag* vertexMaxTraverse = m->findTag("maximumTraversal");
     apf::Field* predictInterfaceBand = m->findField("predictInterfaceBand");
     int marked=1;
@@ -414,8 +298,71 @@ int BFS_propagation2(apf::Mesh* m, std::queue<edgeWalkerInfo> &markedVertices)
 
     int needsParallel=0;
 
+    //check parallel now to make sure every part knows this vertex was marked
+        if(m->isShared(vert) && !m->hasTag(vert,isMarkedVert))
+        {
+            int initialRank = inputObject.initialRank;
+            double desiredSize = apf::getScalar(predictInterfaceBand,vert,0);
+            apf::Copies remotes;
+            m->getRemotes(vert,remotes);
+            for(apf::Copies::iterator iter=remotes.begin(); iter!=remotes.end();++iter)
+            {
+                PCU_COMM_PACK(iter->first, iter->second);
+                PCU_COMM_PACK(iter->first, L_local);
+                PCU_COMM_PACK(iter->first, actualPosition);
+                PCU_COMM_PACK(iter->first, direction);
+                PCU_COMM_PACK(iter->first, initialRank);
+                PCU_COMM_PACK(iter->first, inputObject.edgeID);
+                PCU_COMM_PACK(iter->first, desiredSize);
+            }
+            needsParallel++;
+        }
+
+    if(m->getTagName(inputObject.trackerTag)==std::string("isMarkedVert_0_7200"))
+    {
+        //apf::Field* debugField = m->findField("track7200");
+/*
+        if(m->hasTag(vert,isMarkedVert))
+            apf::setScalar(debugField,vert,0,2);
+        else if( difference_vect.getLength() > L_local)
+            apf::setScalar(debugField,vert,0,3);
+        else if(dontContinue)
+            apf::setScalar(debugField,vert,0,4);
+        else if(phiCurrent*direction<=0)
+            apf::setScalar(debugField,vert,0,5);
+        else
+            apf::setScalar(debugField,vert,0,1);
+*/
+        //apf::setScalar(debugField,vert,0,1);
+
+/*
+        char namebuffer2[40];
+        sprintf(namebuffer2,"track7200_%i",track7200_counter);
+        apf::writeVtkFiles(namebuffer2, m);
+        track7200_counter++; //hack
+*/
+    }
+    if(m->getTagName(inputObject.trackerTag)==std::string("isMarkedVert_0_7373"))
+    {
+        //apf::Field* debugField2 = m->findField("track7373");
+        //apf::setScalar(debugField2,vert,0,1);
+    }
+    if(m->getTagName(inputObject.trackerTag)==std::string("isMarkedVert_2_2189"))
+    {
+        apf::Field* debugField2 = m->findField("track2189");
+        apf::setScalar(debugField2,vert,0,1);
+/*
+        char namebuffer2[40];
+        sprintf(namebuffer2,"track2189_%i",track2189_counter);
+        apf::writeVtkFiles(namebuffer2, m);
+        track2189_counter++; //hack
+*/
+
+    }
+
+
     //need to continue search?
-    if((difference_vect.getLength() > L_local) || dontContinue || (phiCurrent*direction<=0) || m->hasTag(vert,isMarkedVert))
+    if(m->hasTag(vert,isMarkedVert) || (difference_vect.getLength() > L_local) || dontContinue || (phiCurrent*direction<=0))
         return 0;
     else
     {
@@ -438,6 +385,7 @@ int BFS_propagation2(apf::Mesh* m, std::queue<edgeWalkerInfo> &markedVertices)
                 markedVertices.push(inputObject);
             }
         }
+/*
         if(m->isShared(vert))
         {
             int initialRank = PCU_Comm_Self();
@@ -456,7 +404,7 @@ int BFS_propagation2(apf::Mesh* m, std::queue<edgeWalkerInfo> &markedVertices)
             }
             needsParallel++;
         }
-
+*/
     }
     return needsParallel;
 }
@@ -490,6 +438,33 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
     }
     m->end(it2);
 
+    //create trackerfield
+    apf::Field* track7200 = apf::createLagrangeField(m,"track7200",apf::SCALAR,1);
+    it2 = m->begin(0);
+    while((ent2 = m->iterate(it2)) )
+    {
+        apf::setScalar(track7200,ent2,0,0);
+    }
+    m->end(it2);
+    apf::Field* track7373 = apf::createLagrangeField(m,"track7373",apf::SCALAR,1);
+    it2 = m->begin(0);
+    while((ent2 = m->iterate(it2)) )
+    {
+        apf::setScalar(track7373,ent2,0,0);
+    }
+    m->end(it2);
+    apf::Field* track2189  = apf::createLagrangeField(m,"track2189",apf::SCALAR,1);
+    it2 = m->begin(0);
+    while((ent2 = m->iterate(it2)) )
+    {
+        apf::setScalar(track2189,ent2,0,0);
+    }
+    m->end(it2);
+
+    track2189_counter = 0;
+    track7200_counter = 0;
+    track7373_counter = 0;
+
 
     //edge-walk to predict
     apf::MeshTag* vertexMaxTraverse = m->createDoubleTag("maximumTraversal",1); //define tag field for each vertex to store maximum distance that will be travelled
@@ -499,7 +474,6 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
     
     std::queue <edgeWalkerInfo> markedVertices;
 
-    std::cout<<"Edge iteration\n";
     while( (edge = m->iterate(it)) )
     {
         if( intersectsInterface(edge,levelSet) )
@@ -516,12 +490,10 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
             m->getPoint(vertex2,0,pt_2);
             apf::Vector3 edgeVector = pt_2-pt_1;
             double edgeLength = apf::measure(m,edge);
-            //std::cout<<"edge Length "<<edgeLength<<" another "<<edgeVector.getLength()<<std::endl;
             double zeroPosition =  2*(-phi1/(phi2-phi1))-1.0; //parametric position of interface on the edge
             double relativePosition = -phi1/(phi2-phi1); //same as zeroPosition but in interval of [0,1]
             apf::Vector3 actualPosition = (pt_2-pt_1)*relativePosition + pt_1;           
 
-            //std::cout<<"actual Position "<<actualPosition<<std::endl;
             apf::Vector3 edgePoint(zeroPosition,0.0,0.0);
             apf::Element* phiElem = apf::createElement(levelSet,edge);
             apf::Element* gradPhiElem = apf::createElement(gradphi,edge);
@@ -530,7 +502,6 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
             apf::getVector(velocityElem,edgePoint,localVelocity);
             apf::Vector3 localInterfaceNormal;
             apf::getVector(gradPhiElem,edgePoint,localInterfaceNormal);
-            //std::cout<<"value at zeroPosition 0"<<apf::getScalar(phiElem, apf::Vector3(zeroPosition,0,0))<<std::endl;;
             apf::destroyElement(phiElem);
             apf::destroyElement(velocityElem);
             apf::destroyElement(gradPhiElem);
@@ -539,49 +510,75 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
             double L_local = localVelocity.getLength()*numAdaptSteps*delta_T;
         
             L_local += (N_interface_band)*hPhi; //add blending region   
-            L_local = 0.2;
             //get direction, multiply this with levelSet value to determine if in same direction
             double signValue = localVelocity*localInterfaceNormal;
 
-                    std::stringstream tagStream;
-                    tagStream << "isMarkedVert_"<<PCU_Comm_Self()<<"_"<<localNumber(edge);
-                    std::string tagName = tagStream.str();
-                    apf::MeshTag* isMarkedVert = m->createIntTag(tagName.c_str(),1); //define tag field for each vertex
 
+            //hack
+       
+/*
+            if(localNumber(edge)==7200)
+            {
+                L_local = 0.06;
+            }
+            else if(localNumber(edge)==7373)
+            {
+                L_local = 0.06;
+            }
+            else
+                L_local=0.03;
+*/
+            if(localNumber(edge)==2189 && PCU_Comm_Self()==2)
+            {   
+                L_local =0.2;
+            }
+            else
+                L_local=0.03;
+            signValue = 1;
+
+            //create tag field, named uniquely by rank and interface-intersecting edge
+            std::stringstream tagStream;
+            tagStream << "isMarkedVert_"<<PCU_Comm_Self()<<"_"<<localNumber(edge);
+            std::string tagName = tagStream.str();
+            apf::MeshTag* isMarkedVert = m->createIntTag(tagName.c_str(),1); //define tag field for each vertex
 
             //find adjacent vertices and their adjacent edges
             for(int i=0; i<edge_adjVerts.getSize();i++)
             {
+/*
+                if(PCU_Comm_Self()==2 && localNumber(edge_adjVerts[i])==786)
+                {
+                    std::cout<<"localedeg "<<localNumber(edge)<<std::endl;
+                    std::exit(1);
+                }
+*/
                 apf::setScalar(L_local_field,edge_adjVerts[i],0,L_local);
-            
-                    edgeWalkerInfo inputObject;
-                    inputObject.vertex = edge_adjVerts[i];
-                    inputObject.actualPosition = actualPosition;
-                    inputObject.direction = signValue;
-                    inputObject.L_local = L_local;
-                    inputObject.trackerTag = isMarkedVert;
-                    inputObject.edgeID = localNumber(edge);
-                    markedVertices.push(inputObject);
+                edgeWalkerInfo inputObject;
+                inputObject.vertex = edge_adjVerts[i];
+                inputObject.actualPosition = actualPosition;
+                inputObject.direction = signValue;
+                inputObject.L_local = L_local;
+                inputObject.trackerTag = isMarkedVert;
+                inputObject.edgeID = localNumber(edge);
+                inputObject.initialRank = PCU_Comm_Self();
+                markedVertices.push(inputObject);
             }
         } //end if interface edge
     }
     m->end(it);
-
-
     //Parallel preparations
     int needsParallel=1;
 
-    std::cout<<"needs parallel? "<<needsParallel<<std::endl;
-    int counter = 0 ;
     while(needsParallel>0)
     {
         needsParallel=0;
 
         PCU_Comm_Begin();
-        //Empty queue
+
+        //Handle the queue
         while(!markedVertices.empty())
         {
-            needsParallel+=BFS_propagation2(m,markedVertices);
+            needsParallel+=BFS_propagation(m,markedVertices);
         }
         PCU_Add_Ints(&needsParallel,1);
 
@@ -604,49 +601,52 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
             PCU_COMM_UNPACK(edgeID);
             PCU_COMM_UNPACK(desiredSize);
             
+
             edgeWalkerInfo inputObject;
             inputObject.vertex = vertex;
             inputObject.L_local = L_local;
             inputObject.actualPosition = actualPosition;
             inputObject.direction = direction;
             inputObject.edgeID = edgeID;
+            inputObject.initialRank=initialRank;
 
             apf::MeshTag* isMarkedVert;
             std::stringstream tagStream;
             tagStream << "isMarkedVert_"<<initialRank<<"_"<<edgeID;
             std::string tagName = tagStream.str();
-            if(m->findTag(tagName.c_str()) != 0)
-                std::cout<<"Has tag already? "<<tagName<<std::endl;
-            else
+            if(m->findTag(tagName.c_str()) == 0)
                 isMarkedVert = m->createIntTag(tagName.c_str(),1); //define tag field for each vertex
             inputObject.trackerTag=isMarkedVert;
+/*
+            if(PCU_Comm_Self()==0 && localNumber(vertex) == 959)
+            {
+                apf::Vector3 vectorPt;
+                m->getPoint(vertex,0,vectorPt);
+                std::cout<<"GOTCHA "<<actualPosition<<" "<<vectorPt<<" tag "<<m->getTagName(inputObject.trackerTag)<<std::endl;
+                std::exit(1);
+            }
+*/
+
+
 
             //ensures that the size is the same across parts
-            //should be taking a minimum
-            apf::setScalar(predictInterfaceBand,vertex,0,desiredSize);
+            if(desiredSize < apf::getScalar(predictInterfaceBand,vertex,0))
+                apf::setScalar(predictInterfaceBand,vertex,0,desiredSize);
  
             markedVertices.push(inputObject);
-
-            std::cout<<"isMarkedVert "<<m->getTagName(inputObject.trackerTag)<<std::endl;
         }
-
-        std::cout<<"NEEDS PARALLEL? "<<needsParallel<<" "<<counter<<std::endl;
-        counter++;
     }
-    PCU_Barrier();
-    std::cout<<"Flag 1\n";
 
     char namebuffer2[40];
     sprintf(namebuffer2,"afterPredictivePropagation_%i",nAdapt);
     apf::writeVtkFiles(namebuffer2, m);
-    //apf::writeVtkFiles("afterPredictivePropagation", m);
     apf::copyData(interfaceBand,predictInterfaceBand);
     apf::destroyField(predictInterfaceBand);
     apf::destroyField(gradphi);
     apf::destroyField(L_local_field);
     m->destroyTag(vertexMaxTraverse);
 
-    //get all tags
+    //get all tags for destruction
     apf::DynamicArray<apf::MeshTag*> allTags;
     m->getTags(allTags);
     for(int i =0;i<allTags.getSize();i++)
@@ -654,12 +654,14 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
         std::string tagName = m->getTagName(allTags[i]);
         if(tagName.substr(0,12) == "isMarkedVert")
         {
-            //std::cout<<"name is "<<m->getTagName(allTags[i])<<std::endl;
             m->destroyTag(allTags[i]);
         }
     }
     
     std::exit(1);
+    apf::destroyField(track7200);
+    apf::destroyField(track7373);
+    apf::destroyField(track2189);
 }
 
 void MeshAdaptPUMIDrvr::isotropicIntersect()
