@@ -4209,21 +4209,6 @@ class NavierStokesConstantPressure(SolverNullSpace):
         """
         # Check whether a global null space vector for a constant
         # pressure has been created.  If not, create one.
-
-        # ARB todo - The numerical error introduced from removing a constant
-        # pressure null space when one is not present can cause the linear solver
-        # to fail.  I think I should add a check to decide whether this function
-        # needs to be called to avoid this error.
-
-        isp = self.proteus_ksp.preconditioner.isp
-        Ap = self.proteus_ksp.ksp.getOperators()[0].getSubMatrix(isp,isp)
-        bp = par_b.getSubVector(isp)
-        prod_vec = bp.copy()
-        prod_vec.zeroEntries()
-        Ap.mult(bp,prod_vec)
-        if prod_vec.norm() <= 1.0e-10:
-            return
-
         try:
             self.pressure_null_space
         except AttributeError:
@@ -4233,9 +4218,8 @@ class NavierStokesConstantPressure(SolverNullSpace):
                                                                     comm=p4pyPETSc.COMM_WORLD)
 
         # Using the global constant pressure null space, assign it to
-        # the global ksp object and remove it from the RHS vector.
+        # the global ksp object
         self.get_global_ksp().ksp.getOperators()[0].setNullSpace(self.pressure_null_space)
-        self.pressure_null_space.remove(par_b)
 
     def _defineNullSpaceVec(self,
                             par_b):
@@ -4294,5 +4278,5 @@ class ConstantNullSpace(SolverNullSpace):
                                                                     comm=p4pyPETSc.COMM_WORLD)
 
         # Using the global constant pressure null space, assign it to
-        # the global ksp object and remove it from the RHS vector.
+        # the global ksp object.
         self.get_global_ksp().ksp.getOperators()[0].setNullSpace(self.constant_null_space)
