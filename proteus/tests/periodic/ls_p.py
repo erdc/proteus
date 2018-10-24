@@ -5,10 +5,6 @@ from proteus import Context
 ct = Context.get()
 domain = ct.domain
 nd = domain.nd
-mesh = domain.MeshOptions
-
-
-genMesh = mesh.genMesh
 movingDomain = ct.movingDomain
 T = ct.T
 
@@ -32,8 +28,13 @@ diffusiveFluxBoundaryConditions = {0: {}}
 
 periodicDirichletConditions = {0:ct.getPDBC}
 
-class PHI_IC:
+class PHI_SOL:
     def uOfXT(self, x, t):
-        return x[nd-1] - (ct.wave.eta(x,0) + ct.opts.water_level)
+        return (x[nd-1] - (max(ct.wave.eta(x, t%(ct.tank_dim[0]/ct.wave.c)),
+                               ct.wave.eta(x-ct.tank_dim[0], t%(ct.tank_dim[0]/ct.wave.c)))
+                           +
+                           ct.opts.water_level))
 
-initialConditions = {0: PHI_IC()}
+initialConditions = {0: PHI_SOL()}
+
+analyticalSolution = {0: PHI_SOL()}

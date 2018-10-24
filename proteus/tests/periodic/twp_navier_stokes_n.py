@@ -1,7 +1,8 @@
 from proteus import StepControl, TimeIntegration, NonlinearSolvers, LinearSolvers
 from proteus.default_n import *
 from twp_navier_stokes_p import *
-from proteus import Context
+from proteus import (MeshTools,
+                     Context)
 
 ct = Context.get()
 domain = ct.domain
@@ -9,6 +10,8 @@ nd = ct.domain.nd
 nnx = ct.nnx
 nny = ct.nny
 parallelPeriodic=True
+if ct.useHex:
+    quad=True
 triangleFlag=1
 #time stepping
 runCFL = ct.runCFL
@@ -17,16 +20,13 @@ if ct.timeIntegration == "VBDF":
     timeOrder = 2
 else:
     timeIntegration = TimeIntegration.BackwardEuler_cfl
+    timeOrder = 1
 stepController  = StepControl.Min_dt_controller
 
 # mesh options
 nLevels = ct.nLevels
-parallelPartitioningType = mesh.parallelPartitioningType
-nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
-triangleOptions = mesh.triangleOptions
-
-
+parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+nLayersOfOverlapForParallel = 0
 
 elementQuadrature = ct.elementQuadrature
 elementBoundaryQuadrature = ct.elementBoundaryQuadrature

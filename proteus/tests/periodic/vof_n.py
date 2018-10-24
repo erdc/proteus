@@ -11,7 +11,6 @@ from proteus import Context
 ct = Context.get()
 domain = ct.domain
 nd = ct.domain.nd
-mesh = domain.MeshOptions
 periodicDirichletConditions = physics.periodicDirichletConditions
 parallelPeriodic=True
 
@@ -23,15 +22,6 @@ if ct.timeIntegration == "VBDF":
 else:
     timeIntegration = TimeIntegration.BackwardEuler_cfl
 stepController  = StepControl.Min_dt_controller
-
-# mesh options
-nLevels = ct.nLevels
-parallelPartitioningType = mesh.parallelPartitioningType
-nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
-triangleOptions = mesh.triangleOptions
-
-
 
 elementQuadrature = ct.elementQuadrature
 elementBoundaryQuadrature = ct.elementBoundaryQuadrature
