@@ -353,7 +353,6 @@ int MeshAdaptPUMIDrvr::willAdapt()
 
   if(adaptFlag > 0)
     adaptFlag = 1;
-  
   return adaptFlag;
 }
 
@@ -417,6 +416,8 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
   */
   apf::destroyField(currentField);
   apf::destroyField(interfaceField);
+
+  assertFlag = 1;
   return assertFlag;
 }
 
@@ -460,7 +461,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
   {
     //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
-    double L_band = (N_interface_band+1)*hPhi;
+    //double L_band = (N_interface_band+1)*hPhi;
+    double L_band = 0.0000001;
     calculateSizeField(L_band);
     //predictive propagation of size field
     //first measure L_local
