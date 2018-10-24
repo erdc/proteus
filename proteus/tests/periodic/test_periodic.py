@@ -44,11 +44,6 @@ def load_periodic_duct(request):
         sList = so.sList
     yield so, pList, nList, sList
 
-#    def clean_up():
-#        expected.close()
-#        actual.close()
-    request.addfinalizer(clean_up)
-
 @pytest.fixture()
 def load_periodic_opts_2D(request):
     opts.contextOptions = "periodic=True grid=True nd=2 nnx=42 triangles=False spaceOrder=1 weak=True coord=True pc_type='selfp_petsc'" 

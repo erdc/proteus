@@ -5,9 +5,6 @@
 -rans2p_ksp_type gmres
 -rans2p_ksp_gmres_modifiedgramschmidt 1
 -rans2p_ksp_gmres_restart 500
--rans2p_ksp_atol 1e-20
--rans2p_ksp_rtol 1e-6
-#-rans2p_ksp_monitor_true_residual
 #-rans2p_ksp_pc_side right
 
 # pc options
