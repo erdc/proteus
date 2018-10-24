@@ -1859,6 +1859,9 @@ class NS_base(object):  # (HasTraits):
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
                                                                    writeVectors=True,meshChanged=True,femSpaceWritten={},
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
+        model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
+                                                            self.tnList[0],
+                                                            self.tCount)
         #could just pull the code and flags out from SimTools rathter than asking it to parse them
         #uses values in simFlags['storeQuantities']
         #q dictionary

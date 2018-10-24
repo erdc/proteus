@@ -31,7 +31,7 @@ periodicDirichletConditions = {0:ct.getPDBC}
 class PHI_SOL:
     def uOfXT(self, x, t):
         return (x[nd-1] - (max(ct.wave.eta(x, t%(ct.tank_dim[0]/ct.wave.c)),
-                               ct.wave.eta(x-ct.tank_dim[0], t%(ct.tank_dim[0]/ct.wave.c)))
+                               ct.wave.eta(x+ct.tank_dim[0], t%(ct.tank_dim[0]/ct.wave.c)))
                            +
                            ct.opts.water_level))
 
