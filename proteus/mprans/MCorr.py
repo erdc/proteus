@@ -27,7 +27,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useConstantH=False,
                  # mql. For edge based stabilization methods
                  useQuadraticRegularization=False,
-                 edgeBasedStabilizationMethods=False):
+                 edgeBasedStabilizationMethods=False,
+                 nullSpace='NoNullSpace'):
 
         self.useQuadraticRegularization = useQuadraticRegularization
         self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
@@ -77,6 +78,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.applyCorrectionToDOF = False
         self.massConservationError = 0.0
+        self.nullSpace = nullSpace
 
     def initializeMesh(self, mesh):
         self.h = mesh.h
@@ -647,6 +649,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.elementDiameter,  # self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
