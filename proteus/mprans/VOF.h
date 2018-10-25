@@ -69,6 +69,7 @@ namespace proteus
                                    const double* porosity_dof,
                                    //
                                    int* u_l2g,
+                                   int* r_l2g,
                                    double* elementDiameter,
                                    int degree_polynomial,
                                    double* u_dof,
@@ -166,6 +167,7 @@ namespace proteus
                                    const double* q_porosity,
                                    //
                                    int* u_l2g,
+                                   int* r_l2g,
                                    double* elementDiameter,
                                    int degree_polynomial,
                                    double* u_dof,
@@ -240,6 +242,7 @@ namespace proteus
                                                      const double* porosity_dof,
                                                      //
                                                      int* u_l2g,
+                                                     int* r_l2g,
                                                      double* elementDiameter,
                                                      int degree_polynomial,
                                                      double* u_dof,
@@ -337,6 +340,7 @@ namespace proteus
                                      const double* q_porosity,
                                      //
                                      int* u_l2g,
+                                     int* r_l2g,
                                      double* elementDiameter,
                                      int degree_polynomial,
                                      double* u_dof,
@@ -591,6 +595,7 @@ namespace proteus
 			     const double* porosity_dof,
 			     //
 			     int* u_l2g,
+			     int* r_l2g,
 			     double* elementDiameter,
 			     int degree_polynomial,
 			     double* u_dof,
@@ -865,7 +870,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
-		globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
 	      }//i
 	  }//elements
 	//
@@ -1046,7 +1051,7 @@ namespace proteus
 	      {
 		int eN_i = eN*nDOF_test_element+i;
 
-		globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
 	      }//i
 	  }//ebNE
       }
@@ -1084,6 +1089,7 @@ namespace proteus
 			     const double* q_porosity,
 			     //
 			     int* u_l2g,
+			     int* r_l2g,
 			     double* elementDiameter,
 			     int degree_polynomial,
 			     double* u_dof,
@@ -1637,6 +1643,7 @@ namespace proteus
 					       const double* porosity_dof,
 					       //
 					       int* u_l2g,
+					       int* r_l2g,
 					       double* elementDiameter,
 					       int degree_polynomial,
 					       double* u_dof,
@@ -1877,7 +1884,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 
 		// distribute global residual for (lumped) mass matrix
 		globalResidual[gi] += elementResidual_u[i];
@@ -2043,7 +2050,7 @@ namespace proteus
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 		globalResidual[gi] += dt*elementResidual_u[i];
 		boundary_integral[gi] += elementResidual_u[i];
 		min_u_bc[gi] = fmin(min_u_bc_local,min_u_bc[gi]);
@@ -2260,6 +2267,7 @@ namespace proteus
 			       const double* q_porosity,
 			       //
 			       int* u_l2g,
+			       int* r_l2g,
 			       double* elementDiameter,
 			       int degree_polynomial,
 			       double* u_dof,
