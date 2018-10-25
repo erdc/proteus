@@ -14,10 +14,10 @@ velocity = numpy.array([1.0,1.0])
 if nd == 3:
     velocity = numpy.array([1.0,1.0,1.0])
 #where gaussian starts
-center = numpy.array([0.25,0.25])#numpy.array([0.25,0.25])#numpy.array([0.25,0.5])
+center = numpy.array([0.5,0.5])#numpy.array([0.25,0.25])#numpy.array([0.25,0.5])
 if nd == 3:
     velocity = numpy.array([1.0,1.0,1.0])
-    center = numpy.array([0.25,0.25,0.25])#numpy.array([0.25,0.25])#numpy.array([0.25,0.5])
+    center = numpy.array([0.5,0.5,0.5])#numpy.array([0.25,0.25])#numpy.array([0.25,0.5])
 #size
 sigma  = 1./16.
 #quadrature
@@ -93,7 +93,7 @@ B = {0:velocity}
 C = {0:0.0}
 
 useVOF=True
-useNCLS=True
+useNCLS=False
 if useNCLS:
     LevelModelType = NCLS.LevelModel
     coefficients = NCLS.Coefficients(V_model=None,RD_model=None,ME_model=0,checkMass=False,

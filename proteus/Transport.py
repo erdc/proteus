@@ -1652,7 +1652,6 @@ class OneLevelTransport(NonlinearEquation):
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def archiveAnalyticalSolutions(self,archive,analyticalSolutionsDict,T=0.0,tCount=0):
         import copy
-        import pdb
         #
         #set the initial conditions for the DOF based on the generalized interpolation conditions
         #
@@ -6143,8 +6142,7 @@ class MultilevelTransport(object):
             numerics,
             problem.sd,
             problem.movingDomain,
-            PhiSpaceTypeDict=phiSpaces,
-            bdyNullSpace=problem.boundaryCreatesNullSpace)
+            PhiSpaceTypeDict=phiSpaces)
     def initialize(self,
                    nd,
                    mlMesh,
@@ -6170,8 +6168,7 @@ class MultilevelTransport(object):
                    options=None,
                    useSparseDiffusion=True,
                    movingDomain=False,
-                   PhiSpaceTypeDict=None,
-                   bdyNullSpace=False):
+                   PhiSpaceTypeDict=None):
         import copy
         """read in the multilevel mesh, mesh independent boundary
         conditions, and types for test and trial spaces and the
@@ -6372,8 +6369,7 @@ class MultilevelTransport(object):
                                             options,
                                             self.name + str(len(self.levelModelList)),
                                             sd=useSparseDiffusion,
-                                            movingDomain=movingDomain,
-                                            bdyNullSpace=bdyNullSpace)
+                                            movingDomain=movingDomain)
             self.offsetListList.append(transport.offset)
             self.strideListList.append(transport.stride)
             memory()

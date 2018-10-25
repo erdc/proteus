@@ -272,7 +272,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # FOR ARTIFICIAL COMPRESSION
                  cK=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs=False):
+                 outputQuantDOFs=False,
+                 #NULLSPACE INFO
+                 nullSpace='NoNullSpace'):
 
         self.useMetrics = useMetrics
         self.variableNames = ['vof']
@@ -320,6 +322,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.forceStrongConditions = forceStrongConditions
         self.cE = cE
         self.outputQuantDOFs = outputQuantDOFs
+        self.nullSpace = nullSpace
 
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h

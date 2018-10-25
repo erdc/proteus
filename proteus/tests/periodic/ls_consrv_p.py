@@ -35,3 +35,5 @@ class zero_phi:
         return 0.0
 
 initialConditions = {0: zero_phi()}
+
+periodicDirichletConditions = {0:ct.getPDBC}
