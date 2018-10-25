@@ -274,7 +274,62 @@ extern "C"
       }
     return 0;
   }
+  
+  int regularHexahedralMeshElementBoundaryMaterials(const double& Lx, const double& Ly, const double& Lz, Mesh& mesh)
+  {
+    for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
+      {
+	int ebN,nN_0,nN_1,nN_2, nN_3;
+	double x_0,y_0,z_0,
+	  x_1,y_1,z_1,
+	  x_2,y_2,z_2,
+	  x_3,y_3,z_3,
+	  epsilon=1.0e-8;
+	ebN = mesh.exteriorElementBoundariesArray[ebNE];
+	nN_0 = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary + 0];
+	nN_1 = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary + 1];
+	nN_2 = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary + 2];
+	nN_3 = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary + 3];
 
+	x_0 = mesh.nodeArray[nN_0*3+0];
+	y_0 = mesh.nodeArray[nN_0*3+1];
+	z_0 = mesh.nodeArray[nN_0*3+2];
+
+	x_1 = mesh.nodeArray[nN_1*3+0];
+	y_1 = mesh.nodeArray[nN_1*3+1];	
+	z_1 = mesh.nodeArray[nN_1*3+2];
+
+	x_2 = mesh.nodeArray[nN_2*3+0];
+	y_2 = mesh.nodeArray[nN_2*3+1];	
+	z_2 = mesh.nodeArray[nN_2*3+2];
+        
+	x_3 = mesh.nodeArray[nN_3*3+0];
+	y_3 = mesh.nodeArray[nN_3*3+1];	
+	z_3 = mesh.nodeArray[nN_3*3+2];
+
+	if (z_0 <= epsilon && z_1 <= epsilon && z_2 <= epsilon && z_3 <= epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 1;
+	else if (z_0 >= Lz - epsilon && z_1 >= Lz -  epsilon && z_2 >= Lz - epsilon && z_3 >= Lz -  epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 4;
+	else if (y_0 <= epsilon && y_1 <= epsilon && y_2 <= epsilon && y_3 <= epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 2;
+	else if (y_0 >= Ly - epsilon && y_1 >= Ly -  epsilon && y_2 >= Ly -  epsilon && y_3 >= Ly -  epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 6;
+	else if (x_0 <= epsilon && x_1 <= epsilon && x_2 <= epsilon && x_3 <= epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 3;
+	else if (x_0 >= Lx - epsilon && x_1 >= Lx - epsilon && x_2 >= Lx - epsilon && x_3 >= Lx - epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 5;
+	else
+	  assert(false);
+      }
+    return 0;
+  }
+
+  int regularQuadrilateralMeshElementBoundaryMaterials(const double& Lx, const double& Ly, Mesh& mesh)
+  {
+    regularRectangularToTriangularElementBoundaryMaterials(Lx, Ly, mesh);
+  }
+  
   int regularMeshNodes(const int& nx, 
                        const int& ny, 
                        const int& nz,
@@ -319,6 +374,44 @@ extern "C"
 	    else
 	      mesh.nodeMaterialTypes[nN] = 0;
 	  }
+    return 0;
+  }
+
+  int regularMeshNodes2D(const int& nx, 
+                         const int& ny,
+                         const double& Lx, 
+                         const double& Ly, 
+                         Mesh& mesh)
+  {
+    const double hx=Lx/(nx-1.0),
+      hy=Ly/(ny-1.0);
+    mesh.nNodes_global=nx*ny;   
+    mesh.nodeArray = new double[mesh.nNodes_global*3];
+    memset(mesh.nodeArray,0,mesh.nNodes_global*3*sizeof(double));
+    mesh.nodeMaterialTypes = new int[mesh.nNodes_global];
+    //set interior and exterior node material flags after get boundary info in
+    //constructElementBoundaryElementsArray_edge 
+    //if nodeMaterialTypes left as DEFAULT_NODE_MATERIAL
+    memset(mesh.nodeMaterialTypes,DEFAULT_NODE_MATERIAL,mesh.nNodes_global*sizeof(int));
+    int nN;
+    for(int j=0;j<ny;j++)
+      for(int k=0;k<nx;k++)
+        {
+          nN = k*ny + j;
+          mesh.nodeArray[3*nN+0]=k*hx;
+          mesh.nodeArray[3*nN+1]=j*hy;
+          mesh.nodeArray[3*nN+2]=0.0;
+          if (j==0)
+            mesh.nodeMaterialTypes[nN] = 1;
+          else if(j==ny-1)
+            mesh.nodeMaterialTypes[nN] = 3;
+          else if (k==0)
+            mesh.nodeMaterialTypes[nN] = 4;
+          else if(k==nx-1)
+            mesh.nodeMaterialTypes[nN] = 2;
+          else
+            mesh.nodeMaterialTypes[nN] = 0;
+        }
     return 0;
   }
 
@@ -374,6 +467,34 @@ extern "C"
 			     (k+1) + (j+1)*nx + (i+1)*nxy,
 			     (k+0) + (j+1)*nx + (i+1)*nxy);
           }
+    return 0;
+  }
+  
+  int regularQuadrilateralMeshElements(const int& nx, 
+                                       const int& ny,
+                                       Mesh& mesh)
+  {
+    mesh.nNodes_element = 4;
+    mesh.nNodes_global=nx*ny;
+    mesh.nElements_global = (nx-1)*(ny-1);
+
+    mesh.nx=nx;
+    mesh.ny=ny;
+    mesh.nz=1;
+
+    mesh.elementNodesArray = new int[mesh.nElements_global*mesh.nNodes_element];
+    mesh.elementMaterialTypes = new int[mesh.nElements_global];
+    memset(mesh.elementMaterialTypes,DEFAULT_ELEMENT_MATERIAL,mesh.nElements_global*sizeof(int));
+    int eN=0;
+    for(int j=0;j<ny-1;j++)
+      for(int k=0;k<nx-1;k++)
+        {
+          eN=newQuadrilateral(eN,mesh.elementNodesArray,
+                              (k+0)*ny + (j+0),
+                              (k+0)*ny + (j+1),
+                              (k+1)*ny + (j+1),
+                              (k+1)*ny + (j+0));
+        }
     return 0;
   }
   
@@ -704,6 +825,175 @@ extern "C"
             {
               nodes[0] = mesh.elementNodesArray[eN*3+nN_L];
               nodes[1] = mesh.elementNodesArray[eN*3+nN_R];
+              edges.insert(NodeTuple<2>(nodes));
+            }
+      }
+    mesh.nEdges_global = edges.size();
+    mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
+    int edgeN=0;
+    for (set<NodeTuple<2> >::iterator edgeTuple_p=edges.begin();edgeTuple_p != edges.end();edgeTuple_p++,edgeN++)
+      {
+        mesh.edgeNodesArray[edgeN*2+0] = edgeTuple_p->nodes[0];
+        mesh.edgeNodesArray[edgeN*2+1] = edgeTuple_p->nodes[1];
+      }
+    vector<set<int> > nodeStar(mesh.nNodes_global);
+    for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
+      {
+        nodeStar[mesh.edgeNodesArray[edgeN*2+0]].insert(mesh.edgeNodesArray[edgeN*2+1]);
+        nodeStar[mesh.edgeNodesArray[edgeN*2+1]].insert(mesh.edgeNodesArray[edgeN*2+0]);
+      }
+    mesh.nodeStarOffsets = new int[mesh.nNodes_global+1];
+    mesh.nodeStarOffsets[0] = 0;
+    for (int nN=1;nN<mesh.nNodes_global+1;nN++)
+      mesh.nodeStarOffsets[nN] = mesh.nodeStarOffsets[nN-1]+nodeStar[nN-1].size();
+    mesh.nodeStarArray = new int[mesh.nodeStarOffsets[mesh.nNodes_global]];
+    for (int nN=0,offset=0;nN<mesh.nNodes_global;nN++)
+      for (set<int>::iterator nN_star=nodeStar[nN].begin();nN_star!=nodeStar[nN].end();nN_star++,offset++)
+        mesh.nodeStarArray[offset] = *nN_star;
+    stop = CurrentTime();
+    mesh.max_nNodeNeighbors_node=0;
+    for (int nN=0;nN<mesh.nNodes_global;nN++)
+      mesh.max_nNodeNeighbors_node=max(mesh.max_nNodeNeighbors_node,mesh.nodeStarOffsets[nN+1]-mesh.nodeStarOffsets[nN]);
+    //repeat for node-->elements arrays
+    vector<set<int> > nodeElementsStar(mesh.nNodes_global);
+    for (int eN = 0; eN < mesh.nElements_global; eN++)
+      {
+	for (int nN = 0; nN < mesh.nNodes_element; nN++)
+	  nodeElementsStar[mesh.elementNodesArray[eN*mesh.nNodes_element+nN]].insert(eN);
+      }
+    mesh.nodeElementOffsets = new int[mesh.nNodes_global+1];
+    mesh.nodeElementOffsets[0] = 0;
+    for (int nN = 0; nN < mesh.nNodes_global; nN++)
+      mesh.nodeElementOffsets[nN+1] = mesh.nodeElementOffsets[nN]+nodeElementsStar[nN].size();
+    mesh.nodeElementsArray  = new int[mesh.nodeElementOffsets[mesh.nNodes_global]];
+    for (int nN=0,offset=0; nN < mesh.nNodes_global; nN++)
+      {
+	for (set<int>::iterator eN_star = nodeElementsStar[nN].begin(); eN_star != nodeElementsStar[nN].end();
+	     eN_star++,offset++)
+	  {
+	    mesh.nodeElementsArray[offset] = *eN_star;
+	  }
+      }
+    //end node-->elements construction
+    mesh.elementBoundaryMaterialTypes = new int[mesh.nElementBoundaries_global];
+    //if nodeMaterial is DEFAULT, go ahead and set to interior or exterior
+    //depending on which boundary node belongs to. 
+    //If node on at least one exterior boundary then it's exterior
+    //set actual values elsewhere
+    for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
+      {
+	int ebN = mesh.exteriorElementBoundariesArray[ebNE];
+	mesh.elementBoundaryMaterialTypes[ebN] = EXTERIOR_ELEMENT_BOUNDARY_MATERIAL;
+	for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++)
+	  {
+	    int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
+	    if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
+	      mesh.nodeMaterialTypes[nN] = EXTERIOR_NODE_MATERIAL;
+	  }
+      }
+    for (int ebNI = 0; ebNI < mesh.nInteriorElementBoundaries_global; ebNI++)
+      {
+	int ebN = mesh.interiorElementBoundariesArray[ebNI];
+	mesh.elementBoundaryMaterialTypes[ebN] = INTERIOR_ELEMENT_BOUNDARY_MATERIAL;
+	for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++)
+	  {
+	    int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
+	    if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
+	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
+	  }
+      }
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    return 0;
+  }
+
+  int constructElementBoundaryElementsArray_quadrilateral(Mesh& mesh)
+  {
+    using namespace std;
+    mesh.nNodes_elementBoundary = 2;
+    mesh.nElementBoundaries_element = 4;
+    double start,stop;
+    //cout<<"Constructing element boundary map"<<endl;
+    map<NodeTuple<2>,
+      ElementNeighbors> elementBoundaryElements;
+    start=CurrentTime();
+    for(int eN=0;eN<mesh.nElements_global;eN++)
+      for(int ebN=0;ebN<4;ebN++)
+        {
+          register int nodes[2];
+          nodes[0] = mesh.elementNodesArray[eN*4+ebN];
+          nodes[1] = mesh.elementNodesArray[eN*4+(ebN+1)%4];
+          NodeTuple<2> ebt(nodes);
+          if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
+            {
+              elementBoundaryElements[ebt].right=eN;
+              elementBoundaryElements[ebt].right_ebN_element=ebN;
+            }
+          else
+            {
+              elementBoundaryElements.insert(elementBoundaryElements.end(),make_pair(ebt,ElementNeighbors(eN,ebN)));
+            }
+        }
+    stop = CurrentTime();
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    mesh.nElementBoundaries_global = elementBoundaryElements.size();
+    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    
+    //cout<<"Allocating Arrays"<<endl;
+    start = CurrentTime();
+    set<int> interiorElementBoundaries,exteriorElementBoundaries;
+    mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
+    mesh.elementBoundaryElementsArray = new int[mesh.nElementBoundaries_global*2];
+    mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
+    mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
+    mesh.elementBoundariesArray= new int[mesh.nElements_global*mesh.nElementBoundaries_element];
+    stop = CurrentTime();
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+
+    //cout<<"Populating arrays"<<endl;
+    start = CurrentTime();
+    int ebN=0;
+    for(map<NodeTuple<2>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
+        eb != elementBoundaryElements.end();
+        eb++,ebN++)
+      {
+        mesh.elementBoundaryNodesArray[ebN*2 + 0] = eb->first.nodes[0];
+        mesh.elementBoundaryNodesArray[ebN*2 + 1] = eb->first.nodes[1];
+        mesh.elementBoundaryElementsArray[ebN*2 + 0] = eb->second.left;
+        mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 0] = eb->second.left_ebN_element;
+        mesh.elementBoundaryElementsArray[ebN*2 + 1] = eb->second.right;
+        mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
+        mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
+        if(eb->second.right != -1)
+          {
+            interiorElementBoundaries.insert(ebN);
+            mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left;
+          }
+        else
+          exteriorElementBoundaries.insert(ebN);          
+	mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = ebN;
+	if (eb->second.right != -1)
+	  {
+	    mesh.elementBoundariesArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = ebN;
+	  }
+      }
+    mesh.nInteriorElementBoundaries_global = interiorElementBoundaries.size();
+    mesh.interiorElementBoundariesArray = new int[mesh.nInteriorElementBoundaries_global];
+    mesh.nExteriorElementBoundaries_global = exteriorElementBoundaries.size();
+    mesh.exteriorElementBoundariesArray = new int[mesh.nExteriorElementBoundaries_global];
+    int ebNI=0,ebNE=0;
+    for (set<int>::iterator ebN=interiorElementBoundaries.begin();ebN != interiorElementBoundaries.end(); ebN++,ebNI++)
+      mesh.interiorElementBoundariesArray[ebNI] = *ebN;
+    for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
+      mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
+    set<NodeTuple<2> > edges;
+    for (int eN=0;eN<mesh.nElements_global;eN++)
+      {
+        int nodes[2];
+        for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
+          for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
+            {
+              nodes[0] = mesh.elementNodesArray[eN*4+nN_L];
+              nodes[1] = mesh.elementNodesArray[eN*4+nN_R];
               edges.insert(NodeTuple<2>(nodes));
             }
       }
@@ -1930,6 +2220,179 @@ extern "C"
     //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
+  
+  int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_quadrilateral(Mesh& mesh)
+  {
+    using namespace std;
+    mesh.nNodes_elementBoundary = 2;
+    mesh.nElementBoundaries_element = 4;
+    assert(mesh.elementBoundariesArray);
+    double start,stop;
+    //cout<<"Constructing element boundary map"<<endl;
+    map<NodeTuple<2>,
+      ElementNeighbors> elementBoundaryElements;
+    map<NodeTuple<2>,
+      int> elementBoundaryIds;
+    start=CurrentTime();
+    for(int eN=0;eN<mesh.nElements_global;eN++)
+      for(int ebN=0;ebN<4;ebN++)
+        {
+	  register int ebN_global = mesh.elementBoundariesArray[eN*4+ebN];
+          register int nodes[2];
+          nodes[0] = mesh.elementNodesArray[eN*4+ebN];
+          nodes[1] = mesh.elementNodesArray[eN*4+(ebN+1)%4];
+          NodeTuple<2> ebt(nodes);
+          if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
+            {
+              elementBoundaryElements[ebt].right=eN;
+              elementBoundaryElements[ebt].right_ebN_element=ebN;
+	      assert(elementBoundaryIds[ebt] == ebN_global);
+            }
+          else
+            {
+              elementBoundaryElements.insert(elementBoundaryElements.end(),make_pair(ebt,ElementNeighbors(eN,ebN)));
+	      elementBoundaryIds.insert(elementBoundaryIds.end(),make_pair(ebt,ebN_global));
+            }
+        }
+    stop = CurrentTime();
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    mesh.nElementBoundaries_global = elementBoundaryElements.size();
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    
+    //cout<<"Allocating Arrays"<<endl;
+    start = CurrentTime();
+    set<int> interiorElementBoundaries,exteriorElementBoundaries;
+    mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
+    mesh.elementBoundaryElementsArray = new int[mesh.nElementBoundaries_global*2];
+    mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
+    mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
+    stop = CurrentTime();
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+
+    //cout<<"Populating arrays"<<endl;
+    start = CurrentTime();
+    for(map<NodeTuple<2>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
+        eb != elementBoundaryElements.end();
+        eb++)
+      {
+	int ebN = elementBoundaryIds[eb->first];
+        mesh.elementBoundaryNodesArray[ebN*2 + 0] = eb->first.nodes[0];
+        mesh.elementBoundaryNodesArray[ebN*2 + 1] = eb->first.nodes[1];
+        mesh.elementBoundaryElementsArray[ebN*2 + 0] = eb->second.left;
+        mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 0] = eb->second.left_ebN_element;
+        mesh.elementBoundaryElementsArray[ebN*2 + 1] = eb->second.right;
+        mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
+        mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
+        if(eb->second.right != -1)
+          {
+            interiorElementBoundaries.insert(ebN);
+            mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left;
+          }
+        else
+          exteriorElementBoundaries.insert(ebN);          
+	assert(mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] == ebN);
+	if (eb->second.right != -1)
+	  {
+	    assert(mesh.elementBoundariesArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] == ebN);
+ 	  }
+      }
+    mesh.nInteriorElementBoundaries_global = interiorElementBoundaries.size();
+    mesh.interiorElementBoundariesArray = new int[mesh.nInteriorElementBoundaries_global];
+    mesh.nExteriorElementBoundaries_global = exteriorElementBoundaries.size();
+    mesh.exteriorElementBoundariesArray = new int[mesh.nExteriorElementBoundaries_global];
+    int ebNI=0,ebNE=0;
+    for (set<int>::iterator ebN=interiorElementBoundaries.begin();ebN != interiorElementBoundaries.end(); ebN++,ebNI++)
+      mesh.interiorElementBoundariesArray[ebNI] = *ebN;
+    for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
+      mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
+    set<NodeTuple<2> > edges;
+    for (int eN=0;eN<mesh.nElements_global;eN++)
+      {
+        int nodes[2];
+        for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
+          {
+            nodes[0] = mesh.elementNodesArray[eN*4+nN_L];
+            nodes[1] = mesh.elementNodesArray[eN*4+(nN_L+1)%4];
+            edges.insert(NodeTuple<2>(nodes));
+          }
+      }
+    mesh.nEdges_global = edges.size();
+    mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
+    int edgeN=0;
+    for (set<NodeTuple<2> >::iterator edgeTuple_p=edges.begin();edgeTuple_p != edges.end();edgeTuple_p++,edgeN++)
+      {
+        mesh.edgeNodesArray[edgeN*2+0] = edgeTuple_p->nodes[0];
+        mesh.edgeNodesArray[edgeN*2+1] = edgeTuple_p->nodes[1];
+      }
+    vector<set<int> > nodeStar(mesh.nNodes_global);
+    for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
+      {
+        nodeStar[mesh.edgeNodesArray[edgeN*2+0]].insert(mesh.edgeNodesArray[edgeN*2+1]);
+        nodeStar[mesh.edgeNodesArray[edgeN*2+1]].insert(mesh.edgeNodesArray[edgeN*2+0]);
+      }
+    mesh.nodeStarOffsets = new int[mesh.nNodes_global+1];
+    mesh.nodeStarOffsets[0] = 0;
+    for (int nN=1;nN<mesh.nNodes_global+1;nN++)
+      mesh.nodeStarOffsets[nN] = mesh.nodeStarOffsets[nN-1]+nodeStar[nN-1].size();
+    mesh.nodeStarArray = new int[mesh.nodeStarOffsets[mesh.nNodes_global]];
+    for (int nN=0,offset=0;nN<mesh.nNodes_global;nN++)
+      for (set<int>::iterator nN_star=nodeStar[nN].begin();nN_star!=nodeStar[nN].end();nN_star++,offset++)
+        mesh.nodeStarArray[offset] = *nN_star;
+    stop = CurrentTime();
+    mesh.max_nNodeNeighbors_node=0;
+    for (int nN=0;nN<mesh.nNodes_global;nN++)
+      mesh.max_nNodeNeighbors_node=max(mesh.max_nNodeNeighbors_node,mesh.nodeStarOffsets[nN+1]-mesh.nodeStarOffsets[nN]);
+    //repeat for node-->elements arrays
+    vector<set<int> > nodeElementsStar(mesh.nNodes_global);
+    for (int eN = 0; eN < mesh.nElements_global; eN++)
+      {
+	for (int nN = 0; nN < mesh.nNodes_element; nN++)
+	  nodeElementsStar[mesh.elementNodesArray[eN*mesh.nNodes_element+nN]].insert(eN);
+      }
+    mesh.nodeElementOffsets = new int[mesh.nNodes_global+1];
+    mesh.nodeElementOffsets[0] = 0;
+    for (int nN = 0; nN < mesh.nNodes_global; nN++)
+      mesh.nodeElementOffsets[nN+1] = mesh.nodeElementOffsets[nN]+nodeElementsStar[nN].size();
+    mesh.nodeElementsArray  = new int[mesh.nodeElementOffsets[mesh.nNodes_global]];
+    for (int nN=0,offset=0; nN < mesh.nNodes_global; nN++)
+      {
+	for (set<int>::iterator eN_star = nodeElementsStar[nN].begin(); eN_star != nodeElementsStar[nN].end();
+	     eN_star++,offset++)
+	  {
+	    mesh.nodeElementsArray[offset] = *eN_star;
+	  }
+      }
+    //end node-->elements construction
+    mesh.elementBoundaryMaterialTypes = new int[mesh.nElementBoundaries_global];
+    //if nodeMaterial is DEFAULT, go ahead and set to interior or exterior
+    //depending on which boundary node belongs to. 
+    //If node on at least one exterior boundary then it's exterior
+    //set actual values elsewhere
+    for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
+      {
+	int ebN = mesh.exteriorElementBoundariesArray[ebNE];
+	mesh.elementBoundaryMaterialTypes[ebN] = EXTERIOR_ELEMENT_BOUNDARY_MATERIAL;
+	for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++)
+	  {
+	    int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
+	    if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
+	      mesh.nodeMaterialTypes[nN] = EXTERIOR_NODE_MATERIAL;
+	  }
+      }
+    for (int ebNI = 0; ebNI < mesh.nInteriorElementBoundaries_global; ebNI++)
+      {
+	int ebN = mesh.interiorElementBoundariesArray[ebNI];
+	mesh.elementBoundaryMaterialTypes[ebN] = INTERIOR_ELEMENT_BOUNDARY_MATERIAL;
+	for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++)
+	  {
+	    int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
+	    if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
+	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
+	  }
+      }
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    return 0;
+  }
 
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(Mesh& mesh)
   {
@@ -2371,6 +2834,161 @@ extern "C"
     //         mesh.edgeNodesArray[edgeN*2+0] = edgeTuple_p->nodes[0];
     //         mesh.edgeNodesArray[edgeN*2+1] = edgeTuple_p->nodes[1];
     //       }
+    vector<set<int> > nodeStar(mesh.nNodes_global);
+    for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
+      {
+        nodeStar[mesh.edgeNodesArray[edgeN*2+0]].insert(mesh.edgeNodesArray[edgeN*2+1]);
+        nodeStar[mesh.edgeNodesArray[edgeN*2+1]].insert(mesh.edgeNodesArray[edgeN*2+0]);
+      }
+    mesh.nodeStarOffsets = new int[mesh.nNodes_global+1];
+    mesh.nodeStarOffsets[0] = 0;
+    for (int nN=1;nN<mesh.nNodes_global+1;nN++)
+      mesh.nodeStarOffsets[nN] = mesh.nodeStarOffsets[nN-1]+nodeStar[nN-1].size();
+    mesh.nodeStarArray = new int[mesh.nodeStarOffsets[mesh.nNodes_global]];
+    for (int nN=0,offset=0;nN<mesh.nNodes_global;nN++)
+      for (set<int>::iterator nN_star=nodeStar[nN].begin();nN_star!=nodeStar[nN].end();nN_star++,offset++)
+        mesh.nodeStarArray[offset] = *nN_star;
+    stop = CurrentTime();
+    mesh.max_nNodeNeighbors_node=0;
+    for (int nN=0;nN<mesh.nNodes_global;nN++)
+      mesh.max_nNodeNeighbors_node=max(mesh.max_nNodeNeighbors_node,mesh.nodeStarOffsets[nN+1]-mesh.nodeStarOffsets[nN]);
+    //repeat for node-->elements arrays
+    vector<set<int> > nodeElementsStar(mesh.nNodes_global);
+    for (int eN = 0; eN < mesh.nElements_global; eN++)
+      {
+	for (int nN = 0; nN < mesh.nNodes_element; nN++)
+	  nodeElementsStar[mesh.elementNodesArray[eN*mesh.nNodes_element+nN]].insert(eN);
+      }
+    mesh.nodeElementOffsets = new int[mesh.nNodes_global+1];
+    mesh.nodeElementOffsets[0] = 0;
+    for (int nN = 0; nN < mesh.nNodes_global; nN++)
+      mesh.nodeElementOffsets[nN+1] = mesh.nodeElementOffsets[nN]+nodeElementsStar[nN].size();
+    mesh.nodeElementsArray  = new int[mesh.nodeElementOffsets[mesh.nNodes_global]];
+    for (int nN=0,offset=0; nN < mesh.nNodes_global; nN++)
+      {
+	for (set<int>::iterator eN_star = nodeElementsStar[nN].begin(); eN_star != nodeElementsStar[nN].end();
+	     eN_star++,offset++)
+	  {
+	    mesh.nodeElementsArray[offset] = *eN_star;
+	  }
+      }
+    //end node-->elements construction
+    mesh.elementBoundaryMaterialTypes = new int[mesh.nElementBoundaries_global];
+    //if nodeMaterial is DEFAULT, go ahead and set to interior or exterior
+    //depending on which boundary node belongs to. 
+    //If node on at least one exterior boundary then it's exterior
+    //set actual values elsewhere
+    for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
+      {
+	int ebN = mesh.exteriorElementBoundariesArray[ebNE];
+	mesh.elementBoundaryMaterialTypes[ebN] = EXTERIOR_ELEMENT_BOUNDARY_MATERIAL;
+	for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++)
+	  {
+	    int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
+	    if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
+	      mesh.nodeMaterialTypes[nN] = EXTERIOR_NODE_MATERIAL;
+	  }
+      }
+    for (int ebNI = 0; ebNI < mesh.nInteriorElementBoundaries_global; ebNI++)
+      {
+	int ebN = mesh.interiorElementBoundariesArray[ebNI];
+	mesh.elementBoundaryMaterialTypes[ebN] = INTERIOR_ELEMENT_BOUNDARY_MATERIAL;
+	for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++)
+	  {
+	    int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
+	    if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
+	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
+	  }
+      }
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    return 0;
+  }
+
+  int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_quadrilateral(Mesh& mesh)
+  {
+    using namespace std;
+    mesh.nNodes_elementBoundary = 2;
+    mesh.nElementBoundaries_element = 4;
+    assert(mesh.elementBoundariesArray);
+    double start,stop;
+    //cout<<"Constructing element boundary map"<<endl;
+    map<NodeTuple<2>,
+      ElementNeighbors> elementBoundaryElements;
+    map<NodeTuple<2>,
+      int> elementBoundaryIds;
+    start=CurrentTime();
+    for(int eN=0;eN<mesh.nElements_global;eN++)
+      for(int ebN=0;ebN<4;ebN++)
+        {
+	  register int ebN_global = mesh.elementBoundariesArray[eN*4+ebN];
+          register int nodes[2];
+          nodes[0] = mesh.elementNodesArray[eN*4+ebN];
+          nodes[1] = mesh.elementNodesArray[eN*4+(ebN+1)%4];
+          NodeTuple<2> ebt(nodes);
+          if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
+            {
+              elementBoundaryElements[ebt].right=eN;
+              elementBoundaryElements[ebt].right_ebN_element=ebN;
+	      assert(elementBoundaryIds[ebt] == ebN_global);
+            }
+          else
+            {
+              elementBoundaryElements.insert(elementBoundaryElements.end(),make_pair(ebt,ElementNeighbors(eN,ebN)));
+	      elementBoundaryIds.insert(elementBoundaryIds.end(),make_pair(ebt,ebN_global));
+            }
+        }
+    stop = CurrentTime();
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    mesh.nElementBoundaries_global = elementBoundaryElements.size();
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    
+    //cout<<"Allocating Arrays"<<endl;
+    start = CurrentTime();
+    set<int> interiorElementBoundaries,exteriorElementBoundaries;
+    mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
+    mesh.elementBoundaryElementsArray = new int[mesh.nElementBoundaries_global*2];
+    mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
+    mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
+    stop = CurrentTime();
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+
+    //cout<<"Populating arrays"<<endl;
+    start = CurrentTime();
+    for(map<NodeTuple<2>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
+        eb != elementBoundaryElements.end();
+        eb++)
+      {
+	int ebN = elementBoundaryIds[eb->first];
+        mesh.elementBoundaryNodesArray[ebN*2 + 0] = eb->first.nodes[0];
+        mesh.elementBoundaryNodesArray[ebN*2 + 1] = eb->first.nodes[1];
+        mesh.elementBoundaryElementsArray[ebN*2 + 0] = eb->second.left;
+        mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 0] = eb->second.left_ebN_element;
+        mesh.elementBoundaryElementsArray[ebN*2 + 1] = eb->second.right;
+        mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
+        mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
+        if(eb->second.right != -1)
+          {
+            interiorElementBoundaries.insert(ebN);
+            mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left;
+          }
+        else
+          exteriorElementBoundaries.insert(ebN);          
+	assert(mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] == ebN);
+	if (eb->second.right != -1)
+	  {
+	    assert(mesh.elementBoundariesArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] == ebN);
+ 	  }
+      }
+    mesh.nInteriorElementBoundaries_global = interiorElementBoundaries.size();
+    mesh.interiorElementBoundariesArray = new int[mesh.nInteriorElementBoundaries_global];
+    mesh.nExteriorElementBoundaries_global = exteriorElementBoundaries.size();
+    mesh.exteriorElementBoundariesArray = new int[mesh.nExteriorElementBoundaries_global];
+    int ebNI=0,ebNE=0;
+    for (set<int>::iterator ebN=interiorElementBoundaries.begin();ebN != interiorElementBoundaries.end(); ebN++,ebNI++)
+      mesh.interiorElementBoundariesArray[ebNI] = *ebN;
+    for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
+      mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
+    assert(mesh.edgeNodesArray);
     vector<set<int> > nodeStar(mesh.nNodes_global);
     for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
       {
@@ -3169,6 +3787,76 @@ extern "C"
     return 0;
   }
   
+  int allocateGeometricInfo_quadrilateral(Mesh& mesh)
+  {
+    mesh.elementDiametersArray = new double[mesh.nElements_global];
+    mesh.elementInnerDiametersArray = new double[mesh.nElements_global];
+    mesh.elementBoundaryDiametersArray = new double[mesh.nElementBoundaries_global];
+    mesh.nodeDiametersArray = new double[mesh.nNodes_global];
+    mesh.nodeSupportArray = new double[mesh.nNodes_global];
+    return 0;
+  }
+
+  int computeGeometricInfo_quadrilateral(Mesh& mesh)
+  {
+    memset(mesh.elementDiametersArray,0,mesh.nElements_global*sizeof(double));
+    memset(mesh.elementInnerDiametersArray,0,mesh.nElements_global*sizeof(double));
+    memset(mesh.elementBoundaryDiametersArray,0,mesh.nElementBoundaries_global*sizeof(double));
+    memset(mesh.nodeDiametersArray,0,mesh.nNodes_global*sizeof(double));
+    memset(mesh.nodeSupportArray,0,mesh.nNodes_global*sizeof(double));
+    mesh.hMin = edgeLength(mesh.elementNodesArray[0],
+                           mesh.elementNodesArray[1],
+                           mesh.nodeArray);
+    for (int ebN=0;ebN<mesh.nElementBoundaries_global;ebN++)
+      mesh.elementBoundaryDiametersArray[ebN] = edgeLength(mesh.elementBoundaryNodesArray[ebN*2+0],
+                                                           mesh.elementBoundaryNodesArray[ebN*2+1],
+                                                           mesh.nodeArray);
+    const double nNperElemInv = 1.0/double(mesh.nNodes_element);
+    const double nNperElemBInv= 1.0/double(mesh.nNodes_elementBoundary);
+
+    for (int eN=0;eN<mesh.nElements_global;eN++)
+      {
+        double area=0.0, perimeter=0.0,h=0.0, hMin=1.0e6,hMax=0.0;
+        area = triangleArea(mesh.elementNodesArray[eN*4 + 0],
+                            mesh.elementNodesArray[eN*4 + 1],
+                            mesh.elementNodesArray[eN*4 + 2],
+                            mesh.nodeArray) +
+          triangleArea(mesh.elementNodesArray[eN*4 + 0],
+                       mesh.elementNodesArray[eN*4 + 2],
+                       mesh.elementNodesArray[eN*4 + 3],
+                       mesh.nodeArray);
+          
+        //hMax &&  hMin
+        for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
+          for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
+            {
+              h = edgeLength(mesh.elementNodesArray[eN*4+nN_L],
+                             mesh.elementNodesArray[eN*4+nN_R],
+                             mesh.nodeArray);
+              perimeter += h;
+              hMax = fmax(hMax,h);
+              hMin = fmin(hMin,h);
+            } 
+        mesh.elementInnerDiametersArray[eN] = hMin;
+        mesh.elementDiametersArray[eN] = hMax;
+        mesh.volume += area;
+        mesh.sigmaMax = fmax(hMax/hMin,mesh.sigmaMax);
+        mesh.h = fmax(hMax,mesh.h);
+        mesh.hMin = fmin(hMin,mesh.hMin);
+	for (int nN=0;nN<mesh.nNodes_element;nN++)
+	  {
+	    mesh.nodeDiametersArray[mesh.elementNodesArray[eN*mesh.nNodes_element + nN]] += hMax*area;
+	    mesh.nodeSupportArray[mesh.elementNodesArray[eN*mesh.nNodes_element + nN]] += area;
+	  }
+      }
+
+    for (int nN=0;nN<mesh.nNodes_global;nN++)
+      {
+	mesh.nodeDiametersArray[nN] /= mesh.nodeSupportArray[nN];
+      }
+    return 0;
+  }
+  
   int allocateGeometricInfo_edge(Mesh& mesh)
   {
     mesh.elementDiametersArray = new double[mesh.nElements_global];
@@ -3480,8 +4168,26 @@ extern "C"
       }
     return 0;
   }
+  
+  int globallyRefineQuadrilateralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags)
+  {
+    using namespace  std;
+    multilevelMesh.nLevels = nLevels;
+    multilevelMesh.meshArray = new Mesh[nLevels];
+    for(int i=0;i<nLevels;i++)
+      initializeMesh(multilevelMesh.meshArray[i]);
+    multilevelMesh.elementChildrenArray = new int*[nLevels];
+    multilevelMesh.elementChildrenOffsets = new int*[nLevels];
+    multilevelMesh.elementParentsArray = new int*[nLevels];
+    multilevelMesh.meshArray[0] = mesh; //shallow copy
+    for(int i=1;i<nLevels;i++)
+      {
+        std::cout<<"Quad refinement not imlemented "<<i<<endl;
+        assert(false);
+      }
+    return 0;
+  }
 
-  //mwftodo get global refinement to preserve element boundary type   
   int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags)
   {
     using namespace std;
@@ -3763,6 +4469,25 @@ extern "C"
           {
             multilevelMesh.meshArray[i].nodeMaterialTypes[nodeItr->nN] = nodeItr->flag;
           }
+      }
+    return 0;
+  }
+  
+  int globallyRefineHexahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags)
+  {
+    using namespace std;
+    multilevelMesh.nLevels = nLevels;
+    multilevelMesh.meshArray = new Mesh[nLevels];
+    for(int i=0;i<nLevels;i++)
+      initializeMesh(multilevelMesh.meshArray[i]);
+    multilevelMesh.elementChildrenArray = new int*[nLevels];
+    multilevelMesh.elementChildrenOffsets = new int*[nLevels];
+    multilevelMesh.elementParentsArray = new int*[nLevels];
+    multilevelMesh.meshArray[0] = mesh; //shallow copy
+    for(int i=1;i<nLevels;i++)
+      {
+        std::cout<<"Hexahedron refinement not implemented"<<std::endl;
+        assert(false);
       }
     return 0;
   }

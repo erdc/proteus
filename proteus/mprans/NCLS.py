@@ -56,7 +56,8 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
 class NumericalFlux(proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart):
     def __init__(self, vt, getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions):
+                 getDiffusiveFluxBoundaryConditions,
+                 getPeriodicBoundaryConditions=None):
         proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.__init__(self, vt, getPointwiseBoundaryConditions,
                                                                              getAdvectiveFluxBoundaryConditions,
                                                                              getDiffusiveFluxBoundaryConditions)
@@ -121,9 +122,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         Need to switch to use coefficients
         """
-        # mwf debug
-        #import pdb
-        # pdb.set_trace()
         self.lstage += 1
         assert self.timeOrder in [1, 2, 3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
@@ -269,7 +267,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  lambda_coupez=0.1,
                  cfl_redistancing=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs=False):
+                 outputQuantDOFs=False,
+                 # NULLSPACE Info
+                 nullSpace='NoNullSpace'):
 
         self.PURE_BDF=PURE_BDF
         self.DO_SMOOTHING = DO_SMOOTHING
@@ -316,6 +316,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
         self.waterline_interval = waterline_interval
+        self.nullSpace = nullSpace
 
     def attachModels(self, modelList):
         # the level set model
@@ -338,18 +339,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.RD_modelIndex is not None:
             # print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
+            self.ebqe_rd_u = self.rdModel.ebqe[('u',0)]
 
     def initializeElementQuadrature(self, t, cq):
         if self.flowModelIndex is None:
-            self.q_v = numpy.zeros(cq[('grad(u)', 0)].shape, 'd')
+            self.q_v = numpy.ones(cq[('grad(u)', 0)].shape, 'd')
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         if self.flowModelIndex is None:
-            self.ebq_v = numpy.zeros(cebq[('grad(u)', 0)].shape, 'd')
+            self.ebq_v = numpy.ones(cebq[('grad(u)', 0)].shape, 'd')
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         if self.flowModelIndex is None:
-            self.ebqe_v = numpy.zeros(cebqe[('grad(u)', 0)].shape, 'd')
+            self.ebqe_v = numpy.ones(cebqe[('grad(u)', 0)].shape, 'd')
+        if self.RD_modelIndex is None:
+            self.ebqe_rd_u = cebqe[('u',0)]
 
     def preStep(self, t, firstStep=False):
         # SAVE OLD SOLUTION #
@@ -359,52 +363,45 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
 
-        # if self.checkMass:
-        #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
-        #                                                              self.model.mesh.elementDiametersArray,
-        #                                                              self.model.q['dV'],
-        #                                                              self.model.q[('m',0)],
-        #                                                              self.model.mesh.nElements_owned)
-        #     logEvent("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
-        #     self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
-        #                                                               self.model.mesh.elementDiametersArray,
-        #                                                               self.model.q['dV'],
-        #                                                               self.model.timeIntegration.m_last[0],
-        #                                                               self.model.mesh.nElements_owned)
-        #     logEvent("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
-        # #cek todo why is this here
-        # if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
-        #     self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
-        #     self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
+        if self.checkMass:
+            self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
+                                                                     self.model.mesh.elementDiametersArray,
+                                                                     self.model.q['dV'],
+                                                                     self.model.q[('m',0)],
+                                                                     self.model.mesh.nElements_owned)
+            logEvent("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+            self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
+                                                                      self.model.mesh.elementDiametersArray,
+                                                                      self.model.q['dV'],
+                                                                      self.model.timeIntegration.m_last[0],
+                                                                      self.model.mesh.nElements_owned)
+            logEvent("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
         copyInstructions = {}
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
         self.model.q['dV_last'][:] = self.model.q['dV']
-        # if self.checkMass:
-        #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
-        #                                                               self.model.mesh.elementDiametersArray,
-        #                                                               self.model.q['dV'],
-        #                                                               self.model.q[('u',0)],
-        #                                                               self.model.mesh.nElements_owned)
-        #     logEvent("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
-        #     #need a flux here not a velocity
-        #     self.fluxIntegral = Norms.fluxDomainBoundaryIntegralFromVector(self.flowModel.ebqe['dS'],
-        #                                                                    self.flowModel.ebqe[('velocity',0)],
-        #                                                                    self.flowModel.ebqe['n'],
-        #                                                                    self.model.mesh)
-        #     logEvent("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
-        #     logEvent("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
-        #     self.lsGlobalMass = self.m_post
-        #     self.fluxGlobal = self.fluxIntegral*self.model.timeIntegration.dt
-        #     self.totalFluxGlobal += self.fluxGlobal
-        #     self.lsGlobalMassArray.append(self.lsGlobalMass)
-        #     self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
-        #     self.fluxArray.append(self.fluxIntegral)
-        #     self.timeArray.append(self.model.timeIntegration.t)
-        # if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
-        #     self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
-        #     self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
+        if self.checkMass:
+            self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
+                                                                      self.model.mesh.elementDiametersArray,
+                                                                      self.model.q['dV'],
+                                                                      self.model.q[('u',0)],
+                                                                      self.model.mesh.nElements_owned)
+            logEvent("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
+            # #need a flux here not a velocity
+            # self.fluxIntegral = Norms.fluxDomainBoundaryIntegralFromVector(self.flowModel.ebqe['dS'],
+            #                                                                self.flowModel.ebqe[('velocity',0)],
+            #                                                                self.flowModel.ebqe['n'],
+            #                                                                self.model.mesh)
+            # logEvent("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
+            # logEvent("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            # self.lsGlobalMass = self.m_post
+            # self.fluxGlobal = self.fluxIntegral*self.model.timeIntegration.dt
+            # self.totalFluxGlobal += self.fluxGlobal
+            # self.lsGlobalMassArray.append(self.lsGlobalMass)
+            # self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
+            # self.fluxArray.append(self.fluxIntegral)
+            # self.timeArray.append(self.model.timeIntegration.t)
         copyInstructions = {}
         return copyInstructions
 
@@ -491,7 +488,7 @@ class LevelModel(OneLevelTransport):
             for ci in range(1, coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         self.u_dof_old = None
-
+        self.free_u = None
         # Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh  # assume the same mesh for  all components for now
         self.testSpace = testSpaceDict
@@ -892,7 +889,6 @@ class LevelModel(OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
 
-        # pdb.set_trace()
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -928,6 +924,7 @@ class LevelModel(OneLevelTransport):
             # physics
             self.mesh.nElements_global,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
@@ -990,6 +987,7 @@ class LevelModel(OneLevelTransport):
             # physics
             self.mesh.nElements_global,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u_dof_old,  # This is u_lstage due to update stages in RKEV
@@ -1001,8 +999,17 @@ class LevelModel(OneLevelTransport):
     ######################################
 
     def calculateElementResidual(self):
+        fromFreeToGlobal=0 #direction copying
+        cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+                                                               self.offset[0],
+                                                               self.stride[0],
+                                                               self.dirichletConditions[0].global2freeGlobal_global_dofs,
+                                                               self.dirichletConditions[0].global2freeGlobal_free_dofs,
+                                                               self.free_u,
+                                                               self.u[0].dof)
+
         if self.globalResidualDummy is not None:
-            self.getResidual(self.u[0].dof, self.globalResidualDummy)
+            self.getResidual(self.free_u, self.globalResidualDummy)
 
     def getResidual(self, u, r):
         import pdb
@@ -1010,7 +1017,8 @@ class LevelModel(OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-
+        if self.free_u is None:
+            self.free_u = u.copy()
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = numpy.copy(self.u[0].dof)
@@ -1204,6 +1212,7 @@ class LevelModel(OneLevelTransport):
             self.coefficients.sc_uref,
             self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             degree_polynomial,
@@ -1230,7 +1239,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.ebqe_rd_u,
             self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
@@ -1279,9 +1288,6 @@ class LevelModel(OneLevelTransport):
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
         logEvent("Global residual", level=9, data=r)
-        # mwf debug
-        # pdb.set_trace()
-        # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape, 'd')
@@ -1338,6 +1344,7 @@ class LevelModel(OneLevelTransport):
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             degree_polynomial,
             self.u[0].dof,
@@ -1353,7 +1360,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.ebqe_rd_u,
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             self.mesh.h)
@@ -1370,9 +1377,6 @@ class LevelModel(OneLevelTransport):
             degree_polynomial = self.u[0].femSpace.order
         except:
             pass
-
-        # mwf debug
-        # pdb.set_trace()
 
         self.calculateJacobian(  # element #FOR SUPG
             self.timeIntegration.dt,
@@ -1403,6 +1407,7 @@ class LevelModel(OneLevelTransport):
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             degree_polynomial,
             self.u[0].dof,
@@ -1418,7 +1423,7 @@ class LevelModel(OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             self.numericalFlux.isDOFBoundary[0],
-            self.coefficients.rdModel.ebqe[('u', 0)],
+            self.coefficients.ebqe_rd_u,
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             self.coefficients.PURE_BDF,
@@ -1537,6 +1542,7 @@ class LevelModel(OneLevelTransport):
                 self.coefficients.sc_uref,
                 self.coefficients.sc_beta,
                 self.u[0].femSpace.dofMap.l2g,
+                self.l2g[0]['freeGlobal'],
                 self.mesh.elementDiametersArray,
                 self.u[0].dof,
                 self.u_dof_old,
