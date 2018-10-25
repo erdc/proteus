@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test module for surface tension
+Test module for projection scheme
 """
 from builtins import range
 from builtins import object
@@ -24,7 +24,7 @@ from . import (parameters,
                pressureInitial_n)
 
 
-class TestSurfaceTension(object):
+class TestProjScheme(object):
 
     @classmethod
     def setup_class(cls):
@@ -167,14 +167,18 @@ class TestSurfaceTension(object):
         ns.calculateSolution('ev')
         # COMPARE VS REFERENCE #
         actual = tables.open_file('NS_convergence_ev.h5','r')
+        print (np.amax(actual.root.p_t11) - np.amin(actual.root.p_t11))
+        print (np.amax(actual.root.u_t11) - np.amin(actual.root.u_t11))
+        print (np.amax(actual.root.v_t11) - np.amin(actual.root.v_t11))
+               
         assert np.isclose(np.amax(actual.root.p_t11) - np.amin(actual.root.p_t11),
-                          0.594072307827,
+                          0.700588229005,                          
                           atol=1e-10)
         assert np.isclose(np.amax(actual.root.u_t11) - np.amin(actual.root.u_t11),
-                          1.68689325714,
+                          1.68689331381,
                           atol=1e-10)
         assert np.isclose(np.amax(actual.root.v_t11) - np.amin(actual.root.v_t11),
-                          1.68689318939,
+                          1.68689327141,
                           atol=1e-10)        
         actual.close()
 
