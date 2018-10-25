@@ -21,7 +21,7 @@ opts = Context.Options([
     ("grid", True, "Use a regular grid"),
     ("triangles", True, "Use triangular or tetrahedral elements"),
     ("spaceOrder", 1, "Use (bi-)linear or (bi-)quadratic spaces"),
-    ("timeOrder", 2, "Use bdf1 or bdf2"),
+    ("timeOrder", 1, "Use bdf1 or bdf2"),
     ("periodic", False, "Use periodic boundary conditions"),
     ("weak", True, "Use weak boundary conditions"),
     ("coord", False, "Use coordinates for setting boundary conditions"),
@@ -68,7 +68,12 @@ else:
     gravity = [0., 0., 0.]
 
 p.LevelModelType = RANS2P.LevelModel
-p.boundaryCreatesNullSpace = True
+
+if opts.periodic:
+    nullSpace="NavierStokesConstantPressure"
+else:
+    nullSpace="NoNullSpace"
+
 
 p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      sigma=0.0,
@@ -132,9 +137,11 @@ vSol = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
 
 p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol}
 if p.nd == 3:
-    p.analyticalSolution[3] = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
+    p.analyticalSolution[3] = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
                                                                         mu = mu,
                                                                         grad_p = -G)
+
+initialConditions = p.analyticalSolution
 
 nsave=100
 dt_init = 1.0e-3
@@ -214,9 +221,11 @@ if opts.periodic:
 
     p.advectiveFluxBoundaryConditions =  {0:getAFBC_p_duct,
                                           1:getAFBC_u_duct,
-                                          2:getAFBC_v_duct,
-                                          3:getAFBC_w_duct}
-    
+                                          2:getAFBC_v_duct}
+
+    if opts.nd==3:
+        p.advectiveFluxBoundaryConditions[3] = getAFBC_w_duct
+
     def getDFBC_duct(x,flag):
         if onTop(x) or onBottom(x):
             return None
@@ -225,8 +234,11 @@ if opts.periodic:
 
     p.diffusiveFluxBoundaryConditions = {0:{},
                                          1:{1:getDFBC_duct},
-                                         2:{2:getDFBC_duct},
-                                         3:{3:getDFBC_duct}}
+                                         2:{2:getDFBC_duct}}
+
+    if opts.nd==3:
+        p.diffusiveFluxBoundaryConditions[3] = {3:getDFBC_duct}
+
 else:
     if  opts.coord:
         def getDBC_pressure_duct(x,flag):
@@ -514,6 +526,7 @@ n.matrix = LinearAlgebraTools.SparseMatrix
 
 n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 n.levelLinearSolver = LinearSolvers.KSP_petsc4py
+
 if opts.pc_type == 'LU':
     n.multilevelLinearSolver = LinearSolvers.LU
     n.levelLinearSolver = LinearSolvers.LU
@@ -525,10 +538,20 @@ elif opts.pc_type == 'selfp_petsc':
     elif p.nd==2:
         n.linearSmoother = LinearSolvers.SimpleNavierStokes2D
         n.linearSmootherOptions = (opts.A_block_AMG,)
+elif opts.pc_type == 'two_phase_PCD':
+    n.linearSmoother = LinearSolvers.NavierStokes_TwoPhasePCD
+    n.linearSmootherOptions = (False,
+                               True,
+                               1,
+                               0,
+                               1,
+                               False)
+    #(density_scaling, numerical_viscosity, pcd_lumped, chebyshev_its, laplace_null_space)
 
 n.linear_solver_options_prefix = 'rans2p_'
 
-n.linTolFac = 0.001
+n.linTolFac = 0.1
+n.l_atol_res = 0.1*n.nl_atol_res
 
 n.conservativeFlux = None
 

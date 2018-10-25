@@ -661,7 +661,11 @@ class Mesh(object):
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
         logEvent(memory("partitionMesh 2","MeshTools"),level=4)
         if parallelPartitioningType == MeshParallelPartitioningTypes.node:
-            #mwf for now always gives 1 layer of overlap
+            logEvent("Starting nodal partitioning")#mwf for now always gives 1 layer of overlap
+            logEvent("filebase"+`filebase`)
+            logEvent("base"+`base`)
+            logEvent("nLayersOfOverlap" +`nLayersOfOverlap`)
+            logEvent("parallelPartitioningType " +`parallelPartitioningType`)
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,
@@ -671,6 +675,7 @@ class Mesh(object):
              self.edgeOffsets_subdomain_owned,
              self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
+            logEvent("Starting element partitioning")
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,
@@ -3783,6 +3788,8 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
         from . import cmeshTools
+        if filebase==None:
+            filebase="mesh"
         assert(refinementLevels==1)
         assert(parallelPartitioningType==MeshParallelPartitioningTypes.node)
         assert(nLayersOfOverlap<=1)
@@ -5009,10 +5016,14 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0,
+                 useC=True):
         from . import cmeshTools
         MultilevelMesh.__init__(self)
-        self.useC = True   # Implementing with C will take a bit more work. Disabling for now.
+        self.useC = useC  # Implementing with C will take a bit more work. Disabling for now.
+        if refinementLevels > 1:
+            logEvent("Quad refinement is not supported in C routines, switching off c-mesh");
+            self.useC = False  # Currently quad refinement is not supported in C routines.
         self.nLayersOfOverlap=nLayersOfOverlap ; self.parallelPartitioningType = parallelPartitioningType
         if not skipInit:
             if self.useC:
@@ -5134,7 +5145,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                  errorNormType="L2", #L1,Linfty
                  refineType=0,
                  ):
-        from matplotlib import tri as mpl_tri
         from scipy import interpolate as scipy_interpolate
         from . import TriangleTools
         if maxElementDiameter:
