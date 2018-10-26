@@ -1,4 +1,7 @@
 # A type of -*- python -*- file
+"""
+An optimized volume-of-fluid  transport module
+"""
 import numpy
 cimport numpy
 from proteus import *
@@ -68,7 +71,7 @@ cdef extern from "VOF.h" namespace "proteus":
 			       int EXPLICIT_METHOD,
 			       double degree_polynomial,
 			       int stage,
-			       double * uTilde_dof,                               
+			       double * uTilde_dof,
                                double cE,
                                double cK,
                                double uL,
@@ -376,7 +379,7 @@ cdef class cVOF_base:
 			  int EXPLICIT_METHOD,
 			  double degree_polynomial,
 			  int stage,
-			  numpy.ndarray uTilde_dof,                          
+			  numpy.ndarray uTilde_dof,
                           double cE,
                           double cK,
                           double uL,
@@ -778,7 +781,6 @@ cdef class cVOF_base:
                                                          < double * > min_u_bc.data,
                                                          < double * > max_u_bc.data,
                                                          < double * > quantDOFs.data)
-
     def calculateMassMatrix(self,
                             double dt,
                             numpy.ndarray mesh_trial_ref,
