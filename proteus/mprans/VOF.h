@@ -127,7 +127,10 @@ namespace proteus
                                    int STABILIZATION_TYPE,
                                    int ENTROPY_TYPE,
                                    // FOR FCT
-                                   double* low_order_solution,
+				   double* dLow,
+				   double* fluxMatrix,
+                                   double* uDotLow,
+				   double* uLow,
                                    double* dt_times_dH_minus_dL,
                                    double* min_u_bc,
                                    double* max_u_bc,
@@ -194,7 +197,7 @@ namespace proteus
                          double* lumped_mass_matrix, //lumped mass matrix (as vector)
                          double* soln, //DOFs of solution at time tn
                          double* solH, //DOFs of high order solution at tnp1
-                         double* low_order_solution,
+                         double* uLow,
                          double* limited_solution,
                          int* csrRowIndeces_DofLoops, //csr row indeces
                          int* csrColumnOffsets_DofLoops, //csr column offsets
@@ -204,6 +207,21 @@ namespace proteus
                          double* max_u_bc,
                          int LUMPED_MASS_MATRIX
                          )=0;
+    virtual void kth_FCT_step(double dt,
+			      int num_fct_iter,
+			      int NNZ, //number on non-zero entries on sparsity pattern
+			      int numDOFs, //number of DOFs
+			      double* MC,
+			      double* ML,
+			      double* soln,
+			      double* solLim, //DOFs of high order solution at tnp1
+			      double* uDotLow,
+			      double* uLow,
+			      double* dLow,
+			      double* FluxMatrix,
+			      double* limitedFlux,
+			      int* csrRowIndeces_DofLoops, 
+			      int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateResidual_entropy_viscosity(//element
                                                      double dt,
                                                      double* mesh_trial_ref,
@@ -298,7 +316,10 @@ namespace proteus
                                                      int STABILIZATION_TYPE,
                                                      int ENTROPY_TYPE,
                                                      // FOR FCT
-                                                     double* low_order_solution,
+						     double* dLow,
+						     double* fluxMatrix,
+                                                     double* uDotLow,
+						     double* uLow,
                                                      double* dt_times_dH_minus_dL,
                                                      double* min_u_bc,
                                                      double* max_u_bc,
@@ -378,6 +399,7 @@ namespace proteus
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
 	ck()
 	  {}
+
       inline
 	void evaluateCoefficients(const double v[nSpace],
 				  const double& u,
@@ -649,7 +671,10 @@ namespace proteus
 			     int STABILIZATION_TYPE,
 			     int ENTROPY_TYPE,
 			     // FOR FCT
-			     double* low_order_solution,
+			     double* dLow,
+			     double* fluxMatrix,
+			     double* uDotLow,
+			     double* uLow,
 			     double* dt_times_dH_minus_dL,
 			     double* min_u_bc,
 			     double* max_u_bc,
@@ -1504,7 +1529,7 @@ namespace proteus
 		   double* lumped_mass_matrix, //lumped mass matrix (as vector)
 		   double* soln, //DOFs of solution at time tn
 		   double* solH, //DOFs of high order solution at tnp1
-		   double* low_order_solution,
+		   double* uLow,
 		   double* limited_solution,
 		   int* csrRowIndeces_DofLoops, //csr row indeces
 		   int* csrColumnOffsets_DofLoops, //csr column offsets
@@ -1530,7 +1555,7 @@ namespace proteus
 	    double mi = lumped_mass_matrix[i];
 	    // compute low order solution
 	    // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
-	    solL[i] = low_order_solution[i];
+	    solL[i] = uLow[i];
 
 	    double mini=min_u_bc[i], maxi=max_u_bc[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
 	    if (GLOBAL_FCT==1)
@@ -1599,6 +1624,148 @@ namespace proteus
 		ij+=1;
 	      }
 	    limited_solution[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
+	  }
+      }
+
+      void kth_FCT_step(double dt,
+			int num_fct_iter,
+			int NNZ, //number on non-zero entries on sparsity pattern
+			int numDOFs, //number of DOFs
+			double* MC,
+			double* ML,
+			double* soln,
+			double* solLim, // INPUT/OUTPUT
+			double* uDotLow,
+			double* uLow,
+			double* dLow,
+			double* FluxMatrix, 
+			double* limitedFlux, // INPUT/OUTPUT
+			int* csrRowIndeces_DofLoops, 
+			int* csrColumnOffsets_DofLoops)
+      {
+	register double Rpos[numDOFs], Rneg[numDOFs];
+	int ij=0;
+
+	//////////////////////////////////////////////////////
+	// ********** COMPUTE LOW ORDER SOLUTION ********** //
+	//////////////////////////////////////////////////////
+	if (num_fct_iter == 0)
+	  { // No FCT for global bounds 
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		solLim[i] = uLow[i];
+	      }
+	  }
+	else // do FCT iterations (with global bounds) on low order solution 
+	  {
+	    for (int iter=0; iter<num_fct_iter; iter++)
+	      {
+		ij=0;
+		for (int i=0; i<numDOFs; i++)
+		  {
+		    double maxi=1.0, Pposi=0;
+		    for (int offset=csrRowIndeces_DofLoops[i];
+			 offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		      {
+			int j = csrColumnOffsets_DofLoops[offset];
+			// compute Flux correction
+			double Fluxij = FluxMatrix[ij] - limitedFlux[ij];	      
+			Pposi += Fluxij*((Fluxij > 0) ? 1. : 0.);
+			// update ij
+			ij+=1;
+		      }
+		    // compute Q vectors
+		    double mi = ML[i];
+		    double solLimi = solLim[i];
+		    double Qposi = mi*(maxi-solLimi);
+		    // compute R vectors
+		    Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
+		  }
+		ij=0;
+		for (int i=0; i<numDOFs; i++)
+		  {
+		    double ith_Limiter_times_FluxCorrectionMatrix = 0.;
+		    double Rposi = Rpos[i];
+		    for (int offset=csrRowIndeces_DofLoops[i];
+			 offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		      {
+			int j = csrColumnOffsets_DofLoops[offset];
+			// Flux Correction
+			double Fluxij = FluxMatrix[ij] - limitedFlux[ij];
+			// compute limiter
+			double Lij = 1.0;
+			Lij = (Fluxij>0 ? Rposi : Rpos[j]);		    
+			// compute limited flux 
+			ith_Limiter_times_FluxCorrectionMatrix += Lij*Fluxij;		    
+			
+			// update limited flux
+			limitedFlux[ij] = Lij*Fluxij;
+			
+			//update FluxMatrix
+			FluxMatrix[ij] = Fluxij;		   
+			
+			//update ij
+			ij+=1;
+		      }
+		    //update limited solution
+		    double mi = ML[i];
+		    solLim[i] += 1.0/mi*ith_Limiter_times_FluxCorrectionMatrix;	    
+		  }
+	      }
+	  }
+
+	// ***************************************** //
+	// ********** HIGH ORDER SOLUTION ********** //
+	// ***************************************** //
+	ij=0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double mini=soln[i], maxi=soln[i];
+	    double Pposi = 0, Pnegi = 0.;
+	    for (int offset=csrRowIndeces_DofLoops[i];
+		 offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	      {
+		int j = csrColumnOffsets_DofLoops[offset];
+		// compute local bounds //
+		mini = fmin(mini,soln[j]);
+		maxi = fmax(maxi,soln[j]);
+		// compute P vectors //
+		double fij = dt*(MC[ij]*(uDotLow[i]-uDotLow[j]) + dLow[ij]*(uLow[i]-uLow[j]));
+		Pposi += fij * (fij > 0 ? 1. : 0.);
+		Pnegi += fij * (fij < 0 ? 1. : 0.);
+		//update ij
+		ij+=1;
+	      }
+	    // compute Q vectors //
+	    double mi = ML[i];
+	    double Qposi = mi*(maxi-solLim[i]);
+	    double Qnegi = mi*(mini-solLim[i]);
+	    // compute R vectors //
+	    Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
+	    Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));	    	
+	  }
+
+	// COMPUTE LIMITERS //
+	ij=0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double ith_limited_flux_correction = 0;
+	    double Rposi = Rpos[i];
+	    double Rnegi = Rneg[i];
+	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	      {
+		int j = csrColumnOffsets_DofLoops[offset];
+		// compute flux correction
+		double fij = dt*(MC[ij]*(uDotLow[i]-uDotLow[j]) + dLow[ij]*(uLow[i]-uLow[j]));
+		// compute limiters
+		double Lij = 1.0;
+		Lij = fij > 0 ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]);
+		// compute ith_limited_flux_correction
+		ith_limited_flux_correction += Lij*fij;
+		ij+=1;
+	      }
+	    double mi = ML[i];
+	    solLim[i] += 1./mi*ith_limited_flux_correction;
 	  }
       }
 
@@ -1695,13 +1862,18 @@ namespace proteus
 					       int STABILIZATION_TYPE,
 					       int ENTROPY_TYPE,
 					       // FOR FCT
-					       double* low_order_solution,
+					       double* dLow,
+					       double* fluxMatrix,
+					       double* uDotLow,
+					       double* uLow,
 					       double* dt_times_dH_minus_dL,
 					       double* min_u_bc,
 					       double* max_u_bc,
 					       // AUX QUANTITIES OF INTEREST
 					       double* quantDOFs)
       {
+	register double Rpos[numDOFs], Rneg[numDOFs];
+	//register double FluxCorrectionMatrix[NNZ];
 	// NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
 	// Allocate space for the transport matrices
 	// This is used for first order KUZMIN'S METHOD
@@ -2190,25 +2362,43 @@ namespace proteus
 		    if (STABILIZATION_TYPE==1) //EV Stab
 		      {
 			// high-order (entropy viscosity) dissipative operator
-			dEVij = fmax(fabs(global_entropy_residual[i]),fabs(global_entropy_residual[j]));
+			dEVij = fmax(fabs(global_entropy_residual[i]),
+				     fabs(global_entropy_residual[j]));
 			dHij = fmin(dLowij,dEVij) * fmax(1.0-Compij,0.0); // artificial compression
 		      }
 		    else // smoothness based indicator
 		      {
 			dHij = dLij * fmax(1.0-Compij,0.0); // artificial compression
+			//dHij = dLowij;
+			//dLij = dLowij;
+
+			dEVij = fmax(fabs(global_entropy_residual[i]),
+				     fabs(global_entropy_residual[j]));
+			//dHij = fmin(dLowij,dEVij);//*fmax(1.0-Compij,0.0); // artificial compression
+			//dHij = 0.;
+			dHij = dLowij;
+			// 
 		      }
+		    dHij = dLowij;
+		    dLij = dLowij;
+		    dLow[ij]=dLowij;
+		    
 		    //dissipative terms
 		    ith_dissipative_term += dHij*(solnj-solni);
 		    ith_low_order_dissipative_term += dLij*(solnj-solni);
 		    //dHij - dLij. This matrix is needed during FCT step
 		    dt_times_dH_minus_dL[ij] = dt*(dHij - dLij);
 		    dLii -= dLij;
+		    
+		    fluxMatrix[ij] = -dt*(TransportMatrix[ij]*solnj
+					  -TransposeTransportMatrix[ij]*solni
+					  -dHij*(solnj-solni));
 		  }
 		else //i==j
 		  {
-		    // NOTE: this is incorrect. Indeed, dLii = -sum_{j!=i}(dLij) and similarly for dCii.
-		    // However, it is irrelevant since during the FCT step we do (dL-dC)*(solnj-solni)
-		    dt_times_dH_minus_dL[ij]=0;
+		    dt_times_dH_minus_dL[ij] = 0;
+		    fluxMatrix[ij] = 0;//TransportMatrix[ij]*solnj;
+		    dLow[ij]=0.; // not true but works since *= (ui-uj)
 		  }
 		//update ij
 		ij+=1;
@@ -2216,15 +2406,87 @@ namespace proteus
 	    double mi = ML[i];
 	    // compute edge_based_cfl
 	    edge_based_cfl[i] = 2.*fabs(dLii)/mi;
-	    low_order_solution[i] = u_dof_old[i] - dt/mi*(ith_flux_term
-							  + boundary_integral[i]
-							  - ith_low_order_dissipative_term);
+
+
+	    uDotLow[i] = - 1.0/mi*(ith_flux_term
+				   + boundary_integral[i]
+				   - ith_low_order_dissipative_term);	    
+	    uLow[i] = u_dof_old[i] + dt*uDotLow[i];
+	      
+	    //uLow[i] = u_dof_old[i] - dt/mi*(ith_flux_term
+	    //						  + boundary_integral[i]
+	    //						  - ith_low_order_dissipative_term);
 	    // update residual
-	    if (LUMPED_MASS_MATRIX==1)
-	      globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term + boundary_integral[i] - ith_dissipative_term);
-	    else
-	      globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
+	    //if (LUMPED_MASS_MATRIX==1)
+	    //globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term
+	    //					      + boundary_integral[i]
+	    //					      - ith_dissipative_term);
+	    //else
+	    //globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
 	  }
+	
+	//ij=0;
+	//for (int i=0; i<numDOFs; i++)
+	//{
+	//  double mini=0.0;
+	//  double maxi=1.0;
+	//  double Pposi=0;
+	//  double Pnegi=0;
+	//  for (int offset=csrRowIndeces_DofLoops[i];
+	//	 offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	//  {
+	//    int j = csrColumnOffsets_DofLoops[offset];
+	//    Pposi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] > 0) ? 1. : 0.);
+	//    Pnegi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] < 0) ? 1. : 0.);
+	//    ij+=1;
+	//  }
+	//  double mi = ML[i];
+	//  double solni = u_dof_old[i];
+	//  double Qposi = mi*(maxi-solni);
+	//  double Qnegi = mi*(mini-solni);
+
+	    //std::cout << Qposi << std::endl;
+	//  Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
+	//  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));
+
+	    //if (Rpos[i] < 0)
+	    //{
+	    //	std::cout << mi << "\t" << maxi << "\t" << solni << std::endl;
+	    //	std::cout << Qposi << "\t" << Pposi << std::endl;
+	    //	std::cout << Rpos[i] << std::endl;
+		//abort();
+	    //}
+	//}
+	
+	//ij=0;
+	//for (int i=0; i<numDOFs; i++)
+	//{
+	//  double ith_Limiter_times_FluxCorrectionMatrix = 0.;
+	//  double Rposi = Rpos[i];
+	//  double Rnegi = Rneg[i];
+
+	    //if (Rposi > 1.0 || Rposi < 0.0)	      
+	    //std::cout << "Rposi: " << Rposi << std::endl;
+	    //if (Rnegi > 1.0 || Rnegi < 0.0)	      
+	    //std::cout << "Rnegi: " << Rnegi << std::endl;	    
+	    
+	    // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	//  for (int offset=csrRowIndeces_DofLoops[i];
+	//	 offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	//    {
+	//	int j = csrColumnOffsets_DofLoops[offset];
+	//	double Lij = 1.0;
+	//	Lij = ((FluxCorrectionMatrix[ij]>0) ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]));
+	//	//Lij=0.0;
+	//	ith_Limiter_times_FluxCorrectionMatrix += Lij*FluxCorrectionMatrix[ij];
+	//	//update ij
+	//	ij+=1;
+	//    }
+	//  double mi = ML[i];
+	//  double solni = u_dof_old[i];    
+	//  globalResidual[i] = solni + 1.0/mi*ith_Limiter_times_FluxCorrectionMatrix;
+	//}
+	
       }
 
       void calculateMassMatrix(//element

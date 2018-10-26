@@ -811,14 +811,34 @@ class ExplicitLumpedMassMatrix(Newton):
     if you give it the right Jacobian
     """
 
+    def ssolve(self,u,r=None,b=None,par_u=None,par_r=None):
+        #if self.F.residualComputed==False:
+        self.computeResidual(u,r,b)
+        self.F.residualComputed=True
+        u[:] = r
+
+        counter = 0
+        num_fct_iter=1
+        
+        while counter<num_fct_iter:    
+            self.F.kth_FCT_step()
+            counter+=1
+        
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+        
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         self.computeResidual(u,r,b)
         u[:] = r
+        
         ############
         # FCT STEP #
         ############
-        if hasattr(self.F.coefficients,'FCT') and self.F.coefficients.FCT==True:
-            self.F.FCTStep()
+        self.F.kth_FCT_step()
+        
+        #if hasattr(self.F.coefficients,'FCT') and self.F.coefficients.FCT==True:
+        #    self.F.FCTStep()
         ###########################################
         # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
         ###########################################

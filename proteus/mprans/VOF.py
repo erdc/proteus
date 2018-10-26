@@ -266,6 +266,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ENTROPY_TYPE=2,  # logarithmic
                  LUMPED_MASS_MATRIX=False,
                  FCT=True,
+                 num_fct_iter=1,
                  # FOR ENTROPY VISCOSITY
                  cE=1.0,
                  uL=0.0,
@@ -315,6 +316,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.STABILIZATION_TYPE = STABILIZATION_TYPE
         self.ENTROPY_TYPE = ENTROPY_TYPE
         self.FCT = FCT
+        self.num_fct_iter=num_fct_iter
         self.uL = uL
         self.uR = uR
         self.cK = cK
@@ -727,7 +729,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global = {}
         self.ebqe = {}
         self.phi_ip = {}
-        self.edge_based_cfl = numpy.zeros(self.u[0].dof.shape)
+        self.edge_based_cfl = numpy.zeros(self.u[0].dof.shape)+100
         # mesh
         self.q['x'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary, 3), 'd')
@@ -753,8 +755,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hasVelocityFieldAsFunction = False
         if ('velocityFieldAsFunction') in dir(options):
             self.velocityFieldAsFunction = options.velocityFieldAsFunction
-            self.hasVelocityFieldAsFunction = True
-
+            self.hasVelocityFieldAsFunction = True            
+            
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set([('u', ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature = set()
@@ -800,7 +802,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Calculating numerical quadrature formulas", 2)
         self.calculateQuadrature()
         self.setupFieldStrides()
-
+        
         # mql. Some ASSERTS to restrict the combination of the methods
         if self.coefficients.STABILIZATION_TYPE > 0:
             assert self.timeIntegration.isSSP == True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
@@ -824,13 +826,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.cterm_global = None
         self.cterm_transpose_global = None
         # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
-        self.low_order_solution = None
+        self.residualComputed=False #TMP
+        self.dLow= None
+        self.fluxMatrix = None
+        self.uDotLow = None
+        self.uLow = None
         self.dt_times_dC_minus_dL = None
         self.min_u_bc = None
         self.max_u_bc = None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
-
+            
         comm = Comm.get()
         self.comm = comm
         if comm.size() > 1:
@@ -923,7 +929,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ML,  # Lumped mass matrix
             self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],  # soln
             self.timeIntegration.u,  # high order solution
-            self.low_order_solution,
+            self.uLow,
             limited_solution,
             rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
             colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
@@ -934,6 +940,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.LUMPED_MASS_MATRIX)
         self.timeIntegration.u[:] = limited_solution
 
+    def kth_FCT_step(self):
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()        
+        limitedFlux = np.zeros(self.nnz)
+        limited_solution = numpy.zeros(self.u[0].dof.shape)
+        limited_solution[:] = self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage]
+        #limited_solution[:] = self.u[0].dof
+        
+        self.vof.kth_FCT_step(
+            self.timeIntegration.dt,
+            self.coefficients.num_fct_iter,
+            self.nnz,  # number of non zero entries
+            len(rowptr) - 1,  # number of DOFs
+            MassMatrix,
+            self.ML,  # Lumped mass matrix
+            self.u_dof_old,
+            limited_solution,
+            self.uDotLow,
+            self.uLow,
+            self.dLow,
+            self.fluxMatrix,
+            limitedFlux,            
+            rowptr,
+            colind)
+
+        self.timeIntegration.u[:] = limited_solution        
+        self.u[0].dof[:] = limited_solution
+        
     # mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
@@ -1138,10 +1171,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             CTz = numpy.zeros(CTx.shape, 'd')
 
         # This is dummy. I just care about the csr structure of the sparse matrix
+        self.dLow = np.zeros(Cx.shape, 'd')
+        self.fluxMatrix = np.zeros(Cx.shape, 'd')
         self.dt_times_dC_minus_dL = np.zeros(Cx.shape, 'd')
         self.min_u_bc = numpy.zeros(self.u[0].dof.shape, 'd') + 1E10
         self.max_u_bc = numpy.zeros(self.u[0].dof.shape, 'd') - 1E10
-        self.low_order_solution = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.uDotLow = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.uLow = numpy.zeros(self.u[0].dof.shape, 'd')        
 
         #
         # cek end computationa of cterm_global
@@ -1284,7 +1320,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.STABILIZATION_TYPE,
             self.coefficients.ENTROPY_TYPE,
             # FLUX CORRECTED TRANSPORT
-            self.low_order_solution,
+            self.dLow,
+            self.fluxMatrix,
+            self.uDotLow,
+            self.uLow,
             self.dt_times_dC_minus_dL,
             self.min_u_bc,
             self.max_u_bc,
