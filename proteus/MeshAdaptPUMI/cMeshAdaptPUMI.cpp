@@ -395,11 +395,7 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
     double h_needed = apf::getScalar(interfaceField,ent,0);
     if(h_current>h_needed){
       adaptFlag=1;        
-      //std::cout<<"h_current "<<h_current<<" h_needed "<<h_needed<<" id "<<localNumber(ent)<<std::endl;
-      //apf::writeVtkFiles("testTrigger",m);
-      //std::exit(1);
       break;
-      
     }  
   }//end while
 
@@ -407,17 +403,9 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
   PCU_Add_Ints(&assertFlag,1);
   assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
 
-  /*
-  if(assertFlag>0)
-  {
-    apf::writeVtkFiles("currentSizeField2", m);
-    std::exit(1);
-  }
-  */
   apf::destroyField(currentField);
   apf::destroyField(interfaceField);
 
-  assertFlag = 1;
   return assertFlag;
 }
 
@@ -460,14 +448,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   }
   else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
   {
-    //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
-    //double L_band = (N_interface_band+1)*hPhi;
-    double L_band = 0.0000001;
+    double L_band = (N_interface_band+1)*hPhi;
     calculateSizeField(L_band);
-    //predictive propagation of size field
-    //first measure L_local
-    //then determine N_predict
-    //then edge-walk
     if(nAdapt>2)
         predictiveInterfacePropagation();
   }
@@ -505,27 +487,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     apf::writeVtkFiles(namebuffer, m);
     sprintf(namebuffer,"beforeAnisotropicAdapt%i_.smb",nAdapt);
     m->writeNative(namebuffer);
-/* Code to output size scale and frame
-    apf::MeshIterator* it = m->begin(0);
-    apf::MeshEntity* test;
-    std::ofstream myfile;
-    myfile.open("meshSizeScale.txt");
-    while(test = m->iterate(it)){ 
-      apf::Vector3 tempScale;
-      apf::getVector(size_scale, test, 0,tempScale);
-      myfile << tempScale[0] <<","<<tempScale[1]<<","<<tempScale[2]<<std::endl;
-    }
-    myfile.close();
-    it = m->begin(0);
-    myfile.open("meshSizeFrame.txt");
-    while(test = m->iterate(it)){
-      apf::Matrix3x3 tempFrame;
-      apf::getMatrix(size_frame, test, 0,tempFrame);
-      myfile << tempFrame[0][0]<<","<<tempFrame[0][1]<<","<<tempFrame[0][2]<<","<<tempFrame[1][0]<<","<<tempFrame[1][1]<<","<<tempFrame[1][2]<<","<<tempFrame[2][0]<<","<<tempFrame[2][1]<<","<<tempFrame[2][2]<<std::endl;
-    }
-    m->end(it);
-    m->writeNative("beforeAnisotropicAdapt.smb");
-*/
   }
 
   if(size_field_config=="ERM"){
@@ -552,7 +513,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   apf::Field* adaptFrame;
 
   /// Adapt the mesh
-
   ma::Input* in;
   if(size_field_config == "uniform"){
     in = ma::configureUniformRefine(m);
@@ -574,6 +534,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       in = ma::configure(m, adaptSize);
     }
   }
+
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
   in->shouldRunMidZoltan = true;
@@ -592,6 +553,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   double t2 = PCU_Time();
 
   m->verify();
+
   //double mass_after = getTotalMass();
   //PCU_Add_Doubles(&mass_before,1);
   //PCU_Add_Doubles(&mass_after,1);
@@ -600,18 +562,17 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     std::ios::fmtflags saved(std::cout.flags());
     std::cout<<std::setprecision(15)<<"Mass Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
     std::cout.flags(saved);
-*/
     std::ofstream myfile;
     myfile.open("adapt_timing.txt", std::ios::app);
     myfile << t2-t1<<std::endl;
     myfile.close();
-/*
     std::ofstream mymass;
     mymass.open("mass_check.txt", std::ios::app);
     mymass <<std::setprecision(15)<<mass_before<<","<<mass_after<<","<<mass_after-mass_before<<std::endl;
     mymass.close();
 */
   }
+
   if(size_field_config=="ERM"){
     if (has_gBC)
       getSimmetrixBC();
