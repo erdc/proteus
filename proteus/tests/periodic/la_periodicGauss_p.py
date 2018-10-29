@@ -2,7 +2,7 @@ import numpy
 from proteus import *
 from proteus.default_p import *
 from math import *
-from proteus.mprans import VOF, NCLS
+from proteus.mprans import VOF, NCLS, VOS3P
 """
 Linear advection of a guassian with periodic bcs
 """
@@ -29,7 +29,7 @@ nn=11#81#161#41
 #number of meshes in multilevel mesh
 nLevels = 1
 #end time of simulation
-T = 2.0
+T = 1.0
 #number of output time steps, ignored for adaptive/CFL based runs
 nDTout = 100
 #max CFL
@@ -92,9 +92,19 @@ A = {0:numpy.zeros((nd,nd),'d')}
 B = {0:velocity}
 C = {0:0.0}
 
-useVOF=True
+useVOS=True
+useVOF=False
 useNCLS=False
-if useNCLS:
+if useVOS:
+    LevelModelType = VOS3P.LevelModel
+    coefficients = VOS3P.Coefficients(LS_model=None,V_model=None,RD_model=None,ME_model=0,checkMass=False,
+                                      epsFact=0.0,useMetrics=1.0,
+                                      STABILIZATION_TYPE=2,
+                                      LUMPED_MASS_MATRIX=True,
+                                      ENTROPY_TYPE=1,
+                                      FCT=True,
+                                      num_fct_iter=0)
+elif useNCLS:
     LevelModelType = NCLS.LevelModel
     coefficients = NCLS.Coefficients(V_model=None,RD_model=None,ME_model=0,checkMass=False,
                                      epsFact=0.0,useMetrics=1.0)
