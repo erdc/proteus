@@ -20,7 +20,7 @@ coefficients = MyCoefficients(
     STABILIZATION_TYPE=ct.STABILIZATION_TYPE, 
     ENTROPY_TYPE=ct.ENTROPY_TYPE, 
     cE=ct.cE, cK=ct.cK,
-    num_fct_iter=1)
+    num_fct_iter=ct.num_fct_iter)
 coefficients.variableNames=['u']
 
 ##################

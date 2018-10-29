@@ -24,7 +24,8 @@ ct=Context.Options([
     ("cE",0.1,"Entropy viscosity constant"),
     ("cK",1.0,"Artificial compression constant"),
     ("cfl",0.1,"Target cfl"),
-    ("SSPOrder",1,"SSP method of order 1, 2 or 3")
+    ("SSPOrder",1,"SSP method of order 1, 2 or 3"),
+    ("num_fct_iter",1,"Number of FCT iterations for low order VOS solution")
 ],mutable=True)
 
 if ct.problem==0:
