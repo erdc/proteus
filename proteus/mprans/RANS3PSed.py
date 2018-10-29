@@ -394,6 +394,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model = modelList[self.ME_model]
         if self.FLUID_model is not None:
             self.model.q_velocity_fluid = modelList[self.FLUID_model].q[('velocity', 0)]
+            self.model.q_velocityStar_fluid = modelList[self.FLUID_model].q[('velocityStar', 0)]
             self.model.ebqe_velocity_fluid = modelList[self.FLUID_model].ebqe[('velocity', 0)]
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -1877,6 +1878,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.penalty_constant,
             self.coefficients.epsFact_solid,
             self.q_velocity_fluid,
+            self.q_velocityStar_fluid,
             self.q_vos,
             self.q_dvos_dt,
             self.coefficients.q_grad_vos,
@@ -2008,7 +2010,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                         dofN], self.timeIntegration.t)# - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-
+        self.q[('cfl', 0)][:]=0.0
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         log("Maximum CFL = " + str(cflMax), level=2)
         if self.stabilization:
@@ -2107,6 +2109,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # VRANS start
             self.coefficients.epsFact_solid,
             self.q_velocity_fluid,
+            self.q_velocityStar_fluid,
             self.q_vos,
             self.q_dvos_dt,
             self.coefficients.q_grad_vos,
@@ -2239,6 +2242,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 1)],
             self.csrColumnOffsets_eb[(2, 2)],
             self.mesh.elementMaterialTypes)
+        self.q[('cfl', 0)][:]=0.0
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(

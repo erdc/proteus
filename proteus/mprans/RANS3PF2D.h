@@ -115,6 +115,7 @@ namespace proteus
                                          double* phi_solid_nodes,
                                          double* phi_solid,
                                    const double* q_velocity_solid,
+                                   const double* q_velocityStar_solid,
                                    const double* q_vos,
                                    const double* q_dvos_dt,
 				   const double* q_grad_vos,
@@ -357,6 +358,7 @@ namespace proteus
                                          double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
+                                   const double *q_velocityStar_solid,
                                    const double *q_vos,
                                    const double *q_dvos_dt,
                                    const double *q_grad_vos,
@@ -1016,6 +1018,9 @@ namespace proteus
                                                const double u_s,
                                                const double v_s,
                                                const double w_s,
+                                               const double uStar_s,
+                                               const double vStar_s,
+                                               const double wStar_s,
                                                double& mom_u_source,
                                                double& mom_v_source,
                                                double& mom_w_source,
@@ -1036,7 +1041,7 @@ namespace proteus
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
-        double fluid_velocity[2]={u,v}, solid_velocity[2]={u_s,v_s};
+        double fluid_velocity[2]={uStar,vStar}, solid_velocity[2]={uStar_s,vStar_s};
         double new_beta = closure.betaCoeff(1.0-phi_s,
 					    rho,
 					    fluid_velocity,
@@ -2082,6 +2087,7 @@ namespace proteus
                                    double* phi_solid_nodes,
                                    double* phi_solid,
                              const double* q_velocity_solid,
+                             const double* q_velocityStar_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
                              const double* q_grad_vos,
@@ -2696,40 +2702,48 @@ namespace proteus
 
                 //VRANS
                 mass_source = q_mass_source[eN_k];
-                //todo: decide if these should be lagged or not?
-                updateDarcyForchheimerTerms_Ergun(
-                                                  q_dragAlpha[eN_k],
-                                                  q_dragBeta[eN_k],
-                                                  eps_rho,
-                                                  eps_mu,
-                                                  rho_0,
-                                                  nu_0,
-                                                  rho_1,
-                                                  nu_1,
-						  q_eddy_viscosity[eN_k],
-                                                  useVF,
-                                                  vf[eN_k],
-                                                  phi[eN_k],
-                                                  u,
-                                                  v,
-                                                  w,
-                                                  q_velocity_sge[eN_k_nSpace+0],
-                                                  q_velocity_sge[eN_k_nSpace+1],
-                                                  q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
-                                                  eps_solid[elementFlags[eN]],
-                                                  porosity,
-                                                  q_velocity_solid[eN_k_nSpace+0],
-                                                  q_velocity_solid[eN_k_nSpace+1],
-                                                  q_velocity_solid[eN_k_nSpace+1],//cek hack, should not be used
-                                                  mom_u_source,
-                                                  mom_v_source,
-                                                  mom_w_source,
-                                                  dmom_u_source,
-                                                  dmom_v_source,
-                                                  dmom_w_source,
-                                                  q_grad_vos[eN_k_nSpace+0],
-                                                  q_grad_vos[eN_k_nSpace+1],
-                                                  q_grad_vos[eN_k_nSpace+1]);
+                for (int I=0;I<nSpace;I++)
+                  {
+                    dmom_u_source[I] = 0.0;
+                    dmom_v_source[I] = 0.0;
+                    dmom_w_source[I] = 0.0;
+                  }
+                /* updateDarcyForchheimerTerms_Ergun( */
+                /*                                   q_dragAlpha[eN_k], */
+                /*                                   q_dragBeta[eN_k], */
+                /*                                   eps_rho, */
+                /*                                   eps_mu, */
+                /*                                   rho_0, */
+                /*                                   nu_0, */
+                /*                                   rho_1, */
+                /*                                   nu_1, */
+		/* 				  q_eddy_viscosity[eN_k], */
+                /*                                   useVF, */
+                /*                                   vf[eN_k], */
+                /*                                   phi[eN_k], */
+                /*                                   u, */
+                /*                                   v, */
+                /*                                   w, */
+                /*                                   q_velocity_sge[eN_k_nSpace+0], */
+                /*                                   q_velocity_sge[eN_k_nSpace+1], */
+                /*                                   q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used */
+                /*                                   eps_solid[elementFlags[eN]], */
+                /*                                   porosity, */
+                /*                                   q_velocity_solid[eN_k_nSpace+0], */
+                /*                                   q_velocity_solid[eN_k_nSpace+1], */
+                /*                                   q_velocity_solid[eN_k_nSpace+1],//cek hack, should not be used */
+                /*                                   q_velocityStar_solid[eN_k_nSpace+0], */
+                /*                                   q_velocityStar_solid[eN_k_nSpace+1], */
+                /*                                   q_velocityStar_solid[eN_k_nSpace+1],//cek hack, should not be used */
+                /*                                   mom_u_source, */
+                /*                                   mom_v_source, */
+                /*                                   mom_w_source, */
+                /*                                   dmom_u_source, */
+                /*                                   dmom_v_source, */
+                /*                                   dmom_w_source, */
+                /*                                   q_grad_vos[eN_k_nSpace+0], */
+                /*                                   q_grad_vos[eN_k_nSpace+1], */
+                /*                                   q_grad_vos[eN_k_nSpace+1]); */
                 double C_particles=0.0;
                 if(nParticles > 0 && USE_SBM==0)
                   updateSolidParticleTerms(eN < nElements_owned,
@@ -4490,6 +4504,7 @@ namespace proteus
                                    double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
+                             const double* q_velocityStar_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
                              const double* q_grad_vos,
@@ -5079,43 +5094,51 @@ namespace proteus
                                      ball_angular_velocity);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
-                //todo: decide if these should be lagged or not
-                updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
-                                                  /* nonlinearDragFactor, */
-                                                  /* porosity, */
-                                                  /* meanGrainSize, */
-                                                  q_dragAlpha[eN_k],
-                                                  q_dragBeta[eN_k],
-                                                  eps_rho,
-                                                  eps_mu,
-                                                  rho_0,
-                                                  nu_0,
-                                                  rho_1,
-                                                  nu_1,
-						                          eddy_viscosity,
-                                                  useVF,
-                                                  vf[eN_k],
-                                                  phi[eN_k],
-                                                  u,
-                                                  v,
-                                                  w,
-                                                  q_velocity_sge[eN_k_nSpace+0],
-                                                  q_velocity_sge[eN_k_nSpace+1],
-                                                  q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
-                                                  eps_solid[elementFlags[eN]],
-                                                  porosity,
-                                                  q_velocity_solid[eN_k_nSpace+0],
-                                                  q_velocity_solid[eN_k_nSpace+1],
-                                                  q_velocity_solid[eN_k_nSpace+1],//cek hack, should not be used
-                                                  mom_u_source,
-                                                  mom_v_source,
-                                                  mom_w_source,
-                                                  dmom_u_source,
-                                                  dmom_v_source,
-                                                  dmom_w_source,
-                                                  q_grad_vos[eN_k_nSpace+0],
-                                                  q_grad_vos[eN_k_nSpace+1],
-                                                  q_grad_vos[eN_k_nSpace+1]);//cek hack, should not be used
+                for (int I=0;I<nSpace;I++)
+                  {
+                    dmom_u_source[I] = 0.0;
+                    dmom_v_source[I] = 0.0;
+                    dmom_w_source[I] = 0.0;
+                  }
+                /* updateDarcyForchheimerTerms_Ergun(/\* linearDragFactor, *\/ */
+                /*                                   /\* nonlinearDragFactor, *\/ */
+                /*                                   /\* porosity, *\/ */
+                /*                                   /\* meanGrainSize, *\/ */
+                /*                                   q_dragAlpha[eN_k], */
+                /*                                   q_dragBeta[eN_k], */
+                /*                                   eps_rho, */
+                /*                                   eps_mu, */
+                /*                                   rho_0, */
+                /*                                   nu_0, */
+                /*                                   rho_1, */
+                /*                                   nu_1, */
+		/* 				                          eddy_viscosity, */
+                /*                                   useVF, */
+                /*                                   vf[eN_k], */
+                /*                                   phi[eN_k], */
+                /*                                   u, */
+                /*                                   v, */
+                /*                                   w, */
+                /*                                   q_velocity_sge[eN_k_nSpace+0], */
+                /*                                   q_velocity_sge[eN_k_nSpace+1], */
+                /*                                   q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used */
+                /*                                   eps_solid[elementFlags[eN]], */
+                /*                                   porosity, */
+                /*                                   q_velocity_solid[eN_k_nSpace+0], */
+                /*                                   q_velocity_solid[eN_k_nSpace+1], */
+                /*                                   q_velocity_solid[eN_k_nSpace+1],//cek hack, should not be used */
+                /*                                   q_velocityStar_solid[eN_k_nSpace+0], */
+                /*                                   q_velocityStar_solid[eN_k_nSpace+1], */
+                /*                                   q_velocityStar_solid[eN_k_nSpace+1],//cek hack, should not be used */
+                /*                                   mom_u_source, */
+                /*                                   mom_v_source, */
+                /*                                   mom_w_source, */
+                /*                                   dmom_u_source, */
+                /*                                   dmom_v_source, */
+                /*                                   dmom_w_source, */
+                /*                                   q_grad_vos[eN_k_nSpace+0], */
+                /*                                   q_grad_vos[eN_k_nSpace+1], */
+                /*                                   q_grad_vos[eN_k_nSpace+1]);//cek hack, should not be used */
 
                 double C_particles=0.0;
                 if(nParticles > 0 && USE_SBM==0)
