@@ -55,10 +55,12 @@ class Coefficients(TC_base):
                  nd=2,
                  V_model=None,
                  barycenters=None,
-                 flags_rigidbody=None):
+                 flags_rigidbody=None,
+                 nullSpace="ConstantNullSpace"):
         """
         TODO
         """
+        self.nullSpace = nullSpace
         assert(nd in [2, 3])
         self.nd = nd
         if self.nd == 2:
@@ -171,9 +173,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False,
-                 bdyNullSpace=True):
-        self.bdyNullSpace = bdyNullSpace
+                 movingDomain=False):
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
