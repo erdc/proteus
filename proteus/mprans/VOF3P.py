@@ -21,14 +21,12 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
-from . import cVOF3P
-
+from proteus.mprans.cVOF3P import *
+#from . import cVOF3P
 
 class SubgridError(SGE_base):
-
     def __init__(self, coefficients, nd):
-        proteus.SubgridError.SGE_base.__init__(
-            self, coefficients, nd, lag=False)
+        proteus.SubgridError.SGE_base.__init__(self, coefficients, nd, lag=False)
 
     def initializeElementQuadrature(self, mesh, t, cq):
         pass
@@ -39,18 +37,18 @@ class SubgridError(SGE_base):
     def calculateSubgridError(self, q):
         pass
 
-
 class ShockCapturing(ShockCapturing_base):
-
-    def __init__(
-            self,
-            coefficients,
-            nd,
-            shockCapturingFactor=0.25,
-            lag=True,
-            nStepsToDelay=None):
-        proteus.ShockCapturing.ShockCapturing_base.__init__(
-            self, coefficients, nd, shockCapturingFactor, lag)
+    def __init__(self,
+                 coefficients,
+                 nd,
+                 shockCapturingFactor=0.25,
+                 lag=True,
+                 nStepsToDelay=None):
+        proteus.ShockCapturing.ShockCapturing_base.__init__(self,
+                                                            coefficients,
+                                                            nd,
+                                                            shockCapturingFactor,
+                                                            lag)
         self.nStepsToDelay = nStepsToDelay
         self.nSteps = 0
         if self.lag:
@@ -79,13 +77,13 @@ class ShockCapturing(ShockCapturing_base):
                 self.numDiff_last.append(self.numDiff[ci].copy())
         logEvent("VOF3P: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
 
-
-class NumericalFlux(
-        proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
-
-    def __init__(self, vt, getPointwiseBoundaryConditions,
+class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
+    def __init__(self,
+                 vt,
+                 getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions):
+                 getDiffusiveFluxBoundaryConditions,
+                 getPeriodicBoundaryConditions=None):
         proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.__init__(
             self,
             vt,
@@ -102,11 +100,16 @@ class RKEV(proteus.TimeIntegration.SSP):
     """
 
     def __init__(self, transport, timeOrder=1, runCFL=0.1, integrateInterpolationPoints=False):
-        proteus.TimeIntegration.SSP.__init__(self, transport, integrateInterpolationPoints=integrateInterpolationPoints)
+        proteus.TimeIntegration.SSP.__init__(self,
+                                             transport,
+                                             integrateInterpolationPoints=integrateInterpolationPoints)
         self.runCFL = runCFL
         self.dtLast = None
         self.isAdaptive = True
-        self.cfl = transport.q[('cfl', 0)]
+        assert transport.coefficients.STABILIZATION_TYPE > 0, "SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
+        assert hasattr(transport, 'edge_based_cfl'), "No edge based cfl defined"
+        # About the cfl
+        self.cfl = transport.edge_based_cfl        
         # Stuff particular for SSP
         self.timeOrder = timeOrder  # order of approximation
         self.nStages = timeOrder  # number of stages total
@@ -120,8 +123,6 @@ class RKEV(proteus.TimeIntegration.SSP):
             self.m_old[ci] = transport.q[('u',ci)].copy()
             self.u_dof_last[ci] = transport.u[ci].dof.copy()
 
-    # def set_dt(self, DTSET):
-    #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
         maxCFL = max(maxCFL, globalMax(self.cfl.max()))
@@ -269,28 +270,43 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
 
-    def __init__(
-            self,
-            LS_model=None,
-            V_model=0,
-            RD_model=None,
-            ME_model=1,
-            VOS_model=None,
-            checkMass=True,
-            epsFact=0.0,
-            useMetrics=0.0,
-            sc_uref=1.0,
-            sc_beta=1.0,
-            setParamsFunc=None,
-            movingDomain=False,
-            set_vos=None,
-            EXPLICIT_METHOD=False,
-            outputQuantDOFs=False):
+    def __init__(self,
+                 LS_model=None,
+                 V_model=0,
+                 RD_model=None,
+                 ME_model=1,
+                 VOS_model=None,
+                 checkMass=True,
+                 epsFact=0.0,
+                 useMetrics=0.0,
+                 sc_uref=1.0,
+                 sc_beta=1.0,
+                 setParamsFunc=None,
+                 movingDomain=False,
+                 set_vos=None,
+                 forceStrongConditions=False,
+                 STABILIZATION_TYPE=0,
+                 # 0: supg
+                 # 1: Taylor Galerkin with EV
+                 # 2: EV with FCT (with or without art comp)
+                 # 3: DK's with FCT
+                 ENTROPY_TYPE=1,
+                 # 0: linear (this is like shock capturing)
+                 # 1: quadratic
+                 # 2: logarithmic
+                 # FOR ENTROPY VISCOSITY
+                 cE=1.0,
+                 cMax=1.0,
+                 uL=0.0,
+                 uR=1.0,
+                 # FOR ARTIFICIAL COMPRESSION
+                 cK=0.0,
+                 LUMPED_MASS_MATRIX=False,
+                 FCT=True,
+                 outputQuantDOFs=False,
+                 #NULLSPACE INFO
+                 nullSpace='NoNullSpace'):
 
-        self.outputQuantDOFs=outputQuantDOFs
-        self.EXPLICIT_METHOD=EXPLICIT_METHOD
-        self.set_vos = set_vos
-        self.useMetrics = useMetrics
         self.variableNames = ['vof']
         nc = 1
         mass = {0: {0: 'linear'}}
@@ -308,22 +324,36 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          reaction,
                          hamiltonian,
                          self.variableNames,
-                         movingDomain=movingDomain)
-        self.epsFact = epsFact
-        self.V_model = V_model
-        self.modelIndex = ME_model
-        self.RD_modelIndex = RD_model
+                         movingDomain=movingDomain)                
         self.LS_modelIndex = LS_model
+        self.V_model = V_model
+        self.RD_modelIndex = RD_model
+        self.modelIndex = ME_model            
         self.VOS_model = VOS_model
+        self.checkMass = checkMass
+        self.epsFact = epsFact
+        self.useMetrics = useMetrics        
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
-        self.checkMass = checkMass
+        self.setParamsFunc = setParamsFunc
+        self.movingDomain = movingDomain
+        self.forceStrongConditions = forceStrongConditions
+        self.STABILIZATION_TYPE = STABILIZATION_TYPE
+        self.ENTROPY_TYPE = ENTROPY_TYPE
+        self.cE = cE
+        self.cMax = cMax
+        self.uL = uL
+        self.uR = uR
+        self.cK = cK
+        self.LUMPED_MASS_MATRIX = LUMPED_MASS_MATRIX
+        self.FCT = FCT
+        self.outputQuantDOFs = outputQuantDOFs
+        self.nullSpace = nullSpace        
         # VRANS
         self.q_vos = None
         self.ebqe_vos = None
-        self.setParamsFunc = setParamsFunc
         self.flowCoefficients = None
-        self.movingDomain = movingDomain
+        self.set_vos = set_vos
 
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
@@ -365,7 +395,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 if ('f', 0) in modelList[self.V_model].ebq:
                     self.ebq_v = modelList[self.V_model].ebq[('f', 0)]
-        self.flowCoefficients = modelList[self.V_model].coefficients
+        else:            
+            self.q_v = numpy.ones(self.model.q[('u',0)].shape+(self.model.nSpace_global,),'d')
+            self.ebqe_v = numpy.ones(self.model.ebqe[('u',0)].shape+(self.model.nSpace_global,),'d')
+        if self.V_model is not None:            
+            self.flowCoefficients = modelList[self.V_model].coefficients
+        else:
+            self.flowCoefficients = None
         if self.VOS_model is not None:
             self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
             self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
@@ -400,10 +436,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebqe_porosity = self.flowCoefficients.ebqe_porosity
                 self.ebqe_vos = 1.0 - self.ebqe_porosity
             else:
-                self.ebqe_porosity = numpy.ones(
-                    modelList[
-                        self.LS_modelIndex].ebqe[
-                        ('u', 0)].shape, 'd')
+                self.ebqe_porosity = numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
                 if self.setParamsFunc is not None:
                     self.setParamsFunc(
                         modelList[
@@ -412,20 +445,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebqe_vos = 1.0 - self.ebqe_porosity
 
     def initializeElementQuadrature(self, t, cq):
-        if self.V_model is None:
-            self.q_v = numpy.ones(cq[('f', 0)].shape, 'd')
         # VRANS
         self.q_porosity = numpy.ones(cq[('u', 0)].shape, 'd')
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
-        if self.V_model is None:
-            self.ebq_v = numpy.ones(cebq[('f', 0)].shape, 'd')
         # VRANS
         self.ebq_porosity = numpy.ones(cebq[('u', 0)].shape, 'd')
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
-        if self.V_model is None:
-            self.ebqe_v = numpy.ones(cebqe[('f', 0)].shape, 'd')
         # VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u', 0)].shape, 'd')
 
@@ -968,7 +995,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag = 0
-        self.vof = cVOF3P.VOF3P(
+        self.vof = VOF3P(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1003,13 +1030,37 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.stage = 1
         self.auxTaylorGalerkinFlag = 1
         self.uTilde_dof = numpy.zeros(self.u[0].dof.shape,'d')
-        if self.coefficients.EXPLICIT_METHOD==True:
-            self.useTwoStageNewton = True
-        
+        if self.coefficients.STABILIZATION_TYPE==1:
+            self.useTwoStageNewton = True        
         # Some asserts for NCLS with Taylor Galerkin
-        if self.coefficients.EXPLICIT_METHOD==True:
-            assert isinstance(self.timeIntegration,proteus.TimeIntegration.BackwardEuler_cfl), "If EXPLICIT_METHOD=True, use BackwardEuler_cfl"
-            assert options.levelNonlinearSolver == proteus.NonlinearSolvers.TwoStageNewton, "If EXPLICIT_METHOD=True, use levelNonlinearSolver=TwoStageNewton"
+        if self.coefficients.STABILIZATION_TYPE==1:
+            assert isinstance(self.timeIntegration, proteus.TimeIntegration.BackwardEuler_cfl), "If STABILIZATION_TYPE=1, use BackwardEuler_cfl"
+            assert options.levelNonlinearSolver == proteus.NonlinearSolvers.TwoStageNewton, "If STABILIZATION_TYPE=1, use levelNonlinearSolver=TwoStageNewton"
+
+        # For edge based methods
+        self.ML = None  # lumped mass matrix
+        self.MC_global = None  # consistent mass matrix
+        self.low_order_solution = None
+        self.dt_times_dC_minus_dL = None
+        self.min_u_bc = None
+        self.max_u_bc = None
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
+
+        # For Taylor Galerkin methods
+        self.stage = 1
+        self.auxTaylorGalerkinFlag = 1        
+        self.uTilde_dof = numpy.zeros(self.u[0].dof.shape)
+        self.degree_polynomial = 1
+        try:
+            self.degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+        if (self.coefficients.STABILIZATION_TYPE <= 1):  # SUPG or Taylor Galerkin
+            self.calculateResidual = self.vof.calculateResidualElementBased
+            self.calculateJacobian = self.vof.calculateJacobian
+        else:
+            self.calculateResidual = self.vof.calculateResidualEdgeBased
+            self.calculateJacobian = self.vof.calculateMassMatrix
             
     def updateVelocityFieldAsFunction(self):
         X = {0: self.q[('x')][:, :, 0],
@@ -1037,6 +1088,84 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof, self.globalResidualDummy)
 
+    def getMassMatrix(self):
+        # JACOBIANS (FOR ELEMENT TRANSFORMATION)
+        self.q[('J')] = numpy.zeros((self.mesh.nElements_global,
+                                  self.nQuadraturePoints_element,
+                                  self.nSpace_global,
+                                  self.nSpace_global),
+                                 'd')
+        self.q[('inverse(J)')] = numpy.zeros((self.mesh.nElements_global,
+                                           self.nQuadraturePoints_element,
+                                           self.nSpace_global,
+                                           self.nSpace_global),
+                                          'd')
+        self.q[('det(J)')] = numpy.zeros((self.mesh.nElements_global,
+                                       self.nQuadraturePoints_element),
+                                      'd')
+        self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+                                                         self.q['J'],
+                                                         self.q['inverse(J)'],
+                                                         self.q['det(J)'])
+        self.q['abs(det(J))'] = numpy.abs(self.q['det(J)'])
+        # SHAPE FUNCTIONS
+        self.q[('w',0)] = numpy.zeros((self.mesh.nElements_global,
+                                    self.nQuadraturePoints_element,
+                                    self.nDOF_test_element[0]),
+                                   'd')
+        self.q[('w*dV_m',0)] = self.q[('w',0)].copy()
+        self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints, self.q[('w',0)])
+        cfemIntegrals.calculateWeightedShape(self.elementQuadratureWeights[('u',0)],
+                                             self.q['abs(det(J))'],
+                                             self.q[('w',0)],
+                                             self.q[('w*dV_m',0)])
+        # assume a linear mass term
+        dm = numpy.ones(self.q[('u', 0)].shape, 'd')
+        elementMassMatrix = numpy.zeros((self.mesh.nElements_global,
+                                      self.nDOF_test_element[0],
+                                      self.nDOF_trial_element[0]), 'd')
+        cfemIntegrals.updateMassJacobian_weak_lowmem(dm,
+                                                     self.q[('w', 0)],
+                                                     self.q[('w*dV_m', 0)],
+                                                     elementMassMatrix)
+        self.MC_a = self.nzval.copy()
+        self.MC_global = SparseMat(self.nFreeDOF_global[0],
+                                   self.nFreeDOF_global[0],
+                                   self.nnz,
+                                   self.MC_a,
+                                   self.colind,
+                                   self.rowptr)
+        cfemIntegrals.zeroJacobian_CSR(self.nnz, self.MC_global)
+        cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                  self.l2g[0]['freeLocal'],
+                                                                  self.l2g[0]['nFreeDOF'],
+                                                                  self.l2g[0]['freeLocal'],
+                                                                  self.csrRowIndeces[(0, 0)],
+                                                                  self.csrColumnOffsets[(0, 0)],
+                                                                  elementMassMatrix,
+                                                                  self.MC_global)
+
+        
+        self.ML = numpy.zeros((self.nFreeDOF_global[0],), 'd')
+        for i in range(self.nFreeDOF_global[0]):
+            self.ML[i] = self.MC_a[self.rowptr[i]:self.rowptr[i + 1]].sum()
+        numpy.testing.assert_almost_equal(self.ML.sum(),
+                                       self.mesh.volume,
+                                       err_msg="Trace of lumped mass matrix should be the domain volume", verbose=True)
+        
+    def initVectors(self):
+        if self.coefficients.porosity_dof is None:
+            self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape, 'd')
+        if self.u_dof_old is None:
+            # Pass initial condition to u_dof_old
+            self.u_dof_old = numpy.copy(self.u[0].dof)
+
+        rowptr, colind, MC = self.MC_global.getCSRrepresentation()
+        # This is dummy. I just care about the csr structure of the sparse matrix
+        self.dt_times_dC_minus_dL = numpy.zeros(MC.shape, 'd')
+        self.low_order_solution = numpy.zeros(self.u[0].dof.shape, 'd')
+
+        
     def getResidual(self, u, r):
         import pdb
         import copy
@@ -1044,9 +1173,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
 
-        if self.u_dof_old is None:
-            # Pass initial condition to u_dof_old
-            self.u_dof_old = numpy.copy(self.u[0].dof)
+        if self.MC_global is None:
+            self.getMassMatrix()
+            self.initVectors()
 
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'], self.coefficients.q_vos)
@@ -1155,9 +1284,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.uTilde_dof,
             self.timeIntegration.dt)
 
-        #if self.coefficients.EXPLICIT_METHOD:
-        #    self.taylorGalerkinStage = 2
-        
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 r[dofN] = 0
@@ -1177,7 +1303,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
 
-        self.vof.calculateJacobian(  # element
+        self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -1199,6 +1325,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.elementMaps.boundaryNormals,
             self.u[0].femSpace.elementMaps.boundaryJacobians,
+            # physics
             self.mesh.nElements_global,
             self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
@@ -1208,6 +1335,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_vos,
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
             self.u[0].dof,
             self.coefficients.q_v,
@@ -1229,18 +1357,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
-            #EXPLICIT METHODS
-            self.coefficients.EXPLICIT_METHOD)
-        
+            self.coefficients.STABILIZATION_TYPE)
+
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0  # probably want to add some scaling to match non-dirichlet diagonals in linear system
             for dofN in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys()):
                 global_dofN = dofN
-                for i in range(
-                    self.rowptr[global_dofN],
-                    self.rowptr[
-                        global_dofN + 1]):
+                for i in range(self.rowptr[global_dofN],
+                               self.rowptr[global_dofN + 1]):
                     if (self.colind[i] == global_dofN):
                             # print "RBLES forcing residual cj = %s dofN= %s
                             # global_dofN= %s was self.nzval[i]= %s now =%s " %
@@ -1269,10 +1394,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(
             self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
-        self.u[0].femSpace.getBasisGradientValuesRef(
-            self.elementQuadraturePoints)
-        self.coefficients.initializeElementQuadrature(
-            self.timeIntegration.t, self.q)
+        self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.coefficients.initializeElementQuadrature(self.timeIntegration.t,
+                                                      self.q)
         if self.stabilization is not None:
             self.stabilization.initializeElementQuadrature(
                 self.mesh, self.timeIntegration.t, self.q)
@@ -1306,11 +1430,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(
             self.elementBoundaryQuadraturePoints, self.ebqe['x'])
         self.fluxBoundaryConditionsObjectsDict = dict([(cj, FluxBoundaryConditions(self.mesh,
-                                                                                   self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                                   self.ebqe[('x')],
-                                                                                   self.advectiveFluxBoundaryConditionsSetterDict[cj],
-                                                                                   self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
-                                                       for cj in list(self.advectiveFluxBoundaryConditionsSetterDict.keys())])
+                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                          self.ebqe[('x')],
+                                          self.advectiveFluxBoundaryConditionsSetterDict[cj],
+                                          self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
+              for cj in list(self.advectiveFluxBoundaryConditionsSetterDict.keys())])
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(
             self.timeIntegration.t, self.ebqe)
 
