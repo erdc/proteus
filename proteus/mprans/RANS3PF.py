@@ -595,11 +595,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.SED_model is not None:
             self.rho_s = modelList[self.SED_model].coefficients.rho_s
             self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
+            self.q_velocityStar_solid = modelList[self.SED_model].q[('velocityStar',0)]
             self.ebqe_velocity_solid = modelList[self.SED_model].ebqe[('velocity',0)]
         else:
             self.rho_s = self.rho_0
             self.q_velocity_solid = self.model.q[('velocity', 0)].copy()
             self.q_velocity_solid[:] = 0.0
+            self.q_velocityStar_solid = self.model.q[('velocity', 0)].copy()
+            self.q_velocityStar_solid[:] = 0.0
             self.ebqe_velocity_solid = self.model.ebqe[('velocity', 0)].copy()
             self.ebqe_velocity_solid[:] = 0.0
         if self.CLSVOF_model is not None: # use CLSVOF
@@ -2388,6 +2391,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
+            self.coefficients.q_velocityStar_solid,
             self.coefficients.q_vos,#sed fraction - gco check
             self.coefficients.q_dvos_dt,
             self.coefficients.q_grad_vos,
@@ -2707,6 +2711,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
+            self.coefficients.q_velocityStar_solid,
             self.coefficients.q_vos,#sed fraction - gco check
             self.coefficients.q_dvos_dt,
             self.coefficients.q_grad_vos,
