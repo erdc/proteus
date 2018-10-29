@@ -537,8 +537,9 @@ class Newton(NonlinearSolver):
                     self.setLinearSolverTolerance(r)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed()
+                self.linearSolverFailed = self.linearSolver.failed()                
             u-=self.du
+
             if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)

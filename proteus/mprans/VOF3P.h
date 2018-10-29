@@ -43,101 +43,103 @@ namespace proteus
     //The base class defining the interface
   public:
     virtual ~cppVOF3P_base(){}
-    virtual void calculateResidual(//element
-                                   double dt,
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   double* mesh_velocity_dof,
-                                   double MOVING_DOMAIN,
-                                   int* mesh_l2g,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
-                                   //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
-                                   //physics
-                                   int nElements_global,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   int lag_shockCapturing,
-                                   double shockCapturingDiffusion,
-                                   double sc_uref, double sc_alpha,
-                                   //VRANS
-                                   const double* q_vos,
-                                   //
-                                   int* u_l2g,
-                                   double* elementDiameter,
-                                   double* u_dof,
-                                   double* u_dof_old,
-                                   double* velocity,
-                                   double* q_m,
-                                   double* q_u,
-                                   double* q_m_betaBDF,
-                                   double* q_dV,
-                                   double* q_dV_last,
-                                   double* cfl,
-                                   double* edge_based_cfl,
-                                   double* q_numDiff_u,
-                                   double* q_numDiff_u_last,
-                                   int offset_u, int stride_u,
-                                   double* globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_velocity_ext,
-                                   //VRANS
-                                   const double* ebqe_vos_ext,
-                                   //
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_bc_u_ext,
-                                   int* isFluxBoundary_u,
-                                   double* ebqe_bc_flux_u_ext,
-                                   double* ebqe_phi,double epsFact,
-                                   double* ebqe_u,
-                                   double* ebqe_flux,
-				   //EXPLICIT METHODS
-				   int EXPLICIT_METHOD,
-				   double degree_polynomial,
-				   int stage,
-				   double * uTilde_dof,
-                                   // PARAMETERS FOR EDGE BASED STABILIZATION
-                                   double cE,
-                                   double cK,
-                                   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
-                                   double uL,
-                                   double uR,
-                                   // PARAMETERS FOR EDGE VISCOSITY
-                                   int numDOFs,
-                                   int NNZ,
-                                   int* csrRowIndeces_DofLoops,
-                                   int* csrColumnOffsets_DofLoops,
-                                   int* csrRowIndeces_CellLoops,
-                                   int* csrColumnOffsets_CellLoops,
-                                   int* csrColumnOffsets_eb_CellLoops,
-                                   double* ML,
-                                   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
-                                   int LUMPED_MASS_MATRIX,
-                                   int STABILIZATION_TYPE,
-                                   int ENTROPY_TYPE,
-                                   // FOR FCT
-                                   double* low_order_solution,
-                                   double* dt_times_dH_minus_dL,
-                                   double* min_u_bc,
-                                   double* max_u_bc,
-                                   // AUX QUANTITIES OF INTEREST
-                                   double* quantDOFs)=0;
+    virtual void calculateResidualElementBased(//element
+					       double dt,
+					       double* mesh_trial_ref,
+					       double* mesh_grad_trial_ref,
+					       double* mesh_dof,
+					       double* mesh_velocity_dof,
+					       double MOVING_DOMAIN,
+					       int* mesh_l2g,
+					       double* dV_ref,
+					       double* u_trial_ref,
+					       double* u_grad_trial_ref,
+					       double* u_test_ref,
+					       double* u_grad_test_ref,
+					       //element boundary
+					       double* mesh_trial_trace_ref,
+					       double* mesh_grad_trial_trace_ref,
+					       double* dS_ref,
+					       double* u_trial_trace_ref,
+					       double* u_grad_trial_trace_ref,
+					       double* u_test_trace_ref,
+					       double* u_grad_test_trace_ref,
+					       double* normal_ref,
+					       double* boundaryJac_ref,
+					       //physics
+					       int nElements_global,
+					       double useMetrics,
+					       double alphaBDF,
+					       int lag_shockCapturing,
+					       double shockCapturingDiffusion,
+					       double sc_uref,
+					       double sc_alpha,
+					       //VRANS
+					       const double* q_vos,
+					       const double* vos_dof,
+					       //
+					       int* u_l2g,
+					       int* r_l2g,
+					       double* elementDiameter,
+					       double degree_polynomial,
+					       double* u_dof,
+					       double* u_dof_old,
+					       double* velocity,
+					       double* q_m,
+					       double* q_u,
+					       double* q_m_betaBDF,
+					       double* q_dV,
+					       double* q_dV_last,
+					       double* cfl,
+					       double* edge_based_cfl,
+					       double* q_numDiff_u,
+					       double* q_numDiff_u_last,
+					       int offset_u, int stride_u,
+					       double* globalResidual,
+					       int nExteriorElementBoundaries_global,
+					       int* exteriorElementBoundariesArray,
+					       int* elementBoundaryElementsArray,
+					       int* elementBoundaryLocalElementBoundariesArray,
+					       double* ebqe_velocity_ext,
+					       //VRANS
+					       const double* ebqe_vos_ext,
+					       //
+					       int* isDOFBoundary_u,
+					       double* ebqe_bc_u_ext,
+					       int* isFluxBoundary_u,
+					       double* ebqe_bc_flux_u_ext,
+					       double* ebqe_phi,double epsFact,
+					       double* ebqe_u,
+					       double* ebqe_flux,
+					       // TAYLOR GALERKIN
+					       int stage,
+					       double * uTilde_dof,
+					       // PARAMETERS FOR ENTROPY VISCOSITY
+					       double cE,
+					       double cK,
+					       // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+					       double uL,
+					       double uR,
+					       // PARAMETERS FOR EDGE VISCOSITY
+					       int numDOFs,
+					       int NNZ,
+					       int* csrRowIndeces_DofLoops,
+					       int* csrColumnOffsets_DofLoops,
+					       int* csrRowIndeces_CellLoops,
+					       int* csrColumnOffsets_CellLoops,
+					       int* csrColumnOffsets_eb_CellLoops,
+					       double* ML,
+					       // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+					       int LUMPED_MASS_MATRIX,
+					       int STABILIZATION_TYPE,
+					       int ENTROPY_TYPE,
+					       // FOR FCT
+					       double* low_order_solution,
+					       double* dt_times_dH_minus_dL,
+					       double* min_u_bc,
+					       double* max_u_bc,
+					       // AUX QUANTITIES OF INTEREST
+					       double* quantDOFs)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -170,6 +172,7 @@ namespace proteus
                                    const double* q_vos,
                                    //
                                    int* u_l2g,
+				   int* r_l2g,
                                    double* elementDiameter,
                                    double* u_dof,
                                    double* velocity,
@@ -191,7 +194,7 @@ namespace proteus
                                    int* isFluxBoundary_u,
                                    double* ebqe_bc_flux_u_ext,
                                    int* csrColumnOffsets_eb_u_u,
-                                   int EXPLICIT_METHOD)=0;
+                                   int STABILIZATION_TYPE)=0;
     virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
                          int numDOFs, //number of DOFs
                          double* lumped_mass_matrix, //lumped mass matrix (as vector)
@@ -207,103 +210,103 @@ namespace proteus
                          double* max_u_bc,
                          int LUMPED_MASS_MATRIX
                          )=0;
-    virtual void calculateResidual_entropy_viscosity(//element
-                                                     double dt,
-                                                     double* mesh_trial_ref,
-                                                     double* mesh_grad_trial_ref,
-                                                     double* mesh_dof,
-                                                     double* mesh_velocity_dof,
-                                                     double MOVING_DOMAIN,
-                                                     int* mesh_l2g,
-                                                     double* dV_ref,
-                                                     double* u_trial_ref,
-                                                     double* u_grad_trial_ref,
-                                                     double* u_test_ref,
-                                                     double* u_grad_test_ref,
-                                                     //element boundary
-                                                     double* mesh_trial_trace_ref,
-                                                     double* mesh_grad_trial_trace_ref,
-                                                     double* dS_ref,
-                                                     double* u_trial_trace_ref,
-                                                     double* u_grad_trial_trace_ref,
-                                                     double* u_test_trace_ref,
-                                                     double* u_grad_test_trace_ref,
-                                                     double* normal_ref,
-                                                     double* boundaryJac_ref,
-                                                     //physics
-                                                     int nElements_global,
-                                                     double useMetrics,
-                                                     double alphaBDF,
-                                                     int lag_shockCapturing,
-                                                     double shockCapturingDiffusion,
-                                                     double sc_uref,
-                                                     double sc_alpha,
-                                                     //VRANS
-                                                     const double* q_porosity,
-                                                     const double* porosity_dof,
-                                                     //
-                                                     int* u_l2g,
-                                                     double* elementDiameter,
-                                                     double* u_dof,
-                                                     double* u_dof_old,
-                                                     double* velocity,
-                                                     double* q_m,
-                                                     double* q_u,
-                                                     double* q_m_betaBDF,
-                                                     double* q_dV,
-                                                     double* q_dV_last,
-                                                     double* cfl,
-                                                     double* edge_based_cfl,
-                                                     double* q_numDiff_u,
-                                                     double* q_numDiff_u_last,
-                                                     int offset_u, int stride_u,
-                                                     double* globalResidual,
-                                                     int nExteriorElementBoundaries_global,
-                                                     int* exteriorElementBoundariesArray,
-                                                     int* elementBoundaryElementsArray,
-                                                     int* elementBoundaryLocalElementBoundariesArray,
-                                                     double* ebqe_velocity_ext,
-                                                     //VRANS
-                                                     const double* ebqe_porosity_ext,
-                                                     //
-                                                     int* isDOFBoundary_u,
-                                                     double* ebqe_bc_u_ext,
-                                                     int* isFluxBoundary_u,
-                                                     double* ebqe_bc_flux_u_ext,
-                                                     double* ebqe_phi,double epsFact,
-                                                     double* ebqe_u,
-                                                     double* ebqe_flux,
-						     //EXPLICIT METHODS
-						     int EXPLICIT_METHOD,
-						     double degree_polynomial,
-						     int stage,
-						     double * uTilde_dof,
-                                                     // PARAMETERS FOR EDGE BASED STABILIZATION
-                                                     double cE,
-                                                     double cK,
-                                                     // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
-                                                     double uL,
-                                                     double uR,
-                                                     // PARAMETERS FOR EDGE VISCOSITY
-                                                     int numDOFs,
-                                                     int NNZ,
-                                                     int* csrRowIndeces_DofLoops,
-                                                     int* csrColumnOffsets_DofLoops,
-                                                     int* csrRowIndeces_CellLoops,
-                                                     int* csrColumnOffsets_CellLoops,
-                                                     int* csrColumnOffsets_eb_CellLoops,
-                                                     double* ML,
-                                                     // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
-                                                     int LUMPED_MASS_MATRIX,
-                                                     int STABILIZATION_TYPE,
-                                                     int ENTROPY_TYPE,
-                                                     // FOR FCT
-                                                     double* low_order_solution,
-                                                     double* dt_times_dH_minus_dL,
-                                                     double* min_u_bc,
-                                                     double* max_u_bc,
-                                                     // AUX QUANTITIES OF INTEREST
-                                                     double* quantDOFs)=0;
+    virtual void calculateResidualEdgeBased(//element
+					    double dt,
+					    double* mesh_trial_ref,
+					    double* mesh_grad_trial_ref,
+					    double* mesh_dof,
+					    double* mesh_velocity_dof,
+					    double MOVING_DOMAIN,
+					    int* mesh_l2g,
+					    double* dV_ref,
+					    double* u_trial_ref,
+					    double* u_grad_trial_ref,
+					    double* u_test_ref,
+					    double* u_grad_test_ref,
+					    //element boundary
+					    double* mesh_trial_trace_ref,
+					    double* mesh_grad_trial_trace_ref,
+					    double* dS_ref,
+					    double* u_trial_trace_ref,
+					    double* u_grad_trial_trace_ref,
+					    double* u_test_trace_ref,
+					    double* u_grad_test_trace_ref,
+					    double* normal_ref,
+					    double* boundaryJac_ref,
+					    //physics
+					    int nElements_global,
+					    double useMetrics,
+					    double alphaBDF,
+					    int lag_shockCapturing,
+					    double shockCapturingDiffusion,
+					    double sc_uref,
+					    double sc_alpha,
+					    //VRANS
+					    const double* q_vos,
+					    const double* vos_dof,
+					    //
+					    int* u_l2g,
+					    int* r_l2g,
+					    double* elementDiameter,
+					    double degree_polynomial,
+					    double* u_dof,
+					    double* u_dof_old,
+					    double* velocity,
+					    double* q_m,
+					    double* q_u,
+					    double* q_m_betaBDF,
+					    double* q_dV,
+					    double* q_dV_last,
+					    double* cfl,
+					    double* edge_based_cfl,
+					    double* q_numDiff_u,
+					    double* q_numDiff_u_last,
+					    int offset_u, int stride_u,
+					    double* globalResidual,
+					    int nExteriorElementBoundaries_global,
+					    int* exteriorElementBoundariesArray,
+					    int* elementBoundaryElementsArray,
+					    int* elementBoundaryLocalElementBoundariesArray,
+					    double* ebqe_velocity_ext,
+					    //VRANS
+					    const double* ebqe_vos_ext,
+					    //
+					    int* isDOFBoundary_u,
+					    double* ebqe_bc_u_ext,
+					    int* isFluxBoundary_u,
+					    double* ebqe_bc_flux_u_ext,
+					    double* ebqe_phi,double epsFact,
+					    double* ebqe_u,
+					    double* ebqe_flux,
+					    //EXPLICIT METHODS
+					    int stage,
+					    double * uTilde_dof,
+					    // PARAMETERS FOR EDGE BASED STABILIZATION
+					    double cE,
+					    double cK,
+					    // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+					    double uL,
+					    double uR,
+					    // PARAMETERS FOR EDGE VISCOSITY
+					    int numDOFs,
+					    int NNZ,
+					    int* csrRowIndeces_DofLoops,
+					    int* csrColumnOffsets_DofLoops,
+					    int* csrRowIndeces_CellLoops,
+					    int* csrColumnOffsets_CellLoops,
+					    int* csrColumnOffsets_eb_CellLoops,
+					    double* ML,
+					    // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+					    int LUMPED_MASS_MATRIX,
+					    int STABILIZATION_TYPE,
+					    int ENTROPY_TYPE,
+					    // FOR FCT
+					    double* low_order_solution,
+					    double* dt_times_dH_minus_dL,
+					    double* min_u_bc,
+					    double* max_u_bc,
+					    // AUX QUANTITIES OF INTEREST
+					    double* quantDOFs)=0;
     virtual void calculateMassMatrix(//element
                                      double dt,
                                      double* mesh_trial_ref,
@@ -334,9 +337,10 @@ namespace proteus
                                      int lag_shockCapturing,/*mwf not used yet*/
                                      double shockCapturingDiffusion,
                                      //VRANS
-                                     const double* q_porosity,
+				     const double* q_vos,
                                      //
                                      int* u_l2g,
+				     int* r_l2g,
                                      double* elementDiameter,
                                      double* u_dof,
                                      double* velocity,
@@ -351,7 +355,7 @@ namespace proteus
                                      int* elementBoundaryLocalElementBoundariesArray,
                                      double* ebqe_velocity_ext,
                                      //VRANS
-                                     const double* ebqe_porosity_ext,
+				     const double* ebqe_vos_ext,
                                      //
                                      int* isDOFBoundary_u,
                                      double* ebqe_bc_u_ext,
@@ -550,101 +554,102 @@ namespace proteus
 	  }
       }
 
-      void calculateResidual(//element
-			     double dt,
-			     double* mesh_trial_ref,
-			     double* mesh_grad_trial_ref,
-			     double* mesh_dof,
-			     double* mesh_velocity_dof,
-			     double MOVING_DOMAIN,
-			     int* mesh_l2g,
-			     double* dV_ref,
-			     double* u_trial_ref,
-			     double* u_grad_trial_ref,
-			     double* u_test_ref,
-			     double* u_grad_test_ref,
-			     //element boundary
-			     double* mesh_trial_trace_ref,
-			     double* mesh_grad_trial_trace_ref,
-			     double* dS_ref,
-			     double* u_trial_trace_ref,
-			     double* u_grad_trial_trace_ref,
-			     double* u_test_trace_ref,
-			     double* u_grad_test_trace_ref,
-			     double* normal_ref,
-			     double* boundaryJac_ref,
-			     //physics
-			     int nElements_global,
-			     double useMetrics,
-			     double alphaBDF,
-			     int lag_shockCapturing, /*mwf not used yet*/
-			     double shockCapturingDiffusion,
-			     double sc_uref, double sc_alpha,
-			     //VRANS
-			     const double* q_vos,
-			     //
-			     int* u_l2g,
-			     double* elementDiameter,
-			     double* u_dof,
-			     double* u_dof_old,
-			     double* velocity,
-			     double* q_m,
-			     double* q_u,
-			     double* q_m_betaBDF,
-			     double* q_dV,
-			     double* q_dV_last,
-			     double* cfl,
-			     double* edge_based_cfl,
-			     double* q_numDiff_u,
-			     double* q_numDiff_u_last,
-			     int offset_u, int stride_u,
-			     double* globalResidual,
-			     int nExteriorElementBoundaries_global,
-			     int* exteriorElementBoundariesArray,
-			     int* elementBoundaryElementsArray,
-			     int* elementBoundaryLocalElementBoundariesArray,
-			     double* ebqe_velocity_ext,
-			     //VRANS
-			     const double* ebqe_vos_ext,
-			     //
-			     int* isDOFBoundary_u,
-			     double* ebqe_bc_u_ext,
-			     int* isFluxBoundary_u,
-			     double* ebqe_bc_flux_u_ext,
-			     double* ebqe_phi,double epsFact,
-			     double* ebqe_u,
-			     double* ebqe_flux,
-			     //EXPLICIT METHODS
-			     int EXPLICIT_METHOD,
-			     double degree_polynomial,
-			     int stage,
-			     double * uTilde_dof,
-			     // PARAMETERS FOR EDGE BASED STABILIZATION
-			     double cE,
-			     double cK,
-			     // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
-			     double uL,
-			     double uR,
-			     // PARAMETERS FOR EDGE VISCOSITY
-			     int numDOFs,
-			     int NNZ,
-			     int* csrRowIndeces_DofLoops,
-			     int* csrColumnOffsets_DofLoops,
-			     int* csrRowIndeces_CellLoops,
-			     int* csrColumnOffsets_CellLoops,
-			     int* csrColumnOffsets_eb_CellLoops,
-			     double* ML,
-			     // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
-			     int LUMPED_MASS_MATRIX,
-			     int STABILIZATION_TYPE,
-			     int ENTROPY_TYPE,
-			     // FOR FCT
-			     double* low_order_solution,
-			     double* dt_times_dH_minus_dL,
-			     double* min_u_bc,
-			     double* max_u_bc,
-			     // AUX QUANTITIES OF INTEREST
-			     double* quantDOFs)
+      void calculateResidualElementBased(//element
+					 double dt,
+					 double* mesh_trial_ref,
+					 double* mesh_grad_trial_ref,
+					 double* mesh_dof,
+					 double* mesh_velocity_dof,
+					 double MOVING_DOMAIN,
+					 int* mesh_l2g,
+					 double* dV_ref,
+					 double* u_trial_ref,
+					 double* u_grad_trial_ref,
+					 double* u_test_ref,
+					 double* u_grad_test_ref,
+					 //element boundary
+					 double* mesh_trial_trace_ref,
+					 double* mesh_grad_trial_trace_ref,
+					 double* dS_ref,
+					 double* u_trial_trace_ref,
+					 double* u_grad_trial_trace_ref,
+					 double* u_test_trace_ref,
+					 double* u_grad_test_trace_ref,
+					 double* normal_ref,
+					 double* boundaryJac_ref,
+					 //physics
+					 int nElements_global,
+					 double useMetrics,
+					 double alphaBDF,
+					 int lag_shockCapturing, /*mwf not used yet*/
+					 double shockCapturingDiffusion,
+					 double sc_uref, double sc_alpha,
+					 //VRANS
+					 const double* q_vos,
+					 const double* vos_dof,
+					 //
+					 int* u_l2g,
+					 int* r_l2g,
+					 double* elementDiameter,
+					 double degree_polynomial,
+					 double* u_dof,
+					 double* u_dof_old,
+					 double* velocity,
+					 double* q_m,
+					 double* q_u,
+					 double* q_m_betaBDF,
+					 double* q_dV,
+					 double* q_dV_last,
+					 double* cfl,
+					 double* edge_based_cfl,
+					 double* q_numDiff_u,
+					 double* q_numDiff_u_last,
+					 int offset_u, int stride_u,
+					 double* globalResidual,
+					 int nExteriorElementBoundaries_global,
+					 int* exteriorElementBoundariesArray,
+					 int* elementBoundaryElementsArray,
+					 int* elementBoundaryLocalElementBoundariesArray,
+					 double* ebqe_velocity_ext,
+					 //VRANS
+					 const double* ebqe_vos_ext,
+					 //
+					 int* isDOFBoundary_u,
+					 double* ebqe_bc_u_ext,
+					 int* isFluxBoundary_u,
+					 double* ebqe_bc_flux_u_ext,
+					 double* ebqe_phi,double epsFact,
+					 double* ebqe_u,
+					 double* ebqe_flux,
+					 //EXPLICIT METHODS
+					 int stage,
+					 double * uTilde_dof,
+					 // PARAMETERS FOR EDGE BASED STABILIZATION
+					 double cE,
+					 double cK,
+					 // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+					 double uL,
+					 double uR,
+					 // PARAMETERS FOR EDGE VISCOSITY
+					 int numDOFs,
+					 int NNZ,
+					 int* csrRowIndeces_DofLoops,
+					 int* csrColumnOffsets_DofLoops,
+					 int* csrRowIndeces_CellLoops,
+					 int* csrColumnOffsets_CellLoops,
+					 int* csrColumnOffsets_eb_CellLoops,
+					 double* ML,
+					 // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+					 int LUMPED_MASS_MATRIX,
+					 int STABILIZATION_TYPE,
+					 int ENTROPY_TYPE,
+					 // FOR FCT
+					 double* low_order_solution,
+					 double* dt_times_dH_minus_dL,
+					 double* min_u_bc,
+					 double* max_u_bc,
+					 // AUX QUANTITIES OF INTEREST
+					 double* quantDOFs)
       {
 	double meanEntropy = 0., meanOmega = 0., maxEntropy = -1E10, minEntropy = 1E10;
 	register double maxVel[nElements_global], maxEntRes[nElements_global];
@@ -815,7 +820,7 @@ namespace proteus
 		       m_t,
 		       dm_t);
 
-		if (EXPLICIT_METHOD==1)
+		if (STABILIZATION_TYPE==1)
 		  {
 		    double normVel=0., norm_grad_un=0.;
 		    for (int I=0;I<nSpace;I++)
@@ -854,7 +859,6 @@ namespace proteus
 		  }
 		else
 		  {
-
 		    //
 		    //calculate subgrid error (strong residual and adjoint)
 		    //
@@ -883,9 +887,20 @@ namespace proteus
 		    //calculate shock capturing diffusion
 		    //
 
-		    ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);
+		    ck.calculateNumericalDiffusion(shockCapturingDiffusion,
+						   elementDiameter[eN],
+						   pdeResidual_u,
+						   grad_u,
+						   numDiff0);
 		    //ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
-		    ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
+		    ck.calculateNumericalDiffusion(shockCapturingDiffusion,
+						   sc_uref,
+						   sc_alpha,
+						   G,
+						   G_dd_G,
+						   pdeResidual_u,
+						   grad_u,
+						   numDiff1);
 		    q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
 		    //std::cout<<tau<<"   "<<q_numDiff_u[eN_k]<<'\t'<<numDiff0<<'\t'<<numDiff1<<'\t'<<pdeResidual_u<<std::endl;
 
@@ -908,7 +923,7 @@ namespace proteus
 		    //register int eN_k_i=eN_k*nDOF_test_element+i,
                     //eN_k_i_nSpace = eN_k_i*nSpace,
 		    register int i_nSpace=i*nSpace;
-		    if (EXPLICIT_METHOD==1)
+		    if (STABILIZATION_TYPE==1)
 		      {
 			if (stage == 1)
 			  elementResidual_u[i] +=
@@ -930,7 +945,6 @@ namespace proteus
 		      }
 		    else //supg
 		      {
-
 			elementResidual_u[i] +=
 			  ck.Mass_weak(m_t,u_test_dV[i]) +
 			  ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) +
@@ -954,7 +968,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
-		globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
 	      }//i
 	  }//elements
 	//
@@ -1052,7 +1066,7 @@ namespace proteus
 				    jacInv_ext,
 				    u_grad_trial_trace);
 		//solution and gradients
-		if (EXPLICIT_METHOD==1) //explicit
+		if (STABILIZATION_TYPE==1) //explicit
 		  {
 		    ck.valFromDOF(u_dof_old,
 				  &u_l2g[eN_nDOF_trial_element],
@@ -1141,7 +1155,7 @@ namespace proteus
 		else
 		  ebqe_u[ebNE_kb] = bc_u_ext;
 
-		if (EXPLICIT_METHOD==1)
+		if (STABILIZATION_TYPE==1)
 		  if (stage==1)
 		    flux_ext *= 1./3*dt;
 		  else
@@ -1162,10 +1176,10 @@ namespace proteus
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
-		globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
 	      }//i
 	  }//ebNE
-	if (EXPLICIT_METHOD==1)
+	if (STABILIZATION_TYPE==1)
 	  {
 	    meanEntropy /= meanOmega;
 	    double norm_factor = fmax(fabs(maxEntropy - meanEntropy), fabs(meanEntropy-minEntropy));
@@ -1183,7 +1197,6 @@ namespace proteus
 	  }
 
       }
-
 
       void calculateJacobian(//element
 			     double* mesh_trial_ref,
@@ -1217,6 +1230,7 @@ namespace proteus
 			     const double* q_vos,
 			     //
 			     int* u_l2g,
+			     int* r_l2g,
 			     double* elementDiameter,
 			     double* u_dof,
 			     double* velocity,
@@ -1238,7 +1252,7 @@ namespace proteus
 			     int* isFluxBoundary_u,
 			     double* ebqe_bc_flux_u_ext,
 			     int* csrColumnOffsets_eb_u_u,
-			     int EXPLICIT_METHOD)
+			     int STABILIZATION_TYPE)
       {
 	//std::cout<<"ndjaco  address "<<q_numDiff_u_last<<std::endl;
 	double Ct_sge = 4.0;
@@ -1422,7 +1436,7 @@ namespace proteus
 			//int eN_k_j_nSpace = eN_k_j*nSpace;
 			int j_nSpace = j*nSpace;
 			int i_nSpace = i*nSpace;
-			if (EXPLICIT_METHOD==1)
+			if (STABILIZATION_TYPE==1)
 			  {
 			    elementJacobian_u_u[i][j] +=
 			      ck.MassJacobian_weak(1.0,
@@ -1462,7 +1476,7 @@ namespace proteus
 	//
 	//loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
 	//
-	if (EXPLICIT_METHOD==0)
+	if (STABILIZATION_TYPE==0)
 	  for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	    {
 	      register int ebN = exteriorElementBoundariesArray[ebNE];
@@ -1750,102 +1764,102 @@ namespace proteus
 	  }
       }
 
-      void calculateResidual_entropy_viscosity(//element
-					       double dt,
-					       double* mesh_trial_ref,
-					       double* mesh_grad_trial_ref,
-					       double* mesh_dof,
-					       double* mesh_velocity_dof,
-					       double MOVING_DOMAIN,
-					       int* mesh_l2g,
-					       double* dV_ref,
-					       double* u_trial_ref,
-					       double* u_grad_trial_ref,
-					       double* u_test_ref,
-					       double* u_grad_test_ref,
-					       //element boundary
-					       double* mesh_trial_trace_ref,
-					       double* mesh_grad_trial_trace_ref,
-					       double* dS_ref,
-					       double* u_trial_trace_ref,
-					       double* u_grad_trial_trace_ref,
-					       double* u_test_trace_ref,
-					       double* u_grad_test_trace_ref,
-					       double* normal_ref,
-					       double* boundaryJac_ref,
-					       //physics
-					       int nElements_global,
-					       double useMetrics,
-					       double alphaBDF,
-					       int lag_shockCapturing,
-					       double shockCapturingDiffusion,
-					       double sc_uref, double sc_alpha,
-					       //VRANS
-					       const double* q_porosity,
-					       const double* porosity_dof,
-					       //
-					       int* u_l2g,
-					       double* elementDiameter,
-					       double* u_dof,
-					       double* u_dof_old,
-					       double* velocity,
-					       double* q_m,
-					       double* q_u,
-					       double* q_m_betaBDF,
-					       double* q_dV,
-					       double* q_dV_last,
-					       double* cfl,
-					       double* edge_based_cfl,
-					       double* q_numDiff_u,
-					       double* q_numDiff_u_last,
-					       int offset_u, int stride_u,
-					       double* globalResidual,
-					       int nExteriorElementBoundaries_global,
-					       int* exteriorElementBoundariesArray,
-					       int* elementBoundaryElementsArray,
-					       int* elementBoundaryLocalElementBoundariesArray,
-					       double* ebqe_velocity_ext,
-					       //VRANS
-					       const double* ebqe_porosity_ext,
-					       //
-					       int* isDOFBoundary_u,
-					       double* ebqe_bc_u_ext,
-					       int* isFluxBoundary_u,
-					       double* ebqe_bc_flux_u_ext,
-					       double* ebqe_phi,double epsFact,
-					       double* ebqe_u,
-					       double* ebqe_flux,
-					       //EXPLICIT METHODS
-					       int EXPLICIT_METHOD,
-					       double degree_polynomial,
-					       int stage,
-					       double * uTilde_dof,
-					       // PARAMETERS FOR EDGE BASED STABILIZATION
-					       double cE,
-					       double cK,
-					       // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
-					       double uL,
-					       double uR,
-					       // PARAMETERS FOR EDGE VISCOSITY
-					       int numDOFs,
-					       int NNZ,
-					       int* csrRowIndeces_DofLoops,
-					       int* csrColumnOffsets_DofLoops,
-					       int* csrRowIndeces_CellLoops,
-					       int* csrColumnOffsets_CellLoops,
-					       int* csrColumnOffsets_eb_CellLoops,
-					       double* ML,
-					       // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
-					       int LUMPED_MASS_MATRIX,
-					       int STABILIZATION_TYPE,
-					       int ENTROPY_TYPE,
-					       // FOR FCT
-					       double* low_order_solution,
-					       double* dt_times_dH_minus_dL,
-					       double* min_u_bc,
-					       double* max_u_bc,
-					       // AUX QUANTITIES OF INTEREST
-					       double* quantDOFs)
+      void calculateResidualEdgeBased(//element
+				      double dt,
+				      double* mesh_trial_ref,
+				      double* mesh_grad_trial_ref,
+				      double* mesh_dof,
+				      double* mesh_velocity_dof,
+				      double MOVING_DOMAIN,
+				      int* mesh_l2g,
+				      double* dV_ref,
+				      double* u_trial_ref,
+				      double* u_grad_trial_ref,
+				      double* u_test_ref,
+				      double* u_grad_test_ref,
+				      //element boundary
+				      double* mesh_trial_trace_ref,
+				      double* mesh_grad_trial_trace_ref,
+				      double* dS_ref,
+				      double* u_trial_trace_ref,
+				      double* u_grad_trial_trace_ref,
+				      double* u_test_trace_ref,
+				      double* u_grad_test_trace_ref,
+				      double* normal_ref,
+				      double* boundaryJac_ref,
+				      //physics
+				      int nElements_global,
+				      double useMetrics,
+				      double alphaBDF,
+				      int lag_shockCapturing,
+				      double shockCapturingDiffusion,
+				      double sc_uref, double sc_alpha,
+				      //VRANS
+				      const double* q_vos,
+				      const double* vos_dof,
+				      //
+				      int* u_l2g,
+				      int* r_l2g,
+				      double* elementDiameter,
+				      double degree_polynomial,
+				      double* u_dof,
+				      double* u_dof_old,
+				      double* velocity,
+				      double* q_m,
+				      double* q_u,
+				      double* q_m_betaBDF,
+				      double* q_dV,
+				      double* q_dV_last,
+				      double* cfl,
+				      double* edge_based_cfl,
+				      double* q_numDiff_u,
+				      double* q_numDiff_u_last,
+				      int offset_u, int stride_u,
+				      double* globalResidual,
+				      int nExteriorElementBoundaries_global,
+				      int* exteriorElementBoundariesArray,
+				      int* elementBoundaryElementsArray,
+				      int* elementBoundaryLocalElementBoundariesArray,
+				      double* ebqe_velocity_ext,
+				      //VRANS
+				      const double* ebqe_vos_ext,
+				      //
+				      int* isDOFBoundary_u,
+				      double* ebqe_bc_u_ext,
+				      int* isFluxBoundary_u,
+				      double* ebqe_bc_flux_u_ext,
+				      double* ebqe_phi,double epsFact,
+				      double* ebqe_u,
+				      double* ebqe_flux,
+				      //EXPLICIT METHODS
+				      int stage,
+				      double * uTilde_dof,
+				      // PARAMETERS FOR EDGE BASED STABILIZATION
+				      double cE,
+				      double cK,
+				      // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+				      double uL,
+				      double uR,
+				      // PARAMETERS FOR EDGE VISCOSITY
+				      int numDOFs,
+				      int NNZ,
+				      int* csrRowIndeces_DofLoops,
+				      int* csrColumnOffsets_DofLoops,
+				      int* csrRowIndeces_CellLoops,
+				      int* csrColumnOffsets_CellLoops,
+				      int* csrColumnOffsets_eb_CellLoops,
+				      double* ML,
+				      // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+				      int LUMPED_MASS_MATRIX,
+				      int STABILIZATION_TYPE,
+				      int ENTROPY_TYPE,
+				      // FOR FCT
+				      double* low_order_solution,
+				      double* dt_times_dH_minus_dL,
+				      double* min_u_bc,
+				      double* max_u_bc,
+				      // AUX QUANTITIES OF INTEREST
+				      double* quantDOFs)
       {
 	// NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
 	// Allocate space for the transport matrices
@@ -1864,7 +1878,7 @@ namespace proteus
 	    // NODAL ENTROPY //
 	    if (STABILIZATION_TYPE==1) //EV stab
 	      {
-		double porosity_times_solni = porosity_dof[i]*u_dof_old[i];
+		double porosity_times_solni = (1.0-vos_dof[i])*u_dof_old[i];
 		eta[i] = ENTROPY_TYPE == 1 ? ENTROPY(porosity_times_solni,uL,uR) : ENTROPY_LOG(porosity_times_solni,uL,uR);
 		global_entropy_residual[i]=0.;
 	      }
@@ -1956,7 +1970,7 @@ namespace proteus
 		  q_dV_last[eN_k] = dV;
 		q_dV[eN_k] = dV;
 		//VRANS
-		porosity = q_porosity[eN_k];
+		porosity = 1.-q_vos[eN_k];
 		//
 		//moving mesh
 		//
@@ -1992,7 +2006,7 @@ namespace proteus
 		    if (STABILIZATION_TYPE==1) // EV stab
 		      {
 			int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
-			double porosity_times_uni = porosity_dof[gi]*u_dof_old[gi];
+			double porosity_times_uni = (1.-vos_dof[i])*u_dof_old[gi];
 			DENTROPY_uni = ENTROPY_TYPE == 1 ? DENTROPY(porosity_times_uni,uL,uR) : DENTROPY_LOG(porosity_times_uni,uL,uR);
 			element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
 		      }
@@ -2116,7 +2130,7 @@ namespace proteus
 		  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
 
 		//VRANS
-		porosity_ext = ebqe_porosity_ext[ebNE_kb];
+		porosity_ext = 1.0-ebqe_vos_ext[ebNE_kb];
 		//
 		//moving mesh
 		//
@@ -2211,7 +2225,7 @@ namespace proteus
 		etaMaxi = fabs(eta[i]);
 		etaMini = fabs(eta[i]);
 	      }
-	    double porosity_times_solni = porosity_dof[i]*u_dof_old[i];
+	    double porosity_times_solni = (1.-vos_dof[i])*u_dof_old[i];
 	    // initialize gi and compute xi
 	    for (int I=0; I < nSpace; I++)
 	      {
@@ -2229,7 +2243,7 @@ namespace proteus
 		    etaMaxi = fmax(etaMaxi,fabs(eta[j]));
 		    etaMini = fmin(etaMini,fabs(eta[j]));
 		  }
-		double porosity_times_solnj = porosity_dof[j]*u_dof_old[j];
+		double porosity_times_solnj = (1.-vos_dof[i])*u_dof_old[j];
 
 		// COMPUTE gi VECTOR. gi=1/mi*sum_j(Cij*solj)
 		for (int I=0; I < nSpace; I++)
@@ -2302,7 +2316,7 @@ namespace proteus
 	  {
 	    // NOTE: Transport matrices already have the porosity considered. ---> Dissipation matrices as well.
 	    double solni = u_dof_old[i]; // solution at time tn for the ith DOF
-	    double porosityi = porosity_dof[i];
+	    double porosityi = 1.-vos_dof[i];
 	    double ith_dissipative_term = 0;
 	    double ith_low_order_dissipative_term = 0;
 	    double ith_flux_term = 0;
@@ -2313,7 +2327,7 @@ namespace proteus
 	      {
 		int j = csrColumnOffsets_DofLoops[offset];
 		double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-		double porosityj = porosity_dof[j];
+		double porosityj = 1.-vos_dof[j];
 		double dLowij, dLij, dEVij, dHij;
 
 		ith_flux_term += TransportMatrix[ij]*solnj;
@@ -2397,9 +2411,10 @@ namespace proteus
 			       int lag_shockCapturing,/*mwf not used yet*/
 			       double shockCapturingDiffusion,
 			       //VRANS
-			       const double* q_porosity,
+			       const double* q_vos,
 			       //
 			       int* u_l2g,
+			       int* r_l2g,
 			       double* elementDiameter,
 			       double* u_dof,
 			       double* velocity,
@@ -2414,7 +2429,7 @@ namespace proteus
 			       int* elementBoundaryLocalElementBoundariesArray,
 			       double* ebqe_velocity_ext,
 			       //VRANS
-			       const double* ebqe_porosity_ext,
+			       const double* ebqe_vos_ext,
 			       //
 			       int* isDOFBoundary_u,
 			       double* ebqe_bc_u_ext,
@@ -2501,7 +2516,7 @@ namespace proteus
 		      }
 		  }
 		//VRANS
-		porosity = q_porosity[eN_k];
+		porosity = 1.0-q_vos[eN_k];
 		//
 		//
 		//calculate pde coefficients and derivatives at quadrature points
