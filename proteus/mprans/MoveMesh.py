@@ -15,7 +15,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  rhow=998.2,  # kg/m^3 water density (used if pore pressures specified)
                  nd=3,
                  meIndex=0,
-                 V_model=0):
+                 V_model=0,
+                 nullSpace='NoNullSpace'):
         self.flowModelIndex = V_model
         self.modelType_block = modelType_block
         self.modelParams_block = modelParams_block
@@ -81,6 +82,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.meIndex = meIndex
         self.dt_last = None
         self.solidsList = []
+        self.nullSpace = nullSpace
 
     def attachModels(self, modelList):
         self.model = modelList[self.meIndex]

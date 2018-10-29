@@ -82,6 +82,8 @@ cdef extern from "RANS2P.h" namespace "proteus":
                                # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
+                               int * rp_l2g,
+                               int * rvel_l2g,
                                double * p_dof,
                                double * u_dof,
                                double * v_dof,
@@ -590,6 +592,8 @@ cdef class cRANS2P_base:
                           # VRANS end
                           numpy.ndarray p_l2g,
                           numpy.ndarray vel_l2g,
+                          numpy.ndarray rp_l2g,
+                          numpy.ndarray rvel_l2g,
                           numpy.ndarray p_dof,
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
@@ -769,6 +773,8 @@ cdef class cRANS2P_base:
                                        # VRANS end
                                        < int * > p_l2g.data,
                                        < int * > vel_l2g.data,
+                                       < int * > rp_l2g.data,
+                                       < int * > rvel_l2g.data,
                                        < double * > p_dof.data,
                                        < double * > u_dof.data,
                                        < double * > v_dof.data,
