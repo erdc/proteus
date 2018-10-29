@@ -126,6 +126,7 @@ namespace proteus
                                    double* CTy,
                                    double* CTz,
                                    double* ML,
+                                   double* delta_x_ij,
                                    // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
                                    int LUMPED_MASS_MATRIX,
                                    int STABILIZATION_TYPE,
@@ -183,6 +184,7 @@ namespace proteus
                                    double* q_numDiff_u_last,
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                    double* globalJacobian,
+                                   double* delta_x_ij,
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
                                    int* elementBoundaryElementsArray,
@@ -319,6 +321,7 @@ namespace proteus
                                                      double* CTy,
                                                      double* CTz,
                                                      double* ML,
+                                                     double* delta_x_ij,
                                                      // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
                                                      int LUMPED_MASS_MATRIX,
                                                      int STABILIZATION_TYPE,
@@ -376,6 +379,7 @@ namespace proteus
                                      double* q_numDiff_u_last,
                                      int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                                      double* globalJacobian,
+                                     double* delta_x_ij,
                                      int nExteriorElementBoundaries_global,
                                      int* exteriorElementBoundariesArray,
                                      int* elementBoundaryElementsArray,
@@ -675,6 +679,7 @@ namespace proteus
                            double* CTy,
                            double* CTz,
                            double* ML,
+                           double* delta_x_ij,
                            // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
                            int LUMPED_MASS_MATRIX,
                            int STABILIZATION_TYPE,
@@ -1142,6 +1147,7 @@ namespace proteus
                            double* q_numDiff_u_last,
                            int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                            double* globalJacobian,
+                           double* delta_x_ij,
                            int nExteriorElementBoundaries_global,
                            int* exteriorElementBoundariesArray,
                            int* elementBoundaryElementsArray,
@@ -1887,6 +1893,7 @@ namespace proteus
                                              double* CTy,
                                              double* CTz,
                                              double* ML,
+                                             double* delta_x_ij,
                                              // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
                                              int LUMPED_MASS_MATRIX,
                                              int STABILIZATION_TYPE,
@@ -1908,7 +1915,14 @@ namespace proteus
       // Allocate space for the transport matrices
       // This is used for first order KUZMIN'S METHOD
       register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
-      std::valarray<double> u_free_dof_old(numDOFs);
+      std::valarray<double> u_free_dof_old(numDOFs),porosity_free_dof(numDOFs);
+      for(int eN=0;eN<nElements_global;eN++)
+        for (int j=0;j<nDOF_trial_element;j++)
+          {
+            register int eN_nDOF_trial_element = eN*nDOF_trial_element;
+            u_free_dof_old[r_l2g[eN_nDOF_trial_element+j]] = u_dof_old[u_l2g[eN_nDOF_trial_element+j]];
+            porosity_free_dof[r_l2g[eN_nDOF_trial_element+j]] = porosity_dof[u_l2g[eN_nDOF_trial_element+j]];
+          }
       for (int i=0; i<NNZ; i++)
         {
           TransportMatrix[i] = 0.;
@@ -1922,7 +1936,7 @@ namespace proteus
           // NODAL ENTROPY //
           if (STABILIZATION_TYPE==1) //EV stab
             {
-              double porosity_times_solni = porosity_dof[i]*u_dof_old[i];
+              double porosity_times_solni = porosity_free_dof[i]*u_free_dof_old[i];
               eta[i] = ENTROPY_TYPE == 1 ? ENTROPY(porosity_times_solni,uL,uR) : ENTROPY_LOG(porosity_times_solni,uL,uR);
               global_entropy_residual[i]=0.;
             }
@@ -2003,7 +2017,6 @@ namespace proteus
               //precalculate test function products with integration weights for mass matrix terms
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  u_free_dof_old[r_l2g[eN_nDOF_trial_element+j]] = u_dof_old[u_l2g[eN_nDOF_trial_element+j]];
                   u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
                   for (int I=0;I<nSpace;I++)
                     u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -2202,7 +2215,7 @@ namespace proteus
               for (int I=0; I < nSpace; I++)
                 flow += normal[I]*porosity_times_velocity[I];
 
-              if (flow >= 0) //outflow. This is handled via the transport matrices. Then flux_ext=0 and dflux_ext!=0
+              if (flow >= 0 && isFluxBoundary_u[ebNE_kb] != 1 )  //outflow. This is handled via the transport matrices. Then flux_ext=0 and dflux_ext!=0
                 {
                   dflux_ext = flow;
                   flux_ext = 0;
@@ -2297,7 +2310,7 @@ namespace proteus
                   etaMaxi = fmax(etaMaxi,fabs(eta[j]));
                   etaMini = fmin(etaMini,fabs(eta[j]));
                 }
-              double porosity_times_solnj = porosity_dof[j]*u_free_dof_old[j];
+              double porosity_times_solnj = porosity_free_dof[j]*u_free_dof_old[j];
               // Update Cij matrices
               Cij[0] = Cx[ij];
               Cij[1] = Cy[ij];
@@ -2345,7 +2358,12 @@ namespace proteus
               // compute gi*(xi-xj)
               double gi_times_x=0.;
               for (int I=0; I < nSpace; I++)
-                gi_times_x += gi[I]*(xi[I]-xj[I]);
+                {
+                  //if (delta_x_ij[offset*3+I] > 0.0)
+                  //  assert( (xi[I] - xj[I]) == delta_x_ij[offset*3+I]);
+                  //gi_times_x += gi[I]*(xi[I]-xj[I]);
+                  gi_times_x += gi[I]*delta_x_ij[offset*3+I];
+                }
               // compute the positive and negative part of gi*(xi-xj)
               SumPos += gi_times_x > 0 ? gi_times_x : 0;
               SumNeg += gi_times_x < 0 ? gi_times_x : 0;
@@ -2375,7 +2393,7 @@ namespace proteus
         {
           // NOTE: Transport matrices already have the porosity considered. ---> Dissipation matrices as well.
           double solni = u_free_dof_old[i]; // solution at time tn for the ith DOF
-          double porosityi = porosity_dof[i];
+          double porosityi = porosity_free_dof[i];
           double ith_dissipative_term = 0;
           double ith_low_order_dissipative_term = 0;
           double ith_flux_term = 0;
@@ -2386,7 +2404,7 @@ namespace proteus
             {
               int j = csrColumnOffsets_DofLoops[offset];
               double solnj = u_free_dof_old[j]; // solution at time tn for the jth DOF
-              double porosityj = porosity_dof[j];
+              double porosityj = porosity_free_dof[j];
               double dLowij, dLij, dEVij, dHij;
 
               ith_flux_term += TransportMatrix[ij]*solnj;
@@ -2573,6 +2591,7 @@ namespace proteus
                              double* q_numDiff_u_last,
                              int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
                              double* globalJacobian,
+                             double* delta_x_ij,
                              int nExteriorElementBoundaries_global,
                              int* exteriorElementBoundariesArray,
                              int* elementBoundaryElementsArray,
@@ -2771,10 +2790,15 @@ namespace proteus
           for (int i=0;i<nDOF_test_element;i++)
             {
               int eN_i = eN*nDOF_test_element+i;
+              int I = u_l2g[eN_i];
               for (int j=0;j<nDOF_trial_element;j++)
                 {
                   int eN_i_j = eN_i*nDOF_trial_element+j;
+                  int J = u_l2g[eN*nDOF_trial_element+j];
                   globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+                  delta_x_ij[3*(csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j])+0] = mesh_dof[I*3+0] - mesh_dof[J*3+0];
+                  delta_x_ij[3*(csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j])+1] = mesh_dof[I*3+1] - mesh_dof[J*3+1];
+                  delta_x_ij[3*(csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j])+2] = mesh_dof[I*3+2] - mesh_dof[J*3+2];
                 }//j
             }//i
         }//elements
