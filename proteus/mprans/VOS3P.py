@@ -1132,6 +1132,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag = 0
+        self.delta_x_ij=None
         self.vos = cVOS3P.VOS3P(
             self.nSpace_global,
             self.nQuadraturePoints_element,
@@ -1159,11 +1160,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         limited_solution = np.zeros((len(rowptr) - 1),'d')
+        self.u_free_dof_stage_0_l = np.zeros((len(rowptr) - 1),'d')
+        self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],  # soln
+        fromFreeToGlobal=0
+        cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+                                                               self.offset[0],
+                                                               self.stride[0],
+                                                               self.dirichletConditions[0].global2freeGlobal_global_dofs,
+                                                               self.dirichletConditions[0].global2freeGlobal_free_dofs,
+                                                               self.u_free_dof_stage_0_l,
+                                                               self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage])
         self.vos.FCTStep(
             self.nnz,  # number of non zero entries
             len(rowptr) - 1,  # number of DOFs
             self.ML,  # Lumped mass matrix
-            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],  # soln
+            #self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],  # soln
+            self.u_free_dof_stage_0_l,
             self.timeIntegration.u,  # high order solution
             self.uLow,
             limited_solution,
@@ -1188,7 +1200,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                self.dirichletConditions[0].global2freeGlobal_global_dofs,
                                                                self.dirichletConditions[0].global2freeGlobal_free_dofs,
                                                                limited_solution,
-                                                               self.timeintegration.u_dof_stage[0][self.timeIntegration.stage])
+                                                               self.timeintegration.u_dof_stage[0][self.timeIntegration.lstage])
         
         self.vos.kth_FCT_step(
             self.timeIntegration.dt,
@@ -1486,6 +1498,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateResidual = self.vos.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.vos.calculateMassMatrix
+        if self.delta_x_ij is None:
+            self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1578,6 +1592,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             CTy,
             CTz,
             self.ML,
+            self.delta_x_ij,
             # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
             self.coefficients.LUMPED_MASS_MATRIX,
             self.coefficients.STABILIZATION_TYPE,
@@ -1619,7 +1634,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             degree_polynomial = self.u[0].femSpace.order
         except:
             pass
-
+        if self.delta_x_ij is None:
+            self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
         self.calculateJacobian(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1662,6 +1678,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             jacobian,
+            self.delta_x_ij,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
