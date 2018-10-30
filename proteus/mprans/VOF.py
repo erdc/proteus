@@ -912,6 +912,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             assert isinstance(self.timeIntegration, proteus.TimeIntegration.BackwardEuler_cfl), "If STABILIZATION_TYPE=1, use BackwardEuler_cfl"
             assert options.levelNonlinearSolver == TwoStageNewton, "If STABILIZATION_TYPE=1, use levelNonlinearSolver=TwoStageNewton"
         assert self.coefficients.ENTROPY_TYPE in [0,1], "Set ENTROPY_TYPE={0,1}"
+        assert self.coefficients.STABILIZATION_TYPE in [0,1,2,3,4]
         if self.coefficients.STABILIZATION_TYPE==4:
             assert self.coefficients.FCT==True, "If STABILIZATION_TYPE=4, use FCT=True"
             
@@ -940,13 +941,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.degree_polynomial = self.u[0].femSpace.order
         except:
             pass
+        self.calculateJacobian = self.vof.calculateJacobian
         if (self.coefficients.STABILIZATION_TYPE <= 1):  # SUPG or Taylor Galerkin
-            self.calculateResidual = self.vof.calculateResidualElementBased
-            self.calculateJacobian = self.vof.calculateJacobian
+            self.calculateResidual = self.vof.calculateResidualElementBased            
         else:
             self.calculateResidual = self.vof.calculateResidualEdgeBased
-            self.calculateJacobian = self.vof.calculateMassMatrix
-            
             
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
