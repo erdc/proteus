@@ -16,10 +16,13 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
-nn=81
+nn=41
 nLevels = 1#4
 
-if useNCLS:
+if useVOS:
+    subgridError = VOS3P.SubgridError(coefficients, nd)
+    numericalFluxType = VOS3P.NumericalFlux
+elif useNCLS:
     subgridError = NCLS.SubgridError(coefficients, nd)
     numericalFluxType = NCLS.NumericalFlux
 elif useVOF:
@@ -32,7 +35,9 @@ else:
     subgridError = AdvectionDiffusionReaction_ASGS(coefficients, nd, lag=False)
     numericalFluxType = DoNothing#None
 
-if useNCLS:
+if useVOS:
+    shockCapturing = VOS3P.ShockCapturing(coefficients, nd, shockCapturingFactor=0.0, lag=True)
+elif useNCLS:
     shockCapturing = NCLS.ShockCapturing(coefficients, nd, shockCapturingFactor=0.0, lag=True)
 elif useVOF:
     shockCapturing = VOF.ShockCapturing(coefficients, nd, shockCapturingFactor=0.0, lag=True)
@@ -45,9 +50,16 @@ multilevelNonlinearSolver  = Newton
 
 levelNonlinearSolver = Newton
 
-nonlinearSmoother = NLGaussSeidel
-
 fullNewtonFlag = True
+
+if useVOS:
+    timeIntegration = VOS3P.RKEV
+    timeOrder=3
+#    levelNonlinearSolver = ExplicitLumpedMassMatrix
+    levelNonlinearSolver = ExplicitConsistentMassMatrixForVOF
+    fullNewtonFlag = True
+    
+nonlinearSmoother = NLGaussSeidel
 
 tolFac = 0.0
 nl_atol_res = 1.0e-8

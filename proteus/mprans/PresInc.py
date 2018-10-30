@@ -58,7 +58,7 @@ class Coefficients(TC_base):
                  sedModelIndex = None, 
                  fixNullSpace=False,
                  INTEGRATE_BY_PARTS_DIV_U=True,
-                 nullSpace="ConstantNullSpace"):
+                 nullSpace="NoNullSpace"):
         """Construct a coefficients object
 
         :param modelIndex: This model's index into the model list
