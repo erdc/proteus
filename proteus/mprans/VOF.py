@@ -21,9 +21,13 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
+from proteus.LinearAlgebraTools import SparseMat
+from proteus.NonlinearSolvers import ExplicitLumpedMassMatrix,ExplicitConsistentMassMatrixForVOF
+from proteus import TimeIntegration
 from proteus.mprans.cVOF import *
+#from . import cVOF3P
 
-class SubgridError(proteus.SubgridError.SGE_base):
+class SubgridError(SGE_base):
     def __init__(self, coefficients, nd):
         proteus.SubgridError.SGE_base.__init__(self, coefficients, nd, lag=False)
 
@@ -268,8 +272,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 setattr(self, flag, val)
                 if flag == 'timeOrder':
                     self.resetOrder(self.timeOrder)
-
-
+                    
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VOFCoefficientsEvaluate
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
@@ -280,34 +283,35 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
-                 VOS_model=None,                 
+                 VOS_model=None,
                  checkMass=True,
                  epsFact=0.0,
                  useMetrics=0.0,
                  sc_uref=1.0,
                  sc_beta=1.0,
                  setParamsFunc=None,
-                 movingDomain=False,                 
+                 movingDomain=False,
+                 set_vos=None,
                  forceStrongConditions=False,
                  STABILIZATION_TYPE=0,
                  # 0: supg
                  # 1: Taylor Galerkin with EV
                  # 2: EV with FCT (with or without art comp)
                  # 3: Smoothness indicator (with or without art comp)
-                 # 3: DK's with FCT
+                 # 4: DK's with FCT
                  #FOR EDGE BASED EV                 
                  ENTROPY_TYPE=0,
                  # 0: quadratic
                  # 1: logarithmic
                  # FOR ENTROPY VISCOSITY
-                 cE=0.1,
-                 cMax=0.1,
+                 cE=1.0,
+                 cMax=1.0,
                  uL=0.0,
                  uR=1.0,
                  # FOR ARTIFICIAL COMPRESSION
                  cK=0.0,
                  LUMPED_MASS_MATRIX=False,
-                 FCT=True,                 
+                 FCT=True,
                  outputQuantDOFs=False,
                  #NULLSPACE INFO
                  nullSpace='NoNullSpace'):
@@ -330,9 +334,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          hamiltonian,
                          self.variableNames,
                          movingDomain=movingDomain)        
-        self.LS_modelIndex = LS_model        
-        self.flowModelIndex = V_model
-        self.RD_modelIndex = RD_model        
+        self.LS_modelIndex = LS_model
+        self.V_model = V_model
+        self.RD_modelIndex = RD_model
         self.modelIndex = ME_model
         self.VOS_model=VOS_model
         self.checkMass = checkMass
@@ -344,7 +348,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.movingDomain = movingDomain
         self.forceStrongConditions = forceStrongConditions
         self.STABILIZATION_TYPE = STABILIZATION_TYPE
-        self.ENTROPY_TYPE = ENTROPY_TYPE        
+        self.ENTROPY_TYPE = ENTROPY_TYPE
         self.cE = cE
         self.cMax = cMax
         self.uL = uL
@@ -360,6 +364,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_porosity = None
         self.porosity_dof = None
         self.flowCoefficients = None
+        self.set_vos = set_vos
 
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
@@ -379,26 +384,27 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebq_phi = modelList[self.LS_modelIndex].ebq[('u', 0)]
         else:
             self.ebqe_phi = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd') # cek hack, we don't need this
-        if self.flowModelIndex is not None:
-            if ('velocity', 0) in modelList[self.flowModelIndex].q:
-                self.q_v = modelList[self.flowModelIndex].q[('velocity', 0)]
-                self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity', 0)]
+        # flow model
+        if self.V_model is not None:
+            if ('velocity', 0) in modelList[self.V_model].q:
+                self.q_v = modelList[self.V_model].q[('velocity', 0)]
+                self.ebqe_v = modelList[self.V_model].ebqe[('velocity', 0)]
             else:
-                self.q_v = modelList[self.flowModelIndex].q[('f', 0)]
-                self.ebqe_v = modelList[self.flowModelIndex].ebqe[('f', 0)]
-            if ('velocity', 0) in modelList[self.flowModelIndex].ebq:
-                self.ebq_v = modelList[self.flowModelIndex].ebq[('velocity', 0)]
+                self.q_v = modelList[self.V_model].q[('f', 0)]
+                self.ebqe_v = modelList[self.V_model].ebqe[('f', 0)]
+            if ('velocity', 0) in modelList[self.V_model].ebq:
+                self.ebq_v = modelList[self.V_model].ebq[('velocity', 0)]
             else:
-                if ('f', 0) in modelList[self.flowModelIndex].ebq:
-                    self.ebq_v = modelList[self.flowModelIndex].ebq[('f', 0)]
+                if ('f', 0) in modelList[self.V_model].ebq:
+                    self.ebq_v = modelList[self.V_model].ebq[('f', 0)]
         else:
             self.q_v = np.ones(self.model.q[('u',0)].shape+(self.model.nSpace_global,),'d')
             self.ebqe_v = np.ones(self.model.ebqe[('u',0)].shape+(self.model.nSpace_global,),'d')
         # VRANS
-        if self.flowModelIndex is not None:
-            self.flowCoefficients = modelList[self.flowModelIndex].coefficients
+        if self.V_model is not None:
+            self.flowCoefficients = modelList[self.V_model].coefficients
         else:
-            self.flowCoefficients= None
+            self.flowCoefficients = None
         if hasattr(self.flowCoefficients, 'q_porosity'):
             self.q_porosity = self.flowCoefficients.q_porosity
             if self.STABILIZATION_TYPE > 1:  # edge based stabilization: EV or smoothness based
@@ -410,7 +416,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # If the flow model doesn't have porosity then set q_porosity=1 and porosity_dof=1
             self.q_porosity = numpy.ones(modelList[self.modelIndex].q[('u', 0)].shape, 'd')
             self.porosity_dof = numpy.ones(modelList[self.modelIndex].u[0].dof.shape, 'd')
-            
             if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.modelIndex].q['x'], self.q_porosity)
             #
@@ -418,8 +423,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if hasattr(self.flowCoefficients, 'ebq_porosity'):
             self.ebq_porosity = self.flowCoefficients.ebq_porosity
         elif ('u', 0) in modelList[self.modelIndex].ebq:
-            self.ebq_porosity = numpy.ones(modelList[self.modelIndex].ebq[('u', 0)].shape,
-                                           'd')
+            self.ebq_porosity = numpy.ones(modelList[self.modelIndex].ebq[('u', 0)].shape,'d')
             if self.setParamsFunc is not None:
                 self.setParamsFunc(modelList[self.modelIndex].ebq['x'], self.ebq_porosity)
             #
@@ -449,6 +453,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
+        # Restart flags for stages of taylor galerkin
+        self.model.stage = 1
+        self.model.auxTaylorGalerkinFlag = 1
+        
         # COMPUTE NEW VELOCITY (if given by user) #
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
@@ -590,7 +598,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for ci in range(1, coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         self.u_dof_old = None
-
         # Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh  # assume the same mesh for  all components for now
         self.testSpace = testSpaceDict
@@ -762,11 +769,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('advectiveFlux_bc', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('advectiveFlux', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        # mql. Allow the user to provide functions to define the velocity field
-        self.hasVelocityFieldAsFunction = False
-        if ('velocityFieldAsFunction') in dir(options):
-            self.velocityFieldAsFunction = options.velocityFieldAsFunction
-            self.hasVelocityFieldAsFunction = True
 
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set([('u', ci) for ci in range(self.nc)])
@@ -921,6 +923,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             assert options.levelNonlinearSolver == proteus.NonlinearSolvers.TwoStageNewton, "If STABILIZATION_TYPE=1, use levelNonlinearSolver=TwoStageNewton"
         assert self.coefficients.ENTROPY_TYPE in [0,1], "Set ENTROPY_TYPE={0,1}"
 
+        # mql. Allow the user to provide functions to define the velocity field
+        self.hasVelocityFieldAsFunction = False
+        if ('velocityFieldAsFunction') in dir(options):
+            self.velocityFieldAsFunction = options.velocityFieldAsFunction
+            self.hasVelocityFieldAsFunction = True
+
         # For edge based methods
         self.ML = None  # lumped mass matrix
         self.MC_global = None  # consistent mass matrix
@@ -975,11 +983,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                self.dirichletConditions[0].global2freeGlobal_free_dofs,
                                                                self.timeIntegration.u,
                                                                limited_solution)
-        
-
-    # mwf these are getting called by redistancing classes,
-    def calculateCoefficients(self):
-        pass
 
     def updateVelocityFieldAsFunction(self):
         X = {0: self.q[('x')][:, :, 0],
@@ -999,6 +1002,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.ebqe_v[..., 1] = self.velocityFieldAsFunction[1](ebqe_X, t)
         if (self.nSpace_global == 3):
             self.coefficients.ebqe_v[..., 2] = self.velocityFieldAsFunction[2](ebqe_X, t)
+            
+    def calculateCoefficients(self):
+        pass
 
     def calculateElementResidual(self):
         if self.globalResidualDummy is not None:
@@ -1092,6 +1098,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.MC_global is None:
             self.getMassMatrix()
             self.initVectors()
+
+        if self.coefficients.set_vos:
+            self.coefficients.set_vos(self.q['x'], self.coefficients.q_vos)
 
         # Reset some vectors for FCT
         self.min_u_bc = numpy.zeros(self.u[0].dof.shape, 'd') + 1E10
