@@ -5,7 +5,6 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define cMax 0.1
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define IS_BETAij_ONE 0
 #define GLOBAL_FCT 0
@@ -116,6 +115,7 @@ namespace proteus
 					       double * uTilde_dof,
 					       // PARAMETERS FOR ENTROPY VISCOSITY
 					       double cE,
+					       double cMax,
 					       double cK,
 					       // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
 					       double uL,
@@ -283,6 +283,7 @@ namespace proteus
 					    double * uTilde_dof,
 					    // PARAMETERS FOR EDGE BASED STABILIZATION
 					    double cE,
+					    double cMax,
 					    double cK,
 					    // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
 					    double uL,
@@ -626,6 +627,7 @@ namespace proteus
 					 double * uTilde_dof,
 					 // PARAMETERS FOR EDGE BASED STABILIZATION
 					 double cE,
+					 double cMax,
 					 double cK,
 					 // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
 					 double uL,
@@ -1836,6 +1838,7 @@ namespace proteus
 				      double * uTilde_dof,
 				      // PARAMETERS FOR EDGE BASED STABILIZATION
 				      double cE,
+				      double cMax,
 				      double cK,
 				      // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
 				      double uL,
