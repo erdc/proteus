@@ -81,7 +81,6 @@ namespace proteus
 				   double rho_1,
 				   double nu_1,
 				   double rho_s,
-				   double nu_s,
 				   double smagorinskyConstant,
 				   int turbulenceClosureModel,
 				   double Ct_sge,
@@ -90,6 +89,7 @@ namespace proteus
 				   double C_b,
 				   const double* eps_solid,
 				   const double* q_velocity_fluid,
+				   const double* q_velocityStar_fluid,
 				   const double* q_vos,//sed fraction - gco check
 				   const double* q_dvos_dt,
                    const double* q_grad_vos,
@@ -257,7 +257,6 @@ namespace proteus
 				   double rho_1,
 				   double nu_1,
 			       double rho_s,
-		    	   double nu_s, 
 				   double smagorinskyConstant,
 				   int turbulenceClosureModel,
 				   double Ct_sge,
@@ -267,6 +266,7 @@ namespace proteus
 				   //VRANS
 				   const double* eps_solid,
 				   const double* q_velocity_fluid,
+				   const double* q_velocityStar_fluid,
 				   const double* q_vos,//sed fraction - gco check
 				   const double* q_dvos_dt,
                    const double* q_grad_vos,
@@ -538,7 +538,6 @@ namespace proteus
 			      const double rho_1,
 			      double nu_1,
 			      const double rho_s,
-			      double nu_s,
 			      const double h_e,
 			      const double smagorinskyConstant,
 			      const int turbulenceClosureModel,
@@ -648,14 +647,14 @@ namespace proteus
       
       rho = rho_s;
       //rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
-      
+      nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
       nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-      nu = nu_s;
+      //      nu = nu_s;
       //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       nu += nu_t;
       
       //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-      mu = rho_s*nu_s;
+      //      mu = rho_s*nu_s;
 
       eddy_viscosity = nu_t;
       // mass (volume accumulation)
@@ -840,6 +839,9 @@ namespace proteus
 					   const double u_f,
 					   const double v_f,
 					   const double w_f,
+					   const double uStar_f,
+					   const double vStar_f,
+					   const double wStar_f,
 					   double& mom_u_source,
 					   double& mom_v_source,
 					   double& mom_w_source,
@@ -863,28 +865,28 @@ namespace proteus
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
-      double solid_velocity[3]={u,v,w}, fluid_velocity[3]={u_f,v_f,w_f};
+      double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={uStar_f,vStar_f,wStar_f};
       double new_beta =    closure.betaCoeff(vos,
                                           rhoFluid,
                                           fluid_velocity,
                                           solid_velocity,
                                           viscosity);
       //new_beta/=rhoFluid;
-      mom_u_source +=  (vos)*new_beta*((u-u_f) + nu_t*gradC_x/closure.sigmaC_);
-      mom_v_source +=  (vos)*new_beta*((v-v_f) + nu_t*gradC_y/closure.sigmaC_);
-      mom_w_source +=  (vos)*new_beta*((w-w_f) + nu_t*gradC_z/closure.sigmaC_);
+      mom_u_source +=  (vos)*new_beta*((uStar-uStar_f) + nu_t*gradC_x/closure.sigmaC_);
+      mom_v_source +=  (vos)*new_beta*((vStar-vStar_f) + nu_t*gradC_y/closure.sigmaC_);
+      mom_w_source +=  (vos)*new_beta*((wStar-wStar_f) + nu_t*gradC_z/closure.sigmaC_);
 
-      dmom_u_source[0] = (vos)*new_beta;
+      dmom_u_source[0] = 0.0;//(vos)*new_beta;
       dmom_u_source[1] = 0.0;
       dmom_u_source[2] = 0.0;
 
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] =  (vos)*new_beta;
+      dmom_v_source[1] = 0.0;// (vos)*new_beta;
       dmom_v_source[2] = 0.0;
 
       dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = (vos)*new_beta;
+      dmom_w_source[2] = 0.0;//(vos)*new_beta;
     }
 
 
@@ -1513,7 +1515,6 @@ namespace proteus
 			   double rho_1,
 			   double nu_1,
                double rho_s,
-               double nu_s,
 			   double smagorinskyConstant,
 			   int turbulenceClosureModel,
 			   double Ct_sge,
@@ -1523,6 +1524,7 @@ namespace proteus
 			   //VRANS
 			   const double* eps_solid,
 			   const double* q_velocity_fluid,
+			   const double* q_velocityStar_fluid,
 			   const double* q_vos,//sed fraction - gco check
 			   const double* q_dvos_dt,
                const double* q_grad_vos,
@@ -1840,7 +1842,6 @@ namespace proteus
 				   rho_1,
 				   nu_1,
 				   rho_s,
-				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -1938,6 +1939,9 @@ namespace proteus
 						q_velocity_fluid[eN_k_nSpace+0],
 						q_velocity_fluid[eN_k_nSpace+1],
 						q_velocity_fluid[eN_k_nSpace+2],
+						q_velocityStar_fluid[eN_k_nSpace+0],
+						q_velocityStar_fluid[eN_k_nSpace+1],
+						q_velocityStar_fluid[eN_k_nSpace+2],
 						mom_u_source,
 						mom_v_source,
 						mom_w_source,
@@ -2490,7 +2494,6 @@ namespace proteus
     				   rho_1,
     				   nu_1,
     				   rho_s,
-    				   nu_s,
     				   elementDiameter[eN],
     				   smagorinskyConstant,
     				   turbulenceClosureModel,
@@ -2566,7 +2569,6 @@ namespace proteus
     				   rho_1,
     				   nu_1,
     				   rho_s,
-    				   nu_s,
     				   elementDiameter[eN],
     				   smagorinskyConstant,
     				   turbulenceClosureModel,
@@ -3093,7 +3095,6 @@ namespace proteus
 			   double rho_1,
 			   double nu_1, 
 			   double rho_s,
-			   double nu_s, 
 			   double smagorinskyConstant,
 			   int turbulenceClosureModel,
 			   double Ct_sge,
@@ -3103,6 +3104,7 @@ namespace proteus
 			   //VRANS
 			   const double* eps_solid,
 			   const double* q_velocity_fluid,
+			   const double* q_velocityStar_fluid,
 			   const double* q_vos,//sed fraction - gco check
                            const double* q_dvos_dt, 
                            const double* q_grad_vos,
@@ -3452,7 +3454,6 @@ namespace proteus
 				   rho_1,
 				   nu_1,
 				   rho_s,
-				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -3545,11 +3546,14 @@ namespace proteus
                                                 q_velocity_sge[eN_k_nSpace+0],
                                                 q_velocity_sge[eN_k_nSpace+1],
                                                 q_velocity_sge[eN_k_nSpace+2],
-						                        eps_solid[elementFlags[eN]],
-						                        vos,
-						                       q_velocity_fluid[eN_k_nSpace+0],
+                                                eps_solid[elementFlags[eN]],
+                                                vos,
+                                                q_velocity_fluid[eN_k_nSpace+0],
 						q_velocity_fluid[eN_k_nSpace+1],
 						q_velocity_fluid[eN_k_nSpace+2],
+                                                q_velocityStar_fluid[eN_k_nSpace+0],
+						q_velocityStar_fluid[eN_k_nSpace+1],
+						q_velocityStar_fluid[eN_k_nSpace+2],
 						mom_u_source,
 						mom_v_source,
 						mom_w_source,
@@ -4183,7 +4187,6 @@ namespace proteus
 				   rho_1,
 				   nu_1,
 				   rho_s,
-				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -4259,7 +4262,6 @@ namespace proteus
 				   rho_1,
 				   nu_1,
 				   rho_s,
-				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,

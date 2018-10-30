@@ -265,7 +265,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.ws_dirichlet.setConstantBC(0.)
             self.v_diffusive.setConstantBC(0.)
             self.vs_diffusive.setConstantBC(0.)
-        if self._b_or[2] == 1. or self._b_or[2] == -1.:
+        if self.nd==3 and (self._b_or[2] == 1. or self._b_or[2] == -1.):
             self.u_dirichlet.setConstantBC(0.)
             self.v_dirichlet.setConstantBC(0.)
             self.us_dirichlet.setConstantBC(0.)
