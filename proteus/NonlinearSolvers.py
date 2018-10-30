@@ -813,6 +813,22 @@ class ExplicitLumpedMassMatrix(Newton):
     """
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        # compute fluxes
+        self.computeResidual(u,r,b)
+
+        ############
+        # FCT STEP #
+        ############
+        self.F.kth_FCT_step()
+        
+        ###########################################
+        # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+        
+    def no_solve(self,u,r=None,b=None,par_u=None,par_r=None):
         self.computeResidual(u,r,b)
         u[:] = r
         ############

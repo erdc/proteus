@@ -13,10 +13,15 @@ if ct.STABILIZATION_TYPE==0: #SUPG
     fullNewtonFlag = True
     updateJacobian = True
     timeIntegration = BackwardEuler_cfl
+elif ct.STABILIZATION_TYPE==1:
+    fullNewtonFlag = False
+    updateJacobian = False
+    timeIntegration = BackwardEuler_cfl
+    levelNonlinearSolver = TwoStageNewton
 else:
     fullNewtonFlag = False
     updateJacobian = False
-    timeIntegration = VOF.RKEV # SSP33 
+    timeIntegration = VOS3P.RKEV # SSP33 
     if ct.LUMPED_MASS_MATRIX==True: 
         levelNonlinearSolver = ExplicitLumpedMassMatrix
     else:
@@ -55,7 +60,7 @@ else:
 #numericalFluxType = DoNothing
 numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior # PERIODIC
 
-shockCapturing = VOF.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_vos,lag=lag_shockCapturing_vos)
+shockCapturing = VOS3P.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_vos,lag=lag_shockCapturing_vos)
 
 matrix = SparseMatrix
 if parallel:
