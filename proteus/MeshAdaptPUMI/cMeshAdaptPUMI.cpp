@@ -348,8 +348,8 @@ int MeshAdaptPUMIDrvr::willAdapt()
   int adaptFlag = 0;
   if(size_field_config == "combined" or size_field_config == "isotropic")
     adaptFlag += willInterfaceAdapt(); 
-  if(size_field_config == "combined" or size_field_config == "VMS")
-    adaptFlag += willErrorAdapt();
+  //if(size_field_config == "combined" or size_field_config == "VMS")
+  //  adaptFlag += willErrorAdapt();
 
   if(adaptFlag > 0)
     adaptFlag = 1;
@@ -470,8 +470,12 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   }
   else if(size_field_config == "combined" && std::string(inputString)==""){
     assert(vmsErrH1);
-    double L_band = (numAdaptSteps+N_interface_band)*hPhi;
+    //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
+    //calculateSizeField(L_band);
+    double L_band = (N_interface_band+1)*hPhi;
     calculateSizeField(L_band);
+    if(nAdapt>2)
+        predictiveInterfacePropagation();
     getERMSizeField(total_error);
   }
   else {
