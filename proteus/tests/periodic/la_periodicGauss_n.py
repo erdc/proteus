@@ -54,10 +54,10 @@ fullNewtonFlag = True
 
 if useVOS:
     timeIntegration = VOS3P.RKEV
-    timeOrder=1
-    levelNonlinearSolver = ExplicitLumpedMassMatrix
-#    levelNonlinearSolver = ExplicitConsistentMassMatrixForVOF
-    fullNewtonFlag = False
+    timeOrder=3
+#    levelNonlinearSolver = ExplicitLumpedMassMatrix
+    levelNonlinearSolver = ExplicitConsistentMassMatrixForVOF
+    fullNewtonFlag = True
     
 nonlinearSmoother = NLGaussSeidel
 
