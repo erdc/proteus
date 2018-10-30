@@ -365,6 +365,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cE = cE
         self.outputQuantDOFs = outputQuantDOFs
 
+        #mql. Tmp assert while we clean the code
+        #NOTES: This code is very not cleaned up. Here are some things to do:
+        # * Decide methods to support. I lean towards STABILIZTION_TYPE=0,4 (supg, DKuzmin)
+        # * Clean the code accordingly. See VOF and VOF3P as reference
+        # * For now just STAB=0 and 4 work
+        assert self.STABILIZATION_TYPE in [0,4]
+        if self.STABILIZATION_TYPE == 4:
+            assert self.LUMPED_MASS_MATRIX, "While we clean this code use LUMPED_MASS_MATRIX"
+            
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
 
@@ -1030,8 +1039,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         except:
             pass
         if self.coefficients.LUMPED_MASS_MATRIX == True:
-            cond = self.coefficients.STABILIZATION_TYPE == 2
-            assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
+            #cond = self.coefficients.STABILIZATION_TYPE == 2
+            #assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
             cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrix
             assert cond, "Use levelNonlinearSolver=ExplicitLumpedMassMatrix when the mass matrix is lumped"
         if self.coefficients.FCT == True:
@@ -1200,8 +1209,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                self.dirichletConditions[0].global2freeGlobal_global_dofs,
                                                                self.dirichletConditions[0].global2freeGlobal_free_dofs,
                                                                limited_solution,
-                                                               self.timeintegration.u_dof_stage[0][self.timeIntegration.lstage])
-        
+                                                               self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage])
+
         self.vos.kth_FCT_step(
             self.timeIntegration.dt,
             self.coefficients.num_fct_iter,
@@ -1215,7 +1224,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.uLow,
             self.dLow,
             self.fluxMatrix,
-            limitedFlux,            
+            limitedFlux,
+            self.min_u_bc,
+            self.max_u_bc,
             rowptr,
             colind)
 

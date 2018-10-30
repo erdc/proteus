@@ -4,7 +4,7 @@ from proteus import Domain
 from proteus import Norms
 from proteus import Profiling 
 from proteus import Context 
-from proteus.mprans import VOF
+from proteus.mprans import VOS3P
 import numpy as np
 import math 
 
@@ -14,22 +14,17 @@ ct=Context.Options([
     ("T",0.2,"Final time"),
     ("nDTout",10,"Number of time steps to archive"),
     ("refinement",3,"Level of refinement"),
-    ("unstructured",False,"Use unstructured mesh. Set to false for periodic BCs"),
     # Choice of numerical method #
     ("STABILIZATION_TYPE",2,"0: SUPG, 1: EV, 2: smoothness based indicator"),
     ("LUMPED_MASS_MATRIX",True,"Flag to lumped the mass matrix"),
-    ("ENTROPY_TYPE",1,"1: quadratic, 2: logarithmic"),
-    ("FCT",False,"Use Flux Corrected Transport"),
     # Numerical parameters #
-    ("cE",0.1,"Entropy viscosity constant"),
-    ("cK",1.0,"Artificial compression constant"),
     ("cfl",0.1,"Target cfl"),
     ("SSPOrder",1,"SSP method of order 1, 2 or 3")
 ],mutable=True)
 
 if ct.problem==0:
-    ct.T=0.5
-    ct.nDTout=10
+    ct.T=1.0
+    ct.nDTout=20
 elif ct.problem==1:    
     ct.T=0.40
     ct.nDTout=40
@@ -69,7 +64,7 @@ if ct.problem==0:
 nnz=1
 he=old_div(1.0,(nnx-1.0))
 
-unstructured=ct.unstructured #True for tetgen, false for tet or hex from rectangular grid
+unstructured=False
 box=Domain.RectangularDomain(L=(1.0,0.1 if ct.problem==0 else 1.0),
                              x=(0.0,0.0),
                              name="box");
@@ -83,7 +78,7 @@ else:
     domain = box
 soname="vos_level_"+repr(ct.refinement)
 
-class MyCoefficients(VOF.Coefficients):
+class MyCoefficients(VOS3P.Coefficients):
     def attachModels(self,modelList):
         self.model = modelList[0]
         self.rdModel = self.model
