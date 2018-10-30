@@ -134,7 +134,8 @@ namespace proteus
 					       int STABILIZATION_TYPE,
 					       int ENTROPY_TYPE,
 					       // FOR FCT
-					       double* low_order_solution,
+					       double* uLow,
+					       double* dLow,
 					       double* dt_times_dH_minus_dL,
 					       double* min_u_bc,
 					       double* max_u_bc,
@@ -195,12 +196,14 @@ namespace proteus
                                    double* ebqe_bc_flux_u_ext,
                                    int* csrColumnOffsets_eb_u_u,
                                    int STABILIZATION_TYPE)=0;
-    virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+    virtual void FCTStep(double dt,
+			 int NNZ, //number on non-zero entries on sparsity pattern
                          int numDOFs, //number of DOFs
                          double* lumped_mass_matrix, //lumped mass matrix (as vector)
                          double* soln, //DOFs of solution at time tn
                          double* solH, //DOFs of high order solution at tnp1
-                         double* low_order_solution,
+                         double* uLow,
+			 double* dLow,
                          double* limited_solution,
                          int* csrRowIndeces_DofLoops, //csr row indeces
                          int* csrColumnOffsets_DofLoops, //csr column offsets
@@ -208,7 +211,8 @@ namespace proteus
                          double* dt_times_dH_minus_dL, //low minus high order dissipative matrices
                          double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
                          double* max_u_bc,
-                         int LUMPED_MASS_MATRIX
+                         int LUMPED_MASS_MATRIX,
+			 int STABILIZATION_TYPE
                          )=0;
     virtual void calculateResidualEdgeBased(//element
 					    double dt,
@@ -302,7 +306,8 @@ namespace proteus
 					    int STABILIZATION_TYPE,
 					    int ENTROPY_TYPE,
 					    // FOR FCT
-					    double* low_order_solution,
+					    double* uLow,
+					    double* dLow,
 					    double* dt_times_dH_minus_dL,
 					    double* min_u_bc,
 					    double* max_u_bc,
@@ -645,7 +650,8 @@ namespace proteus
 					 int STABILIZATION_TYPE,
 					 int ENTROPY_TYPE,
 					 // FOR FCT
-					 double* low_order_solution,
+					 double* uLow,
+					 double* dLow,
 					 double* dt_times_dH_minus_dL,
 					 double* min_u_bc,
 					 double* max_u_bc,
@@ -931,7 +937,7 @@ namespace proteus
 			    ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
 			    1./3*dt*ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) +
 			    1./9*dt*dt*ck.NumericalDiffusion(Hn,df,&u_grad_test_dV[i_nSpace]) +
-			    0./3*dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
+			    1./3*dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
 										grad_u_old,
 										&u_grad_test_dV[i_nSpace]);
 			// TODO: Add part about moving mesh
@@ -940,7 +946,7 @@ namespace proteus
 			    ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
 			    dt*ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) +
 			    0.5*dt*dt*ck.NumericalDiffusion(HTilde,df,&u_grad_test_dV[i_nSpace]) +
-			    0*dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
+			    dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
 									   grad_u_old,
 									   &u_grad_test_dV[i_nSpace]);
 		      }
@@ -1662,12 +1668,14 @@ namespace proteus
 	    }//ebNE
       }//computeJacobian
 
-      void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
+      void FCTStep(double dt,
+		   int NNZ, //number on non-zero entries on sparsity pattern
 		   int numDOFs, //number of DOFs
 		   double* lumped_mass_matrix, //lumped mass matrix (as vector)
 		   double* soln, //DOFs of solution at time tn
 		   double* solH, //DOFs of high order solution at tnp1
-		   double* low_order_solution,
+		   double* uLow,
+		   double* dLow,
 		   double* limited_solution,
 		   int* csrRowIndeces_DofLoops, //csr row indeces
 		   int* csrColumnOffsets_DofLoops, //csr column offsets
@@ -1675,12 +1683,12 @@ namespace proteus
 		   double* dt_times_dH_minus_dL, //low minus high order dissipative matrices
 		   double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
 		   double* max_u_bc,
-		   int LUMPED_MASS_MATRIX
+		   int LUMPED_MASS_MATRIX,
+		   int STABILIZATION_TYPE
 		   )
       {
 	register double Rpos[numDOFs], Rneg[numDOFs];
 	register double FluxCorrectionMatrix[NNZ];
-	register double solL[numDOFs];
 	//////////////////
 	// LOOP in DOFs //
 	//////////////////
@@ -1691,10 +1699,8 @@ namespace proteus
 	    double solHi = solH[i];
 	    double solni = soln[i];
 	    double mi = lumped_mass_matrix[i];
-	    // compute low order solution
-	    // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
-	    solL[i] = low_order_solution[i];
-
+	    double uLowi = uLow[i];
+	    double uDotLowi = (uLowi - solni)/dt;
 	    double mini=min_u_bc[i], maxi=max_u_bc[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
 	    if (GLOBAL_FCT==1)
 	      {
@@ -1707,19 +1713,31 @@ namespace proteus
 	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	      {
 		int j = csrColumnOffsets_DofLoops[offset];
+		double solnj = soln[j];
 		////////////////////////
 		// COMPUTE THE BOUNDS //
 		////////////////////////
 		if (GLOBAL_FCT == 0)
 		  {
-		    mini = fmin(mini,soln[j]);
-		    maxi = fmax(maxi,soln[j]);
+		    mini = fmin(mini,solnj);
+		    maxi = fmax(maxi,solnj);
 		  }
-		// i-th row of flux correction matrix
-		double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
-		FluxCorrectionMatrix[ij] = ML_minus_MC * (solH[j]-soln[j] - (solHi-solni))
-		  + dt_times_dH_minus_dL[ij]*(soln[j]-solni);
-
+		double uLowj = uLow[j];
+		double uDotLowj = (uLowj - solnj)/dt;
+		// i-th row of flux correction matrix		
+		if (STABILIZATION_TYPE==4) // DK high-order, linearly stable anti-dif. flux
+		  {
+		    FluxCorrectionMatrix[ij] = dt*(MassMatrix[ij]*(uDotLowi-uDotLowj)
+						   + dLow[ij]*(uLowi-uLowj));
+		  }
+		else
+		  {
+		    double ML_minus_MC =
+		      (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+		    FluxCorrectionMatrix[ij] = ML_minus_MC * (solH[j]-solnj - (solHi-solni))
+		      + dt_times_dH_minus_dL[ij]*(solnj-solni);
+		  }
+		
 		///////////////////////
 		// COMPUTE P VECTORS //
 		///////////////////////
@@ -1732,8 +1750,8 @@ namespace proteus
 	    ///////////////////////
 	    // COMPUTE Q VECTORS //
 	    ///////////////////////
-	    double Qposi = mi*(maxi-solL[i]);
-	    double Qnegi = mi*(mini-solL[i]);
+	    double Qposi = mi*(maxi-uLow[i]);
+	    double Qnegi = mi*(mini-uLow[i]);
 
 	    ///////////////////////
 	    // COMPUTE R VECTORS //
@@ -1754,14 +1772,13 @@ namespace proteus
 	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	      {
 		int j = csrColumnOffsets_DofLoops[offset];
-		ith_Limiter_times_FluxCorrectionMatrix +=
-		  ((FluxCorrectionMatrix[ij]>0) ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]))
-		  * FluxCorrectionMatrix[ij];
-		//ith_Limiter_times_FluxCorrectionMatrix += FluxCorrectionMatrix[ij];
+		double Lij = 1;
+		Lij = ((FluxCorrectionMatrix[ij]>0) ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]));
+		ith_Limiter_times_FluxCorrectionMatrix += Lij * FluxCorrectionMatrix[ij];
 		//update ij
 		ij+=1;
 	      }
-	    limited_solution[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
+	    limited_solution[i] = uLow[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
 	  }
       }
 
@@ -1856,7 +1873,8 @@ namespace proteus
 				      int STABILIZATION_TYPE,
 				      int ENTROPY_TYPE,
 				      // FOR FCT
-				      double* low_order_solution,
+				      double* uLow,
+				      double* dLow,
 				      double* dt_times_dH_minus_dL,
 				      double* min_u_bc,
 				      double* max_u_bc,
@@ -1880,7 +1898,7 @@ namespace proteus
 	    // NODAL ENTROPY //
 	    if (STABILIZATION_TYPE==2) //EV stab
 	      {
-		double porosity_times_solni = porosity_dof[i]*u_dof_old[i];		
+		double porosity_times_solni = porosity_dof[i]*u_dof_old[i];
 		eta[i] = ENTROPY_TYPE == 0 ? ENTROPY(porosity_times_solni,uL,uR) : ENTROPY_LOG(porosity_times_solni,uL,uR);
 		global_entropy_residual[i]=0.;
 	      }
@@ -2038,7 +2056,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
 
 		// distribute global residual for (lumped) mass matrix
 		globalResidual[gi] += elementResidual_u[i];
@@ -2205,7 +2223,7 @@ namespace proteus
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
 		globalResidual[gi] += dt*elementResidual_u[i];
 		boundary_integral[gi] += elementResidual_u[i];
 		min_u_bc[gi] = fmin(min_u_bc_local,min_u_bc[gi]);
@@ -2248,7 +2266,7 @@ namespace proteus
 	      }
 	    if (STABILIZATION_TYPE==2) //EV Stab
 	      {
-		// Normalizae entropy residual
+		// Normalize entropy residual
 		global_entropy_residual[i] *= etaMini == etaMaxi ? 0. : 2*cE/(etaMaxi-etaMini);
 		quantDOFs[i] = fabs(global_entropy_residual[i]);
 	      }
@@ -2310,12 +2328,14 @@ namespace proteus
 		    //dHij - dLij. This matrix is needed during FCT step
 		    dt_times_dH_minus_dL[ij] = dt*(dHij - dLowij);
 		    dLii -= dLij;
+		    dLow[ij] = dLowij;
 		  }
 		else //i==j
 		  {
 		    // NOTE: this is incorrect. Indeed, dLii = -sum_{j!=i}(dLij) and similarly for dCii.
 		    // However, it is irrelevant since during the FCT step we do (dL-dC)*(solnj-solni)
 		    dt_times_dH_minus_dL[ij]=0;
+		    dLow[ij]=0;
 		  }
 		//update ij
 		ij+=1;
@@ -2323,12 +2343,15 @@ namespace proteus
 	    double mi = ML[i];
 	    // compute edge_based_cfl
 	    edge_based_cfl[i] = 2.*fabs(dLii)/mi;
-	    low_order_solution[i] = u_dof_old[i] - dt/mi*(ith_flux_term
-	    						  + boundary_integral[i]
-	    						  - ith_low_order_dissipative_term);
+	    uLow[i] = u_dof_old[i] - dt/mi*(ith_flux_term
+					    + boundary_integral[i]
+					    - ith_low_order_dissipative_term);
+
 	    // update residual
 	    if (LUMPED_MASS_MATRIX==1)
-	      globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term + boundary_integral[i] - ith_dissipative_term);
+	      globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term
+							+ boundary_integral[i]
+							- ith_dissipative_term);
 	    else
 	      globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
 	  }
