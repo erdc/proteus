@@ -622,7 +622,17 @@ namespace proteus
                 {
                   if (nDOF_mesh_trial_elementIn == 3) // P1 FE-space
                     {
-                      if (nQuadraturePoints_elementIn == 4)
+                      if (nQuadraturePoints_elementIn == 3)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 2)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,3,3,3,3,2>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else if (nQuadraturePoints_elementIn == 4)
                         {
                           if (nQuadraturePoints_elementBoundaryIn == 3)
                             return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,4,3,3,3,3>());
@@ -727,6 +737,87 @@ namespace proteus
                   NO_INSTANCE;
                   abort();
                 }
+            }
+        }
+      else
+        {
+          NO_INSTANCE;
+          abort();
+        }
+      return NULL;
+    }
+  template<class Model_Base,
+    template<class CompKernelType,
+    int nSpace,
+    int nQuadraturePoints_element,
+    int nDOF_mesh_trial_element,
+    int nDOF_trial_element,
+    int nDOF_test_element,
+    int nQuadraturePoints_elementBoundary>
+    class ModelTemplate,
+    template<int nSpace,
+    int nDOF_mesh_trial_element,
+    int nDOF_trial_element,
+    int nDOF_test_element>
+    class CompKernelTemplate>
+    Model_Base* chooseAndAllocateDiscretization1D(int nSpaceIn,
+                                                  int nQuadraturePoints_elementIn,
+                                                  int nDOF_mesh_trial_elementIn,
+                                                  int nDOF_trial_elementIn,
+                                                  int nDOF_test_elementIn,
+                                                  int nQuadraturePoints_elementBoundaryIn,
+                                                  int CompKernelFlag)//0=Parametric
+    {
+      if (CompKernelFlag == 0)
+        {
+          if (nSpaceIn == 1) // 2D
+            {
+              if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric
+                {
+                  if (nDOF_mesh_trial_elementIn == 2) // P1 FE-space
+                    {
+                      if (nQuadraturePoints_elementIn == 2)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 1)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<1,2,2,2>,1,2,2,2,2,1>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else if (nQuadraturePoints_elementIn == 4)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 1)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<1,2,2,2>,1,4,2,2,2,1>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else
+                        {
+                          NO_INSTANCE;
+                          abort();
+                        }
+                    }
+                  else
+                    {
+                      NO_INSTANCE;
+                      abort();
+                    }
+                }
+              else
+                {
+                  NO_INSTANCE;
+                  abort();
+                }
+            }
+          else
+            {
+              NO_INSTANCE;
+              abort();
             }
         }
       else
