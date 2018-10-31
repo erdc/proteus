@@ -398,8 +398,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.flowCoefficients = None
         if self.VOS_model is not None:
-            self.model.q_vos = modelList[self.VOS_model].q[('u',0)].copy()
-            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)].copy()
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
             self.q_vos = self.model.q_vos
             self.ebqe_vos = self.model.ebqe_vos
         else:
