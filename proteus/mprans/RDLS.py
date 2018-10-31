@@ -164,7 +164,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  alpha=1.0E9,
                  backgroundDissipationEllipticRedist=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs=False): #penalization param for elliptic re-distancing
+                 outputQuantDOFs=False,
+                 # NULLSpace info
+                 nullSpace='NoNullSpace'): #penalization param for elliptic re-distancing
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         variableNames = ['phid']
@@ -213,6 +215,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if alpha=='inf':
             self.alpha = 0
             self.freeze_interface_within_elliptic_redist = True
+        self.nullSpace = nullSpace
 
     def attachModels(self, modelList):
         if self.nModelId is not None:
@@ -956,8 +959,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')
 
         # try to use 1d,2d,3d specific modules
-        # mwf debug
-        # pdb.set_trace()
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -1278,9 +1279,6 @@ def setZeroLSweakDirichletBCs(RDLSvt):
                     RDLSvt.weakDirichletConditionFlags[J] = 1
     else:
         #
-        # mwf debug
-        #import pdb
-        # pdb.set_trace()
         # use c directly
         ctransportCoefficients.setWeakDirichletConditionsForLevelSet(RDLSvt.mesh.nElements_global,
                                                                      RDLSvt.nDOF_trial_element[0],
@@ -1314,9 +1312,6 @@ def setZeroLSweakDirichletBCsSimple(RDLSvt):
                     RDLSvt.weakDirichletConditionFlags[J] = 1
     else:
         #
-        # mwf debug
-        #import pdb
-        # pdb.set_trace()
         # use c directly
         ctransportCoefficients.setSimpleWeakDirichletConditionsForLevelSet(RDLSvt.mesh.nElements_global,
                                                                            RDLSvt.nDOF_trial_element[0],
