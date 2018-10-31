@@ -424,6 +424,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #    self.ebqe_v = modelList[
             #        self.flowModelIndex].ebqe[
             #        ('velocity', 0)]
+
             if ('velocity', 0) in modelList[self.SED_model].q:
                 self.q_v = modelList[self.SED_model].q[('velocity', 0)]
                 self.ebqe_v = modelList[self.SED_model].ebqe[('velocity', 0)]
@@ -1512,9 +1513,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.delta_x_ij is None:
             self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
 
-        #import pdb; pdb.set_trace()
-        self.coefficients.q_v[:,:,0]=0.0
-        self.coefficients.q_v[:,:,1]=-0.1
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
