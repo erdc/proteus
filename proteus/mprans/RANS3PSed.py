@@ -866,7 +866,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #if self.q_grad_vos.all != 0.0:
             #    logEvent('q_grad_vos from RANS3PSed.py --> %s ' % self.q_grad_vos)
 
-
+        #self.model.u[0].dof[:]=0
+        #self.model.u[1].dof[:]=-0.1 #mql hack
+        #self.model.u[2].dof[:]=0
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
