@@ -450,7 +450,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   {
     double L_band = (N_interface_band+1)*hPhi;
     calculateSizeField(L_band);
-    if(nAdapt>2)
+    if(nAdapt>1)
         predictiveInterfacePropagation();
   }
   else if (size_field_config == "isotropicProteus")
