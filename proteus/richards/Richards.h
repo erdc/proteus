@@ -506,8 +506,9 @@ namespace proteus
             DKWr_DpsiC    = 0.0;
           }
         //slight compressibility
-        rhom = rho*exp(beta*u);
-        drhom = beta*rhom;
+        //cek hack, force incompressible
+        rhom = rho;//*exp(beta*u);
+        drhom = 0.0;//beta*rhom;
         m = rhom*thetaW;
         dm = -rhom*DthetaW_DpsiC+drhom*thetaW;
         for (int I=0;I<nSpace;I++)
@@ -522,6 +523,47 @@ namespace proteus
                 da[ii] = -rho*DKWr_DpsiC*KWs[ii];
               }
           }
+      }
+      
+      inline
+        void evaluateInverseCoefficients(const int rowptr[nSpace],
+                                         const int colind[nnz],
+                                         const double rho,
+                                         const double beta,
+                                         const double gravity[nSpace],
+                                         const double alpha,
+                                         const double n_vg,
+                                         const double thetaR,
+                                         const double thetaSR,
+                                         const double KWs[nnz],			      
+                                         double& u,
+                                         const double& m,
+                                         const double& dm,
+                                         const double f[nSpace],
+                                         const double df[nSpace],
+                                         const double a[nnz],
+                                         const double da[nnz])
+      {
+        register double psiC,
+          pcBar,pcBar_n,
+          sBar,
+          thetaW,
+          thetaS,
+          m_vg;
+        m_vg = 1.0 - 1.0/n_vg;
+        thetaS = thetaR + thetaSR;
+        thetaW = m/rho;
+        sBar = (thetaW - thetaR)/thetaSR;
+        pcBar_n = pow(sBar,-1.0/m_vg) - 1.0;
+        pcBar = pow(pcBar_n,1.0/n_vg);
+        psiC = pcBar/alpha;
+        u = - psiC;
+        //cek debug
+        /* std::cout<<"n "<<n_vg<<std::endl */
+        /*          <<"m "<<m_vg<<std::endl */
+        /*          <<"sBar "<<sBar<<std::endl */
+        /*          <<"psiC "<<psiC<<std::endl; */
+        /* std::cout<<"psi "<<u<<std::endl; */
       }
 
       inline
@@ -1942,7 +1984,7 @@ namespace proteus
         // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
         // Allocate space for the transport matrices
         // This is used for first order KUZMIN'S METHOD
-        register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
+        register double TransportMatrix[NNZ];
         std::valarray<double> u_free_dof_old(numDOFs);
         for(int eN=0;eN<nElements_global;eN++)
           for (int j=0;j<nDOF_trial_element;j++)
@@ -1953,7 +1995,6 @@ namespace proteus
         for (int i=0; i<NNZ; i++)
           {
             TransportMatrix[i] = 0.;
-            TransposeTransportMatrix[i] = 0.;
           }
 
         // compute entropy and init global_entropy_residual and boundary_integral
@@ -1983,11 +2024,14 @@ namespace proteus
             //declare local storage for local contributions and initialize
             register double
               elementResidual_u[nDOF_test_element],
-              element_entropy_residual[nDOF_test_element];
+              element_entropy_residual[nDOF_test_element],Phi[nDOF_trial_element];
             register double  elementTransport[nDOF_test_element][nDOF_trial_element];
             register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
+                Phi[i] = u_dof_old[i];
+                for (int I=0;I<nSpace;I++)
+                  Phi[i] -= rho*mesh_dof[i*3+I]*gravity[I];
                 elementResidual_u[i]=0.0;
                 element_entropy_residual[i]=0.0;
                 for (int j=0;j<nDOF_trial_element;j++)
@@ -2014,8 +2058,7 @@ namespace proteus
                   //for general use
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
                   dV,x,y,z,xt,yt,zt,
-                  //VRANS
-                  porosity;
+                  m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
                 //get the physical integration weight
                 ck.calculateMapping_element(eN,
                                             k,
@@ -2040,7 +2083,7 @@ namespace proteus
                 ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
                 //get the solution gradients at tn for entropy viscosity
                 ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-                ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+                ck.gradFromDOF(Phi,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
                 //precalculate test function products with integration weights for mass matrix terms
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -2048,9 +2091,47 @@ namespace proteus
                     for (int I=0;I<nSpace;I++)
                       u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
                   }
-
-                //VRANS
-                porosity = 1.0;
+                
+                //
+                //calculate pde coefficients at quadrature points
+                //
+                evaluateCoefficients(a_rowptr,
+                                     a_colind,
+                                     rho,
+                                     beta,
+                                     gravity,
+                                     alpha[elementMaterialTypes[eN]],
+                                     n[elementMaterialTypes[eN]],
+                                     thetaR[elementMaterialTypes[eN]],
+                                     thetaSR[elementMaterialTypes[eN]],
+                                     &KWs[elementMaterialTypes[eN]*nnz],			      
+                                     un,
+                                     m,
+                                     dm,
+                                     f,
+                                     df,
+                                     a,
+                                     da);
+                double test_u=0.0;
+                evaluateInverseCoefficients(a_rowptr,
+                                            a_colind,
+                                            rho,
+                                            beta,
+                                            gravity,
+                                            alpha[elementMaterialTypes[eN]],
+                                            n[elementMaterialTypes[eN]],
+                                            thetaR[elementMaterialTypes[eN]],
+                                            thetaSR[elementMaterialTypes[eN]],
+                                            &KWs[elementMaterialTypes[eN]*nnz],			      
+                                            test_u,
+                                            m,
+                                            dm,
+                                            f,
+                                            df,
+                                            a,
+                                            da);
+                //cek debug
+                //std::cout<<"u "<<un<<" test_u "<<test_u<<std::endl;
                 //
                 //moving mesh
                 //
@@ -2060,8 +2141,10 @@ namespace proteus
                 mesh_velocity[2] = zt;
                 //relative velocity at tn
                 for (int I=0;I<nSpace;I++)
-                  porosity_times_velocity[I] = porosity*(velocity[eN_k_nSpace+I]-MOVING_DOMAIN*mesh_velocity[I]);
-
+                  {
+                    f[I] -= MOVING_DOMAIN*m*mesh_velocity[I];
+                    porosity_times_velocity[I] = df[I]*(2.0*dm*dm/(dm*dm + fmax(1.0e-16,dm*dm)));
+                  }
                 //////////////////////////////
                 // CALCULATE CELL BASED CFL //
                 //////////////////////////////
@@ -2074,7 +2157,7 @@ namespace proteus
                   {
                     for (int I=0;I<nSpace;I++)
                       aux_entropy_residual += porosity_times_velocity[I]*grad_un[I];
-                    DENTROPY_un = ENTROPY_TYPE==1 ? DENTROPY(porosity*un,uL,uR) : DENTROPY_LOG(porosity*un,uL,uR);
+                    DENTROPY_un = ENTROPY_TYPE==1 ? DENTROPY(un,uL,uR) : DENTROPY_LOG(un,uL,uR);
                   }
                 //////////////
                 // ith-LOOP //
@@ -2090,7 +2173,8 @@ namespace proteus
                         DENTROPY_uni = ENTROPY_TYPE == 1 ? DENTROPY(porosity_times_uni,uL,uR) : DENTROPY_LOG(porosity_times_uni,uL,uR);
                         element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
                       }
-                    elementResidual_u[i] += porosity*(u-un)*u_test_dV[i];
+                    //cek todo, fix elemnetResidual
+                    elementResidual_u[i] += (u-un)*u_test_dV[i];
                     ///////////////
                     // j-th LOOP // To construct transport matrices
                     ///////////////
@@ -2098,17 +2182,16 @@ namespace proteus
                       {
                         int j_nSpace = j*nSpace;
                         int i_nSpace = i*nSpace;
-                        elementTransport[i][j] += // -int[(vel.grad_wi)*wj*dx]
-                          ck.AdvectionJacobian_weak(porosity_times_velocity,
-                                                    u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]);
-                        elementTransposeTransport[i][j] += // -int[(vel.grad_wj)*wi*dx]
-                          ck.AdvectionJacobian_weak(porosity_times_velocity,
-                                                    u_trial_ref[k*nDOF_trial_element+i],&u_grad_test_dV[j_nSpace]);
+                        elementTransport[i][j] += ck.SimpleDiffusionJacobian_weak(a_rowptr,
+                                                                                  a_colind,
+                                                                                  a,
+                                                                                  &u_grad_trial[j_nSpace],
+                                                                                  &u_grad_test_dV[i_nSpace]);
                       }
                   }//i
                 //save solution for other models
                 q_u[eN_k] = u;
-                q_m[eN_k] = porosity*u;
+                q_m[eN_k] = m;
               }
             /////////////////
             // DISTRIBUTE // load cell based element into global residual
@@ -2130,165 +2213,163 @@ namespace proteus
                     int eN_i_j = eN_i*nDOF_trial_element+j;
                     TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]]
                       += elementTransport[i][j];
-                    TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]]
-                      += elementTransposeTransport[i][j];
                   }//j
               }//i
           }//elements
 
-        //////////////////////////////////////////////////////////////////////////////////////////
-        // ADD OUTFLOW BOUNDARY TERM TO TRANSPORT MATRICES AND COMPUTE INFLOW BOUNDARY INTEGRAL //
-        //////////////////////////////////////////////////////////////////////////////////////////
-        //   * Compute outflow boundary integral as a matrix; i.e., int_B[ (vel.normal)*wi*wj*dx]
-        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
-          {
-            double min_u_bc_local = 1E10, max_u_bc_local = -1E10;
-            register int ebN = exteriorElementBoundariesArray[ebNE];
-            register int eN  = elementBoundaryElementsArray[ebN*2+0],
-              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
-              eN_nDOF_trial_element = eN*nDOF_trial_element;
-            register double elementResidual_u[nDOF_test_element];
-            for (int i=0;i<nDOF_test_element;i++)
-              elementResidual_u[i]=0.0;
-            // loop on quad points
-            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-              {
-                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
-                  ebNE_kb_nSpace = ebNE_kb*nSpace,
-                  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
-                  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-                register double
-                  u_ext=0.0, bc_u_ext=0.0,
-                  porosity_times_velocity[nSpace],
-                  flux_ext=0.0, dflux_ext=0.0,
-                  fluxTransport[nDOF_trial_element],
-                  jac_ext[nSpace*nSpace],
-                  jacDet_ext,
-                  jacInv_ext[nSpace*nSpace],
-                  boundaryJac[nSpace*(nSpace-1)],
-                  metricTensor[(nSpace-1)*(nSpace-1)],
-                  metricTensorDetSqrt,
-                  dS,
-                  u_test_dS[nDOF_test_element],
-                  normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,porosity_ext;
-                // calculate mappings
-                ck.calculateMapping_elementBoundary(eN,
-                                                    ebN_local,
-                                                    kb,
-                                                    ebN_local_kb,
-                                                    mesh_dof,
-                                                    mesh_l2g,
-                                                    mesh_trial_trace_ref,
-                                                    mesh_grad_trial_trace_ref,
-                                                    boundaryJac_ref,
-                                                    jac_ext,
-                                                    jacDet_ext,
-                                                    jacInv_ext,
-                                                    boundaryJac,
-                                                    metricTensor,
-                                                    metricTensorDetSqrt,
-                                                    normal_ref,
-                                                    normal,
-                                                    x_ext,y_ext,z_ext);
-                ck.calculateMappingVelocity_elementBoundary(eN,
-                                                            ebN_local,
-                                                            kb,
-                                                            ebN_local_kb,
-                                                            mesh_velocity_dof,
-                                                            mesh_l2g,
-                                                            mesh_trial_trace_ref,
-                                                            xt_ext,yt_ext,zt_ext,
-                                                            normal,
-                                                            boundaryJac,
-                                                            metricTensor,
-                                                            integralScaling);
-                dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
-                //compute shape and solution information
-                ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-                //precalculate test function products with integration weights
-                for (int j=0;j<nDOF_trial_element;j++)
-                  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+        /* ////////////////////////////////////////////////////////////////////////////////////////// */
+        /* // ADD OUTFLOW BOUNDARY TERM TO TRANSPORT MATRICES AND COMPUTE INFLOW BOUNDARY INTEGRAL // */
+        /* ////////////////////////////////////////////////////////////////////////////////////////// */
+        /* //   * Compute outflow boundary integral as a matrix; i.e., int_B[ (vel.normal)*wi*wj*dx] */
+        /* for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) */
+        /*   { */
+        /*     double min_u_bc_local = 1E10, max_u_bc_local = -1E10; */
+        /*     register int ebN = exteriorElementBoundariesArray[ebNE]; */
+        /*     register int eN  = elementBoundaryElementsArray[ebN*2+0], */
+        /*       ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0], */
+        /*       eN_nDOF_trial_element = eN*nDOF_trial_element; */
+        /*     register double elementResidual_u[nDOF_test_element]; */
+        /*     for (int i=0;i<nDOF_test_element;i++) */
+        /*       elementResidual_u[i]=0.0; */
+        /*     // loop on quad points */
+        /*     for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) */
+        /*       { */
+        /*         register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
+        /*           ebNE_kb_nSpace = ebNE_kb*nSpace, */
+        /*           ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb, */
+        /*           ebN_local_kb_nSpace = ebN_local_kb*nSpace; */
+        /*         register double */
+        /*           u_ext=0.0, bc_u_ext=0.0, */
+        /*           porosity_times_velocity[nSpace], */
+        /*           flux_ext=0.0, dflux_ext=0.0, */
+        /*           fluxTransport[nDOF_trial_element], */
+        /*           jac_ext[nSpace*nSpace], */
+        /*           jacDet_ext, */
+        /*           jacInv_ext[nSpace*nSpace], */
+        /*           boundaryJac[nSpace*(nSpace-1)], */
+        /*           metricTensor[(nSpace-1)*(nSpace-1)], */
+        /*           metricTensorDetSqrt, */
+        /*           dS, */
+        /*           u_test_dS[nDOF_test_element], */
+        /*           normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,porosity_ext; */
+        /*         // calculate mappings */
+        /*         ck.calculateMapping_elementBoundary(eN, */
+        /*                                             ebN_local, */
+        /*                                             kb, */
+        /*                                             ebN_local_kb, */
+        /*                                             mesh_dof, */
+        /*                                             mesh_l2g, */
+        /*                                             mesh_trial_trace_ref, */
+        /*                                             mesh_grad_trial_trace_ref, */
+        /*                                             boundaryJac_ref, */
+        /*                                             jac_ext, */
+        /*                                             jacDet_ext, */
+        /*                                             jacInv_ext, */
+        /*                                             boundaryJac, */
+        /*                                             metricTensor, */
+        /*                                             metricTensorDetSqrt, */
+        /*                                             normal_ref, */
+        /*                                             normal, */
+        /*                                             x_ext,y_ext,z_ext); */
+        /*         ck.calculateMappingVelocity_elementBoundary(eN, */
+        /*                                                     ebN_local, */
+        /*                                                     kb, */
+        /*                                                     ebN_local_kb, */
+        /*                                                     mesh_velocity_dof, */
+        /*                                                     mesh_l2g, */
+        /*                                                     mesh_trial_trace_ref, */
+        /*                                                     xt_ext,yt_ext,zt_ext, */
+        /*                                                     normal, */
+        /*                                                     boundaryJac, */
+        /*                                                     metricTensor, */
+        /*                                                     integralScaling); */
+        /*         dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb]; */
+        /*         //compute shape and solution information */
+        /*         ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext); */
+        /*         //precalculate test function products with integration weights */
+        /*         for (int j=0;j<nDOF_trial_element;j++) */
+        /*           u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS; */
 
-                //VRANS
-                porosity_ext = 1.0;
-                //
-                //moving mesh
-                //
-                double mesh_velocity[3];
-                mesh_velocity[0] = xt_ext;
-                mesh_velocity[1] = yt_ext;
-                mesh_velocity[2] = zt_ext;
-                //std::cout<<"mesh_velocity ext"<<std::endl;
-                for (int I=0;I<nSpace;I++)
-                  porosity_times_velocity[I] = porosity_ext*(ebqe_velocity_ext[ebNE_kb_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]);
-                //
-                //calculate the fluxes
-                //
-                double flow = 0.;
-                for (int I=0; I < nSpace; I++)
-                  flow += normal[I]*porosity_times_velocity[I];
+        /*         //VRANS */
+        /*         porosity_ext = 1.0; */
+        /*         // */
+        /*         //moving mesh */
+        /*         // */
+        /*         double mesh_velocity[3]; */
+        /*         mesh_velocity[0] = xt_ext; */
+        /*         mesh_velocity[1] = yt_ext; */
+        /*         mesh_velocity[2] = zt_ext; */
+        /*         //std::cout<<"mesh_velocity ext"<<std::endl; */
+        /*         for (int I=0;I<nSpace;I++) */
+        /*           porosity_times_velocity[I] = porosity_ext*(ebqe_velocity_ext[ebNE_kb_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]); */
+        /*         // */
+        /*         //calculate the fluxes */
+        /*         // */
+        /*         double flow = 0.; */
+        /*         for (int I=0; I < nSpace; I++) */
+        /*           flow += normal[I]*porosity_times_velocity[I]; */
+        /*         //cek todo, fix boundary conditions */
+        /*         if (flow >= 0 && isFluxBoundary_u[ebNE_kb] != 1 )  //outflow. This is handled via the transport matrices. Then flux_ext=0 and dflux_ext!=0 */
+        /*           { */
+        /*             dflux_ext = flow; */
+        /*             flux_ext = 0; */
+        /*             // save external u */
+        /*             ebqe_u[ebNE_kb] = u_ext; */
+        /*           } */
+        /*         else // inflow. This is handled via the boundary integral. Then flux_ext!=0 and dflux_ext=0 */
+        /*           { */
+        /*             dflux_ext = 0; */
+        /*             // save external u */
+        /*             ebqe_u[ebNE_kb] = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext; */
+        /*             if (isDOFBoundary_u[ebNE_kb] == 1) */
+        /*               flux_ext = ebqe_bc_u_ext[ebNE_kb]*flow; */
+        /*             else if (isFluxBoundary_u[ebNE_kb] == 1) */
+        /*               flux_ext = ebqe_bc_flux_u_ext[ebNE_kb]; */
+        /*             else */
+        /*               { */
+        /*                 std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl; */
+        /*                 flux_ext = 0.0; */
+        /*               } */
+        /*           } */
 
-                if (flow >= 0 && isFluxBoundary_u[ebNE_kb] != 1 )  //outflow. This is handled via the transport matrices. Then flux_ext=0 and dflux_ext!=0
-                  {
-                    dflux_ext = flow;
-                    flux_ext = 0;
-                    // save external u
-                    ebqe_u[ebNE_kb] = u_ext;
-                  }
-                else // inflow. This is handled via the boundary integral. Then flux_ext!=0 and dflux_ext=0
-                  {
-                    dflux_ext = 0;
-                    // save external u
-                    ebqe_u[ebNE_kb] = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
-                    if (isDOFBoundary_u[ebNE_kb] == 1)
-                      flux_ext = ebqe_bc_u_ext[ebNE_kb]*flow;
-                    else if (isFluxBoundary_u[ebNE_kb] == 1)
-                      flux_ext = ebqe_bc_flux_u_ext[ebNE_kb];
-                    else
-                      {
-                        std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl;
-                        flux_ext = 0.0;
-                      }
-                  }
-
-                for (int j=0;j<nDOF_trial_element;j++)
-                  {
-                    // elementResidual. This is to include the inflow boundary integral.
-                    // NOTE: here I assume that we use a Galerkin approach st nDOF_test_element = nDOF_trial_element
-                    elementResidual_u[j] += flux_ext*u_test_dS[j];
-                    register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-                    fluxTransport[j] = dflux_ext*u_trial_trace_ref[ebN_local_kb_j];
-                  }//j
-                ///////////////////////////////////////////////////////
-                // DISTRIBUTE OUTFLOW BOUNDARY TO TRANSPORT MATRICES //
-                ///////////////////////////////////////////////////////
-                for (int i=0;i<nDOF_test_element;i++)
-                  {
-                    register int eN_i = eN*nDOF_test_element+i;
-                    for (int j=0;j<nDOF_trial_element;j++)
-                      {
-                        register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
-                        TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]]
-                          += fluxTransport[j]*u_test_dS[i];
-                        TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]]
-                          += fluxTransport[i]*u_test_dS[j];
-                      }//j
-                  }//i
-                // local min/max at boundary
-                min_u_bc_local = fmin(ebqe_u[ebNE_kb], min_u_bc_local);
-                max_u_bc_local = fmax(ebqe_u[ebNE_kb], max_u_bc_local);
-              }//kb
-            // global min/max at boundary
-            for (int i=0;i<nDOF_test_element;i++)
-              {
-                int eN_i = eN*nDOF_test_element+i;
-                int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
-                globalResidual[gi] += dt*elementResidual_u[i];
-                boundary_integral[gi] += elementResidual_u[i];
-                min_u_bc[gi] = fmin(min_u_bc_local,min_u_bc[gi]);
-                max_u_bc[gi] = fmax(max_u_bc_local,max_u_bc[gi]);
-              }
-          }//ebNE
+        /*         for (int j=0;j<nDOF_trial_element;j++) */
+        /*           { */
+        /*             // elementResidual. This is to include the inflow boundary integral. */
+        /*             // NOTE: here I assume that we use a Galerkin approach st nDOF_test_element = nDOF_trial_element */
+        /*             elementResidual_u[j] += flux_ext*u_test_dS[j]; */
+        /*             register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j; */
+        /*             fluxTransport[j] = dflux_ext*u_trial_trace_ref[ebN_local_kb_j]; */
+        /*           }//j */
+        /*         /////////////////////////////////////////////////////// */
+        /*         // DISTRIBUTE OUTFLOW BOUNDARY TO TRANSPORT MATRICES // */
+        /*         /////////////////////////////////////////////////////// */
+        /*         for (int i=0;i<nDOF_test_element;i++) */
+        /*           { */
+        /*             register int eN_i = eN*nDOF_test_element+i; */
+        /*             for (int j=0;j<nDOF_trial_element;j++) */
+        /*               { */
+        /*                 register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j; */
+        /*                 TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]] */
+        /*                   += fluxTransport[j]*u_test_dS[i]; */
+        /*                 TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]] */
+        /*                   += fluxTransport[i]*u_test_dS[j]; */
+        /*               }//j */
+        /*           }//i */
+        /*         // local min/max at boundary */
+        /*         min_u_bc_local = fmin(ebqe_u[ebNE_kb], min_u_bc_local); */
+        /*         max_u_bc_local = fmax(ebqe_u[ebNE_kb], max_u_bc_local); */
+        /*       }//kb */
+        /*     // global min/max at boundary */
+        /*     for (int i=0;i<nDOF_test_element;i++) */
+        /*       { */
+        /*         int eN_i = eN*nDOF_test_element+i; */
+        /*         int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index */
+        /*         globalResidual[gi] += dt*elementResidual_u[i]; */
+        /*         boundary_integral[gi] += elementResidual_u[i]; */
+        /*         min_u_bc[gi] = fmin(min_u_bc_local,min_u_bc[gi]); */
+        /*         max_u_bc[gi] = fmax(max_u_bc_local,max_u_bc[gi]); */
+        /*       } */
+        /*   }//ebNE */
         // END OF ADDING BOUNDARY TERM TO TRANSPORT MATRICES and COMPUTING BOUNDARY INTEGRAL //
 
         /////////////////////////////////////////////////////////////////
@@ -2406,85 +2487,130 @@ namespace proteus
           {
             // NOTE: Transport matrices already have the porosity considered. ---> Dissipation matrices as well.
             double solni = u_free_dof_old[i]; // solution at time tn for the ith DOF
+            for (int I=0;I<nSpace;I++)
+              solni -= rho*gravity[I]*mesh_dof[i*3+I];
             double porosityi = 1.0;
             double ith_dissipative_term = 0;
             double ith_low_order_dissipative_term = 0;
             double ith_flux_term = 0;
             double dLii = 0.;
+            double m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
 
             // loop over the sparsity pattern of the i-th DOF
             for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
               {
                 int j = csrColumnOffsets_DofLoops[offset];
                 double solnj = u_free_dof_old[j]; // solution at time tn for the jth DOF
+                for (int I=0;I<nSpace;I++)
+                  solnj -= rho*gravity[I]*mesh_dof[j*3+I];
                 double porosityj = 1.0;
                 double dLowij, dLij, dEVij, dHij;
 
-                ith_flux_term += TransportMatrix[ij]*solnj;
-                if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
-                  {
-                    // artificial compression
-                    double solij = 0.5*(porosityi*solni+porosityj*solnj);
-                    double Compij = cK*fmax(solij*(1.0-solij),0.0)/(fabs(porosityi*solni-porosityj*solnj)+1E-14);
-                    // first-order dissipative operator
-                    dLowij = fmax(fabs(TransportMatrix[ij]),fabs(TransposeTransportMatrix[ij]));
-                    //dLij = fmax(0.,fmax(psi[i]*TransportMatrix[ij], // Approach by S. Badia
-                    //              psi[j]*TransposeTransportMatrix[ij]));
-                    dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
-                    if (STABILIZATION_TYPE==1) //EV Stab
-                      {
-                        // high-order (entropy viscosity) dissipative operator
-                        dEVij = fmax(fabs(global_entropy_residual[i]),
-                                     fabs(global_entropy_residual[j]));
-                        dHij = fmin(dLowij,dEVij) * fmax(1.0-Compij,0.0); // artificial compression
-                      }
-                    else // smoothness based indicator
-                      {
-                        dHij = dLij * fmax(1.0-Compij,0.0); // artificial compression
-                        //dHij = dLowij;
-                        //dLij = dLowij;
+                ith_flux_term += fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+                //std::cout<<"i "<<i<<" j "<<j<<" grad ij "<<(solnj - solni)<<" flux ij "<<fmax(0.0, -TransportMatrix[ij])*(solnj - solni)<<std::endl;
+                /* if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term) */
+                /*   { */
+                /*     // artificial compression */
+                /*     double solij = 0.5*(porosityi*solni+porosityj*solnj); */
+                /*     double Compij = cK*fmax(solij*(1.0-solij),0.0)/(fabs(porosityi*solni-porosityj*solnj)+1E-14); */
+                /*     // first-order dissipative operator */
+                /*     dLowij = fmax(fabs(TransportMatrix[ij]),fabs(TransportMatrix[ij]));//symmetric */
+                /*     //dLij = fmax(0.,fmax(psi[i]*TransportMatrix[ij], // Approach by S. Badia */
+                /*     //              psi[j]*TransposeTransportMatrix[ij])); */
+                /*     dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV */
+                /*     if (STABILIZATION_TYPE==1) //EV Stab */
+                /*       { */
+                /*         // high-order (entropy viscosity) dissipative operator */
+                /*         dEVij = fmax(fabs(global_entropy_residual[i]), */
+                /*                      fabs(global_entropy_residual[j])); */
+                /*         dHij = fmin(dLowij,dEVij) * fmax(1.0-Compij,0.0); // artificial compression */
+                /*       } */
+                /*     else // smoothness based indicator */
+                /*       { */
+                /*         dHij = dLij * fmax(1.0-Compij,0.0); // artificial compression */
+                /*         //dHij = dLowij; */
+                /*         //dLij = dLowij; */
 
-                        dEVij = fmax(fabs(global_entropy_residual[i]),
-                                     fabs(global_entropy_residual[j]));
-                        //dHij = fmin(dLowij,dEVij);//*fmax(1.0-Compij,0.0); // artificial compression
-                        //dHij = 0.;
-                        dHij = dLowij;
-                        // 
-                      }
-                    dHij = dLowij;
-                    dLij = dLowij;
-                    dLow[ij]=dLowij;
+                /*         dEVij = fmax(fabs(global_entropy_residual[i]), */
+                /*                      fabs(global_entropy_residual[j])); */
+                /*         //dHij = fmin(dLowij,dEVij);//\*fmax(1.0-Compij,0.0); // artificial compression */
+                /*         //dHij = 0.; */
+                /*         dHij = dLowij; */
+                /*         //  */
+                /*       } */
+                /*     dHij = dLowij; */
+                /*     dLij = dLowij; */
+                /*     dLow[ij]=dLowij; */
 		    
-                    //dissipative terms
-                    ith_dissipative_term += dHij*(solnj-solni);
-                    ith_low_order_dissipative_term += dLij*(solnj-solni);
-                    //dHij - dLij. This matrix is needed during FCT step
-                    dt_times_dH_minus_dL[ij] = dt*(dHij - dLij);
-                    dLii -= dLij;
+                /*     //dissipative terms */
+                /*     ith_dissipative_term += dHij*(solnj-solni); */
+                /*     ith_low_order_dissipative_term += dLij*(solnj-solni); */
+                /*     //dHij - dLij. This matrix is needed during FCT step */
+                /*     dt_times_dH_minus_dL[ij] = dt*(dHij - dLij); */
+                /*     dLii -= dLij; */
 		    
-                    fluxMatrix[ij] = -dt*(TransportMatrix[ij]*solnj
-                                          -TransposeTransportMatrix[ij]*solni
-                                          -dHij*(solnj-solni));
-                  }
-                else //i==j
-                  {
-                    dt_times_dH_minus_dL[ij] = 0;
-                    fluxMatrix[ij] = 0;//TransportMatrix[ij]*solnj;
-                    dLow[ij]=0.; // not true but works since *= (ui-uj)
-                  }
+                /*     fluxMatrix[ij] = -dt*(TransportMatrix[ij]*solnj */
+                /*                           -TransposeTransportMatrix[ij]*solni */
+                /*                           -dHij*(solnj-solni)); */
+                /*   } */
+                /* else //i==j */
+                /*   { */
+                /*     dt_times_dH_minus_dL[ij] = 0; */
+                /*     fluxMatrix[ij] = 0;//TransportMatrix[ij]*solnj; */
+                /*     dLow[ij]=0.; // not true but works since *= (ui-uj) */
+                /*   } */
                 //update ij
                 ij+=1;
               }
             double mi = ML[i];
             // compute edge_based_cfl
-            edge_based_cfl[i] = 2.*fabs(dLii)/mi;
+            //edge_based_cfl[i] = 2.*fabs(dLii)/mi;
 
 
-            uDotLow[i] = - 1.0/mi*(ith_flux_term
-                                   + boundary_integral[i]
-                                   - ith_low_order_dissipative_term);	    
-            uLow[i] = u_free_dof_old[i] + dt*uDotLow[i];
-	      
+            uDotLow[i] = 1.0/mi*ith_flux_term;
+            //+ boundary_integral[i]);
+            //- ith_low_order_dissipative_term);	    
+            evaluateCoefficients(a_rowptr,
+                                 a_colind,
+                                 rho,
+                                 beta,
+                                 gravity,
+                                 alpha[0],//cek hack, only for 1 material
+                                 n[0],
+                                 thetaR[0],
+                                 thetaSR[0],
+                                 &KWs[0*nnz],			      
+                                 u_free_dof_old[i],
+                                 m,
+                                 dm,
+                                 f,
+                                 df,
+                                 a,
+                                 da);
+            uLow[i] = m + dt*uDotLow[i];//cek should introduce mn,mnp1 or somethign clearer
+            //cek debug
+            //std::cout<<"dt*divergence "<<dt*uDotLow[i]<<std::endl;
+            //std::cout<<"mass density old "<<m<<std::endl;
+            m = uLow[i];
+            //std::cout<<"mass density "<<m<<std::endl;
+            evaluateInverseCoefficients(a_rowptr,
+                                        a_colind,
+                                        rho,
+                                        beta,
+                                        gravity,
+                                        alpha[0],//cek hack, only for 1 material
+                                        n[0],
+                                        thetaR[0],
+                                        thetaSR[0],
+                                        &KWs[0*nnz],			      
+                                        uLow[i],
+                                        m,
+                                        dm,
+                                        f,
+                                        df,
+                                        a,
+                                        da);
+            globalResidual[i] = uLow[i];
             //uLow[i] = u_dof_old[i] - dt/mi*(ith_flux_term
             //						  + boundary_integral[i]
             //						  - ith_low_order_dissipative_term);
@@ -2809,6 +2935,7 @@ namespace proteus
                             int j_nSpace = j*nSpace;
                             int i_nSpace = i*nSpace;
                             //std::cout<<"jac "<<'\t'<<q_numDiff_u_last[eN_k]<<'\t'<<dm_t<<'\t'<<df[0]<<df[1]<<'\t'<<dsubgridError_u_u[j]<<std::endl;
+                            dm_t = 1.0;//cek, will solving for continuum density explicitly
                             elementJacobian_u_u[i][j] +=
                               dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
                           }

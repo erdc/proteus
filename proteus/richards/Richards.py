@@ -4,6 +4,185 @@ from past.utils import old_div
 import proteus
 from .cRichards import *
 
+class RKEV(proteus.TimeIntegration.SSP):
+    from proteus import TimeIntegration
+    """
+    Wrapper for SSPRK time integration using EV
+
+    ... more to come ...
+    """
+
+    def __init__(self, transport, timeOrder=1, runCFL=0.1, integrateInterpolationPoints=False):
+        TimeIntegration.SSP.__init__(self, transport, integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL = runCFL
+        self.dtLast = None
+        self.isAdaptive = True
+        # About the cfl
+        assert transport.coefficients.STABILIZATION_TYPE > 0, "SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
+        assert hasattr(transport, 'edge_based_cfl'), "No edge based cfl defined"
+        self.cfl = transport.edge_based_cfl
+        # Stuff particular for SSP
+        self.timeOrder = timeOrder  # order of approximation
+        self.nStages = timeOrder  # number of stages total
+        self.lstage = 0  # last stage completed
+        # storage vectors
+        self.u_dof_last = {}
+        # per component stage values, list with array at each stage
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+            if ('m', ci) in transport.q:
+                self.u_dof_last[ci] = transport.u[ci].dof.copy()
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages + 1):
+                    self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+
+    # def set_dt(self, DTSET):
+    #    self.dt = DTSET #  don't update t
+    def choose_dt(self):
+        maxCFL = 1.0e-6
+        maxCFL = max(maxCFL, globalMax(self.cfl.max()))
+        self.dt = old_div(self.runCFL, maxCFL)
+        if self.dtLast is None:
+            self.dtLast = self.dt
+        self.t = self.tLast + self.dt
+        self.substeps = [self.t for i in range(self.nStages)]  # Manuel is ignoring different time step levels for now
+
+    def initialize_dt(self, t0, tOut, q):
+        """
+        Modify self.dt
+        """
+        self.tLast = t0
+        self.choose_dt()
+        self.t = t0 + self.dt
+
+    def setCoefficients(self):
+        """
+        beta are all 1's here
+        mwf not used right now
+        """
+        self.alpha = np.zeros((self.nStages, self.nStages), 'd')
+        self.dcoefs = np.zeros((self.nStages), 'd')
+
+    def updateStage(self):
+        """
+        Need to switch to use coefficients
+        """
+        self.lstage += 1
+        assert self.timeOrder in [1, 2, 3]
+        assert self.lstage > 0 and self.lstage <= self.timeOrder
+        if self.timeOrder == 3:
+            if self.lstage == 1:
+                logEvent("First stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+            elif self.lstage == 2:
+                logEvent("Second stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage] *= old_div(1., 4.)
+                    self.u_dof_stage[ci][self.lstage] += 3. / 4. * self.u_dof_last[ci]
+                    # Update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+            elif self.lstage == 3:
+                logEvent("Third stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage] *= old_div(2.0, 3.0)
+                    self.u_dof_stage[ci][self.lstage] += 1.0 / 3.0 * self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
+        elif self.timeOrder == 2:
+            if self.lstage == 1:
+                logEvent("First stage of SSP22 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    # Update u_dof_old
+                    self.transport.u_dof_old[:] = self.transport.u[ci].dof
+            elif self.lstage == 2:
+                logEvent("Second stage of SSP22 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage][:] *= old_div(1., 2.)
+                    self.u_dof_stage[ci][self.lstage][:] += 1. / 2. * self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
+        else:
+            assert self.timeOrder == 1
+            for ci in range(self.nc):
+                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+                self.transport.u_dof_old[:] = self.transport.u[ci].dof
+
+    def initializeTimeHistory(self, resetFromDOF=True):
+        """
+        Push necessary information into time history arrays
+        """
+        for ci in range(self.nc):
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            for k in range(self.nStages):
+                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+
+    def updateTimeHistory(self, resetFromDOF=False):
+        """
+        assumes successful step has been taken
+        """
+
+        self.t = self.tLast + self.dt
+        for ci in range(self.nc):
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            for k in range(self.nStages):
+                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+        self.lstage = 0
+        self.dtLast = self.dt
+        self.tLast = self.t
+
+    def generateSubsteps(self, tList):
+        """
+        create list of substeps over time values given in tList. These correspond to stages
+        """
+        self.substeps = []
+        tLast = self.tLast
+        for t in tList:
+            dttmp = t - tLast
+            self.substeps.extend([tLast + dttmp for i in range(self.nStages)])
+            tLast = t
+
+    def resetOrder(self, order):
+        """
+        initialize data structures for stage updges
+        """
+        self.timeOrder = order  # order of approximation
+        self.nStages = order  # number of stages total
+        self.lstage = 0  # last stage completed
+        # storage vectors
+        # per component stage values, list with array at each stage
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+            if ('m', ci) in self.transport.q:
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages + 1):
+                    self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
+        self.substeps = [self.t for i in range(self.nStages)]
+
+    def setFromOptions(self, nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        if 'runCFL' in dir(nOptions):
+            self.runCFL = nOptions.runCFL
+        flags = ['timeOrder']
+        for flag in flags:
+            if flag in dir(nOptions):
+                val = getattr(nOptions, flag)
+                setattr(self, flag, val)
+                if flag == 'timeOrder':
+                    self.resetOrder(self.timeOrder)
+
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     version of Re where element material type id's used in evals
@@ -95,7 +274,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.uL = uL
         self.uR = uR
         self.cK = cK
-        self.forceStrongConditions = False
+        self.forceStrongConditions = True
         self.cE = cE
         self.outputQuantDOFs = outputQuantDOFs
         TC_base.__init__(self,
@@ -617,12 +796,94 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')        
-        self.forceStrongConditions=False
+        self.forceStrongConditions=True
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
-    #mwf these are getting called by redistancing classes,
+    def FCTStep(self):
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        limited_solution = np.zeros((len(rowptr) - 1),'d')
+        self.u_free_dof_stage_0_l = np.zeros((len(rowptr) - 1),'d')
+        self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],  # soln
+        fromFreeToGlobal=0
+        cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+                                                               self.offset[0],
+                                                               self.stride[0],
+                                                               self.dirichletConditions[0].global2freeGlobal_global_dofs,
+                                                               self.dirichletConditions[0].global2freeGlobal_free_dofs,
+                                                               self.u_free_dof_stage_0_l,
+                                                               self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage])
+        limited_solution[:] = self.uLow
+        # self.richards.FCTStep(
+        #     self.nnz,  # number of non zero entries
+        #     len(rowptr) - 1,  # number of DOFs
+        #     self.ML,  # Lumped mass matrix
+        #     #self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],  # soln
+        #     self.u_free_dof_stage_0_l,
+        #     self.timeIntegration.u,  # high order solution
+        #     self.uLow,
+        #     limited_solution,
+        #     rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
+        #     colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
+        #     MassMatrix,
+        #     self.dt_times_dC_minus_dL,
+        #     self.min_u_bc,
+        #     self.max_u_bc,
+        #     self.coefficients.LUMPED_MASS_MATRIX)
+        self.timeIntegration.u[:] = limited_solution
+        fromFreeToGlobal=1 #direction copying
+        cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+                                                               self.offset[0],
+                                                               self.stride[0],
+                                                               self.dirichletConditions[0].global2freeGlobal_global_dofs,
+                                                               self.dirichletConditions[0].global2freeGlobal_free_dofs,
+                                                               self.u[0].dof,
+                                                               limited_solution)
+
+    def kth_FCT_step(self):
+        import pdb
+        pdb._set_trace()
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()        
+        limitedFlux = np.zeros(self.nnz)
+        limited_solution = np.zeros((len(rowptr) - 1),'d')
+        #limited_solution[:] = self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage]
+        fromFreeToGlobal=0 #direction copying
+        cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+                                                               self.offset[0],
+                                                               self.stride[0],
+                                                               self.dirichletConditions[0].global2freeGlobal_global_dofs,
+                                                               self.dirichletConditions[0].global2freeGlobal_free_dofs,
+                                                               limited_solution,
+                                                               self.timeintegration.u_dof_stage[0][self.timeIntegration.lstage])
+        
+        self.richards.kth_FCT_step(
+            self.timeIntegration.dt,
+            self.coefficients.num_fct_iter,
+            self.nnz,  # number of non zero entries
+            len(rowptr) - 1,  # number of DOFs
+            MassMatrix,
+            self.ML,  # Lumped mass matrix
+            self.u_dof_old,
+            limited_solution,
+            self.uDotLow,
+            self.uLow,
+            self.dLow,
+            self.fluxMatrix,
+            limitedFlux,            
+            rowptr,
+            colind)
+
+        self.timeIntegration.u[:] = limited_solution        
+        #self.u[0].dof[:] = limited_solution
+        fromFreeToGlobal=1 #direction copying
+        cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+                                                               self.offset[0],
+                                                               self.stride[0],
+                                                               self.dirichletConditions[0].global2freeGlobal_global_dofs,
+                                                               self.dirichletConditions[0].global2freeGlobal_free_dofs,
+                                                               self.u[0].dof,
+                                                               limited_solution)
     def calculateCoefficients(self):
         pass
     def calculateElementResidual(self):

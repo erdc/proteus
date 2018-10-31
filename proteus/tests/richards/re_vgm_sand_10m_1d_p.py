@@ -11,7 +11,7 @@ analyticalSolution = None
 viscosity     = 8.9e-4  #kg/(m*s)
 density       = 998.2   #kg/m^3
 gravity       = 9.8     #m/s^2
-beta          = density*gravity*4.524e-10
+beta          = 0.0#density*gravity*4.524e-10
 m_per_s_by_m_per_d = 1.1574074e-5
 permeability  = (5.04*m_per_s_by_m_per_d)*viscosity/(gravity*density)  #m^2
 print 'perm',permeability
@@ -60,7 +60,20 @@ if optRichards:
                                          gravity=dimensionless_gravity,
                                          density=dimensionless_density,
                                          beta=0.0001,
-                                         diagonal_conductivity=True)
+                                         diagonal_conductivity=True,
+                                         STABILIZATION_TYPE=2,
+                                         ENTROPY_TYPE=1,
+                                         LUMPED_MASS_MATRIX=True,
+                                         FCT=False,#True,
+                                         num_fct_iter=1,
+                                         # FOR ENTROPY VISCOSITY
+                                         cE=1.0,
+                                         uL=0.0,
+                                         uR=1.0,
+                                         # FOR ARTIFICIAL COMPRESSION
+                                         cK=1.0,
+                                         # OUTPUT quantDOFs
+                                         outputQuantDOFs=False)
 
 elif satRichards:
     coefficients = ConservativeSatRichardsMualemVanGenuchten(hydraulicConductivity=dimensionless_conductivity,
@@ -82,8 +95,8 @@ else:
                                                               m = mvg_m,
                                                               beta=beta)
 
-pondingPressure=0.1#-0.1
-bottomPressure = 0.0#0.0
+pondingPressure=-0.1#-0.1
+bottomPressure = -0.2#0.0
 #pondingPressure=-0.1
 #bottomPressure = -10.0
 pondingSaturation = 0.9
@@ -98,8 +111,9 @@ if satRichards:
             return lambda x,t: waterTableSaturation
 else:
     def getDBC_Richards_Shock(x,flag):
-        if x[0] == L[0]:
-            return lambda x,t: pondingPressure
+        return None
+#        if x[0] == L[0]:
+#            return lambda x,t: pondingPressure
         if x[0] == 0.0:
             return lambda x,t: bottomPressure
    
@@ -115,19 +129,28 @@ if satRichards:
 else:
     class ShockIC_Richards:
         def uOfXT(self,x,t):
-            f = getDBC_Richards_Shock(x,0)
-            if f:
-                return f(x,t)
-            return bottomPressure + x[0]*dimensionless_gravity[0]*dimensionless_density
+            # f = getDBC_Richards_Shock(x,0)
+            # if f:
+            #     return f(x,t)
+            # return bottomPressure + x[0]*dimensionless_gravity[0]*dimensionless_density
+            if x[0] < L[0]*0.5:
+                return bottomPressure + x[0]*dimensionless_gravity[0]*dimensionless_density
+            else:
+                return pondingPressure
 
 initialConditions  = {0:ShockIC_Richards()}
 
 fluxBoundaryConditions = {0:'outFlow'}
 
 def flux(x,flag):
-    return None
+    if x[0] == L[0]:
+        return lambda x,t: 0.0
+#    if x[0] == 0.0:
+#        return lambda x,t: 0.0
+
 advectiveFluxBoundaryConditions =  {0:flux}
 
 diffusiveFluxBoundaryConditions = {0:{}}
 
-T = 0.5/timeScale
+#T = 0.5/timeScale
+T = 0.35/timeScale

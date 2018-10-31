@@ -9,7 +9,7 @@ useGustafsson = False#True#
 atol_u[0] = 1.0e-5
 rtol_u[0] = 1.0e-5
 DT = 1.0e-6#None#0.025#1.0e-1/timeScale
-tnList = [0.0,DT]; nDTout = 100
+tnList = [0.0,DT]; nDTout = 250#cek don't have stability worked out yet, blows up for large time steps
 for i in range(nDTout):
     tnList.append(DT+(i+1)*(T-DT)/float(nDTout))
 if useFLCBDF:
@@ -39,6 +39,21 @@ else:
     dtNLfailureReduceFactor = 0.5
     useInitialGuessPredictor= True
     stepExact = True
+
+timeIntegration = Richards.RKEV
+timeOrder = 1
+stepController = Min_dt_controller
+#systemStepControllerType = SplitOperator.Sequential_FixedStep
+#dt_system_fixed = 0.001
+#nDTout = 1#int(T/DT)#int(T/DT) #100#int(T/DT)
+#for controlling time stepping
+nonlinearIterationsFloor = 4
+nonlinearIterationsCeil  = 8
+dtNLgrowFactor = 2
+dtNLreduceFactor = 0.5
+dtNLfailureReduceFactor = 0.5
+useInitialGuessPredictor= True
+stepExact = True
 
 femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
 
@@ -84,6 +99,7 @@ multilevelNonlinearSolver = Newton
 
 #levelNonlinearSolver = FAS
 levelNonlinearSolver = Newton
+levelNonlinearSolver = ExplicitLumpedMassMatrix
 #levelNonlinearSolver = NLStarILU
 #levelNonlinearSolver = NLGaussSeidel
 #levelNonlinearSolver = NLJacobi
