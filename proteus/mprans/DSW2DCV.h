@@ -14,13 +14,11 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
-//#define lambda 1.0 // For Dispersive Model
+#define lambda 1.0 // For Dispersive Model
 #define WHICH_DISP_MODEL 1
-// EJT. If WHICH_DISP_MODEL is 1, then this is
-// Guermond's dispersive  model. If 0,
-// then this is Gavrilyuk's dispersive model
-// Recall these models are modifications of the
-// Serre-Green-Naghdi equations. See our paper.
+// EJT.
+// Recall this is the hyperbolic modification of the Green Naghdi
+// equations. See Guermond, Popov, Tovar.
 
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
@@ -192,13 +190,13 @@ namespace proteus
                                    int offset_h,
                                    int offset_hu,
                                    int offset_hv,
-				   int offset_heta,
-				   int offset_hw,
+				                           int offset_heta,
+				                           int offset_hw,
                                    int stride_h,
                                    int stride_hu,
                                    int stride_hv,
-				   int stride_heta,
-				   int stride_hw,
+                        				   int stride_heta,
+                        				   int stride_hw,
                                    double* globalResidual,
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
@@ -2358,12 +2356,12 @@ namespace proteus
               double hi = h_dof_old[i];
               double hui = hu_dof_old[i];
               double hvi = hv_dof_old[i];
-	      double hetai = heta_dof_old[i];
-	      double hwi = hw_dof_old[i];
+	            double hetai = heta_dof_old[i];
+	            double hwi = hw_dof_old[i];
 
               double Zi = b_dof[i];
               double mi = lumped_mass_matrix[i];
-	      double cut_offi = 1.0/std::pow(10.0,8.0);
+	            double cut_offi = 1.0/std::pow(10.0,8.0);
               double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,cut_offi),2)); // hEps
               double ui = hui*one_over_hiReg;
               double vi = hvi*one_over_hiReg;
@@ -2374,26 +2372,26 @@ namespace proteus
                 ith_dLij_minus_muLij_times_hStarStates=0.,
                 ith_dLij_minus_muLij_times_huStarStates=0.,
                 ith_dLij_minus_muLij_times_hvStarStates=0.,
-		ith_dLij_minus_muLij_times_hetaStarStates=0.,
-		ith_dLij_minus_muLij_times_hwStarStates=0.,
+		            ith_dLij_minus_muLij_times_hetaStarStates=0.,
+		            ith_dLij_minus_muLij_times_hwStarStates=0.,
                 ith_muLij_times_hStates=0.,
                 ith_muLij_times_huStates=0.,
                 ith_muLij_times_hvStates=0.,
-		ith_muLij_times_hetaStates=0.,
-	        ith_muLij_times_hwStates=0.;
+		            ith_muLij_times_hetaStates=0.,
+	              ith_muLij_times_hwStates=0.;
 
               // HIGH ORDER DISSIPATIVE TERMS
               double
                 ith_dHij_minus_muHij_times_hStarStates=0.,
                 ith_dHij_minus_muHij_times_huStarStates=0.,
                 ith_dHij_minus_muHij_times_hvStarStates=0.,
-		ith_dHij_minus_muHij_times_hetaStarStates=0.,
-		ith_dHij_minus_muHij_times_hwStarStates=0.,
+		            ith_dHij_minus_muHij_times_hetaStarStates=0.,
+	            	ith_dHij_minus_muHij_times_hwStarStates=0.,
                 ith_muHij_times_hStates=0.,
                 ith_muHij_times_huStates=0.,
                 ith_muHij_times_hvStates=0.,
-		ith_muHij_times_hetaStates=0.,
-		ith_muHij_times_hwStates=0.;
+		            ith_muHij_times_hetaStates=0.,
+		            ith_muHij_times_hwStates=0.;
 
               ///////////////////
               // FRICTION TERM //
@@ -2412,32 +2410,31 @@ namespace proteus
                   ith_friction_term3 = mannings*hvi*mi;
                 }
 
-	      /////////////////
-	      // FORCE TERMS //
-	      /////////////////
+        // Define things here to make life easier.
+        double meshi = std::sqrt(mi);
+        double alphai = lambda / (3.0 * meshi);
+        double constanti = lambda * g / meshi;
+        double etai = hetai*one_over_hiReg;
+        double eta_over_h_i = etai * one_over_hiReg;
+        double ratio_i =  2.0 * hetai/(std::pow(etai,2.0)+std::pow(hi,2.0)+cut_offi);
+        double x0_i =  fmin(2.0, std::sqrt(1.0+1.0/(2*alphai*(fmax(etai,0.0)+cut_offi))));
 
-	      // EJT. Corrected terms to match our paper
-	      // and define both Guermond and Gavrilyuk force terms for hw equation.
-	      double lambda = 0.0;
-	      double etai = hetai*one_over_hiReg;
-	      double meshi = std::sqrt(mi);
-	      double xxi = etai*one_over_hiReg;
+        /////////////////////
+	      // For Force Terms //
+        /////////////////////
+        double hSqd_GammaPi = 4.0*(x0_i-1.0)*hetai+(1-std::pow(x0_i,2.0))*std::pow(hi,2.0);
+        if (etai < 0.0)
+        {
+          hSqd_GammaPi = 0.0;
+        }
+        else if (etai <= x0_i*hi)
+        {
+          hSqd_GammaPi = 3.0*std::pow(etai,2.0)+std::pow(hi,2.0)-4.0*hetai;
+        }
+	      double force_term_hetai = hwi*mi*std::pow(ratio_i,3.0);
+	      double force_term_hwi = -constanti*hSqd_GammaPi*std::pow(ratio_i,3.0)*mi;
 
 
-	      // stuff for water height goes to 0 fix
-
-
-
-	      // This is Guermond's force term on hwi
-	      double psii = 12.0 * (xxi - 1.0);
-	      double force_term_hetai = hwi*mi;
-	      double force_term_hwi = -lambda*g/meshi*etai*etai*psii*mi;
-
-	      // if WHICH_DISP_MODEL is 0 then code runs with Gavrilyuk's model.
-	      if (WHICH_DISP_MODEL==0)
-		{
-		 force_term_hwi = -lambda * (xxi-1.0) * mi;
-		}
 
               // loop over the sparsity pattern of the i-th DOF
               for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -2446,58 +2443,57 @@ namespace proteus
                   double hj = h_dof_old[j];
                   double huj = hu_dof_old[j];
                   double hvj = hv_dof_old[j];
-            	  double hetaj = heta_dof_old[j];
-            	  double hwj = hw_dof_old[j];
+            	    double hetaj = heta_dof_old[j];
+            	    double hwj = hw_dof_old[j];
                   double Zj = b_dof[j];
-		  double cut_off = 1.0 / std::pow(10.0,8.0);
+		              double cut_off = 1.0 / std::pow(10.0,8.0);
                   double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,cut_off),2)); //hEps
                   double uj = huj*one_over_hjReg;
-		  double vj = hvj*one_over_hjReg;
-		  // EJT. Corrected terms to match our paper.
-		  double etaj = hetaj*one_over_hjReg;
-          	  double mj = lumped_mass_matrix[j];
+		              double vj = hvj*one_over_hjReg;
+            		  // EJT. Corrected terms to match our paper.
+                  double mj = lumped_mass_matrix[j];
                   double meshj = std::sqrt(mj); // local mesh size in 2d
+                  double alphaj = lambda / (3.0 * meshj);
+                  double etaj = hetaj*one_over_hjReg;
+                  double eta_over_h_j = etaj * one_over_hjReg;
+                  double ratio_j =  2.0 * hetaj/(std::pow(etaj,2.0)+std::pow(hj,2.0)+cut_off);
+                  double x0_j =  fmin(2.0, std::sqrt(1.0+1.0/(2*alphaj*(fmax(etaj,0.0)+cut_off))));
 
-		  double xxj = etaj*one_over_hjReg;
+                  /////////////////////
+          	      // For Flux Terms //
+                  /////////////////////
+                  double pTildej = -alphaj*g*(std::pow(x0_j,2.0)-1.0)*hetaj*hj;
+                  if (etaj < 0.0)
+                  {
+                    pTildej = 0.0;
+                  }
+                  else if (etaj <= x0_j*hj)
+                  {
+                    pTildej = -alphaj*g*etaj*(std::pow(etaj,2.0)-std::pow(hj,2.0));
+                  }
 
-		  // stuff for water height goes to 0 fix
-		  if (etaj < meshj * 0.1)
-		    {lambda = 0.0;}
-		  else
-		    {lambda = 0.0;}
-		  // This is used to make definition of pTildej cleaner
-	    	  double polyj = 2.0 + 4.0 * std::pow(xxj,3.0) - 6.0*std::pow(xxj,4.0);
-
-                  // Define pTildej here. Standard is Guermond's model
-                  double pTildej = lambda*g/(3. * meshj)*std::pow(hj,3.)*polyj;
-		  
-		  // if WHICH_DISP_MODEL is 0 then Gavrilyuk's model is used.
-                      if (WHICH_DISP_MODEL==0)
-                          {
-			    pTildej = -lambda/3.*(xxj-1.0)*etaj;
-	                  }
 
 
 
                   // Nodal projection of fluxes
                   ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
-	          ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cx[ij];
+	                ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cx[ij];
                   ith_flux_term3 += vj*huj*Cx[ij] + vj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cy[ij];
-		  ith_flux_term4 += hetaj*uj*Cx[ij] + hetaj*vj*Cy[ij];
-	          ith_flux_term5 += hwj*uj*Cx[ij] + hwj*vj*Cy[ij];
+		              ith_flux_term4 += hetaj*uj*Cx[ij] + hetaj*vj*Cy[ij];
+	                ith_flux_term5 += hwj*uj*Cx[ij] + hwj*vj*Cy[ij];
 
                   // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
                   double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
                   double huStarij = hui*hStarij*one_over_hiReg;
                   double hvStarij = hvi*hStarij*one_over_hiReg;
-            	  double hetaStarij = hetai*hStarij*one_over_hiReg;
-            	  double hwStarij = hwi*hStarij*one_over_hiReg;
+            	    double hetaStarij = hetai*hStarij*one_over_hiReg;
+            	    double hwStarij = hwi*hStarij*one_over_hiReg;
 
                   double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
                   double huStarji = huj*hStarji*one_over_hjReg;
                   double hvStarji = hvj*hStarji*one_over_hjReg;
-            	  double hetaStarji = hetaj*hStarji*one_over_hjReg;
-            	  double hwStarji = hwj*hStarji*one_over_hjReg;
+            	    double hetaStarji = hetaj*hStarji*one_over_hjReg;
+            	    double hwStarji = hwj*hStarji*one_over_hjReg;
 
                   // Dissipative well balancing term
                   double muLowij = 0., muLij = 0., muHij = 0.;
