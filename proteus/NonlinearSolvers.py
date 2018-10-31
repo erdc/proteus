@@ -733,7 +733,7 @@ class TwoStageNewton(Newton):
             return self.failedFlag
 
 class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
-    """
+    """ 
     This is a fake solver meant to be used with optimized code
     A simple iterative solver that is Newton's method
     if you give it the right Jacobian
@@ -815,7 +815,8 @@ class ExplicitLumpedMassMatrix(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         # compute fluxes
         self.computeResidual(u,r,b)
-
+        #u[:]=self.F.uLow
+        
         ############
         # FCT STEP #
         ############

@@ -311,7 +311,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             uL=0.0,
             uR=1.0,
             # FOR ARTIFICIAL COMPRESSION
-            cK=1.0,
+            cK=0.0,
             # OUTPUT quantDOFs
             outputQuantDOFs=False):
         self.vos_function=vos_function
@@ -1511,6 +1511,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateJacobian = self.vos.calculateMassMatrix
         if self.delta_x_ij is None:
             self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
+
+        #import pdb; pdb.set_trace()
+        self.coefficients.q_v[:,:,0]=0.0
+        self.coefficients.q_v[:,:,1]=-0.1
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,

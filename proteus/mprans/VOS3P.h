@@ -1700,7 +1700,7 @@ namespace proteus
               ij=0;
               for (int i=0; i<numDOFs; i++)
                 {
-                  double maxi=1.0, Pposi=0;
+                  double maxi=0.75, mini=0.0, Pposi=0, Pnegi=0;
                   for (int offset=csrRowIndeces_DofLoops[i];
                        offset<csrRowIndeces_DofLoops[i+1]; offset++)
                     {
@@ -1708,6 +1708,7 @@ namespace proteus
                       // compute Flux correction
                       double Fluxij = FluxMatrix[ij] - limitedFlux[ij];	      
                       Pposi += Fluxij*((Fluxij > 0) ? 1. : 0.);
+		      Pnegi += Fluxij*((Fluxij < 0) ? 1. : 0.);
                       // update ij
                       ij+=1;
                     }
@@ -1715,14 +1716,16 @@ namespace proteus
                   double mi = ML[i];
                   double solLimi = solLim[i];
                   double Qposi = mi*(maxi-solLimi);
+		  double Qnegi = mi*(mini-solLimi);
                   // compute R vectors
                   Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
+		  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));
                 }
               ij=0;
               for (int i=0; i<numDOFs; i++)
                 {
                   double ith_Limiter_times_FluxCorrectionMatrix = 0.;
-                  double Rposi = Rpos[i];
+                  double Rposi = Rpos[i], Rnegi = Rneg[i];
                   for (int offset=csrRowIndeces_DofLoops[i];
                        offset<csrRowIndeces_DofLoops[i+1]; offset++)
                     {
@@ -1731,7 +1734,8 @@ namespace proteus
                       double Fluxij = FluxMatrix[ij] - limitedFlux[ij];
                       // compute limiter
                       double Lij = 1.0;
-                      Lij = (Fluxij>0 ? Rposi : Rpos[j]);
+                      //Lij = (Fluxij>0 ? Rposi : Rpos[j]);
+		      Lij = (Fluxij>0 ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]));
                       // compute limited flux 
                       ith_Limiter_times_FluxCorrectionMatrix += Lij*Fluxij;		    
 
