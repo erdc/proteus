@@ -2165,9 +2165,9 @@ namespace proteus
               mesh_vel[0] = xt;
               mesh_vel[1] = yt;
               mesh_vel[2] = zt;
-              q_velocity[eN_k_nSpace+0]=u;
-              q_velocity[eN_k_nSpace+1]=v;
-              q_velocity[eN_k_nSpace+2]=w;
+              //q_velocity[eN_k_nSpace+0]=0;//u;
+	      //q_velocity[eN_k_nSpace+1]=-0.1; // v;// mql hack
+	      //q_velocity[eN_k_nSpace+2]=0.; //w;
               for(int i=0;i<nDOF_test_element;i++)
                 {
                   register int i_nSpace=i*nSpace;
