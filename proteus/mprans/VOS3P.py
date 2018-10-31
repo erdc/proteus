@@ -1199,6 +1199,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.u[:] = limited_solution
 
     def kth_FCT_step(self):
+        import pdb
+        pdb._set_trace()
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()        
         limitedFlux = np.zeros(self.nnz)
         limited_solution = np.zeros((len(rowptr) - 1),'d')
