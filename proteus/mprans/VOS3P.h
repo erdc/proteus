@@ -229,6 +229,8 @@ namespace proteus
 			      double* limitedFlux,
 			      double* min_u_bc,
 			      double* max_u_bc,
+			      double global_min_u,
+			      double global_max_u,
 			      int* csrRowIndeces_DofLoops, 
 			      int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateResidual_entropy_viscosity(//element
@@ -1677,6 +1679,8 @@ namespace proteus
                       double* limitedFlux, // INPUT/OUTPUT
 		      double* min_u_bc,
 		      double* max_u_bc,
+		      double global_min_u,
+		      double global_max_u,
                       int* csrRowIndeces_DofLoops, 
                       int* csrColumnOffsets_DofLoops)
     {
@@ -1700,7 +1704,7 @@ namespace proteus
               ij=0;
               for (int i=0; i<numDOFs; i++)
                 {
-                  double maxi=0.75, mini=0.0, Pposi=0, Pnegi=0;
+                  double Pposi=0, Pnegi=0;
                   for (int offset=csrRowIndeces_DofLoops[i];
                        offset<csrRowIndeces_DofLoops[i+1]; offset++)
                     {
@@ -1715,8 +1719,8 @@ namespace proteus
                   // compute Q vectors
                   double mi = ML[i];
                   double solLimi = solLim[i];
-                  double Qposi = mi*(maxi-solLimi);
-		  double Qnegi = mi*(mini-solLimi);
+                  double Qposi = mi*(global_max_u-solLimi);
+		  double Qnegi = mi*(global_min_u-solLimi);
                   // compute R vectors
                   Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
 		  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));
