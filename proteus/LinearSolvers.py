@@ -1770,7 +1770,7 @@ class Schur_Sp(SchurPrecon):
 
     def setUp(self,global_ksp):
         self._setSchurlog(global_ksp)
-        self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
+        self.A00 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
                                                              self.isv)
         self.A01 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
                                                              self.isp)
