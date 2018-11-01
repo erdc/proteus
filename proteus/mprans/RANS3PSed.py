@@ -883,13 +883,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #if self.q_grad_vos.all != 0.0:
             #    logEvent('q_grad_vos from RANS3PSed.py --> %s ' % self.q_grad_vos)
 
-        # mql hack. This is to set sediment vel. = (0,-0.1,0)
-        self.model.u[0].dof[:]=0
-        self.model.u[1].dof[:]=-0.1 #mql hack
-        self.model.q[('velocity',0)][:,:,0]=0.
-        self.model.q[('velocity',0)][:,:,1]=-0.1
-        #self.model.q[('velocity',0)][:,:,2]=0.
-
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
 
@@ -2032,7 +2025,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                         dofN], self.timeIntegration.t)# - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-        self.q[('cfl', 0)][:]=0.0
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         log("Maximum CFL = " + str(cflMax), level=2)
         if self.stabilization:
