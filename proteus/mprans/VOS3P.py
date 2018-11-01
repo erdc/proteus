@@ -303,6 +303,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             LUMPED_MASS_MATRIX=False,
             FCT=True,
             num_fct_iter=1,
+            global_min_u=0.0,
+            global_max_u=0.75,
             # FOR ENTROPY VISCOSITY
             cE=1.0,
             uL=0.0,
@@ -355,6 +357,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ENTROPY_TYPE = ENTROPY_TYPE
         self.FCT = FCT
         self.num_fct_iter=num_fct_iter
+        self.global_min_u=global_min_u
+        self.global_max_u=global_max_u
         self.uL = uL
         self.uR = uR
         self.cK = cK
@@ -421,6 +425,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #    self.ebqe_v = modelList[
             #        self.flowModelIndex].ebqe[
             #        ('velocity', 0)]
+
             if ('velocity', 0) in modelList[self.SED_model].q:
                 self.q_v = modelList[self.SED_model].q[('velocity', 0)]
                 self.ebqe_v = modelList[self.SED_model].ebqe[('velocity', 0)]
@@ -1224,6 +1229,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             limitedFlux,
             self.min_u_bc,
             self.max_u_bc,
+            self.coefficients.global_min_u,
+            self.coefficients.global_max_u,
             rowptr,
             colind)
 
@@ -1508,6 +1515,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateJacobian = self.vos.calculateMassMatrix
         if self.delta_x_ij is None:
             self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
+
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
