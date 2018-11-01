@@ -223,7 +223,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_alpha=1000.0,
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
-                 particle_nitsche=1.0,):
+                 particle_nitsche=1.0,
+                 nullSpace='NoNullSpace'):
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
@@ -317,6 +318,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
+        self.nullSpace = nullSpace
         mass = {}
         advection = {}
         diffusion = {}
@@ -828,12 +830,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.comm.isMaster():
-            # print "wettedAreas"
-            # print self.wettedAreas[:]
-            # print "Forces_p"
-            # print self.netForces_p[:,:]
-            # print "Forces_v"
-            # print self.netForces_v[:,:]
+            logEvent("wettedAreas\n"+
+                     `self.wettedAreas[:]` +
+                     "\nForces_p\n" +
+                     `self.netForces_p[:,:]` +
+                     "\nForces_v\n" +
+                     `self.netForces_v[:,:]`)
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
@@ -876,8 +878,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='RANS2P',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False,
-                 bdyNullSpace=False):
+                 movingDomain=False):
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         useConstant_he = coefficients.useConstant_he  # this is a hack to test the effect of using a constant smoothing width
         self.postProcessing = True
@@ -904,7 +905,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi = phiDict
         self.dphi = {}
         self.matType = matType
-        # mwf try to reuse test and trial information across components if spaces are the same
         self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
         if self.reuse_test_trial_quadrature:
             for ci in range(1, coefficients.nc):
@@ -915,7 +915,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList = None  # explicit Dirichlet  conditions for now, no Dirichlet BC constraints
-        self.bdyNullSpace = bdyNullSpace
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
@@ -1521,7 +1520,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
-                                                 self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                                                 self.timeIntegration.t)
+                        if self.MOVING_DOMAIN == 1.0:
+                            self.u[cj].dof[dofN] += self.mesh.nodeVelocityArray[dofN, cj - 1]
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
@@ -1600,6 +1601,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
+                                      self.l2g[0]['freeGlobal'],
+                                      self.l2g[1]['freeGlobal'],
                                       self.u[0].dof,
                                       self.u[1].dof,
                                       self.u[2].dof,
@@ -1754,8 +1757,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
                     else:
                         r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
-                            g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) - \
-                            self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                            g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) 
+                        if self.MOVING_DOMAIN == 1.0:
+                            r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax), level=2)
@@ -2149,6 +2153,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian[cj] = True
         self.q['velocityError'][:] = self.q[('velocity', 0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        # if  self.coefficients.nd ==3:
+        #     self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
+        #                                    self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1] +
+        #                                    self.q[('velocity',0)][...,2]*self.q[('velocity',0)][...,2])/self.elementDiameter[:,np.newaxis]
+        # else:
+        #     self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
+        #                                    self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1])/self.elementDiameter[:,np.newaxis]
         self.q['velocityError'] -= self.q[('velocity', 0)]
         self.q['eddy_viscosity_last'][:] = self.q['eddy_viscosity']
         self.ebqe['eddy_viscosity_last'][:] = self.ebqe['eddy_viscosity']

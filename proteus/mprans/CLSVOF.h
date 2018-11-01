@@ -5,13 +5,20 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-// True characteristic functions
-#define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
-#define Sign(z) (z>0 ? 1. : (z<0 ? -1. : 0.))
-
 #define USE_SIGN_FUNCTION 1
 #define IMPLICIT_BCs 0
 #define LAMBDA_SCALING 0
+
+namespace proteus
+{
+// True characteristic functions
+  inline double heaviside(const double& z){
+    return (z>0 ? 1. : (z<0 ? 0. : 0.5));
+  }
+  inline double Sign(const double& z){
+    return (z>0 ? 1. : (z<0 ? -1. : 0.));
+  }
+}
 
 namespace proteus
 {
@@ -262,6 +269,22 @@ namespace proteus
 				      double* rhs_qz,
 				      int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
 				      double* weighted_mass_matrix)=0;
+    virtual void calculateRhsL2Proj(double* mesh_trial_ref,
+				    double* mesh_grad_trial_ref,
+				    double* mesh_dof,
+				    int* mesh_l2g,
+				    double* dV_ref,
+				    double* u_trial_ref,
+				    double* u_grad_trial_ref,
+				    double* u_test_ref,
+				    int nElements_global,
+				    int* u_l2g,
+				    double* elementDiameter,
+				    double he_for_disc_ICs,
+				    double* u_dof,
+				    int offset_u, int stride_u,
+				    int numDOFs,
+				    double* rhs_qx)=0;
     virtual void calculateLumpedMassMatrix(double* mesh_trial_ref,
 					   double* mesh_grad_trial_ref,
 					   double* mesh_dof,
@@ -771,7 +794,7 @@ namespace proteus
 		      }
 		    normUn = sqrt(normUn)+1E-10;
 		    // compute coefficient for stabilization
-		    tau = 0.5*hK/normUn;
+		    tau = 0.5*hK;///normUn;
 		  }
 		else //clsvof model
 		  {
@@ -1310,7 +1333,7 @@ namespace proteus
 		      }
 		    normUn = sqrt(normUn)+1E-10;
 		    // compute tau coefficient
-		    tau = 0.5*hK/normUn;
+		    tau = 0.5*hK;///normUn;
 		  }
 		else
 		  {
@@ -1994,6 +2017,81 @@ namespace proteus
 		    weighted_mass_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]]
 		      += element_weighted_mass_matrix[i][j];
 		  }
+              }//i
+          }//elements
+      }
+
+      void calculateRhsL2Proj(//element
+			      double* mesh_trial_ref,
+			      double* mesh_grad_trial_ref,
+			      double* mesh_dof,
+			      int* mesh_l2g,
+			      double* dV_ref,
+			      double* u_trial_ref,
+			      double* u_grad_trial_ref,
+			      double* u_test_ref,
+			      //physics
+			      int nElements_global,
+			      int* u_l2g,
+			      double* elementDiameter,
+			      double he_for_disc_ICs,
+			      double* u_dof,
+			      int offset_u, int stride_u,
+			      // PARAMETERS FOR EDGE VISCOSITY
+			      int numDOFs,
+			      double* rhs_l2_proj)
+      {
+        for (int i=0; i<numDOFs; i++)
+	  rhs_l2_proj[i]=0.;
+        for(int eN=0;eN<nElements_global;eN++)
+          {
+            //declare local storage for local contributions and initialize
+            register double element_rhs_l2_proj[nDOF_test_element];
+            for (int i=0;i<nDOF_test_element;i++)
+	      element_rhs_l2_proj[i]=0.0;
+
+            //loop over quadrature points and compute integrands
+            for(int k=0;k<nQuadraturePoints_element;k++)
+              {
+                //compute indeces and declare local storage
+                register int eN_k = eN*nQuadraturePoints_element+k,
+                  eN_k_nSpace = eN_k*nSpace,
+                  eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double
+		  u,u_test_dV[nDOF_trial_element],
+                  //for general use
+                  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+                  dV,x,y,z;
+                //get the physical integration weight
+                ck.calculateMapping_element(eN,
+                                            k,
+                                            mesh_dof,
+                                            mesh_l2g,
+                                            mesh_trial_ref,
+                                            mesh_grad_trial_ref,
+                                            jac,
+                                            jacDet,
+                                            jacInv,
+                                            x,y,z);
+                dV = fabs(jacDet)*dV_ref[k];
+                ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      u);
+                //precalculate test function products with integration weights for mass matrix terms
+                for (int j=0;j<nDOF_trial_element;j++)
+                  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+                for(int i=0;i<nDOF_test_element;i++)
+		  element_rhs_l2_proj[i] += he_for_disc_ICs*u*u_test_dV[i];
+		//element_rhs_l2_proj[i] += u*u_test_dV[i];
+              } //k
+            // DISTRIBUTE //
+            for(int i=0;i<nDOF_test_element;i++)
+              {
+                int eN_i=eN*nDOF_test_element+i;
+                int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		rhs_l2_proj[gi] += element_rhs_l2_proj[i];
               }//i
           }//elements
       }
