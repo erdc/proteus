@@ -159,9 +159,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         Need to switch to use coefficients
         """
-        # mwf debug
-        #import pdb
-        # pdb.set_trace()
         self.lstage += 1
         assert self.timeOrder in [1, 2, 3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
@@ -1198,8 +1195,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.u[:] = limited_solution
 
     def kth_FCT_step(self):
-        import pdb
-        pdb._set_trace()
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()        
         limitedFlux = np.zeros(self.nnz)
         limited_solution = np.zeros((len(rowptr) - 1),'d')
@@ -1513,11 +1508,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateJacobian = self.vos.calculateMassMatrix
         if self.delta_x_ij is None:
             self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
-        #mql hack
-        #import pdb; pdb.set_trace()
-        self.coefficients.q_v[:,:,0]=0.0
-        self.coefficients.q_v[:,:,1]=-0.1
-        #end hack
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
