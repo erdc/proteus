@@ -159,9 +159,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         Need to switch to use coefficients
         """
-        # mwf debug
-        #import pdb
-        # pdb.set_trace()
         self.lstage += 1
         assert self.timeOrder in [1, 2, 3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
