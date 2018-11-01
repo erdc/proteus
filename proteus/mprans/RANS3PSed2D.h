@@ -1,4 +1,3 @@
-
 #ifndef RANS3PSed2D_H
 #define RANS3PSed2D_H
 #include <cmath>
@@ -6,7 +5,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
-
+#define NO_DRAG 0.0
 namespace proteus
 {
   class cppRANS3PSed2D_base
@@ -102,9 +101,9 @@ namespace proteus
                                    int* p_l2g, 
                                    int* vel_l2g, 
                                    double* p_dof, 
-                                   double* qu_dof, 
-                                   double* qv_dof, 
-                                   double* qw_dof,
+                                   double* u_dof, 
+                                   double* v_dof, 
+                                   double* w_dof,
                                    double* g,
                                    const double useVF,
                                    double *vf,
@@ -277,7 +276,7 @@ namespace proteus
                                    const double* q_turb_var_grad_0,
                                    int* p_l2g,
                                    int* vel_l2g,
-                                   double* p_dof, double* qu_dof, double* qv_dof, double* qw_dof,
+                                   double* p_dof, double* u_dof, double* v_dof, double* w_dof,
                                    double* g,
                                    const double useVF,
                                    double *vf,
@@ -642,11 +641,11 @@ namespace proteus
         //..hardwired
       
         //u momentum accumulation
-        mom_u_acc=qu;//trick for non-conservative form
+        mom_u_acc=u;//trick for non-conservative form
         dmom_u_acc_u=rho;
   
         //v momentum accumulation
-        mom_v_acc=qv;
+        mom_v_acc=v;
         dmom_v_acc_v=rho;
   
         /* //w momentum accumulation */
@@ -654,16 +653,16 @@ namespace proteus
         /* dmom_w_acc_w=rho*vos; */
 
         //mass advective flux
-        mass_adv[0]=qu;
-        mass_adv[1]=qv;
+        mass_adv[0]=vos*u;
+        mass_adv[1]=vos*v;
         /* mass_adv[2]=qw; */
   
-        dmass_adv_u[0]=1.0;
+        dmass_adv_u[0]=vos;
         dmass_adv_u[1]=0.0;
         /* dmass_adv_u[2]=0.0; */
       
         dmass_adv_v[0]=0.0;
-        dmass_adv_v[1]=1.0;
+        dmass_adv_v[1]=vos;
         /* dmass_adv_v[2]=0.0; */
       
         /* dmass_adv_w[0]=0.0; */
@@ -672,12 +671,12 @@ namespace proteus
 
         //advection switched to non-conservative form but could be used for mesh motion...
         //u momentum advective flux
-        mom_u_adv[0]=qu*uStar;
-        mom_u_adv[1]=qu*vStar;
+        mom_u_adv[0]=0.0;
+        mom_u_adv[1]=0.0;
         /* mom_u_adv[2]=0.0; */
       
-        dmom_u_adv_u[0]=uStar;
-        dmom_u_adv_u[1]=vStar;
+        dmom_u_adv_u[0]=0.0;
+        dmom_u_adv_u[1]=0.0;
         /* dmom_u_adv_u[2]=0.0; */
       
         dmom_u_adv_v[0]=0.0;
@@ -689,8 +688,8 @@ namespace proteus
         /* dmom_u_adv_w[2]=0.0; */
       
         //v momentum advective_flux
-        mom_v_adv[0]=qv*uStar;
-        mom_v_adv[1]=qv*vStar;
+        mom_v_adv[0]=0.0;
+        mom_v_adv[1]=0.0;
         /* mom_v_adv[2]=0.0; */
       
         dmom_v_adv_u[0]=0.0;
@@ -701,8 +700,8 @@ namespace proteus
         /* dmom_v_adv_w[1]=0.0; */
         /* dmom_v_adv_w[2]=0.0; */
       
-        dmom_v_adv_v[0]=uStar;
-        dmom_v_adv_v[1]=vStar;
+        dmom_v_adv_v[0]=0.0;
+        dmom_v_adv_v[1]=0.0;
         /* dmom_v_adv_v[2]=0.0; */
       
         /* //w momentum advective_flux */
@@ -723,20 +722,20 @@ namespace proteus
         /* dmom_w_adv_w[2]=0.0; */
       
         //u momentum diffusion tensor
-        mom_uu_diff_ten[0] =vos*2.0*mu;
-        mom_uu_diff_ten[1] =vos*mu;
+        mom_uu_diff_ten[0] =0.0;
+        mom_uu_diff_ten[1] =0.0;
         /* mom_uu_diff_ten[2] = vos*nu; */
   
-        mom_uv_diff_ten[0]=vos*mu;
+        mom_uv_diff_ten[0]=0.0;
   
         /* mom_uw_diff_ten[0]=vos*nu; */
   
         //v momentum diffusion tensor
-        mom_vv_diff_ten[0] =vos*mu;
-        mom_vv_diff_ten[1] =vos*2.0*mu;
+        mom_vv_diff_ten[0] =0.0;
+        mom_vv_diff_ten[1] =0.0;
         /* mom_vv_diff_ten[2] = vos*mu; */
   
-        mom_vu_diff_ten[0]=vos*mu;
+        mom_vu_diff_ten[0]=0.0;
   
         /* mom_vw_diff_ten[0]=vos*mu; */
   
@@ -751,20 +750,20 @@ namespace proteus
   
         //momentum sources
         norm_n = sqrt(n[0]*n[0]+n[1]*n[1]);//+n[2]*n[2]);
-        mom_u_source = -vos*rho*g[0];// - vos*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
-        mom_v_source = -vos*rho*g[1];// - vos*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
+        mom_u_source = -rho*g[0];// - vos*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
+        mom_v_source = -rho*g[1];// - vos*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
         /* mom_w_source = -vos*g[2];// - vos*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
    
         //u momentum Hamiltonian (pressure)
-        mom_u_ham = vos*grad_p[0];
-        dmom_u_ham_grad_p[0]=vos;
+        mom_u_ham = grad_p[0];
+        dmom_u_ham_grad_p[0]=1.0;
         dmom_u_ham_grad_p[1]=0.0;
         /* dmom_u_ham_grad_p[2]=0.0; */
           
         //v momentum Hamiltonian (pressure)
-        mom_v_ham = vos*grad_p[1];
+        mom_v_ham = grad_p[1];
         dmom_v_ham_grad_p[0]=0.0;
-        dmom_v_ham_grad_p[1]=vos;
+        dmom_v_ham_grad_p[1]=1.0;
         /* dmom_v_ham_grad_p[2]=0.0; */
 
         /* //w momentum Hamiltonian (pressure) */
@@ -774,15 +773,15 @@ namespace proteus
         /* dmom_w_ham_grad_p[2]=vos/rho; */
 
         //u momentum Hamiltonian (advection)
-        mom_u_ham +=  0.0;
-        dmom_u_ham_grad_u[0]= 0.0;
-        dmom_u_ham_grad_u[1]= 0.0;
+        mom_u_ham +=  rho*(uStar*grad_u[0]+vStar*grad_u[1]);
+        dmom_u_ham_grad_u[0]= rho*uStar;
+        dmom_u_ham_grad_u[1]= rho*vStar;
         /* dmom_u_ham_grad_u[2]=vos*wStar; */
   
         //v momentum Hamiltonian (advection)
-        mom_v_ham += 0.0;
-        dmom_v_ham_grad_v[0]= 0.0;
-        dmom_v_ham_grad_v[1]= 0.0;
+        mom_v_ham += rho*(uStar*grad_v[0]+vStar*grad_v[1]);
+        dmom_v_ham_grad_v[0]= rho*uStar;
+        dmom_v_ham_grad_v[1]= rho*vStar;
         /* dmom_v_ham_grad_v[2]=vos*wStar; */
       
       /* //w momentum Hamiltonian (advection) */
@@ -846,30 +845,34 @@ namespace proteus
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
-      double solid_velocity[2]={uStar,vStar}, fluid_velocity[2]={uStar_f,vStar_f};
+      double solid_velocity[2]={uStar,vStar}, fluid_velocity[2]={uStar_f, vStar_f};
       double new_beta =    closure.betaCoeff(vos,
 					     rhoFluid,
 					     fluid_velocity,
 					     solid_velocity,
-					     viscosity);
+					     viscosity)*NO_DRAG;
+      //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
+      double beta2 = 156976.4;//hack, fall velocity of 0.1 with hydrostatic water
+        
       //new_beta/=rhoFluid;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
-      mom_u_source +=  (vos)*new_beta*((u-u_f) + nu_t*gradC_x/closure.sigmaC_);
+      mom_u_source +=  new_beta*((u - u_f) + nu_t*gradC_x/closure.sigmaC_) + (1.0-NO_DRAG)*beta2*u;
 
-      mom_v_source +=  (vos)*new_beta*((v-v_f) + nu_t*gradC_y/closure.sigmaC_);
-      /* mom_w_source += vos*new_beta*(w-w_s); */
+      mom_v_source +=  new_beta*((v - v_f) + nu_t*gradC_y/closure.sigmaC_) + (1.0-NO_DRAG)*beta2*v;
 
-      dmom_u_source[0] = (vos)*new_beta;
+      /* mom_w_source += new_beta*(w-w_s); */
+
+      dmom_u_source[0] = new_beta + (1.0-NO_DRAG)*beta2;
       dmom_u_source[1] = 0.0;
       /* dmom_u_source[2] = 0.0; */
 
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] = (vos)*new_beta;
+      dmom_v_source[1] = new_beta + (1.0-NO_DRAG)*beta2;
       /*dmom_v_source[2] = 0.0;*/
 
       /*      dmom_w_source[0] = 0.0;
       dmom_w_source[1] = 0.0;
-      dmom_w_source[2] = (vos)*new_beta;*/
+      dmom_w_source[2] = new_beta;*/
     }
 
 
@@ -1153,6 +1156,7 @@ namespace proteus
         velocity[0] = u;
         velocity[1] = v;
         /* velocity[2] = w; */
+        //cek todo, switch back to conservative form weak BC's
         if (isDOFBoundary_u != 1)
           {
             flux_mass += n[0]*f_mass[0];
@@ -1205,27 +1209,12 @@ namespace proteus
         if (isFluxBoundary_u == 1)
           {
             flux_umom = bc_flux_umom;
-	    if(vos > 1e-8)
-	      {
-		velocity[0] = bc_flux_umom/fabs(vos);
-	      }
-	    else
-	      {
-		velocity[0] = bc_flux_umom;
-	      }
+            velocity[0] = bc_flux_umom;
           }
         if (isFluxBoundary_v == 1)
           {
             flux_vmom = bc_flux_vmom;
-	    if(vos > 1e-8)
-	      {
-		velocity[1] = bc_flux_umom/fabs(vos);
-	      }
-	    else
-	      {
-		velocity[1] = bc_flux_vmom;
-	      }
-
+            velocity[1] = bc_flux_umom;
           }
         /* if (isFluxBoundary_w == 1) */
         /*   { */
@@ -1551,9 +1540,9 @@ namespace proteus
                              int* p_l2g, 
                              int* vel_l2g, 
                              double* p_dof, 
-                             double* qu_dof, 
-                             double* qv_dof, 
-                             double* qw_dof,
+                             double* u_dof, 
+                             double* v_dof, 
+                             double* w_dof,
                              double* g,
                              const double useVF,
                              double* vf,
@@ -1675,10 +1664,8 @@ namespace proteus
                   eN_k_3d     = eN_k*3,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
-                  qu=0.0,qv=0.0,qw=0.0,
                   one_by_vos=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],grad_vos[nSpace],
-                  grad_qu[nSpace],grad_qv[nSpace],grad_qw[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
                   mom_v_acc=0.0,
@@ -1802,8 +1789,8 @@ namespace proteus
                 //get the solution
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
                 p = q_p[eN_k];
-                ck.valFromDOF(qu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],qu);
-                ck.valFromDOF(qv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],qv);
+                ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
+                ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w); */
                 //get the solution gradients
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
@@ -1811,19 +1798,12 @@ namespace proteus
                   grad_p[I] = q_grad_p[eN_k_nSpace + I];
                 for (int I=0;I<nSpace;I++)
                   grad_vos[I] = q_grad_vos[eN_k_nSpace + I];                         
-                ck.gradFromDOF(qu_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_qu);
-                ck.gradFromDOF(qv_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_qv);
+                ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
+                ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
                 //VRANS
                 vos      = q_vos[eN_k];//sed fraction - gco check
                 one_by_vos = 2.0*vos/(vos*vos + fmax(1.0e-8,vos*vos));
-                u = one_by_vos*qu;
-                v = one_by_vos*qv;
-                for (int I=0;I<nSpace;I++)
-                  {
-                    grad_u[I] = one_by_vos*grad_qu[I];
-                    grad_v[I] = one_by_vos*grad_qv[I];
-                  }
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -1884,9 +1864,9 @@ namespace proteus
                                      u,
                                      v,
                                      w,
-                                     qu,
-                                     qv,
-                                     qw,
+                                     u,
+                                     v,
+                                     w,
                                      q_velocity_sge[eN_k_nSpace+0],
                                      q_velocity_sge[eN_k_nSpace+1],
                                      q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
@@ -1942,55 +1922,56 @@ namespace proteus
                     dmom_v_source[I] = 0.0;
                     dmom_w_source[I] = 0.0;
                   }
-                /* updateDarcyForchheimerTerms_Ergun(// linearDragFactor, */
-                /*                                   // nonlinearDragFactor, */
-                /*                                   // vos, */
-                /*                                   // meanGrainSize, */
-                /*                                   q_dragAlpha[eN_k], */
-                /*                                   q_dragBeta[eN_k], */
-                /*                                   eps_rho, */
-                /*                                   eps_mu, */
-                /*                                   rho_0, */
-                /*                                   nu_0, */
-                /*                                   rho_1, */
-                /*                                   nu_1, */
-		/* 				  q_eddy_viscosity[eN_k], */
-                /*                                   useVF, */
-                /*                                   vf[eN_k], */
-                /*                                   phi[eN_k], */
-                /*                                   u, */
-                /*                                   v, */
-                /*                                   w, */
-                /*                                   q_velocity_sge[eN_k_nSpace+0], */
-                /*                                   q_velocity_sge[eN_k_nSpace+1], */
-                /*                                   q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used */
-                /*                                   eps_solid[elementFlags[eN]], */
-                /*                                   vos, */
-                /*                                   q_velocity_fluid[eN_k_nSpace+0], */
-                /*                                   q_velocity_fluid[eN_k_nSpace+1], */
-                /*                                   q_velocity_fluid[eN_k_nSpace+1],//cek hack, should not be used */
-                /*                                   q_velocityStar_fluid[eN_k_nSpace+0], */
-                /*                                   q_velocityStar_fluid[eN_k_nSpace+1], */
-                /*                                   q_velocityStar_fluid[eN_k_nSpace+1],//cek hack, should not be used */
-                /*                                   mom_u_source, */
-                /*                                   mom_v_source, */
-                /*                                   mom_w_source, */
-                /*                                   dmom_u_source, */
-                /*                                   dmom_v_source, */
-                /*                                   dmom_w_source, */
-                /*                                   q_grad_vos[eN_k_nSpace+0], */
-                /*                                   q_grad_vos[eN_k_nSpace+1], */
-                /*                                   q_grad_vos[eN_k_nSpace+1]); */
-		/* updatePenaltyForPacking(vos, */
-		/* 			u, */
-		/* 			v, */
-		/* 			w, */
-		/* 			mom_u_source, */
-		/* 			mom_v_source, */
-		/* 			mom_w_source, */
-		/* 			dmom_u_source, */
-		/* 			dmom_v_source, */
-		/* 			dmom_w_source); */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // vos,
+                                                  // meanGrainSize,
+                                                  q_dragAlpha[eN_k],
+                                                  q_dragBeta[eN_k],
+                                                  eps_rho,
+                                                  eps_mu,
+                                                  rho_0,
+                                                  nu_0,
+                                                  rho_1,
+                                                  nu_1,
+                                                  q_eddy_viscosity[eN_k],
+                                                  useVF,
+                                                  vf[eN_k],
+                                                  phi[eN_k],
+                                                  u,
+                                                  v,
+                                                  w,
+                                                  q_velocity_sge[eN_k_nSpace+0],
+                                                  q_velocity_sge[eN_k_nSpace+1],
+                                                  q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
+                                                  eps_solid[elementFlags[eN]],
+                                                  vos,
+                                                  q_velocity_fluid[eN_k_nSpace+0],
+                                                  q_velocity_fluid[eN_k_nSpace+1],
+                                                  q_velocity_fluid[eN_k_nSpace+1],
+                                                  q_velocityStar_fluid[eN_k_nSpace+0],
+                                                  q_velocityStar_fluid[eN_k_nSpace+1],
+                                                  q_velocityStar_fluid[eN_k_nSpace+1],
+                                                  mom_u_source,
+                                                  mom_v_source,
+                                                  mom_w_source,
+                                                  dmom_u_source,
+                                                  dmom_v_source,
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+1]);
+
+		/* /\* updatePenaltyForPacking(vos, *\/ */
+		/* /\* 			u, *\/ */
+		/* /\* 			v, *\/ */
+		/* /\* 			w, *\/ */
+		/* /\* 			mom_u_source, *\/ */
+		/* /\* 			mom_v_source, *\/ */
+		/* /\* 			mom_w_source, *\/ */
+		/* /\* 			dmom_u_source, *\/ */
+		/* /\* 			dmom_v_source, *\/ */
+		/* /\* 			dmom_w_source); *\/ */
                 
                 /* updateFrictionalPressure(vos, */
                 /*                          grad_vos, */
@@ -2020,12 +2001,6 @@ namespace proteus
                      /*              mom_ww_diff_ten, */
                      /*              mom_wu_diff_ten, */
                      /*              mom_wv_diff_ten); */
-                     for (int I=0;I<nSpace;I++)
-                       {
-                         dmom_u_source[I]*=one_by_vos;
-                         dmom_v_source[I]*=one_by_vos;
-                         dmom_w_source[I]*=one_by_vos;
-                       }
                 //Turbulence closure model
                 //
                 //save momentum for time history and velocity for subgrid error
@@ -2109,14 +2084,14 @@ namespace proteus
 
                 pdeResidual_u = 
                   ck.Mass_strong(mom_u_acc_t) +
-                  ck.Advection_strong(dmom_adv_sge,grad_qu) + //note here and below: same in cons. and non-cons.
+                  ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
                   ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_u_source) -
                   ck.Reaction_strong(u*div_mesh_velocity);
           
                 pdeResidual_v = 
                   ck.Mass_strong(mom_v_acc_t) +
-                  ck.Advection_strong(dmom_adv_sge,grad_qv) +
+                  ck.Advection_strong(dmom_adv_sge,grad_v) +
                   ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) + 
                   ck.Reaction_strong(mom_v_source) -
                   ck.Reaction_strong(v*div_mesh_velocity);
@@ -2237,10 +2212,10 @@ namespace proteus
                       ck.Diffusion_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
                       /* ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                       ck.Reaction_weak(mom_u_source,vel_test_dV[i]) + 
-                      //ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) + 
-                      //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
-                      //ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
-                      ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_qu,&vel_grad_test_dV[i_nSpace]); 
+                      ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) + 
+                      /* ck.SubgridError(subgridError_p,Lstar_p_u[i]) + */
+                      ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
+                      ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
                   
                     elementResidual_v[i] += 
                       ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) + 
@@ -2249,10 +2224,10 @@ namespace proteus
                       ck.Diffusion_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
                       /* ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                       ck.Reaction_weak(mom_v_source,vel_test_dV[i]) + 
-                      //ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) + 
-                      //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
-                      //ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
-                      ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_qv,&vel_grad_test_dV[i_nSpace]); 
+                      ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) + 
+                      /* ck.SubgridError(subgridError_p,Lstar_p_v[i]) + */
+                      ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
+                      ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]); 
 
                     /* elementResidual_w[i] += 
                        ck.Mass_weak(mom_w_acc_t,vel_test_dV[i]) + */
@@ -2560,9 +2535,9 @@ namespace proteus
         /*                              u_ext, */
         /*                              v_ext, */
         /*                              w_ext, */
-        /*                              qu_ext, */
-        /*                              qv_ext, */
-        /*                              qw_ext, */
+        /*                              u_ext, */
+        /*                              v_ext, */
+        /*                              w_ext, */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+0], */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+1], */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used */
@@ -2638,9 +2613,9 @@ namespace proteus
         /*                              bc_u_ext, */
         /*                              bc_v_ext, */
         /*                              bc_w_ext, */
-        /*                              bc_qu_ext, */
-        /*                              bc_qv_ext, */
-        /*                              bc_qw_ext, */
+        /*                              bc_u_ext, */
+        /*                              bc_v_ext, */
+        /*                              bc_w_ext, */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+0], */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+1], */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used */
@@ -3169,7 +3144,7 @@ namespace proteus
                              //
                              int* p_l2g, 
                              int* vel_l2g,
-                             double* p_dof, double* qu_dof, double* qv_dof, double* qw_dof,
+                             double* p_dof, double* u_dof, double* v_dof, double* w_dof,
                              double* g,
                              const double useVF,
                              double* vf,
@@ -3318,10 +3293,8 @@ namespace proteus
 
                 //declare local storage
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
-                  qu=0.0,qv=0.0,qw=0.0,
                   one_by_vos=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],grad_vos[nSpace],
-                  grad_qu[nSpace],grad_qv[nSpace],grad_qw[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
                   mom_v_acc=0.0,
@@ -3459,8 +3432,8 @@ namespace proteus
                 //get the solution        
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
                 p = q_p[eN_k];
-                ck.valFromDOF(qu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],qu);
-                ck.valFromDOF(qv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],qv);
+                ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
+                ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w); */
                 //get the solution gradients
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
@@ -3468,18 +3441,11 @@ namespace proteus
                   grad_p[I] = q_grad_p[eN_k_nSpace+I];
                 for (int I=0;I<nSpace;I++)
                   grad_vos[I] = q_grad_vos[eN_k_nSpace + I];
-                ck.gradFromDOF(qu_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_qu);
-                ck.gradFromDOF(qv_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_qv);
+                ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
+                ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 //VRANS
                 vos = q_vos[eN_k];//sed fraction - gco check
                 one_by_vos = 2.0*vos / (vos*vos + fmax(1.0e-8,vos*vos));
-                u = one_by_vos*u;
-                v = one_by_vos*v;
-                for (int I=0;I<nSpace;I++)
-                  {
-                    grad_u[I] = one_by_vos*grad_qu[I];
-                    grad_v[I] = one_by_vos*grad_qv[I];
-                  }
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
@@ -3538,9 +3504,9 @@ namespace proteus
                                      u,
                                      v,
                                      w,
-                                     qu,
-                                     qv,
-                                     qw,
+                                     u,
+                                     v,
+                                     w,
                                      q_velocity_sge[eN_k_nSpace+0],
                                      q_velocity_sge[eN_k_nSpace+1],
                                      q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't be used
@@ -3596,56 +3562,56 @@ namespace proteus
                     dmom_v_source[I] = 0.0;
                     dmom_w_source[I] = 0.0;
                   }
-                /* updateDarcyForchheimerTerms_Ergun(// linearDragFactor, */
-                /*                                   // nonlinearDragFactor, */
-                /*                                   // vos, */
-                /*                                   // meanGrainSize, */
-                /*                                   q_dragAlpha[eN_k], */
-                /*                                   q_dragBeta[eN_k], */
-                /*                                   eps_rho, */
-                /*                                   eps_mu, */
-                /*                                   rho_0, */
-                /*                                   nu_0, */
-                /*                                   rho_1, */
-                /*                                   nu_1, */
-                /*                                   eddy_viscosity, */
-                /*                                   useVF, */
-                /*                                   vf[eN_k], */
-                /*                                   phi[eN_k], */
-                /*                                   u, */
-                /*                                   v, */
-                /*                                   w, */
-                /*                                   q_velocity_sge[eN_k_nSpace+0], */
-                /*                                   q_velocity_sge[eN_k_nSpace+1], */
-                /*                                   q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used */
-                /*                                   eps_solid[elementFlags[eN]], */
-                /*                                   vos, */
-                /*                                   q_velocity_fluid[eN_k_nSpace+0], */
-                /*                                   q_velocity_fluid[eN_k_nSpace+1], */
-                /*                                   q_velocity_fluid[eN_k_nSpace+1], */
-                /*                                   q_velocityStar_fluid[eN_k_nSpace+0], */
-                /*                                   q_velocityStar_fluid[eN_k_nSpace+1], */
-                /*                                   q_velocityStar_fluid[eN_k_nSpace+1], */
-                /*                                   mom_u_source, */
-                /*                                   mom_v_source, */
-                /*                                   mom_w_source, */
-                /*                                   dmom_u_source, */
-                /*                                   dmom_v_source, */
-                /*                                   dmom_w_source, */
-                /*                                   q_grad_vos[eN_k_nSpace+0], */
-                /*                                   q_grad_vos[eN_k_nSpace+1], */
-                /*                                   q_grad_vos[eN_k_nSpace+1]); */
+                updateDarcyForchheimerTerms_Ergun(// linearDragFactor,
+                                                  // nonlinearDragFactor,
+                                                  // vos,
+                                                  // meanGrainSize,
+                                                  q_dragAlpha[eN_k],
+                                                  q_dragBeta[eN_k],
+                                                  eps_rho,
+                                                  eps_mu,
+                                                  rho_0,
+                                                  nu_0,
+                                                  rho_1,
+                                                  nu_1,
+                                                  eddy_viscosity,
+                                                  useVF,
+                                                  vf[eN_k],
+                                                  phi[eN_k],
+                                                  u,
+                                                  v,
+                                                  w,
+                                                  q_velocity_sge[eN_k_nSpace+0],
+                                                  q_velocity_sge[eN_k_nSpace+1],
+                                                  q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
+                                                  eps_solid[elementFlags[eN]],
+                                                  vos,
+                                                  q_velocity_fluid[eN_k_nSpace+0],
+                                                  q_velocity_fluid[eN_k_nSpace+1],
+                                                  q_velocity_fluid[eN_k_nSpace+1],
+                                                  q_velocityStar_fluid[eN_k_nSpace+0],
+                                                  q_velocityStar_fluid[eN_k_nSpace+1],
+                                                  q_velocityStar_fluid[eN_k_nSpace+1],
+                                                  mom_u_source,
+                                                  mom_v_source,
+                                                  mom_w_source,
+                                                  dmom_u_source,
+                                                  dmom_v_source,
+                                                  dmom_w_source,
+                                                  q_grad_vos[eN_k_nSpace+0],
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  q_grad_vos[eN_k_nSpace+1]);
 
-		/* updatePenaltyForPacking(vos, */
-		/* 			u, */
-		/* 			v, */
-		/* 			w, */
-		/* 			mom_u_source, */
-		/* 			mom_v_source, */
-		/* 			mom_w_source, */
-		/* 			dmom_u_source, */
-		/* 			dmom_v_source, */
-		/* 			dmom_w_source); */
+		/* /\* updatePenaltyForPacking(vos, *\/ */
+		/* /\* 			u, *\/ */
+		/* /\* 			v, *\/ */
+		/* /\* 			w, *\/ */
+		/* /\* 			mom_u_source, *\/ */
+		/* /\* 			mom_v_source, *\/ */
+		/* /\* 			mom_w_source, *\/ */
+		/* /\* 			dmom_u_source, *\/ */
+		/* /\* 			dmom_v_source, *\/ */
+		/* /\* 			dmom_w_source); *\/ */
 
 		/* updateFrictionalPressure(vos, */
                 /*                          grad_vos, */
@@ -3675,12 +3641,6 @@ namespace proteus
                            /*        mom_ww_diff_ten, */
                            /*        mom_wu_diff_ten, */
                            /*        mom_wv_diff_ten); */
-                     for (int I=0;I<nSpace;I++)
-                       {
-                         dmom_u_source[I]*=one_by_vos;
-                         dmom_v_source[I]*=one_by_vos;
-                         dmom_w_source[I]*=one_by_vos;
-                       }
                 //
                 //moving mesh
                 //
@@ -3741,8 +3701,8 @@ namespace proteus
                 //
                 pdeResidual_p =
 		  ck.Mass_strong(q_dvos_dt[eN_k]) +
-                  ck.Advection_strong(dmass_adv_u,grad_qu) +
-                  ck.Advection_strong(dmass_adv_v,grad_qv) +
+                  ck.Advection_strong(dmass_adv_u,grad_u) +
+                  ck.Advection_strong(dmass_adv_v,grad_v) +
                   /* ck.Advection_strong(dmass_adv_w,grad_w) + */
                   DM2*MOVING_DOMAIN*ck.Reaction_strong(alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity) +
                   //VRANS
@@ -3751,14 +3711,14 @@ namespace proteus
               
                 pdeResidual_u = 
                   ck.Mass_strong(mom_u_acc_t) +
-                  ck.Advection_strong(dmom_adv_sge,grad_qu) +
+                  ck.Advection_strong(dmom_adv_sge,grad_u) +
                   ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
                   ck.Reaction_strong(mom_u_source) -
                   ck.Reaction_strong(u*div_mesh_velocity);
           
                 pdeResidual_v = 
                   ck.Mass_strong(mom_v_acc_t) +
-                  ck.Advection_strong(dmom_adv_sge,grad_qv) +
+                  ck.Advection_strong(dmom_adv_sge,grad_v) +
                   ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) + 
                   ck.Reaction_strong(mom_v_source)  - 
                   ck.Reaction_strong(v*div_mesh_velocity);
@@ -3917,18 +3877,18 @@ namespace proteus
                         /*   ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);  */
                         elementJacobian_u_u[i][j] += 
                           ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
-                          //ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
+                          ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
                           ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-                          ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace])*one_by_vos + 
+                          ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
                           //VRANS
                           ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           //ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
-                          //ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
+                          ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
                           ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
                         elementJacobian_u_v[i][j] += 
                           ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
-                          ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace])*one_by_vos + 
+                          ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
                           //VRANS
                           ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);// +
                           //
@@ -3944,21 +3904,21 @@ namespace proteus
                         /*   ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_v[i]);  */
                         elementJacobian_v_u[i][j] += 
                           ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
-                          ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace])*one_by_vos + 
+                          ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
                           //VRANS
                             ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);// + 
                           //
                           //ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
                         elementJacobian_v_v[i][j] += 
                           ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-                          //ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
+                          ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
                           ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-                          ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace])*one_by_vos + 
+                          ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
                           //VRANS
                           ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           //ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
-                          //ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
+                          ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
                           ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
                         /* elementJacobian_v_w[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +   */
                         /*   ck.SimpleDiffusionJacobian_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
@@ -4297,9 +4257,9 @@ namespace proteus
         /*                              u_ext, */
         /*                              v_ext, */
         /*                              w_ext, */
-        /*                              qu_ext, */
-        /*                              qv_ext, */
-        /*                              qw_ext, */
+        /*                              u_ext, */
+        /*                              v_ext, */
+        /*                              w_ext, */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+0], */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+1], */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used */
@@ -4375,9 +4335,9 @@ namespace proteus
         /*                              bc_u_ext, */
         /*                              bc_v_ext, */
         /*                              bc_w_ext, */
-        /*                              bc_qu_ext, */
-        /*                              bc_qv_ext, */
-        /*                              bc_qw_ext, */
+        /*                              bc_u_ext, */
+        /*                              bc_v_ext, */
+        /*                              bc_w_ext, */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+0], */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+1], */
         /*                              ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used */
