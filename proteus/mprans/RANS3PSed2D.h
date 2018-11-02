@@ -2225,6 +2225,7 @@ namespace proteus
                       ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
                       ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
                     mom_u_source_i[i] += ck.Reaction_weak(mom_u_source,vel_test_dV[i]);
+
                     elementResidual_v[i] += 
                       ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) + 
                       ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) +
