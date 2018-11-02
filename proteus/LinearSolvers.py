@@ -682,8 +682,14 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Sp:
                 logEvent("NAHeader Preconditioner selfp" )
-                self.preconditioner = Schur_Sp(par_L,
-                                               prefix)
+                try:
+                    self.preconditioner = Schur_Sp(par_L,
+                                                   prefix,
+                                                   velocity_block_preconditioner=self.preconditionerOptions[0])
+                except IndexError:
+                    logEvent("Preconditioner options not specified, using defaults")
+                    self.preconditioner = Schur_Sp(par_L,
+                                                   prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Qp:
                 logEvent("NAHeader Preconditioner Qp" )
@@ -748,6 +754,14 @@ class SchurOperatorConstructor(object):
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
+        # ARB TODO : the Schur class should be refactored to avoid
+        # the follow expection statement
+        try:
+            self.L.pde
+            pass
+        except AttributeError:
+            return
+
         if isinstance(self.L.pde, RANS2P.LevelModel):
             self.opBuilder = OperatorConstructor_rans2p(self.L.pde)
         else:
@@ -1737,7 +1751,142 @@ class SchurPrecon(KSP_Preconditioner):
         else:
             return self.model_info.const_null_space
 
-class Schur_Sp(SchurPrecon):
+class Schur_Qp(SchurPrecon) :
+    """
+    A Navier-Stokes (or Stokes) preconditioner which uses the
+    viscosity scaled pressure mass matrix.
+    """
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
+        """
+        Initializes the pressure mass matrix class.
+
+        Parameters
+        ---------
+        L : petsc4py matrix
+            Defines the problem's operator.
+        """
+        SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
+        self.operator_constructor = SchurOperatorConstructor(self)
+        self.Q = self.operator_constructor.initializeQ()
+
+    def setUp(self,global_ksp):
+        """ Attaches the pressure mass matrix to PETSc KSP preconditioner.
+
+        Parameters
+        ----------
+        global_ksp : PETSc KSP object
+        """
+        # Create the pressure mass matrix and scaxle by the viscosity.
+        self.operator_constructor.updateQ()
+        self.Qp = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                      self.operator_constructor.linear_smoother.isp)
+        self.Qp.scale(1./self.L.pde.coefficients.nu)
+        L_sizes = self.Qp.size
+
+        # Setup a PETSc shell for the inverse Qp operator
+        self.QpInv_shell = p4pyPETSc.Mat().create()
+        self.QpInv_shell.setSizes(L_sizes)
+        self.QpInv_shell.setType('python')
+        self.matcontext_inv = MatrixInvShell(self.Qp)
+        self.QpInv_shell.setPythonContext(self.matcontext_inv)
+        self.QpInv_shell.setUp()
+        # Set PETSc Schur operator
+        self._setSchurApproximation(global_ksp)
+        self._setSchurlog(global_ksp)
+
+class NavierStokesSchur(SchurPrecon):
+    r""" Schur complement preconditioners for Navier-Stokes problems.
+
+    This class is derived from SchurPrecond and serves as the base
+    class for all NavierStokes preconditioners which use the Schur complement
+    method.
+    """
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 velocity_block_preconditioner=True,
+                 solver_info=None):
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix=prefix,
+                             solver_info=solver_info)
+        self.operator_constructor = SchurOperatorConstructor(self,
+                                                             pde_type='navier_stokes')
+        self.velocity_block_preconditioner = velocity_block_preconditioner
+        if self.velocity_block_preconditioner:
+            self._initialize_velocity_idx()
+
+    def _initialize_velocity_idx(self):
+        """
+        This function creates index sets so that a block
+        preconditioner ca be used for the velocity solve. One index
+        set (e.g. is_vel_*) describes the global dof associated
+        with the * component of the velocity.  The second
+        is (e.g. is*_local) describes the local dof
+        indexes relative to the velocity block.
+        """
+        L_range = self.L.getOwnershipRange()
+        neqns = self.L.getSizes()[0][0]
+
+        vel_is_func = self.model_info.dof_order_class.create_vel_DOF_IS
+        
+        velocity_DOF_full, velocity_DOF_local = vel_is_func(L_range,
+                                                            neqns,
+                                                            self.model_info.nc)
+
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_1 = "is_vel_" + var
+            name_2 = "is"+var+"_local"
+            setattr(self,name_1, velocity_DOF_full[i])
+            setattr(self,name_2, velocity_DOF_local[i])
+
+    def _initialize_velocity_block_preconditioner(self,global_ksp):
+        r""" Initialize the velocity block preconditioner.
+
+        """
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setType('fieldsplit')
+        is_lst = []
+        for var in self.get_velocity_var_names():
+            is_local_name = "is" + var + "_local"
+            is_local = getattr(self,is_local_name)
+            is_lst.append((var,is_local))
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitIS(*is_lst)
+        # ARB - need to run some tests to see what the best option is here
+#        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitType(1)  # This is for additive (e.g. Jacobi)
+
+    def _setup_velocity_block_preconditioner(self,global_ksp):
+        r"""To improve the effiency of the velocity-block solve in the
+            Schur complement preconditioner, we can apply a block
+            preconditioner.  This function builds an index set to
+            support this.
+
+        Parameters
+        ----------
+        global_ksp : xxx
+           xxx
+
+        Notes
+        -----
+        This is currently only set up for interlaced DOF ordering.
+        """
+        self.velocity_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_str = "is_vel_" + var
+            name_str_mat = "velocity_" + var + "_sub_matrix"
+            is_set = getattr(self, name_str)
+            setattr(self,name_str_mat, global_ksp.getOperators()[0].getSubMatrix(is_set,
+                                                                                 is_set))
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setOperators(getattr(self,name_str_mat),
+                                                                                            getattr(self,name_str_mat))
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setFromOptions()
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setUp()
+
+
+        global_ksp.pc.getFieldSplitSubKSP()[0].setUp()
+        global_ksp.pc.setUp()
+
+class Schur_Sp(NavierStokesSchur):
     """
     Implements the SIMPLE Schur complement approximation proposed
     in 2009 by Rehman, Vuik and Segal.
@@ -1761,15 +1910,26 @@ class Schur_Sp(SchurPrecon):
     """
     def __init__(self,
                  L,
-                 prefix=None,
-                 solver_info = None):
-        SchurPrecon.__init__(self,
-                             L,
-                             prefix,
-                             solver_info=solver_info)
+                 prefix,
+                 velocity_block_preconditioner=False,
+                 solver_info=None):
+        super(Schur_Sp, self).__init__(L,
+                                       prefix,
+                                       velocity_block_preconditioner,
+                                       solver_info=solver_info)
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
 
     def setUp(self,global_ksp):
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
+
         self._setSchurlog(global_ksp)
+
         self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
                                                              self.isv)
         self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.isv,
@@ -1854,7 +2014,8 @@ class NavierStokesSchur(SchurPrecon):
     def __init__(self,
                  L,
                  prefix=None,
-                 velocity_block_preconditioner=True):
+                 velocity_block_preconditioner=True,
+                 solver_info=None):
         """
         Initializes a base class for Navier-Stokes Schur complement
         preconditioners.
@@ -1868,10 +2029,11 @@ class NavierStokesSchur(SchurPrecon):
         velocity_block_preconditioner : Bool
             Indicates whether the velocity block should be solved as
             a block preconditioner
-        """
+        """        
         SchurPrecon.__init__(self,
                              L,
-                             prefix)
+                             prefix,
+                             solver_info=solver_info)
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
         self.velocity_block_preconditioner = velocity_block_preconditioner
