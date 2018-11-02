@@ -1649,7 +1649,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * ebqe_dynamic_viscosity_as_function,
                                double order_polynomial,
                                double* isActiveDOF,
-                               int USE_SBM)
+                               int USE_SBM,
+                               double* ncDrag,
+                               double* betaDrag,
+                               double* vos_vel_nodes)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -2180,7 +2183,10 @@ cdef class RANS3PF2D:
                           numpy.ndarray ebqe_dynamic_viscosity_as_function,
                           double order_polynomial,
                           numpy.ndarray isActiveDOF,
-                          int USE_SBM):
+                          int USE_SBM,
+                          numpy.ndarray ncDrag,
+                          numpy.ndarray betaDrag,
+                          numpy.ndarray vos_vel_nodes):
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -2398,7 +2404,10 @@ cdef class RANS3PF2D:
                                        < double * > ebqe_dynamic_viscosity_as_function.data,
                                        order_polynomial,
                                        < double *> isActiveDOF.data,
-                                       USE_SBM)
+                                       USE_SBM,
+                                       < double *> ncDrag.data,
+                                       < double *> betaDrag.data,
+                                       < double *> vos_vel_nodes.data)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
