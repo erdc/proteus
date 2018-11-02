@@ -9,7 +9,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
-#define NO_DRAG 0.0
+#define DRAG_FAC 0.0
+#define TURB_FORCE_FAC 0.0
 //////////////////////
 // ***** TODO ***** //
 //////////////////////
@@ -287,7 +288,10 @@ namespace proteus
                                    double* ebqe_dynamic_viscosity_as_function,
                                    double order_polynomial,
                                    double* isActiveDOF,
-                                   int USE_SBM
+                                   int USE_SBM,
+                                   double* ncDrag,
+                                   double* betaDrag,
+                                   double* vos_vel_nodes
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -1046,17 +1050,22 @@ namespace proteus
 					    rho,
 					    fluid_velocity,
 					    solid_velocity,
-					    viscosity)*NO_DRAG;
-	mom_u_source += (1.0 - phi_s) * new_beta * ( (u - u_s) - nu_t*gradC_x/closure.sigmaC_ );
-	mom_v_source += (1.0 - phi_s) * new_beta * ( (v - v_s) - nu_t*gradC_y/closure.sigmaC_);
+					    viscosity)*DRAG_FAC;
+        //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
+        double beta2 = 156976.4;//hack, fall velocity of 0.1 with hydrostatic water
+        
+        mom_u_source += (1.0 - phi_s) * new_beta * ( (u - u_s) - TURB_FORCE_FAC*nu_t*gradC_x/closure.sigmaC_ ) +
+          (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(u-u_s);
+	mom_v_source += (1.0 - phi_s) * new_beta * ( (v - v_s) - TURB_FORCE_FAC*nu_t*gradC_y/closure.sigmaC_) +
+          (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(v-v_s);
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-        dmom_u_source[0] = (1.0 - phi_s) * new_beta;
+        dmom_u_source[0] = (1.0 - phi_s) * new_beta + (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2;
         dmom_u_source[1] = 0.0;
         /* dmom_u_source[2] = 0.0; */
 
         dmom_v_source[0] = 0.0;
-        dmom_v_source[1] = (1.0 - phi_s) * new_beta;
+        dmom_v_source[1] = (1.0 - phi_s) * new_beta + (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2;
         /*dmom_v_source[2] = 0.0; */
 
         dmom_w_source[0] = 0.0;
@@ -2240,7 +2249,10 @@ namespace proteus
                              double* ebqe_dynamic_viscosity_as_function,
                              double order_polynomial,
                              double* isActiveDOF,
-                             int USE_SBM)
+                             int USE_SBM,
+                             double* ncDrag,
+                             double* betaDrag,
+                             double* vos_vel_nodes)
       {
         //
         //Loop over elements to compute volume integrals and load them into element and global residual
@@ -2263,6 +2275,10 @@ namespace proteus
             register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
+              mom_u_source_i[nDOF_test_element],
+              mom_v_source_i[nDOF_test_element],
+              betaDrag_i[nDOF_test_element],
+              vos_i[nDOF_test_element],
               phisErrorElement[nDOF_test_element],
               //elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
@@ -2280,6 +2296,10 @@ namespace proteus
                 elementResidual_p[i]=0.0;
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
+                mom_u_source_i[i]=0.0;
+                mom_v_source_i[i]=0.0;
+                betaDrag_i[i]=0.0;
+                vos_i[i]=0.0;
                 phisErrorElement[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
               }//i
@@ -3189,6 +3209,11 @@ namespace proteus
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v1,vel_tgrad_test_i) +  //exp.
                       ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_u,vel_tgrad_test_i); //imp.
+                    mom_u_source_i[i] += ck.Reaction_weak(mom_u_source,vel_test_dV[i]);
+                    betaDrag_i[i] += ck.Reaction_weak(dmom_u_source[0],
+                                                      vel_test_dV[i]);
+                    vos_i[i] += ck.Reaction_weak(1.0-porosity,
+                                                 vel_test_dV[i]);
 
                     elementResidual_v[i] +=
                       ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) +
@@ -3204,6 +3229,7 @@ namespace proteus
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v2,vel_tgrad_test_i) +  //exp.
                       ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_v,vel_tgrad_test_i); //imp.
+                    mom_v_source_i[i] += ck.Reaction_weak(mom_v_source,vel_test_dV[i]);
 
                     /* elementResidual_w[i] +=
                        ck.Mass_weak(mom_w_acc_t,vel_test_dV[i]) + */
@@ -3244,6 +3270,10 @@ namespace proteus
                 /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
                 globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
+                ncDrag[offset_u+stride_u*vel_l2g[eN_i]]+=mom_u_source_i[i]; 
+                ncDrag[offset_v+stride_v*vel_l2g[eN_i]]+=mom_v_source_i[i];
+                betaDrag[vel_l2g[eN_i]] += betaDrag_i[i];
+                vos_vel_nodes[vel_l2g[eN_i]] += vos_i[i];
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
             }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */

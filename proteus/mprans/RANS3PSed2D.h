@@ -5,7 +5,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
-#define NO_DRAG 0.0
+#define DRAG_FAC 0.0
+#define TURB_FORCE_FAC 0.0
 namespace proteus
 {
   class cppRANS3PSed2D_base
@@ -202,7 +203,8 @@ namespace proteus
                                    double* wettedAreas,
                                    double* netForces_p,
                                    double* netForces_v,
-                                   double* netMoments)=0;
+                                   double* netMoments,
+                                   double* ncDrag)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -850,24 +852,24 @@ namespace proteus
 					     rhoFluid,
 					     fluid_velocity,
 					     solid_velocity,
-					     viscosity)*NO_DRAG;
+					     viscosity)*DRAG_FAC;
       //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
       double beta2 = 156976.4;//hack, fall velocity of 0.1 with hydrostatic water
         
       //new_beta/=rhoFluid;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
-      mom_u_source +=  new_beta*((u - u_f) + nu_t*gradC_x/closure.sigmaC_) + (1.0-NO_DRAG)*beta2*u;
+      mom_u_source +=  new_beta*((u - uStar_f) + TURB_FORCE_FAC*nu_t*gradC_x/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(u-u_f);
 
-      mom_v_source +=  new_beta*((v - v_f) + nu_t*gradC_y/closure.sigmaC_) + (1.0-NO_DRAG)*beta2*v;
+      mom_v_source +=  new_beta*((v - vStar_f) + TURB_FORCE_FAC*nu_t*gradC_y/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(v-v_f);
 
       /* mom_w_source += new_beta*(w-w_s); */
 
-      dmom_u_source[0] = new_beta + (1.0-NO_DRAG)*beta2;
+      dmom_u_source[0] = new_beta + (1.0-DRAG_FAC)*beta2;
       dmom_u_source[1] = 0.0;
       /* dmom_u_source[2] = 0.0; */
 
       dmom_v_source[0] = 0.0;
-      dmom_v_source[1] = new_beta + (1.0-NO_DRAG)*beta2;
+      dmom_v_source[1] = new_beta + (1.0-DRAG_FAC)*beta2;
       /*dmom_v_source[2] = 0.0;*/
 
       /*      dmom_w_source[0] = 0.0;
@@ -946,11 +948,12 @@ namespace proteus
       double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
       double rho_fluid = rho_0*(1.0-H_rho)+rho_1*H_rho;
       double nu_fluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      double one_by_vos = 2.0*vos/(vos*vos + fmax(1.0e-8,vos*vos));
 
       double mu_fr = closure.mu_fr(vos,
                                    grad_u[0], grad_u[1], 0., 
                                    grad_v[0], grad_v[1], 0., 
-                                   0., 0. , 0.);
+                                   0., 0. , 0.)*one_by_vos;
       double rho_solid = rho_s;
 
       mom_uu_diff_ten[0] += 2. * mu_fr * (2./3.); 
@@ -1622,7 +1625,8 @@ namespace proteus
                              double* wettedAreas,
                              double* netForces_p,
                              double* netForces_v,
-                             double* netMoments)
+                             double* netMoments,
+                             double* ncDrag)
       {
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -1638,6 +1642,8 @@ namespace proteus
             register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
+              mom_u_source_i[nDOF_test_element],
+              mom_v_source_i[nDOF_test_element],
               //elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
             const double* elementResidual_w(NULL);
@@ -1651,6 +1657,8 @@ namespace proteus
                 elementResidual_p[i]=0.0;
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
+                mom_u_source_i[i]=0.0;
+                mom_v_source_i[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
               }//i
             //
@@ -1978,29 +1986,29 @@ namespace proteus
                 /*                          mom_u_source, */
                 /*                          mom_v_source, */
                 /*                          mom_w_source); */
-		     /* updateFrictionalStress(vos, */
-                     /*             eps_rho, */
-                     /*             eps_mu, */
-                     /*             rho_0, */
-                     /*             nu_0, */
-                     /*             rho_1, */
-                     /*             nu_1, */
-                     /*             rho_s, */
-                     /*             useVF, */
-                     /*             vf[eN_k], */
-                     /*             phi[eN_k], */
-                     /*              grad_u, */
-                     /*              grad_v, */
-                     /*              grad_w, */
-                     /*              mom_uu_diff_ten, */
-                     /*              mom_uv_diff_ten, */
-                     /*              mom_uw_diff_ten, */
-                     /*              mom_vv_diff_ten, */
-                     /*              mom_vu_diff_ten, */
-                     /*              mom_vw_diff_ten, */
-                     /*              mom_ww_diff_ten, */
-                     /*              mom_wu_diff_ten, */
-                     /*              mom_wv_diff_ten); */
+		     updateFrictionalStress(vos,
+                                 eps_rho,
+                                 eps_mu,
+                                 rho_0,
+                                 nu_0,
+                                 rho_1,
+                                 nu_1,
+                                 rho_s,
+                                 useVF,
+                                 vf[eN_k],
+                                 phi[eN_k],
+                                  grad_u,
+                                  grad_v,
+                                  grad_w,
+                                  mom_uu_diff_ten,
+                                  mom_uv_diff_ten,
+                                  mom_uw_diff_ten,
+                                  mom_vv_diff_ten,
+                                  mom_vu_diff_ten,
+                                  mom_vw_diff_ten,
+                                  mom_ww_diff_ten,
+                                  mom_wu_diff_ten,
+                                  mom_wv_diff_ten);
                 //Turbulence closure model
                 //
                 //save momentum for time history and velocity for subgrid error
@@ -2216,7 +2224,7 @@ namespace proteus
                       /* ck.SubgridError(subgridError_p,Lstar_p_u[i]) + */
                       ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
                       ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
-                  
+                    mom_u_source_i[i] += ck.Reaction_weak(mom_u_source,vel_test_dV[i]);
                     elementResidual_v[i] += 
                       ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) + 
                       ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) +
@@ -2228,6 +2236,7 @@ namespace proteus
                       /* ck.SubgridError(subgridError_p,Lstar_p_v[i]) + */
                       ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
                       ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]); 
+                    mom_v_source_i[i] += ck.Reaction_weak(mom_v_source,vel_test_dV[i]);
 
                     /* elementResidual_w[i] += 
                        ck.Mass_weak(mom_w_acc_t,vel_test_dV[i]) + */
@@ -2254,6 +2263,8 @@ namespace proteus
                 /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
                 globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
+                ncDrag[offset_u+stride_u*vel_l2g[eN_i]]+=mom_u_source_i[i]; 
+                ncDrag[offset_v+stride_v*vel_l2g[eN_i]]+=mom_v_source_i[i]; 
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
               }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */
@@ -3618,29 +3629,29 @@ namespace proteus
                 /*                          mom_u_source, */
                 /*                          mom_v_source, */
                 /*                          mom_w_source); */
-		           /* updateFrictionalStress(vos, */
-                           /*       eps_rho, */
-                           /*       eps_mu, */
-                           /*       rho_0, */
-                           /*       nu_0, */
-                           /*       rho_1, */
-                           /*       nu_1, */
-                           /*       rho_s, */
-                           /*       useVF, */
-                           /*       vf[eN_k], */
-                           /*       phi[eN_k], */
-                           /*        grad_u, */
-                           /*        grad_v, */
-                           /*        grad_w, */
-                           /*        mom_uu_diff_ten, */
-                           /*        mom_uv_diff_ten, */
-                           /*        mom_uw_diff_ten, */
-                           /*        mom_vv_diff_ten, */
-                           /*        mom_vu_diff_ten, */
-                           /*        mom_vw_diff_ten, */
-                           /*        mom_ww_diff_ten, */
-                           /*        mom_wu_diff_ten, */
-                           /*        mom_wv_diff_ten); */
+		           updateFrictionalStress(vos,
+                                 eps_rho,
+                                 eps_mu,
+                                 rho_0,
+                                 nu_0,
+                                 rho_1,
+                                 nu_1,
+                                 rho_s,
+                                 useVF,
+                                 vf[eN_k],
+                                 phi[eN_k],
+                                  grad_u,
+                                  grad_v,
+                                  grad_w,
+                                  mom_uu_diff_ten,
+                                  mom_uv_diff_ten,
+                                  mom_uw_diff_ten,
+                                  mom_vv_diff_ten,
+                                  mom_vu_diff_ten,
+                                  mom_vw_diff_ten,
+                                  mom_ww_diff_ten,
+                                  mom_wu_diff_ten,
+                                  mom_wv_diff_ten);
                 //
                 //moving mesh
                 //
