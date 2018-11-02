@@ -451,7 +451,9 @@ namespace proteus
                                   double f[nSpace],
                                   double df[nSpace],
                                   double a[nnz],
-                                  double da[nnz])
+                                  double da[nnz],
+                                  double& kr,
+                                  double& dkr)
       {
         const int nSpace2=nSpace*nSpace;
         register double psiC,
@@ -519,8 +521,10 @@ namespace proteus
               {
                 f[I]  += rho2*KWr*KWs[ii]*gravity[colind[ii]];
                 df[I] += -rho2*DKWr_DpsiC*KWs[ii]*gravity[colind[ii]];
-                a[ii]  = rho*KWr*KWs[ii];
-                da[ii] = -rho*DKWr_DpsiC*KWs[ii];
+                a[ii]  = rho*KWs[ii];
+                da[ii] = 0.0;
+                kr = KWr;
+                dkr=DKWr_DpsiC;
               }
           }
       }
@@ -935,6 +939,7 @@ namespace proteus
                 //
                 //calculate pde coefficients at quadrature points
                 //
+                double Kr,dKr;
                 evaluateCoefficients(a_rowptr,
                                      a_colind,
                                      rho,
@@ -951,7 +956,9 @@ namespace proteus
                                      f,
                                      df,
                                      a,
-                                     da);
+                                     da,
+                                     Kr,
+                                     dKr);
                 //
                 //calculate time derivative at quadrature points
                 //
@@ -1132,7 +1139,8 @@ namespace proteus
                 bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
                 // 
                 //calculate the pde coefficients using the solution and the boundary values for the solution 
-                // 
+                //
+                double Kr, dKr;
                 evaluateCoefficients(a_rowptr,
                                      a_colind,
                                      rho,
@@ -1149,7 +1157,9 @@ namespace proteus
                                      f_ext,
                                      df_ext,
                                      a_ext,
-                                     da_ext);
+                                     da_ext,
+                                     Kr,
+                                     dKr);
                 evaluateCoefficients(a_rowptr,
                                      a_colind,
                                      rho,
@@ -1166,7 +1176,9 @@ namespace proteus
                                      bc_f_ext,
                                      bc_df_ext,
                                      bc_a_ext,
-                                     bc_da_ext);
+                                     bc_da_ext,
+                                     Kr,
+                                     dKr);
                 // 
                 //calculate the numerical fluxes 
                 // 
@@ -1357,6 +1369,7 @@ namespace proteus
                 //
                 //calculate pde coefficients and derivatives at quadrature points
                 //
+                double Kr,dKr;
                 evaluateCoefficients(a_rowptr,
                                      a_colind,
                                      rho,
@@ -1373,7 +1386,9 @@ namespace proteus
                                      f,
                                      df,
                                      a,
-                                     da);
+                                     da,
+                                     Kr,
+                                     dKr);
                 //
                 //calculate time derivatives
                 //
@@ -1552,7 +1567,8 @@ namespace proteus
                 bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
                 // 
                 //calculate the internal and external trace of the pde coefficients 
-                // 
+                //
+                double Kr, dKr;
                 evaluateCoefficients(a_rowptr,
                                      a_colind,
                                      rho,
@@ -1569,7 +1585,9 @@ namespace proteus
                                      f_ext,
                                      df_ext,
                                      a_ext,
-                                     da_ext);
+                                     da_ext,
+                                     Kr,
+                                     dKr);
                 evaluateCoefficients(a_rowptr,
                                      a_colind,
                                      rho,
@@ -1586,7 +1604,9 @@ namespace proteus
                                      bc_f_ext,
                                      bc_df_ext,
                                      bc_a_ext,
-                                     bc_da_ext);
+                                     bc_da_ext,
+                                     Kr,
+                                     dKr);
                 //
                 //calculate the flux jacobian
                 //
@@ -2095,6 +2115,7 @@ namespace proteus
                 //
                 //calculate pde coefficients at quadrature points
                 //
+                double Kr, dKr;
                 evaluateCoefficients(a_rowptr,
                                      a_colind,
                                      rho,
@@ -2111,7 +2132,9 @@ namespace proteus
                                      f,
                                      df,
                                      a,
-                                     da);
+                                     da,
+                                     Kr,
+                                     dKr);
                 double test_u=0.0;
                 evaluateInverseCoefficients(a_rowptr,
                                             a_colind,
@@ -2497,6 +2520,26 @@ namespace proteus
             double m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
 
             // loop over the sparsity pattern of the i-th DOF
+            double Kr, dKr;
+            evaluateCoefficients(a_rowptr,
+                                 a_colind,
+                                 rho,
+                                 beta,
+                                 gravity,
+                                 alpha[0],//cek hack, only for 1 material
+                                 n[0],
+                                 thetaR[0],
+                                 thetaSR[0],
+                                 &KWs[0*nnz],			      
+                                 u_free_dof_old[i],
+                                 m,
+                                 dm,
+                                 f,
+                                 df,
+                                 a,
+                                 da,
+                                 Kr,
+                                 dKr);
             for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
               {
                 int j = csrColumnOffsets_DofLoops[offset];
@@ -2505,8 +2548,31 @@ namespace proteus
                   solnj -= rho*gravity[I]*mesh_dof[j*3+I];
                 double porosityj = 1.0;
                 double dLowij, dLij, dEVij, dHij;
-
-                ith_flux_term += fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+                if (-TransportMatrix[ij]*(solnj - solni) <= 0)
+                  ith_flux_term += -Kr*TransportMatrix[ij]*(solnj - solni);
+                else
+                  {
+                    evaluateCoefficients(a_rowptr,
+                                         a_colind,
+                                         rho,
+                                         beta,
+                                         gravity,
+                                         alpha[0],//cek hack, only for 1 material
+                                         n[0],
+                                         thetaR[0],
+                                         thetaSR[0],
+                                         &KWs[0*nnz],			      
+                                         u_free_dof_old[j],
+                                         m,
+                                         dm,
+                                         f,
+                                         df,
+                                         a,
+                                         da,
+                                         Kr,
+                                         dKr);
+                    ith_flux_term += -Kr*TransportMatrix[ij]*(solnj - solni);
+                  }
                 //std::cout<<"i "<<i<<" j "<<j<<" grad ij "<<(solnj - solni)<<" flux ij "<<fmax(0.0, -TransportMatrix[ij])*(solnj - solni)<<std::endl;
                 /* if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term) */
                 /*   { */
@@ -2569,7 +2635,7 @@ namespace proteus
 
             uDotLow[i] = 1.0/mi*ith_flux_term;
             //+ boundary_integral[i]);
-            //- ith_low_order_dissipative_term);	    
+            //- ith_low_order_dissipative_term);
             evaluateCoefficients(a_rowptr,
                                  a_colind,
                                  rho,
@@ -2586,7 +2652,9 @@ namespace proteus
                                  f,
                                  df,
                                  a,
-                                 da);
+                                 da,
+                                 Kr,
+                                 dKr);
             uLow[i] = m + dt*uDotLow[i];//cek should introduce mn,mnp1 or somethign clearer
             //cek debug
             //std::cout<<"dt*divergence "<<dt*uDotLow[i]<<std::endl;
@@ -2839,6 +2907,7 @@ namespace proteus
                 //
                 //calculate pde coefficients and derivatives at quadrature points
                 //
+                double Kr,dKr;
                 evaluateCoefficients(a_rowptr,
                                      a_colind,
                                      rho,
@@ -2855,7 +2924,9 @@ namespace proteus
                                      f,
                                      df,
                                      a,
-                                     da);
+                                     da,
+                                     Kr,
+                                     dKr);
                 //
                 //moving mesh
                 //
