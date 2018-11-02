@@ -1058,6 +1058,7 @@ namespace proteus
           (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(u-u_s);
 	mom_v_source += (1.0 - phi_s) * new_beta * ( (v - v_s) - TURB_FORCE_FAC*nu_t*gradC_y/closure.sigmaC_) +
           (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(v-v_s);
+
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
         dmom_u_source[0] = (1.0 - phi_s) * new_beta + (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2;
