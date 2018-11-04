@@ -13,6 +13,9 @@ timeIntegration = BackwardEuler
 stepController = HeuristicNL_dt_controller#FixedStep
 #nDTout = 1#int(T/DT)#int(T/DT) #100#int(T/DT)
 #for controlling time stepping
+timeIntegration = Richards.RKEV
+timeOrder = 1
+stepController = Min_dt_controller
 nonlinearIterationsFloor = 4
 nonlinearIterationsCeil  = 8
 dtNLgrowFactor = 2
@@ -20,9 +23,9 @@ dtNLreduceFactor = 0.5
 dtNLfailureReduceFactor = 0.5
 useInitialGuessPredictor= True
 stepExact = True
-nDTout = 200
+nDTout = 2000
 DT = T/nDTout 
-tnList = [0.0,min(1.0e-5,DT/2.0)]+[i*DT for i  in range(1,nDTout+1)]
+tnList = [0.0]+[i*DT for i  in range(1,nDTout+1)]
 atol_u[0] = 1.0e-3
 rtol_u[0] = 1.0e-3
 
@@ -32,18 +35,19 @@ rtol_u[0] = 1.0e-3
 femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
 #femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
 
-#elementQuadrature = SimplexGaussQuadrature(nd,4)
+elementQuadrature = SimplexGaussQuadrature(nd,4)
 
-#elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
+elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
-elementQuadrature = SimplexLobattoQuadrature(nd,1)
+#elementQuadrature = SimplexLobattoQuadrature(nd,1)
 #
-elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
+#elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
 
-nnx=61
-nny=61
+nnx=21
+nny=21
 nLevels = 1
-triangleFlag = 1
+triangleFlag = 0
+triangleOptions="pAq30Dena%f" % (0.5*(L[0]/(nnx-1))**2,)
 subgridError = None
 #subgridError = AdvectionDiffusionReaction_ASGS(coefficients,nd,stabFlag='2',lag=True)
 
@@ -65,6 +69,8 @@ multilevelNonlinearSolver = Newton
 #levelNonlinearSolver = NLStarILU
 #levelNonlinearSolver = FAS
 levelNonlinearSolver = Newton
+levelNonlinearSolver = ExplicitLumpedMassMatrix
+
 #levelNonlinearSolver = NLGaussSeidel
 #levelNonlinearSolver = NLJacobi
 
@@ -102,4 +108,4 @@ parallelPartitioningType = MeshParallelPartitioningTypes.element
 #default number of layers to use > 1 with element partition means
 #C0P1 methods don't need to do communication in global element assembly
 #nodal partitioning does not need communication for C0P1 (has overlap 1) regardless
-nLayersOfOverlapForParallel = 1
+nLayersOfOverlapForParallel = 0

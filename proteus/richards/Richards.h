@@ -557,17 +557,25 @@ namespace proteus
         m_vg = 1.0 - 1.0/n_vg;
         thetaS = thetaR + thetaSR;
         thetaW = m/rho;
-        sBar = (thetaW - thetaR)/thetaSR;
-        pcBar_n = pow(sBar,-1.0/m_vg) - 1.0;
-        pcBar = pow(pcBar_n,1.0/n_vg);
+        sBar = (fmax(thetaR+1.0e-8, fmin(thetaS, thetaW)) - thetaR)/thetaSR;
+        //sBar = (thetaW - thetaR)/thetaSR;
+        pcBar_n = pow(sBar, -1.0/m_vg) - 1.0;
+        pcBar = pow(pcBar_n, 1.0/n_vg);
         psiC = pcBar/alpha;
         u = - psiC;
-        //cek debug
-        /* std::cout<<"n "<<n_vg<<std::endl */
-        /*          <<"m "<<m_vg<<std::endl */
-        /*          <<"sBar "<<sBar<<std::endl */
-        /*          <<"psiC "<<psiC<<std::endl; */
-        /* std::cout<<"psi "<<u<<std::endl; */
+        if (thetaW > thetaS || thetaW <= thetaR)
+          {
+            //cek debug
+            std::cout<<"n "<<n_vg<<std::endl
+                     <<"m "<<m_vg<<std::endl
+                     <<"thetaR "<<thetaR<<std::endl
+                     <<"theta "<<thetaW<<std::endl
+                     <<"thetaS "<<thetaS<<std::endl
+                     <<"sBar "<<sBar<<std::endl
+                     <<"pcBar_n "<<pcBar_n<<std::endl
+                     <<"pcBar "<<pcBar<<std::endl
+                     <<"psiC "<<psiC<<std::endl;
+          }
       }
 
       inline
@@ -2046,7 +2054,6 @@ namespace proteus
               elementResidual_u[nDOF_test_element],
               element_entropy_residual[nDOF_test_element],Phi[nDOF_trial_element];
             register double  elementTransport[nDOF_test_element][nDOF_trial_element];
-            register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
                 Phi[i] = u_dof_old[i];
@@ -2057,7 +2064,6 @@ namespace proteus
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     elementTransport[i][j]=0.0;
-                    elementTransposeTransport[i][j]=0.0;
                   }
               }
             //loop over quadrature points and compute integrands
@@ -2103,13 +2109,17 @@ namespace proteus
                 ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
                 //get the solution gradients at tn for entropy viscosity
                 ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-                ck.gradFromDOF(Phi,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
                 //precalculate test function products with integration weights for mass matrix terms
+                for (int I=0;I<nSpace;I++)
+                  grad_un[I] =0.0;
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
-                      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+                      {
+                        grad_un[I] += Phi[j]*u_grad_trial[j*nSpace+I];
+                        u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+                      }
                   }
                 
                 //
@@ -2135,26 +2145,6 @@ namespace proteus
                                      da,
                                      Kr,
                                      dKr);
-                double test_u=0.0;
-                evaluateInverseCoefficients(a_rowptr,
-                                            a_colind,
-                                            rho,
-                                            beta,
-                                            gravity,
-                                            alpha[elementMaterialTypes[eN]],
-                                            n[elementMaterialTypes[eN]],
-                                            thetaR[elementMaterialTypes[eN]],
-                                            thetaSR[elementMaterialTypes[eN]],
-                                            &KWs[elementMaterialTypes[eN]*nnz],			      
-                                            test_u,
-                                            m,
-                                            dm,
-                                            f,
-                                            df,
-                                            a,
-                                            da);
-                //cek debug
-                //std::cout<<"u "<<un<<" test_u "<<test_u<<std::endl;
                 //
                 //moving mesh
                 //
@@ -2521,25 +2511,6 @@ namespace proteus
 
             // loop over the sparsity pattern of the i-th DOF
             double Kr, dKr;
-            evaluateCoefficients(a_rowptr,
-                                 a_colind,
-                                 rho,
-                                 beta,
-                                 gravity,
-                                 alpha[0],//cek hack, only for 1 material
-                                 n[0],
-                                 thetaR[0],
-                                 thetaSR[0],
-                                 &KWs[0*nnz],			      
-                                 u_free_dof_old[i],
-                                 m,
-                                 dm,
-                                 f,
-                                 df,
-                                 a,
-                                 da,
-                                 Kr,
-                                 dKr);
             for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
               {
                 int j = csrColumnOffsets_DofLoops[offset];
@@ -2548,8 +2519,29 @@ namespace proteus
                   solnj -= rho*gravity[I]*mesh_dof[j*3+I];
                 double porosityj = 1.0;
                 double dLowij, dLij, dEVij, dHij;
-                if (-TransportMatrix[ij]*(solnj - solni) <= 0)
-                  ith_flux_term += -Kr*TransportMatrix[ij]*(solnj - solni);
+                if (-TransportMatrix[ij]*(solnj - solni) <= 0.0)
+                  {
+                    evaluateCoefficients(a_rowptr,
+                                         a_colind,
+                                         rho,
+                                         beta,
+                                         gravity,
+                                         alpha[elementMaterialTypes[0]],//cek hack, only for 1 material
+                                         n[elementMaterialTypes[0]],
+                                         thetaR[elementMaterialTypes[0]],
+                                         thetaSR[elementMaterialTypes[0]],
+                                         &KWs[elementMaterialTypes[0]*nnz],			      
+                                         u_free_dof_old[i],
+                                         m,
+                                         dm,
+                                         f,
+                                         df,
+                                         a,
+                                         da,
+                                         Kr,
+                                         dKr);
+                    ith_flux_term += Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+                  }
                 else
                   {
                     evaluateCoefficients(a_rowptr,
@@ -2557,11 +2549,11 @@ namespace proteus
                                          rho,
                                          beta,
                                          gravity,
-                                         alpha[0],//cek hack, only for 1 material
-                                         n[0],
-                                         thetaR[0],
-                                         thetaSR[0],
-                                         &KWs[0*nnz],			      
+                                         alpha[elementMaterialTypes[0]],//cek hack, only for 1 material
+                                         n[elementMaterialTypes[0]],
+                                         thetaR[elementMaterialTypes[0]],
+                                         thetaSR[elementMaterialTypes[0]],
+                                         &KWs[elementMaterialTypes[0]*nnz],			      
                                          u_free_dof_old[j],
                                          m,
                                          dm,
@@ -2571,7 +2563,7 @@ namespace proteus
                                          da,
                                          Kr,
                                          dKr);
-                    ith_flux_term += -Kr*TransportMatrix[ij]*(solnj - solni);
+                    ith_flux_term += Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
                   }
                 //std::cout<<"i "<<i<<" j "<<j<<" grad ij "<<(solnj - solni)<<" flux ij "<<fmax(0.0, -TransportMatrix[ij])*(solnj - solni)<<std::endl;
                 /* if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term) */
@@ -2641,11 +2633,11 @@ namespace proteus
                                  rho,
                                  beta,
                                  gravity,
-                                 alpha[0],//cek hack, only for 1 material
-                                 n[0],
-                                 thetaR[0],
-                                 thetaSR[0],
-                                 &KWs[0*nnz],			      
+                                 alpha[elementMaterialTypes[0]],//cek hack, only for 1 material
+                                 n[elementMaterialTypes[0]],
+                                 thetaR[elementMaterialTypes[0]],
+                                 thetaSR[elementMaterialTypes[0]],
+                                 &KWs[elementMaterialTypes[0]*nnz],			      
                                  u_free_dof_old[i],
                                  m,
                                  dm,
@@ -2666,11 +2658,11 @@ namespace proteus
                                         rho,
                                         beta,
                                         gravity,
-                                        alpha[0],//cek hack, only for 1 material
-                                        n[0],
-                                        thetaR[0],
-                                        thetaSR[0],
-                                        &KWs[0*nnz],			      
+                                        alpha[elementMaterialTypes[0]],//cek hack, only for 1 material
+                                        n[elementMaterialTypes[0]],
+                                        thetaR[elementMaterialTypes[0]],
+                                        thetaSR[elementMaterialTypes[0]],
+                                        &KWs[elementMaterialTypes[0]*nnz],			      
                                         uLow[i],
                                         m,
                                         dm,

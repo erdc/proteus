@@ -33,14 +33,14 @@ dimensionless_alpha    = mvg_alpha*lengthScale
 satRichards = False
 optRichards = True
 nMediaTypes  = 1
-alphaVGtypes = numpy.zeros((nMediaTypes,),'d')
-nVGtypes     = numpy.zeros((nMediaTypes,),'d')
-thetaStypes  = numpy.zeros((nMediaTypes,),'d')
-thetaRtypes  = numpy.zeros((nMediaTypes,),'d')
-thetaSRtypes = numpy.zeros((nMediaTypes,),'d')
-KsTypes      = numpy.zeros((nMediaTypes,3),'d')
+alphaVGtypes = numpy.zeros((nMediaTypes+1,),'d')
+nVGtypes     = numpy.zeros((nMediaTypes+1,),'d')
+thetaStypes  = numpy.zeros((nMediaTypes+1,),'d')
+thetaRtypes  = numpy.zeros((nMediaTypes+1,),'d')
+thetaSRtypes = numpy.zeros((nMediaTypes+1,),'d')
+KsTypes      = numpy.zeros((nMediaTypes+1,1),'d')
 
-for i in range(nMediaTypes):
+for i in range(nMediaTypes+1):
     alphaVGtypes[i] = mvg_alpha
     nVGtypes[i]     = mvg_n
     thetaStypes[i]  = thetaS
