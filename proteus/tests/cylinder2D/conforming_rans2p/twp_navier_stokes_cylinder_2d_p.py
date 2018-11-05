@@ -8,7 +8,10 @@ from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 import sys
-from .cylinder2d import *
+try:
+    from .cylinder2d import *
+except:
+    from cylinder2d import *
 from proteus.mprans import RANS2P
 name="rans2p"
 bcsTimeDependent = True

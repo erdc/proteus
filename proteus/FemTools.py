@@ -3993,8 +3993,11 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                     values.text = ar.hdfFilename+":/"+u.name+"_t{0:d}".format(tCount)
                     comm = Comm.get()
                     ar.create_dataset_sync(u.name+"_t{0:d}".format(tCount),
-                                           offsets=self.dofMap.dof_offsets_subdomain_owned,
-                                           data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
+                                           #need to use the mesh node offsets due to parallel periodic case
+                                           #offsets = self.dofMap.dof_offsets_subdomain_owned,
+                                           #data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
+                                           offsets=self.mesh.globalMesh.nodeOffsets_subdomain_owned,
+                                           data = u.dof[:(self.mesh.globalMesh.nodeOffsets_subdomain_owned[comm.rank()+1] -self.mesh.globalMesh.nodeOffsets_subdomain_owned[comm.rank()])])
                 else:
                     assert False, "global_sync not supported  with pytables"
             else:
@@ -4318,8 +4321,11 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_t{0:d}".format(tCount)
                     ar.create_dataset_sync(u.name+"_t{0:d}".format(tCount),
-                                           offsets = self.dofMap.dof_offsets_subdomain_owned,
-                                           data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
+                                           #need to use the mesh node offsets due to parallel periodic case
+                                           #offsets = self.dofMap.dof_offsets_subdomain_owned,
+                                           #data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - self.dofMap.dof_offsets_subdomain_owned[comm.rank()])],
+                                           offsets=self.mesh.globalMesh.nodeOffsets_subdomain_owned,
+                                           data = u.dof[:(self.mesh.globalMesh.nodeOffsets_subdomain_owned[comm.rank()+1] -self.mesh.globalMesh.nodeOffsets_subdomain_owned[comm.rank()])])
                 else:
                     assert False, "global_sync not supported  with pytables"
             else:
