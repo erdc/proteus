@@ -162,7 +162,8 @@ independently and lagged in time
                  sc_uref=1.0,
                  sc_beta=1.0,
                  default_dissipation=1.0e-3,
-                 closure=None):
+                 closure=None,
+                 nullSpace='NoNullSpace'):
 
         self.useMetrics = useMetrics
         self.variableNames = ['kappa']
@@ -210,6 +211,7 @@ independently and lagged in time
         self.dissipation_model_flag = dissipation_model_flag  # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
+        self.nullSpace = nullSpace
         # for debugging model
         self.default_dissipation = default_dissipation
         try:
