@@ -1261,7 +1261,8 @@ class CLSVOFNewton(Newton):
         maxIts = self.maxIts
         self.maxIts=1
         # set tolerances for this spin up stage
-        tol = 1E-10
+        
+        tol = self.atol_r
         norm_r0 = self.norm(r)
         norm_r = 1.0*norm_r0
         num_iters = 0
