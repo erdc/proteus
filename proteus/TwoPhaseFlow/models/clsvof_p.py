@@ -28,6 +28,7 @@ epsFactRedist = clsvof_parameters['epsFactRedist']
 lambdaFact = clsvof_parameters['lambdaFact']
 outputQuantDOFs = clsvof_parameters['outputQuantDOFs']
 computeMetrics = clsvof_parameters['computeMetrics']
+disc_ICs = clsvof_parameters['disc_ICs']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
@@ -51,7 +52,8 @@ coefficients = CLSVOF.Coefficients(V_model=V_model,
                                    epsFactRedist=epsFactRedist,
                                    lambdaFact=lambdaFact,
                                    outputQuantDOFs=outputQuantDOFs,
-                                   computeMetrics=computeMetrics)
+                                   computeMetrics=computeMetrics,
+                                   disc_ICs=disc_ICs)
 coefficients.variableNames=['phi']
 name="clsvof"
 
