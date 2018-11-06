@@ -18,7 +18,7 @@ opts= Context.Options([
     ('ns_model',1,"ns_model = {rans2p,rans3p}"),
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
-    ("cfl",0.33,"Desired CFL restriction"),
+    ("cfl",0.25,"Desired CFL restriction"),
     ("refinement",3,"level of refinement")
     ])
 
@@ -37,7 +37,8 @@ tank_dim = (1.0,2.0)
 refinement = opts.refinement
 structured=True
 if structured:
-    nnx = 4 * refinement**2 +2
+    nnx = 5*(2**refinement)+1
+    #nnx = 4 * refinement**2 +2
     nny = 2*nnx
     domain = Domain.RectangularDomain(tank_dim)
     boundaryTags = domain.boundaryTags
@@ -77,7 +78,13 @@ class clsvof_init_cond(object):
         r = np.sqrt((x[0]-xB)**2 + (x[1]-yB)**2)
         # dist to surface of bubble
         dB = rB - r
-        return dB
+        #return dB
+        if dB>0:
+            return 1.0
+        elif dB==0:
+            return 0.0
+        else:
+            return -1.0
 
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
@@ -125,6 +132,7 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              useSuperlu=False)
 physical_parameters = myTpFlowProblem.physical_parameters
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
+myTpFlowProblem.clsvof_parameters['disc_ICs']=True
 if opts.test_case==1:
     physical_parameters['densityA'] = 1000.0
     physical_parameters['viscosityA'] = 10.0/physical_parameters['densityA']
