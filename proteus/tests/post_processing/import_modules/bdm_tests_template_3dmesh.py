@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
@@ -16,7 +18,7 @@ p.T=1.0
 
 p.nc = 1
 
-class velEx:
+class velEx(object):
     def __init__(self,duex,aex):
         self.duex = duex
         self.aex = aex
@@ -34,7 +36,7 @@ def A(x):
 def f(x):
     return 1.0
 
-class uEx:
+class uEx(object):
     def __init__(self):
         pass
     def uOfX(self,x):

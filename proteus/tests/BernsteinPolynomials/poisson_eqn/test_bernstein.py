@@ -2,6 +2,7 @@
 """
 Test module for Berstein basis FE
 """
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -14,7 +15,7 @@ from . import (parameters_for_poisson,
                poisson_p,
                poisson_n)
 
-class TestBernstein():
+class TestBernstein(object):
 
     @classmethod
     def setup_class(cls):

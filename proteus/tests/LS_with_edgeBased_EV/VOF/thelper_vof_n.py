@@ -1,7 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
 from proteus import *
 from proteus.default_n import *
-from thelper_vof_p import *
-from thelper_vof import *
+from .thelper_vof_p import *
+from .thelper_vof import *
 nd = 2
 
 multilevelNonlinearSolver  = Newton
@@ -35,7 +38,7 @@ if useHex:
         else:
             femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
-        print "pDegree = %s not recognized " % pDegree_vof
+        print("pDegree = %s not recognized " % pDegree_vof)
     elementQuadrature = CubeGaussQuadrature(nd,vof_quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vof_quad_order)
 else:
@@ -44,7 +47,7 @@ else:
     elif pDegree_vof == 2:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
-        print "pDegree = %s not recognized " % pDegree_vof
+        print("pDegree = %s not recognized " % pDegree_vof)
     elementQuadrature = SimplexGaussQuadrature(nd,vof_quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vof_quad_order)
 

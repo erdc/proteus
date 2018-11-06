@@ -1,7 +1,10 @@
+from __future__ import division
 # cython: wraparound=False
 # cython: boundscheck=False
 # cython: initializedcheck=False
-
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import cython
 
 """
@@ -579,7 +582,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
                 if phi <= 0.:
                     H = 0.0
                 elif 0 < phi <= smoothing:
-                    H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                    H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
                 else:
                     H = 1.0
                 u = H * Uwind[i] + (1 - H) * U[i]
@@ -603,7 +606,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             u = H * Uwind + (1 - H) * U
@@ -617,7 +620,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * kInflowAir + (1 - H) * kInflow
@@ -627,7 +630,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
@@ -698,7 +701,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * kInflowAir + (1 - H) * kInflow
@@ -708,7 +711,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
@@ -748,7 +751,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
                     if phi <= 0.:
                         H = 0.0
                     elif 0 < phi <= smoothing:
-                        H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                        H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
                     else:
                         H = 1.0
                     return H * Uwind[i] + (1 - H) * U[i]
@@ -837,7 +840,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * kInflowAir + (1 - H) * kInflow
@@ -847,7 +850,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
@@ -869,7 +872,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
                     if phi <= 0.:
                         H = 0.0
                     elif 0 < phi <= smoothing:
-                        H = smoothedHeaviside(smoothing / 2., phi - smoothing / 2.)
+                        H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
                     else:
                         H = 1.0
                     return H * Uwind[i] + (1 - H) * U[i]
@@ -960,7 +963,7 @@ class RelaxationZone:
 
     def __cinit__(self, zone_type, center, orientation, epsFact_solid,
                   waves=None, shape=None, wind_speed=np.array([0., 0., 0.]),
-                  dragAlpha=0.5 / 1.005e-6, dragBeta=0., porosity=1., vert_axis=None, smoothing=0.,
+                  dragAlpha=old_div(0.5, 1.005e-6), dragBeta=0., porosity=1., vert_axis=None, smoothing=0.,
                   vof_water=0., vof_air=1.):
         self.Shape = shape
         self.nd = self.Shape.Domain.nd
@@ -1045,7 +1048,7 @@ class RelaxationZone:
         return self.waves.__cpp_calculate_velocity(x, t)
 
 
-class RelaxationZoneWaveGenerator():
+class RelaxationZoneWaveGenerator:
     """
     Prescribe a velocity penalty scaling in a material zone via a
     Darcy-Forchheimer penalty
@@ -1073,13 +1076,13 @@ class RelaxationZoneWaveGenerator():
 
     def calculate_init(self):
         max_key = 0
-        for key, zone in self.zones.iteritems():
+        for key, zone in list(self.zones.items()):
             zone.calculate_init()
             if key > max_key:
                 max_key = key
         self.max_flag = max_key
         self.zones_array = np.empty(self.max_flag + 1, dtype=object)
-        for key, zone in self.zones.iteritems():
+        for key, zone in list(self.zones.items()):
             self.zones_array[key] = zone
 
     def calculate(self):
@@ -1173,7 +1176,7 @@ class __cppClass_WavesCharacteristics:
             waterSpeed = self.WT.u(xx, t)
         elif 0 < phi <= self.smoothing:
             # smoothing on half the range of VOF (above wave crest)
-            H = smoothedHeaviside(self.smoothing / 2., phi - self.smoothing / 2.)
+            H = smoothedHeaviside(old_div(self.smoothing, 2.), phi - old_div(self.smoothing, 2.))
             # use max velocity of wave for water
             x_max[0] = x[0]
             x_max[1] = x[1]
@@ -1240,7 +1243,7 @@ from collections import OrderedDict
 from proteus.mprans import BodyDynamics as bd
 
 
-class WallFunctions(AuxiliaryVariables.AV_base, object):
+class WallFunctions(AuxiliaryVariables.AV_base):
     """
     Auxiliary variable used to calculate attributes of an associated shape
     class instance acting as a wall.
@@ -1290,7 +1293,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         #_b_or is positive when points outward the domain
         b0, b1, b2 = self._b_or
         # normal unit vector is positive when points inward the domain
-        self.nV = (-self._b_or) / np.sqrt(np.sum([b0**2, b1**2, b2**2]))
+        self.nV = old_div((-self._b_or), np.sqrt(np.sum([b0**2, b1**2, b2**2])))
         # initialise variables
         self.Ubound = np.zeros(3)
         self.kappa = 1e-10
@@ -1501,7 +1504,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         # projection of u vector over an ortoganal plane to b_or
         self.tanU = self.meanV - self.meanV * (self.nV**2)
         # tangential unit vector
-        self.tV = self.tanU/np.sqrt(np.sum(self.tanU**2))
+        self.tV = old_div(self.tanU,np.sqrt(np.sum(self.tanU**2)))
 
     def getVariables(self, x, t):
         """
@@ -1521,15 +1524,15 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         if self.Ystar < 11.225:
             self.Ustar = self.Ystar
             self.uDir = (self.utStar*self.Ystar) * self.tV
-            self.gradU = ( (self.utStar**2) / self.nu ) * self.tV
+            self.gradU = ( old_div((self.utStar**2), self.nu) ) * self.tV
         # log-law layer
         else:
             # Wall function theory from S.B. Pope, page 442-443
             E = np.exp(self.B * self.K)
             self.Ustar = self.utStar * np.log(E * self.Ystar) / self.K
-            self.utAbs = self.utStar * np.sqrt(Up / self.Ustar)
+            self.utAbs = self.utStar * np.sqrt(old_div(Up, self.Ustar))
             # Velocity vector and velocity gradient multiplied by the tangential vector unit
-            self.gradU = (self.utAbs / (self.K * self.Y)) * self.tV
+            self.gradU = (old_div(self.utAbs, (self.K * self.Y))) * self.tV
             # Linear approximation for velocity at the wall (using the gradU of the logLaw)
             self.uDir = self.tanU - (self.gradU * self.Y)
 
@@ -1578,9 +1581,9 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.getVariables(x, t)
         d = 0.
         if self.turbModel == 'ke':
-            d = (self.utStar**3) / (self.K * self.Y)
+            d = old_div((self.utStar**3), (self.K * self.Y))
         elif self.turbModel == 'kw' and self.kappa > 0.:
-            d = np.sqrt(self.kappa) / (self.K * self.Y * (self.Cmu**0.25))
+            d = old_div(np.sqrt(self.kappa), (self.K * self.Y * (self.Cmu**0.25)))
         return d
 
     def get_u_diffusive(self, x, t):
@@ -1614,7 +1617,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         return gradU
 
 
-class kWall(AuxiliaryVariables.AV_base, object):
+class kWall(AuxiliaryVariables.AV_base):
     """
     Auxiliary variable used to calculate attributes of an associated shape
     class instance acting as a wall for the k variable.
@@ -1675,7 +1678,7 @@ class kWall(AuxiliaryVariables.AV_base, object):
     def kappaNearWall(self, xi, element, rank, kInit=None):
         if kInit is True or self.model is None:
             self.ut = self.Yplus * self.nu / self.Y
-            self.kappa = (self.ut**2) / np.sqrt(self.Cmu)
+            self.kappa = old_div((self.ut**2), np.sqrt(self.Cmu))
         else:
             self.kappa = self.getFluidKappaLocalCoords(xi, element, rank)
 

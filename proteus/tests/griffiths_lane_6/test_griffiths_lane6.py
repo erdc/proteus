@@ -9,6 +9,8 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+from __future__ import print_function
+from builtins import object
 from proteus.iproteus import *
 import os
 import numpy as np
@@ -18,7 +20,7 @@ from . import re_gl_6_3d_n
 from . import sm_gl_6_3d_p
 from . import sm_gl_6_3d_n
 
-class TestRichards():
+class TestRichards(object):
 
     @classmethod
     def setup_class(cls):
@@ -42,7 +44,7 @@ class TestRichards():
             if os.path.exists(f):
                 try:
                     os.remove(f)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:
                 pass

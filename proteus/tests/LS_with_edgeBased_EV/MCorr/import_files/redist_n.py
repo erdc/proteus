@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from redist_p import *
-from cons_ls import *
+from .redist_p import *
+from .cons_ls import *
 
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = Newton

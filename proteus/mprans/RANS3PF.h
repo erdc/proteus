@@ -24,6 +24,8 @@
 //      * Turbulence: double check eddy_viscosity within evaluateCoefficients
 // ***** END OF TODO *****
 
+#define CELL_BASED_EV_COEFF 1
+
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
@@ -96,6 +98,7 @@ namespace proteus
                                    int nElements_global,
                                    int nElements_owned,
                                    int nElementBoundaries_owned,
+                                   int nNodes_owned,
                                    double useRBLES,
                                    double useMetrics,
                                    double alphaBDF,
@@ -336,6 +339,7 @@ namespace proteus
                                    int nElements_global,
                                    int nElements_owned,
                                    int nElementBoundaries_owned,
+                                   int nNodes_owned,
                                    double useRBLES,
                                    double useMetrics,
                                    double alphaBDF,
@@ -2014,6 +2018,7 @@ namespace proteus
                              int nElements_global,
                              int nElements_owned,
                              int nElementBoundaries_owned,
+                             int nNodes_owned,
                              double useRBLES,
                              double useMetrics,
                              double alphaBDF,
@@ -2233,6 +2238,8 @@ namespace proteus
             double element_active=1;//use 1 since by default it is ibm
             double mesh_volume_conservation_element=0.0,
               mesh_volume_conservation_element_weak=0.0;
+	    // for entropy viscosity
+	    double linVisc_eN = 0, nlinVisc_eN_num = 0, nlinVisc_eN_den = 0;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
@@ -2246,13 +2253,8 @@ namespace proteus
               }//i
             if(USE_SBM>0)
             {
-                //since by default it has value 1 and it is ibm.
-                for (int i=0;i<nDOF_test_element;i++)
-                {
-                    isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
-                    isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
-                    isActiveDOF[offset_w+stride_w*vel_l2g[eN*nDOF_trial_element + i]]=0.0;
-                }
+                //isActiveDOF has value 1 for ibm.
+                //isActiveDOF is initialized in python side.
                 //
                 //detect cut cells
                 //
@@ -2286,95 +2288,76 @@ namespace proteus
                     }
                     assert(opp_node >=0);
                     assert(opp_node <nDOF_mesh_trial_element);
-                    int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                    surrogate_boundaries.push_back(ebN);
-                    //now find which element neighbor this element is
-                    //since each face has 2 neighbor elements.
-                    //YY: what if this face is a boundary face?
-                    if (eN == elementBoundaryElementsArray[eN*2+0])
-                        surrogate_boundary_elements.push_back(1);
-                    else
-                        surrogate_boundary_elements.push_back(0);
+                    //For parallel. Two reasons:
+                    //if none of nodes of this edge is owned by this processor,
+                    //1. The surrogate_boundary_elements corresponding to this edge is -1, which gives 0 JacDet and infty h_penalty.
+                    //2. there is no contribution of the integral over this edge to Jacobian and residual.
+                    const int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                    const int eN_oppo = (eN == elementBoundaryElementsArray[ebN*2+0])?elementBoundaryElementsArray[ebN*2+1]:elementBoundaryElementsArray[ebN*2+0];
+                    if((mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]<nNodes_owned
+                        || mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]<nNodes_owned
+                        || mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]<nNodes_owned
+                       )&&eN_oppo !=-1)//not a boundary face
+                    {
+                        surrogate_boundaries.push_back(ebN);
+                        //now find which element neighbor this element is
+                        //since each face has 2 neighbor elements.
+                        //YY: what if this face is a boundary face?
+                        if (eN == elementBoundaryElementsArray[ebN*2+0])
+                            surrogate_boundary_elements.push_back(1);
+                        else
+                            surrogate_boundary_elements.push_back(0);
 
-                    //check which particle this surrogate edge is related to.
-                    //The method is to check one quadrature point inside of this element.
-                    //It works based on the assumption that the distance between any two particles
-                    //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
-                    //or one edge belongs to two particles .
-                    //But in any case, phi_s is well defined as the minimum.
-                    int j=-1;
-                    double distance=1e10, distance_to_ith_particle;
-                    if(use_ball_as_particle==1)
-                    {
-                        double middle_point_coord[3]={0.0};
-                        double middle_point_distance;
-                        if(opp_node==0)
+                        //check which particle this surrogate edge is related to.
+                        //The method is to check one quadrature point inside of this element.
+                        //It works based on the assumption that the distance between any two particles
+                        //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
+                        //or one edge belongs to two particles .
+                        //But in any case, phi_s is well defined as the minimum.
+                        int j=-1;
+                        double distance=1e10, distance_to_ith_particle;
+                        if(use_ball_as_particle==1)
                         {
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2])/3.0;
+                            double middle_point_coord[3]={0.0};
+                            double middle_point_distance;
+                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+0]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+0]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+0])/3.0;
+                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+1]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+1]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+1])/3.0;
+                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+2]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+2]
+                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+2])/3.0;
+                            j = get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                    middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
+                                    middle_point_distance);
                         }
-                        else if(opp_node==1)
+                        else
                         {
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2])/3.0;
-                        }
-                        else if(opp_node==2)
-                        {
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2])/3.0;
-                        }
-                        else if(opp_node==3)
-                        {
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2])/3.0;
-                        }
-                        j = get_distance_to_ball(nParticles, ball_center, ball_radius,
-                                                 middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
-                                                 middle_point_distance);
-                    }
-                    else
-                    {
-                        for (int i=0;i<nParticles;++i)
-                        {
-                            distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
-                                                                               +eN*nQuadraturePoints_element
-                                                                               +0];//0-th quadrature point
-                            if (distance_to_ith_particle<distance)
+                            for (int i=0;i<nParticles;++i)
                             {
-                                distance = distance_to_ith_particle;
-                                j = i;
+                                distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
+                                                                                   +eN*nQuadraturePoints_element
+                                                                                   +0];//0-th quadrature point
+                                if (distance_to_ith_particle<distance)
+                                {
+                                    distance = distance_to_ith_particle;
+                                    j = i;
+                                }
                             }
                         }
+                        surrogate_boundary_particle.push_back(j);
+
+                    }else{
+                        //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
+                        //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
+                        //by the processor. This assert is used to make sure this is the case.
+                        if(ebN<nElementBoundaries_owned)//eN_oppo ==-1
+                        {
+                            assert(eN_oppo==-1);
+                        }
                     }
-                    surrogate_boundary_particle.push_back(j);
                 }
                 else if (pos_counter == 4)// so the element is in fluid totally
                 {
@@ -3026,12 +3009,19 @@ namespace proteus
                       - mu*(hess_w[0] + hess_w[4] + hess_w[8])  // w_xx + w_yy + w_zz
                       - mu*(hess_u[2] + hess_v[5] + hess_w[8]); // u_xz + v_yz + w_zz
 		    // compute entropy residual
-		    double entRes = Res_in_x*u + Res_in_y*v + Res_in_z*w;
+		    double entRes_times_u = Res_in_x*u + Res_in_y*v + Res_in_z*w;
 		    double hK = elementDiameter[eN]/order_polynomial;
 		    q_numDiff_u[eN_k] = fmin(cMax*porosity*rho*hK*std::sqrt(vel2),
-					     cE*hK*hK*fabs(entRes)/(vel2+1E-10));
+					     cE*hK*hK*fabs(entRes_times_u)/(vel2+1E-10));
 		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+
+		    if (CELL_BASED_EV_COEFF)
+		      {
+			linVisc_eN  = fmax(porosity*rho*std::sqrt(vel2),linVisc_eN);
+			nlinVisc_eN_num = fmax(fabs(entRes_times_u),nlinVisc_eN_num);
+			nlinVisc_eN_den = fmax(vel2,nlinVisc_eN_den);
+		      }
 		  }
 
 		//
@@ -3161,6 +3151,20 @@ namespace proteus
                       ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_w,vel_tgrad_test_i); //imp.
                   }//i
               }
+	    // End computation of cell based EV coeff //
+	    if (CELL_BASED_EV_COEFF && ARTIFICIAL_VISCOSITY==2)
+	      {
+		double hK = elementDiameter[eN];
+		double artVisc = fmin(cMax*hK*linVisc_eN,
+				      cE*hK*hK*nlinVisc_eN_num/(nlinVisc_eN_den+1E-10));
+		for(int k=0;k<nQuadraturePoints_element;k++)
+		  {
+		    register int eN_k = eN*nQuadraturePoints_element+k;
+		    q_numDiff_u[eN_k] = artVisc;
+		    q_numDiff_v[eN_k] = artVisc;
+		    q_numDiff_w[eN_k] = artVisc;
+		  }
+	      }
             //
             //load element into global residual and save element residual
             //
@@ -3199,8 +3203,9 @@ namespace proteus
                 elementResidual_v[nDOF_test_element],
                 elementResidual_w[nDOF_test_element],
                 eps_rho,eps_mu;
-
-                if (ebN >= nElementBoundaries_owned) continue;//for parallel
+                //This assumption is wrong for parallel: If one of nodes of this edge is owned by this processor,
+                //then the integral over this edge has contribution to the residual and Jacobian.
+                //if (ebN >= nElementBoundaries_owned) continue;
                 for (int i=0;i<nDOF_test_element;i++)
                 {
                     elementResidual_mesh[i]=0.0;
@@ -3321,11 +3326,20 @@ namespace proteus
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                         bc_w_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+2];
                     }
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x
                     distance[1] = -P_normal[1]*dist;
                     distance[2] = -P_normal[2]*dist;
-//                    P_tangent[0] = -P_normal[1];
-//                    P_tangent[1] = P_normal[0];
+                    assert(h_penalty>0.0);
+                    if (h_penalty < std::abs(dist))
+                        h_penalty = std::abs(dist);
+
+                    if(get_dot_product(P_normal,normal)>0)
+                    {
+                        for(int i=0;i<3;++i)
+                        {
+                            normal[i] *= -1.0;
+                        }
+                    }
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
@@ -3358,18 +3372,18 @@ namespace proteus
                         globalResidual[GlobPos_w] += C_adim*phi_i*u_m_uD[2];
 
                         // (2)
-                        get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,grad_w_ext,P_normal,res);
+                        get_symmetric_gradient_dot_vec(grad_u_ext,grad_v_ext,grad_w_ext,normal,res);
                         globalResidual[GlobPos_u] -= visco * phi_i*res[0];
                         globalResidual[GlobPos_v] -= visco * phi_i*res[1];
                         globalResidual[GlobPos_w] -= visco * phi_i*res[2];
 
                         // (3)
-                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,u_m_uD,res);
-                        globalResidual[GlobPos_u] -= visco * get_dot_product(P_normal,res);
-                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,u_m_uD,res);
-                        globalResidual[GlobPos_v] -= visco * get_dot_product(P_normal,res);
-                        get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,u_m_uD,res);
-                        globalResidual[GlobPos_w] -= visco * get_dot_product(P_normal,res);
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,normal,res);
+                        globalResidual[GlobPos_u] -= visco * get_dot_product(u_m_uD,res);
+                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,normal,res);
+                        globalResidual[GlobPos_v] -= visco * get_dot_product(u_m_uD,res);
+                        get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,normal,res);
+                        globalResidual[GlobPos_w] -= visco * get_dot_product(u_m_uD,res);
 
                         // (4)
                         globalResidual[GlobPos_u] += C_adim*grad_phi_i_dot_d*u_m_uD[0];
@@ -3387,11 +3401,11 @@ namespace proteus
                         globalResidual[GlobPos_w] += C_adim*phi_i*grad_u_d[2];
 
                         // (7)
-                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,P_normal,res);
+                        get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,normal,res);
                         globalResidual[GlobPos_u] -= visco*get_dot_product(grad_u_d,res);
-                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,P_normal,res);
+                        get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,normal,res);
                         globalResidual[GlobPos_v] -= visco*get_dot_product(grad_u_d,res);
-                        get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,P_normal,res);
+                        get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,normal,res);
                         globalResidual[GlobPos_w] -= visco*get_dot_product(grad_u_d,res);
 
                         // the penalization on the tangential derivative (8)
@@ -3417,7 +3431,6 @@ namespace proteus
                     force_quad_pt[0] *= dS;
                     force_quad_pt[1] *= dS;
                     force_quad_pt[2] *= dS;
-
                     if(use_ball_as_particle==1)
                     {
                         position_vector_to_mass_center[0] = x_ext - ball_center[surrogate_boundary_particle[ebN_s] * 3 + 0];
@@ -3431,14 +3444,15 @@ namespace proteus
                         position_vector_to_mass_center[2] = z_ext - particle_centroids[surrogate_boundary_particle[ebN_s] * 3 + 2];
                     }
                     get_cross_product(position_vector_to_mass_center,force_quad_pt,torque_quad_pt);
-
-                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += force_quad_pt[0];
-                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += force_quad_pt[1];
-                    particle_netForces[3*surrogate_boundary_particle[ebN_s]+2] += force_quad_pt[2];
-                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+0] += torque_quad_pt[0];
-                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+1] += torque_quad_pt[1];
-                    particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2] += torque_quad_pt[2];
-
+                    if(ebN < nElementBoundaries_owned)//avoid double counting
+                    {
+                        particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += force_quad_pt[0];
+                        particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += force_quad_pt[1];
+                        particle_netForces[3*surrogate_boundary_particle[ebN_s]+2] += force_quad_pt[2];
+                        particle_netMoments[3*surrogate_boundary_particle[ebN_s]+0] += torque_quad_pt[0];
+                        particle_netMoments[3*surrogate_boundary_particle[ebN_s]+1] += torque_quad_pt[1];
+                        particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2] += torque_quad_pt[2];
+                    }
                 }//kb
             }//ebN_s
         }
@@ -4401,6 +4415,7 @@ namespace proteus
                              int nElements_global,
                              int nElements_owned,
                              int nElementBoundaries_owned,
+                             int nNodes_owned,
                              double useRBLES,
                              double useMetrics,
                              double alphaBDF,
@@ -4639,95 +4654,75 @@ namespace proteus
                     }
                     assert(opp_node >=0);
                     assert(opp_node <nDOF_mesh_trial_element);
-                    int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                    surrogate_boundaries.push_back(ebN);
-                    //now find which element neighbor this element is
-                    //since each face has 2 neighbor elements.
-                    //YY: what if this face is a boundary face?
-                    if (eN == elementBoundaryElementsArray[eN*2+0])
-                        surrogate_boundary_elements.push_back(1);
-                    else
-                        surrogate_boundary_elements.push_back(0);
+                    //For parallel. Two reasons:
+                    //if none of nodes of this edge is owned by this processor,
+                    //1. The surrogate_boundary_elements corresponding to this edge is -1, which gives 0 JacDet and infty h_penalty.
+                    //2. there is no contribution of the integral over this edge to Jacobian and residual.
+                    const int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
+                    const int eN_oppo = (eN == elementBoundaryElementsArray[ebN*2+0])?elementBoundaryElementsArray[ebN*2+1]:elementBoundaryElementsArray[ebN*2+0];
+                    if((mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]<nNodes_owned
+                        || mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]<nNodes_owned
+                        || mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]<nNodes_owned
+                       )&&eN_oppo !=-1)//not a boundary face
+                    {
+                        surrogate_boundaries.push_back(ebN);
+                        //now find which element neighbor this element is
+                        //since each face has 2 neighbor elements.
+                        //YY: what if this face is a boundary face?
+                        if (eN == elementBoundaryElementsArray[ebN*2+0])
+                            surrogate_boundary_elements.push_back(1);
+                        else
+                            surrogate_boundary_elements.push_back(0);
 
-                    //check which particle this surrogate edge is related to.
-                    //The method is to check one quadrature point inside of this element.
-                    //It works based on the assumption that the distance between any two particles
-                    //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
-                    //or one edge belongs to two particles .
-                    //But in any case, phi_s is well defined as the minimum.
-                    int j=-1;
-                    double distance=1e10, distance_to_ith_particle;
-                    if(use_ball_as_particle==1)
-                    {
-                        double middle_point_coord[3]={0.0};
-                        double middle_point_distance;
-                        if(opp_node==0)
+                        //check which particle this surrogate edge is related to.
+                        //The method is to check one quadrature point inside of this element.
+                        //It works based on the assumption that the distance between any two particles
+                        //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
+                        //or one edge belongs to two particles .
+                        //But in any case, phi_s is well defined as the minimum.
+                        int j=-1;
+                        double distance=1e10, distance_to_ith_particle;
+                        if(use_ball_as_particle==1)
                         {
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2])/3.0;
+                            double middle_point_coord[3]={0.0};
+                            double middle_point_distance;
+                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+0]
+                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+0]
+                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+0])/3.0;
+                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+1]
+                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+1]
+                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+1])/3.0;
+                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+2]
+                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+2]
+                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+2])/3.0;
+                            j = get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                    middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
+                                    middle_point_distance);
                         }
-                        else if(opp_node==1)
+                        else
                         {
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2])/3.0;
-                        }
-                        else if(opp_node==2)
-                        {
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+3]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2])/3.0;
-                        }
-                        else if(opp_node==3)
-                        {
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+0]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+1]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+0]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+1]+2]
-                                                    +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+2]+2])/3.0;
-                        }
-                        j = get_distance_to_ball(nParticles, ball_center, ball_radius,
-                                middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
-                                middle_point_distance);
-                    }
-                    else
-                    {
-                        for (int i=0;i<nParticles;++i)
-                        {
-                            distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
-                                                                               +eN*nQuadraturePoints_element
-                                                                               +0];//0-th quadrature point
-                            if (distance_to_ith_particle<distance)
+                            for (int i=0;i<nParticles;++i)
                             {
-                                distance = distance_to_ith_particle;
-                                j = i;
+                                distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
+                                                                                   +eN*nQuadraturePoints_element
+                                                                                   +0];//0-th quadrature point
+                                if (distance_to_ith_particle<distance)
+                                {
+                                    distance = distance_to_ith_particle;
+                                    j = i;
+                                }
                             }
                         }
+                        surrogate_boundary_particle.push_back(j);
+                    }else{
+                        //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
+                        //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
+                        //by the processor. This assert is used to make sure this is the case.
+                        if(ebN<nElementBoundaries_owned)//eN_oppo ==-1
+                        {
+                            assert(eN_oppo==-1);
+                        }
                     }
-                    surrogate_boundary_particle.push_back(j);
                 }
                 else if (pos_counter == 4)// element is in fluid totally
                 {
@@ -5555,7 +5550,6 @@ namespace proteus
                         ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                         eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double eps_rho,eps_mu;
-                if (ebN >= nElementBoundaries_owned) continue;//for parallel
                 for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                 {
                     register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
@@ -5673,12 +5667,23 @@ namespace proteus
                         bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
                         bc_w_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+2];
                     }
-                    distance[0] = -P_normal[0]*dist;
+                    distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     distance[1] = -P_normal[1]*dist;
                     distance[2] = -P_normal[2]*dist;
 //                    P_tangent[0] = -P_normal[1];
 //                    P_tangent[1] = P_normal[0];
 //                    double tx = P_tangent[0] ; double ty = P_tangent[1];
+                    if(get_dot_product(P_normal,normal)>0)
+                    {
+                        //                        std::cout<<"YYPDB: some normal direction has wrong sign\n";
+                        for(int i=0;i<3;++i)
+                        {
+                            normal[i] *= -1.0;
+                        }
+                    }
+                    assert(h_penalty>0.0);
+                    if (h_penalty < std::abs(dist))
+                        h_penalty = std::abs(dist);
                     double visco = nu_0*rho_0;
                     double Csb=10;
                     double C_adim = Csb*visco/h_penalty;
@@ -5696,8 +5701,11 @@ namespace proteus
                         const double grad_phi_i_dot_d = get_dot_product(grad_phi_i,distance);
                         for (int j=0;j<nDOF_trial_element;j++)
                         {
-                            register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,
-                                    ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+                            register int ebN_i_j = ebN*4*nDOF_test_X_trial_element
+                                                    + surrogate_boundary_elements[ebN_s]*2*nDOF_test_X_trial_element
+                                                    + surrogate_boundary_elements[ebN_s]*nDOF_test_X_trial_element
+                                                    + i*nDOF_trial_element
+                                                    + j;
 
                             double phi_j = vel_test_dS[j]/dS;//since phi_i has dS
                             const double grad_phi_j[3]={vel_grad_test_dS[j*nSpace+0]/dS,
@@ -5715,7 +5723,7 @@ namespace proteus
                                     C_adim*phi_i*phi_j;
 
                             // (2)
-                            get_symmetric_gradient_dot_vec(grad_phi_j,zero_vec,zero_vec,P_normal,res);
+                            get_symmetric_gradient_dot_vec(grad_phi_j,zero_vec,zero_vec,normal,res);
                             globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
                                     visco * phi_i * res[0];
                             globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
@@ -5723,7 +5731,7 @@ namespace proteus
                             globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_eb_u_w[ebN_i_j]] -=
                                     visco * phi_i * res[2];
 
-                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_j,zero_vec,P_normal,res);
+                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_j,zero_vec,normal,res);
                             globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
                                     visco * phi_i * res[0] ;
                             globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
@@ -5731,7 +5739,7 @@ namespace proteus
                             globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_eb_v_w[ebN_i_j]] -=
                                     visco * phi_i * res[2];
 
-                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_j,P_normal,res);
+                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_j,normal,res);
                             globalJacobian[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_eb_w_u[ebN_i_j]] -=
                                     visco * phi_i * res[0] ;
                             globalJacobian[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_eb_w_v[ebN_i_j]] -=
@@ -5740,7 +5748,7 @@ namespace proteus
                                     visco * phi_i * res[2];
 
                             // (3)
-                            get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,P_normal,res);
+                            get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,normal,res);
                             globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
                                     visco * phi_j * res[0];
                             globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
@@ -5748,7 +5756,7 @@ namespace proteus
                             globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_eb_u_w[ebN_i_j]] -=
                                     visco * phi_j * res[2];
 
-                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,P_normal,res);
+                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,normal,res);
                             globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
                                     visco * phi_j * res[0] ;
                             globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
@@ -5756,7 +5764,7 @@ namespace proteus
                             globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_eb_v_w[ebN_i_j]] -=
                                     visco * phi_j * res[2];
 
-                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,P_normal,res);
+                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,normal,res);
                             globalJacobian[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_eb_w_u[ebN_i_j]] -=
                                     visco * phi_j * res[0] ;
                             globalJacobian[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_eb_w_v[ebN_i_j]] -=
@@ -5786,7 +5794,7 @@ namespace proteus
                             globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] +=
                                     C_adim*grad_phi_j_dot_d*phi_i;
                             // (7)
-                            get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,P_normal,res);
+                            get_symmetric_gradient_dot_vec(grad_phi_i,zero_vec,zero_vec,normal,res);
                             globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
                                     visco * grad_phi_j_dot_d * res[0];
                             globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] -=
@@ -5794,7 +5802,7 @@ namespace proteus
                             globalJacobian[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_eb_u_w[ebN_i_j]] -=
                                     visco * grad_phi_j_dot_d * res[2];
 
-                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,P_normal,res);
+                            get_symmetric_gradient_dot_vec(zero_vec,grad_phi_i,zero_vec,normal,res);
                             globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] -=
                                     visco * grad_phi_j_dot_d * res[0] ;
                             globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] -=
@@ -5802,7 +5810,7 @@ namespace proteus
                             globalJacobian[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_eb_v_w[ebN_i_j]] -=
                                     visco * grad_phi_j_dot_d * res[2];
 
-                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,P_normal,res);
+                            get_symmetric_gradient_dot_vec(zero_vec,zero_vec,grad_phi_i,normal,res);
                             globalJacobian[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_eb_w_u[ebN_i_j]] -=
                                     visco * grad_phi_j_dot_d * res[0] ;
                             globalJacobian[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_eb_w_v[ebN_i_j]] -=
