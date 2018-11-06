@@ -7,11 +7,18 @@ this module define common PDE's.
 .. inheritance-diagram:: proteus.TransportCoefficients
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from math import *
 from warnings import warn
 import numpy
-import Norms
-from Profiling import logEvent
+from . import Norms
+from .Profiling import logEvent
 from warnings import warn
 
 ## \file TransportCoefficients.py
@@ -36,7 +43,7 @@ from warnings import warn
 #the equations and the diffusion tensor may be provided as a sparse
 #matrix.
 #
-class TC_base:
+class TC_base(object):
     """
     This is the base class for coefficients of the vector transport
     equation with nc components. The coefficients and their derivative
@@ -108,7 +115,7 @@ class TC_base:
         """
         self.nc = nc
         if variableNames is None:
-            self.variableNames = ['u'+`i` for i in range(nc)]
+            self.variableNames = ['u'+repr(i) for i in range(nc)]
         else:
             self.variableNames=variableNames
         self.mass=mass
@@ -125,14 +132,14 @@ class TC_base:
         self.elementBoundaryIntegralKeys=[]
         self.stencil=[set() for ci in range(self.nc)]
         self.integrals={}
-        for ci,cjDict in self.mass.iteritems():
+        for ci,cjDict in self.mass.items():
             self.elementIntegralKeys.append(('m',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
                 #if moving domain and mass term add advection term
                 if self.movingDomain:
-                    if self.advection.has_key(ci):
-                        if self.advection[ci].has_key(cj):
+                    if ci in self.advection:
+                        if cj in self.advection[ci]:
                             if self.mass[ci][cj] == 'nonlinear':
                                 self.advection[ci][cj] == 'nonlinear'
                             elif self.mass[ci][cj] == 'linear':
@@ -142,36 +149,36 @@ class TC_base:
                             self.advection[ci][cj] == self.mass[ci][cj]
                     else:
                         self.advection[ci] = {cj:self.mass[ci][cj]}
-        for ci,cjDict in self.advection.iteritems():
+        for ci,cjDict in self.advection.items():
             self.elementIntegralKeys.append(('f',ci))
             self.elementBoundaryIntegralKeys.append(('f',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
-        for ci,ckDict in self.diffusion.iteritems():
-            for ck,cjDict in ckDict.iteritems():
+        for ci,ckDict in self.diffusion.items():
+            for ck,cjDict in ckDict.items():
                 self.elementIntegralKeys.append(('a',ci,ck))
                 self.elementBoundaryIntegralKeys.append(('a',ci,ck))
-                if not self.potential.has_key(ck):
+                if ck not in self.potential:
                     logEvent("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
                     phi[ck=%d]=u[ck=%d], the potential definition
                     should be corrected in the future\n""" % (ci,ck,ck,ck,ck))
                     self.potential[ck]='u'
-                for cj in cjDict.keys():
+                for cj in list(cjDict.keys()):
                     self.stencil[ci].add(cj)
                     self.stencil[ci].add(ck)
-        for ci,cjDict in self.potential.iteritems():
-            for cj in cjDict.keys():
+        for ci,cjDict in self.potential.items():
+            for cj in list(cjDict.keys()):
                 self.stencil[ci].add(cj)
-        for ci,cjDict in self.reaction.iteritems():
+        for ci,cjDict in self.reaction.items():
             self.elementIntegralKeys.append(('r',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
-        for ci,cjDict in self.hamiltonian.iteritems():
+        for ci,cjDict in self.hamiltonian.items():
             self.elementIntegralKeys.append(('H',ci))
             self.elementBoundaryIntegralKeys.append(('H',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
-        for ci,cjDict in self.stress.iteritems():
+        for ci,cjDict in self.stress.items():
             self.elementIntegralKeys.append(('sigma',ci))
             self.elementBoundaryIntegralKeys.append(('sigma',ci))
             for cj in cjDict:
@@ -182,6 +189,10 @@ class TC_base:
                 which means the system defined by the coefficients is singular.""")
         self.vectorComponents=None
         self.vectorName="velocity"
+        try:
+            self.nullSpace
+        except AttributeError:
+            self.nullSpace = 'NoNullSpace'
         #mwf append u integral key by default
         for ci in range(self.nc):
             self.elementIntegralKeys.append(('u',ci))
@@ -218,12 +229,12 @@ class TC_base:
         """
         pass
     def updateToMovingDomain(self,t,c):
-        import cfemIntegrals
+        from . import cfemIntegrals
         for ci in range(self.nc):
-            if c.has_key(('m',ci)):
+            if ('m',ci) in c:
                 cfemIntegrals.update_f_movingDomain(c['xt'],c[('m',ci)],c[('f',ci)])
                 for cj in range(self.nc):
-                    if c.has_key(('dm',ci,cj)):
+                    if ('dm',ci,cj) in c:
                         cfemIntegrals.update_df_movingDomain(c['xt'],c[('dm',ci,cj)],c[('df',ci,cj)])
             #else: transport coefficients derived class should add this if a constant mass is assumed
             #    cfemIntegrals.update_f_movingDomain_constantMass(c['xt'],c[('f',ci)])
@@ -242,11 +253,6 @@ class TC_base:
         Give the TC object an opportunity to modify itself after the time step.
         """
         return {}
-    def postAdaptStep(self):
-        """
-        Give opportunity to TC object to maintain consistency with previous TC object
-        """
-        return {}
     def allocateDummyCoefficients(self,c=None,nPoints=101,uMax=1.0,uMin=0.0,nSpace=1):
         """
         Allocate some coefficient dictionaries to use for viewing the coefficients
@@ -256,32 +262,32 @@ class TC_base:
             ctemp = {}
             for ci in range(self.nc):
                 ctemp[('u',ci)] = numpy.zeros(nPoints,'d')
-                delta_u = (uMax-uMin)/float(nPoints-1)
+                delta_u = old_div((uMax-uMin),float(nPoints-1))
                 for i in range(nPoints):
                     ctemp[('u',ci)] = i*delta_u + uMin
-            for ci,cjDict in self.mass.iteritems():
+            for ci,cjDict in self.mass.items():
                 for cj in cjDict:
                     ctemp[('m',ci)] = numpy.zeros(nPoints,'d')
                     ctemp[('dm',ci,cj)] = numpy.zeros(nPoints,'d')
-            for ci,cjDict in self.advection.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.advection.items():
+                for cj in list(cjDict.keys()):
                     ctemp[('f',ci)] = numpy.zeros((nPoints,nSpace),'d')
                     ctemp[('df',ci,cj)] = numpy.zeros((nPoints,nSpace),'d')
-            for ci,ckDict in self.diffusion.iteritems():
-                for ck,cjDict in ckDict.iteritems():
-                    for cj in cjDict.keys():
+            for ci,ckDict in self.diffusion.items():
+                for ck,cjDict in ckDict.items():
+                    for cj in list(cjDict.keys()):
                         ctemp[('a',ci,ck)] = numpy.zeros((nPoints,nSpace,nSpace),'d')
                         ctemp[('da',ci,ck,cj)] = numpy.zeros((nPoints,nSpace,nSpace),'d')
-            for ci,cjDict in self.potential.iteritems():
-                for cj,flag in cjDict.iteritems():
+            for ci,cjDict in self.potential.items():
+                for cj,flag in cjDict.items():
                     ctemp[('phi',ci)] = numpy.zeros(nPoints,'d')
                     ctemp[('dphi',ci,cj)] = numpy.zeros(nPoints,'d')
-            for ci,cjDict in self.reaction.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.reaction.items():
+                for cj in list(cjDict.keys()):
                     ctemp[('r',ci)] = numpy.zeros(nPoints,'d')
                     ctemp[('dr',ci,cj)] = numpy.zeros(nPoints,'d')
-            for ci,cjDict in self.hamiltonian.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.hamiltonian.items():
+                for cj in list(cjDict.keys()):
                     ctemp[('H',ci)] = numpy.zeros(nPoints,'d')
                     ctemp[('dH',ci,cj)] = numpy.zeros((nPoints,nSpace),'d')
         else:
@@ -290,7 +296,7 @@ class TC_base:
             for ci in range(self.nc):
                 uMin = min(c[('u',ci)].flat)
                 uMax = max(c[('u',ci)].flat)
-                delta_u = (uMax-uMin)/float(nPoints-1)
+                delta_u = old_div((uMax-uMin),float(nPoints-1))
                 for i in range(nPoints):
                     ctemp[('u',ci)].flat[i]=i*delta_u+uMin
         return ctemp
@@ -299,7 +305,7 @@ class TC_base:
         """
         Plot the coefficients
         """
-        import Viewers
+        from . import Viewers
         nPoints = len(ctemp[('u',0)].flat)
         self.evaluate(t,ctemp)
         if Viewers.viewerType == 'gnuplot':
@@ -315,35 +321,35 @@ class TC_base:
                 Viewers.viewerPipe.write(cmd)
                 Viewers.newPlot()
                 Viewers.newWindow()
-            for ci,cjDict in self.mass.iteritems():
+            for ci,cjDict in self.mass.items():
                 for cj in cjDict:
                     linePlot(ctemp[('u',cj)],ctemp[('m',ci)],'m_%i vs. u_%i' % (ci,cj) )
                     linePlot(ctemp[('u',cj)],ctemp[('dm',ci,cj)],'dm/du_%i vs. u_%i' % (ci,cj))
-            for ci,cjDict in self.advection.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.advection.items():
+                for cj in list(cjDict.keys()):
                     nSpace = ctemp[('f',ci)].shape[-1]
                     for I in range(nSpace):
                         linePlot(ctemp[('u',cj)],ctemp[('f',ci)],'f_%i vs. u_%i' % (ci,cj),start=I,stride=nSpace)
                         linePlot(ctemp[('u',cj)],ctemp[('df',ci,cj)],'df/du_%i vs. u_%i' % (ci,cj),start=I,stride=nSpace)
-            for ci,ckDict in self.diffusion.iteritems():
-                for ck,cjDict in ckDict.iteritems():
-                    for cj in cjDict.keys():
+            for ci,ckDict in self.diffusion.items():
+                for ck,cjDict in ckDict.items():
+                    for cj in list(cjDict.keys()):
                         nSpace = ctemp[('a',ci,ck)].shape[-1]
                         for I in range(nSpace):
                             for J in range(nSpace):
                                 linePlot(ctemp[('u',cj)],ctemp[('a',ci,ck)],'a_%i,%i vs. u_%i' % (ci,ck,cj),start=I*nSpace+J,stride=nSpace*nSpace)
                                 linePlot(ctemp[('u',cj)],ctemp[('da',ci,ck,cj)],'da/du_%i,%i vs. u_%i' % (ci,ck,cj),start=I*nSpace+J,stride=nSpace*nSpace)
-            for ci,cjDict in self.potential.iteritems():
-                for cj,flag in cjDict.iteritems():
+            for ci,cjDict in self.potential.items():
+                for cj,flag in cjDict.items():
                     if flag == 'nonlinear':
                         linePlot(ctemp[('u',cj)],ctemp[('phi',ci)],'phi_%i vs. u_%i' % (ci,cj) )
                         linePlot(ctemp[('u',cj)],ctemp[('dphi',ci,cj)],'dphi/du_%i vs. u_%i' % (ci,cj))
-            for ci,cjDict in self.reaction.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.reaction.items():
+                for cj in list(cjDict.keys()):
                     linePlot(ctemp[('u',cj)],ctemp[('r',ci)],'r_%i vs. u_%i' % (ci,cj) )
                     linePlot(ctemp[('u',cj)],ctemp[('dr',ci,cj)],'dr/du_%i vs. u_%i' % (ci,cj))
-            for ci,cjDict in self.hamiltonian.iteritems():
-                for cj in cjDict.keys():
+            for ci,cjDict in self.hamiltonian.items():
+                for cj in list(cjDict.keys()):
                     linePlot(ctemp[('u',cj)],ctemp[('H',ci)],'H_%i vs. u_%i' % (ci,cj) )
                     linePlot(ctemp[('u',cj)],ctemp[('dH',ci,cj)],'dH/dgrad_u_%i vs. u_%i' % (ci,cj))
 
@@ -361,7 +367,7 @@ class LinearVADR_ConstantCoefficients(TC_base):
     This class implements constant coefficients with no cross-component diffusion for
     a system of advection-diffuion-reaction equations.
     """
-    from ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
+    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=[0],A=[0],B=[0],C=[0],rFunc=None,useSparseDiffusion = True):
         mass={}
         advection={}
@@ -421,7 +427,7 @@ class LinearVADR_ConstantCoefficients_skew(TC_base):
     """
     This class implements constant coefficients for a skew symmetric system, mainly for testing and debugging
     """
-    from ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
+    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=0,A=0,B=0,C=0):
         mass={}
         advection={}
@@ -481,7 +487,7 @@ class LinearVADR_ConstantCoefficients_upper(TC_base):
     """
     This class implements constant coefficients with upper diagonal coupling
     """
-    from ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
+    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=0,A=0,B=0,C=0):
         mass={}
         advection={}
@@ -552,7 +558,7 @@ class LinearVADR_ConstantCoefficients_lower(TC_base):
     """
     This class implements constant coefficients with lower diagonal coupling
     """
-    from ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
+    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=0,A=0,B=0,C=0):
         mass={}
         advection={}
@@ -625,7 +631,7 @@ class LinearVADR_ConstantCoefficients_full(TC_base):
     """
     This class implements constant coefficients with full coupling
     """
-    from ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
+    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=0,A=0,B=0,C=0):
         mass={}
         advection={}
@@ -673,7 +679,7 @@ class LinearVADR_ConstantCoefficients_full(TC_base):
                                                         c[('f',i)],c[('df',i,i)],
                                                         c[('a',i,i)],
                                                         c[('r',i)],c[('dr',i,i)])
-            for j in range(0,i)+range(i+1,self.nc):
+            for j in list(range(0,i))+list(range(i+1,self.nc)):
                 self.linearADR_ConstantCoefficientsEvaluate(self.eps*self.M[j],
                                                             self.eps*self.A[j],
                                                             self.eps*self.B[j],
@@ -702,7 +708,7 @@ class NonlinearVADR_pqrst(TC_base):
     This class implements simple monomial nonlinear coefficients with no cross-component diffusion for
     a system of advection-diffuion-reaction equations.
     """
-    from ctransportCoefficients import nonlinearADR_pqrstEvaluate
+    from .ctransportCoefficients import nonlinearADR_pqrstEvaluate
     def __init__(self,nc=1,M={0:0.0},A={0:1.0},B={0:0.0},C={0:0.0},
                  p={0:1.0},q={0:1.0},r={0:1.0},s={0:1.0},t={0:0.0}):
         mass={}
@@ -792,7 +798,7 @@ class NonlinearVADR_pqrst_full(TC_base):
     """
     This class implements the simple nonlinear ADR equation with full coupling
     """
-    from ctransportCoefficients import nonlinearADR_pqrstEvaluate
+    from .ctransportCoefficients import nonlinearADR_pqrstEvaluate
     def __init__(self,nc=1,M={0:0.0},A={0:1.0},B={0:0.0},C={0:0.0},
                  p={0:1.0},q={0:1.0},r={0:1.0},s={0:1.0},t={0:0.0}):
         mass={}
@@ -854,7 +860,7 @@ class NonlinearVADR_pqrst_full(TC_base):
                                             c[('a',i,i)],c[('da',i,i,i)],
                                             phitmp,phitmp,
                                             c[('r',i)],c[('dr',i,i)])
-            for j in range(0,i)+range(i+1,self.nc):
+            for j in list(range(0,i))+list(range(i+1,self.nc)):
                 self.nonlinearADR_pqrstEvaluate(self.eps*self.M[j],
                                                 self.eps*self.A[j],
                                                 self.eps*self.B[j],
@@ -893,7 +899,7 @@ class UnitSquareRotation(TC_base):
     """
     Conservative linear advection with a rotating velocity field
     """
-    from ctransportCoefficients import unitSquareRotationEvaluate
+    from .ctransportCoefficients import unitSquareRotationEvaluate
     def __init__(self):
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -919,7 +925,7 @@ class UnitCubeRotation(TC_base):
     """
     Conservative linear advection with a rotating velocity field in 3d
     """
-    from ctransportCoefficients import unitCubeRotationEvaluate
+    from .ctransportCoefficients import unitCubeRotationEvaluate
     def __init__(self):
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -955,8 +961,8 @@ class NavierStokes(TC_base):
     """
     The coefficients for the incompressible Navier-Stokes equations.
     """
-    from ctransportCoefficients import NavierStokes_2D_Evaluate
-    from ctransportCoefficients import NavierStokes_3D_Evaluate
+    from .ctransportCoefficients import NavierStokes_2D_Evaluate
+    from .ctransportCoefficients import NavierStokes_3D_Evaluate
     def __init__(self,rho=998.2,nu=1.004e-6,g=[0.0,9.8],nd=2):
         self.rho = rho
         self.nu = nu
@@ -1124,8 +1130,8 @@ class ShallowWater(TC_base):
     :math:`a = 1/3` for Mannings law --> bedFrictionPower
 
     """
-    from ctransportCoefficients import shallowWater_1D_Evaluate
-    from ctransportCoefficients import shallowWater_2D_Evaluate
+    from .ctransportCoefficients import shallowWater_1D_Evaluate
+    from .ctransportCoefficients import shallowWater_2D_Evaluate
 #    from ctransportCoefficients import shallowWater_3D_Evaluate
     def __init__(self,g=9.8,nd=1,h_eps=1.0e-8,
                  bedFrictionCoefficient=0.0, #bed friction law coefficient (n^2 for Manning)
@@ -1232,7 +1238,7 @@ class ShallowWater(TC_base):
         cq[('H',0)] = numpy.copy(cq[('u',0)])
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         self.ebq_grad_b = numpy.zeros(cebq[('grad(u)',0)].shape,'d')
-        if cebq_global.has_key(('grad(u)',0)):
+        if ('grad(u)',0) in cebq_global:
             self.ebq_global_grad_b = numpy.zeros(cebq_global[('grad(u)',0)].shape,'d')
         else:
             sh = (cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd)
@@ -1253,7 +1259,7 @@ class ShallowWater(TC_base):
                 cebq_global['x'].flat[i*3+self.bind]=b
                 self.ebq_global_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
         #
-        if cebq_global.has_key(('u',0)):
+        if ('u',0) in cebq_global:
             cebq_global[('H',0)] = numpy.copy(cebq_global[('u',0)]);
         else:
             sh = (cebq_global['x'].shape[0],cebq_global['x'].shape[1])
@@ -1299,7 +1305,7 @@ class ShallowWater(TC_base):
             grad_b = self.ebq_global_grad_b
         assert grad_b is not None
         #total elevation
-        if not c.has_key(('H',0)) and c.has_key(('u',0)):
+        if ('H',0) not in c and ('u',0) in c:
             c[('H',0)] = numpy.copy(c[('u',0)])
         if self.nd==1:
             self.shallowWater_1D_Evaluate(self.h_eps,
@@ -1425,8 +1431,8 @@ class DiscreteLaplaceOperator(TC_base):
     for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
     :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
     """
-    from ctransportCoefficients import Laplace_2D_Evaluate
-    from ctransportCoefficients import Laplace_3D_Evaluate
+    from .ctransportCoefficients import Laplace_2D_Evaluate
+    from .ctransportCoefficients import Laplace_3D_Evaluate
     def __init__(self,nd=2,nu=1.0):
         self.nd=nd
         self.nu=nu # ... Detail I need to worry about later ...
@@ -1520,8 +1526,8 @@ class Stokes(TC_base):
     """
     The coefficients for the Stokes equations.
     """
-    from ctransportCoefficients import Stokes_2D_Evaluate
-    from ctransportCoefficients import Stokes_3D_Evaluate
+    from .ctransportCoefficients import Stokes_2D_Evaluate
+    from .ctransportCoefficients import Stokes_3D_Evaluate
     def __init__(self,rho=998.2,nu=1.004e-6,g=[0.0,9.8],nd=2,steady=True,weakBoundaryConditions=True):
         self.steady=steady
         self.rho = rho
@@ -1677,8 +1683,8 @@ class StokesP(TC_base):
     """
     The coefficients for the Stokes equations.
     """
-    from ctransportCoefficients import StokesP_2D_Evaluate
-    from ctransportCoefficients import StokesP_3D_Evaluate
+    from .ctransportCoefficients import StokesP_2D_Evaluate
+    from .ctransportCoefficients import StokesP_3D_Evaluate
     def __init__(self,rho=998.2,nu=1.004e-6,g=[0.0,9.8],nd=2,steady=True):
         self.steady=steady
         self.rho = rho
@@ -1833,8 +1839,8 @@ class TwophaseNavierStokes_LS_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
     """
-    from ctransportCoefficients import TwophaseNavierStokes_LS_SO_2D_Evaluate
-    from ctransportCoefficients import TwophaseNavierStokes_LS_SO_3D_Evaluate
+    from .ctransportCoefficients import TwophaseNavierStokes_LS_SO_2D_Evaluate
+    from .ctransportCoefficients import TwophaseNavierStokes_LS_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  rho_0=998.2,nu_0=1.004e-6,
@@ -1929,7 +1935,7 @@ class TwophaseNavierStokes_LS_SO(TC_base):
             self.q_phi = modelList[self.LS_model].q[('u',0)]
             self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
             self.ebq_phi = None
-            if modelList[self.LS_model].ebq.has_key(('u',0)):
+            if ('u',0) in modelList[self.LS_model].ebq:
                 self.ebq_phi = modelList[self.LS_model].ebq[('u',0)]
 
     def initializeMesh(self,mesh):
@@ -2063,10 +2069,10 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
     """
-    from ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate
-    from ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
-    from ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
-    from ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
+    from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate
+    from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
+    from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
+    from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -2217,14 +2223,14 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         self.model = modelList[0]
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u',0)]
-            if modelList[self.LS_model].ebq.has_key(('u',0)):
+            if ('u',0) in modelList[self.LS_model].ebq:
                 self.ebq_phi = modelList[self.LS_model].ebq[('u',0)]
             else:
                 self.ebq_phi = None
             self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
             #normal
             self.q_n = modelList[self.LS_model].q[('grad(u)',0)]
-            if modelList[self.LS_model].ebq.has_key(('grad(u)',0)):
+            if ('grad(u)',0) in modelList[self.LS_model].ebq:
                 self.ebq_n = modelList[self.LS_model].ebq[('grad(u)',0)]
             else:
                 self.ebq_n   = None
@@ -2233,7 +2239,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         if self.KN_model is not None:
             self.q_kappa    = modelList[self.KN_model].q[('u',0)]
             self.ebqe_kappa = modelList[self.KN_model].ebqe[('u',0)]
-            if modelList[self.KN_model].ebq.has_key(('u',0)):
+            if ('u',0) in modelList[self.KN_model].ebq:
                 self.ebq_kappa = modelList[self.KN_model].ebq[('u',0)]
             else:
                 self.ebq_kappa = None
@@ -2270,7 +2276,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
         self.ebqe_meanGrain = numpy.ones(cebqe[('u',1)].shape,'d')
     def updateToMovingDomain(self,t,c):
-        import cfemIntegrals
+        from . import cfemIntegrals
         assert(self.movingDomain)
         if self.movingDomain:
             cfemIntegrals.update_f_movingDomain_constantMass(c['xt'],c[('f',0)])
@@ -2303,13 +2309,6 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
             phi   = self.ebq_phi
             n     = self.ebq_n
             kappa = self.ebq_kappa
-        #mwf debug
-        #waterLevelBase = 0.529
-        #for i in range(len(phi.flat)):
-            #if abs(phi.flat[i]) > 0.0:
-            #    assert abs(phi.flat[i] - (c['x'].flat[3*i+1] - waterLevelBase)) <= 1.0e-5, "Problem with phi t=%s phi.shape=%s i=%s phi=%s y=%s wl=%s " % (t,phi.shape,i,phi.flat[i],c['x'].flat[3*i+1],waterLevelBase)
-            #phi.flat[i] = c['x'].flat[3*i+1] - waterLevelBase#self.waterLevel
-        #self.sd=False
         if self.nd==2:
             if self.sd:
                 self.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.eps_density,
@@ -2529,8 +2528,8 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
     """
-    from ctransportCoefficients import ThreephaseNavierStokes_ST_LS_SO_2D_Evaluate
-    from ctransportCoefficients import ThreephaseNavierStokes_ST_LS_SO_3D_Evaluate
+    from .ctransportCoefficients import ThreephaseNavierStokes_ST_LS_SO_2D_Evaluate
+    from .ctransportCoefficients import ThreephaseNavierStokes_ST_LS_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -2700,14 +2699,14 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         #level set
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u',0)]
-            if modelList[self.LS_model].ebq.has_key(('u',0)):
+            if ('u',0) in modelList[self.LS_model].ebq:
                 self.ebq_phi = modelList[self.LS_model].ebq[('u',0)]
             else:
                 self.ebq_phi = None
             self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
             #normal
             self.q_n = modelList[self.LS_model].q[('grad(u)',0)]
-            if modelList[self.LS_model].ebq.has_key(('grad(u)',0)):
+            if ('grad(u)',0) in modelList[self.LS_model].ebq:
                 self.ebq_n = modelList[self.LS_model].ebq[('grad(u)',0)]
             else:
                 self.ebq_n   = None
@@ -2716,7 +2715,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         if self.KN_model is not None:
             self.q_kappa    = modelList[self.KN_model].q[('u',0)]
             self.ebqe_kappa = modelList[self.KN_model].ebqe[('u',0)]
-            if modelList[self.KN_model].ebq.has_key(('u',0)):
+            if ('u',0) in modelList[self.KN_model].ebq:
                 self.ebq_kappa = modelList[self.KN_model].ebq[('u',0)]
             else:
                 self.ebq_kappa = None
@@ -2738,9 +2737,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cq['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.q_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
-                    self.q_n_s.flat[2*i+0] = u/math.sqrt(u**2 + v**2)
-                    self.q_n_s.flat[2*i+1] = v/math.sqrt(u**2 + v**2)
+                    self.q_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
+                    self.q_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
+                    self.q_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
         else:
             try:
                 self.defaultSolidProfile(t,cq['x'],self.q_phi_s,self.q_n_s)
@@ -2771,9 +2770,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cebq['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.ebq_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
-                    self.ebq_n_s.flat[2*i+0] = u/math.sqrt(u**2 + v**2)
-                    self.ebq_n_s.flat[2*i+1] = v/math.sqrt(u**2 + v**2)
+                    self.ebq_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
+                    self.ebq_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
+                    self.ebq_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
         else:
             try:
                 self.defaultSolidProfile(t,cebq['x'],self.ebq_phi_s,self.ebq_n_s)
@@ -2804,9 +2803,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cebqe['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.ebqe_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
-                    self.ebqe_n_s.flat[2*i+0] = u/math.sqrt(u**2 + v**2)
-                    self.ebqe_n_s.flat[2*i+1] = v/math.sqrt(u**2 + v**2)
+                    self.ebqe_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
+                    self.ebqe_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
+                    self.ebqe_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
         else:
             try:
                 self.defaultSolidProfile(t,cebqe['x'],self.ebqe_phi_s,self.ebqe_n_s)
@@ -2983,10 +2982,6 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                 c[('df',3,1)].flat[:] = 0.0
                 c[('df',3,2)].flat[:] = 0.0
                 c[('df',3,3)].flat[:] = 0.0
-        #cek hack to look at signed distance to dem particles
-        #for i in range(len(c[('u',0)].flat)):
-        #    c[('m',1)].flat[i] = self.signedDistance(c['x'].flat[3*i : (3*i+3)])
-        #mwf hack for visuzlization
         c[('phis_viz')] = phi_s
         c[('phi_viz')]  = phi
 ##\brief Two-phase, Incompressible Navier-Stokes equations (level-set formulation)
@@ -3023,8 +3018,8 @@ class TwophaseStokes_LS_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Stokes equations and seperated by a sharp interface represented by a level set function
     """
-    from ctransportCoefficients import TwophaseStokes_LS_SO_2D_Evaluate
-    from ctransportCoefficients import TwophaseStokes_LS_SO_3D_Evaluate
+    from .ctransportCoefficients import TwophaseStokes_LS_SO_2D_Evaluate
+    from .ctransportCoefficients import TwophaseStokes_LS_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  rho_0=998.2,nu_0=1.005e-6,
@@ -3111,7 +3106,7 @@ class TwophaseStokes_LS_SO(TC_base):
     def attachModels(self,modelList):
         self.q_phi    = modelList[self.levelSetModelIndex].q[('u',0)]
         self.ebqe_phi = modelList[self.levelSetModelIndex].ebqe[('u',0)]
-        if modelList[self.levelSetModelIndex].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.levelSetModelIndex].ebq:
             self.ebq_phi = modelList[self.levelSetModelIndex].ebq[('u',0)]
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -3227,8 +3222,8 @@ class TwophaseNavierStokes_VOF_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a volume of  fluid (volume fraction) function
     """
-    from ctransportCoefficients import TwophaseNavierStokes_VOF_SO_2D_Evaluate
-    from ctransportCoefficients import TwophaseNavierStokes_VOF_SO_3D_Evaluate
+    from .ctransportCoefficients import TwophaseNavierStokes_VOF_SO_2D_Evaluate
+    from .ctransportCoefficients import TwophaseNavierStokes_VOF_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  rho_0=998.2,nu_0=1.004e-6,
@@ -3322,7 +3317,7 @@ class TwophaseNavierStokes_VOF_SO(TC_base):
         self.q_vof = modelList[self.LS_model].q[('u',0)]
         self.ebqe_vof = modelList[self.LS_model].ebqe[('u',0)]
         self.ebq_vof  = None
-        if modelList[self.LS_model].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.LS_model].ebq:
             self.ebq_vof = modelList[self.LS_model].ebq[('u',0)]
 
     def initializeMesh(self,mesh):
@@ -3445,8 +3440,8 @@ class TwophaseStokes_VOF_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Stokes equations and seperated by a sharp interface represented by a volume of fluid function
     """
-    from ctransportCoefficients import TwophaseStokes_VOF_SO_2D_Evaluate
-    from ctransportCoefficients import TwophaseStokes_VOF_SO_3D_Evaluate
+    from .ctransportCoefficients import TwophaseStokes_VOF_SO_2D_Evaluate
+    from .ctransportCoefficients import TwophaseStokes_VOF_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  rho_0=998.2,nu_0=1.005e-6,
@@ -3533,7 +3528,7 @@ class TwophaseStokes_VOF_SO(TC_base):
     def attachModels(self,modelList):
         self.q_vof = modelList[self.levelSetModelIndex].q[('u',0)]
         self.ebqe_vof = modelList[self.levelSetModelIndex].ebqe[('u',0)]
-        if modelList[self.levelSetModelIndex].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.levelSetModelIndex].ebq:
             self.ebq_vof = modelList[self.levelSetModelIndex].ebq[('u',0)]
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -3636,15 +3631,12 @@ class TwophaseStokes_VOF_SO(TC_base):
 #\f]
 #
 class NCLevelSetCoefficients(TC_base):
-    from ctransportCoefficients import ncLevelSetCoefficientsEvaluate
-    from UnstructuredFMMandFSWsolvers import FMMEikonalSolver,FSWEikonalSolver
-    from NonlinearSolvers import EikonalSolver
+    from .ctransportCoefficients import ncLevelSetCoefficientsEvaluate
 
     def __init__(self,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
-                 EikonalSolverFlag=0,
                  checkMass=True,epsFact=1.5):
         self.epsFact=epsFact
         self.variableNames=['phi']
@@ -3667,10 +3659,6 @@ class NCLevelSetCoefficients(TC_base):
         self.flowModelIndex=V_model
         self.modelIndex=ME_model
         self.RD_modelIndex=RD_model
-        #mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1: #FMM
-            assert self.RD_modelIndex is None, "no redistance with eikonal solver too"
         self.checkMass = checkMass
     def attachModels(self,modelList):
         #the level set model
@@ -3680,36 +3668,19 @@ class NCLevelSetCoefficients(TC_base):
             self.flowModel = modelList[self.flowModelIndex]
             self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
             self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity',0)]
-            if modelList[self.flowModelIndex].ebq.has_key(('velocity',0)):
+            if ('velocity',0) in modelList[self.flowModelIndex].ebq:
                 self.ebq_v  = modelList[self.flowModelIndex].ebq[('velocity',0)]
             else:
                 self.ebq_v  = None
-            if not self.model.ebq.has_key(('u',0)) and self.flowModel.ebq.has_key(('u',0)):
+            if ('u',0) not in self.model.ebq and ('u',0) in self.flowModel.ebq:
                 self.model.ebq[('u',0)] = numpy.zeros(self.flowModel.ebq[('u',0)].shape,'d')
                 self.model.ebq[('grad(u)',0)] = numpy.zeros(self.flowModel.ebq[('grad(u)',0)].shape,'d')
-            if self.flowModel.ebq.has_key(('v',1)):
+            if ('v',1) in self.flowModel.ebq:
                 self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
                 self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
         if self.RD_modelIndex is not None:
             #print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
-        if self.eikonalSolverFlag == 2: #FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0,absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-8,#default 1.0e-4
-                                                    frontInitType='frontIntersection')
-#,#'frontIntersection',#or 'magnitudeOnly'
-        elif self.eikonalSolverFlag == 1: #FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-8,#default 1.0e-4
-                                                    frontInitType='frontIntersection')
-#,#'frontIntersection',#or 'magnitudeOnly'
         if self.checkMass:
             self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
                                                                      self.model.mesh.elementDiametersArray,
@@ -3748,7 +3719,7 @@ class NCLevelSetCoefficients(TC_base):
             #                                                           self.model.mesh.nElements_owned)
             # logEvent("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
         #cek todo why is this here
-        if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
+        if self.flowModelIndex >= 0 and ('v',1) in self.flowModel.ebq:
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
             self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
         copyInstructions = {}
@@ -3775,7 +3746,7 @@ class NCLevelSetCoefficients(TC_base):
             self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
             self.fluxArray.append(self.fluxIntegral)
             self.timeArray.append(self.model.timeIntegration.t)
-        if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
+        if self.flowModelIndex >= 0 and ('v',1) in self.flowModel.ebq:
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
             self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
         copyInstructions = {}
@@ -3792,7 +3763,7 @@ class NCLevelSetCoefficients(TC_base):
         elif self.ebq_v is not None and c[('dH',0,0)].shape == self.ebq_v.shape:
             v = self.ebq_v
         else:
-            raise RuntimeError,"don't have v for NC Level set of shape = " +`c[('dH',0,0)].shape`
+            raise RuntimeError("don't have v for NC Level set of shape = " +repr(c[('dH',0,0)].shape))
         if v is not None:
             self.ncLevelSetCoefficientsEvaluate(v,
                                                 c[('u',0)],
@@ -3803,10 +3774,8 @@ class NCLevelSetCoefficients(TC_base):
                                                 c[('dH',0,0)])
 
 class CLevelSetCoefficients(TC_base):
-    from ctransportCoefficients import cLevelSetCoefficientsEvaluate
-    from UnstructuredFMMandFSWsolvers import FMMEikonalSolver,FSWEikonalSolver
-    from NonlinearSolvers import EikonalSolver
-    def __init__(self,V_model=0,RD_model=-1,ME_model=1,EikonalSolverFlag=0,checkMass=True):
+    from .ctransportCoefficients import cLevelSetCoefficientsEvaluate
+    def __init__(self,V_model=0,RD_model=-1,ME_model=1,checkMass=True):
         self.variableNames=['vof']
         nc=1
         mass={0:{0:'linear'}}
@@ -3827,10 +3796,6 @@ class CLevelSetCoefficients(TC_base):
         self.flowModelIndex=V_model
         self.modelIndex=ME_model
         self.RD_modelIndex=RD_model
-        #mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1: #FMM
-            assert self.RD_modelIndex < 0, "no redistance with eikonal solver too"
         self.checkMass = checkMass
     def attachModels(self,modelList):
         self.model = modelList[self.modelIndex]
@@ -3839,26 +3804,8 @@ class CLevelSetCoefficients(TC_base):
         self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
         self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity',0)]
         self.ebq_v = None
-        if modelList[self.flowModelIndex].ebq.has_key(('velocity',0)):
+        if ('velocity',0) in modelList[self.flowModelIndex].ebq:
             self.ebq_v = modelList[self.flowModelIndex].ebq[('velocity',0)]
-        if self.eikonalSolverFlag == 2: #FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0,absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-4,#default 1.0e-4
-                                                    frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction = False)
-        elif self.eikonalSolverFlag == 1: #FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-4,#default 1.0e-4
-                                                    frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction = False)
-
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
@@ -3914,23 +3861,6 @@ class CLevelSetCoefficients(TC_base):
                     if self.model.q[('u',0)][eN,iq] >= 0.0:
                         heavisideMassPre += self.model.q[('dV_u',0)][eN,iq]
             #print """CLevel postStep t=%s u massIn =%s """ % (t,heavisideMassPre)
-        if self.eikonalSolverFlag > 0:
-            heavisideMassPost = 0.0;
-            #check to see if q[('u',0)] is getting updated
-            #qU_in = numpy.array(self.model.q[('u',0)])
-            #maxDiff=0.0;
-            failed = self.eikonalSolver.solve(self.model.u[0].dof,self.resDummy)
-            #cek letting step controller handle time history
-            #self.model.updateTimeHistory(t)
-            if self.checkMass:
-                for eN in range(self.model.mesh.nElements_global):
-                    for iq in range(self.model.nQuadraturePoints_element):
-                        #maxDiff = max(maxDiff,abs(self.model.q[('u',0)][eN,iq]-qU_in[eN,iq]))
-                        if self.model.q[('u',0)][eN,iq] >= 0.0:
-                            heavisideMassPost += self.model.q[('dV_u',0)][eN,iq]
-
-                #mwf debug
-                #print """CLevel postStep t=%s after Eikonal solve massOut=%s """ % (t,heavisideMassPost)
     def evaluate(self,t,c):
         if c[('f',0)].shape == self.q_v.shape:
             v = self.q_v
@@ -3945,10 +3875,8 @@ class CLevelSetCoefficients(TC_base):
                                            c[('f',0)],
                                            c[('df',0,0)])
 class VOFCoefficients(TC_base):
-    from ctransportCoefficients import VOFCoefficientsEvaluate
-    from UnstructuredFMMandFSWsolvers import FMMEikonalSolver,FSWEikonalSolver
-    from NonlinearSolvers import EikonalSolver
-    def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0):
+    from .ctransportCoefficients import VOFCoefficientsEvaluate
+    def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,checkMass=True,epsFact=0.0):
         self.variableNames=['vof']
         nc=1
         mass={0:{0:'linear'}}
@@ -3971,10 +3899,6 @@ class VOFCoefficients(TC_base):
         self.modelIndex=ME_model
         self.RD_modelIndex=RD_model
         self.LS_modelIndex=LS_model
-        #mwf added
-        self.eikonalSolverFlag = EikonalSolverFlag
-        if self.eikonalSolverFlag >= 1: #FMM
-            assert self.RD_modelIndex < 0, "no redistance with eikonal solver too"
         self.checkMass = checkMass
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -3988,42 +3912,24 @@ class VOFCoefficients(TC_base):
         self.lsModel = modelList[self.LS_modelIndex]
         self.q_phi = modelList[self.LS_modelIndex].q[('u',0)]
         self.ebqe_phi = modelList[self.LS_modelIndex].ebqe[('u',0)]
-        if modelList[self.LS_modelIndex].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.LS_modelIndex].ebq:
             self.ebq_phi = modelList[self.LS_modelIndex].ebq[('u',0)]
         else:
             self.ebq_phi = None
         #flow model
         #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))
         if self.flowModelIndex >= 0:
-            if modelList[self.flowModelIndex].q.has_key(('velocity',0)):
+            if ('velocity',0) in modelList[self.flowModelIndex].q:
                 self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity',0)]
             else:
                 self.q_v = modelList[self.flowModelIndex].q[('f',0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('f',0)]
-            if modelList[self.flowModelIndex].ebq.has_key(('velocity',0)):
+            if ('velocity',0) in modelList[self.flowModelIndex].ebq:
                 self.ebq_v = modelList[self.flowModelIndex].ebq[('velocity',0)]
             else:
-                if modelList[self.flowModelIndex].ebq.has_key(('f',0)):
+                if ('f',0) in modelList[self.flowModelIndex].ebq:
                     self.ebq_v = modelList[self.flowModelIndex].ebq[('f',0)]
-        #
-        if self.eikonalSolverFlag == 2: #FSW
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FSWEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    relativeTolerance=0.0,absoluteTolerance=1.0e-12,
-                                                    frontTolerance=1.0e-4,#default 1.0e-4
-                                                    frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction = False)
-        elif self.eikonalSolverFlag == 1: #FMM
-            self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
-            eikonalSolverType = self.FMMEikonalSolver
-            self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
-                                                    self.model,
-                                                    frontTolerance=1.0e-4,#default 1.0e-4
-                                                    frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
-                                                    useLocalPWLreconstruction = False)
         if self.checkMass:
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
@@ -4033,7 +3939,7 @@ class VOFCoefficients(TC_base):
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
             logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
-            if self.model.ebqe.has_key(('advectiveFlux',0)):
+            if ('advectiveFlux',0) in self.model.ebqe:
                 self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
                                                                      self.model.ebqe[('advectiveFlux',0)],
                                                                      self.model.mesh)
@@ -4088,8 +3994,6 @@ class VOFCoefficients(TC_base):
         #in a moving domain simulation the velocity coming in is already for the moving domain
         pass
     def evaluate(self,t,c):
-        #mwf debug
-        #print "VOFcoeficients eval t=%s " % t
         if c[('f',0)].shape == self.q_v.shape:
             v = self.q_v
             phi = self.q_phi
@@ -4146,7 +4050,7 @@ class LevelSetNormalCoefficients(TC_base):
             self.q_r   = modelList[self.levelSetModelIndex].q[('u',0)]
             self.ebqe_r= modelList[self.levelSetModelIndex].ebqe[('u',0)]
             self.ebq_r = None
-            if modelList[self.levelSetModelIndex].ebq.has_key(('u',0)):
+            if ('u',0) in modelList[self.levelSetModelIndex].ebq:
                 self.ebq_r = modelList[self.levelSetModelIndex].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         #initialize so it can run without a flow model
@@ -4188,7 +4092,7 @@ class LevelSetNormalCoefficients(TC_base):
         c[('r',0)] -= r
 
 class LevelSetCurvatureCoefficients(TC_base):
-    from ctransportCoefficients import levelSetCurvatureCoefficientsEvaluate
+    from .ctransportCoefficients import levelSetCurvatureCoefficientsEvaluate
     def __init__(self,epsFact=0.0,LSModel_index=3,grad_phi_func=None,sd=True,nd=None):
         self.sd=sd
         self.grad_phi_func = grad_phi_func
@@ -4227,7 +4131,7 @@ class LevelSetCurvatureCoefficients(TC_base):
         logEvent("Attaching \grad \phi in curvature model")
         self.q_grad_phi    = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
         self.ebqe_grad_phi = modelList[self.levelSetModelIndex].ebqe[('grad(u)',0)]
-        if modelList[self.levelSetModelIndex].ebq.has_key(('grad(u)',0)):
+        if ('grad(u)',0) in modelList[self.levelSetModelIndex].ebq:
             self.ebq_grad_phi = modelList[self.levelSetModelIndex].ebq[('grad(u)',0)]
         else:
             self.ebq_grad_phi  = None
@@ -4285,8 +4189,8 @@ class LevelSetCurvatureCoefficients(TC_base):
                                                    c[('dr',0,0)])
 
 class LevelSetConservation(TC_base):
-    from ctransportCoefficients import levelSetConservationCoefficientsEvaluate
-    from ctransportCoefficients import levelSetConservationCoefficientsEvaluate_sd
+    from .ctransportCoefficients import levelSetConservationCoefficientsEvaluate
+    from .ctransportCoefficients import levelSetConservationCoefficientsEvaluate_sd
     def __init__(self,applyCorrection=True,epsFactHeaviside=0.0,epsFactDirac=1.0,epsFactDiffusion=2.0,LSModel_index=3,V_model=2,me_model=5,VOFModel_index=4,checkMass=True,sd=True,nd=None,applyCorrectionToDOF=True):
         self.sd=sd
         self.checkMass=checkMass
@@ -4341,7 +4245,7 @@ class LevelSetConservation(TC_base):
         self.lsModel = modelList[self.levelSetModelIndex]
         self.q_u_ls    = modelList[self.levelSetModelIndex].q[('u',0)]
         self.ebqe_u_ls = modelList[self.levelSetModelIndex].ebqe[('u',0)]
-        if modelList[self.levelSetModelIndex].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.levelSetModelIndex].ebq:
             self.ebq_u_ls = modelList[self.levelSetModelIndex].ebq[('u',0)]
         else:
             self.ebq_u_ls = None
@@ -4349,7 +4253,7 @@ class LevelSetConservation(TC_base):
         self.vofModel = modelList[self.VOFModelIndex]
         self.q_H_vof = modelList[self.VOFModelIndex].q[('u',0)]
         self.ebqe_H_vof = modelList[self.VOFModelIndex].ebqe[('u',0)]
-        if modelList[self.VOFModelIndex].ebq.has_key(('u',0)):
+        if ('u',0) in modelList[self.VOFModelIndex].ebq:
             self.ebq_H_vof = modelList[self.VOFModelIndex].ebq[('u',0)]
         else:
             self.ebq_H_vof = None
@@ -4380,13 +4284,13 @@ class LevelSetConservation(TC_base):
                 logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
                 logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
     def initializeElementQuadrature(self,t,cq):
-        if self.sd and cq.has_key(('a',0,0)):
+        if self.sd and ('a',0,0) in cq:
             cq[('a',0,0)].fill(self.epsDiffusion)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.sd and cebq.has_key(('a',0,0)):
+        if self.sd and ('a',0,0) in cebq:
             cebq[('a',0,0)].fill(self.epsDiffusion)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.sd and cebqe.has_key(('a',0,0)):
+        if self.sd and ('a',0,0) in cebqe:
             cebqe[('a',0,0)].fill(self.epsDiffusion)
     def preStep(self,t,firstStep=False):
         if self.checkMass:
@@ -4407,12 +4311,12 @@ class LevelSetConservation(TC_base):
                 self.vofModel.q[('u',0)][:]=self.vofModel.q[('m',0)]
             if self.lsModel.q[('u',0)] is not self.lsModel.q[('m',0)]:
                 self.lsModel.q[('u',0)][:]=self.lsModel.q[('m',0)]
-            if self.vofModel.q.has_key(('mt',0)):
+            if ('mt',0) in self.vofModel.q:
                 self.vofModel.timeIntegration.calculateElementCoefficients(self.vofModel.q)
                 self.vofModel.timeIntegration.lastStepErrorOk()
             if self.applyCorrectionToDOF:
                 self.lsModel.u[0].dof += self.massCorrModel.u[0].dof
-            if self.lsModel.q.has_key(('mt',0)):
+            if ('mt',0) in self.lsModel.q:
                 self.lsModel.timeIntegration.calculateElementCoefficients(self.lsModel.q)
                 self.lsModel.timeIntegration.lastStepErrorOk()
             if self.checkMass:
@@ -4485,8 +4389,8 @@ class LevelSetConservation(TC_base):
                                                                                   self.massCorrModel.mesh.nElements_owned),),level=2)
 
 class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
-    from ctransportCoefficients import  conservativeHeadRichardsL2projMualemVanGenuchtenHomEvaluate
-    from ctransportCoefficients import  conservativeHeadRichardsL2projBndMualemVanGenuchtenHomEvaluate
+    from .ctransportCoefficients import  conservativeHeadRichardsL2projMualemVanGenuchtenHomEvaluate
+    from .ctransportCoefficients import  conservativeHeadRichardsL2projBndMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4523,19 +4427,12 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
         self.n = n
         self.m = m
     def evaluate(self,t,c):
-        if c.has_key(('dV_u',0)):
-            #mwf debug
-            #print """ReL2proj f.shape= %s a.shape= %s da.shape= %s dV_u.shape= %s """ % (c[('f',0)].shape,
-            #                                                                             c[('a',0,0)].shape,
-            #                                                                             c[('da',0,0,0)].shape,
-            #                                                                             c[('dV_u',0)].shape)
-            #raw_input('L2proj eval: hit return to continue')
-            #mwf debug
+        if ('dV_u',0) in c:
             volFact = 1.0;
             if c[('f',0)].shape[2] == 2:
                 volFact =0.5
             elif c[('f',0)].shape[2] == 3:
-                volFact = 1./6.
+                volFact = old_div(1.,6.)
             for eN in range(c[('dV_u',0)].shape[0]):
                 vol = 0.0;
                 for k in range(c[('dV_u',0)].shape[1]):
@@ -4561,18 +4458,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
                                                                              c[('a',0,0)],
                                                                              c[('da',0,0,0)])
 
-            #mwf debug
-            #for eN in range(c[('m',0)].shape[0]):
-            #    print """out of L2proj elm m[%d,:]=%s """ % (eN,c[('m',0)][eN,:])
-            #    print """out of L2proj elm dm[%d,:]=%s """ % (eN,c[('dm',0,0)][eN,:])
-            #    print """out of L2proj elm a[%d,:,0,0]=%s """ % (eN,c[('a',0,0)][eN,:])
-        elif c.has_key(('dS_u',0)):
-            #mwf debug
-            #print """ReL2proj f.shape= %s a.shape= %s da.shape = %s dS_u.shape= %s """ % (c[('f',0)].shape,
-            #                                                                              c[('a',0,0)].shape,
-            #                                                                              c[('da',0,0,0)].shape,
-            #                                                                              c[('dS_u',0)].shape)
-            #raw_input('L2proj eval: hit return to continue')
+        elif ('dS_u',0) in c:
             volFact = 1.0;
             if c[('f',0)].shape[-1] == 3:
                 volFact =0.5
@@ -4608,7 +4494,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
             assert False, "dS_u or dV_u keys not found!"
 
 class ConservativeHeadRichardsL2projMualemVanGenuchtenBlockHet(TC_base):
-    from ctransportCoefficients import  conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate
+    from .ctransportCoefficients import  conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4713,7 +4599,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchtenBlockHet(TC_base):
 
 
 class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
-    from ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
+    from .ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4774,7 +4660,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                                                                    c[('dphi',0,0)])
 
 class ConservativeSatRichardsMualemVanGenuchten(TC_base):
-    from ctransportCoefficients import  conservativeSatRichardsMualemVanGenuchtenHomEvaluate
+    from .ctransportCoefficients import  conservativeSatRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4831,7 +4717,7 @@ class ConservativeSatRichardsMualemVanGenuchten(TC_base):
                                                                   c[('dphi',0,0)])
 
 class ConservativeTotalHeadRichardsMualemVanGenuchten(TC_base):
-    from ctransportCoefficients import  conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate
+    from .ctransportCoefficients import  conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4893,31 +4779,31 @@ class ConservativeTotalHeadRichardsMualemVanGenuchten(TC_base):
 
 def VGM_to_BCB_Simple(vgm_alpha,vgm_n):
     bcb_lambda = vgm_n-1
-    bcb_pd = 1.0/vgm_alpha
+    bcb_pd = old_div(1.0,vgm_alpha)
     return (bcb_lambda,bcb_pd)
 def BCB_to_VGM_Simple(bcb_pd,bcb_lambda):
     vgm_n = bcb_lambda + 1
-    vgm_alpha = 1.0/bcb_pd
+    vgm_alpha = old_div(1.0,bcb_pd)
     return (vgm_alpha,vgm_n)
 
 def VGM_to_BCB_Johns(vgm_alpha,vgm_n):
-    vgm_m = 1.0 - 1.0/vgm_n
-    bcb_lambda = vgm_m/(1.0-vgm_m)*(1.0-(0.5)**(1.0/vgm_m))
+    vgm_m = 1.0 - old_div(1.0,vgm_n)
+    bcb_lambda = vgm_m/(1.0-vgm_m)*(1.0-(0.5)**(old_div(1.0,vgm_m)))
     thetaStar=0.72-0.35*exp(-vgm_n**4);
-    bcb_pd = (thetaStar**(1.0/bcb_lambda))/vgm_alpha*(thetaStar**(-1.0/vgm_m)-1.0)**( 1.0-vgm_m)
+    bcb_pd = (thetaStar**(old_div(1.0,bcb_lambda)))/vgm_alpha*(thetaStar**(old_div(-1.0,vgm_m))-1.0)**( 1.0-vgm_m)
     return (bcb_lambda,bcb_pd)
 
 def VGM_to_BCB_MorelSeytoux(vgm_alpha,vgm_n):
-    vgm_m = 1.0 - 1.0/vgm_n
-    p = 1.0 + 2.0/vgm_m
-    bcb_pd = ((1.0/vgm_alpha)*
-              ((p+3.0)/((2.0*p)*(p-1.0)))*
-              ((147.8 + 8.1*p + 0.092*p**2)/(55.6+7.4*p+p**2)))
-    bcb_lambda = 2.0/(p-3.0)
+    vgm_m = 1.0 - old_div(1.0,vgm_n)
+    p = 1.0 + old_div(2.0,vgm_m)
+    bcb_pd = ((old_div(1.0,vgm_alpha))*
+              (old_div((p+3.0),((2.0*p)*(p-1.0))))*
+              (old_div((147.8 + 8.1*p + 0.092*p**2),(55.6+7.4*p+p**2))))
+    bcb_lambda = old_div(2.0,(p-3.0))
     return (bcb_lambda,bcb_pd)
 
 class ConservativeHeadRichardsBrooksCoreyBurdine(TC_base):
-    from ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHomEvaluate
+    from .ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4970,7 +4856,7 @@ class ConservativeHeadRichardsBrooksCoreyBurdine(TC_base):
                                                                    c[('a',0,0)],
                                                                    c[('da',0,0,0)])
 class ConservativeHeadRichardsMualemVanGenuchtenHet(TC_base):
-    from ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHetEvaluate
+    from .ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHetEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -5099,7 +4985,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenHet(TC_base):
                                                                    c[('da',0,0,0)])
 
 class ConservativeHeadRichardsBrooksCoreyBurdineHet(TC_base):
-    from ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHetEvaluate
+    from .ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHetEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -5181,7 +5067,7 @@ class ConservativeHeadRichardsBrooksCoreyBurdineHet(TC_base):
             thetaR = self.thetaR_ebq
             thetaS = self.thetaS_ebq
         else:
-            raise RuntimeError,"nothing of this size in transportCoefficients " +`c[('u',0)].shape`
+            raise RuntimeError("nothing of this size in transportCoefficients " +repr(c[('u',0)].shape))
         self.conservativeHeadRichardsBrooksCoreyBurdineHetEvaluate(self.rho,
                                                                    self.gravity,
                                                                    bcb_lambda,
@@ -5207,7 +5093,7 @@ class ConservativeHeadRichardsBrooksCoreyBurdineHet(TC_base):
             pdb.set_trace()
 
 class ConservativeHeadRichardsMualemVanGenuchtenBlockHet(TC_base):
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluate
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -5307,7 +5193,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
     def __init__(self,
                  Ks_block,
                  vgm_n_block,
@@ -5394,9 +5280,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
 #        for em in materialTypes:
 #            print em
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
                                                                      self.rho,
                                                                      self.beta,
@@ -5413,7 +5296,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
                                                                      c[('df',0,0)],
                                                                      c[('a',0,0)],
                                                                      c[('da',0,0,0)])
-#         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5424,14 +5306,11 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             import pdb
             pdb.set_trace()
 
-#         #mwf debug
-#         if c[('u',0)].shape == self.q_shape:
-#             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class SeepageBrezis(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from ctransportCoefficients import seepageBrezis
+    from .ctransportCoefficients import seepageBrezis
     def __init__(self,
                  Ks_block,
                  vgm_n_block,
@@ -5549,7 +5428,7 @@ class ConservativeHeadRichardsJLeverett(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from ctransportCoefficients import conservativeHeadRichardsJLeverettEvaluate
+    from .ctransportCoefficients import conservativeHeadRichardsJLeverettEvaluate
     def __init__(self,
                  phi_block,
                  psiD_block,
@@ -5629,7 +5508,7 @@ class ConservativeHeadRichardsJLeverett(TC_base):
         if self.debug:
             if numpy.isnan(c[('u',0)]).any():
                 import pdb
-                print "NaN's on input"
+                print("NaN's on input")
                 pdb.set_trace()
         self.conservativeHeadRichardsJLeverettEvaluate(materialTypes,
                                                self.rho,
@@ -5649,7 +5528,6 @@ class ConservativeHeadRichardsJLeverett(TC_base):
                                                c[('df',0,0)],
                                                c[('a',0,0)],
                                                c[('da',0,0,0)])
-        #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5660,14 +5538,13 @@ class ConservativeHeadRichardsJLeverett(TC_base):
             import pdb
             pdb.set_trace()
 
-        #mwf debug
         if c[('u',0)].shape == self.q_shape:
             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class ConservativeHeadRichardsJLeverettAni(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from ctransportCoefficients import conservativeHeadRichardsJLeverettAniEvaluate
+    from .ctransportCoefficients import conservativeHeadRichardsJLeverettAniEvaluate
     def __init__(self,
                  phi_block,
                  psiD_block,
@@ -5751,7 +5628,7 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
         if self.debug:
             if numpy.isnan(c[('u',0)]).any():
                 import pdb
-                print "NaN's on input"
+                print("NaN's on input")
                 pdb.set_trace()
         self.conservativeHeadRichardsJLeverettAniEvaluate(materialTypes,
                                                self.rho,
@@ -5773,7 +5650,6 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
                                                c[('df',0,0)],
                                                c[('a',0,0)],
                                                c[('da',0,0,0)])
-        #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5784,11 +5660,10 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
             import pdb
             pdb.set_trace()
 
-        #mwf debug
         if c[('u',0)].shape == self.q_shape:
             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class ConstantVelocityLevelSet(TC_base):
-    from ctransportCoefficients import constantVelocityLevelSetEvaluate
+    from .ctransportCoefficients import constantVelocityLevelSetEvaluate
     def __init__(self,b=[1.0,0.0],lsModelId=0):
         self.b=b
         mass={0:{0:'linear'}}
@@ -5812,7 +5687,6 @@ class ConstantVelocityLevelSet(TC_base):
         if len(modelList) > 1:
             self.lsModel = modelList[self.lsModelId]
     def evaluate(self,t,c):
-        #mwf appears to work when have f,
         self.constantVelocityLevelSetEvaluate(self.b,
                                               c['x'],
                                               c[('u',0)],
@@ -5827,7 +5701,7 @@ class ConstantVelocityLevelSet(TC_base):
     #end def
 
 class UnitSquareVortexLevelSet(TC_base):
-    from ctransportCoefficients import unitSquareVortexLevelSetEvaluate
+    from .ctransportCoefficients import unitSquareVortexLevelSetEvaluate
     def __init__(self):
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -5858,7 +5732,7 @@ class UnitSquareVortexLevelSet(TC_base):
     #end def
 
 class RotatingVelocityLevelSet(TC_base):
-    from ctransportCoefficients import unitSquareRotationLevelSetEvaluate
+    from .ctransportCoefficients import unitSquareRotationLevelSetEvaluate
     def __init__(self):
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -5887,11 +5761,11 @@ class RotatingVelocityLevelSet(TC_base):
                                                 c[('dH',0,0)]);
 
         #make sure r gets set to zero if using general HJ form
-        if ('r',0) in c.keys():
+        if ('r',0) in list(c.keys()):
             c[('r',0)].flat[:] = 0.0
     #end def
 class EikonalEquationCoefficients(TC_base):
-    from ctransportCoefficients import eikonalEquationEvaluate
+    from .ctransportCoefficients import eikonalEquationEvaluate
     def __init__(self,rhsval=1.0):
         mass={0:{0:'linear'}}
         advection={}
@@ -5956,7 +5830,7 @@ class RedistanceLevelSet(TC_base):
         if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
             self.q_u0 =   self.nModel.q[('u',0)]
-            if self.nModel.ebq.has_key(('u',0)):
+            if ('u',0) in self.nModel.ebq:
                 self.ebq_u0 = self.nModel.ebq[('u',0)]
             self.ebqe_u0 =   self.nModel.ebqe[('u',0)]
             self.dof_u0 = self.nModel.u[0].dof
@@ -5988,8 +5862,6 @@ class RedistanceLevelSet(TC_base):
                 for i in range(len(cebqe[('u',0)].flat)):
                     self.ebqe_u0.flat[i]=self.u0.uOfXT(cebqe['x'].flat[3*i:3*(i+1)],0.)
     def preStep(self,t,firstStep=False):
-        import pdb
-        #pdb.set_trace()
         if self.nModel is not None:
             logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
@@ -6126,7 +5998,7 @@ class RedistanceLevelSet(TC_base):
                     vt.dirichletValues[0][(eN,j0)]=float(vt.u[0].dof[J0])
                     vt.dirichletGlobalNodeSet[0].add(J0)
                 if signU != 0:
-                    for j in (range(0,j0)+range(j0+1,vt.nDOF_trial_element[0])):
+                    for j in (list(range(0,j0))+list(range(j0+1,vt.nDOF_trial_element[0]))):
                         J = vt.u[0].femSpace.dofMap.l2g[eN,j]
                         if (((vt.u[0].dof[J] < -eps) and
                              (signU == 1)) or
@@ -6410,7 +6282,7 @@ class PoissonEquationCoefficients(TC_base):
                 cq[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](cq['x'].flat[3*i:3*(i+1)]).flat
 
             if self.l2proj is not None and self.l2proj[ci] == True:
-                if cq.has_key(('dV_u',ci)):
+                if ('dV_u',ci) in cq:
                     assert cq[('r',ci)].shape == cq[('dV_u',ci)].shape, "wrong scalar shape"
                     self.L2projectEvaluate(0,cq[('dV_u',ci)],cq[('r',ci)])
                     self.L2projectEvaluate(1,cq[('dV_u',ci)],cq[('f',ci)])
@@ -6420,8 +6292,8 @@ class PoissonEquationCoefficients(TC_base):
         nd = self.nd
         for c in [cebq,cebq_global]:
             for ci in range(self.nc):
-                if c.has_key(('f',ci)): c[('f',ci)].flat[:] = 0.0
-                if c.has_key(('r',ci)) and c.has_key(('a',ci,ci)):
+                if ('f',ci) in c: c[('f',ci)].flat[:] = 0.0
+                if ('r',ci) in c and ('a',ci,ci) in c:
                     for i in range(len(c[('u',ci)].flat)):
                         c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
                         c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
@@ -6434,8 +6306,8 @@ class PoissonEquationCoefficients(TC_base):
         nd = self.nd
         for c in [cebqe]:
             for ci in range(self.nc):
-                if c.has_key(('f',ci)): c[('f',ci)].flat[:] = 0.0
-                if c.has_key(('r',ci)) and c.has_key(('a',ci,ci)):
+                if ('f',ci) in c: c[('f',ci)].flat[:] = 0.0
+                if ('r',ci) in c and ('a',ci,ci) in c:
                     for i in range(len(c[('u',ci)].flat)):
                         c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
                         c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
@@ -6455,7 +6327,7 @@ class PoissonEquationCoefficients(TC_base):
                     c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
                 #end i
                 if self.l2proj is not None and self.l2proj[ci] == True:
-                    if c.has_key(('dV_u',ci)):
+                    if ('dV_u',ci) in c:
                         assert c[('r',ci)].shape == c[('dV_u',ci)].shape, "wrong scalar shape"
                         self.L2projectEvaluate(0,c[('dV_u',ci)],c[('r',ci)])
                         self.L2projectEvaluate(1,c[('dV_u',ci)],c[('f',ci)])
@@ -6472,9 +6344,9 @@ class PoissonEquationCoefficients(TC_base):
 ##\brief Linear Elasticity
 #
 class LinearElasticity(TC_base):
-    from ctransportCoefficients import LinearElasticity_1D_Evaluate
-    from ctransportCoefficients import LinearElasticity_2D_Evaluate
-    from ctransportCoefficients import LinearElasticity_3D_Evaluate
+    from .ctransportCoefficients import LinearElasticity_1D_Evaluate
+    from .ctransportCoefficients import LinearElasticity_2D_Evaluate
+    from .ctransportCoefficients import LinearElasticity_3D_Evaluate
     def __init__(self,E=1.0,nu=0.75,g=[0.0,9.8],nd=2):
         self.E = E
         self.nu = nu
@@ -6580,9 +6452,9 @@ class LinearElasticity(TC_base):
                                               c[('r',1)],
                                               c[('r',2)])
 class MovingMesh(TC_base):
-    from ctransportCoefficients import MovingMesh_1D_Evaluate
-    from ctransportCoefficients import MovingMesh_2D_Evaluate
-    from ctransportCoefficients import MovingMesh_3D_Evaluate
+    from .ctransportCoefficients import MovingMesh_1D_Evaluate
+    from .ctransportCoefficients import MovingMesh_2D_Evaluate
+    from .ctransportCoefficients import MovingMesh_3D_Evaluate
     def __init__(self,E=1.0,nu=0.3,g=[0.0,0.0],nd=2,moveMesh=True):
         self.moveMesh=moveMesh
         self.E = E
@@ -6669,7 +6541,7 @@ class MovingMesh(TC_base):
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
-        if c.has_key('abs(det(J))'):
+        if 'abs(det(J))' in c:
             det_J = c['abs(det(J))']
         else:
             det_J = c['sqrt(det(g))']
@@ -6865,14 +6737,9 @@ class kEpsilon(TC_base):
                 for term in terms:
                     d = getattr(modelList[self.flowModelID],quad)
                     key = self.nameMap[term]
-                    if d.has_key(key):
+                    if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
     def initializeMesh(self,mesh):
         pass
@@ -6920,9 +6787,7 @@ class kEpsilon(TC_base):
         elif c['x'].shape[:-1] == self.ebq_gradu.shape[:-1]:
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
         else:
-            #import pdb
-            #pdb.set_trace()
-            raise TypeError, "c['x'].shape= not recognized "
+            raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
@@ -7040,9 +6905,6 @@ class kEpsilon(TC_base):
                                              c[('dr',1,1)])
             else:
                 assert False, "k-epsilon 3d non sd not implemented"
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
             if hackSourceTerm:
                 c[('r',0)].flat[:] = 0.0
@@ -7188,14 +7050,9 @@ class kEpsilon_k(TC_base):
                 for term in terms:
                     d = getattr(modelList[self.flowModelID],quad)
                     key = self.nameMap[term]
-                    if d.has_key(key):
+                    if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
         if self.epsilonModelID is not None:
             terms = ['epsilon']
@@ -7203,7 +7060,7 @@ class kEpsilon_k(TC_base):
                 for term in terms:
                     d = getattr(modelList[self.epsilonModelID],quad)
                     key = self.nameMap[term]
-                    if d.has_key(key):
+                    if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
 
@@ -7276,9 +7133,7 @@ class kEpsilon_k(TC_base):
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
             epsilon = self.ebq_epsilon
         else:
-            #import pdb
-            #pdb.set_trace()
-            raise TypeError, "c['x'].shape= not recognized "
+            raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
@@ -7327,9 +7182,6 @@ class kEpsilon_k(TC_base):
 
             else:
                 raise NotImplementedError
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
         if hackSourceTerm:
             c[('r',0)].flat[:] = 0.0
@@ -7474,14 +7326,9 @@ class kEpsilon_epsilon(TC_base):
                 for term in terms:
                     d = getattr(modelList[self.flowModelID],quad)
                     key = self.nameMap[term]
-                    if d.has_key(key):
+                    if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
         if self.kModelID is not None:
             terms = ['k']
@@ -7489,7 +7336,7 @@ class kEpsilon_epsilon(TC_base):
                 for term in terms:
                     d = getattr(modelList[self.kModelID],quad)
                     key = self.nameMap[term]
-                    if d.has_key(key):
+                    if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
 
@@ -7562,9 +7409,7 @@ class kEpsilon_epsilon(TC_base):
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
             k = self.ebq_k
         else:
-            #import pdb
-            #pdb.set_trace()
-            raise TypeError, "c['x'].shape= not recognized "
+            raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
@@ -7619,9 +7464,6 @@ class kEpsilon_epsilon(TC_base):
 
             else:
                 raise NotImplementedError
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
         if hackSourceTerm:
             c[('r',0)].flat[:] = 0.0
@@ -7636,8 +7478,8 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
     KEmodelID = [m1,m2] if using two separate models for k and epsilon
     otherwise should be just an integer id
     """
-    from ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update
-    from ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd
+    from .ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update
+    from .ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -7697,7 +7539,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                     if not self.KEmodelSplit:
                         d = getattr(modelList[self.KEmodelID],quad)
                         key = self.nameMap[term]
-                        if d.has_key(key):
+                        if key in d:
                             name = quad+'_'+term
                             setattr(self,name,d[key])
                     else:
@@ -7707,7 +7549,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                             ID = self.KEmodelID[0]
                         d = getattr(modelList[ID],quad)
                         key = self.nameMap[term]
-                        if d.has_key(key):
+                        if key in d:
                             name = quad+'_'+term
                             setattr(self,name,d[key])
 
@@ -7777,7 +7619,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
         elif c['x'].shape[:-1] == self.ebq_grad_k.shape[:-1]:
             k = self.ebq_k; epsilon = self.ebq_epsilon; grad_k = self.ebq_grad_k;
         else:
-            raise TypeError, "c['x'].shape= not recognized "
+            raise TypeError("c['x'].shape= not recognized ")
         if self.nd == 2:
             if self.sd == True:
                 self.ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd(self.rho,
@@ -7878,12 +7720,12 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
     The coefficients for incompresslble fluid governed by the Navier-Stokes equations
     assuming k-epsilon model for turbulence
     """
-    from ctransportCoefficients import eddyViscosity_2D_Update_sd,eddyViscosity_2D_Update
-    from ctransportCoefficients import calculateEddyViscosity_Smagorinsky_2D
-    from ctransportCoefficients import calculateEddyViscosity_Smagorinsky2P_2D
-    from ctransportCoefficients import eddyViscosity_3D_Update_sd,eddyViscosity_3D_Update
-    from ctransportCoefficients import calculateEddyViscosity_Smagorinsky_3D
-    from ctransportCoefficients import calculateEddyViscosity_Smagorinsky2P_3D
+    from .ctransportCoefficients import eddyViscosity_2D_Update_sd,eddyViscosity_2D_Update
+    from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky_2D
+    from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky2P_2D
+    from .ctransportCoefficients import eddyViscosity_3D_Update_sd,eddyViscosity_3D_Update
+    from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky_3D
+    from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky2P_3D
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -8235,8 +8077,8 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
     The coefficients for incompressible fluid in a porous domain governed by the Navier-Stokes equations
 
     """
-    from ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_2D_Evaluate
-    from ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_3D_Evaluate
+    from .ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_2D_Evaluate
+    from .ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_3D_Evaluate
     def __init__(self,
                  rho=998.2,mu=1.0e-3,
                  g=[0.0,-9.8],
@@ -8486,10 +8328,6 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
                                                                      c[('H',2)],
                                                                      c[('dH',2,0)])
 
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-            #
             if self.stokesOnly:
                 c[('f',1)].flat[:]=0.0; c[('f',2)].flat[:]=0.0;
                 c[('df',1,1)].flat[:]=0.0;c[('df',1,2)].flat[:]=0.0;
@@ -8603,11 +8441,11 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
     """
-    from ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate
-    from ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
-    from ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate
-    from ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
-    from ctransportCoefficients import calculateWaveFunction3d_ref
+    from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate
+    from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
+    from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate
+    from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
+    from .ctransportCoefficients import calculateWaveFunction3d_ref
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -8673,7 +8511,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                              2:{1:'nonlinear',2:'nonlinear',3:'nonlinear'},
                              3:{1:'nonlinear',2:'nonlinear',3:'nonlinear'}}
 
-        for ci,cjDict in self.reaction.iteritems():
+        for ci,cjDict in self.reaction.items():
             self.elementIntegralKeys.append(('r',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
@@ -8776,11 +8614,8 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         if self.turbulenceClosureFlag is not None:
             self.q_nu_t *= self.q_porosity
     def evaluateForcingTerms(self,t,c,mesh=None,mesh_trial_ref=None,mesh_l2g=None):
-        if c.has_key('x') and len(c['x'].shape) == 3:
+        if 'x' in c and len(c['x'].shape) == 3:
             if self.nd == 2:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
                 if self.waveFlag == 1:#secondOrderStokes:
@@ -8829,15 +8664,10 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                     c['x'],
                                                     c[('r',0)],
                                                     t)
-
-                #mwf debug
                 if numpy.isnan(c[('r',0)].any()):
                     import pdb
                     pdb.set_trace()
             else:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
                 if self.waveFlag == 1:#secondOrderStokes:
@@ -8937,10 +8767,8 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
             porosity = self.ebq_porosity
             meanGrain= self.ebq_meanGrain
         #
-        #mwf debug
         if phi is None or n is None or kappa is None or porosity is None or meanGrain is None:
             pdb.set_trace()
-        #pdb.set_trace()
         if self.nd==2:
             if self.sd:
                 self.VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.killNonlinearDrag,
@@ -9232,11 +9060,8 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                      c[('a',3,2)])
                 else:
                     assert False, "nd != 2,3 not done yet"
-        if c.has_key('x') and len(c['x'].shape) == 3:
+        if 'x' in c and len(c['x'].shape) == 3:
             if self.nd == 2:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
                 if self.waveFlag == 1:#secondOrderStokes:
@@ -9285,15 +9110,10 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                     c['x'],
                                                     c[('r',0)],
                                                     t)
-
-                #mwf debug
                 if numpy.isnan(c[('r',0)].any()):
                     import pdb
                     pdb.set_trace()
             else:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
                 if self.waveFlag == 1:#secondOrderStokes:
@@ -9349,30 +9169,19 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                       c[('r',0)],
                                                       t)
 
-        #mwf debug
-        #if numpy.absolute(c[('r',0)]).max() > 1.0e-4:
-        #    pdb.set_trace()
-        #print "c[('r',0)]= [%s, %s] p=[%s,%s] u= [%s,%s] v=[%s,%s] por=[%s,%s] " % (c[('r',0)].min(),c[('r',0)].max(),
-        #                                                                            c[('u',0)].min(),c[('u',0)].max(),
-        #                                                                            c[('u',1)].min(),c[('u',1)].max(),
-        #                                                                            c[('u',2)].min(),c[('u',2)].max(),
-        #                                                                            porosity.min(),porosity.max())
-
-    #
 ########################################################################
 #VOF coefficients when have variable porosity term
 ########################################################################
 class VolumeAveragedVOFCoefficients(VOFCoefficients):
-    from ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
-    from cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
-    def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,
+    from .ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
+    from .cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
+    def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,checkMass=True,epsFact=0.0,
                  setParamsFunc=None):
         VOFCoefficients.__init__(self,
                                  LS_model=LS_model,
                                  V_model=V_model,
                                  RD_model=RD_model,
                                  ME_model=ME_model,
-                                 EikonalSolverFlag=EikonalSolverFlag,
                                  checkMass=checkMass,
                                  epsFact=epsFact)
         self.setParamsFunc   = setParamsFunc
@@ -9393,7 +9202,7 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
         #
         if hasattr(self.flowCoefficients,'ebq_porosity'):
             self.ebq_porosity = self.flowCoefficients.ebq_porosity
-        elif modelList[self.modelIndex].ebq.has_key(('u',0)):
+        elif ('u',0) in modelList[self.modelIndex].ebq:
             self.ebq_porosity = numpy.ones(modelList[self.modelIndex].ebq[('u',0)].shape,
                                            'd')
             if self.setParamsFunc is not None:
@@ -9507,12 +9316,12 @@ class GroundwaterTransportCoefficients(TC_base):
         elif self.ebq_global_v.shape == c[('df',0,0)].shape:
             v = self.ebq_global_v
         else:
-            print c[('df',0,0)].shape
-            print self.ebq_v.shape
-            print self.q_v.shape
-            print self.ebqe_v.shape
-            print self.ebq_global_v.shape
-            print "no v---------------------"
+            print(c[('df',0,0)].shape)
+            print(self.ebq_v.shape)
+            print(self.q_v.shape)
+            print(self.ebqe_v.shape)
+            print(self.ebq_global_v.shape)
+            print("no v---------------------")
             raise RuntimeError
         if self.useC:
             self.groundwaterTransportCoefficientsEvaluate(self.omega,
@@ -9526,7 +9335,6 @@ class GroundwaterTransportCoefficients(TC_base):
                                                           c[('f',0)],
                                                           c[('df',0,0)],
                                                           c[('a',0,0)])
-            #mwf debug
             if v.shape == self.q_v.shape:
                 for i in range(len(c[('u',0)].flat)):
                     if c['x'].flat[3*i+0] > 100.0-2.5 and c['x'].flat[3*i+1] < 2.5 and c[('u',0)].flat[i] < -1.0e-1:
@@ -9608,19 +9416,13 @@ class GroundwaterBiodegradation01Coefficients(TC_base):
         elif self.ebqe_v.shape == c[('df',0,0)].shape:
             v = self.ebqe_v
         else:
-            print c[('df',0,0)].shape
-            print self.ebq_v.shape
-            print self.q_v.shape
-            print self.ebqe_v.shape
-            print self.ebq_global_v.shape
-            raise RuntimeError,"no v---------------------"
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
+            print(c[('df',0,0)].shape)
+            print(self.ebq_v.shape)
+            print(self.q_v.shape)
+            print(self.ebqe_v.shape)
+            print(self.ebq_global_v.shape)
+            raise RuntimeError("no v---------------------")
         if self.useC:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.groundwaterBiodegradation01EvaluateFC(self.omega,
                                                        self.d_c,
                                                        self.d_e,
@@ -9730,16 +9532,13 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
         elif self.ebqe_v.shape == c[('df',0,0)].shape:
             v = self.ebqe_v
         else:
-            print c[('df',0,0)].shape
-            print self.ebq_v.shape
-            print self.q_v.shape
-            print self.ebqe_v.shape
-            print self.ebq_global_v.shape
-            raise RuntimeError,"no v---------------------"
+            print(c[('df',0,0)].shape)
+            print(self.ebq_v.shape)
+            print(self.q_v.shape)
+            print(self.ebqe_v.shape)
+            print(self.ebq_global_v.shape)
+            raise RuntimeError("no v---------------------")
         if self.useC:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.groundwaterBryantDawsonIonExEvaluateFC(self.omega,
                                                         self.d_m,
                                                         self.d_h,
@@ -9777,10 +9576,10 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwind
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm
-    from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm_sd
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwind
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm
+    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm_sd
 
     def __init__(self,
                  nd,
@@ -9832,11 +9631,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
         self.ebq_global_n = None
         self.quadraturePointToElementBoundary = {}
         self.useOrigUpwind = False
-        #mwf debug
-        #import gc
-        #gc.set_debug(gc.DEBUG_LEAK)
-        #import pdb
-        #pdb.set_trace()
     def initializeMesh(self,mesh):
         self.elementMaterialTypes = mesh.elementMaterialTypes
         #want element boundary material types for evaluating heterogeneity
@@ -9855,7 +9649,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
         #for holding element averages of coefficients
         #
         avgs = {('f',0):[self.nd],('df',0,0):[self.nd],('a',0,0):[self.nd,self.nd],('da',0,0,0):[self.nd,self.nd]}
-        for key in avgs.keys():
+        for key in list(avgs.keys()):
             dims = [self.q_shape[0]]; dims.extend(avgs[key])
             self.q_avg[key] = numpy.zeros(tuple(dims),'d')
         #map from quadrature points to element boundary
@@ -9879,7 +9673,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
             self.materialTypes_ebq[eN,:] = self.elementMaterialTypes[eN]
         #for holding element averages of coefficients
         avgs = {('f',0):[self.nd],('df',0,0):[self.nd],('a',0,0):[self.nd,self.nd],('da',0,0,0):[self.nd,self.nd]}
-        for key in avgs.keys():
+        for key in list(avgs.keys()):
             dims = [self.ebq_shape[0],self.ebq_shape[1]]; dims.extend(avgs[key])
             self.ebq_avg[key] = numpy.zeros(tuple(dims),'d')
             dims = [self.ebq_global_shape[0]]; dims.extend(avgs[key])
@@ -9901,7 +9695,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
             self.materialTypes_ebqe[ebNE] = self.exteriorElementBoundaryTypes[ebNE]
         #for holding element averages of coefficients
         avgs = {('f',0):[self.nd],('df',0,0):[self.nd],('a',0,0):[self.nd,self.nd],('da',0,0,0):[self.nd,self.nd]}
-        for key in avgs.keys():
+        for key in list(avgs.keys()):
             dims = [self.ebqe_shape[0]]; dims.extend(avgs[key])
             self.ebqe_avg[key] = numpy.zeros(tuple(dims),'d')
         #
@@ -9937,11 +9731,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
                                                                          c[('a',0,0)],
                                                                          c[('da',0,0,0)])
         elif self.upwindFlag >= 1:
-            #mwf debug
-            #print "REv2 calling collect here 1 u.shape= ", c[('u',0)].shape
-            #import gc
-            #gc.collect()
-
             quad_avg = None; quad2bnd = None; dV = None
             computeAverages = 0;
             useUpwindApprox = 0; #second style upwinding only works for elements quad
@@ -10048,39 +9837,15 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
                                                                                                   c[('a',0,0)],
                                                                                                   c[('da',0,0,0)])
 
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-        #
-        #mwf debug
-        #print "REv2 calling collect here 2 u.shape = ", c[('u',0)].shape
-        #import gc
-        #gc.collect()
-#         #mwf debug
-#         if (numpy.isnan(c[('da',0,0,0)]).any() or
-#             numpy.isnan(c[('a',0,0)]).any() or
-#             numpy.isnan(c[('df',0,0)]).any() or
-#             numpy.isnan(c[('f',0)]).any() or
-#             numpy.isnan(c[('u',0)]).any() or
-#             numpy.isnan(c[('m',0)]).any() or
-#             numpy.isnan(c[('dm',0,0)]).any()):
-#             import pdb
-#             pdb.set_trace()
-
-#         #mwf debug
-#         if c[('u',0)].shape == self.q_shape:
-#             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
-
-
 class DiffusiveWave_1D(TC_base):
-    from ctransportCoefficients import diffusiveWave1DCoefficientsEvaluate
+    from .ctransportCoefficients import diffusiveWave1DCoefficientsEvaluate
 
     """
     A class implementing the coefficients of the diffusive wave equation in 1D.
 
     This implements the regularized formulation in M. Santillana's thesis (ref).
     """
-    def __init__(self,alpha=5.0/3.0,gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, reactionFunc=None, analyticalSoln=None):
+    def __init__(self,alpha=old_div(5.0,3.0),gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, reactionFunc=None, analyticalSoln=None):
         """
         Construct a coefficients object given the parameters of the Manning/Chezy formula and the regularization parameter.
 
@@ -10180,14 +9945,14 @@ class DiffusiveWave_1D(TC_base):
 
 
 class DiffusiveWave_2D(TC_base):
-    from ctransportCoefficients import diffusiveWave2DCoefficientsEvaluate
+    from .ctransportCoefficients import diffusiveWave2DCoefficientsEvaluate
 
     """
     A class implementing the coefficients of the diffusive wave equation in 2D.
 
     This implements the regularized formulation in M. Santillana's thesis (ref).
     """
-    def __init__(self,nd=2,alpha=5.0/3.0,gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, bathymetryGradientFunc=None):
+    def __init__(self,nd=2,alpha=old_div(5.0,3.0),gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, bathymetryGradientFunc=None):
         """
         Construct a coefficients object given the parameters of the Manning/Chezy formula and the regularization parameter.
 
@@ -10225,7 +9990,7 @@ class DiffusiveWave_2D(TC_base):
                 self.q_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         self.ebq_grad_b = numpy.zeros(cebq[('grad(u)',0)].shape,'d')
-        if cebq_global.has_key(('grad(u)',0)):
+        if ('grad(u)',0) in cebq_global:
             self.ebq_global_grad_b = numpy.zeros(cebq_global[('grad(u)',0)].shape,'d')
         else:
             sh = (cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd)
@@ -10284,7 +10049,7 @@ class DiffusiveWave_2D(TC_base):
                                                  c[('dm',0,0)],
                                                  c[('a',0,0)],
                                                  c[('da',0,0,0)])
-import waveFunctions
+from . import waveFunctions
 class TwophaseNavierStokesWithWaveMaker(TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure):
     def __init__(self,
                  epsFact=1.5,
@@ -10342,10 +10107,7 @@ class TwophaseNavierStokesWithWaveMaker(TwophaseReynoldsAveragedNavierStokes_Alg
 
     def evaluate(self,t,c):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.evaluate(self,t,c)
-        if c.has_key('x') and len(c['x'].shape) == 3:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
+        if 'x' in c and len(c['x'].shape) == 3:
             c[('r',0)].fill(0.0)
             eps_source=self.eps_source
             if self.waveFlag == 1:#secondOrderStokes:
@@ -10394,10 +10156,7 @@ class TwophaseNavierStokesWithWaveMaker(TwophaseReynoldsAveragedNavierStokes_Alg
                                                 c['x'],
                                                 c[('r',0)],
                                                 t)
-            #
-            #mwf debug
-            #print "TwpWaveMaker waveFlag= %s t=%s factor= %s c[('r',0)].max()= %s  c[('r',0)].min()= %s " % (self.waveFlag,t,self.waveHeight*self.waveCelerity*sin(self.waveFrequency*t),
-            #                                                                                                 c[('r',0)].max(),c[('r',0)].min())
+
 
 class SinglePhaseDarcyCoefficients(TC_base):
     """
@@ -10465,22 +10224,22 @@ class SinglePhaseDarcyCoefficients(TC_base):
         nd = self.nd
         #use harmonic average for a, arith average for f
         for ci in range(self.nc):
-            if cebq_global.has_key(('f',ci)): cebq_global[('f',ci)].flat[:] = 0.0
-            if cebq.has_key(('f',ci)): cebq[('f',ci)].flat[:] = 0.0
+            if ('f',ci) in cebq_global: cebq_global[('f',ci)].flat[:] = 0.0
+            if ('f',ci) in cebq: cebq[('f',ci)].flat[:] = 0.0
             for ebN in range(cebq_global['x'].shape[0]):
                 material_left = self.elementBoundaryTypes[ebN,0]
                 material_right= self.elementBoundaryTypes[ebN,1]
                 for k in range(cebq_global['x'].shape[1]):
-                    if cebq_global.has_key(('r',ci)):
+                    if ('r',ci) in cebq_global:
                         cebq_global[('r',ci)][eN,k] =-0.5*(self.source_types[material_left](cebq_global['x'][ebN,k],t)+
                                                            self.source_types[material_right](cebq_global['x'][ebN,k],t))
-                    if cebq_global.has_key(('a',ci,ci)):
+                    if ('a',ci,ci) in cebq_global:
                         for i in range(nd):
                             for j in range(nd):
                                 x = cebq_global['x'][ebN,k];
                                 numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                 denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = numer/denom
+                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = old_div(numer,denom)
             for eN in range(cebq['x'].shape[0]):
                 for ebN_local in range(cebq['x'].shape[1]):
                     ebN = self.elementBoundariesArray[eN,ebN_local]
@@ -10488,15 +10247,15 @@ class SinglePhaseDarcyCoefficients(TC_base):
                     material_right= self.elementBoundaryTypes[ebN,1]
                     for k in range(cebq['x'].shape[2]):
                         x = cebq['x'][eN,ebN_local,k]
-                        if cebq.has_key(('r',ci)):
+                        if ('r',ci) in cebq:
                             cebq[('r',ci)][eN,ebN_local,k] =-0.5*(self.source_types[material_left](x,t)+
                                                                   self.source_types[material_right](x,t))
-                        if cebq.has_key(('a',ci,ci)):
+                        if ('a',ci,ci) in cebq:
                             for i in range(nd):
                                 for j in range(nd):
                                     numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                     denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = numer/denom
+                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = old_div(numer,denom)
                     #
                 #
             #
@@ -10504,14 +10263,14 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         nd = self.nd
         for ci in range(self.nc):
-            if cebqe.has_key(('f',ci)): cebqe[('f',ci)].flat[:] = 0.0
+            if ('f',ci) in cebqe: cebqe[('f',ci)].flat[:] = 0.0
             for ebNE in range(cebqe['x'].shape[0]):
                 material = self.exteriorElementBoundaryTypes[ebNE]
                 for k in range(cebqe['x'].shape[1]):
                     x = cebqe['x'][ebNE,k]
-                    if cebqe.has_key(('r',ci)):
+                    if ('r',ci) in cebqe:
                         cebqe[('r',ci)][ebNE,k] = -self.source_types[material](x,t)
-                    if cebqe.has_key(('a',ci,ci)):
+                    if ('a',ci,ci) in cebqe:
                         cebqe[('a',ci,ci)][ebNE,k,:] = self.a_types[material](x,t).flat
                 #
             #
@@ -10533,8 +10292,8 @@ class DiscreteMassMatrix(TC_base):
     for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
     :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
     """
-    from ctransportCoefficients import Mass_2D_Evaluate
-    from ctransportCoefficients import Mass_3D_Evaluate
+    from .ctransportCoefficients import Mass_2D_Evaluate
+    from .ctransportCoefficients import Mass_3D_Evaluate
     def __init__(self,rho=1.0,nd=2):
         self.rho = rho
         self.nd = nd
@@ -10627,7 +10386,7 @@ class DiscreteTwoPhaseAdvectionOperator(TC_base):
         An array of arrays with the advective field evaluated at the 
         quadrature points.
     """
-    from ctransportCoefficients import TwoPhaseAdvection_2D_Evaluate
+    from .ctransportCoefficients import TwoPhaseAdvection_2D_Evaluate
 #    from ctransportCoefficients import TwoPhaseAdvection_3D_Evaluate
     def __init__(self,
                  u,
@@ -10650,7 +10409,6 @@ class DiscreteTwoPhaseAdvectionOperator(TC_base):
         self.rho_1 = rho_1
         self.nu_1 = nu_1
         self.LS_model = LS_model
-        import pdb ; pdb.set_trace()
         self.phase_function = phase_function
         mass = {}
         advection = {}

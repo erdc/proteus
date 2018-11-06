@@ -1,11 +1,11 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from math import *
-from vortex2D import *
+from .vortex2D import *
 from proteus.mprans import RDLS
-#from proteus.mprans import RDLS3P as RDLS
+from . import ncls_p
 
-import ncls_p
 name = soname+"_rdls"
 LevelModelType = RDLS.LevelModel
 

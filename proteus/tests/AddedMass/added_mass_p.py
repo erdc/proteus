@@ -1,3 +1,4 @@
+from builtins import object
 from proteus.default_p import *
 from proteus.mprans import AddedMass
 from proteus import Context
@@ -31,7 +32,7 @@ def getFlux_am(x, flag):
 
 diffusiveFluxBoundaryConditions = {0: {0:getFlux_am}}
 
-class dp_IC:
+class dp_IC(object):
     def uOfXT(self, x, t):
         return 0.0
 

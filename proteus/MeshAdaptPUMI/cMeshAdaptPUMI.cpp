@@ -548,7 +548,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
-  in->goodQuality = 0.064;//0.027;
+  //in->goodQuality = 0.16;//0.027;
   //double mass_before = getTotalMass();
   
   double t1 = PCU_Time();
@@ -557,7 +557,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   double t2 = PCU_Time();
 
   m->verify();
-
   //double mass_after = getTotalMass();
   //PCU_Add_Doubles(&mass_before,1);
   //PCU_Add_Doubles(&mass_after,1);

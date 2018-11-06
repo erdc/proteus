@@ -1,3 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -8,9 +13,9 @@ from proteus import Context
 flow around a 2D cylinder  benchmark problem.
 '''
 
-ct = Context.Options([
+opts = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.04, "maximum size of edges"),
+    ("he",0.02, "maximum size of edges"),
     ("backwardEuler",False,"use backward Euler or not"),
     ("onlySaveFinalSolution",False,"Only save the final solution")
 ], mutable=True)
@@ -22,7 +27,7 @@ spaceOrder=1
 Refinement=1
 useHex=False
 points_on_grain = 21
-DX = ct.he
+DX = opts.he
 usePETSc = False#True
 
 
@@ -37,7 +42,7 @@ fl_H = H
 
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit() 
 if spaceOrder == 1:
     hFactor=1.0
@@ -62,7 +67,11 @@ elif spaceOrder == 2:
 
 nLevels = 1
 #from cylinder2dDomain import *
-from symmetricDomain_john import *
+try:
+    from .symmetricDomain_john import *
+except:
+    from symmetricDomain_john import *
+    
 domain = symmetric2D(box=(2.2,0.41),
                      L= 0.2,
                      H = 0.2,
@@ -74,18 +83,18 @@ domain = symmetric2D(box=(2.2,0.41),
 boundaryTags=domain.boundaryFlags
 
 # Time stepping
-T= ct.T
+T= opts.T
 runCFL = 0.9
 dt_fixed = 0.005
 dt_init = 0.0025
-nDTout = int(T/dt_fixed)
+nDTout = int(old_div(T,dt_fixed))
 dt_init = min(dt_init,0.5*dt_fixed)
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)] 
-if ct.onlySaveFinalSolution == True:
-    tnList = [0.0,dt_init,ct.T]
+if opts.onlySaveFinalSolution == True:
+    tnList = [0.0,dt_init,opts.T]
 
 
-useBackwardEuler = True
+useBackwardEuler = opts.backwardEuler
 # Numerical parameters
 ns_shockCapturingFactor  = 0.0
 ns_lag_shockCapturing = True#False
@@ -109,7 +118,7 @@ g = [0.0,0.0]
 
 #triangleOptions="pAq30.0Dena%f" % (.5*DX**2)  #% (0.5*(DX)**2,)
 triangleOptions="pAq30.0Dena"
-print triangleOptions
+print(triangleOptions)
 genMesh=True
 domain.writePLY('cylinder2D')
 domain.writePoly('cylinder2D')

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import range
 import numpy as np
 
 
@@ -23,7 +25,7 @@ def AddTimestep(Beam_x,
     f = open(filename + ".xmf", 'r')
     data_list = f.readlines()
     f.close()
-    print data_list
+    print(data_list)
     del data_list[-1]
     del data_list[-1]
     del data_list[-1]
@@ -31,23 +33,23 @@ def AddTimestep(Beam_x,
     f = open(filename + ".xmf", 'w')
     f.writelines(data_list)
     f.write('\t\t\t<Grid GridType="Uniform">\n'
-            + '\t\t\t\t<Time Value="' + `t` + '" />\n'
-            + '\t\t\t\t<Topology TopologyType="Polyline" Dimensions="' + `nBeams` + '">\n'
-            + '\t\t\t\t\t<DataItem Dimensions="' + `nBeams` +' ' + `Beam_x[0].size` + '" NumberType="Int" Precision="8" Format="XML">\n')
+            + '\t\t\t\t<Time Value="' + repr(t) + '" />\n'
+            + '\t\t\t\t<Topology TopologyType="Polyline" Dimensions="' + repr(nBeams) + '">\n'
+            + '\t\t\t\t\t<DataItem Dimensions="' + repr(nBeams) +' ' + repr(Beam_x[0].size) + '" NumberType="Int" Precision="8" Format="XML">\n')
     count = 0
     for i in range(len(Beam_x)):
         for j in range(Beam_x[i].size):
-            f.write(`count` + ' ')
+            f.write(repr(count) + ' ')
             count += 1
         f.write('\n')
 
     f.write('\t\t\t\t\t</DataItem>\n'
             + '\t\t\t\t</Topology>\n'
             + '\t\t\t\t<Geometry GeometryType="XYZ">\n'
-            + '\t\t\t\t\t<DataItem Dimensions="' + `len(Beam_x) * Beam_x[0].size` +' 3" NumberType="Float" Precision="4" Format="XML">\n')
+            + '\t\t\t\t\t<DataItem Dimensions="' + repr(len(Beam_x) * Beam_x[0].size) +' 3" NumberType="Float" Precision="4" Format="XML">\n')
     for i in range(len(Beam_x)):
         for j in range(Beam_x[i].size):
-            sp = `Beam_x[i][j]` + ' ' + `Beam_y[i][j]` + ' ' + `Beam_z[i][j]` + '\n'
+            sp = repr(Beam_x[i][j]) + ' ' + repr(Beam_y[i][j]) + ' ' + repr(Beam_z[i][j]) + '\n'
             f.write(sp)
     f.write('\t\t\t\t\t</DataItem>\n'
             + '\t\t\t\t</Geometry>\n'
@@ -72,13 +74,13 @@ def Archive_parallel(Beam_x,
             + '\t\t<Grid CollectionType="Temporal" GridType="Collection" Name="Mesh Spatial_Domain"> \n')
     for k in range(len(tList)):
         f.write('\t\t\t<Grid GridType="Uniform">\n'
-                + '\t\t\t\t<Time Value="' + `tList[k]` + '" />\n'
-                + '\t\t\t\t<Topology TopologyType="Polyline" Dimensions="' + `nBeams` + '">\n'
-                + '\t\t\t\t\t<DataItem Dimensions="' + `nBeams` +' ' + `Beam_x[k][0].size` + '" NumberType="Int" Precision="8" Format="XML">\n')
+                + '\t\t\t\t<Time Value="' + repr(tList[k]) + '" />\n'
+                + '\t\t\t\t<Topology TopologyType="Polyline" Dimensions="' + repr(nBeams) + '">\n'
+                + '\t\t\t\t\t<DataItem Dimensions="' + repr(nBeams) +' ' + repr(Beam_x[k][0].size) + '" NumberType="Int" Precision="8" Format="XML">\n')
         count = 0
         for i in range(len(Beam_x[k])):
             for j in range(Beam_x[k][i].size):
-                f.write(`count` + ' ')
+                f.write(repr(count) + ' ')
                 count += 1
             f.write('\n')
 
@@ -90,10 +92,10 @@ def Archive_parallel(Beam_x,
                 '\t\t\t\t\t</DataItem>\n'
                 + '\t\t\t\t</Topology>\n'
                 + '\t\t\t\t<Geometry GeometryType="XYZ">\n'
-                + '\t\t\t\t\t<DataItem Dimensions="' + `len(Beam_x[k]) * Beam_x[k][0].size` +' 3" NumberType="Float" Precision="4" Format="XML">\n')
+                + '\t\t\t\t\t<DataItem Dimensions="' + repr(len(Beam_x[k]) * Beam_x[k][0].size) +' 3" NumberType="Float" Precision="4" Format="XML">\n')
         for i in range(len(Beam_x[k])):
             for j in range(Beam_x[k][i].size):
-                sp = `Beam_x[k][i][j]` + ' ' + `Beam_y[k][i][j]` + ' ' + `Beam_z[k][i][j]` + '\n'
+                sp = repr(Beam_x[k][i][j]) + ' ' + repr(Beam_y[k][i][j]) + ' ' + repr(Beam_z[k][i][j]) + '\n'
                 f.write(sp)
         f.write('\t\t\t\t\t</DataItem>\n'
                 + '\t\t\t\t</Geometry>\n'
@@ -113,7 +115,7 @@ def Archive_time_step(Beam_x,
                       t=0.0,
                       tStep=0):
 
-    f = open(filename + `tStep`+".xmf", 'w')
+    f = open(filename + repr(tStep)+".xmf", 'w')
     # f.writelines(data_list)
     f.write('<?xml version="1.0" ?>' + '\n'
             + '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>' + '\n'
@@ -121,23 +123,23 @@ def Archive_time_step(Beam_x,
             + '\t<Domain> \n'
             + '\t\t<Grid CollectionType="Temporal" GridType="Collection" Name="Mesh Spatial_Domain"> \n'
             + '\t\t\t<Grid GridType="Uniform">\n'
-            + '\t\t\t\t<Time Value="' + `t` + '" />\n'
-            + '\t\t\t\t<Topology TopologyType="Polyline" Dimensions="' + `nBeams` + '">\n'
-            + '\t\t\t\t\t<DataItem Dimensions="' + `nBeams` +' ' + `Beam_x[0].size` + '" NumberType="Int" Precision="8" Format="XML">\n')
+            + '\t\t\t\t<Time Value="' + repr(t) + '" />\n'
+            + '\t\t\t\t<Topology TopologyType="Polyline" Dimensions="' + repr(nBeams) + '">\n'
+            + '\t\t\t\t\t<DataItem Dimensions="' + repr(nBeams) +' ' + repr(Beam_x[0].size) + '" NumberType="Int" Precision="8" Format="XML">\n')
     count = 0
     for i in range(len(Beam_x)):
         for j in range(Beam_x[i].size):
-            f.write(`count` + ' ')
+            f.write(repr(count) + ' ')
             count += 1
         f.write('\n')
 
     f.write('\t\t\t\t\t</DataItem>\n'
             + '\t\t\t\t</Topology>\n'
             + '\t\t\t\t<Geometry GeometryType="XYZ">\n'
-            + '\t\t\t\t\t<DataItem Dimensions="' + `len(Beam_x) * Beam_x[0].size` +' 3" NumberType="Float" Precision="4" Format="XML">\n')
+            + '\t\t\t\t\t<DataItem Dimensions="' + repr(len(Beam_x) * Beam_x[0].size) +' 3" NumberType="Float" Precision="4" Format="XML">\n')
     for i in range(len(Beam_x)):
         for j in range(Beam_x[i].size):
-            sp = `Beam_x[i][j]` + ' ' + `Beam_y[i][j]` + ' ' + `Beam_z[i][j]` + '\n'
+            sp = repr(Beam_x[i][j]) + ' ' + repr(Beam_y[i][j]) + ' ' + repr(Beam_z[i][j]) + '\n'
             f.write(sp)
     f.write('\t\t\t\t\t</DataItem>\n'
             + '\t\t\t\t</Geometry>\n'

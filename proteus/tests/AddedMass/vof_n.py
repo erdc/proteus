@@ -1,10 +1,14 @@
+from __future__ import absolute_import
 from proteus.default_n import *
 from proteus import (StepControl,
                      TimeIntegration,
                      NonlinearSolvers,
                      LinearSolvers,
                      LinearAlgebraTools)
-import vof_p as physics
+try:
+    from . import vof_p as physics
+except:
+    import vof_p as physics
 from proteus.mprans import VOF
 from proteus import Context
 

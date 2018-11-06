@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
 from math import *
-from thelper_cons_ls import *
+from .thelper_cons_ls import *
 from proteus.mprans import NCLS
 #import Profiling
 
@@ -18,6 +20,7 @@ class MyCoefficients(NCLS.Coefficients):
         self.q_v = np.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = np.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
         self.rdModel = self.model
+        self.ebqe_rd_u = self.rdModel.ebqe[('u',0)]
         # Define a 'velocity' field to be read by VOF
         self.model.q[('velocity',0)]=self.q_v
         self.model.ebqe[('velocity',0)]=self.ebqe_v
@@ -63,7 +66,7 @@ velocityField={0:velx,
 #####################
 # INITIAL CONDITION #
 #####################
-class init_cond:
+class init_cond(object):
     def __init__(self,L,scaling=0.25):
         self.radius=0.15
         self.xc=0.5

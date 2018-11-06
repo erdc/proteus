@@ -1,12 +1,25 @@
+from __future__ import absolute_import
 from proteus import *
-import step2d
+try:
+    from . import step2d
+except:
+    import step2d
+    
 reload(step2d)
-from step2d import *
+try:
+    from .step2d import *
+except:
+    from step2d import *
 from proteus.default_n import *
-import twp_navier_stokes_step2d_p
+try:
+    from . import twp_navier_stokes_step2d_p
+except:
+    import twp_navier_stokes_step2d_p
 reload(twp_navier_stokes_step2d_p)
-from twp_navier_stokes_step2d_p import *
-
+try:
+    from .twp_navier_stokes_step2d_p import *
+except:
+    from twp_navier_stokes_step2d_p import *
 from proteus import Context
 ct = Context.get()
 
@@ -119,7 +132,7 @@ if usePETSc:
     elif schur_solver == 'petsc_LU':
         linearSmoother=petsc_LU
     else:
-        raise Exception, 'invalid solver type'
+        raise Exception('invalid solver type')
     linearSolverConvergenceTest = 'r-true'
     parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
     nLayersOfOverlapForParallel = 0

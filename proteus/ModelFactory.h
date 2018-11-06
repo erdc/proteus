@@ -54,6 +54,8 @@ namespace proteus
                         return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,5,4,4,4,4>());
                       else if (nQuadraturePoints_elementIn == 4)
                         return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,4,4,4,4,3>());
+                      else if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7)
+                        return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,15,4,4,4,7>());
                       else
                         {
                           NO_INSTANCE;
@@ -277,6 +279,18 @@ namespace proteus
                               abort();
                             }
                         }
+                      else if (nQuadraturePoints_elementIn == 112)//hk=0.25
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 5)
+                            {
+                              return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,112,3,3,3,5>());
+                            }
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
                       else if (nQuadraturePoints_elementIn == 16)//hk=0.5
                         {
                           if (nQuadraturePoints_elementBoundaryIn == 3)
@@ -392,6 +406,18 @@ namespace proteus
                           if (nQuadraturePoints_elementBoundaryIn == 5)
                             {
                               return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,7,3,6,6,5>());
+                            }
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else if (nQuadraturePoints_elementIn == 112)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 5)
+                            {
+                              return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,112,3,6,6,5>());
                             }
                           else
                             {

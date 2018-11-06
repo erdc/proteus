@@ -6,6 +6,10 @@ The equation is
 
 .. math: \frac{\partial u}{\partial t} + \nabla \cdot (\frac{1}{2} u^2 - \epsilon \nabla u) = 0
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from proteus.iproteus import *
 
 class Burgers(TransportCoefficients.TC_base):
@@ -82,7 +86,7 @@ def getDFBC(x,flag):
 #    if outflow(x):
 #        return constant_zero
 
-class Initial:
+class Initial(object):
     def uOfXT(self,x,t):
         offset=np.array([0.1,0.1,0.1])
         if inflow(x-offset):
@@ -112,7 +116,7 @@ physics.fluxBoundaryConditions = {0:'outFlow'}
 #numerics
 
 nDTout = 100
-DT = T/float(nDTout)
+DT = old_div(T,float(nDTout))
 
 numerics=default_n
 numerics.timeIntegration = TimeIntegration.BackwardEuler_cfl

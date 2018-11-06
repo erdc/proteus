@@ -2,6 +2,8 @@
 """
 Test module for Elliptic Re-distancing
 """
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -15,7 +17,7 @@ from . import (vortex2D, vortex2D_so,
                ncls_p, ncls_n,
                rdls_p, rdls_n)
 
-class TestEllipticRedistancing():
+class TestEllipticRedistancing(object):
 
     @classmethod
     def setup_class(cls):

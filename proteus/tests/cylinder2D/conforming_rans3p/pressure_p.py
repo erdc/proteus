@@ -1,7 +1,13 @@
+from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from cylinder import *
+try:
+    from .cylinder import *
+except:
+    from cylinder import *
+    
 from proteus.mprans import Pres
 
 name = "pressure"
@@ -21,7 +27,7 @@ def getDBC_p(x,flag):
 def getFlux(x,flag):
     return None
 
-class getIBC_p:
+class getIBC_p(object):
     def uOfXT(self,x,t):
        return 0.0
 

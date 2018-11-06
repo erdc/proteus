@@ -1,9 +1,14 @@
 """
 Incompressible Navier-Stokes flow around a cylinder in 2D.
 """
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from cavity2d import *
+try:
+    from .cavity2d import *
+except:
+    from cavity2d import *
 from proteus.mprans import RANS2P
 
 bcsTimeDependent = True
@@ -27,10 +32,10 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    forceStrongDirichlet=ns_forceStrongDirichlet,
                                    NONCONSERVATIVE_FORM=1.0,
                                    MOMENTUM_SGE=0.0,
-                                   PRESSURE_PROJECTION_STABILIZATION=1.0)
+                                   PRESSURE_PROJECTION_STABILIZATION=1.0,
+                                   nullSpace='NavierStokesConstantPressure')
 
-
-class uTrue:
+class uTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):
@@ -38,7 +43,7 @@ class uTrue:
     def uOfXT(self,x,t):
         return 1. - x[0]**4
 
-class vTrue:
+class vTrue(object):
     def __init__(self):
         pass
     def vOfX(self,x):
@@ -88,19 +93,19 @@ diffusiveFluxBoundaryConditions = {0:{},
                                    1:{1:getDFBC_u},
                                    2:{2:getDFBC_v}}
 
-class Steady_p:
+class Steady_p(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-class Steady_u:
+class Steady_u(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-class Steady_v:
+class Steady_v(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

@@ -2,6 +2,10 @@
 """
 Proper orthogonal decomposition for the heat equation solver
 """
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from heat_init import *
 from read_hdf5 import *
 
@@ -108,25 +112,25 @@ for i in range(1,nDTout+1):
     if (i == 50):
 	U_approx = u_approx
     label="/%s%d" % ('u',i)
-    print 'trying to read from %s ' % label
+    print('trying to read from %s ' % label)
     u = read_from_hdf5(archive.hdfFile,label)
 
     err = u-u_approx
     err *= err
-    err *= 1.0/9261.0
+    err *= old_div(1.0,9261.0)
     L2approx = np.sqrt(err.sum())
-    print 'error is %s ' % L2approx
+    print('error is %s ' % L2approx)
 
 end = time.time() # we measure time required to obtain the reduced solution
 elapsed = end - start
-print 'time required was %s seconds' % (end-start)
+print('time required was %s seconds' % (end-start))
 
 #arrays for using matplotlib's unstructured plotting interface
 u_range = U_approx[4410:4851]
 u_range = u_range.reshape(21,21)
 #x and y are needed for plotting only, z = 0.5
 label="/%s%d" % ('nodesSpatial_Domain',0)
-print 'trying to read from %s ' % label
+print('trying to read from %s ' % label)
 coord = read_from_hdf5(archive.hdfFile,label)
 x = coord[4410:4851,0]
 y = coord[4410:4851,1]
