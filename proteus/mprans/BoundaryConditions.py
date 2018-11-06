@@ -250,7 +250,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.pInc_dirichlet.setConstantBC(0.)
         self.pInit_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
-        self.vos_dirichlet.setConstantBC(0.)  
+        self.vos_dirichlet.setConstantBC(0.)
         self.k_dirichlet.setConstantBC(1e-30)
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
