@@ -28,6 +28,18 @@
 
 #define CELL_BASED_EV_COEFF 1
 
+inline void baryCoords(const double r0[2],
+                       const double r1[2],
+                       const double r2[2],
+                       const double r[2],
+                       double* lambda)
+{
+  double detT = (r1[1] - r2[1])*(r0[0] - r2[0]) + (r2[0] - r1[0])*(r0[1] - r2[1]);
+  lambda[0] = ((r1[1] - r2[1])*(r[0] - r2[0]) + (r2[0] - r1[0])*(r[1] - r2[1]))/detT;
+  lambda[1] = ((r2[1] - r0[1])*(r[0] - r2[0]) + (r0[0] - r2[0])*(r[1] - r2[1]))/detT;
+  lambda[2] = 1.0 - lambda[0] - lambda[1];
+}
+
 namespace proteus
 {
   class cppRANS3PF2D_base
@@ -2353,7 +2365,7 @@ namespace proteus
                     element_active = 1.0;//for now leave all elements active
                     //P1 interpolation operator; only 2D for now
                     double GI[6*3];//3 DOF to 6DOF for linear interpolation onto 4T refinement
-                    double sub_mesh_dof[6*3];//6 3D points
+                    double sub_mesh_dof[6*3], sub_u_dof[15], sub_v_dof[15], sub_phi_dof[6];//6 3D points
                     int boundaryNodes[6] = {0,0,0,0,0,0};
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                       {
@@ -2400,13 +2412,68 @@ namespace proteus
                                             3,4,5};
                     for (int I=0; I<6; I++)
                       {
+                        sub_phi_dof[I] = 0.0;
                         for (int K=0; K<3; K++)
                           sub_mesh_dof[I*3+K] = 0.0; 
                         for (int J=0; J<3; J++)
-                          for (int K=0; K<3; K++)
-                            {
-                              sub_mesh_dof[I*3+K] += GI[I*3+J]*mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+J]+K];
-                            }
+                          {
+                            for (int K=0; K<3; K++)
+                              {
+                                sub_mesh_dof[I*3+K] += GI[I*3+J]*mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+J]+K];
+                              }
+                            sub_phi_dof[I] += GI[I*3+J]*phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+J]];
+                          }
+                      }
+                    //TODO for P2
+                    //1. Now define the Lagrange nodes for P2 on the submesh X
+                    //2. Define and evaluate the P2 trial functions for the parent element at the new submesh P2 nodes. X
+                    //3. Form the G2I interpolation operator X
+                    //4. Interpolate the P2 DOF from the parent element to the submesh DOF X
+                    double G2I[15*6];//6 DOF to 15 DOF for quadratic interpolation onto 4T refinement
+                    double lagrangeNodes[9*3];//9 new quadratic nodes in addition to the 6 we have 
+                    for (int K=0;K<3;K++)
+                      {
+                        lagrangeNodes[0*3+K] = 0.5*(sub_mesh_dof[0*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                        lagrangeNodes[1*3+K] = 0.5*(sub_mesh_dof[1*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                        lagrangeNodes[2*3+K] = 0.5*(sub_mesh_dof[1*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[3*3+K] = 0.5*(sub_mesh_dof[2*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[4*3+K] = 0.5*(sub_mesh_dof[2*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[5*3+K] = 0.5*(sub_mesh_dof[0*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[6*3+K] = 0.5*(sub_mesh_dof[3*3+0*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[7*3+K] = 0.5*(sub_mesh_dof[3*3+1*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[8*3+K] = 0.5*(sub_mesh_dof[3*3+2*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                      }
+                    double lambda[3];
+                    for (int I=0;I<6;I++)
+                      {
+                        baryCoords(&sub_mesh_dof[0],&sub_mesh_dof[1*3],&sub_mesh_dof[2*3],&sub_mesh_dof[I*3],lambda);
+                        //std::cout<<"lambda"<<'\t'<<lambda[0]<<'\t'<<lambda[1]<<'\t'<<lambda[2]<<std::endl;
+                        G2I[I*6+0] = lambda[0]*(2.0*lambda[0] - 1.0);
+                        G2I[I*6+1] = lambda[1]*(2.0*lambda[1] - 1.0);
+                        G2I[I*6+2] = lambda[2]*(2.0*lambda[2] - 1.0);
+                        G2I[I*6+3] = 4.0*lambda[0]*lambda[1];
+                        G2I[I*6+4] = 4.0*lambda[1]*lambda[2];
+                        G2I[I*6+5] = 4.0*lambda[2]*lambda[0];
+                      }
+                    for (int I=0;I<9;I++)
+                      {
+                        baryCoords(&sub_mesh_dof[0],&sub_mesh_dof[1*3],&sub_mesh_dof[2*3],&lagrangeNodes[I*3],lambda);
+                        G2I[6*6 + I*6 + 0] = lambda[0]*(2.0*lambda[0] - 1.0);
+                        G2I[6*6 + I*6 + 1] = lambda[1]*(2.0*lambda[1] - 1.0);
+                        G2I[6*6 + I*6 + 2] = lambda[2]*(2.0*lambda[2] - 1.0);
+                        G2I[6*6 + I*6 + 3] = 4.0*lambda[0]*lambda[1];
+                        G2I[6*6 + I*6 + 4] = 4.0*lambda[1]*lambda[2];
+                        G2I[6*6 + I*6 + 5] = 4.0*lambda[2]*lambda[0];
+                      }
+                    for (int I=0; I<15; I++)
+                      {
+                        sub_u_dof[I] = 0.0;
+                        sub_v_dof[I] = 0.0;
+                        for (int J=0; J<6; J++)
+                          {
+                            sub_u_dof[I] += G2I[I*6+J]*u_dof[vel_l2g[eN*nDOF_trial_element+J]];
+                            sub_v_dof[I] += G2I[I*6+J]*v_dof[vel_l2g[eN*nDOF_trial_element+J]];
+                          }
                       }
                     for (int esN=0;esN<4;esN++)
                       {
@@ -2414,13 +2481,8 @@ namespace proteus
                       }
                     for (int I=0; I<6; I++)
                       {
-                        std::cout<<sub_mesh_dof[I*3+0]<<'\t'<<sub_mesh_dof[I*3+1]<<'\t'<<sub_mesh_dof[I*3+2]<<'\t'<<boundaryNodes[I]<<std::endl;
+                        std::cout<<sub_mesh_dof[I*3+0]<<'\t'<<sub_mesh_dof[I*3+1]<<'\t'<<sub_mesh_dof[I*3+2]<<'\t'<<boundaryNodes[I]<<'\t'<<sub_phi_dof[I]<<'\t'<<sub_u_dof[I]<<'\t'<<sub_v_dof[I]<<'\t'<<G2I[I*6+0]<<'\t'<<G2I[I*6+1]<<'\t'<<G2I[I*6+2]<<'\t'<<G2I[I*6+3]<<'\t'<<G2I[I*6+4]<<'\t'<<G2I[I*6+5]<<std::endl;
                       }
-                    //TODO for P2
-                    //1. Now define the Lagrange nodes for P2 on the submesh
-                    //2. Define and evaluate the P2 trial functions for the parent element at the new submesh P2 nodes.
-                    //3. Form the G2I interpolation operator
-                    //4. Interpolate the P2 DOF from the parent element to the submesh DOF
                   }
               }
             if(USE_SBM>0)
