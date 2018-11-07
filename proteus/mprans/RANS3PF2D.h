@@ -9,7 +9,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
-#define DRAG_FAC 0.0
+#define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
 //////////////////////
 // ***** TODO ***** //
@@ -1054,9 +1054,9 @@ namespace proteus
         //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
         double beta2 = 156976.4;//hack, fall velocity of 0.1 with hydrostatic water
         
-        mom_u_source += (1.0 - phi_s) * new_beta * ( (u - u_s) - TURB_FORCE_FAC*nu_t*gradC_x/closure.sigmaC_ ) +
+        mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s) - TURB_FORCE_FAC*new_beta*nu_t*gradC_x/closure.sigmaC_  +
           (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(u-u_s);
-	mom_v_source += (1.0 - phi_s) * new_beta * ( (v - v_s) - TURB_FORCE_FAC*nu_t*gradC_y/closure.sigmaC_) +
+	mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s) - TURB_FORCE_FAC*new_beta*nu_t*gradC_y/closure.sigmaC_ +
           (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(v-v_s);
 
         /* mom_w_source += phi_s*new_beta*(w-w_s); */

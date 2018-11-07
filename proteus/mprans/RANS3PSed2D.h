@@ -5,7 +5,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
-#define DRAG_FAC 0.0
+#define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
 namespace proteus
 {
@@ -853,14 +853,16 @@ namespace proteus
 					     fluid_velocity,
 					     solid_velocity,
 					     viscosity)*DRAG_FAC;
+      
       //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
       double beta2 = 156976.4;//hack, fall velocity of 0.1 with hydrostatic water
+      double one_by_vos = 2.0*vos/(vos*vos + fmax(1.0e-8,vos*vos));
         
       //new_beta/=rhoFluid;
       //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
-      mom_u_source +=  new_beta*((u - uStar_f) + TURB_FORCE_FAC*nu_t*gradC_x/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(u-u_f);
+      mom_u_source +=  new_beta*((u - uStar_f) + TURB_FORCE_FAC*one_by_vos*nu_t*gradC_x/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(u-u_f);
 
-      mom_v_source +=  new_beta*((v - vStar_f) + TURB_FORCE_FAC*nu_t*gradC_y/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(v-v_f);
+      mom_v_source +=  new_beta*((v - vStar_f) + TURB_FORCE_FAC*one_by_vos*nu_t*gradC_y/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(v-v_f);
 
       /* mom_w_source += new_beta*(w-w_s); */
 
@@ -1981,11 +1983,11 @@ namespace proteus
 		/* /\* 			dmom_v_source, *\/ */
 		/* /\* 			dmom_w_source); *\/ */
                 
-                /* updateFrictionalPressure(vos, */
-                /*                          grad_vos, */
-                /*                          mom_u_source, */
-                /*                          mom_v_source, */
-                /*                          mom_w_source); */
+                updateFrictionalPressure(vos,
+                                         grad_vos,
+                                         mom_u_source,
+                                         mom_v_source,
+                                         mom_w_source);
 		     updateFrictionalStress(vos,
                                  eps_rho,
                                  eps_mu,
@@ -3625,11 +3627,11 @@ namespace proteus
 		/* /\* 			dmom_v_source, *\/ */
 		/* /\* 			dmom_w_source); *\/ */
 
-		/* updateFrictionalPressure(vos, */
-                /*                          grad_vos, */
-                /*                          mom_u_source, */
-                /*                          mom_v_source, */
-                /*                          mom_w_source); */
+		updateFrictionalPressure(vos,
+                                         grad_vos,
+                                         mom_u_source,
+                                         mom_v_source,
+                                         mom_w_source);
 		           updateFrictionalStress(vos,
                                  eps_rho,
                                  eps_mu,
