@@ -11,6 +11,7 @@
 #include "SedClosure.h"
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
+#define CUT_CELL_INTEGRATION 1.0
 //////////////////////
 // ***** TODO ***** //
 //////////////////////
@@ -2314,6 +2315,114 @@ namespace proteus
                                                 mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
                                                 phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
             }
+            if(CUT_CELL_INTEGRATION > 0)
+              {
+                //
+                //detect cut cells, for unfitted fem we want all cells cut by phi=0 or with phi=0 lying on any boundary
+                //
+                double _distance[nDOF_mesh_trial_element]={0.0};
+                int pos_counter=0;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                  {
+                    if(use_ball_as_particle==1)
+                      {
+                        get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                             _distance[I]);
+                      }
+                    else
+                      {
+                        _distance[I] = phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]];
+                      }
+                    if ( _distance[I] > 0)//fully in fluid
+                      pos_counter++;
+                  }
+                if (pos_counter == 3)
+                  {
+                    element_active = 1.0;
+                  }
+                else if (pos_counter == 0)
+                  {
+                    element_active = 1.0;
+                  }
+                else
+                  {
+                    std::cout<<"submesh "<<eN<<std::endl;
+                    element_active = 1.0;//for now leave all elements active
+                    //P1 interpolation operator; only 2D for now
+                    double GI[6*3];//3 DOF to 6DOF for linear interpolation onto 4T refinement
+                    double sub_mesh_dof[6*3];//6 3D points
+                    int boundaryNodes[6] = {0,0,0,0,0,0};
+                    for (int I=0;I<nDOF_mesh_trial_element;I++)
+                      {
+                        for (int K=0;K<nDOF_mesh_trial_element;K++)
+                          {
+                            GI[I*3+K] = 0.0;
+                            if (I==K)
+                              {
+                                GI[I*3+K] = 1.0;
+                              }
+                          }
+                        const double eps = 1.0e-4;
+                        double delta_phi=0.0,theta;
+                        delta_phi = _distance[(I+1)%3] - _distance[I];
+                        if (fabs(delta_phi) > eps)//level set does NOT lie on edge (intersects line SOMEWHERE)
+                          //need tolerance selection guidance
+                          {
+                            theta = -_distance[I]/delta_phi;//zero level set is at theta*xIp1+(1-theta)*xI
+                            if (theta > 1.0-eps || theta < eps)//zero level does NOT intersect between nodes
+                              {
+                                theta = 0.5;//just put the subelement node at midpoint
+                              }
+                            else
+                              boundaryNodes[3+I]=1;
+                          }
+                        else //level set lies on edge
+                          {
+                            theta = 0.5;
+                            if (fabs(_distance[I]) <= eps) //edge IS the zero level set
+                              {
+                                boundaryNodes[I]=1;
+                                boundaryNodes[3+I]=1;
+                                boundaryNodes[(I+1)%3]=1;
+                              }
+                          }
+                        assert(theta <= 1.0);
+                        GI[3*3 + I*3 + I] = 1.0-theta;
+                        GI[3*3 + I*3 + (I+1)%3] = theta;
+                        GI[3*3 + I*3 + (I+2)%3] = 0.0;
+                      }
+                    int sub_mesh_l2g[12] = {0,3,5,
+                                            1,4,3,
+                                            2,5,4,
+                                            3,4,5};
+                    for (int I=0; I<6; I++)
+                      {
+                        for (int K=0; K<3; K++)
+                          sub_mesh_dof[I*3+K] = 0.0; 
+                        for (int J=0; J<3; J++)
+                          for (int K=0; K<3; K++)
+                            {
+                              sub_mesh_dof[I*3+K] += GI[I*3+J]*mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+J]+K];
+                            }
+                      }
+                    for (int esN=0;esN<4;esN++)
+                      {
+                        std::cout<<sub_mesh_l2g[esN*3]<<'\t'<<sub_mesh_l2g[esN*3+1]<<'\t'<<sub_mesh_l2g[esN*3+2]<<std::endl;
+                      }
+                    for (int I=0; I<6; I++)
+                      {
+                        std::cout<<sub_mesh_dof[I*3+0]<<'\t'<<sub_mesh_dof[I*3+1]<<'\t'<<sub_mesh_dof[I*3+2]<<'\t'<<boundaryNodes[I]<<std::endl;
+                      }
+                    //TODO for P2
+                    //1. Now define the Lagrange nodes for P2 on the submesh
+                    //2. Define and evaluate the P2 trial functions for the parent element at the new submesh P2 nodes.
+                    //3. Form the G2I interpolation operator
+                    //4. Interpolate the P2 DOF from the parent element to the submesh DOF
+                  }
+              }
             if(USE_SBM>0)
             {
                 //
@@ -3282,6 +3391,7 @@ namespace proteus
             /* mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element)); */
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
+        std::cout<<std::flush;
         //
         //loop over the surrogate boundaries in SB method and assembly into residual
         //
