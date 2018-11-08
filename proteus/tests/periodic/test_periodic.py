@@ -25,7 +25,9 @@ def load_periodic_duct(request):
     pList = []
     sList = []
     reload(duct)
-    so = proteus.defaults.load_system('duct')
+    script_dir = os.path.dirname(__file__)
+    so = proteus.defaults.load_system('duct',
+                                      path = script_dir)
     for (pModule,nModule) in so.pnList:
         if not isinstance(pModule, proteus.defaults.Physics_base):
             pList.append(proteus.defaults.load_physics(pModule))
@@ -48,7 +50,9 @@ def load_periodic_duct(request):
 def load_periodic_opts_2D(request):
     opts.contextOptions = "periodic=True grid=True nd=2 nnx=42 triangles=False spaceOrder=1 weak=True coord=True pc_type='selfp_petsc'" 
     proteus.Context.contextOptionsString=opts.contextOptions
-    opts.petscOptionsFile = './petsc/petsc.options.schur.selfp_petsc.superlu'
+    script_dir = os.path.dirname(__file__)
+    relpath = 'petsc/petsc.options.schur.selfp_petsc.superlu'
+    opts.petscOptionsFile = os.path.join(script_dir,relpath)
     proteus.Comm.argv = TestTools.fixture_set_petsc_options_from_file(opts.petscOptionsFile)
     comm = Comm.init()
 
@@ -56,7 +60,9 @@ def load_periodic_opts_2D(request):
 def load_periodic_opts_3D(request):
     opts.contextOptions = "periodic=True nd=3 coord=True pc_type='selfp_petsc'"
     proteus.Context.contextOptionsString=opts.contextOptions
-    opts.petscOptionsFile = './petsc/petsc.options.schur.selfp_petsc.superlu'
+    script_dir = os.path.dirname(__file__)
+    relpath = 'petsc/petsc.options.schur.selfp_petsc.superlu'
+    opts.petscOptionsFile = os.path.join(script_dir,relpath)
     proteus.Comm.argv = TestTools.fixture_set_petsc_options_from_file(opts.petscOptionsFile)
     comm = Comm.init()
 
@@ -64,7 +70,9 @@ def load_periodic_opts_3D(request):
 def load_periodic_opts_3D_T2(request):
     opts.contextOptions = "periodic=True nd=3 coord=True pc_type='selfp_petsc' A_block_AMG=True" 
     proteus.Context.contextOptionsString=opts.contextOptions
-    opts.petscOptionsFile = './petsc/petsc.options.schur.selfp_petsc.amg'
+    script_dir = os.path.dirname(__file__)
+    relpath = 'petsc/petsc.options.schur.selfp_petsc.amg'
+    opts.petscOptionsFile = os.path.join(script_dir,relpath)
     proteus.Comm.argv = TestTools.fixture_set_petsc_options_from_file(opts.petscOptionsFile)
     comm = Comm.init()
 
