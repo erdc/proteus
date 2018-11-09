@@ -80,7 +80,6 @@ namespace proteus
                                    double rho_1,
                                    double nu_1,
                                    double rho_s,
-                                   double nu_s,
                                    double smagorinskyConstant,
                                    int turbulenceClosureModel,
                                    double Ct_sge,
@@ -256,7 +255,6 @@ namespace proteus
                                    double rho_1,
                                    double nu_1,
                                    double rho_s,
-                                   double nu_s,
                                    double smagorinskyConstant,
                                    int turbulenceClosureModel,
                                    double Ct_sge,
@@ -525,7 +523,6 @@ namespace proteus
                                   const double rho_1,
                                   double nu_1,
                                   const double rho_s,
-                                  double nu_s,
                                   const double h_e,
                                   const double smagorinskyConstant,
                                   const int turbulenceClosureModel,
@@ -625,9 +622,6 @@ namespace proteus
             }
           }
       
-        //gco: we need to use only rho_s and nu_s for solving RANS
-        // we need fluid rho and nu for turbulence
-        // we need fluid rho and nu for momentum interface
         rho = rho_s;
         rho_f = rho_0*(1.0-H_rho)+rho_1*H_rho;
         nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
@@ -1525,7 +1519,6 @@ namespace proteus
                              double rho_1,
                              double nu_1,
                              double rho_s,
-                             double nu_s,
                              double smagorinskyConstant,
                              int turbulenceClosureModel,
                              double Ct_sge,
@@ -1851,7 +1844,6 @@ namespace proteus
                                      rho_1,
                                      nu_1,
                                      rho_s,
-                                     nu_s,
                                      elementDiameter[eN],
                                      smagorinskyConstant,
                                      turbulenceClosureModel,
@@ -2512,7 +2504,6 @@ namespace proteus
                                      rho_1,
                                      nu_1,
                                      rho_s,
-                                     nu_s,
                                      elementDiameter[eN],
                                      smagorinskyConstant,
                                      turbulenceClosureModel,
@@ -2588,7 +2579,6 @@ namespace proteus
                                      rho_1,
                                      nu_1,
                                      rho_s,
-                                     nu_s,
                                      elementDiameter[eN],
                                      smagorinskyConstant,
                                      turbulenceClosureModel,
@@ -3115,7 +3105,6 @@ namespace proteus
                              double rho_1,
                              double nu_1,
                              double rho_s,
-                             double nu_s,
                              double smagorinskyConstant,
                              int turbulenceClosureModel,
                              double Ct_sge,
@@ -3475,7 +3464,6 @@ namespace proteus
                                      rho_1,
                                      nu_1,
                                      rho_s,
-                                     nu_s,
                                      elementDiameter[eN],
                                      smagorinskyConstant,
                                      turbulenceClosureModel,
@@ -4219,7 +4207,6 @@ namespace proteus
                                      rho_1,
                                      nu_1,
                                      rho_s,
-                                     nu_s,
                                      elementDiameter[eN],
                                      smagorinskyConstant,
                                      turbulenceClosureModel,
@@ -4295,7 +4282,6 @@ namespace proteus
                                      rho_1,
                                      nu_1,
                                      rho_s,
-                                     nu_s,
                                      elementDiameter[eN],
                                      smagorinskyConstant,
                                      turbulenceClosureModel,
