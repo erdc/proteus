@@ -24,6 +24,8 @@ class TwoPhaseFlowProblem:
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
+                 # AUXILIARY VARIABLES #
+                 auxVariables=None,
                  # OTHERS #
                  useSuperlu=False):
         # ***** SET OF ASSERTS ***** #
@@ -42,6 +44,9 @@ class TwoPhaseFlowProblem:
         assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
         assert type(initialConditions)==dict, "Provide dict of initial conditions"
         assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
+        self.auxVariables = auxVariables
+        if auxVariables is not None:
+            assert type(auxVariables)==dict, "auxVariables must be a dictionary"
         self.assert_initialConditions(ns_model,nd,initialConditions)
         self.assert_boundaryConditions(ns_model,nd,boundaryConditions)
 
