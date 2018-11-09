@@ -11,6 +11,7 @@ FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+auxVariables = myTpFlowProblem.auxVariables
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -73,3 +74,10 @@ nl_atol_res = pressure_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.0
 l_atol_res = 0.1*pressure_nl_atol_res
+
+# *********************************** #
+# ********** AUX VARIABLES ********** #
+# *********************************** #
+if auxVariables is not None:
+    if 'pressure' in auxVariables:
+        auxiliaryVariables=auxVariables['pressure']

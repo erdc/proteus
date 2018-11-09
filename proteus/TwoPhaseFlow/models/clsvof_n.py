@@ -11,6 +11,7 @@ FESpace = myTpFlowProblem.FESpace
 he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+auxVariables = myTpFlowProblem.auxVariables
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -76,3 +77,10 @@ else:
 l_atol_res = nl_atol_res
 tolFac=0.
 maxNonlinearIts = 50
+
+# *********************************** #
+# ********** AUX VARIABLES ********** #
+# *********************************** #
+if auxVariables is not None:
+    if 'clsvof' in auxVariables:
+        auxiliaryVariables=auxVariables['clsvof']
