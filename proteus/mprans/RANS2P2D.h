@@ -186,6 +186,9 @@ namespace proteus
                                    double* ball_radius,
                                    double* ball_velocity,
                                    double* ball_angular_velocity,
+                                   double* ball_center_acceleration,
+                                   double* ball_angular_acceleration,
+                                   double* ball_density,
                                    int nParticles,
                                    double *particle_netForces,
                                    double *particle_netMoments,
@@ -370,6 +373,9 @@ namespace proteus
                                    double* ball_radius,
                                    double* ball_velocity,
                                    double* ball_angular_velocity,
+                                   double* ball_center_acceleration,
+                                   double* ball_angular_acceleration,
+                                   double* ball_density,
                                    int nParticles,
                                    int nElements_owned,
                                    double particle_nitsche,
@@ -929,6 +935,18 @@ namespace proteus
           vx = ball_velocity[3*I + 0] - ball_angular_velocity[3*I + 2]*(y-ball_center[3*I + 1]);
           vy = ball_velocity[3*I + 1] + ball_angular_velocity[3*I + 2]*(x-ball_center[3*I + 0]);
       }
+      void get_acceleration_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
+                                    const double* ball_velocity, const double* ball_angular_velocity,
+                                    const double* ball_center_acceleration, const double* ball_angular_acceleration,
+                                    int I,
+                                    const double x, const double y, const double z,
+                                    double& ax, double& ay)
+      {
+          ax = ball_center_acceleration[3*I + 0] - ball_angular_acceleration[3*I + 2]*(y-ball_center[3*I + 1])
+                - ball_angular_acceleration[3*I + 2]*ball_angular_acceleration[3*I + 2]*(x-ball_center[3*I + 0]);
+          ay = ball_center_acceleration[3*I + 1] + ball_angular_acceleration[3*I + 2]*(x-ball_center[3*I + 0])
+                - ball_angular_acceleration[3*I + 2]*ball_angular_acceleration[3*I + 2]*(y-ball_center[3*I + 1]);
+      }
       inline void updateSolidParticleTerms(const double NONCONSERVATIVE_FORM,
                                            bool element_owned,
                                            const double particle_nitsche,
@@ -944,6 +962,9 @@ namespace proteus
                                            const double* ball_radius,
                                            const double* ball_velocity,
                                            const double* ball_angular_velocity,
+                                           const double* ball_center_acceleration,
+                                           const double* ball_angular_acceleration,
+                                           const double* ball_density,
                                            const double porosity, //VRANS specific
                                            const double penalty,
                                            const double alpha,
@@ -1010,7 +1031,8 @@ namespace proteus
         double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
         double phi_s_normal[2]={0.0};
         double fluid_outward_normal[2];
-        double vel[2];
+        double vel[2]={0.0};
+        double acceleration[2]={0.0};
         double center[2];
         H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
@@ -1029,6 +1051,12 @@ namespace proteus
                                          vel[0],vel[1]);
                 center[0] = ball_center[3*i+0];
                 center[1] = ball_center[3*i+1];
+                get_acceleration_to_ith_ball(nParticles,ball_center,ball_radius,
+                                         ball_velocity,ball_angular_velocity,
+                                         ball_center_acceleration,ball_angular_acceleration,
+                                         i,x,y,z,
+                                         acceleration[0],acceleration[1]);
+                
             }
             else
             {
@@ -1080,7 +1108,7 @@ namespace proteus
             r_y = y - center[1];
 
             if (element_owned)
-              {
+            {
                 particle_surfaceArea[i] += dV * D_s;
                 particle_netForces[i * 3 + 0] += force_x;
                 particle_netForces[i * 3 + 1] += force_y;
@@ -1089,12 +1117,12 @@ namespace proteus
                 particle_netForces[(i+  nParticles)*3+1]+= force_stress_y;
                 particle_netForces[(i+2*nParticles)*3+1]+= force_p_y;
                 particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
-              }
+            }
 
             // These should be done inside to make sure the correct velocity of different particles are used
             //(1)
-            mom_u_source += C * (u - u_s);
-            mom_v_source += C * (v - v_s);
+            mom_u_source += C * (u - u_s) + (ball_density[i]-rho)*acceleration[0];
+            mom_v_source += C * (v - v_s) + (ball_density[i]-rho)*acceleration[1];
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
@@ -2063,6 +2091,9 @@ namespace proteus
                              double* ball_radius,
                              double* ball_velocity,
                              double* ball_angular_velocity,
+                             double* ball_center_acceleration,
+                             double* ball_angular_acceleration,
+                             double* ball_density,
                              int nParticles,
                              double *particle_netForces,
                              double *particle_netMoments,
@@ -2452,6 +2483,9 @@ namespace proteus
                                             ball_radius,
                                             ball_velocity,
                                             ball_angular_velocity,
+                                            ball_center_acceleration,
+                                            ball_angular_acceleration,
+                                            ball_density,
                                             porosity,
                                             particle_penalty_constant/h_phi,//penalty,
                                             particle_alpha,
@@ -3736,6 +3770,9 @@ namespace proteus
                              double* ball_radius,
                              double* ball_velocity,
                              double* ball_angular_velocity,
+                             double* ball_center_acceleration,
+                             double* ball_angular_acceleration,
+                             double* ball_density,
                              int nParticles,
                              int nElements_owned,
                              double particle_nitsche,
@@ -4125,6 +4162,9 @@ namespace proteus
                                             ball_radius,
                                             ball_velocity,
                                             ball_angular_velocity,
+                                            ball_center_acceleration,
+                                            ball_angular_acceleration,
+                                            ball_density,
                                             porosity,
                                             particle_penalty_constant/h_phi,//penalty,
                                             particle_alpha,
