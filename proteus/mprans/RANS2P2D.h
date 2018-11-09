@@ -1121,12 +1121,20 @@ namespace proteus
 
             // These should be done inside to make sure the correct velocity of different particles are used
             //(1)
-            mom_u_source += C * (u - u_s) + (ball_density[i]-rho)*acceleration[0];
-            mom_v_source += C * (v - v_s) + (ball_density[i]-rho)*acceleration[1];
+            mom_u_source += C * (u - u_s);
+            mom_v_source += C * (v - v_s);
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
 
+            if (NONCONSERVATIVE_FORM > 0.0)
+            {
+              mom_u_source += (1.0-H_s)*(ball_density[i]-rho)*acceleration[0];
+              mom_v_source += (1.0-H_s)*(ball_density[i]-rho)*acceleration[1];
+            }else{
+              mom_u_source += (1.0-H_s)*(ball_density[i]-rho)*acceleration[0]/rho;
+              mom_v_source += (1.0-H_s)*(ball_density[i]-rho)*acceleration[1]/rho;
+            }
             if (NONCONSERVATIVE_FORM > 0.0)
             {
                 //(2)
