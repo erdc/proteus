@@ -788,6 +788,9 @@ cdef class cCLSVOF_base:
                                            &global_Xy,
                                            &global_Uy,
                                            &global_V)
+        return (global_Xy,
+                global_Uy,
+                global_V)
    def normalReconstruction(self,
                             numpy.ndarray mesh_trial_ref,
                             numpy.ndarray mesh_grad_trial_ref,

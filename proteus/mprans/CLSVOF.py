@@ -28,6 +28,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs = True, # mql. I use it to visualize H(u) at the DOFs
                  computeMetrics = 0, #0, 1, 2 or 3
+                 computeMetricsForBubble = False,
                  # SPIN UP STEP #
                  doSpinUpStep=False, # To achieve high order with Bernstein polynomials
                  disc_ICs=False, # Is the init condition a characteristic function?
@@ -44,12 +45,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # 0: don't compute metrics
         # 1: compute change in volume at ETS (every time step)
         # 2: compute several metrics at ETS (every time step)
-        # 3: compute metrics at EOS (end of simulations). Needs an exact solution
+        # 3: compute metrics at EOS (end of simulations). Needs an exact solution        
         self.useMetrics=useMetrics
         self.doSpinUpStep=doSpinUpStep
         self.disc_ICs=disc_ICs
         self.timeOrder=timeOrder
         self.computeMetrics=computeMetrics
+        self.computeMetricsForBubble=computeMetricsForBubble
         self.epsFactHeaviside=epsFactHeaviside
         self.epsFactDirac=epsFactDirac
         self.epsFactRedist=epsFactRedist
@@ -189,7 +191,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # Compute metrics at end of time step
         if self.computeMetrics == 1 or self.computeMetrics == 2: #compute metrics at ETS
             self.model.getMetricsAtETS()
-            self.model.getMetricsForBubble()
+            if self.computeMetricsForBubble:
+                self.model.getMetricsForBubble()
             if self.model.comm.isMaster():
                 if self.computeMetrics == 1:
                     self.model.metricsAtETS.write(repr(self.model.timeIntegration.t)[:4]+",\t"+
@@ -209,12 +212,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                   "\n")
                     self.model.metricsAtETS.flush()
                 # Metrics for Bubble
-                self.model.metricsForBubble.write(repr(self.model.timeIntegration.dt)+","+
-                                                  repr(self.model.timeIntegration.t)+","+
-                                                  repr(self.model.global_Xy)+","+
-                                                  repr(self.model.global_Uy)+
-                                                  "\n")
-                self.model.metricsForBubble.flush()            
+                if self.computeMetricsForBubble:
+                    self.model.metricsForBubble.write(repr(self.model.timeIntegration.dt)+","+
+                                                      repr(self.model.timeIntegration.t)+","+
+                                                      repr(self.model.global_Xy)+","+
+                                                      repr(self.model.global_Uy)+
+                                                      "\n")
+                    self.model.metricsForBubble.flush()    
         #
         self.model.q['dV_last'][:] = self.model.q['dV']
         copyInstructions = {}
@@ -806,12 +810,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                             'global_D_err'+
                                             "\n")
             # for metrics for bubble
-            self.metricsForBubble = open(self.name+"_metricsForBubble.csv","w")
-            self.metricsForBubble.write('time_step'+","+
-                                        'time'+","+
-                                        'global_Xy'+","+
-                                        'global_Uy'+
-                                        "\n")                                    
+            if self.coefficients.computeMetricsForBubble:
+                self.metricsForBubble = open(self.name+"_metricsForBubble.csv","w")
+                self.metricsForBubble.write('time_step'+","+
+                                            'time'+","+
+                                            'global_Xy'+","+
+                                            'global_Uy'+
+                                            "\n")                             
 
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
