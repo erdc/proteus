@@ -1173,6 +1173,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
+                               double * vel_hess_trial_ref,
                                double * vel_test_ref,
                                double * vel_grad_test_ref,
                                double * mesh_trial_trace_ref,
@@ -1232,6 +1233,9 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * u_dof,
                                double * v_dof,
                                double * w_dof,
+                               double * u_dof_old,
+                               double * v_dof_old,
+                               double * w_dof_old,                               
                                double * g,
                                double useVF,
                                double * vf,
@@ -1313,7 +1317,13 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * netForces_p,
                                double * netForces_v,
                                double * netMoments,
-                               double * ncDrag)
+                               double * ncDrag,
+                               double dt,
+                               double order_polynomial,
+                               int USE_SUPG,
+                               int ARTIFICIAL_VISCOSITY,
+                               double cMax,
+                               double cE)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1331,7 +1341,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * ebqe_p,
                                double * ebqe_grad_p,
                                double * vel_trial_ref,
-                               double * vel_grad_trial_ref,
+                               double * vel_grad_trial_ref,                               
                                double * vel_test_ref,
                                double * vel_grad_test_ref,
                                double * mesh_trial_trace_ref,
@@ -1480,7 +1490,8 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                int * csrColumnOffsets_eb_w_u,
                                int * csrColumnOffsets_eb_w_v,
                                int * csrColumnOffsets_eb_w_w,
-                               int * elementFlags)
+                               int * elementFlags,
+                               int USE_SUPG)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -1607,6 +1618,7 @@ cdef class RANS3PSed2D:
                           numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
+                          numpy.ndarray vel_hess_trial_ref,
                           numpy.ndarray vel_test_ref,
                           numpy.ndarray vel_grad_test_ref,
                           numpy.ndarray mesh_trial_trace_ref,
@@ -1666,6 +1678,9 @@ cdef class RANS3PSed2D:
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
                           numpy.ndarray w_dof,
+                          numpy.ndarray u_dof_old,
+                          numpy.ndarray v_dof_old,
+                          numpy.ndarray w_dof_old,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -1746,7 +1761,13 @@ cdef class RANS3PSed2D:
                           numpy.ndarray netForces_p,
                           numpy.ndarray netForces_v,
                           numpy.ndarray netMoments,
-                          numpy.ndarray ncDrag):
+                          numpy.ndarray ncDrag,
+                          double dt,
+                          double order_polynomial,
+                          int USE_SUPG,
+                          int ARTIFICIAL_VISCOSITY,
+                          double cMax,
+                          double cE):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1765,6 +1786,7 @@ cdef class RANS3PSed2D:
                                        < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
+                                        < double * > vel_hess_trial_ref.data,
                                        < double * > vel_test_ref.data,
                                        < double * > vel_grad_test_ref.data,
                                        < double * > mesh_trial_trace_ref.data,
@@ -1824,6 +1846,9 @@ cdef class RANS3PSed2D:
                                         < double * > u_dof.data,
                                         < double * > v_dof.data,
                                         < double * > w_dof.data,
+                                        < double * > u_dof_old.data,
+                                        < double * > v_dof_old.data,
+                                        < double * > w_dof_old.data,
                                         < double * > g.data,
                                         useVF,
                                         < double * > vf.data,
@@ -1904,8 +1929,13 @@ cdef class RANS3PSed2D:
                                         < double * > netForces_p.data,
                                         < double * > netForces_v.data,
                                         < double * > netMoments.data,
-                                        < double * > ncDrag.data)
-
+                                        < double * > ncDrag.data,
+                                        dt,
+                                        order_polynomial,
+                                        USE_SUPG,
+                                        ARTIFICIAL_VISCOSITY,
+                                        cMax,
+                                        cE)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -2072,7 +2102,8 @@ cdef class RANS3PSed2D:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags,
+                          int USE_SUPG):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double *> mesh_trial_ref.data,
@@ -2240,8 +2271,8 @@ cdef class RANS3PSed2D:
                                         < int * > csrColumnOffsets_eb_w_u.data,
                                         < int * > csrColumnOffsets_eb_w_v.data,
                                         < int * > csrColumnOffsets_eb_w_w.data,
-                                        < int * > elementFlags.data)
-
+                                        < int * > elementFlags.data,
+                                       USE_SUPG)
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
                                  numpy.ndarray exteriorElementBoundariesArray,

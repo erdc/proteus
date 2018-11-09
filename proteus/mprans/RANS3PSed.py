@@ -140,6 +140,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
+                 USE_SUPG=1,
+                 ARTIFICIAL_VISCOSITY=1,
+                 cMax=1.0,
+                 cE=1.0,                 
                  epsFact=1.5,
                  sigma=72.8,
                  rho_0=998.2,
@@ -290,6 +294,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
+        self.USE_SUPG=USE_SUPG
+        self.ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY
+        self.cMax=cMax
+        self.cE=cE
+        #
         mass = {}
         advection = {}
         diffusion = {}
@@ -859,6 +868,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+        # solution at tn
+        self.model.u_dof_old[:] = self.model.u[0].dof
+        self.model.v_dof_old[:] = self.model.u[1].dof
+        if (self.model.nSpace_global == 3):
+            self.model.w_dof_old[:] = self.model.u[2].dof
+        #
         self.model.dt_last = self.model.timeIntegration.dt
         # Compute 2nd order extrapolation on velocity
         if (firstStep):
@@ -1121,6 +1136,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global = {}
         self.ebqe = {}
         self.phi_ip = {}
+        # needed for entropy viscosity
+        self.u_dof_old = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.v_dof_old = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.w_dof_old = numpy.zeros(self.u[0].dof.shape, 'd')        
         # mesh
         self.ebqe['x'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
@@ -1854,6 +1873,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.ebqe_grad_p_sharp,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.Hessian_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
@@ -1911,6 +1931,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
+            self.u_dof_old,
+            self.v_dof_old,
+            self.w_dof_old,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
@@ -2010,7 +2033,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
             self.coefficients.netMoments,
-            self.ncDrag)
+            self.ncDrag,
+            self.timeIntegration.dt,
+            self.u[0].femSpace.order, # order_polynomial
+            self.coefficients.USE_SUPG,
+            self.coefficients.ARTIFICIAL_VISCOSITY,
+            self.coefficients.cMax,
+            self.coefficients.cE)
+        
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -2257,7 +2287,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 0)],
             self.csrColumnOffsets_eb[(2, 1)],
             self.csrColumnOffsets_eb[(2, 2)],
-            self.mesh.elementMaterialTypes)
+            self.mesh.elementMaterialTypes,
+            self.coefficients.USE_SUPG)
         self.q[('cfl', 0)][:]=0.0
 
         if not self.forceStrongConditions and max(
@@ -2313,6 +2344,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(
             self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisHessianValuesRef(
+            self.elementQuadraturePoints)        
         self.u[1].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[1].femSpace.getBasisGradientValuesRef(
             self.elementQuadraturePoints)
