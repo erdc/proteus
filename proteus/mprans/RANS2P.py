@@ -214,6 +214,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_radius=None,
                  ball_velocity=None,
                  ball_angular_velocity=None,
+                 ball_center_acceleration=None,
+                 ball_angular_acceleration=None,
+                 ball_density=None,
                  nParticles = 0,
                  particle_epsFact=3.0,
                  particle_alpha=1000.0,
@@ -249,6 +252,22 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
         else:
             self.ball_angular_velocity = ball_angular_velocity
+
+        if ball_center_acceleration is None:
+            self.ball_center_acceleration = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_center_acceleration = ball_center_acceleration
+
+        if ball_angular_acceleration is None:
+            self.ball_angular_acceleration = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_angular_acceleration = ball_angular_acceleration
+
+        if ball_density is None:
+            self.ball_density = rho_0*numpy.ones((self.nParticles,1),'d')
+        else:
+            self.ball_density = ball_density
+
         self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
@@ -1698,6 +1717,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
+                                      self.coefficients.ball_center_acceleration,
+                                      self.coefficients.ball_angular_acceleration,
+                                      self.coefficients.ball_density,
                                       self.coefficients.nParticles,
                                       self.coefficients.particle_netForces,
                                       self.coefficients.particle_netMoments,
@@ -1982,6 +2004,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
+                                      self.coefficients.ball_center_acceleration,
+                                      self.coefficients.ball_angular_acceleration,
+                                      self.coefficients.ball_density,
                                       self.coefficients.nParticles,
                                       self.mesh.nElements_owned,
                                       self.coefficients.particle_nitsche,
