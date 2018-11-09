@@ -1270,7 +1270,7 @@ class SpInv_shell(InvOperatorShell):
     problem uses pure Dirichlet boundary conditions will likely result
     in poor solver performance or failure.
     """
-    def __init__(self, A00, A11, A01, A10, constNullSpace=True):
+    def __init__(self, A00, A11, A01, A10, constNullSpace):
         self.A00 = A00
         self.A11 = A11
         self.A01 = A01
@@ -1309,7 +1309,7 @@ class SpInv_shell(InvOperatorShell):
             self.const_null_space.remove(tmp1)
         self.kspSp.solve(tmp1,y)
         assert numpy.isnan(y.norm())==False, "Applying the schur complement \
-resulted in not-a-number."
+        resulted in not-a-number."
 
     def _create_Sp(self):
         self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
