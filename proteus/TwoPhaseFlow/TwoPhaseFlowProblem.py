@@ -259,6 +259,7 @@ default_clsvof_parameters = {'useMetrics': 1.0,
                              'lambdaFact': 10.0,
                              'outputQuantDOFs': True,
                              'computeMetrics': 1,
+                             'computeMetricsForBubble': False,
                              'eps_tolerance_clsvof': False,
                              'disc_ICs': False}
 default_general = {'nLevels': 1,
