@@ -100,8 +100,8 @@ linearSolverConvergenceTest             = 'r-true'
 ns_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 nl_atol_res = ns_nl_atol_res
 tolFac = 0.0
-linTolFac = 0.01
-l_atol_res = 0.01*ns_nl_atol_res
+linTolFac = 0.0
+l_atol_res = 0.1*ns_nl_atol_res
 
 useEisenstatWalker = False
 maxNonlinearIts = 50
