@@ -887,6 +887,10 @@ class NS_base(object):  # (HasTraits):
                      coef.vectorName+"_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last[:] = vector[:,vci]
+              p0.domain.PUMIMesh.transferFieldToProteus(
+                     coef.vectorName+"_old_old", vector)
+              for vci in range(len(coef.vectorComponents)):
+                lm.u[coef.vectorComponents[vci]].dof_last_last[:] = vector[:,vci]
 
               del vector
             for ci in range(coef.nc):
@@ -899,6 +903,10 @@ class NS_base(object):  # (HasTraits):
                 p0.domain.PUMIMesh.transferFieldToProteus(
                     coef.variableNames[ci]+"_old", scalar)
                 lm.u[ci].dof_last[:] = scalar[:,0]
+                p0.domain.PUMIMesh.transferFieldToProteus(
+                    coef.variableNames[ci]+"_old_old", scalar)
+                lm.u[ci].dof_last_last[:] = scalar[:,0]
+
                 del scalar
         logEvent("Attaching models on new mesh to each other")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
@@ -1075,6 +1083,12 @@ class NS_base(object):  # (HasTraits):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
               p0.domain.PUMIMesh.transferFieldToPUMI(
                      coef.vectorName+"_old", vector)
+              #Transfer dof_last_last
+              for vci in range(len(coef.vectorComponents)):
+                vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
+              p0.domain.PUMIMesh.transferFieldToPUMI(
+                     coef.vectorName+"_old_old", vector)
+
               del vector
             for ci in range(coef.nc):
               if coef.vectorComponents is None or \
@@ -1088,6 +1102,11 @@ class NS_base(object):  # (HasTraits):
                 scalar[:,0] = lm.u[ci].dof_last[:]
                 p0.domain.PUMIMesh.transferFieldToPUMI(
                      coef.variableNames[ci]+"_old", scalar)
+                #Transfer dof_last_last
+                scalar[:,0] = lm.u[ci].dof_last_last[:]
+                p0.domain.PUMIMesh.transferFieldToPUMI(
+                     coef.variableNames[ci]+"_old_old", scalar)
+
                 del scalar
 
         scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
@@ -1515,6 +1534,7 @@ class NS_base(object):  # (HasTraits):
                                 m.rList):
                 if self.opts.save_dof:
                     for ci in range(lm.coefficients.nc):
+                        lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
                         lm.u[ci].dof_last[:] = lm.u[ci].dof
                 #calculate the coefficients, any explicit terms will be wrong
                 lm.timeTerm=False
@@ -1607,6 +1627,7 @@ class NS_base(object):  # (HasTraits):
                 for m in self.modelList:
                     for lm in m.levelModelList:
                         for ci in range(lm.coefficients.nc):
+                            lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
                             lm.u[ci].dof_last[:] = lm.u[ci].dof
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
