@@ -6544,11 +6544,15 @@ class FiniteElementFunction(object):
             #: calculate the finite element function.
             self.dof=dof
             self.dof_last=dof_last
+            self.dof_last_last=dof_last_last
         else:
             self.dof = numpy.zeros((self.femSpace.dim*dim_dof),
                                      'd')
             self.dof_last = numpy.zeros((self.femSpace.dim*dim_dof),
                                      'd')
+            self.dof_last_last = numpy.zeros((self.femSpace.dim*dim_dof),
+                                     'd')
+
         #: boolean variable indentifying whether calculations should
         #: use C-routines.
         self.useC=True
