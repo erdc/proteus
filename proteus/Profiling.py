@@ -220,7 +220,9 @@ class Dispatcher(object):
         if comm.isMaster():
             import copy
             import io
-            profilingLog = io.StringIO()
+            import StringIO
+            #profilingLog = io.StringIO()
+            profilingLog = StringIO.StringIO()
             stats = pstats.Stats(profile_rank_name, stream=profilingLog)
             stats.__dict__['files']=['Maximum times across MPI tasks for',
                                      stats.__dict__['files'][0]]

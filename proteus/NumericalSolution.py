@@ -35,6 +35,7 @@ from .Profiling import logEvent
 # Global to control whether the kernel starting is active.
 embed_ok = True
 
+
 class NS_base(object):  # (HasTraits):
     r"""
     The base class for managing the numerical solution of  PDE's.
@@ -1384,11 +1385,15 @@ class NS_base(object):  # (HasTraits):
         n0 = self.nList[0].ct
         sfConfig = p0.domain.PUMIMesh.size_field_config()
         logEvent("h-adapt mesh by calling AdaptPUMIMesh")
+        import time
+        adaptStep1=time.clock()
         if(sfConfig=="pseudo"):
             logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
         else:
             p0.domain.PUMIMesh.adaptPUMIMesh(inputString)
-
+        adaptStep2=time.clock()
+        self.adaptTime+= (adaptStep2-adaptStep1)
+        self.numberAdapts+=1
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
         #if(sfConfig=="ERM"):
@@ -1402,6 +1407,7 @@ class NS_base(object):  # (HasTraits):
         #TODO: this code is nearly identical to
         #PUMI conversion #1, they should be merged
         #into a function
+        restartTime1 = time.clock()
         if p0.domain.nd == 3:
           mesh = MeshTools.TetrahedralMesh()
         else:
@@ -1414,6 +1420,8 @@ class NS_base(object):  # (HasTraits):
                              dim = p0.domain.nd)
 
         self.PUMI2Proteus(mesh)
+        restartTime2 = time.clock()
+        self.restartTime += (restartTime2-restartTime1)
       ##chitak end Adapt
 
     ## compute the solution
@@ -1655,6 +1663,15 @@ class NS_base(object):  # (HasTraits):
         systemStepFailed=False
         stepFailed=False
 
+        #Start of timers
+        import time
+        self.solverTime=0 #accounts for time spent in the solver function
+        self.adaptTime=0 #accounts for time spent in MeshAdapt
+        self.restartTime=0 #accounts for time spent restarting after adapt
+        self.ignoreTime=0 #accounts for time i want to ignore
+        self.triggerTime=0 #accounts for time for detecting trigger
+        self.numberAdapts=0
+
         #### Perform an initial adapt after applying initial conditions ####
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
@@ -1709,7 +1726,6 @@ class NS_base(object):  # (HasTraits):
                         lm.u[ci].dof_last[:] = lm.u[ci].dof
                         lm.u[ci].dof[:] = lm.u_store[ci].dof
 
-
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
@@ -1721,7 +1737,8 @@ class NS_base(object):  # (HasTraits):
             while self.systemStepController.t_system_last < self.tn:
                 logEvent("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                               self.systemStepController.dt_system),level=3)
-
+                import time
+                stepInitialTime=time.clock() #reference time to compute contribution
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
 
@@ -1833,12 +1850,17 @@ class NS_base(object):  # (HasTraits):
                                                                                               model.stepController.dt_model,
                                                                                               model.name))
                         self.systemStepController.sequenceTaken()
+                        #skip archiving time
+                        import time
+                        stepArchiveTime1=time.clock()
                         for index,model in enumerate(self.modelList):
                             self.viewSolution(model,index)
                         if self.archiveFlag == ArchiveFlags.EVERY_MODEL_STEP:
                             self.tCount+=1
                             for index,model in enumerate(self.modelList):
                                 self.archiveSolution(model,index,self.systemStepController.t_system)
+                        stepArchiveTime2=time.clock()
+                        self.ignoreTime -= (stepArchiveTime2-stepArchiveTime1)
                 #end system split operator sequence
                 if systemStepFailed:
                     logEvent("System Step Failed")
@@ -1861,6 +1883,9 @@ class NS_base(object):  # (HasTraits):
                                                                                                self.systemStepController.dt_system))
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
+
+                stepArchiveTime1=time.clock()
+
                 for model in self.modelList:
                     for av in self.auxiliaryVariables[model.name]:
                         av.calculate()
@@ -1868,13 +1893,21 @@ class NS_base(object):  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
+                stepArchiveTime2=time.clock()
+                self.ignoreTime -= (stepArchiveTime2-stepArchiveTime1)
+
                 #can only handle PUMIDomain's for now
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 import gc; gc.collect()
+                triggerTime1=time.clock()
                 if(self.PUMI_estimateError()):
+                    triggerTime2=time.clock()
+                    self.triggerTime+=(triggerTime2-triggerTime1)
                     self.PUMI_adaptMesh()
+                stepFinalTime=time.clock()
+                self.solverTime+=(stepFinalTime-stepInitialTime)
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
@@ -1893,6 +1926,16 @@ class NS_base(object):  # (HasTraits):
             #if(self.PUMI_estimateError()):
             #  self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
+
+        #write out times 
+        from . import Comm
+        comm=Comm.get()
+        self.comm=comm
+        if(comm.isMaster()):
+            file0 = open('timerResults.csv','w')           
+            netSolveTime = self.solverTime - self.adaptTime - self.restartTime - self.ignoreTime - self.triggerTime
+            file0.write('%f,%f,%f,%f,%f,%i\n' % (netSolveTime,self.solverTime,self.triggerTime,self.adaptTime,self.restartTime,self.numberAdapts))
+            file0.close()
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
             if hasattr(model.levelModelList[-1],'runAtEOS'):
