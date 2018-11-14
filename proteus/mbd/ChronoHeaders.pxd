@@ -362,18 +362,4 @@ cdef extern from "ChBodyAddedMass.h":
         ChVector GetInertiaXY()
         void SetMfullmass(ChMatrixDynamic Mfullmass_in)
         void SetInvMfullmass(ChMatrixDynamic inv_Mfullmass_in)
-
-
-
-cdef extern from "ChBodyAddedMass.h":
-    cdef cppclass ChBodyAddedMass(ChBody):
-        ChBodyAddedMass() except +
-        void SetMass(double newmass)
-        void SetInertia(ChMatrix33& newXInertia)
-        void SetInertiaXX(ChVector& newXInertia)
-        void SetInertiaXY(ChVector& newXInertia)
-        ChVector GetInertiaXX()
-        ChVector GetInertiaXY()
-        void SetMfullmass(ChMatrixDynamic Mfullmass_in)
-        void SetInvMfullmass(ChMatrixDynamic inv_Mfullmass_in)
-
+    ChBodyAddedMass * newChBodyAddedMass()
