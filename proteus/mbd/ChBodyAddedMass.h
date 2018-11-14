@@ -95,4 +95,7 @@ namespace chrono {
 
 }  // end namespace chrono
 
+chrono::ChBodyAddedMass * newChBodyAddedMass();
+
 #endif
+
