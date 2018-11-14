@@ -13,6 +13,7 @@ from libcpp.memory cimport (shared_ptr,
                             make_shared)
 from cython.operator cimport dereference as deref
 cimport ChronoHeaders as ch
+import ChronoEngine_python_core as chrono
 
 
 cdef np.ndarray ChVector_to_npArray(ch.ChVector &myvec):
@@ -323,39 +324,50 @@ cdef class ChContactSurfaceNodeCloud:
 
 
 
+cdef extern from "swigpyobject.h":
+    ctypedef struct SwigPyObject:
+        void *ptr
 
 
 
-cdef class ChBodyAddedMass(ChBody):
+cdef class ChBodyAddedMass:
     """Cython class for ChBodyAddedMass
     (!) Uses shared_ptr
     """
 
     def __cinit__(self):
-        if type(self) is ChBodyAddedMass:
-            self.sharedptr_chbodyaddedmass = make_shared[ch.ChBodyAddedMass]()
-            self.sharedptr_chbody = <shared_ptr[ch.ChBody]> self.sharedptr_chbodyaddedmass
-            self.sharedptr_chbodyframe = <shared_ptr[ch.ChBodyFrame]> self.sharedptr_chbodyaddedmass
-            self.sharedptr_chframemoving = <shared_ptr[ch.ChFrameMoving]> self.sharedptr_chbodyaddedmass
-            self.sharedptr_chframe = <shared_ptr[ch.ChFrame]> self.sharedptr_chbodyaddedmass
+        self.sharedptr = make_shared[ch.ChBodyAddedMass]()
+        self.sharedptr_chbody = <shared_ptr[ch.ChBody]> self.sharedptr
+        self.thisptr = self.sharedptr.get()
+        self.ChBodySWIG = chrono.ChBody()
+        cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChBodySWIG.this
+        self.bodyptr = <ch.ChBody*?> &self.thisptr
+        swig_obj.ptr = self.bodyptr
+        # print(self.ChBodyy.GetPos())
+
+        # cdef ch.ChVe *mycpp_ptr = <ch.ChVector*?>swig_obj.ptr
+        # cdef ch.ChVector my_instance = deref(mycpp_ptr)
 
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
-        deref(self.sharedptr_chbodyaddedmass).SetMfullmass(Mfullmass_in)
+        self.thisptr.SetMfullmass(Mfullmass_in)
 
     cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
-        deref(self.sharedptr_chbodyaddedmass).SetInvMfullmass(inv_Mfullmass_in)
+        self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
 
     cpdef np.ndarray GetInertia(self):
-        return ConstChMatrix33_to_npArray(deref(self.sharedptr_chbodyaddedmass).GetInertia())
+        return ConstChMatrix33_to_npArray(self.thisptr.GetInertia())
 
     cpdef void SetInertiaXX(self, ChVector iner):
-        deref(self.sharedptr_chbodyaddedmass).SetInertiaXX(iner.cppobj)
+        self.thisptr.SetInertiaXX(iner.cppobj)
 
     cpdef void SetInertiaXY(self, ChVector iner):
-        deref(self.sharedptr_chbodyaddedmass).SetInertiaXY(iner.cppobj)
+        self.thisptr.SetInertiaXY(iner.cppobj)
 
     cpdef void SetMass(self, double newmass):
-        deref(self.sharedptr_chbodyaddedmass).SetMass(newmass)
+        self.thisptr.SetMass(newmass)
 
     cpdef double GetMass(self):
-        return deref(self.sharedptr_chbodyaddedmass).GetMass()
+        return self.thisptr.GetMass()
+
+    cpdef double GetPos(self):
+        return self.thisptr.GetPos().x()

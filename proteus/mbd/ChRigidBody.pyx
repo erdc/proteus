@@ -1,5 +1,7 @@
+#!python
 # distutils: language = c++
-# cython: profile=True
+# cython: profile=True, binding=True, embedsignature=True
+
 """
 Coupling between Chrono and Proteus is done in this file.
 
@@ -50,6 +52,16 @@ from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 from proteus.Archiver import indentXML
 
+# needed for sphinx docs
+__all__ = ['ProtChSystem',
+           'ProtChBody',
+           'ProtChMesh',
+           'ProtChMoorings',
+           'ProtChAddedMass']
+
+cdef extern from "swigpyobject.h":
+    ctypedef struct SwigPyObject:
+        void *ptr
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppMesh:
@@ -234,7 +246,8 @@ cdef class ProtChBody:
       double width_2D
       object record_dict
       object prescribed_motion_function
-      pych.ChBodyAddedMass ChBody
+      object ChBody
+      pych.ChBodyAddedMass ChBodyAddedMass
       np.ndarray position
       np.ndarray position_last
       np.ndarray F  # force as retrieved from Chrono
@@ -289,9 +302,10 @@ cdef class ProtChBody:
         self.ProtChSystem = system
         # create new cppRigidBody
         self.thisptr = newRigidBody(system.thisptr)
-        self.ChBody = pych.ChBodyAddedMass()
-        self.thisptr.body = self.ChBody.sharedptr_chbody  # give pointer to cpp class
-        # add body to system
+        self.ChBodyAddedMass = pych.ChBodyAddedMass()
+        self.ChBody = self.ChBodyAddedMass.ChBodySWIG
+        self.thisptr.body = self.ChBodyAddedMass.sharedptr_chbody  # give pointer to cpp class
+        # # add body to system
         if system is not None:
             self.ProtChSystem.addProtChBody(self)
         # initialise values
@@ -712,6 +726,13 @@ cdef class ProtChBody:
         self.thisptr.addSpring(stiffness, damping, <double*> fairlead.data,
                                <double*> anchor.data, rest_length)
 
+    def SetPosition2(self, position):
+        cdef SwigPyObject *swig_obj = <SwigPyObject*>position.this
+        cdef ch.ChVector *mycpp_ptr = <ch.ChVector*?>swig_obj.ptr
+        cdef ch.ChVector my_instance = deref(mycpp_ptr)
+        
+        print(my_instance.x())
+
     def SetPosition(self, np.ndarray position):
         """Sets position of body manually
 
@@ -798,8 +819,8 @@ cdef class ProtChBody:
             for j in range(6):
                 chFM.SetElement(i, j, FM[i, j])
                 inv_chFM.SetElement(i, j, inv_FM[i, j])
-        self.ChBody.SetMfullmass(chFM)
-        self.ChBody.SetInvMfullmass(inv_chFM)
+        self.ChBodyAddedMass.SetMfullmass(chFM)
+        self.ChBodyAddedMass.SetInvMfullmass(inv_chFM)
 
     def getPressureForces(self):
         """Gives pressure forces from fluid (Proteus) acting on body.
@@ -857,7 +878,7 @@ cdef class ProtChBody:
         M_t += Mp
         return M_t
 
-    def SetPos(self, double[:] pos):
+    def SetPos(self, pos):
         """Sets current position of body
 
         Parameters
@@ -865,10 +886,11 @@ cdef class ProtChBody:
         pos: array_like
             position of body (array of length 3)
         """
-        assert len(pos) == 3, 'Position aray must be of length 3'
-        cdef ch.ChVector pos_vec
-        pos_vec = ch.ChVector[double](pos[0], pos[1], pos[2])
-        deref(self.thisptr.body).SetPos(pos_vec)
+        cdef SwigPyObject *swig_obj = <SwigPyObject*>pos.this
+        cdef ch.ChVector *mycpp_ptr = <ch.ChVector*?>swig_obj.ptr
+        cdef ch.ChVector my_instance = deref(mycpp_ptr)
+
+        deref(self.thisptr.body).SetPos(my_instance)
 
     def SetRot(self, double[:] rot):
         """Sets current rotation (quaternion) of body
@@ -1692,7 +1714,7 @@ cdef class ProtChSystem:
         self.update_substeps = False
 
     def addProtChBody(self, ProtChBody body):
-        self.thisptr.system.AddBody(body.ChBody.sharedptr_chbody)
+        self.thisptr.system.AddBody(body.ChBodyAddedMass.sharedptr_chbody)
         body.ProtChSystem = self
         self.addSubcomponent(body)  # add body to system (for pre and post steps)
 
@@ -2164,7 +2186,7 @@ cdef class ProtChSystem:
 #    print(gg.x, gg.y, gg.z)
 
 
-cdef class Mesh:
+cdef class ProtChMesh:
     cdef cppMesh * thisptr
     def __cinit__(self, ProtChSystem system):
         cdef shared_ptr[ch.ChMesh] mesh = make_shared[ch.ChMesh]()
@@ -2172,9 +2194,10 @@ cdef class Mesh:
     def setAutomaticGravity(self, bool val):
         self.thisptr.SetAutomaticGravity(val)
 
+
 cdef class SurfaceBoxNodesCloud:
     cdef cppSurfaceBoxNodesCloud * thisptr
-    def __cinit__(self, ProtChSystem system, Mesh mesh, np.ndarray position, np.ndarray dimensions):
+    def __cinit__(self, ProtChSystem system, ProtChMesh mesh, np.ndarray position, np.ndarray dimensions):
         cdef ch.ChVector[double] pos = ch.ChVector[double](position[0], position[1], position[2])
         cdef ch.ChVector[double] dim = ch.ChVector[double](dimensions[0], dimensions[1], dimensions[2])
         self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system,
@@ -2268,7 +2291,7 @@ cdef class ProtChMoorings:
       double[:] tCount_value
     def __cinit__(self,
                   ProtChSystem system,
-                  Mesh mesh,
+                  ProtChMesh mesh,
                   double[:] length,
                   np.ndarray nb_elems,
                   double[:] d,
@@ -3356,8 +3379,8 @@ cpdef linkBodies(ProtChBody body1,
     limit_Rz: double
         Limit rotation around z axis
     """
-    ChLinkLockBodies(body1.ChBody.sharedptr_chbody,
-                     body2.ChBody.sharedptr_chbody,
+    ChLinkLockBodies(body1.ChBodyAddedMass.sharedptr_chbody,
+                     body2.ChBodyAddedMass.sharedptr_chbody,
                      system.thisptr.system,
                      coordsys.cppobj,
                      limit_X,
