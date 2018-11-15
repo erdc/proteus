@@ -873,6 +873,8 @@ class NS_base(object):  # (HasTraits):
         for avList in list(self.auxiliaryVariables.values()):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
+
+        
         logEvent("Transfering fields from PUMI to Proteus")
         for m in self.modelList:
           for lm in m.levelModelList:
@@ -995,6 +997,9 @@ class NS_base(object):  # (HasTraits):
         #The goal is therefore to populate the nodal fields with the old solution, get m_tmp properly and lagged sge properly.
         #Mimic the solver stagger with a new loop to repopulate the nodal fields with u^{n} solution. This is necessary because NS relies on the u^{n-1} field for VOF/LS
 
+        #print("At the destination")
+        #import pdb; pdb.set_trace()
+
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1})
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -1005,50 +1010,77 @@ class NS_base(object):  # (HasTraits):
                     lm.u[ci].dof[:] = lm.u[ci].dof_last
                 lm.setFreeDOF(lu)
 
-        #All solution fields are now in state u^{n-1}
+        #All solution fields are now in state u^{n-1} and used to get m_tmp and u_sge
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.getResidual(lu,lr)
-                lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+                #lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
 
-                if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
-                    lm.timeIntegration.dt = lm.timeIntegration.dtLast
-
-                #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
-
-                #update the eddy-viscosity history
-                lm.calculateAuxiliaryQuantitiesAfterStep()
-
-        ###This loop reloads the current solution and the previous solution into proper places
-        for m,mOld in zip(self.modelList, modelListOld):
-            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                for ci in range(0,lm.coefficients.nc):
-                    lm.u[ci].dof[:] = lm.u_store[ci].dof
-                    lm.u[ci].dof_last[:] = lm.u_store[ci].dof_last
-                lm.setFreeDOF(lu)
-                lm.getResidual(lu,lr)
-                lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
-                lm.timeIntegration.dt = lm.dt_store
+                #if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
+                #    lm.timeIntegration.dt = lm.timeIntegration.dtLast
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
+                if(lm.name=='twp_navier_stokes_p0' and modelListOld[0].levelModelList[0].stabilization.lag and (modelListOld[0].levelModelList[0].stabilization.nSteps - 1 > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
                     self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
-        ###
-
-        ###Shock capturing
-                if(lmOld.shockCapturing and lmOld.shockCapturing.nStepsToDelay is not None and lmOld.shockCapturing.nSteps > lmOld.shockCapturing.nStepsToDelay):
-                    lm.shockCapturing.nSteps=lm.shockCapturing.nStepsToDelay
-                    lm.shockCapturing.updateShockCapturingHistory()
 
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
 
         self.postStep(self.modelList[3])
         self.postStep(self.modelList[4])
+        #self.modelList[1].levelModelList[0].timeIntegration.postAdaptUpdate(modelListOld[1].levelModelList[0].timeIntegration)
+        #self.modelList[2].levelModelList[0].timeIntegration.postAdaptUpdate(modelListOld[2].levelModelList[0].timeIntegration)
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+
+                if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
+                    lm.timeIntegration.dt = lm.timeIntegration.dtLast
+
+
+
+        print("At the destination")
+        #import pdb; pdb.set_trace()
+        ###This loop reloads the current solution and the previous solution into proper places
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                for ci in range(0,lm.coefficients.nc):
+                    lm.u[ci].dof[:] = lm.u_store[ci].dof
+                    lm.u[ci].dof_last[:] = lm.u_store[ci].dof_last
+
+                lm.setFreeDOF(lu)
+                lm.getResidual(lu,lr)
+
+                #This gets the subgrid error history correct
+                if(lm.name=='twp_navier_stokes_p0' and modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+        ###
+
+        self.postStep(self.modelList[3])
+        self.postStep(self.modelList[4])
+
+        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.005):
+        #  import pdb; pdb.set_trace()
+
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+
+              lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+              lm.timeIntegration.dt = lm.dt_store
+
+        ###Shock capturing update happens with the time history update
+              if(lmOld.shockCapturing and lmOld.shockCapturing.nStepsToDelay is not None and lmOld.shockCapturing.nSteps > lmOld.shockCapturing.nStepsToDelay):
+                    lm.shockCapturing.nSteps=lm.shockCapturing.nStepsToDelay
+                    lm.shockCapturing.updateShockCapturingHistory()
+
+              #update the eddy-viscosity history
+              lm.calculateAuxiliaryQuantitiesAfterStep()
+
+        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.005):
+        #  import pdb; pdb.set_trace()
+
 
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
@@ -1066,6 +1098,17 @@ class NS_base(object):  # (HasTraits):
         logEvent("Copying coordinates to PUMI")
         p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
+
+        #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.005):
+        #  import pdb; pdb.set_trace()
+
+        #put the solution field as uList
+        #VOF and LS needs to reset the u.dof array for proper transfer
+        self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
+        self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
+
+        
+
 
         logEvent("Copying DOF and parameters to PUMI")
         for m in self.modelList:
@@ -1574,23 +1617,23 @@ class NS_base(object):  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
-            self.pList[0].domain.PUMIMesh.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
-            self.so.useOneMesh):
+ #       if (hasattr(self.pList[0].domain, 'PUMIMesh') and
+ #           self.pList[0].domain.PUMIMesh.adaptMesh() and
+ #           (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
+ #           self.so.useOneMesh):
 
-            self.PUMI_transferFields()
-            logEvent("Initial Adapt before Solve")
-            self.PUMI_adaptMesh("interface")
+ #           self.PUMI_transferFields()
+ #           logEvent("Initial Adapt before Solve")
+ #           self.PUMI_adaptMesh("interface")
 
-            for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
-                if p.initialConditions is not None:
-                    logEvent("Setting initial conditions for "+p.name)
-                    m.setInitialConditions(p.initialConditions,self.tnList[0])
- 
-            self.PUMI_transferFields()
-            logEvent("Initial Adapt 2 before Solve")
-            self.PUMI_adaptMesh("interface")
+ #           for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
+ #               if p.initialConditions is not None:
+ #                   logEvent("Setting initial conditions for "+p.name)
+ #                   m.setInitialConditions(p.initialConditions,self.tnList[0])
+# 
+ #           self.PUMI_transferFields()
+ #           logEvent("Initial Adapt 2 before Solve")
+ #           self.PUMI_adaptMesh("interface")
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1640,9 +1683,11 @@ class NS_base(object):  # (HasTraits):
 
                     self.opts.save_dof = True
                     if self.opts.save_dof:
+                        #import pdb; pdb.set_trace()
                         for m in self.modelList:
                             for lm in m.levelModelList:
                                 for ci in range(lm.coefficients.nc):
+                                    lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
                                     lm.u[ci].dof_last[:] = lm.u[ci].dof
                         logEvent("saving previous velocity dofs %s" % self.nSolveSteps)
 
@@ -1683,6 +1728,10 @@ class NS_base(object):  # (HasTraits):
 
 
                                 model.stepController.setInitialGuess(model.uList,model.rList)
+                                #if(self.modelList[2].levelModelList[0].timeIntegration.t>0.002 and model.name=="ls_p"):
+                                #if(self.modelList[1].levelModelList[0].timeIntegration.t>0.002 and model.name=="vof_p"):
+                                #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.005 and model.name=="twp_navier_stokes_p"):
+                                #  import pdb; pdb.set_trace()
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
