@@ -1771,13 +1771,13 @@ class Schur_Sp(SchurPrecon):
     def setUp(self,global_ksp):
         self._setSchurlog(global_ksp)
         self.A00 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
-                                                             self.isv)
+                                                                self.isv)
         self.A01 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
-                                                             self.isp)
+                                                                self.isp)
         self.A10 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
-                                                             self.isv)
+                                                                self.isv)
         self.A11 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
-                                                             self.isp)
+                                                                self.isp)
         L_sizes = self.isp.sizes
         self.SpInv_shell = p4pyPETSc.Mat().create()
         self.SpInv_shell.setSizes(L_sizes)
@@ -2053,16 +2053,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         isp = self.operator_constructor.linear_smoother.isp
         isv = self.operator_constructor.linear_smoother.isv
 
-        self.Np_rho = self.N_rho.createSubMatrix(isp,
-                                                 isp)
-        self.Ap_invScaledRho = self.A_invScaledRho.createSubMatrix(isp,
-                                                                   isp)
-        self.Qp_rho = self.Q_rho.createSubMatrix(isp,
-                                                 isp)
-        self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(isp,
-                                                                   isp)
-
-
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
         #        time steps.
@@ -2086,12 +2076,12 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         # End ******** Sp for Ap ***********
 
         self.Np_rho = self.N_rho.createSubMatrix(isp,
-                                              isp)
+                                                 isp)
 
         self.Ap_invScaledRho = self.A_invScaledRho.createSubMatrix(isp,
-                                                                isp)
+                                                                   isp)
         self.Qp_rho = self.Q_rho.createSubMatrix(isp,
-                                              isp)
+                                                 isp)
         try:
             if self.velocity_block_preconditioner_set is False:
                 self._initialize_velocity_block_preconditioner(global_ksp)
@@ -2099,7 +2089,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         except AttributeError:
             pass
         self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(isp,
-                                                                isp)
+                                                                   isp)
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
