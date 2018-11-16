@@ -1191,8 +1191,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateResidual = self.vof.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.vof.calculateMassMatrix
-
-
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1304,9 +1302,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             logEvent("...   Current dt = " + str(self.timeIntegration.dt), level=4)
             logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax), level=2)
             logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax), level=2)
-
-        #if(self.timeIntegration.t > 0.005):
-        #  import pdb; pdb.set_trace()
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
