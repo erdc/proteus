@@ -25,7 +25,7 @@
 // ***** END OF TODO *****
 
 #define CELL_BASED_EV_COEFF 1
-#define POWER_SMOOTHNESS_INDICATOR 2
+#define POWER_SMOOTHNESS_INDICATOR 0
 
 namespace proteus
 {
@@ -3437,7 +3437,7 @@ namespace proteus
 		    double u_alpha = fabs(u_alpha_numerator)/(u_alpha_denominator+1E-10);
 		    double v_alpha = fabs(v_alpha_numerator)/(v_alpha_denominator+1E-10);
 		    // compute psi=alpha^power
-		    psi[i] = std::pow(fmax(u_alpha,v_alpha),POWER_SMOOTHNESS_INDICATOR);
+		    psi[i] = POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 : std::pow(fmax(u_alpha,v_alpha),POWER_SMOOTHNESS_INDICATOR);
 		  }
 	      }
 
