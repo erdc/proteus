@@ -1992,7 +1992,7 @@ class NewtonNS(NonlinearSolver):
                     self.norm_2_Jinv_current = old_div(1.0,sqrt(min(self.JLsolver.eigenvalues_r)))
                     self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
                     self.betaK_current = self.norm_2_Jinv_current
-                self.linearSolver.prepare(b=r)
+                self.linearSolver.prepare(b=r,newton_its=self.its-1)
             self.du[:]=0.0
             if not self.directSolver:
                 if self.EWtol:
