@@ -1000,6 +1000,10 @@ class NS_base(object):  # (HasTraits):
         #print("At the destination")
         #import pdb; pdb.set_trace()
 
+        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.005):
+        #  import pdb; pdb.set_trace()
+
+
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1})
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -1014,10 +1018,6 @@ class NS_base(object):  # (HasTraits):
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.getResidual(lu,lr)
-                #lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
-
-                #if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
-                #    lm.timeIntegration.dt = lm.timeIntegration.dtLast
 
                 #This gets the subgrid error history correct
                 if(lm.name=='twp_navier_stokes_p0' and modelListOld[0].levelModelList[0].stabilization.lag and (modelListOld[0].levelModelList[0].stabilization.nSteps - 1 > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
@@ -1027,10 +1027,10 @@ class NS_base(object):  # (HasTraits):
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
 
-        self.postStep(self.modelList[3])
-        self.postStep(self.modelList[4])
-        #self.modelList[1].levelModelList[0].timeIntegration.postAdaptUpdate(modelListOld[1].levelModelList[0].timeIntegration)
-        #self.modelList[2].levelModelList[0].timeIntegration.postAdaptUpdate(modelListOld[2].levelModelList[0].timeIntegration)
+        if(self.modelList[0].levelModelList[0].timeIntegration.t>0.005): #older solutions may not have been post-stepped...
+          self.postStep(self.modelList[3])
+          self.postStep(self.modelList[4])
+
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
@@ -1039,6 +1039,14 @@ class NS_base(object):  # (HasTraits):
                     lm.timeIntegration.dt = lm.timeIntegration.dtLast
 
 
+        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.005):
+        #  import pdb; pdb.set_trace()
+
+        #self.postStep(self.modelList[3])
+        #self.postStep(self.modelList[4])
+
+        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.002):
+        #  import pdb; pdb.set_trace()
 
         print("At the destination")
         #import pdb; pdb.set_trace()
@@ -1058,12 +1066,12 @@ class NS_base(object):  # (HasTraits):
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
         ###
 
-        self.postStep(self.modelList[3])
-        self.postStep(self.modelList[4])
-
-        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.005):
+        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.002):
         #  import pdb; pdb.set_trace()
 
+
+        self.postStep(self.modelList[3])
+        self.postStep(self.modelList[4])
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
 
@@ -1078,7 +1086,7 @@ class NS_base(object):  # (HasTraits):
               #update the eddy-viscosity history
               lm.calculateAuxiliaryQuantitiesAfterStep()
 
-        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.005):
+        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.002):
         #  import pdb; pdb.set_trace()
 
 
@@ -1659,19 +1667,33 @@ class NS_base(object):  # (HasTraits):
         self.nSequenceSteps = 0
         nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
         self.nSolveSteps=0
+
+        self.opts.save_dof = True
+        if self.opts.save_dof:
+            for m in self.modelList:
+                for lm in m.levelModelList:
+                    for ci in range(lm.coefficients.nc):
+                        lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
+                        lm.u[ci].dof_last[:] = lm.u[ci].dof
+
+
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
 
-            self.opts.save_dof = True
-            if self.opts.save_dof:
-                for m in self.modelList:
-                    for lm in m.levelModelList:
-                        for ci in range(lm.coefficients.nc):
-                            lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
-                            lm.u[ci].dof_last[:] = lm.u[ci].dof
+            #self.opts.save_dof = True
+            #if self.opts.save_dof:
+            #    for m in self.modelList:
+            #        for lm in m.levelModelList:
+            #            import copy
+            #            lm.u_store = copy.deepcopy(lm.u)
+            #            lm.setUnknowns(m.uList[0])
+            #            for ci in range(lm.coefficients.nc):
+            #                lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
+            #                lm.u[ci].dof_last[:] = lm.u[ci].dof
+            #                lm.u[ci].dof[:] = lm.u_store[ci].dof
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
@@ -1681,14 +1703,18 @@ class NS_base(object):  # (HasTraits):
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
 
+                    #This should be the only place dofs are saved otherwise there might be a double-shift for last_last
                     self.opts.save_dof = True
                     if self.opts.save_dof:
-                        #import pdb; pdb.set_trace()
+                        import copy
                         for m in self.modelList:
                             for lm in m.levelModelList:
+                                lm.u_store = copy.deepcopy(lm.u)
+                                lm.setUnknowns(m.uList[0])
                                 for ci in range(lm.coefficients.nc):
                                     lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
                                     lm.u[ci].dof_last[:] = lm.u[ci].dof
+                                    lm.u[ci].dof[:] = lm.u_store[ci].dof
                         logEvent("saving previous velocity dofs %s" % self.nSolveSteps)
 
 
@@ -1729,13 +1755,19 @@ class NS_base(object):  # (HasTraits):
 
                                 model.stepController.setInitialGuess(model.uList,model.rList)
                                 #if(self.modelList[2].levelModelList[0].timeIntegration.t>0.002 and model.name=="ls_p"):
-                                #if(self.modelList[1].levelModelList[0].timeIntegration.t>0.002 and model.name=="vof_p"):
-                                #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.005 and model.name=="twp_navier_stokes_p"):
+                                #if(self.modelList[1].levelModelList[0].timeIntegration.t>0.000 and model.name=="vof_p"):
+                                ##if(self.modelList[0].levelModelList[0].timeIntegration.t>0.009 and model.name=="twp_navier_stokes_p"):
                                 #  import pdb; pdb.set_trace()
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
+
+                                #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.002 and model.name=="ls_consrv_p"):
+                                 # import pdb; pdb.set_trace()
+                                #if(self.modelList[1].levelModelList[0].timeIntegration.t>0.002 and model.name=="vof_p"):
+                                #  import pdb; pdb.set_trace()
+
 
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
@@ -1772,6 +1804,9 @@ class NS_base(object):  # (HasTraits):
                                 self.postStep(model)
                                 self.systemStepController.sequenceStepTaken(model)
                         else:
+                            #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.000 and model.name=="ls_consrv_p"):
+                            #  import pdb; pdb.set_trace()
+
                             self.postStep(model)
                             self.systemStepController.sequenceStepTaken(model)
                     #end model split operator step
@@ -1809,6 +1844,9 @@ class NS_base(object):  # (HasTraits):
                                                                                            model.name))
                     break
                 else:
+                    #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.000):
+                    #  import pdb; pdb.set_trace()
+
                     self.systemStepController.updateTimeHistory()
                     logEvent("Step Taken, System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                                                    self.systemStepController.dt_system))
