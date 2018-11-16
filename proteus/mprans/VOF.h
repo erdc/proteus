@@ -834,10 +834,6 @@ namespace proteus
 		//ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
 		ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
 		q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
-    if(eN==495)
-    {
-      std::cout<<"eN_k "<<eN_k<<" shock capturing "<<q_numDiff_u[eN_k]<<" "<<shockCapturingDiffusion<<" sc_uref "<<sc_uref<<" sc_alpha "<<sc_alpha<<" G_dd_G "<<G_dd_G<<" pdeResidual "<<pdeResidual_u<<" numDiff1 "<<numDiff1<<" time deriv "<< ck.Mass_strong(m_t)<<" advection strong "<< ck.Advection_strong(df,grad_u)<<" alpha bdf "<<alphaBDF<<" beta BDF "<<q_m_betaBDF[eN_k]<<std::endl;
-    }
 		//std::cout<<tau<<"   "<<q_numDiff_u[eN_k]<<'\t'<<numDiff0<<'\t'<<numDiff1<<'\t'<<pdeResidual_u<<std::endl;
 		//
 		//update element residual

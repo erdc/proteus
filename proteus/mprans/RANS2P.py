@@ -43,7 +43,6 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.hFactor = hFactor
         self.nStepsToDelay = nStepsToDelay
         self.nSteps = 0
-        self.isLagged=False
         if self.lag:
             logEvent("RANS2P.SubgridError: lagging requested but must lag the first step; switching lagging off and delaying")
             #Ensure nStepsToDelay value makes sense by throwing an error
@@ -78,7 +77,6 @@ class SubgridError(proteus.SubgridError.SGE_base):
                 logEvent("RANS2P.SubgridError: switched to lagged subgrid error")
                 #create a separate object identical to cq[('velocity')] 
                 self.v_last = self.cq[('velocity', 0)].copy()
-                self.isLagged=True
             else:
                 pass
             self.nSteps += 1
@@ -1757,8 +1755,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant)
-        #if(self.timeIntegration.t > 0.0005):
-        #  import pdb; pdb.set_trace()
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])

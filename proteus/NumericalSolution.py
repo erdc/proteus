@@ -997,13 +997,6 @@ class NS_base(object):  # (HasTraits):
         #The goal is therefore to populate the nodal fields with the old solution, get m_tmp properly and lagged sge properly.
         #Mimic the solver stagger with a new loop to repopulate the nodal fields with u^{n} solution. This is necessary because NS relies on the u^{n-1} field for VOF/LS
 
-        #print("At the destination")
-        #import pdb; pdb.set_trace()
-
-        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.005):
-        #  import pdb; pdb.set_trace()
-
-
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1})
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -1020,14 +1013,15 @@ class NS_base(object):  # (HasTraits):
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(lm.name=='twp_navier_stokes_p0' and modelListOld[0].levelModelList[0].stabilization.lag and (modelListOld[0].levelModelList[0].stabilization.nSteps - 1 > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
+                if(modelListOld[0].levelModelList[0].stabilization.lag and (modelListOld[0].levelModelList[0].stabilization.nSteps - 1 > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
                     self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
 
-        if(self.modelList[0].levelModelList[0].timeIntegration.t>0.005): #older solutions may not have been post-stepped...
+        #older solutions may not have been post-stepped...
+        if(self.modelList[0].levelModelList[0].timeIntegration.t>0.005): 
           self.postStep(self.modelList[3])
           self.postStep(self.modelList[4])
 
@@ -1038,18 +1032,6 @@ class NS_base(object):  # (HasTraits):
                 if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
                     lm.timeIntegration.dt = lm.timeIntegration.dtLast
 
-
-        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.005):
-        #  import pdb; pdb.set_trace()
-
-        #self.postStep(self.modelList[3])
-        #self.postStep(self.modelList[4])
-
-        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.002):
-        #  import pdb; pdb.set_trace()
-
-        print("At the destination")
-        #import pdb; pdb.set_trace()
         ###This loop reloads the current solution and the previous solution into proper places
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -1061,14 +1043,10 @@ class NS_base(object):  # (HasTraits):
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(lm.name=='twp_navier_stokes_p0' and modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
+                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
                     self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
         ###
-
-        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.002):
-        #  import pdb; pdb.set_trace()
-
 
         self.postStep(self.modelList[3])
         self.postStep(self.modelList[4])
@@ -1085,10 +1063,6 @@ class NS_base(object):  # (HasTraits):
 
               #update the eddy-viscosity history
               lm.calculateAuxiliaryQuantitiesAfterStep()
-
-        #if(self.modelList[0].levelModelList[0].timeIntegration.t > 0.002):
-        #  import pdb; pdb.set_trace()
-
 
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
@@ -1107,16 +1081,10 @@ class NS_base(object):  # (HasTraits):
         p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
-        #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.005):
-        #  import pdb; pdb.set_trace()
-
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
         self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
         self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
-
-        
-
 
         logEvent("Copying DOF and parameters to PUMI")
         for m in self.modelList:
@@ -1754,20 +1722,10 @@ class NS_base(object):  # (HasTraits):
 
 
                                 model.stepController.setInitialGuess(model.uList,model.rList)
-                                #if(self.modelList[2].levelModelList[0].timeIntegration.t>0.002 and model.name=="ls_p"):
-                                #if(self.modelList[1].levelModelList[0].timeIntegration.t>0.000 and model.name=="vof_p"):
-                                ##if(self.modelList[0].levelModelList[0].timeIntegration.t>0.009 and model.name=="twp_navier_stokes_p"):
-                                #  import pdb; pdb.set_trace()
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
-
-                                #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.002 and model.name=="ls_consrv_p"):
-                                 # import pdb; pdb.set_trace()
-                                #if(self.modelList[1].levelModelList[0].timeIntegration.t>0.002 and model.name=="vof_p"):
-                                #  import pdb; pdb.set_trace()
-
 
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
@@ -1804,9 +1762,6 @@ class NS_base(object):  # (HasTraits):
                                 self.postStep(model)
                                 self.systemStepController.sequenceStepTaken(model)
                         else:
-                            #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.000 and model.name=="ls_consrv_p"):
-                            #  import pdb; pdb.set_trace()
-
                             self.postStep(model)
                             self.systemStepController.sequenceStepTaken(model)
                     #end model split operator step
@@ -1844,9 +1799,6 @@ class NS_base(object):  # (HasTraits):
                                                                                            model.name))
                     break
                 else:
-                    #if(self.modelList[0].levelModelList[0].timeIntegration.t>0.000):
-                    #  import pdb; pdb.set_trace()
-
                     self.systemStepController.updateTimeHistory()
                     logEvent("Step Taken, System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                                                    self.systemStepController.dt_system))
