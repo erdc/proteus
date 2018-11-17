@@ -1020,8 +1020,10 @@ class NS_base(object):  # (HasTraits):
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
 
-        #older solutions may not have been post-stepped...
-        if(self.modelList[0].levelModelList[0].timeIntegration.t>0.005): 
+        #shock capturing depends on m_tmp or m_last (if lagged). m_tmp is modified by mass-correction and is pushed into m_last during updateTimeHistory().
+        #This leads to a situation where m_last comes from the mass-corrected solutions so post-step is needed to get this behavior.
+        #If adapt is called after the first time-step, then skip the post-step for the old solution
+        if(abs(self.tn - self.tnList[1])> 1e-12):
           self.postStep(self.modelList[3])
           self.postStep(self.modelList[4])
 
@@ -1651,17 +1653,6 @@ class NS_base(object):  # (HasTraits):
             logEvent("==============================================================",level=0)
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
 
-            #self.opts.save_dof = True
-            #if self.opts.save_dof:
-            #    for m in self.modelList:
-            #        for lm in m.levelModelList:
-            #            import copy
-            #            lm.u_store = copy.deepcopy(lm.u)
-            #            lm.setUnknowns(m.uList[0])
-            #            for ci in range(lm.coefficients.nc):
-            #                lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
-            #                lm.u[ci].dof_last[:] = lm.u[ci].dof
-            #                lm.u[ci].dof[:] = lm.u_store[ci].dof
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
