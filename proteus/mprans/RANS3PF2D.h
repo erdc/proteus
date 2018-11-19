@@ -25,7 +25,7 @@
 // ***** END OF TODO *****
 
 #define CELL_BASED_EV_COEFF 1
-#define POWER_SMOOTHNESS_INDICATOR 0
+#define POWER_SMOOTHNESS_INDICATOR 2
 
 namespace proteus
 {
