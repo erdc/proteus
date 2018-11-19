@@ -4,6 +4,7 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cCLSVOF import *
+from proteus.flcbdfWrappers import globalSum, globalMax
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -45,7 +46,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # 0: don't compute metrics
         # 1: compute change in volume at ETS (every time step)
         # 2: compute several metrics at ETS (every time step)
-        # 3: compute metrics at EOS (end of simulations). Needs an exact solution        
+        # 3: compute metrics at EOS (end of simulations). Needs an exact solution
         self.useMetrics=useMetrics
         self.doSpinUpStep=doSpinUpStep
         self.disc_ICs=disc_ICs
@@ -174,7 +175,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if (firstStep==True):
             self.q_v_old[:] = self.q_v
         # GET MAX VELOCITY #
-        self.VelMax = max(self.q_v.max(),1E-6)
+        self.model.VelMax = max(globalMax(self.q_v.max()),1E-6)
         copyInstructions = {}
         return copyInstructions
 
@@ -218,7 +219,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                       repr(self.model.global_Xy)+","+
                                                       repr(self.model.global_Uy)+
                                                       "\n")
-                    self.model.metricsForBubble.flush()    
+                    self.model.metricsForBubble.flush()
         #
         self.model.q['dV_last'][:] = self.model.q['dV']
         copyInstructions = {}
@@ -647,7 +648,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.projected_disc_ICs = numpy.zeros(self.u[0].dof.shape,'d')
         self.par_projected_disc_ICs = None
 
-        from proteus.flcbdfWrappers import globalMax
         self.he_for_disc_ICs = 0.5*(-globalMax(-self.mesh.elementDiametersArray.min()) +
                                     globalMax(self.mesh.elementDiametersArray.max()))
         ###################################
@@ -780,7 +780,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_sH_L2_err = 0.0
         # For bubble
         self.global_Xy = 0.0
-        self.global_Uy = 0.0        
+        self.global_Uy = 0.0
         if self.coefficients.computeMetrics > 0 and self.comm.isMaster():
             if self.hasExactSolution and self.coefficients.computeMetrics==3: # at EOS
                 self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
@@ -816,7 +816,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                             'time'+","+
                                             'global_Xy'+","+
                                             'global_Uy'+
-                                            "\n")                             
+                                            "\n")
 
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -905,15 +905,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.mesh.nodeDiametersArray,
              self.degree_polynomial,
              self.coefficients.epsFactHeaviside,
-             self.u[0].dof, 
+             self.u[0].dof,
              self.coefficients.q_v,
              self.offset[0],self.stride[0])
 
-        from proteus.flcbdfWrappers import globalSum
         # metrics about conservation
         self.global_Xy = globalSum(global_Xy)/globalSum(global_Bubble)
         self.global_Uy = globalSum(global_Uy)/globalSum(global_Bubble)
-        
+
     def getMetricsAtETS(self): #ETS=Every Time Step
         """
         Calculate some metrics at ETS (Every Time Step)
@@ -953,7 +952,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.R_vector,
              self.sR_vector)
 
-        from proteus.flcbdfWrappers import globalSum
         # metrics about conservation
         self.global_V = globalSum(global_V)
         self.global_V0 = globalSum(global_V0)
@@ -1007,7 +1005,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              u_exact,
              self.offset[0],self.stride[0])
 
-        from proteus.flcbdfWrappers import globalSum
         # Interface metrics
         self.global_I_err = globalSum(global_I_err)
         self.global_sI_err = globalSum(global_sI_err)
@@ -1262,7 +1259,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # END OF FREEZING INTERFACE #
         else: # RELATED CLSVOF MODEL #
             # Quantities to compute normalization factor
-            from proteus.flcbdfWrappers import globalSum, globalMax
             self.min_distance = -globalMax(-min_distance[0])
             self.max_distance = globalMax(max_distance[0])
             self.mean_distance = globalSum(mean_distance[0])
@@ -1348,6 +1344,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.lambdaFact,
             self.preRedistancingStage,
             self.norm_factor_lagged,
+            self.VelMax,
             self.coefficients.alpha/self.mesh.elementDiametersArray.min())
 
         # RELATED TO EIKONAL EQUATION #

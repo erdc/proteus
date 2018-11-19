@@ -140,6 +140,7 @@ cdef extern from "CLSVOF.h" namespace "proteus":
                                double lambdaFact,
 			       int preRedistancingStage,
                                double norm_factor_lagged,
+			       double VelMax,
 			       double alpha)
         void calculateMetricsAtEOS(double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -542,6 +543,7 @@ cdef class cCLSVOF_base:
                          double lambdaFact,
 			 int preRedistancingStage,
                          double norm_factor_lagged,
+			 double VelMax,
 			 double alpha):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -599,6 +601,7 @@ cdef class cCLSVOF_base:
                                       lambdaFact,
 				      preRedistancingStage,
                                       norm_factor_lagged,
+				      VelMax,
 				      alpha)
    def calculateMetricsAtEOS(self,
                              numpy.ndarray mesh_trial_ref,

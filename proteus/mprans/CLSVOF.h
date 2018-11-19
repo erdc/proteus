@@ -182,6 +182,7 @@ namespace proteus
                                    // normalization factor
 				   int preRedistancingStage,
                                    double norm_factor_lagged,
+				   double VelMax,
 				   double alpha)=0;
     virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
                                        double* mesh_trial_ref,
@@ -844,7 +845,7 @@ namespace proteus
 		    ////////////
 		    // LAMBDA //
 		    ////////////
-		    lambda = lambdaFact*hK/norm_factor_lagged;
+		    lambda = lambdaFact*VelMax*hK/norm_factor_lagged;
 		    if (LAMBDA_SCALING==1)
 		      {
 			double deltaHat = fmax(smoothedNormalizedDirac(2*epsHeaviside,un),1E-6);
@@ -1249,6 +1250,7 @@ namespace proteus
                              // normalization factor
 			     int preRedistancingStage,
                              double norm_factor_lagged,
+			     double VelMax,
 			     double alpha)
       {
         for(int eN=0;eN<nElements_global;eN++)
@@ -1381,7 +1383,7 @@ namespace proteus
 		    ////////////
 		    // LAMBDA //
 		    ////////////
-		    lambda = lambdaFact*hK/norm_factor_lagged;
+		    lambda = lambdaFact*VelMax*hK/norm_factor_lagged;
 		    if (LAMBDA_SCALING==1)
 		      {
 			double deltaHat = fmax(smoothedNormalizedDirac(2*epsDirac,un),1E-6);
