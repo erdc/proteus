@@ -504,8 +504,8 @@ namespace proteus
 				   int ARTIFICIAL_VISCOSITY,
 				   double * dMatrix,
 				   int numDOFs_1D,
-				   int offset_u, int offset_v,
-				   int stride_u, int stride_v,
+				   int offset_u, int offset_v, int offset_w,
+				   int stride_u, int stride_v, int stride_w,
 				   int *rowptr_1D, int *colind_1D,
 				   int *rowptr, int *colind)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
@@ -2641,7 +2641,7 @@ namespace proteus
 			    v_times_vel_grad_test_dV[j*nSpace+I] =
 			      v*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_v[I];
 			    /*w_times_vel_grad_test_dV[j*nSpace+I] =
-			      w*vel_grad_trial[j*nSpace+I]*dV+vel_test_dV[j]*grad_w[I];*/
+			      w*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_w[I];*/
 			  }
                       }
                   }
@@ -3212,10 +3212,12 @@ namespace proteus
                                             tgrad_v);
                 // END OF SURFACE TENSION //
 
-		//
-		velStar[0] = q_velocity_sge[eN_k_nSpace+0];
-		velStar[1] = q_velocity_sge[eN_k_nSpace+1];
-		/*velStar[2] = q_velocity_sge[eN_k_nSpace+2];*/
+		if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		  {
+		    velStar[0] = q_velocity_sge[eN_k_nSpace+0];
+		    velStar[1] = q_velocity_sge[eN_k_nSpace+1];
+		    /*velStar[2] = q_velocity_sge[eN_k_nSpace+2];*/
+		  }
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     register int i_nSpace=i*nSpace;
@@ -3308,7 +3310,8 @@ namespace proteus
 			  ck.Diffusion_weak(sdInfo_v_u_rowptr,
 					    sdInfo_v_u_colind,
 					    mom_vu_diff_ten,
-					    grad_u,&v_times_vel_grad_test_dV[i_nSpace])+
+					    grad_u,
+					    &v_times_vel_grad_test_dV[i_nSpace])+
 			  ck.Diffusion_weak(sdInfo_v_v_rowptr,
 					    sdInfo_v_v_colind,
 					    mom_vv_diff_ten,
@@ -3400,12 +3403,14 @@ namespace proteus
 		if (ARTIFICIAL_VISCOSITY==4) // via entropy viscosity
 		  {
 		    // normalize entropy residual per node
-		    double max_u2i = std::pow(u_dof[i],2.) + std::pow(v_dof[i],2.);
+		    double max_u2i = (std::pow(u_dof[i],2.) +
+				      std::pow(v_dof[i],2.));
 		    double min_u2i = max_u2i;
 		    for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
 		      {
 			int j = colind_1D[offset];
-			double u2j = std::pow(u_dof[j],2.) + std::pow(v_dof[j],2.);
+			double u2j = (std::pow(u_dof[j],2.) +
+				      std::pow(v_dof[j],2.));
 			max_u2i = fmax(max_u2i,u2j);
 			min_u2i = fmin(min_u2i,u2j);
 		      }
@@ -3431,13 +3436,15 @@ namespace proteus
 			u_alpha_numerator += (uStarj - uStari);
 			u_alpha_denominator += fabs(uStarj - uStari);
 			// for v component
-			v_alpha_numerator += (uStarj - uStari);
-			v_alpha_denominator += fabs(uStarj - uStari);
+			v_alpha_numerator += (vStarj - vStari);
+			v_alpha_denominator += fabs(vStarj - vStari);
 		      }
 		    double u_alpha = fabs(u_alpha_numerator)/(u_alpha_denominator+1E-10);
 		    double v_alpha = fabs(v_alpha_numerator)/(v_alpha_denominator+1E-10);
 		    // compute psi=alpha^power
-		    psi[i] = POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 : std::pow(fmax(u_alpha,v_alpha),POWER_SMOOTHNESS_INDICATOR);
+		    psi[i] = (POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 :
+			      std::pow(fmax(u_alpha,v_alpha),
+				       POWER_SMOOTHNESS_INDICATOR));
 		  }
 	      }
 
@@ -3468,8 +3475,6 @@ namespace proteus
 			    double dLij = fmax(0.,fmax(TransportMatrix[ij],
 						       TransposeTransportMatrix[ij]));
 			    dMatrix[ij] = fmin(dLij,cE*dEVij);
-
-			    //std::cout << dLij << "\t" << dEVij << std::endl;
 			  }
 			else // via smoothness indicator
 			  {
@@ -4882,8 +4887,8 @@ namespace proteus
 			     int ARTIFICIAL_VISCOSITY,
 			     double * dMatrix,
 			     int numDOFs_1D,
-			     int offset_u, int offset_v,
-			     int stride_u, int stride_v,
+			     int offset_u, int offset_v, int offset_w,
+			     int stride_u, int stride_v, int stride_w,
 			     int *rowptr_1D, int *colind_1D,
 			     int *rowptr, int *colind)
       {
@@ -5851,6 +5856,7 @@ namespace proteus
                   }//j
               }//i
           }//elements
+
 	// loop in DOFs for discrete upwinding
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {

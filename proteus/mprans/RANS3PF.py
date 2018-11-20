@@ -1070,7 +1070,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # COMPUTE STAR VELOCITIES #
         ###########################
         if firstStep:
-            self.model.entropyResidualPerNode[:] = 1.E15
+            self.model.entropyResidualPerNode[:] = 1.E15 # first step use low order stab
         #
         self.model.laggedEntropyResidualPerNode[:] = self.model.entropyResidualPerNode[:]
         # Compute 2nd order extrapolation on velocity
@@ -2940,10 +2940,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numDOFs_1D,
             self.offset[0],
             self.offset[1],
-            #self.offset[2],
+            self.offset[2],
             self.stride[0],
             self.stride[1],
-            #self.stride[2],
+            self.stride[2],
             self.rowptr_1D,
             self.colind_1D)
 
