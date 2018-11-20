@@ -16,6 +16,8 @@ using namespace std;
 
 class cppSystem {
  public:
+  std::shared_ptr<ChSystemSMC> systemSMC_sharedptr;
+  ChSystemSMC* systemSMC;
   ChSystem* system;
   double* gravity;
   double chrono_dt;
@@ -66,7 +68,7 @@ class cppRigidBody {
   std::shared_ptr<ChLinkSpring> spring;
   /* ChVector <> inertia; */
   double* inertia;
-  ChTriangleMeshConnected trimesh;
+  shared_ptr<ChTriangleMeshConnected> trimesh;
   std::shared_ptr<ChBody> body;
   cppSystem* system;
   cppRigidBody(cppSystem* system);
@@ -110,7 +112,9 @@ class cppRigidBody {
 cppSystem::cppSystem(double* gravity):
 gravity(gravity)
 {
-  system = new ChSystemSMC();
+  systemSMC_sharedptr = std::make_shared<ChSystemSMC>();
+  systemSMC = systemSMC_sharedptr.get();
+  system = systemSMC;
   chrono_dt = 0.000001;
   system->Set_G_acc(ChVector<>(gravity[0], gravity[1], gravity[2]));
   directory = "./";
@@ -249,7 +253,7 @@ void cppRigidBody::calculate_init() {
   rotq0 = body->GetRot();
   trimesh_pos.clear();
   trimesh_pos0.clear();
-  auto trimesh_coords = trimesh.getCoordsVertices();
+  auto trimesh_coords = trimesh->getCoordsVertices();
   for (int i = 0; i < trimesh_coords.size(); i++) {
   trimesh_pos0.push_back(ChVector<double>(trimesh_coords[i].x(),
                                           trimesh_coords[i].y(),
@@ -265,7 +269,7 @@ void cppRigidBody::prestep(double* force, double* torque)
   /* step to call before running chrono system step */
   pos_last = body->GetPos();
   vel_last = body->GetPos_dt();
-  trimesh_pos_last = trimesh.getCoordsVertices();
+  trimesh_pos_last = trimesh->getCoordsVertices();
   acc_last = body->GetPos_dtdt();
   rotm_last = body->GetA();
   rotq_last = body->GetRot();
@@ -539,8 +543,8 @@ void cppRigidBody::setName(std::string name) {
 
 void cppRigidBody::getTriangleMeshSDF(ChVector<> pos,
                                       double* dist_n) {
-  auto xxs = trimesh.getCoordsVertices();
-  auto nns = trimesh.getCoordsNormals();
+  auto xxs = trimesh->getCoordsVertices();
+  auto nns = trimesh->getCoordsNormals();
   ChVector<> dist_vec;
   double min_dist=1e10;
   double dist;
@@ -568,8 +572,8 @@ void cppRigidBody::getTriangleMeshSDF(ChVector<> pos,
 void cppRigidBody::getTriangleMeshVel(double *x,
                                       double dt,
                                       double *vel) {
-  auto xxs = trimesh.getCoordsVertices();
-  auto nns = trimesh.getCoordsNormals();
+  auto xxs = trimesh->getCoordsVertices();
+  auto nns = trimesh->getCoordsNormals();
   double min_dist = 1e10;
   ChVector<> p(x[0], x[1], x[2]);
   ChVector<> d_vector(0.0);
@@ -644,3 +648,21 @@ void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
   mylink->SetLimit_Rz(&chlimit_Rz);
   mylink->Initialize(body1, body2, coordsys);
 }
+
+struct no_op_delete
+{
+  void operator()(void*) { }
+};
+
+std::shared_ptr<ChPhysicsItem> getPhysicsItemSharedPtr(ChPhysicsItem* item) {
+  std::shared_ptr<ChPhysicsItem> sp(item, no_op_delete());
+  return sp;
+}
+static std::map<ChPhysicsItem*, std::shared_ptr<ChPhysicsItem>> spans;
+
+std::shared_ptr<ChPhysicsItem> getPhysicsItemSharedPtr2(ChPhysicsItem* item) {
+  std::shared_ptr<ChPhysicsItem> sp = spans.at(item);
+  /* std::shared_ptr<ChPhysicsItem> sp(item, no_op_delete()); */
+  return sp;
+}
+

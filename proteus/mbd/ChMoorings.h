@@ -482,22 +482,21 @@ ChVector<> cppMultiSegmentedCable::getTensionElement(int i, double eta=0.) {
   auto force = ChVector<>();
   auto torque = ChVector<>();
   if (beam_type == "CableANCF") {
-    elemsCableANCF[i]->EvaluateSectionForceTorque(eta,
-                                                  mat,
-                                                  force,
-                                                  torque);
+    /* elemsCableANCF[i]->EvaluateSectionForceTorque(eta, */
+    /*                                               mat, */
+    /*                                               force, */
+    /*                                               torque); */
     elemsCableANCF[i]->EvaluateSectionStrain(eta,
-                                             mat,
                                              force);
   }
   else if (beam_type == "BeamEuler") {
     auto mat2 = ChMatrixDynamic<>();
     elemsBeamEuler[i]->GetStateBlock(mat2);
     //elemsBeamEuler[i]->EvaluateSectionStrain(eta, mat, force);
-    elemsBeamEuler[i]->EvaluateSectionForceTorque(eta,
-                                                  mat2,
-                                                  force,
-                                                  torque);
+    /* elemsBeamEuler[i]->EvaluateSectionForceTorque(eta, */
+    /*                                               mat2, */
+    /*                                               force, */
+    /*                                               torque); */
   }
   return force;
 }
