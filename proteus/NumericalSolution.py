@@ -1013,7 +1013,7 @@ class NS_base(object):  # (HasTraits):
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and (modelListOld[0].levelModelList[0].stabilization.nSteps - 1 > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
+                if(modelListOld[0].levelModelList[0].stabilization.lag and ((modelListOld[0].levelModelList[0].stabilization.nSteps - 1) > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
                     self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
@@ -1023,7 +1023,7 @@ class NS_base(object):  # (HasTraits):
         #shock capturing depends on m_tmp or m_last (if lagged). m_tmp is modified by mass-correction and is pushed into m_last during updateTimeHistory().
         #This leads to a situation where m_last comes from the mass-corrected solutions so post-step is needed to get this behavior.
         #If adapt is called after the first time-step, then skip the post-step for the old solution
-        if(abs(self.tn - self.tnList[1])> 1e-12):
+        if(abs(self.systemStepController.t_system - self.tnList[1])> 1e-12 or  abs(self.systemStepController.t_system - self.tnList[0])> 1e-12  ):
           self.postStep(self.modelList[3])
           self.postStep(self.modelList[4])
 
@@ -1050,8 +1050,9 @@ class NS_base(object):  # (HasTraits):
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
         ###
 
-        self.postStep(self.modelList[3])
-        self.postStep(self.modelList[4])
+        if(abs(self.systemStepController.t_system - self.tnList[0])> 1e-12  ):
+            self.postStep(self.modelList[3])
+            self.postStep(self.modelList[4])
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
 
@@ -1066,6 +1067,7 @@ class NS_base(object):  # (HasTraits):
               #update the eddy-viscosity history
               lm.calculateAuxiliaryQuantitiesAfterStep()
 
+        #import pdb; pdb.set_trace()
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
             self.tCount+=1
@@ -1554,9 +1556,14 @@ class NS_base(object):  # (HasTraits):
                                 m.uList,
                                 m.rList):
                 if self.opts.save_dof:
+                    import copy
+                    lm.u_store = copy.deepcopy(lm.u)
+                    lm.setUnknowns(m.uList[0])
                     for ci in range(lm.coefficients.nc):
                         lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
                         lm.u[ci].dof_last[:] = lm.u[ci].dof
+                        lm.u[ci].dof[:] = lm.u_store[ci].dof
+
                 #calculate the coefficients, any explicit terms will be wrong
                 lm.timeTerm=False
                 lm.getResidual(lu,lr)
@@ -1595,23 +1602,23 @@ class NS_base(object):  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
-            self.pList[0].domain.PUMIMesh.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
-            self.so.useOneMesh):
+        #if (hasattr(self.pList[0].domain, 'PUMIMesh') and
+        #    self.pList[0].domain.PUMIMesh.adaptMesh() and
+        #    (self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
+        #    self.so.useOneMesh):
 
-            self.PUMI_transferFields()
-            logEvent("Initial Adapt before Solve")
-            self.PUMI_adaptMesh("interface")
+        #    self.PUMI_transferFields()
+        #    logEvent("Initial Adapt before Solve")
+        #    self.PUMI_adaptMesh("interface")
 
-            for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
-                if p.initialConditions is not None:
-                    logEvent("Setting initial conditions for "+p.name)
-                    m.setInitialConditions(p.initialConditions,self.tnList[0])
+        #    for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
+        #        if p.initialConditions is not None:
+        #            logEvent("Setting initial conditions for "+p.name)
+        #            m.setInitialConditions(p.initialConditions,self.tnList[0])
  
-            self.PUMI_transferFields()
-            logEvent("Initial Adapt 2 before Solve")
-            self.PUMI_adaptMesh("interface")
+        #    self.PUMI_transferFields()
+        #    logEvent("Initial Adapt 2 before Solve")
+        #    self.PUMI_adaptMesh("interface")
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1640,11 +1647,15 @@ class NS_base(object):  # (HasTraits):
 
         self.opts.save_dof = True
         if self.opts.save_dof:
+            import copy
             for m in self.modelList:
                 for lm in m.levelModelList:
+                    lm.u_store = copy.deepcopy(lm.u)
+                    lm.setUnknowns(m.uList[0])
                     for ci in range(lm.coefficients.nc):
                         lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
                         lm.u[ci].dof_last[:] = lm.u[ci].dof
+                        lm.u[ci].dof[:] = lm.u_store[ci].dof
 
 
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
