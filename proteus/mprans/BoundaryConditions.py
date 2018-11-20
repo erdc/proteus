@@ -20,6 +20,14 @@ from proteus import WaveTools as wt
 from proteus.Profiling import logEvent
 from math import cos, sin, sqrt, atan2, acos, asin
 
+# needed for sphinx docs
+__all__ = ['BC_RANS',
+           'WallFunctions',
+           'RelaxationZone',
+           'RelaxationZoneWaveGenerator',
+           '__cppClass_WavesCharacteristics',
+           'WallFunctions'
+           'kWall']
 
 class BC_RANS(BoundaryConditions.BC_Base):
     """
@@ -29,7 +37,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
     def __init__(self, shape=None, name=None, b_or=None, b_i=0., nd=None):
         super(BC_RANS, self).__init__(shape=shape, name=name, b_or=b_or, b_i=b_i, nd=nd)
         # _dirichlet
-        self.p_dirichlet = BoundaryCondition()  # pressure
+        self.p_dirichlet = BoundaryCondition()  #: pressure
         self.u_dirichlet = BoundaryCondition()  # velocity u
         self.v_dirichlet = BoundaryCondition()  # velocity v
         self.w_dirichlet = BoundaryCondition()  # velocity w
@@ -233,12 +241,13 @@ class BC_RANS(BoundaryConditions.BC_Base):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
+
         Parameters
         ----------
-        orientation: Optional[array_like]
+        orientation: array_like, optional
             orientation of the boundary. Optional if orientation was already
             passed when creating the BC_RANS class instance.
-        vof_air: Optional[float]
+        vof_air: float, optional
             VOF value of air (default is 1.)
         """
         self.BC_type = 'Atmosphere'
@@ -443,18 +452,18 @@ class BC_RANS(BoundaryConditions.BC_Base):
 
         Parameters
         ----------
-        wave: proteus.WaveTools
+        wave: :class:`proteus.WaveTools`
             class describing a wave (from proteus.WaveTools)
         smoothing: float
             smoothing distance (typically 3.*he)
-        vert_axis: Optional[int]
+        vert_axis: int, optional
             index of vertical position vector (x:0, y:1, z:2), must always be
             aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
-        wind_speed: Optional[array_like]
+        wind_speed: array_like of float, optional
             speed of air phase
-        vof_air: Optional[float]
+        vof_air: float, optional
             VOF value of air (default is 1.)
-        vof_water: Optional[float]
+        vof_water: float, optional
             VOF value of water (default is 0.)
 
         Below the sea water level: fluid velocity to wave speed.
@@ -528,29 +537,29 @@ class BC_RANS(BoundaryConditions.BC_Base):
         boundary for higher than the sealevel.
         Parameters
         ----------
-        U: list.
+        U: array_like
             Velocity vector at the global system.
-        Uwind: list.
-            Air velocity vector at the global system.
-        waterLevel: float.
+        waterLevel: float
             water level at global coordinate system.
-        smoothing: float.
+        smoothing: float
             range within smoothing function is valid.
-           [3.0 times mesh element size can be a good value]
-        vert_axis: optional. 
+            [3.0 times mesh element size can be a good value]
+        Uwind: array_like, optional
+            Air velocity vector at the global system.
+        vert_axis: float, optional
             index of vertical in position vector, must always be
             aligned with gravity, by default set to 1].
-        air: optional.
+        air: float, optional
             Volume fraction for air (1.0 by default).
-        water: optional.
+        water: float, optional
             Volume fraction for water (0.0 by default).
-        kInflow: float (optional).
+        kInflow: float, optional
             K inflow value for turbulent model imposed at the boundary.
-        dissipationInflow: float (optional).
+        dissipationInflow: float, optional
             Dissipation inflow value for turbulent model imposed at the boundary.
-        kInflowAir: float (optional).
+        kInflowAir: float, optional
             Air K inflow value for turbulent model imposed at the boundary.
-        dissipationInflowAir: float (optional).
+        dissipationInflowAir: float, optional
             Air dissipation inflow value for turbulent model imposed at the boundary.
         Below the seawater level, the condition returns the _dirichlet and
         p_advective condition according to the inflow velocity.
@@ -934,25 +943,25 @@ class RelaxationZone:
         orientation for absorption/generation zones: from boundary to tank
     epsFact_solid: float
         half the zone length
-    waves: Optional[proteus.WaveTools]
+    waves: :class:`proteus.WaveTools`, optional
         class instance of a wave from proteus.WaveTools (must be set for
         generation zone)
-    shape: Optional[proteus.SpatialTools.Shape]
+    shape: :class:`proteus.mprans.SpatialTools.ShapeRANS`, optional
         shape class instance containing region
-    dragAlpha: Optional[float]
+    dragAlpha: float, optional
         parameter for porous zones (default: 0.5/1.005e-6)
-    dragBeta: Optional[float]
+    dragBeta: float, optional
         parameter for porous zones (default: 0.)
-    porosity: Optional[float]
+    porosity: float, optional
         parameter for porous zone (default: 1.)
-    vert_axis: Optional[int]
+    vert_axis: int, optional
         index of vertical position vector (x:0, y:1, z:2), must always be
         aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
-    smoothing: Optional[float]
+    smoothing: float, optional
         smoothing distance from the free surface (usually 3*he)
-    vof_water: Optional[int]
+    vof_water: int, optional
         VOF value of water (default: 0)
-    vof_air: Optional[int]
+    vof_air: int, optional
         VOF value of air (default: 1)
     """
 
@@ -1125,21 +1134,21 @@ class __cppClass_WavesCharacteristics:
 
     Parameters
     ----------
-    wave: proteus.WaveTools
+    wave: :class:`proteus.WaveTools`
         class describing a wave (from proteus.WaveTools)
     vert_axis: int
         index of vertical position vector (x:0, y:1, z:2), must always be
         aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
-    wind_speed: Optional[array_like]
+    wind_speed: array_like, optional
         speed of air phase
-    b_or: Optional[array_like]
+    b_or: array_like, optional
         boundary orientation. Necessary for pressure calculations. Used
         for boundary conditions but not in relaxation zones.
-    smoothing: Optional[float]
+    smoothing: float, optional
         smoothing distance from the free surface (usually 3*he)
-    vof_water: Optional[float]
+    vof_water: float, optional
         VOF value of water (default: 0)
-    vof_air: Optional[float]
+    vof_air: float, optional
         VOF value of air (default: 1)
     """
 

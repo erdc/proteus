@@ -50,6 +50,10 @@ from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 from proteus.Archiver import indentXML
 
+__all__ = ['ProtChSystem',
+           'ProtChBody',
+           'ProtChMoorings',
+           'ProtChAddedMass']
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppMesh:
@@ -2164,7 +2168,7 @@ cdef class ProtChSystem:
 #    print(gg.x, gg.y, gg.z)
 
 
-cdef class Mesh:
+cdef class ProtChMesh:
     cdef cppMesh * thisptr
     def __cinit__(self, ProtChSystem system):
         cdef shared_ptr[ch.ChMesh] mesh = make_shared[ch.ChMesh]()
@@ -2174,7 +2178,7 @@ cdef class Mesh:
 
 cdef class SurfaceBoxNodesCloud:
     cdef cppSurfaceBoxNodesCloud * thisptr
-    def __cinit__(self, ProtChSystem system, Mesh mesh, np.ndarray position, np.ndarray dimensions):
+    def __cinit__(self, ProtChSystem system, ProtChMesh mesh, np.ndarray position, np.ndarray dimensions):
         cdef ch.ChVector[double] pos = ch.ChVector[double](position[0], position[1], position[2])
         cdef ch.ChVector[double] dim = ch.ChVector[double](dimensions[0], dimensions[1], dimensions[2])
         self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system,
@@ -2266,9 +2270,10 @@ cdef class ProtChMoorings:
       int[:] owning_rank
       string hdfFileName
       double[:] tCount_value
+      double[:] length
     def __cinit__(self,
                   ProtChSystem system,
-                  Mesh mesh,
+                  ProtChMesh mesh,
                   double[:] length,
                   np.ndarray nb_elems,
                   double[:] d,
@@ -2283,6 +2288,7 @@ cdef class ProtChMoorings:
         self.Mesh = mesh
         self.beam_type = beam_type
         self.nb_elems = nb_elems
+        self.length = length
         cdef vector[double] vec_length
         cdef vector[int] vec_nb_elems
         cdef vector[double] vec_d

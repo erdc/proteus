@@ -6,6 +6,10 @@ Module for creating boundary conditions. Imported in SpatialTools.py
    :parts: 1
 """
 
+# needed for sphinx docs
+__all__ = ['BC_Base',
+           'BoundaryCondition']
+
 class BC_Base:
     """
     Generic class regrouping boundary conditions

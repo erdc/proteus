@@ -59,7 +59,7 @@ class ShapeRANS(Shape):
     domain: proteus.Domain.D_base
         Domain class instance that hold all the geometrical informations and
         boundary conditions of the shape.
-    nd: Optional[int]
+    nd: int, optional
         Number of dimensions of the shape. If not set, will take the number of
         dimensions of the domain.
     """
@@ -220,9 +220,9 @@ class ShapeRANS(Shape):
             Coordinates of the center of the absorption zone.
         orientation: array_like
             Orientation vector pointing TOWARDS incoming waves.
-        dragBeta: Optional[float]
+        dragBeta: float, optional
             Relaxation zone coefficient.
-        porosity: Optional[float]
+        porosity: float, optional
             Relaxation zone coefficient.
         """
         self._attachAuxiliaryVariable('RelaxZones')
@@ -270,13 +270,13 @@ class ShapeRANS(Shape):
             Orientation vector pointing ACCORDING WITH the direction of generated waves.
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
-        dragAlpha: Optional[float]
+        dragAlpha: float, optional
             Relaxation zone coefficient.
-        wind_speed: Optional[array_like]
+        wind_speed: array_like, optional
             Speed of wind in generation zone (default is (0., 0., 0.))
-        dragBeta: Optional[float]
+        dragBeta: float, optional
             Relaxation zone coefficient.
-        porosity: Optional[float]
+        porosity: float, optional
             Relaxation zone coefficient.
         """
         self._attachAuxiliaryVariable('RelaxZones')
@@ -399,11 +399,11 @@ class Tank3D(ShapeRANS):
     domain: proteus.Domain.D_base
         Domain class instance that hold all the geometrical informations and
         boundary conditions of the shape.
-    dim: Optional[array_like]
+    dim: array_like, optional
         Dimensions of the cuboid.
-    coords: Optional[array_like]
+    coords: array_like, optional
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
+    from_0: bool, optional
         If True (default), the tank extends from the origin to postive x, y, z
     """
     count = 0
@@ -470,13 +470,13 @@ class Tank3D(ShapeRANS):
 
         Parameters
         ----------
-        x_p: Optional[float]
+        x_p: float, optional
             length of sponge layer in +x direction.
-        x_n: Optional[float]
+        x_n: float, optional
             length of sponge layer in -x direction.
-        y_p: Optional[float]
+        y_p: float, optional
             length of sponge layer in +y direction.
-        y_n: Optional[float]
+        y_n: float, optional
             length of sponge layer in -y direction.
         """
         self.spongeLayers['x+'] = x_p
@@ -806,9 +806,9 @@ class Tank3D(ShapeRANS):
             If True, y+ region is converted to absorption zone.
         y_n: bool
             If True, y- region is converted to absorption zone.
-        dragBeta: Optional[float]
+        dragBeta: float, optional
             Relaxation zone coefficient.
-        porosity: Optional[float]
+        porosity: float, optional
             Relaxation zone coefficient.
         """
         self.abs_zones = {'y-': y_n, 'y+': y_p, 'x-': x_n, 'x+': x_p}
@@ -867,21 +867,21 @@ class Tank3D(ShapeRANS):
             Smoothing distance (typically 3.*he)
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
-        wind_speed: Optional[array_like]
+        wind_speed: array_like, optional
             Speed of wind in generation zone (default is (0., 0., 0.))
-        allSponge: bool
+        allSponge: bool, optional
             If True, all sponge layers are converted to generation zones.
-        x_p: bool
+        x_p: bool, optional
             If True, x+ region is converted to generation zone.
-        x_n: bool
+        x_n: bool, optional
             If True, x- region is converted to generation zone.
-        y_p: bool
+        y_p: bool, optional
             If True, y+ region is converted to generation zone.
-        y_n: bool
+        y_n: bool, optional
             If True, y- region is converted to generation zone.
-        dragBeta: Optional[float]
+        dragBeta: float, optional
             Relaxation zone coefficient.
-        porosity: Optional[float]
+        porosity: float, optional
             Relaxation zone coefficient.
         """
         self.abs_zones = {'y-': y_n, 'y+': y_p, 'x-': x_n, 'x+': x_p}
@@ -950,9 +950,9 @@ class Tank2D(ShapeRANS):
         boundary conditions of the shape.
     dim: array_like
         Dimensions of the tank (excluding sponge layers).
-    coords: Optional[array_like]
+    coords: array_like, optional
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
+    from_0: bool, optional
         If True (default), the tank extends from the origin to positive x, y, z
     """
     count = 0
@@ -1138,9 +1138,9 @@ class Tank2D(ShapeRANS):
 
         Parameters
         ----------
-        x_p: Optional[float]
+        x_p: float, optional
             length of sponge layer in +x direction.
-        x_n: Optional[float]
+        x_n: float, optional
             length of sponge layer in -x direction.
         """
         self.spongeLayers['x-'] = x_n
@@ -1162,9 +1162,9 @@ class Tank2D(ShapeRANS):
             If True, x+ region is converted to absorption zone.
         x_n: bool
             If True, x- region is converted to absorption zone.
-        dragBeta: Optional[float]
+        dragBeta: float, optional
             Relaxation zone coefficient.
-        porosity: Optional[float]
+        porosity: float, optional
             Relaxation zone coefficient.
         """
         waves = None
@@ -1221,17 +1221,17 @@ class Tank2D(ShapeRANS):
             Smoothing distance
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
-        wind_speed: Optional[array_like]
+        wind_speed: array_like, optional
             Speed of wind in generation zone (default is (0., 0., 0.))
-        allSponge: bool
+        allSponge: bool, optional
             If True, all sponge layers are converted to generation zones.
-        x_p: bool
+        x_p: bool, optional
             If True, x+ region is converted to generation zone.
-        x_n: bool
+        x_n: bool, optional
             If True, x- region is converted to generation zone.
-        dragBeta: Optional[float]
+        dragBeta: float, optional
             Relaxation zone coefficient.
-        porosity: Optional[float]
+        porosity: float, optional
             Relaxation zone coefficient.
         """
         waves = waves
@@ -1309,33 +1309,33 @@ class TankWithObstacles2D(Tank2D):
     domain: proteus.Domain.D_base
         Domain class instance that hold all the geometrical informations and
         boundary conditions of the shape.
-    dim: Optional[array_like]
+    dim: array_like, optional
         Dimensions of the cuboid.
-    obstacles: Optional[array_like]
+    obstacles: array_like, optional
         A list of lists of (x,y) coordinates.  Each (x,y) coordinate is a length
         and height relative to the x-,y- corner of the tank.  Each list of
         coordinates is an obstacle defined by points connected in the order of
         their index.  The list of lists gives all such obstacles in a
         counterclockwise manner of which they should be appended, starting from
         the (x-,y-) corner.
-    special_boundaries: Optional[mapping]
+    special_boundaries: mapping, optional
         A dictionary of lists of vertices keyed to boundary names. The vertices
         listed will be given the boundary name they are keyed to, overriding
         any other designation they would be given.
         If this is a distinct boundary name, the segment starting from the vertex
         will be assigned the same boundary tag.
-    full_circle: Optional[bool]
+    full_circle: bool, optional
         A boolean tag to check if the final obstacle ends on the same edge that
         the first obstacle starts on.  Default is False.
-    coords: Optional[array_like]
+    coords: array_like, optional
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
+    from_0: bool, optional
         If True (default), the tank extends from the origin to positive x, y, z
-    hole: Optional[bool]
+    hole: bool, optional
         If True (default), the obstacle of the tank is just an open hole at the
         bottom of the tank. If False, a segment at the bottom of the obstacle is
         created to close the hole.
-    obstacle_regions: Optional[array_like]
+    obstacle_regions: array_like, optional
         To use only if hole=False.(x,y) coordinates of a point inside the
         obstacle in order to fill the obstacle with what should be inside
         (for example a porous material).
@@ -1894,13 +1894,13 @@ class TankWithObstacles2D(Tank2D):
             Relaxation zone coefficient
         allSponge: bool
             If True, all sponge layers are converted to absorption zones.
-        x_p: bool
+        x_p: bool, optional
             If True, x+ region is converted to absorption zone.
-        x_n: bool
+        x_n: bool, optional
             If True, x- region is converted to absorption zone.
-        dragBeta: Optional[float]
+        dragBeta: float, optional
             Relaxation zone coefficient.
-        porosity: Optional[float]
+        porosity: float, optional
             Relaxation zone coefficient.
         """
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
@@ -1961,17 +1961,17 @@ class TankWithObstacles2D(Tank2D):
             Smoothing distance (typically 3*he)
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
-        wind_speed: Optional[array_like]
+        wind_speed: array_like, optional
             Speed of wind in generation zone (default is (0., 0., 0.))
-        allSponge: bool
+        allSponge: bool, optional
             If True, all sponge layers are converted to generation zones.
-        x_p: bool
+        x_p: bool, optional
             If True, x+ region is converted to generation zone.
-        x_n: bool
+        x_n: bool, optional
             If True, x- region is converted to generation zone.
-        dragBeta: Optional[float]
+        dragBeta: float, optional
             Relaxation zone coefficient.
-        porosity: Optional[float]
+        porosity: float, optional
             Relaxation zone coefficient.
         """
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])

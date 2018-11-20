@@ -74,10 +74,13 @@ def linkcode_resolve(domain, info):
         return None
     filename = info['module'].replace('.', '/')
     suffix='py'
+    module_name = importlib.import_module(info['module']).__file__[:-3]
     module_suffix = importlib.import_module(info['module']).__file__[-2:]
     if module_suffix  == 'so':
-        suffix = 'pyx'
-    return "https://github.com/erdc-cm/proteus/tree/master/%s.%s" % (filename, suffix)
+        # change source only if it is not a "pure python" cython module
+        if not os.path.isfile(module_name+'.py'):
+            suffix = 'pyx'
+    return "https://github.com/erdc/proteus/tree/master/%s.%s" % (filename, suffix)
 
 autoclass_content = 'both'
 
