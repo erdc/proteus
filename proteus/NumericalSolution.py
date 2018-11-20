@@ -1595,23 +1595,23 @@ class NS_base(object):  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
- #       if (hasattr(self.pList[0].domain, 'PUMIMesh') and
- #           self.pList[0].domain.PUMIMesh.adaptMesh() and
- #           (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
- #           self.so.useOneMesh):
+        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
+            self.pList[0].domain.PUMIMesh.adaptMesh() and
+            (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
+            self.so.useOneMesh):
 
- #           self.PUMI_transferFields()
- #           logEvent("Initial Adapt before Solve")
- #           self.PUMI_adaptMesh("interface")
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt before Solve")
+            self.PUMI_adaptMesh("interface")
 
- #           for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
- #               if p.initialConditions is not None:
- #                   logEvent("Setting initial conditions for "+p.name)
- #                   m.setInitialConditions(p.initialConditions,self.tnList[0])
-# 
- #           self.PUMI_transferFields()
- #           logEvent("Initial Adapt 2 before Solve")
- #           self.PUMI_adaptMesh("interface")
+            for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
+                if p.initialConditions is not None:
+                    logEvent("Setting initial conditions for "+p.name)
+                    m.setInitialConditions(p.initialConditions,self.tnList[0])
+ 
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt 2 before Solve")
+            self.PUMI_adaptMesh("interface")
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
