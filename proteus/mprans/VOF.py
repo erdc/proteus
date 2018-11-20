@@ -478,10 +478,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         tolerance = 1.0E-12
         self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof > 1.0+tolerance) - 1.0*(self.model.u[0].dof < 0.0-tolerance)
-        print self.model.quantDOFs.max()
-        print abs(1.-self.model.u[0].dof.max())
+        #print self.model.quantDOFs.max()
+        #print abs(1.-self.model.u[0].dof.max())
         #print sum(self.model.quantDOFs)
-        
+
         # COMPUTE NORMS #        
         self.model.getMetricsAtEOS()
         self.model.metricsAtEOS.write(repr(np.sqrt(self.model.global_L2))+","+
@@ -1462,7 +1462,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.beta=(meshSize[0])
 
         self.dLow.fill(0.0)
-        self.beta=0        
+        self.beta=0
+        
         self.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
