@@ -1023,7 +1023,7 @@ class NS_base(object):  # (HasTraits):
         #shock capturing depends on m_tmp or m_last (if lagged). m_tmp is modified by mass-correction and is pushed into m_last during updateTimeHistory().
         #This leads to a situation where m_last comes from the mass-corrected solutions so post-step is needed to get this behavior.
         #If adapt is called after the first time-step, then skip the post-step for the old solution
-        if(abs(self.systemStepController.t_system - self.tnList[1])> 1e-12 or  abs(self.systemStepController.t_system - self.tnList[0])> 1e-12  ):
+        if(abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  ):
           self.postStep(self.modelList[3])
           self.postStep(self.modelList[4])
 
@@ -1050,7 +1050,7 @@ class NS_base(object):  # (HasTraits):
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
         ###
 
-        if(abs(self.systemStepController.t_system - self.tnList[0])> 1e-12  ):
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  ):
             self.postStep(self.modelList[3])
             self.postStep(self.modelList[4])
         for m,mOld in zip(self.modelList, modelListOld):
@@ -1602,23 +1602,23 @@ class NS_base(object):  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        #if (hasattr(self.pList[0].domain, 'PUMIMesh') and
-        #    self.pList[0].domain.PUMIMesh.adaptMesh() and
-        #    (self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
-        #    self.so.useOneMesh):
+        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
+            self.pList[0].domain.PUMIMesh.adaptMesh() and
+            (self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
+            self.so.useOneMesh):
 
-        #    self.PUMI_transferFields()
-        #    logEvent("Initial Adapt before Solve")
-        #    self.PUMI_adaptMesh("interface")
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt before Solve")
+            self.PUMI_adaptMesh("interface")
 
-        #    for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
-        #        if p.initialConditions is not None:
-        #            logEvent("Setting initial conditions for "+p.name)
-        #            m.setInitialConditions(p.initialConditions,self.tnList[0])
+            for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
+                if p.initialConditions is not None:
+                    logEvent("Setting initial conditions for "+p.name)
+                    m.setInitialConditions(p.initialConditions,self.tnList[0])
  
-        #    self.PUMI_transferFields()
-        #    logEvent("Initial Adapt 2 before Solve")
-        #    self.PUMI_adaptMesh("interface")
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt 2 before Solve")
+            self.PUMI_adaptMesh("interface")
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
