@@ -92,7 +92,7 @@ cdef extern from "ChMoorings.h":
                                bool load_uv=False)
 
     cdef cppclass ChCollisionModel:
-        bool AddTriangleMesh(const ChTriangleMesh &trimesh,
+        bool AddTriangleMesh(shared_ptr[ChTriangleMesh] trimesh,
                              bool is_static,
                              bool is_convex,
                              const ChVector &pos,

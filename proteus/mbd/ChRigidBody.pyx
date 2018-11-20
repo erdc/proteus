@@ -43,6 +43,7 @@ from libcpp.memory cimport (shared_ptr,
                             make_shared)
 from collections import OrderedDict
 from cython.operator cimport dereference as deref
+# from cython.cpp cimport static_cast
 import xml.etree.ElementTree as ET
 import h5py
 # chrono C++ headers
@@ -51,19 +52,22 @@ cimport ChronoHeaders as ch
 from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 from proteus.Archiver import indentXML
+import ChronoEngine_python_core as chrono
 
 # needed for sphinx docs
-__all__ = ['ProtChSystem',
-           'ProtChBody',
-           'ProtChMesh',
-           'ProtChMoorings',
-           'ProtChAddedMass']
+# __all__ = ['ProtChSystem',
+#            'ProtChBody',
+#            'ProtChMesh',
+#            'ProtChMoorings',
+#            'ProtChAddedMass']
 
 cdef extern from "swigpyobject.h":
     ctypedef struct SwigPyObject:
         void *ptr
 
 cdef extern from "ChRigidBody.h":
+    shared_ptr[ch.ChPhysicsItem] getPhysicsItemSharedPtr(ch.ChPhysicsItem* item)
+    shared_ptr[ch.ChPhysicsItem] getPhysicsItemSharedPtr2(ch.ChPhysicsItem* item)
     cdef cppclass cppMesh:
         shared_ptr[ch.ChMesh] mesh
         void SetAutomaticGravity(bool val)
@@ -148,6 +152,7 @@ cdef extern from "ChRigidBody.h":
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
         ch.ChSystem* system
+        ch.ChSystemSMC* systemSMC
         void DoStepDynamics(dt)
         void step(double proteus_dt, int n_substeps)
         void setChTimeStep(double dt)
@@ -180,7 +185,7 @@ cdef extern from "ChRigidBody.h":
         ch.ChVector F_last
         ch.ChVector M
         ch.ChVector M_last
-        ch.ChTriangleMeshConnected trimesh
+        shared_ptr[ch.ChTriangleMeshConnected] trimesh
         vector[ch.ChVector] trimesh_pos
         vector[ch.ChVector] trimesh_pos0
         ch.ChVector pos0_trimesh
@@ -227,6 +232,10 @@ cdef extern from "ChRigidBody.h":
                           double limit_Rx,
                           double limit_Ry,
                           double limit_Rz)
+
+cdef extern from "swigpyobject.h":
+    ctypedef struct SwigPyObject:
+        void *ptr
 
 cdef class ProtChBody:
     cdef cppRigidBody * thisptr
@@ -408,7 +417,7 @@ cdef class ProtChBody:
             self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
                                                            self.trimesh_nodes.at(f[1]),
                                                            self.trimesh_nodes.at(f[2])))
-            self.thisptr.trimesh.addTriangle(self.trimesh_triangles.at(f_i))
+            deref(self.thisptr.trimesh).addTriangle(self.trimesh_triangles.at(f_i))
         if pos is None:
             pos = np.zeros(3)
         cdef ch.ChMatrix33 rotmat
@@ -418,7 +427,7 @@ cdef class ProtChBody:
             for j in range(rot.shape[1]):
                 rotmat.SetElement(i, j, rot[i, j])
         # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
-        deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(self.thisptr.trimesh,
+        deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(<shared_ptr[ch.ChTriangleMesh]> self.thisptr.trimesh,
                                                                             is_static,
                                                                             is_convex,
                                                                             ch.ChVector(pos[0],
@@ -467,13 +476,13 @@ cdef class ProtChBody:
 
     def getTriangleMeshInfo(self):
         # vertices
-        cdef vector[ch.ChVector]* chpos = &self.thisptr.trimesh.getCoordsVertices()
+        cdef vector[ch.ChVector[double]] chpos = deref(self.thisptr.trimesh).getCoordsVertices()
         cdef double[:,:] pos = np.zeros((chpos.size(),3 ))
         for i in range(chpos.size()):
             pos[i, 0] = chpos.at(i).x()
             pos[i, 1] = chpos.at(i).y()
             pos[i, 2] = chpos.at(i).z()
-        cdef vector[ch.ChVector[int]]* chel_connect = &self.thisptr.trimesh.getIndicesVertexes()
+        cdef vector[ch.ChVector[int]] chel_connect = deref(self.thisptr.trimesh).getIndicesVertexes()
             # connection of vertices
         cdef int[:,:] el_connect = np.zeros((chel_connect.size(), 3), dtype=np.int32)
         for i in range(chel_connect.size()):
@@ -551,7 +560,7 @@ cdef class ProtChBody:
             # self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.scheme == "CSS":
             h_body_vec = self.thisptr.hxyz(<double*> x.data, t)
-            h_body = pych.ChVector_to_npArray(h_body_vec)
+            h_body = np.array(h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
             h += h_body
         elif self.ProtChSystem.scheme == "ISS":
             # remove previous prediction
@@ -585,7 +594,7 @@ cdef class ProtChBody:
                 print("x_old: ", x+h)
                 print("F_applied: ", self.F_applied)
             h_body_vec = self.thisptr.hxyz(<double*> xx.data, t)
-            h_body = pych.ChVector_to_npArray(h_body_vec)
+            h_body = np.array(h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
             h += h_body
             # add current prediction
             # rotate first
@@ -790,7 +799,7 @@ cdef class ProtChBody:
         assert added_mass.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
         assert added_mass.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         cdef double mass = self.ChBody.GetMass()
-        cdef np.ndarray iner = self.ChBody.GetInertia()
+        cdef np.ndarray iner = mat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
         cdef np.ndarray AM = np.zeros((6,6))  # added mass matrix
         cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
@@ -873,7 +882,7 @@ cdef class ProtChBody:
         M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
-        rx, ry, rz = self.barycenter0-self.ChBody.GetPos()
+        rx, ry, rz = self.barycenter0-vec2array(self.ChBody.GetPos())
         Mp = np.array([ry*Fz-rz*Fy, -(rx*Fz-rz*Fx), (rx*Fy-ry*Fx)])
         M_t += Mp
         return M_t
@@ -1072,7 +1081,7 @@ cdef class ProtChBody:
         self.thisptr.pos_last = pos_last
         if self.ProtChSystem.model_addedmass is not None:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
-            am.barycenters[self.i_start:self.i_end] = self.ChBody.GetPos()
+            am.barycenters[self.i_start:self.i_end] = vec2array(self.ChBody.GetPos())
         self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
 
     def prediction(self):
@@ -1138,9 +1147,9 @@ cdef class ProtChBody:
         if self.Shape is not None:
             self.barycenter0 = self.Shape.barycenter.copy()
         else:
-            self.barycenter0 = self.ChBody.GetPos()
-        self.position_last[:] = self.ChBody.GetPos()
-        self.position[:] = self.ChBody.GetPos()
+            self.barycenter0 = vec2array(self.ChBody.GetPos())
+        self.position_last[:] = vec2array(self.ChBody.GetPos())
+        self.position[:] = vec2array(self.ChBody.GetPos())
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
@@ -1274,7 +1283,7 @@ cdef class ProtChBody:
         self.position_last = self.position
         self.acceleration_last = self.acceleration
         self.rotq_last = self.rotq
-        self.rotm_last = self.rotm
+        # self.rotm_last = self.rotm
         self.ang_acceleration_last = self.ang_acceleration
         self.ang_velocity_last = self.ang_velocity
         self.F_last = self.F
@@ -1297,8 +1306,8 @@ cdef class ProtChBody:
                                                 self.ProtChSystem.chrono_processor)
             self.rotq_last = comm.bcast(self.rotq_last,
                                         self.ProtChSystem.chrono_processor)
-            self.rotm_last = comm.bcast(self.rotm_last,
-                                        self.ProtChSystem.chrono_processor)
+            # self.rotm_last = comm.bcast(self.rotm_last,
+            #                             self.ProtChSystem.chrono_processor)
             self.ang_velocity_last = comm.bcast(self.ang_velocity_last,
                                                 self.ProtChSystem.chrono_processor)
             self.ang_acceleration_last = comm.bcast(self.ang_acceleration_last,
@@ -1320,33 +1329,37 @@ cdef class ProtChBody:
         """Get values (pos, vel, acc, etc.) from C++ to python
         """
         # position
-        self.position = self.ChBody.GetPos()
+        self.position = vec2array(self.ChBody.GetPos())
         # rotation
-        self.rotq = self.ChBody.GetRot()
-        self.rotm = self.ChBody.GetA()
+        self.rotq = quat2array(self.ChBody.GetRot())
+        # self.rotm = mat332array(self.ChBody.GetA())
         # acceleration
-        self.acceleration = self.ChBody.GetPos_dtdt()
+        self.acceleration = vec2array(self.ChBody.GetPos_dtdt())
         #velocity
-        self.velocity = self.ChBody.GetPos_dt()
+        self.velocity = vec2array(self.ChBody.GetPos_dt())
         # angular acceleration
-        self.ang_acceleration = self.ChBody.GetWacc_loc()
+        self.ang_acceleration = vec2array(self.ChBody.GetWacc_loc())
         # angular velocity
-        self.ang_velocity = self.ChBody.GetWvel_loc()
+        self.ang_velocity = vec2array(self.ChBody.GetWvel_loc())
         # norm of angular velocity
         self.ang_vel_norm = np.sqrt(self.ang_velocity[0]**2
                                     +self.ang_velocity[1]**2
                                     +self.ang_velocity[2]**2)
         # force
-        self.F = pych.ChVector_to_npArray(self.thisptr.F)
+        self.F = np.array([self.thisptr.F.x(),
+                           self.thisptr.F.y(),
+                           self.thisptr.F.z()])
         # moment
-        self.M = pych.ChVector_to_npArray(self.thisptr.M)
+        self.M = np.array([self.thisptr.M.x(),
+                           self.thisptr.M.y(),
+                           self.thisptr.M.z()])
         if self.ProtChSystem.parallel_mode is True:
             comm = Comm.get().comm.tompi4py()
             self.position = comm.bcast(self.position, self.ProtChSystem.chrono_processor)
             self.velocity = comm.bcast(self.velocity, self.ProtChSystem.chrono_processor)
             self.acceleration = comm.bcast(self.acceleration, self.ProtChSystem.chrono_processor)
             self.rotq = comm.bcast(self.rotq, self.ProtChSystem.chrono_processor)
-            self.rotm = comm.bcast(self.rotm, self.ProtChSystem.chrono_processor)
+            # self.rotm = comm.bcast(self.rotm, self.ProtChSystem.chrono_processor)
             self.ang_velocity = comm.bcast(self.ang_velocity, self.ProtChSystem.chrono_processor)
             self.ang_acceleration = comm.bcast(self.ang_acceleration, self.ProtChSystem.chrono_processor)
             self.ang_vel_norm = comm.bcast(self.ang_vel_norm, self.ProtChSystem.chrono_processor)
@@ -1648,7 +1661,10 @@ cdef class ProtChSystem:
     cdef double dt
     cdef double dt_last
     cdef double t
+    cdef vector[shared_ptr[ch.ChPhysicsItem]] myphysicsitem
+    cdef vector[shared_ptr[ch.ChBody]] mybodies
     cdef public:
+        object System
         object model
         object model_module
         double dt_init
@@ -1679,6 +1695,11 @@ cdef class ProtChSystem:
         if gravity is not None:
             self.thisptr = newSystem(<double*> gravity.data)
         self.subcomponents = []
+        # cannot call it self.ChSystem or self.ChSystemSMC (conflict in C++ - unknown reason)
+        self.System = chrono.ChSystemSMC()
+        self.System.this.disown()
+        cdef SwigPyObject *swig_obj = <SwigPyObject*>self.System.this
+        swig_obj.ptr = <ch.ChSystemSMC*?> &self.thisptr.systemSMC
         self.dt_init = dt_init
         self.model = None
         self.nd = nd
@@ -1712,6 +1733,39 @@ cdef class ProtChSystem:
         self.tCount = 0
         self.initialised = False
         self.update_substeps = False
+
+    # cpdef AddBody(self, obj):
+    # # not working
+    #     cdef SwigPyObject *swig_obj = <SwigPyObject*>obj.this
+    #     cdef ch.ChBody* mycpp_ptr = <ch.ChBody*> swig_obj.ptr
+    #     # cdef ch.ChBody my_instance = deref(mycpp_ptr)
+
+    #     print('heyy', mycpp_ptr.GetPos().x())
+    #     cdef shared_ptr[ch.ChBody] mycpp_sharedptr = make_shared[ch.ChBody]()
+    #     mycpp_sharedptr.reset(mycpp_ptr)
+    #     # # keep a record
+    #     self.mybodies.push_back(mycpp_sharedptr)
+    #     # add the ChBody to the system
+    #     # self.thisptr.system.AddBody(mycpp_sharedptr)
+
+    # def  body0(self):
+    #     cdef double xx = deref(self.mybodies[0]).GetPos().x()
+    #     return xx
+
+    # cpdef Add(self, obj):
+    #     # not working
+    #     physicsitem = obj.GetPhysicsItem()
+    #     cdef SwigPyObject *swig_obj = <SwigPyObject*>physicsitem.this
+    #     cdef ch.ChPhysicsItem* mycpp_ptr = <ch.ChPhysicsItem*> &swig_obj.ptr
+    #     self.thisptr.system.Add(getPhysicsItemSharedPtr2(mycpp_ptr))
+    #     # # cdef ch.ChPhysicsItem my_instance = deref(mycpp_ptr)
+    #     # cdef shared_ptr[ch.ChPhysicsItem] mycpp_sharedptr = shared_ptr[ch.ChPhysicsItem](<ch.ChPhysicsItem*> &swig_obj.ptr)
+    #     # # mycpp_sharedptr.reset(mycpp_ptr)
+    #     # # # keep a record
+    #     # self.myphysicsitem.push_back(mycpp_sharedptr)
+    #     # # add the ChPhysicsItem to the system
+    #     # self.thisptr.system.Add(mycpp_sharedptr)
+
 
     def addProtChBody(self, ProtChBody body):
         self.thisptr.system.AddBody(body.ChBodyAddedMass.sharedptr_chbody)
@@ -1845,11 +1899,6 @@ cdef class ProtChSystem:
         self.record_values = False
         self.first_step = False  # first step passed
         self.tCount += 1
-
-    def addBodyEasyBox(self, pych.ChBodyEasyBox body):
-        """Hack to add BodyEasyBox
-        """
-        self.thisptr.system.AddBody(body.sharedptr_chbody)
 
     def calculate_init(self):
         """Does chrono system initialisation
@@ -2647,7 +2696,7 @@ cdef class ProtChMoorings:
         cdef ch.ChVector T
         if self.thisptr.constraint_back:
             T = deref(self.thisptr.constraint_back).Get_react_force()
-            return pych.ChVector_to_npArray(T)
+            return np.array([T.x(), T.y(), T.z()])
         else:
             return np.zeros(3)
 
@@ -2658,7 +2707,7 @@ cdef class ProtChMoorings:
         cdef ch.ChVector T
         if self.thisptr.constraint_front:
             T = deref(self.thisptr.constraint_front).Get_react_force()
-            return pych.ChVector_to_npArray(T)
+            return np.array([T.x(), T.y(), T.z()])
         else:
             return np.zeros(3)
 
@@ -3013,7 +3062,7 @@ cdef class ProtChMoorings:
             dire[i] = [vec.x(), vec.y(), vec.z()]
         return dire
 
-    def setContactMaterial(self, pych.ChMaterialSurfaceSMC mat):
+    def setContactMaterial(self, mat):
         """Sets contact material of the cable
 
         Parameters
@@ -3021,7 +3070,8 @@ cdef class ProtChMoorings:
         mat: ChMaterialSurfaceSMC
             Material of cable.
         """
-        self.thisptr.setContactMaterial(mat.sharedptr)
+        pass
+        # self.thisptr.setContactMaterial(mat.sharedptr)
 
     def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None,
                           fluid_acceleration_array=None):
@@ -3343,49 +3393,60 @@ cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cab
         cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)
 
 
-cpdef linkBodies(ProtChBody body1,
-                 ProtChBody body2,
-                 ProtChSystem system,
-                 pych.ChCoordsys coordsys,
-                 double limit_X=0.,
-                 double limit_Y=0.,
-                 double limit_Z=0.,
-                 double limit_Rx=0.,
-                 double limit_Ry=0.,
-                 double limit_Rz=0.):
-    """Create a link between 2 bodies.
-    Master body is body2.
+# cpdef linkBodies(ProtChBody body1,
+#                  ProtChBody body2,
+#                  ProtChSystem system,
+#                  object coordsys,
+#                  double limit_X=0.,
+#                  double limit_Y=0.,
+#                  double limit_Z=0.,
+#                  double limit_Rx=0.,
+#                  double limit_Ry=0.,
+#                  double limit_Rz=0.):
+#     """Create a link between 2 bodies.
+#     Master body is body2.
 
-    Parameters:
-    -----------
-    body1: ProtChBody
-        Instance of first body
-    body2: ProtChBody
-        Instance of second body
-    body2: ProtChSystem
-        Instance of system to add link
-    coordsys: proteus.mbd.pyChronoCore.ChCoordsys
-        Coordinate system of link
-    limit_X: double
-        Limit in x direction
-    limit_Y: double
-        Limit in y direction
-    limit_Z: double
-        Limit in z direction
-    limit_Rx: double
-        Limit rotation around x axis
-    limit_Ry: double
-        Limit rotation around y axis
-    limit_Rz: double
-        Limit rotation around z axis
-    """
-    ChLinkLockBodies(body1.ChBodyAddedMass.sharedptr_chbody,
-                     body2.ChBodyAddedMass.sharedptr_chbody,
-                     system.thisptr.system,
-                     coordsys.cppobj,
-                     limit_X,
-                     limit_Y,
-                     limit_Z,
-                     limit_Rx,
-                     limit_Ry,
-                     limit_Rz)
+#     Parameters:
+#     -----------
+#     body1: ProtChBody
+#         Instance of first body
+#     body2: ProtChBody
+#         Instance of second body
+#     body2: ProtChSystem
+#         Instance of system to add link
+#     coordsys: proteus.mbd.pyChronoCore.ChCoordsys
+#         Coordinate system of link
+#     limit_X: double
+#         Limit in x direction
+#     limit_Y: double
+#         Limit in y direction
+#     limit_Z: double
+#         Limit in z direction
+#     limit_Rx: double
+#         Limit rotation around x axis
+#     limit_Ry: double
+#         Limit rotation around y axis
+#     limit_Rz: double
+#         Limit rotation around z axis
+#     """
+#     ChLinkLockBodies(body1.ChBodyAddedMass.sharedptr_chbody,
+#                      body2.ChBodyAddedMass.sharedptr_chbody,
+#                      system.thisptr.system,
+#                      coordsys.cppobj,
+#                      limit_X,
+#                      limit_Y,
+#                      limit_Z,
+#                      limit_Rx,
+#                      limit_Ry,
+#                      limit_Rz)
+
+def vec2array(vec):
+    return np.array([vec.x(), vec.y(), vec.z()])
+
+def mat332array(mat):
+    return np.array([[mat.Get_A_Xaxis().x(), mat.Get_A_Xaxis().y(), mat.Get_A_Xaxis().z()],
+                     [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
+                     [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
+
+def quat2array(quat):
+    return np.array([quat.e0(), quat.e1(), quat.e2(), quat.e3()])
