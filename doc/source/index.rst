@@ -212,7 +212,28 @@ Source Code Documentation
 
 .. toctree::
    :maxdepth: 1
+   :caption: General
+   :name: sec-general
 
    api/modules
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tools
+   :name: sec-tools
+
+   tools/boundary_conditions
+   tools/spatial_tools
    
+.. toctree::
+   :maxdepth: 1
+   :caption: Models
+   :name: sec-tools
+
+   models/index
+   models/navier_stokes
+   models/free_surface
+   models/chrono
+   models/ale_mesh_elastic
+   models/ale_mesh_monitor
 
