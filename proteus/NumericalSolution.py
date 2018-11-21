@@ -769,6 +769,135 @@ class NS_base(object):  # (HasTraits):
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
+
+    def PUMI_recomputeStructures(self,modelListOld):
+
+        ##This section is to correct any differences in the quadrature point field from the old model
+
+        #Shock capturing lagging needs to be matched
+
+        import copy
+        #This sections gets beta bdf right
+        #import pdb; pdb.set_trace()
+        #self.modelList[1].levelModelList[0].u_store = copy.deepcopy(self.modelList[1].levelModelList[0].u)
+        #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u[0].dof_last
+        #self.modelList[1].levelModelList[0].calculateElementResidual()
+        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
+
+        ##this section gets numDiff right
+        #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u_store[0].dof
+        #self.modelList[1].levelModelList[0].u[0].dof_last[:] = self.modelList[1].levelModelList[0].u_store[0].dof_last
+
+        #self.modelList[1].levelModelList[0].calculateElementResidual()
+        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
+
+        #if(modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay is not None and modelListOld[1].levelModelList[0].shockCapturing.nSteps > modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay):
+        #    self.modelList[1].levelModelList[0].shockCapturing.nSteps=self.modelList[1].levelModelList[0].shockCapturing.nStepsToDelay
+        #    self.modelList[1].levelModelList[0].shockCapturing.updateShockCapturingHistory()
+
+        ###Details for solution transfer
+        #To get shock capturing lagging correct, the numDiff array needs to be computed correctly with the u^{n} solution.
+        #numDiff depends on the PDE residual and can depend on the subgrid error (SGE)
+        #the PDE residual depends on the alpha and beta_bdf terms which depend on m_tmp from u^{n-1} as well as VOF or LS fields.
+        #getResidual() is used to populate m_tmp, numDiff.
+        #The goal is therefore to populate the nodal fields with the old solution, get m_tmp properly and lagged sge properly.
+        #Mimic the solver stagger with a new loop to repopulate the nodal fields with u^{n} solution. This is necessary because NS relies on the u^{n-1} field for VOF/LS
+
+        ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1}
+
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
+                lm.u_store = copy.deepcopy(lm.u)
+                lm.dt_store = copy.deepcopy(lm.timeIntegration.dt)
+                for ci in range(0,lm.coefficients.nc):
+                    lm.u[ci].dof[:] = lm.u[ci].dof_last
+                lm.setFreeDOF(lu)
+
+        #All solution fields are now in state u^{n-1} and used to get m_tmp and u_sge
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                lm.getResidual(lu,lr)
+
+                #This gets the subgrid error history correct
+                if(modelListOld[0].levelModelList[0].stabilization.lag and ((modelListOld[0].levelModelList[0].stabilization.nSteps - 1) > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
+                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+
+                #update the eddy-viscosity history
+                lm.calculateAuxiliaryQuantitiesAfterStep()
+
+        #shock capturing depends on m_tmp or m_last (if lagged). m_tmp is modified by mass-correction and is pushed into m_last during updateTimeHistory().
+        #This leads to a situation where m_last comes from the mass-corrected solutions so post-step is needed to get this behavior.
+        #If adapt is called after the first time-step, then skip the post-step for the old solution
+        if(abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  ):
+
+            for idx in [3,4]:
+                model = self.modelList[idx]
+                self.preStep(model)
+                self.setWeakDirichletConditions(model)
+                model.stepController.setInitialGuess(model.uList,model.rList)
+                solverFailed = model.solver.solveMultilevel(uList=model.uList,
+                                                    rList=model.rList,
+                                                    par_uList=model.par_uList,
+                                                    par_rList=model.par_rList)
+                self.postStep(model)
+
+
+          #self.postStep(self.modelList[3])
+          #self.postStep(self.modelList[4])
+
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+
+                if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
+                    lm.timeIntegration.dt = lm.timeIntegration.dtLast
+
+        ###This loop reloads the current solution and the previous solution into proper places
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                for ci in range(0,lm.coefficients.nc):
+                    lm.u[ci].dof[:] = lm.u_store[ci].dof
+                    lm.u[ci].dof_last[:] = lm.u_store[ci].dof_last
+
+                lm.setFreeDOF(lu)
+                lm.getResidual(lu,lr)
+
+                #This gets the subgrid error history correct
+                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+        ###
+
+        ###need to re-distance and mass correct
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  ):
+            for idx in [3,4]:
+                model = self.modelList[idx]
+                self.preStep(model)
+                self.setWeakDirichletConditions(model)
+                model.stepController.setInitialGuess(model.uList,model.rList)
+                solverFailed = model.solver.solveMultilevel(uList=model.uList,
+                                                            rList=model.rList,
+                                                            par_uList=model.par_uList,
+                                                            par_rList=model.par_rList)
+                self.postStep(model)
+
+        for m,mOld in zip(self.modelList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+
+              lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
+              lm.timeIntegration.dt = lm.dt_store
+
+        ###Shock capturing update happens with the time history update
+              if(lmOld.shockCapturing and lmOld.shockCapturing.nStepsToDelay is not None and lmOld.shockCapturing.nSteps > lmOld.shockCapturing.nStepsToDelay):
+                    lm.shockCapturing.nSteps=lm.shockCapturing.nStepsToDelay
+                    lm.shockCapturing.updateShockCapturingHistory()
+
+              #update the eddy-viscosity history
+              lm.calculateAuxiliaryQuantitiesAfterStep()
+
+
     def PUMI2Proteus(self,mesh):
         #p0 = self.pList[0] #This can probably be cleaned up somehow
         #n0 = self.nList[0]
@@ -932,6 +1061,14 @@ class NS_base(object):  # (HasTraits):
             m.stepController.t_model_last = mOld.stepController.t_model_last
             m.stepController.substeps = mOld.stepController.substeps
 
+        #if first time-step / initial adapt
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])< 1e-12 ):
+            for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
+                if p.initialConditions is not None:
+                    logEvent("Setting initial conditions for "+p.name)
+                    m.setInitialConditions(p.initialConditions,self.tnList[0])
+ 
+
         #Attach models and do sample residual calculation. The results are usually irrelevant.
         #What's important right now is to re-establish the relationships between data structures.
         #The necessary values will be written in later.
@@ -965,109 +1102,11 @@ class NS_base(object):  # (HasTraits):
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
         self.systemStepController.choose_dt_system()
 
-        ##This section is to correct any differences in the quadrature point field from the old model
 
-        #Shock capturing lagging needs to be matched
+        #Don't do anything if this is the initial adapt
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.PUMI_recomputeStructures(modelListOld)
 
-        import copy
-        #This sections gets beta bdf right
-        #import pdb; pdb.set_trace()
-        #self.modelList[1].levelModelList[0].u_store = copy.deepcopy(self.modelList[1].levelModelList[0].u)
-        #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u[0].dof_last
-        #self.modelList[1].levelModelList[0].calculateElementResidual()
-        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
-
-        ##this section gets numDiff right
-        #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u_store[0].dof
-        #self.modelList[1].levelModelList[0].u[0].dof_last[:] = self.modelList[1].levelModelList[0].u_store[0].dof_last
-
-        #self.modelList[1].levelModelList[0].calculateElementResidual()
-        #self.modelList[1].levelModelList[0].q[('m_last',0)][:] = self.modelList[1].levelModelList[0].q[('m_tmp',0)]
-
-        #if(modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay is not None and modelListOld[1].levelModelList[0].shockCapturing.nSteps > modelListOld[1].levelModelList[0].shockCapturing.nStepsToDelay):
-        #    self.modelList[1].levelModelList[0].shockCapturing.nSteps=self.modelList[1].levelModelList[0].shockCapturing.nStepsToDelay
-        #    self.modelList[1].levelModelList[0].shockCapturing.updateShockCapturingHistory()
-
-
-        ###Details for solution transfer
-        #To get shock capturing lagging correct, the numDiff array needs to be computed correctly with the u^{n} solution.
-        #numDiff depends on the PDE residual and can depend on the subgrid error (SGE)
-        #the PDE residual depends on the alpha and beta_bdf terms which depend on m_tmp from u^{n-1} as well as VOF or LS fields.
-        #getResidual() is used to populate m_tmp, numDiff.
-        #The goal is therefore to populate the nodal fields with the old solution, get m_tmp properly and lagged sge properly.
-        #Mimic the solver stagger with a new loop to repopulate the nodal fields with u^{n} solution. This is necessary because NS relies on the u^{n-1} field for VOF/LS
-
-        ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1})
-        for m,mOld in zip(self.modelList, modelListOld):
-            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
-                lm.u_store = copy.deepcopy(lm.u)
-                lm.dt_store = copy.deepcopy(lm.timeIntegration.dt)
-                for ci in range(0,lm.coefficients.nc):
-                    lm.u[ci].dof[:] = lm.u[ci].dof_last
-                lm.setFreeDOF(lu)
-
-        #All solution fields are now in state u^{n-1} and used to get m_tmp and u_sge
-        for m,mOld in zip(self.modelList, modelListOld):
-            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                lm.getResidual(lu,lr)
-
-                #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and ((modelListOld[0].levelModelList[0].stabilization.nSteps - 1) > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
-
-                #update the eddy-viscosity history
-                lm.calculateAuxiliaryQuantitiesAfterStep()
-
-        #shock capturing depends on m_tmp or m_last (if lagged). m_tmp is modified by mass-correction and is pushed into m_last during updateTimeHistory().
-        #This leads to a situation where m_last comes from the mass-corrected solutions so post-step is needed to get this behavior.
-        #If adapt is called after the first time-step, then skip the post-step for the old solution
-        if(abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  ):
-          self.postStep(self.modelList[3])
-          self.postStep(self.modelList[4])
-
-        for m,mOld in zip(self.modelList, modelListOld):
-            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
-
-                if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
-                    lm.timeIntegration.dt = lm.timeIntegration.dtLast
-
-        ###This loop reloads the current solution and the previous solution into proper places
-        for m,mOld in zip(self.modelList, modelListOld):
-            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                for ci in range(0,lm.coefficients.nc):
-                    lm.u[ci].dof[:] = lm.u_store[ci].dof
-                    lm.u[ci].dof_last[:] = lm.u_store[ci].dof_last
-
-                lm.setFreeDOF(lu)
-                lm.getResidual(lu,lr)
-
-                #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
-        ###
-
-        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  ):
-            self.postStep(self.modelList[3])
-            self.postStep(self.modelList[4])
-        for m,mOld in zip(self.modelList, modelListOld):
-            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-
-              lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
-              lm.timeIntegration.dt = lm.dt_store
-
-        ###Shock capturing update happens with the time history update
-              if(lmOld.shockCapturing and lmOld.shockCapturing.nStepsToDelay is not None and lmOld.shockCapturing.nSteps > lmOld.shockCapturing.nStepsToDelay):
-                    lm.shockCapturing.nSteps=lm.shockCapturing.nStepsToDelay
-                    lm.shockCapturing.updateShockCapturingHistory()
-
-              #update the eddy-viscosity history
-              lm.calculateAuxiliaryQuantitiesAfterStep()
-
-        #import pdb; pdb.set_trace()
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
             self.tCount+=1
@@ -1543,6 +1582,7 @@ class NS_base(object):  # (HasTraits):
                     logEvent("Spin-Up Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (m.stepController.t_model,
                                                                                              m.stepController.dt_model,
                                                                                              m.name))
+
         for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,list(range(len(self.pList)))):
             if not self.opts.hotStart:
                 logEvent("Archiving initial conditions")
@@ -1610,11 +1650,6 @@ class NS_base(object):  # (HasTraits):
             self.PUMI_transferFields()
             logEvent("Initial Adapt before Solve")
             self.PUMI_adaptMesh("interface")
-
-            for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
-                if p.initialConditions is not None:
-                    logEvent("Setting initial conditions for "+p.name)
-                    m.setInitialConditions(p.initialConditions,self.tnList[0])
  
             self.PUMI_transferFields()
             logEvent("Initial Adapt 2 before Solve")
