@@ -50,6 +50,8 @@ extensions = [
 #    'sphinx.ext.viewcode',
     'sphinx.ext.linkcode',
     'sphinx.ext.napoleon',
+    'breathe',
+    'exhale',
 #    'IPython.sphinxext.ipython_console_highlighting',
 #    'IPython.sphinxext.ipython_directive',
 ]
@@ -176,9 +178,9 @@ html_theme_options = {
 html_context = {
     "display_github": True, # Integrate GitHub
     "github_user": "erdc", # Username
-    "github_repo": "godot-docs", # Repo name
+    "github_repo": "proteus", # Repo name
     "github_version": "master", # Version
-    "conf_py_path": "/", # Path in the checkout to the docs root
+    "conf_py_path": "/doc", # Path in the checkout to the docs root
 }
 
 #html_theme_options = {'bootswatch_theme':'spacelab'}
@@ -479,3 +481,34 @@ todo_include_todos = False
 graphviz_output_format = 'svg'
 
 mathjax_pth = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTM"
+
+breathe_projects = {
+    "Proteus C++": "./capi/xml"
+}
+breathe_default_project = "Proteus C++"
+
+import textwrap
+exhaleDoxygenStdin = textwrap.dedent('''
+INPUT      = ../../proteus
+FILE_PATTERNS = *.h
+''')
+
+exhale_args = {
+    # These arguments are required
+    "containmentFolder":     "./capi",
+    "rootFileName":          "cmodules.rst",
+    "rootFileTitle":         "C/C++ API",
+    "doxygenStripFromPath":  "..",
+    # Suggested optional arguments
+    "createTreeView":        True,
+    "verboseBuild":          True,
+    # TIP: if using the sphinx-bootstrap-theme, you need
+    # "treeViewIsBootstrap": True,
+    "exhaleExecutesDoxygen": True,
+    "exhaleDoxygenStdin":    exhaleDoxygenStdin
+}
+# Tell sphinx what the primary language being documented is.
+primary_domain = 'cpp'
+
+# Tell sphinx what the pygments highlight language should be.
+highlight_language = 'cpp'

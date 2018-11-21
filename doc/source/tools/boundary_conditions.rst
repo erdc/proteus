@@ -1,7 +1,10 @@
+.. _boundary_conditions:
+
 BoundaryConditions
 ******************
 
-:doc:`BoundaryConditions`
+source: :py:mod:`proteus.BoundaryConditions` and
+:py:mod:`proteus.mprans.BoundaryConditions`
 
 Usage
 =====
@@ -28,8 +31,10 @@ multi-phase flows, can be imported as follows:
 
 .. note::
 
-   The base `proteus.BoundaryConditions` only initialises empty
-   `BoundaryCondition` instances. In practice,
-   `proteus.mprans.BoundaryConditions` is always the module imported for
-   multi-phase flow applications. It is also usually used through
-   :doc:`SpatialTools <./spatial_tools>` without being directly imported.
+   The base :py:mod:`proteus.BoundaryConditions` only initialises empty
+   :py:class:`proteus.BoundaryConditions.BC_Base` instances. In practice,
+   :py:mod:`proteus.mprans.BoundaryConditions` is always the module imported
+   for multi-phase flow applications, with pre-populated
+   :py:mod:`proteus.mprans.BoundaryConditions.BC_RANS` that include the most
+   common BCs used in Proteus. It is also usually used through
+   :ref:`spatial_tools` without being directly imported.

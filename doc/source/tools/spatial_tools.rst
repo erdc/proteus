@@ -1,21 +1,20 @@
+.. _spatial_tools:
+
 SpatialTools
 ************
 
-:doc:`BoundaryConditions`
+source: :py:mod:`proteus.BoundaryConditions` and
+:py:mod:`proteus.mprans.BoundaryConditions`
 
 Usage
 =====
 
-..
-   General
-   -------
-
 Using spatial tools
 
-#. Create a domain from `proteus.Domain`.
+#. Create a domain from :py:mod:`proteus.Domain`.
 #. Create geometries that will be part of this domain from
-   `proteus.SpatialTools` or `proteus.mprans.SpatialTools`.
-#. Assemble domain.
+   :py:mod:`proteus.SpatialTools` or :py:mod:`proteus.mprans.SpatialTools`.
+#. Assemble domain with :py:meth:`proteus.SpatialTools.assembleDomain` or :py:meth:`proteus.mprans.SpatialTools.assembleDomain`.
 
 Import
 ------

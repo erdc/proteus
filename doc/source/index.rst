@@ -216,6 +216,7 @@ Source Code Documentation
    :name: sec-general
 
    api/modules
+   capi/cmodules
 
 .. toctree::
    :maxdepth: 1
@@ -233,7 +234,6 @@ Source Code Documentation
    models/index
    models/navier_stokes
    models/free_surface
-   models/chrono
+   models/body_dynamics
    models/ale_mesh_elastic
    models/ale_mesh_monitor
-

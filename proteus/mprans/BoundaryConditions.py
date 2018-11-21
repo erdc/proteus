@@ -32,6 +32,70 @@ __all__ = ['BC_RANS',
 class BC_RANS(BoundaryConditions.BC_Base):
     """
     Class regrouping boundary conditions for two-phase flows
+
+    Attributes
+    ----------
+    p_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet fluid pressure
+    u_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet fluid velocity, u component
+    v_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet fluid velocity, v component
+    w_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet fluid velocity, w component
+    vof_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet VOF value
+    hx_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet mesh node displacement, x component)
+    hy_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet mesh node displacement, y component)
+    hz_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet mesh node displacement, z component)
+    k_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    dissipation_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    p_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Advective fluid pressure
+    u_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Advective fluid velocity, u component
+    v_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Advective fluid velocity, v component
+    w_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Advective fluid velocity, w component
+    vof_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Advective VOF value
+    k_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    dissipation_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    u_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Diffusive fluid velocity, u component
+    v_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Diffusive fluid velocity, v component
+    w_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Diffusive fluid velocity, w component
+    k_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    dissipation_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    u_stress: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet stress value, u component (for moving mesh with elasticiy)
+    v_stress: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet stress value, v component (for moving mesh with elasticiy)
+    w_stress: :class:`proteus.BoundaryConditions.BoundaryCondition`
+        Dirichlet stress value, w component (for moving mesh with elasticiy)
+    us_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    vs_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    ws_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    vos_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    us_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    vs_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    ws_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    vos_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    us_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    vs_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    ws_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    pInit_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    pInc_dirichlet: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    pInit_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    pInc_advective: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    pInit_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
+    pInc_diffusive: :class:`proteus.BoundaryConditions.BoundaryCondition`
     """
 
     def __init__(self, shape=None, name=None, b_or=None, b_i=0., nd=None):

@@ -1,3 +1,5 @@
+.. _navier_stokes:
+
 Navier-Stokes
 *************
 
@@ -7,51 +9,42 @@ Description
 
 There are currently 3 implementations of Navier-Stokes equations in proteus:
 
-* Two-phase flow (air/water)
-* Three-phase flow (air/water/sediment)
+* Two-phase flow (e.g. air/water)
+* Three-phase flow (e.g. air/water/sediment)
+* Two-phase flow (e.g. air/water) with immersed boundaries (solid)
 
 Two-Phase
 =========
-The two-phase implementation of Navier-Stokes.
-Files corresponding to model:
-`proteus.mprans.RANS2P.py`,
 
-`proteus.mprans.RANS2P.h`,
-`proteus.mprans.cRANS2P.pyx`
-
-`proteus.mprans.RANS2P2D.h`,
-`proteus.mprans.cRANS2P2D.pyx`
+The two-phase implementation of Navier-Stokes, with source documentation
+available here: :py:mod:`proteus.mprans.RANS2P`.
 
 
 Three-Phase
 ===========
-The three-phase implementation of Navier-Stokes.
-Files corresponding to model:
-`proteus.mprans.RANS3P.py`,
-`proteus.mprans.RANS3PSed.py`,
-
-`proteus.mprans.RANS3PF.h`,
-`proteus.mprans.RANS3PF2D.h`,
-`proteus.mprans.cRANS3PF.pyx`
-
-`proteus.mprans.RANS3PSed.h`,
-`proteus.mprans.RANS3PSed2D.h`,
-`proteus.mprans.cRANS3PSed.pyx`
+The three-phase implementation of Navier-Stokes, with source documentation
+available here: :py:mod:`proteus.mprans.RANS3P`.
 
 
 Dealing with Moving Domains
 ===========================
 
-When dealing with moving domains, the option `movingDomain` must be set to `True`.
+When dealing with moving domains, the option ``movingDomain`` must be set to
+``True``. This is necessary to signal to the model that mesh nodes velocity is
+to be expected from an external model.
 
 
 Moving (ALE) Mesh
 -----------------
 
+In the current implementation, if a model for moving the mesh is used such as
+:ref:`ale_mesh_elastic` or :ref:`ale_mesh_monitor`, it should be the first
+model to be solved, as the mesh velocity is calculated from the previous time
+step.
+
+
 Immersed Boundaries
 -------------------
 
-`proteus.mprans.RANS2P.py`,
-
-`proteus.mprans.RANS2P.h`,
-`proteus.mprans.cRANS2P.pyx`
+The immersed boundary (three-phase) implementation of Navier-Stokes, with
+source documentation available here: :py:mod:`proteus.mprans.RANS2P_IB`.

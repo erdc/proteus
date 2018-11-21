@@ -25,58 +25,33 @@ cdef class BC_RANS(BC_Base):
     cdef public:
         # dirichlet
         cdef BoundaryCondition p_dirichlet #: pressure
-        """fluid pressure dirichlet"""
         cdef BoundaryCondition u_dirichlet
-        """fluid velocity dirichlet (u component)"""
         cdef BoundaryCondition v_dirichlet
-        """fluid velocity dirichlet (v component)"""
         cdef BoundaryCondition w_dirichlet
-        """fluid velocity dirichlet (w component)"""
         cdef BoundaryCondition vof_dirichlet
-        """vof dirichlet"""
         cdef BoundaryCondition k_dirichlet
-        """k dirichlet (turbulence)"""
         cdef BoundaryCondition dissipation_dirichlet
-        """epsilon dirichlet (turbulence3)"""
         # advective
         cdef BoundaryCondition p_advective
-        """fluid pressure advective"""
         cdef BoundaryCondition u_advective
-        """fluid velocity advective (u component)"""
         cdef BoundaryCondition v_advective
-        """fluid velocity advective (v component)"""
         cdef BoundaryCondition w_advective
-        """fluid velocity advective (w component)"""
         cdef BoundaryCondition vof_advective
-        """vof advective"""
         cdef BoundaryCondition k_advective
-        """k advective (turbulence)"""
         cdef BoundaryCondition dissipation_advective
-        """epsilon advective (turbulence3)"""
         #diffusive
         cdef BoundaryCondition u_diffusive
-        """fluid velocity diffusive (u component)"""
         cdef BoundaryCondition v_diffusive
-        """fluid velocity diffusive (v component)"""
         cdef BoundaryCondition w_diffusive
-        """fluid velocity diffusive (w component)"""
         cdef BoundaryCondition k_diffusive
-        """k diffusive (turbulence)"""
         cdef BoundaryCondition dissipation_diffusive
-        """epsilon diffusive (turbulence3)"""
         # mesh
         cdef BoundaryCondition hx_dirichlet
-        """node displacement dirichlet (x component)"""
         cdef BoundaryCondition hy_dirichlet
-        """node displacement dirichlet (y component)"""
         cdef BoundaryCondition hz_dirichlet
-        """node displacement dirichlet (z component)"""
         cdef BoundaryCondition u_stress
-        """stress (u component) [MoveMesh]"""
         cdef BoundaryCondition v_stress
-        """stress (v component) [MoveMesh]"""
         cdef BoundaryCondition w_stress
-        """stress (w component) [MoveMesh]"""
         # sediment solver
         cdef BoundaryCondition us_dirichlet
         cdef BoundaryCondition vs_dirichlet
