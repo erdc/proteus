@@ -843,10 +843,6 @@ class NS_base(object):  # (HasTraits):
                                                     par_rList=model.par_rList)
                 self.postStep(model)
 
-
-          #self.postStep(self.modelList[3])
-          #self.postStep(self.modelList[4])
-
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
@@ -1644,7 +1640,7 @@ class NS_base(object):  # (HasTraits):
 
         if (hasattr(self.pList[0].domain, 'PUMIMesh') and
             self.pList[0].domain.PUMIMesh.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
+            (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
             self.so.useOneMesh):
 
             self.PUMI_transferFields()
