@@ -1488,8 +1488,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if options is not None:
             try:
-                if options.has_chrono == True:
-                    self.chrono_model = options.chrono_model
+                self.chrono_model = options.chrono_model
             except AttributeError:
                 logEvent('WARNING: did not find chrono model')
                 pass
