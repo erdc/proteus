@@ -1,0 +1,8 @@
+-rans2p_max_it 2000
+-rans2p_ksp_type fgmres
+-rans2p_pc_type gamg
+-rans2p_pc_gamg_threshold -0.08
+# -rans2p_pc_gasm_type basic
+-rans2p_ksp_atol 1.0e-8
+-rans2p_ksp_rtol 0.0
+-log_summary

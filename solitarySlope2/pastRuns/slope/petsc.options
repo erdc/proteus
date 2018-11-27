@@ -1,0 +1,14 @@
+-ksp_type gmres
+-ksp_max_it 2000
+-ksp_atol 1.0e-10
+-pc_type gamg
+-clsvof_ksp_type gmres
+-clsvof_pc_type hypre
+-clsvof_pc_hypre_type boomeramg
+-clsvof_ksp_max_it 2000
+-rans2p_ksp_type bcgsl
+-rans2p_pc_type asm
+-rans2p_pc_asm_type basic
+-rans2p_ksp_atol 1.0e-8
+-rans2p_ksp_rtol 0.0
+-log_summary

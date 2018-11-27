@@ -1,0 +1,7 @@
+rm *.pyc
+rm *.log
+rm *.csv
+rm *.txt
+rm mesh.*
+rm *.xmf
+rm *.h5
