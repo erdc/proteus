@@ -58,7 +58,7 @@ class GaussEdge(Q_base):
     def __init__(self,order=1):
         #mql. Compute points and weigths for Gauss Quad with n=5,...,9
         #mql. TODO: we should generalize this to any order.
-        #mql. Why are the points not in order? 
+        #mql. Why are the points not in order?
         [p6,w6]=numpy.polynomial.legendre.leggauss(6); p6=0.5*(p6+1); w6=0.5*w6
         [p7,w7]=numpy.polynomial.legendre.leggauss(7); p7=0.5*(p7+1); w7=0.5*w7
         [p8,w8]=numpy.polynomial.legendre.leggauss(8); p8=0.5*(p8+1); w8=0.5*w8
@@ -88,21 +88,21 @@ class GaussEdge(Q_base):
              EVec(p6[2]),
              EVec(p6[3]),
              EVec(p6[4]),
-             EVec(p6[5])),            
+             EVec(p6[5])),
             (EVec(p7[0]), #n=7
              EVec(p7[1]),
              EVec(p7[2]),
              EVec(p7[3]),
              EVec(p7[4]),
              EVec(p7[5]),
-             EVec(p7[6])),            
+             EVec(p7[6])),
             (EVec(p8[0]), #n=8
              EVec(p8[1]),
              EVec(p8[2]),
              EVec(p8[3]),
              EVec(p8[4]),
              EVec(p8[5]),
-             EVec(p8[6]),             
+             EVec(p8[6]),
              EVec(p8[7])),
             (EVec(p9[0]), #n=9
              EVec(p9[1]),
@@ -111,9 +111,9 @@ class GaussEdge(Q_base):
              EVec(p9[4]),
              EVec(p9[5]),
              EVec(p9[6]),
-             EVec(p9[7]),                          
+             EVec(p9[7]),
              EVec(p9[8]))
-            )        
+            )
         self.weightsAll=(
             (1.0,), #n=1
             (0.5, #n=2
@@ -143,7 +143,66 @@ class GaussEdge(Q_base):
         for i in range(order):
             self.points.append(EVec((domain[1]-domain[0])*points[i][0] +domain[0]))
             self.weights.append((domain[1]-domain[0])*weights[i])
-        
+
+# Composite quad rule is needed for blending the spaces #
+class GaussCompositeEdge(Q_base):
+    """
+    Gaussian Quadrature on the unit interval.
+    """
+    def __init__(self,order=1):
+        [p1,w1]=numpy.polynomial.legendre.leggauss(1); #p1=0.5*(p1+1); w1=0.5*w6
+        [p2,w2]=numpy.polynomial.legendre.leggauss(2); #p2=0.5*(p2+1); w2=0.5*w6
+        [p3,w3]=numpy.polynomial.legendre.leggauss(3); #p3=0.5*(p3+1); w3=0.5*w6
+        [p4,w4]=numpy.polynomial.legendre.leggauss(4); #p4=0.5*(p4+1); w4=0.5*w6
+        [p5,w5]=numpy.polynomial.legendre.leggauss(5); #p5=0.5*(p5+1); w5=0.5*w6
+        [p6,w6]=numpy.polynomial.legendre.leggauss(6); #p6=0.5*(p6+1); w6=0.5*w6
+        Q_base.__init__(self,order)
+        self.pointsAll=(
+            (EVec(p1[0])), #n=1
+            (EVec(p2[0]),  #n=2
+             EVec(p2[1])),
+            (EVec(p3[0]),  #n=3
+             EVec(p3[1]),
+             EVec(p3[2])),
+            (EVec(p4[0]),  #n=4
+             EVec(p4[1]),
+             EVec(p4[2]),
+             EVec(p4[3])),
+            (EVec(p5[0]),  #n=5
+             EVec(p5[1]),
+             EVec(p5[2]),
+             EVec(p5[3]),
+             EVec(p5[4])),
+            (EVec(p6[0]),  #n=6
+             EVec(p6[1]),
+             EVec(p6[2]),
+             EVec(p6[3]),
+             EVec(p6[4]),
+             EVec(p6[5]))
+            )
+        self.weightsAll=(
+            (w1[0]), #n=1
+            (w2[0],w2[1]), #n=2
+            (w3[0],w3[1],w3[2]), #n=3
+            (w4[0],w4[1],w4[2],w4[3]), #n=4
+            (w5[0],w5[1],w5[2],w5[3],w5[4]), #n=5
+            (w6[0],w6[1],w6[2],w6[3],w6[4],w6[5]) #n=6
+        )
+        self.setOrder(order)
+
+    def setOrder(self,order,domain=[0.0,1.0]):
+        Q_base.setOrder(self,order)
+        points = self.points
+        weights = self.weights
+        self.points = []
+        self.weights = []
+        for i in range(order):
+            #t = 0.5*(x + 1)*(b - a) + a
+            #gauss = sum(w * f(t)) * 0.5*(b - a)
+            self.points.append(EVec(0.5*(domain[1]-domain[0])*(points[i][0]+1.) +domain[0]))
+            self.weights.append(0.5*(domain[1]-domain[0])*weights[i])
+#########################################################
+
 class LobattoEdge(Q_base):
     """
     Gauss-Lobatto quadrature on the unit interval.
@@ -993,6 +1052,51 @@ class CubeGaussQuadrature(Q_base):
                         self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0],self.quadrature.points[k][0]))
                         self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j]*self.quadrature.weights[k])
 
+# Composite quad rule is needed for blending the spaces #
+class CubeGaussCompositeQuadrature(Q_base):
+    """
+    A class for all quadrature on unit simplices.
+    """
+    def __init__(self,nd=3,order=1):
+        Q_base.__init__(self,order)
+        self.nd=nd
+        self.quadratureNeg = GaussCompositeEdge(order=order)
+        self.quadraturePos = GaussCompositeEdge(order=order)
+        self.setOrder(order)
+
+    def setOrder(self,order):
+        self.points = []
+        self.weights = []
+        self.quadratureNeg.setOrder(order,[-1.0,0.0])
+        self.quadraturePos.setOrder(order,[0.0,1.0])
+
+        if self.nd == 1 or self.nd == 3:
+            raise("Not implemented")
+        ## Neg x Neg
+        for i in range(order):
+            for j in range(order):
+                self.points.append(EVec(self.quadratureNeg.points[i][0],
+                                        self.quadratureNeg.points[j][0]))
+                self.weights.append(self.quadratureNeg.weights[i]*self.quadratureNeg.weights[j])
+        ## Neg x Pos
+        for i in range(order):
+            for j in range(order):
+                self.points.append(EVec(self.quadratureNeg.points[i][0],
+                                        self.quadraturePos.points[j][0]))
+                self.weights.append(self.quadratureNeg.weights[i]*self.quadraturePos.weights[j])
+        ## Pos x Neg
+        for i in range(order):
+            for j in range(order):
+                self.points.append(EVec(self.quadraturePos.points[i][0],
+                                        self.quadratureNeg.points[j][0]))
+                self.weights.append(self.quadraturePos.weights[i]*self.quadratureNeg.weights[j])
+        ## Pos x Pos
+        for i in range(order):
+            for j in range(order):
+                self.points.append(EVec(self.quadraturePos.points[i][0],
+                                        self.quadraturePos.points[j][0]))
+                self.weights.append(self.quadraturePos.weights[i]*self.quadraturePos.weights[j])
+#########################################################
 
 class SimplexLobattoQuadrature(Q_base):
     """
