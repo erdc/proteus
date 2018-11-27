@@ -1312,7 +1312,8 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * wettedAreas,
                                double * netForces_p,
                                double * netForces_v,
-                               double * netMoments)
+                               double * netMoments,
+                               double * ncDrag)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1744,7 +1745,8 @@ cdef class RANS3PSed2D:
                           numpy.ndarray wettedAreas,
                           numpy.ndarray netForces_p,
                           numpy.ndarray netForces_v,
-                          numpy.ndarray netMoments):
+                          numpy.ndarray netMoments,
+                          numpy.ndarray ncDrag):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1901,7 +1903,8 @@ cdef class RANS3PSed2D:
                                         < double * > wettedAreas.data,
                                         < double * > netForces_p.data,
                                         < double * > netForces_v.data,
-                                        < double * > netMoments.data)
+                                        < double * > netMoments.data,
+                                        < double * > ncDrag.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
