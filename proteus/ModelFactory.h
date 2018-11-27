@@ -440,8 +440,128 @@ namespace proteus
                 }
               else
                 {
-                  NO_INSTANCE;
-                  abort();
+		  //// high order hexes
+		  if (nDOF_trial_elementIn == 9) //2nd order polynomials
+		    {
+		      if (nQuadraturePoints_elementIn == 25) //n_quad=(2*order+1)^2
+			{
+		          if (nQuadraturePoints_elementBoundaryIn == 5)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,25,4,9,9,5>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+		        }
+		      else if (nQuadraturePoints_elementIn == 36) //order=2. use n_quad=(2*order+2)^nd
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 6)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,36,4,9,9,6>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 64) //order=2. use n_quad=(2*(order+1)+2)^nd
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 8)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,64,4,9,9,8>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 100)
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 10)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,100,4,9,9,10>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 144)
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 12)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,144,4,9,9,12>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 196)
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 14)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,196,4,9,9,14>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 256)
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 16)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,256,4,9,9,16>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 324)
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 18)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,324,4,9,9,18>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 400)
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 20)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,400,4,9,9,20>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else //other quad rules
+			{
+			  NO_INSTANCE;
+			  abort();
+			}
+		    }
+		  else //higher-order polynomials
+		    {
+		      NO_INSTANCE;
+		      abort();
+		    }
                 }
             }
         }
@@ -484,9 +604,9 @@ namespace proteus
           if (nSpaceIn == 3) // 3D
             {
               if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric
-                {		  		  
+                {
                   if (nDOF_mesh_trial_elementIn == 4) // P1 FE-space.
-                    {		      		      
+                    {
 		      if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7)
 			return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,3,15,4,4,4,7>());//3D, for pressure on p1 while vel on p2
                       else if (nQuadraturePoints_elementIn == 5)
@@ -670,7 +790,7 @@ namespace proteus
                           abort();
                         }
                     }
-                  else  if(nDOF_mesh_trial_elementIn == 4)
+                  else  if(nDOF_mesh_trial_elementIn == 4) //Hexes
                     {
                       if (nQuadraturePoints_elementIn == 4) // Q1 FE-space
                         {
@@ -724,8 +844,44 @@ namespace proteus
                 }
               else
                 {
-                  NO_INSTANCE;
-                  abort();
+		  //// high order hexes
+		  if (nDOF_trial_elementIn == 9) //2nd order polynomials
+		    {
+		      if (nQuadraturePoints_elementIn == 36) //order=2. use n_quad=(2*order+2)^nd
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 6)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,36,4,9,9,6>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 64) //order=2. use n_quad=(2*(order+1)+2)^nd
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 8)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,64,4,9,9,8>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else //other quad rules
+			{
+			  NO_INSTANCE;
+			  abort();
+			}
+		    }
+		  else //higher-order polynomials
+		    {
+		      NO_INSTANCE;
+		      abort();
+		    }
                 }
             }
         }
