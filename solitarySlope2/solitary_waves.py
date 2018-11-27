@@ -53,7 +53,7 @@ opts=Context.Options([
     ("dt_fixed", None, "Fixed (maximum) time step"),
     ("timeIntegration", "backwardEuler", "Time integration scheme (backwardEuler/VBDF)"),
     ("cfl", 0.5 , "Target cfl"),
-    ("nsave",  5, "Number of time steps to save per second"),
+    ("nsave",  10, "Number of time steps to save per second"),
     ("useRANS", 0, "RANS model"),
     ])
 
@@ -70,7 +70,7 @@ if opts.waves is True:
 				depth = depth,
                			g = np.array(opts.g), 
 				waveDir = direction,
-				trans = np.array([-4., 0., 0.]),
+				trans = np.array([-8., 0., 0.]),
                        		fast = opts.fast
 			  )
 
@@ -116,18 +116,18 @@ else:
         nnx=4*Refinement
         nny=2*Refinement
     else:
-        vertices = [[0.0, 0.0, 0.0], [L[0], 0.0, 1.5], [L[0], L[1], 1.5], [0.0, L[1], 0.0],
-                    [0.0, 0.0, L[2]], [L[0], 0.0, L[2]], [L[0], L[1], L[2]], [0.0, L[1], L[2]]]
+        vertices = [[0.0,0.0,0.0], [L[0],0.0,1.5], [L[0],L[1],1.5], [0.0,L[1],0.0],
+                    [0.0,0.0,L[2]], [L[0],0.0,L[2]], [L[0],L[1],L[2]], [0.0,L[1],L[2]]]
         vertexFlags = [boundaryTags['z-'], boundaryTags['z-'], boundaryTags['z-'], boundaryTags['z-'],
                        boundaryTags['z+'], boundaryTags['z+'], boundaryTags['z+'], boundaryTags['z+']]
-        facets = [[[0, 1, 2, 3]], [[0,1,5,4]], [[0,3,7,4]],
-                  [[1,2,6,5]], [[2,3,7,6]], [[4, 5, 6, 7]]]
+        facets = [[[0,1,2,3]], [[0,1,5,4]], [[0,3,7,4]],
+                  [[2,1,5,6]], [[3,2,6,7]], [[7,6,5,4]]]
         segments = []
         segmentFlags = []
         volumes = [[[0, 1]]]
         facetFlags = [boundaryTags['z-'], boundaryTags['y-'], boundaryTags['x-'],
                       boundaryTags['x+'], boundaryTags['y+'], boundaryTags['z-']]
-        regions = [[L[0]/2, L[1]/2, L[2]/2]]
+        regions = [[9.0, L[1]/2, 1.3]]
         regionFlags = [1]
         regionIndice = {'tank': 0}
 
@@ -161,7 +161,6 @@ tank_dim = opts.tank_dim
 tank_sponge = opts.tank_sponge
 waterLevel = opts.water_level
 dragAlpha = 5.*omega/1e-6
-cent = ( domainX/2, width/2, height/2)
 
 tank = st.Tank3D(domain )
 
