@@ -2,7 +2,10 @@ from __future__ import absolute_import
 import proteus.default_so
 reload(proteus.default_so)
 from proteus.default_so import *
-from . import cylinder
+try:
+    from . import cylinder
+except:
+    import cylinder
 reload(cylinder)
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem

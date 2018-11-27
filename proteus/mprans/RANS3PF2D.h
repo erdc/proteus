@@ -9,7 +9,9 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
-#define NO_DRAG 0.0
+#define DRAG_FAC 1.0
+#define TURB_FORCE_FAC 0.0
+#define CUT_CELL_INTEGRATION 0.0
 //////////////////////
 // ***** TODO ***** //
 //////////////////////
@@ -25,6 +27,18 @@
 // ***** END OF TODO *****
 
 #define CELL_BASED_EV_COEFF 1
+
+inline void baryCoords(const double r0[2],
+                       const double r1[2],
+                       const double r2[2],
+                       const double r[2],
+                       double* lambda)
+{
+  double detT = (r1[1] - r2[1])*(r0[0] - r2[0]) + (r2[0] - r1[0])*(r0[1] - r2[1]);
+  lambda[0] = ((r1[1] - r2[1])*(r[0] - r2[0]) + (r2[0] - r1[0])*(r[1] - r2[1]))/detT;
+  lambda[1] = ((r2[1] - r0[1])*(r[0] - r2[0]) + (r0[0] - r2[0])*(r[1] - r2[1]))/detT;
+  lambda[2] = 1.0 - lambda[0] - lambda[1];
+}
 
 namespace proteus
 {
@@ -287,7 +301,10 @@ namespace proteus
                                    double* ebqe_dynamic_viscosity_as_function,
                                    double order_polynomial,
                                    double* isActiveDOF,
-                                   int USE_SBM
+                                   int USE_SBM,
+                                   double* ncDrag,
+                                   double* betaDrag,
+                                   double* vos_vel_nodes
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -1046,17 +1063,23 @@ namespace proteus
 					    rho,
 					    fluid_velocity,
 					    solid_velocity,
-					    viscosity)*NO_DRAG;
-	mom_u_source += (1.0 - phi_s) * new_beta * ( (u - u_s) - nu_t*gradC_x/closure.sigmaC_ );
-	mom_v_source += (1.0 - phi_s) * new_beta * ( (v - v_s) - nu_t*gradC_y/closure.sigmaC_);
+					    viscosity)*DRAG_FAC;
+        //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
+        double beta2 = 156976.4;//hack, fall velocity of 0.1 with hydrostatic water
+        
+        mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s) - TURB_FORCE_FAC*new_beta*nu_t*gradC_x/closure.sigmaC_  +
+          (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(u-u_s);
+	mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s) - TURB_FORCE_FAC*new_beta*nu_t*gradC_y/closure.sigmaC_ +
+          (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(v-v_s);
+
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-        dmom_u_source[0] = (1.0 - phi_s) * new_beta;
+        dmom_u_source[0] = (1.0 - phi_s) * new_beta + (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2;
         dmom_u_source[1] = 0.0;
         /* dmom_u_source[2] = 0.0; */
 
         dmom_v_source[0] = 0.0;
-        dmom_v_source[1] = (1.0 - phi_s) * new_beta;
+        dmom_v_source[1] = (1.0 - phi_s) * new_beta + (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2;
         /*dmom_v_source[2] = 0.0; */
 
         dmom_w_source[0] = 0.0;
@@ -2240,7 +2263,10 @@ namespace proteus
                              double* ebqe_dynamic_viscosity_as_function,
                              double order_polynomial,
                              double* isActiveDOF,
-                             int USE_SBM)
+                             int USE_SBM,
+                             double* ncDrag,
+                             double* betaDrag,
+                             double* vos_vel_nodes)
       {
         //
         //Loop over elements to compute volume integrals and load them into element and global residual
@@ -2263,6 +2289,10 @@ namespace proteus
             register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
+              mom_u_source_i[nDOF_test_element],
+              mom_v_source_i[nDOF_test_element],
+              betaDrag_i[nDOF_test_element],
+              vos_i[nDOF_test_element],
               phisErrorElement[nDOF_test_element],
               //elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
@@ -2280,6 +2310,10 @@ namespace proteus
                 elementResidual_p[i]=0.0;
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
+                mom_u_source_i[i]=0.0;
+                mom_v_source_i[i]=0.0;
+                betaDrag_i[i]=0.0;
+                vos_i[i]=0.0;
                 phisErrorElement[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
               }//i
@@ -2293,6 +2327,164 @@ namespace proteus
                                                 mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
                                                 phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
             }
+            if(CUT_CELL_INTEGRATION > 0)
+              {
+                //
+                //detect cut cells, for unfitted fem we want all cells cut by phi=0 or with phi=0 lying on any boundary
+                //
+                double _distance[nDOF_mesh_trial_element]={0.0};
+                int pos_counter=0;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                  {
+                    if(use_ball_as_particle==1)
+                      {
+                        get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                             _distance[I]);
+                      }
+                    else
+                      {
+                        _distance[I] = phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]];
+                      }
+                    if ( _distance[I] > 0)//fully in fluid
+                      pos_counter++;
+                  }
+                if (pos_counter == 3)
+                  {
+                    element_active = 1.0;
+                  }
+                else if (pos_counter == 0)
+                  {
+                    element_active = 1.0;
+                  }
+                else
+                  {
+                    std::cout<<"submesh "<<eN<<std::endl;
+                    element_active = 1.0;//for now leave all elements active
+                    //P1 interpolation operator; only 2D for now
+                    double GI[6*3];//3 DOF to 6DOF for linear interpolation onto 4T refinement
+                    double sub_mesh_dof[6*3], sub_u_dof[15], sub_v_dof[15], sub_phi_dof[6];//6 3D points
+                    int boundaryNodes[6] = {0,0,0,0,0,0};
+                    for (int I=0;I<nDOF_mesh_trial_element;I++)
+                      {
+                        for (int K=0;K<nDOF_mesh_trial_element;K++)
+                          {
+                            GI[I*3+K] = 0.0;
+                            if (I==K)
+                              {
+                                GI[I*3+K] = 1.0;
+                              }
+                          }
+                        const double eps = 1.0e-4;
+                        double delta_phi=0.0,theta;
+                        delta_phi = _distance[(I+1)%3] - _distance[I];
+                        if (fabs(delta_phi) > eps)//level set does NOT lie on edge (intersects line SOMEWHERE)
+                          //need tolerance selection guidance
+                          {
+                            theta = -_distance[I]/delta_phi;//zero level set is at theta*xIp1+(1-theta)*xI
+                            if (theta > 1.0-eps || theta < eps)//zero level does NOT intersect between nodes
+                              {
+                                theta = 0.5;//just put the subelement node at midpoint
+                              }
+                            else
+                              boundaryNodes[3+I]=1;
+                          }
+                        else //level set lies on edge
+                          {
+                            theta = 0.5;
+                            if (fabs(_distance[I]) <= eps) //edge IS the zero level set
+                              {
+                                boundaryNodes[I]=1;
+                                boundaryNodes[3+I]=1;
+                                boundaryNodes[(I+1)%3]=1;
+                              }
+                          }
+                        assert(theta <= 1.0);
+                        GI[3*3 + I*3 + I] = 1.0-theta;
+                        GI[3*3 + I*3 + (I+1)%3] = theta;
+                        GI[3*3 + I*3 + (I+2)%3] = 0.0;
+                      }
+                    int sub_mesh_l2g[12] = {0,3,5,
+                                            1,4,3,
+                                            2,5,4,
+                                            3,4,5};
+                    for (int I=0; I<6; I++)
+                      {
+                        sub_phi_dof[I] = 0.0;
+                        for (int K=0; K<3; K++)
+                          sub_mesh_dof[I*3+K] = 0.0; 
+                        for (int J=0; J<3; J++)
+                          {
+                            for (int K=0; K<3; K++)
+                              {
+                                sub_mesh_dof[I*3+K] += GI[I*3+J]*mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+J]+K];
+                              }
+                            sub_phi_dof[I] += GI[I*3+J]*phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+J]];
+                          }
+                      }
+                    //TODO for P2
+                    //1. Now define the Lagrange nodes for P2 on the submesh X
+                    //2. Define and evaluate the P2 trial functions for the parent element at the new submesh P2 nodes. X
+                    //3. Form the G2I interpolation operator X
+                    //4. Interpolate the P2 DOF from the parent element to the submesh DOF X
+                    double G2I[15*6];//6 DOF to 15 DOF for quadratic interpolation onto 4T refinement
+                    double lagrangeNodes[9*3];//9 new quadratic nodes in addition to the 6 we have 
+                    for (int K=0;K<3;K++)
+                      {
+                        lagrangeNodes[0*3+K] = 0.5*(sub_mesh_dof[0*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                        lagrangeNodes[1*3+K] = 0.5*(sub_mesh_dof[1*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                        lagrangeNodes[2*3+K] = 0.5*(sub_mesh_dof[1*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[3*3+K] = 0.5*(sub_mesh_dof[2*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[4*3+K] = 0.5*(sub_mesh_dof[2*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[5*3+K] = 0.5*(sub_mesh_dof[0*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[6*3+K] = 0.5*(sub_mesh_dof[3*3+0*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[7*3+K] = 0.5*(sub_mesh_dof[3*3+1*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[8*3+K] = 0.5*(sub_mesh_dof[3*3+2*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                      }
+                    double lambda[3];
+                    for (int I=0;I<6;I++)
+                      {
+                        baryCoords(&sub_mesh_dof[0],&sub_mesh_dof[1*3],&sub_mesh_dof[2*3],&sub_mesh_dof[I*3],lambda);
+                        //std::cout<<"lambda"<<'\t'<<lambda[0]<<'\t'<<lambda[1]<<'\t'<<lambda[2]<<std::endl;
+                        G2I[I*6+0] = lambda[0]*(2.0*lambda[0] - 1.0);
+                        G2I[I*6+1] = lambda[1]*(2.0*lambda[1] - 1.0);
+                        G2I[I*6+2] = lambda[2]*(2.0*lambda[2] - 1.0);
+                        G2I[I*6+3] = 4.0*lambda[0]*lambda[1];
+                        G2I[I*6+4] = 4.0*lambda[1]*lambda[2];
+                        G2I[I*6+5] = 4.0*lambda[2]*lambda[0];
+                      }
+                    for (int I=0;I<9;I++)
+                      {
+                        baryCoords(&sub_mesh_dof[0],&sub_mesh_dof[1*3],&sub_mesh_dof[2*3],&lagrangeNodes[I*3],lambda);
+                        G2I[6*6 + I*6 + 0] = lambda[0]*(2.0*lambda[0] - 1.0);
+                        G2I[6*6 + I*6 + 1] = lambda[1]*(2.0*lambda[1] - 1.0);
+                        G2I[6*6 + I*6 + 2] = lambda[2]*(2.0*lambda[2] - 1.0);
+                        G2I[6*6 + I*6 + 3] = 4.0*lambda[0]*lambda[1];
+                        G2I[6*6 + I*6 + 4] = 4.0*lambda[1]*lambda[2];
+                        G2I[6*6 + I*6 + 5] = 4.0*lambda[2]*lambda[0];
+                      }
+                    for (int I=0; I<15; I++)
+                      {
+                        sub_u_dof[I] = 0.0;
+                        sub_v_dof[I] = 0.0;
+                        for (int J=0; J<6; J++)
+                          {
+                            sub_u_dof[I] += G2I[I*6+J]*u_dof[vel_l2g[eN*nDOF_trial_element+J]];
+                            sub_v_dof[I] += G2I[I*6+J]*v_dof[vel_l2g[eN*nDOF_trial_element+J]];
+                          }
+                      }
+                    for (int esN=0;esN<4;esN++)
+                      {
+                        std::cout<<sub_mesh_l2g[esN*3]<<'\t'<<sub_mesh_l2g[esN*3+1]<<'\t'<<sub_mesh_l2g[esN*3+2]<<std::endl;
+                      }
+                    for (int I=0; I<6; I++)
+                      {
+                        std::cout<<sub_mesh_dof[I*3+0]<<'\t'<<sub_mesh_dof[I*3+1]<<'\t'<<sub_mesh_dof[I*3+2]<<'\t'<<boundaryNodes[I]<<'\t'<<sub_phi_dof[I]<<'\t'<<sub_u_dof[I]<<'\t'<<sub_v_dof[I]<<'\t'<<G2I[I*6+0]<<'\t'<<G2I[I*6+1]<<'\t'<<G2I[I*6+2]<<'\t'<<G2I[I*6+3]<<'\t'<<G2I[I*6+4]<<'\t'<<G2I[I*6+5]<<std::endl;
+                      }
+                  }
+              }
             if(USE_SBM>0)
             {
                 //
@@ -3189,6 +3381,11 @@ namespace proteus
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v1,vel_tgrad_test_i) +  //exp.
                       ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_u,vel_tgrad_test_i); //imp.
+                    mom_u_source_i[i] += ck.Reaction_weak(mom_u_source,vel_test_dV[i]);
+                    betaDrag_i[i] += ck.Reaction_weak(dmom_u_source[0],
+                                                      vel_test_dV[i]);
+                    vos_i[i] += ck.Reaction_weak(1.0-porosity,
+                                                 vel_test_dV[i]);
 
                     elementResidual_v[i] +=
                       ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) +
@@ -3204,6 +3401,7 @@ namespace proteus
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v2,vel_tgrad_test_i) +  //exp.
                       ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_v,vel_tgrad_test_i); //imp.
+                    mom_v_source_i[i] += ck.Reaction_weak(mom_v_source,vel_test_dV[i]);
 
                     /* elementResidual_w[i] +=
                        ck.Mass_weak(mom_w_acc_t,vel_test_dV[i]) + */
@@ -3244,6 +3442,10 @@ namespace proteus
                 /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
                 globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
+                ncDrag[offset_u+stride_u*vel_l2g[eN_i]]+=mom_u_source_i[i]; 
+                ncDrag[offset_v+stride_v*vel_l2g[eN_i]]+=mom_v_source_i[i];
+                betaDrag[vel_l2g[eN_i]] += betaDrag_i[i];
+                vos_vel_nodes[vel_l2g[eN_i]] += vos_i[i];
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
             }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */
@@ -3251,6 +3453,8 @@ namespace proteus
             /* mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element)); */
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
+	  if(CUT_CELL_INTEGRATION > 0)
+	    std::cout<<std::flush;
         //
         //loop over the surrogate boundaries in SB method and assembly into residual
         //
