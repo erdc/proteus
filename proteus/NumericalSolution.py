@@ -934,7 +934,7 @@ class NS_base(object):  # (HasTraits):
             mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
             mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
         section1end = time.clock()
-        self.restart_section1 = section1end-section1begin
+        self.restart_section1 += section1end-section1begin
         
         #Section 2 - model allocation
         section2begin = time.clock()
@@ -945,7 +945,7 @@ class NS_base(object):  # (HasTraits):
         logEvent("Attach auxiliary variables to new models")
 
         section2end = time.clock()
-        self.restart_section2 = section2end-section2begin
+        self.restart_section2 += section2end-section2begin
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
         self.auxiliaryVariables = {}
@@ -1015,7 +1015,7 @@ class NS_base(object):  # (HasTraits):
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
 
         section3end = time.clock()
-        self.restart_section3 = section3end-section3begin
+        self.restart_section3 += section3end-section3begin
         
         #Section 4 - Transfer and setup
         section4begin = time.clock()
@@ -1118,7 +1118,7 @@ class NS_base(object):  # (HasTraits):
         self.systemStepController.choose_dt_system()
         
         section4end = time.clock()
-        self.restart_section4 = section4end-section4begin
+        self.restart_section4 += section4end-section4begin
 
         #Don't do anything if this is the initial adapt
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
@@ -1539,6 +1539,7 @@ class NS_base(object):  # (HasTraits):
 
         #Start of timers
         import time
+        self.outerSolverTime=0 #accounts for time spent in the solver loop
         self.solverTime=0 #accounts for time spent in the solver loop
         self.adaptTime=0 #accounts for time spent in MeshAdapt
         self.restartTime=0 #accounts for time spent restarting after adapt
@@ -1801,6 +1802,8 @@ class NS_base(object):  # (HasTraits):
                         lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
                         lm.u[ci].dof_last[:] = lm.u[ci].dof
                         lm.u[ci].dof[:] = lm.u_store[ci].dof
+        import time
+        outerStepInitialTime=time.clock() #reference time to compute contribution
 
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
@@ -2003,7 +2006,8 @@ class NS_base(object):  # (HasTraits):
             #if(self.PUMI_estimateError()):
             #  self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
-
+        outerStepFinalTime=time.clock() #reference time to compute contribution
+        self.outerSolveTime = outerStepFinalTime - outerStepInitialTime
         #write out times 
         from . import Comm
         comm=Comm.get()
@@ -2011,7 +2015,7 @@ class NS_base(object):  # (HasTraits):
         if(comm.isMaster()):
             file0 = open('timerResults.csv','w')           
             #netSolveTime = self.solverTime - self.adaptTime - self.restartTime - self.ignoreTime - self.triggerTime
-            file0.write('%f,%f,%f,%f,%f,%f,%f,%i,%i\n' % (self.initializeTime,self.solverTime,self.triggerTime,self.adaptTime,self.restartTime,self.recomputeTime,self.ignoreTime,self.nSolveSteps,self.numberAdapts))
+            file0.write('%f,%f,%f,%f,%f,%f,%f,%f,%i,%i\n' % (self.initializeTime,self.outerSolveTime,self.solverTime,self.triggerTime,self.adaptTime,self.restartTime,self.recomputeTime,self.ignoreTime,self.nSolveSteps,self.numberAdapts))
             file0.write('%f,%f,%f,%f\n' % (self.restart_section1,self.restart_section2,self.restart_section3,self.restart_section4))
             file0.close()
         # compute auxiliary quantities at last time step
