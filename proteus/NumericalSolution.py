@@ -73,6 +73,9 @@ class NS_base(object):  # (HasTraits):
         from . import Comm
         comm=Comm.get()
         self.comm=comm
+        self.initTime = 0
+        import time 
+        initTime1 = time.clock()
         message = "Initializing NumericalSolution for "+so.name+"\n System includes: \n"
         for p in pList:
             message += p.name+"\n"
@@ -647,6 +650,15 @@ class NS_base(object):  # (HasTraits):
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
         self.systemStepController.setFromOptions(so)
         logEvent("Finished NumericalSolution initialization")
+        initTime2 = time.clock()
+        self.initTime = initTime2-initTime1
+        if(comm.isMaster()):
+            file0 = open('timerResults.csv','w')           
+            #netSolveTime = self.solverTime - self.adaptTime - self.restartTime - self.ignoreTime - self.triggerTime
+            file0.write('%f,\n' % (self.initTime))
+            file0.close()
+
+
 
     def allocateModels(self):
         self.modelList=[]
@@ -2013,7 +2025,7 @@ class NS_base(object):  # (HasTraits):
         comm=Comm.get()
         self.comm=comm
         if(comm.isMaster()):
-            file0 = open('timerResults.csv','w')           
+            file0 = open('timerResults.csv','a')           
             #netSolveTime = self.solverTime - self.adaptTime - self.restartTime - self.ignoreTime - self.triggerTime
             file0.write('%f,%f,%f,%f,%f,%f,%f,%f,%i,%i\n' % (self.initializeTime,self.outerSolveTime,self.solverTime,self.triggerTime,self.adaptTime,self.restartTime,self.recomputeTime,self.ignoreTime,self.nSolveSteps,self.numberAdapts))
             file0.write('%f,%f,%f,%f\n' % (self.restart_section1,self.restart_section2,self.restart_section3,self.restart_section4))

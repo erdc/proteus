@@ -16,6 +16,7 @@ import gc
 import inspect
 import pstats
 from time import time
+from time import clock
 import atexit
 
 try:
@@ -39,7 +40,8 @@ flushBuffer=False
 preInitBuffer=[]
 logDir = '.'
 
-startTime = time()
+#startTime = time()
+startTime = clock()
 
 def memProfOn():
     global memLog
@@ -104,7 +106,8 @@ def logEvent(stringIn, level=1, data=None):
                     if data is not None:
                         string += repr(data)
                     string +='\n'
-                    string = ("[%8d] " % (time() - startTime)) + string
+                    #string = ("[%8d] " % (time() - startTime)) + string
+                    string = ("[%8d] " % (clock() - startTime)) + string
                     global logFile,verbose
                     logFile.write(string)
                     if flushBuffer:
