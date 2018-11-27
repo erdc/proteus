@@ -2517,166 +2517,160 @@ namespace proteus
         /*         //VRANS */
         /*         vos_ext = ebqe_vos_ext[ebNE_kb];//sed fraction - gco check */
 
-        /*         // */
-        /*         //calculate the pde coefficients using the solution and the boundary values for the solution  */
-        /*         //  */
-        /*         double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now */
-        /*         evaluateCoefficients(eps_rho, */
-        /*                              eps_mu, */
-        /*                              sigma, */
-        /*                              rho_0, */
-        /*                              nu_0, */
-        /*                              rho_1, */
-        /*                              nu_1, */
-        /*                              rho_s, */
-        /*                              elementDiameter[eN], */
-        /*                              smagorinskyConstant, */
-        /*                              turbulenceClosureModel, */
-        /*                              g, */
-        /*                              useVF, */
-        /*                              ebqe_vf_ext[ebNE_kb], */
-        /*                              ebqe_phi_ext[ebNE_kb], */
-        /*                              &ebqe_normal_phi_ext[ebNE_kb_nSpace], */
-        /*                              ebqe_kappa_phi_ext[ebNE_kb], */
-        /*                              //VRANS */
-        /*                              vos_ext, */
-        /*                              // */
-        /*                              p_ext, */
-        /*                              grad_p_ext, */
-        /*                              grad_u_ext, */
-        /*                              grad_v_ext, */
-        /*                              grad_w_ext, */
-        /*                              u_ext, */
-        /*                              v_ext, */
-        /*                              w_ext, */
-        /*                              u_ext, */
-        /*                              v_ext, */
-        /*                              w_ext, */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+0], */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+1], */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used */
-        /*                              eddy_viscosity_ext, */
-        /*                              mom_u_acc_ext, */
-        /*                              dmom_u_acc_u_ext, */
-        /*                              mom_v_acc_ext, */
-        /*                              dmom_v_acc_v_ext, */
-        /*                              mom_w_acc_ext, */
-        /*                              dmom_w_acc_w_ext, */
-        /*                              mass_adv_ext, */
-        /*                              dmass_adv_u_ext, */
-        /*                              dmass_adv_v_ext, */
-        /*                              dmass_adv_w_ext, */
-        /*                              mom_u_adv_ext, */
-        /*                              dmom_u_adv_u_ext, */
-        /*                              dmom_u_adv_v_ext, */
-        /*                              dmom_u_adv_w_ext, */
-        /*                              mom_v_adv_ext, */
-        /*                              dmom_v_adv_u_ext, */
-        /*                              dmom_v_adv_v_ext, */
-        /*                              dmom_v_adv_w_ext, */
-        /*                              mom_w_adv_ext, */
-        /*                              dmom_w_adv_u_ext, */
-        /*                              dmom_w_adv_v_ext, */
-        /*                              dmom_w_adv_w_ext, */
-        /*                              mom_uu_diff_ten_ext, */
-        /*                              mom_vv_diff_ten_ext, */
-        /*                              mom_ww_diff_ten_ext, */
-        /*                              mom_uv_diff_ten_ext, */
-        /*                              mom_uw_diff_ten_ext, */
-        /*                              mom_vu_diff_ten_ext, */
-        /*                              mom_vw_diff_ten_ext, */
-        /*                              mom_wu_diff_ten_ext, */
-        /*                              mom_wv_diff_ten_ext, */
-        /*                              mom_u_source_ext, */
-        /*                              mom_v_source_ext, */
-        /*                              mom_w_source_ext, */
-        /*                              mom_u_ham_ext, */
-        /*                              dmom_u_ham_grad_p_ext, */
-        /*                              dmom_u_ham_grad_u_ext, */
-        /*                              mom_v_ham_ext, */
-        /*                              dmom_v_ham_grad_p_ext, */
-        /*                              dmom_v_ham_grad_v_ext, */
-        /*                              mom_w_ham_ext, */
-        /*                              dmom_w_ham_grad_p_ext,           */
-        /*                              dmom_w_ham_grad_w_ext);           */
-        /*         evaluateCoefficients(eps_rho, */
-        /*                              eps_mu, */
-        /*                              sigma, */
-        /*                              rho_0, */
-        /*                              nu_0, */
-        /*                              rho_1, */
-        /*                              nu_1, */
-        /*                              rho_s, */
-        /*                              elementDiameter[eN], */
-        /*                              smagorinskyConstant, */
-        /*                              turbulenceClosureModel, */
-        /*                              g, */
-        /*                              useVF, */
-        /*                              bc_ebqe_vf_ext[ebNE_kb], */
-        /*                              bc_ebqe_phi_ext[ebNE_kb], */
-        /*                              &ebqe_normal_phi_ext[ebNE_kb_nSpace], */
-        /*                              ebqe_kappa_phi_ext[ebNE_kb], */
-        /*                              //VRANS */
-        /*                              vos_ext, */
-        /*                              // */
-        /*                              p_ext, */
-        /*                              grad_p_ext, */
-        /*                              grad_u_ext, */
-        /*                              grad_v_ext, */
-        /*                              grad_w_ext, */
-        /*                              bc_u_ext, */
-        /*                              bc_v_ext, */
-        /*                              bc_w_ext, */
-        /*                              bc_u_ext, */
-        /*                              bc_v_ext, */
-        /*                              bc_w_ext, */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+0], */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+1], */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used */
-        /*                              bc_eddy_viscosity_ext, */
-        /*                              bc_mom_u_acc_ext,  */
-        /*                              bc_dmom_u_acc_u_ext, */
-        /*                              bc_mom_v_acc_ext, */
-        /*                              bc_dmom_v_acc_v_ext, */
-        /*                              bc_mom_w_acc_ext, */
-        /*                              bc_dmom_w_acc_w_ext, */
-        /*                              bc_mass_adv_ext, */
-        /*                              bc_dmass_adv_u_ext, */
-        /*                              bc_dmass_adv_v_ext, */
-        /*                              bc_dmass_adv_w_ext, */
-        /*                              bc_mom_u_adv_ext, */
-        /*                              bc_dmom_u_adv_u_ext, */
-        /*                              bc_dmom_u_adv_v_ext, */
-        /*                              bc_dmom_u_adv_w_ext, */
-        /*                              bc_mom_v_adv_ext, */
-        /*                              bc_dmom_v_adv_u_ext, */
-        /*                              bc_dmom_v_adv_v_ext, */
-        /*                              bc_dmom_v_adv_w_ext, */
-        /*                              bc_mom_w_adv_ext, */
-        /*                              bc_dmom_w_adv_u_ext, */
-        /*                              bc_dmom_w_adv_v_ext, */
-        /*                              bc_dmom_w_adv_w_ext, */
-        /*                              bc_mom_uu_diff_ten_ext, */
-        /*                              bc_mom_vv_diff_ten_ext, */
-        /*                              bc_mom_ww_diff_ten_ext, */
-        /*                              bc_mom_uv_diff_ten_ext, */
-        /*                              bc_mom_uw_diff_ten_ext, */
-        /*                              bc_mom_vu_diff_ten_ext, */
-        /*                              bc_mom_vw_diff_ten_ext, */
-        /*                              bc_mom_wu_diff_ten_ext, */
-        /*                              bc_mom_wv_diff_ten_ext, */
-        /*                              bc_mom_u_source_ext, */
-        /*                              bc_mom_v_source_ext, */
-        /*                              bc_mom_w_source_ext, */
-        /*                              bc_mom_u_ham_ext, */
-        /*                              bc_dmom_u_ham_grad_p_ext, */
-        /*                              bc_dmom_u_ham_grad_u_ext, */
-        /*                              bc_mom_v_ham_ext, */
-        /*                              bc_dmom_v_ham_grad_p_ext, */
-        /*                              bc_dmom_v_ham_grad_v_ext, */
-        /*                              bc_mom_w_ham_ext, */
-        /*                              bc_dmom_w_ham_grad_p_ext,           */
-        /*                              bc_dmom_w_ham_grad_w_ext);           */
+                //
+                //calculate the pde coefficients using the solution and the boundary values for the solution 
+                // 
+                double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
+                evaluateCoefficients(eps_rho,
+                                     eps_mu,
+                                     sigma,
+                                     rho_0,
+                                     nu_0,
+                                     rho_1,
+                                     nu_1,
+                                     rho_s,
+                                     elementDiameter[eN],
+                                     smagorinskyConstant,
+                                     turbulenceClosureModel,
+                                     g,
+                                     useVF,
+                                     ebqe_vf_ext[ebNE_kb],
+                                     ebqe_phi_ext[ebNE_kb],
+                                     &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+                                     ebqe_kappa_phi_ext[ebNE_kb],
+                                     //VRANS
+                                     vos_ext,
+                                     //
+                                     p_ext,
+                                     grad_p_ext,
+                                     grad_u_ext,
+                                     grad_v_ext,
+                                     grad_w_ext,
+                                     u_ext,
+                                     v_ext,
+                                     w_ext,
+                                     ebqe_velocity_star[ebNE_kb_nSpace+0],
+                                     ebqe_velocity_star[ebNE_kb_nSpace+1],
+                                     ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
+                                     eddy_viscosity_ext,
+                                     mom_u_acc_ext,
+                                     dmom_u_acc_u_ext,
+                                     mom_v_acc_ext,
+                                     dmom_v_acc_v_ext,
+                                     mom_w_acc_ext,
+                                     dmom_w_acc_w_ext,
+                                     mass_adv_ext,
+                                     dmass_adv_u_ext,
+                                     dmass_adv_v_ext,
+                                     dmass_adv_w_ext,
+                                     mom_u_adv_ext,
+                                     dmom_u_adv_u_ext,
+                                     dmom_u_adv_v_ext,
+                                     dmom_u_adv_w_ext,
+                                     mom_v_adv_ext,
+                                     dmom_v_adv_u_ext,
+                                     dmom_v_adv_v_ext,
+                                     dmom_v_adv_w_ext,
+                                     mom_w_adv_ext,
+                                     dmom_w_adv_u_ext,
+                                     dmom_w_adv_v_ext,
+                                     dmom_w_adv_w_ext,
+                                     mom_uu_diff_ten_ext,
+                                     mom_vv_diff_ten_ext,
+                                     mom_ww_diff_ten_ext,
+                                     mom_uv_diff_ten_ext,
+                                     mom_uw_diff_ten_ext,
+                                     mom_vu_diff_ten_ext,
+                                     mom_vw_diff_ten_ext,
+                                     mom_wu_diff_ten_ext,
+                                     mom_wv_diff_ten_ext,
+                                     mom_u_source_ext,
+                                     mom_v_source_ext,
+                                     mom_w_source_ext,
+                                     mom_u_ham_ext,
+                                     dmom_u_ham_grad_p_ext,
+                                     dmom_u_ham_grad_u_ext,
+                                     mom_v_ham_ext,
+                                     dmom_v_ham_grad_p_ext,
+                                     dmom_v_ham_grad_v_ext,
+                                     mom_w_ham_ext,
+                                     dmom_w_ham_grad_p_ext,          
+                                     dmom_w_ham_grad_w_ext);          
+                evaluateCoefficients(eps_rho,
+                                     eps_mu,
+                                     sigma,
+                                     rho_0,
+                                     nu_0,
+                                     rho_1,
+                                     nu_1,
+                                     rho_s,
+                                     elementDiameter[eN],
+                                     smagorinskyConstant,
+                                     turbulenceClosureModel,
+                                     g,
+                                     useVF,
+                                     bc_ebqe_vf_ext[ebNE_kb],
+                                     bc_ebqe_phi_ext[ebNE_kb],
+                                     &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+                                     ebqe_kappa_phi_ext[ebNE_kb],
+                                     //VRANS
+                                     vos_ext,
+                                     //
+                                     p_ext,
+                                     grad_p_ext,
+                                     grad_u_ext,
+                                     grad_v_ext,
+                                     grad_w_ext,
+                                     bc_u_ext,
+                                     bc_v_ext,
+                                     bc_w_ext,
+                                     ebqe_velocity_star[ebNE_kb_nSpace+0],
+                                     ebqe_velocity_star[ebNE_kb_nSpace+1],
+                                     ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
+                                     bc_eddy_viscosity_ext,
+                                     bc_mom_u_acc_ext, 
+                                     bc_dmom_u_acc_u_ext,
+                                     bc_mom_v_acc_ext,
+                                     bc_dmom_v_acc_v_ext,
+                                     bc_mom_w_acc_ext,
+                                     bc_dmom_w_acc_w_ext,
+                                     bc_mass_adv_ext,
+                                     bc_dmass_adv_u_ext,
+                                     bc_dmass_adv_v_ext,
+                                     bc_dmass_adv_w_ext,
+                                     bc_mom_u_adv_ext,
+                                     bc_dmom_u_adv_u_ext,
+                                     bc_dmom_u_adv_v_ext,
+                                     bc_dmom_u_adv_w_ext,
+                                     bc_mom_v_adv_ext,
+                                     bc_dmom_v_adv_u_ext,
+                                     bc_dmom_v_adv_v_ext,
+                                     bc_dmom_v_adv_w_ext,
+                                     bc_mom_w_adv_ext,
+                                     bc_dmom_w_adv_u_ext,
+                                     bc_dmom_w_adv_v_ext,
+                                     bc_dmom_w_adv_w_ext,
+                                     bc_mom_uu_diff_ten_ext,
+                                     bc_mom_vv_diff_ten_ext,
+                                     bc_mom_ww_diff_ten_ext,
+                                     bc_mom_uv_diff_ten_ext,
+                                     bc_mom_uw_diff_ten_ext,
+                                     bc_mom_vu_diff_ten_ext,
+                                     bc_mom_vw_diff_ten_ext,
+                                     bc_mom_wu_diff_ten_ext,
+                                     bc_mom_wv_diff_ten_ext,
+                                     bc_mom_u_source_ext,
+                                     bc_mom_v_source_ext,
+                                     bc_mom_w_source_ext,
+                                     bc_mom_u_ham_ext,
+                                     bc_dmom_u_ham_grad_p_ext,
+                                     bc_dmom_u_ham_grad_u_ext,
+                                     bc_mom_v_ham_ext,
+                                     bc_dmom_v_ham_grad_p_ext,
+                                     bc_dmom_v_ham_grad_v_ext,
+                                     bc_mom_w_ham_ext,
+                                     bc_dmom_w_ham_grad_p_ext,          
+                                     bc_dmom_w_ham_grad_w_ext);          
 
         /*         //Turbulence closure model */
 
@@ -4239,166 +4233,160 @@ namespace proteus
         /*         //VRANS */
         /*         vos_ext = ebqe_vos_ext[ebNE_kb];//sed fraction - gco check */
 
-        /*         //  */
-        /*         //calculate the internal and external trace of the pde coefficients  */
-        /*         //  */
-        /*         double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now */
-        /*         evaluateCoefficients(eps_rho, */
-        /*                              eps_mu, */
-        /*                              sigma, */
-        /*                              rho_0, */
-        /*                              nu_0, */
-        /*                              rho_1, */
-        /*                              nu_1, */
-        /*                              rho_s, */
-        /*                              elementDiameter[eN], */
-        /*                              smagorinskyConstant, */
-        /*                              turbulenceClosureModel, */
-        /*                              g, */
-        /*                              useVF, */
-        /*                              ebqe_vf_ext[ebNE_kb], */
-        /*                              ebqe_phi_ext[ebNE_kb], */
-        /*                              &ebqe_normal_phi_ext[ebNE_kb_nSpace], */
-        /*                              ebqe_kappa_phi_ext[ebNE_kb], */
-        /*                              //VRANS */
-        /*                              vos_ext, */
-        /*                              // */
-        /*                              p_ext, */
-        /*                              grad_p_ext, */
-        /*                              grad_u_ext, */
-        /*                              grad_v_ext, */
-        /*                              grad_w_ext, */
-        /*                              u_ext, */
-        /*                              v_ext, */
-        /*                              w_ext, */
-        /*                              u_ext, */
-        /*                              v_ext, */
-        /*                              w_ext, */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+0], */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+1], */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used */
-        /*                              eddy_viscosity_ext, */
-        /*                              mom_u_acc_ext, */
-        /*                              dmom_u_acc_u_ext, */
-        /*                              mom_v_acc_ext, */
-        /*                              dmom_v_acc_v_ext, */
-        /*                              mom_w_acc_ext, */
-        /*                              dmom_w_acc_w_ext, */
-        /*                              mass_adv_ext, */
-        /*                              dmass_adv_u_ext, */
-        /*                              dmass_adv_v_ext, */
-        /*                              dmass_adv_w_ext, */
-        /*                              mom_u_adv_ext, */
-        /*                              dmom_u_adv_u_ext, */
-        /*                              dmom_u_adv_v_ext, */
-        /*                              dmom_u_adv_w_ext, */
-        /*                              mom_v_adv_ext, */
-        /*                              dmom_v_adv_u_ext, */
-        /*                              dmom_v_adv_v_ext, */
-        /*                              dmom_v_adv_w_ext, */
-        /*                              mom_w_adv_ext, */
-        /*                              dmom_w_adv_u_ext, */
-        /*                              dmom_w_adv_v_ext, */
-        /*                              dmom_w_adv_w_ext, */
-        /*                              mom_uu_diff_ten_ext, */
-        /*                              mom_vv_diff_ten_ext, */
-        /*                              mom_ww_diff_ten_ext, */
-        /*                              mom_uv_diff_ten_ext, */
-        /*                              mom_uw_diff_ten_ext, */
-        /*                              mom_vu_diff_ten_ext, */
-        /*                              mom_vw_diff_ten_ext, */
-        /*                              mom_wu_diff_ten_ext, */
-        /*                              mom_wv_diff_ten_ext, */
-        /*                              mom_u_source_ext, */
-        /*                              mom_v_source_ext, */
-        /*                              mom_w_source_ext, */
-        /*                              mom_u_ham_ext, */
-        /*                              dmom_u_ham_grad_p_ext, */
-        /*                              dmom_u_ham_grad_u_ext, */
-        /*                              mom_v_ham_ext, */
-        /*                              dmom_v_ham_grad_p_ext, */
-        /*                              dmom_v_ham_grad_v_ext, */
-        /*                              mom_w_ham_ext, */
-        /*                              dmom_w_ham_grad_p_ext,           */
-        /*                              dmom_w_ham_grad_w_ext);           */
-        /*         evaluateCoefficients(eps_rho, */
-        /*                              eps_mu, */
-        /*                              sigma, */
-        /*                              rho_0, */
-        /*                              nu_0, */
-        /*                              rho_1, */
-        /*                              nu_1, */
-        /*                              rho_s, */
-        /*                              elementDiameter[eN], */
-        /*                              smagorinskyConstant, */
-        /*                              turbulenceClosureModel, */
-        /*                              g, */
-        /*                              useVF, */
-        /*                              bc_ebqe_vf_ext[ebNE_kb], */
-        /*                              bc_ebqe_phi_ext[ebNE_kb], */
-        /*                              &ebqe_normal_phi_ext[ebNE_kb_nSpace], */
-        /*                              ebqe_kappa_phi_ext[ebNE_kb], */
-        /*                              //VRANS */
-        /*                              vos_ext, */
-        /*                              // */
-        /*                              bc_p_ext, */
-        /*                              grad_p_ext, */
-        /*                              grad_u_ext, */
-        /*                              grad_v_ext, */
-        /*                              grad_w_ext, */
-        /*                              bc_u_ext, */
-        /*                              bc_v_ext, */
-        /*                              bc_w_ext, */
-        /*                              bc_u_ext, */
-        /*                              bc_v_ext, */
-        /*                              bc_w_ext, */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+0], */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+1], */
-        /*                              ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used */
-        /*                              bc_eddy_viscosity_ext, */
-        /*                              bc_mom_u_acc_ext, */
-        /*                              bc_dmom_u_acc_u_ext, */
-        /*                              bc_mom_v_acc_ext, */
-        /*                              bc_dmom_v_acc_v_ext, */
-        /*                              bc_mom_w_acc_ext, */
-        /*                              bc_dmom_w_acc_w_ext, */
-        /*                              bc_mass_adv_ext, */
-        /*                              bc_dmass_adv_u_ext, */
-        /*                              bc_dmass_adv_v_ext, */
-        /*                              bc_dmass_adv_w_ext, */
-        /*                              bc_mom_u_adv_ext, */
-        /*                              bc_dmom_u_adv_u_ext, */
-        /*                              bc_dmom_u_adv_v_ext, */
-        /*                              bc_dmom_u_adv_w_ext, */
-        /*                              bc_mom_v_adv_ext, */
-        /*                              bc_dmom_v_adv_u_ext, */
-        /*                              bc_dmom_v_adv_v_ext, */
-        /*                              bc_dmom_v_adv_w_ext, */
-        /*                              bc_mom_w_adv_ext, */
-        /*                              bc_dmom_w_adv_u_ext, */
-        /*                              bc_dmom_w_adv_v_ext, */
-        /*                              bc_dmom_w_adv_w_ext, */
-        /*                              bc_mom_uu_diff_ten_ext, */
-        /*                              bc_mom_vv_diff_ten_ext, */
-        /*                              bc_mom_ww_diff_ten_ext, */
-        /*                              bc_mom_uv_diff_ten_ext, */
-        /*                              bc_mom_uw_diff_ten_ext, */
-        /*                              bc_mom_vu_diff_ten_ext, */
-        /*                              bc_mom_vw_diff_ten_ext, */
-        /*                              bc_mom_wu_diff_ten_ext, */
-        /*                              bc_mom_wv_diff_ten_ext, */
-        /*                              bc_mom_u_source_ext, */
-        /*                              bc_mom_v_source_ext, */
-        /*                              bc_mom_w_source_ext, */
-        /*                              bc_mom_u_ham_ext, */
-        /*                              bc_dmom_u_ham_grad_p_ext, */
-        /*                              bc_dmom_u_ham_grad_u_ext, */
-        /*                              bc_mom_v_ham_ext, */
-        /*                              bc_dmom_v_ham_grad_p_ext, */
-        /*                              bc_dmom_v_ham_grad_v_ext, */
-        /*                              bc_mom_w_ham_ext, */
-        /*                              bc_dmom_w_ham_grad_p_ext,           */
-        /*                              bc_dmom_w_ham_grad_w_ext);           */
+                // 
+                //calculate the internal and external trace of the pde coefficients 
+                // 
+                double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now
+                evaluateCoefficients(eps_rho,
+                                     eps_mu,
+                                     sigma,
+                                     rho_0,
+                                     nu_0,
+                                     rho_1,
+                                     nu_1,
+                                     rho_s,
+                                     elementDiameter[eN],
+                                     smagorinskyConstant,
+                                     turbulenceClosureModel,
+                                     g,
+                                     useVF,
+                                     ebqe_vf_ext[ebNE_kb],
+                                     ebqe_phi_ext[ebNE_kb],
+                                     &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+                                     ebqe_kappa_phi_ext[ebNE_kb],
+                                     //VRANS
+                                     vos_ext,
+                                     //
+                                     p_ext,
+                                     grad_p_ext,
+                                     grad_u_ext,
+                                     grad_v_ext,
+                                     grad_w_ext,
+                                     u_ext,
+                                     v_ext,
+                                     w_ext,
+                                     ebqe_velocity_star[ebNE_kb_nSpace+0],
+                                     ebqe_velocity_star[ebNE_kb_nSpace+1],
+                                     ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
+                                     eddy_viscosity_ext,
+                                     mom_u_acc_ext,
+                                     dmom_u_acc_u_ext,
+                                     mom_v_acc_ext,
+                                     dmom_v_acc_v_ext,
+                                     mom_w_acc_ext,
+                                     dmom_w_acc_w_ext,
+                                     mass_adv_ext,
+                                     dmass_adv_u_ext,
+                                     dmass_adv_v_ext,
+                                     dmass_adv_w_ext,
+                                     mom_u_adv_ext,
+                                     dmom_u_adv_u_ext,
+                                     dmom_u_adv_v_ext,
+                                     dmom_u_adv_w_ext,
+                                     mom_v_adv_ext,
+                                     dmom_v_adv_u_ext,
+                                     dmom_v_adv_v_ext,
+                                     dmom_v_adv_w_ext,
+                                     mom_w_adv_ext,
+                                     dmom_w_adv_u_ext,
+                                     dmom_w_adv_v_ext,
+                                     dmom_w_adv_w_ext,
+                                     mom_uu_diff_ten_ext,
+                                     mom_vv_diff_ten_ext,
+                                     mom_ww_diff_ten_ext,
+                                     mom_uv_diff_ten_ext,
+                                     mom_uw_diff_ten_ext,
+                                     mom_vu_diff_ten_ext,
+                                     mom_vw_diff_ten_ext,
+                                     mom_wu_diff_ten_ext,
+                                     mom_wv_diff_ten_ext,
+                                     mom_u_source_ext,
+                                     mom_v_source_ext,
+                                     mom_w_source_ext,
+                                     mom_u_ham_ext,
+                                     dmom_u_ham_grad_p_ext,
+                                     dmom_u_ham_grad_u_ext,
+                                     mom_v_ham_ext,
+                                     dmom_v_ham_grad_p_ext,
+                                     dmom_v_ham_grad_v_ext,
+                                     mom_w_ham_ext,
+                                     dmom_w_ham_grad_p_ext,          
+                                     dmom_w_ham_grad_w_ext);          
+                evaluateCoefficients(eps_rho,
+                                     eps_mu,
+                                     sigma,
+                                     rho_0,
+                                     nu_0,
+                                     rho_1,
+                                     nu_1,
+                                     rho_s,
+                                     elementDiameter[eN],
+                                     smagorinskyConstant,
+                                     turbulenceClosureModel,
+                                     g,
+                                     useVF,
+                                     bc_ebqe_vf_ext[ebNE_kb],
+                                     bc_ebqe_phi_ext[ebNE_kb],
+                                     &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+                                     ebqe_kappa_phi_ext[ebNE_kb],
+                                     //VRANS
+                                     vos_ext,
+                                     //
+                                     bc_p_ext,
+                                     grad_p_ext,
+                                     grad_u_ext,
+                                     grad_v_ext,
+                                     grad_w_ext,
+                                     bc_u_ext,
+                                     bc_v_ext,
+                                     bc_w_ext,
+                                     ebqe_velocity_star[ebNE_kb_nSpace+0],
+                                     ebqe_velocity_star[ebNE_kb_nSpace+1],
+                                     ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
+                                     bc_eddy_viscosity_ext,
+                                     bc_mom_u_acc_ext,
+                                     bc_dmom_u_acc_u_ext,
+                                     bc_mom_v_acc_ext,
+                                     bc_dmom_v_acc_v_ext,
+                                     bc_mom_w_acc_ext,
+                                     bc_dmom_w_acc_w_ext,
+                                     bc_mass_adv_ext,
+                                     bc_dmass_adv_u_ext,
+                                     bc_dmass_adv_v_ext,
+                                     bc_dmass_adv_w_ext,
+                                     bc_mom_u_adv_ext,
+                                     bc_dmom_u_adv_u_ext,
+                                     bc_dmom_u_adv_v_ext,
+                                     bc_dmom_u_adv_w_ext,
+                                     bc_mom_v_adv_ext,
+                                     bc_dmom_v_adv_u_ext,
+                                     bc_dmom_v_adv_v_ext,
+                                     bc_dmom_v_adv_w_ext,
+                                     bc_mom_w_adv_ext,
+                                     bc_dmom_w_adv_u_ext,
+                                     bc_dmom_w_adv_v_ext,
+                                     bc_dmom_w_adv_w_ext,
+                                     bc_mom_uu_diff_ten_ext,
+                                     bc_mom_vv_diff_ten_ext,
+                                     bc_mom_ww_diff_ten_ext,
+                                     bc_mom_uv_diff_ten_ext,
+                                     bc_mom_uw_diff_ten_ext,
+                                     bc_mom_vu_diff_ten_ext,
+                                     bc_mom_vw_diff_ten_ext,
+                                     bc_mom_wu_diff_ten_ext,
+                                     bc_mom_wv_diff_ten_ext,
+                                     bc_mom_u_source_ext,
+                                     bc_mom_v_source_ext,
+                                     bc_mom_w_source_ext,
+                                     bc_mom_u_ham_ext,
+                                     bc_dmom_u_ham_grad_p_ext,
+                                     bc_dmom_u_ham_grad_u_ext,
+                                     bc_mom_v_ham_ext,
+                                     bc_dmom_v_ham_grad_p_ext,
+                                     bc_dmom_v_ham_grad_v_ext,
+                                     bc_mom_w_ham_ext,
+                                     bc_dmom_w_ham_grad_p_ext,          
+                                     bc_dmom_w_ham_grad_w_ext);          
 
         /*         // */
         /*         //moving domain */
