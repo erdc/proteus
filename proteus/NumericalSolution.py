@@ -896,11 +896,15 @@ class NS_base(object):  # (HasTraits):
 
 
     def PUMI2Proteus(self,mesh):
+
+        import time
         #p0 = self.pList[0] #This can probably be cleaned up somehow
         #n0 = self.nList[0]
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
 
+        ##Section 1 - generating level mesh
+        section1begin = time.clock()
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
@@ -929,16 +933,26 @@ class NS_base(object):  # (HasTraits):
         if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
             mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
             mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
-
+        section1end = time.clock()
+        self.restart_section1 = section1end-section1begin
+        
+        #Section 2 - model allocation
+        section2begin = time.clock()
         #may want to trigger garbage collection here
         modelListOld = self.modelList
         logEvent("Allocating models on new mesh")
         self.allocateModels()
         logEvent("Attach auxiliary variables to new models")
+
+        section2end = time.clock()
+        self.restart_section2 = section2end-section2begin
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
         self.auxiliaryVariables = {}
         self.newAuxiliaryVariables = {}
+
+        #Section 3 - gauge reallocation
+        section3begin = time.clock()
         if self.simFlagsList is not None:
             for p, n, simFlags, model, index in zip(
                     self.pList,
@@ -1000,7 +1014,11 @@ class NS_base(object):  # (HasTraits):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
 
+        section3end = time.clock()
+        self.restart_section3 = section3end-section3begin
         
+        #Section 4 - Transfer and setup
+        section4begin = time.clock()
         logEvent("Transfering fields from PUMI to Proteus")
         for m in self.modelList:
           for lm in m.levelModelList:
@@ -1098,7 +1116,9 @@ class NS_base(object):  # (HasTraits):
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
         self.systemStepController.choose_dt_system()
-
+        
+        section4end = time.clock()
+        self.restart_section4 = section4end-section4begin
 
         #Don't do anything if this is the initial adapt
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
@@ -1527,6 +1547,10 @@ class NS_base(object):  # (HasTraits):
         self.triggerTime=0 #accounts for time for detecting trigger
         self.numberAdapts=0
         self.initializeTime=0 #accounts for time spent performing initialization excluding initial adapt
+        self.restart_section1=0
+        self.restart_section2=0
+        self.restart_section3=0
+        self.restart_section4=0
 
         initializationTime1=time.clock() #reference time to compute contribution
 
@@ -1988,6 +2012,7 @@ class NS_base(object):  # (HasTraits):
             file0 = open('timerResults.csv','w')           
             #netSolveTime = self.solverTime - self.adaptTime - self.restartTime - self.ignoreTime - self.triggerTime
             file0.write('%f,%f,%f,%f,%f,%f,%f,%i,%i\n' % (self.initializeTime,self.solverTime,self.triggerTime,self.adaptTime,self.restartTime,self.recomputeTime,self.ignoreTime,self.nSolveSteps,self.numberAdapts))
+            file0.write('%f,%f,%f,%f\n' % (self.restart_section1,self.restart_section2,self.restart_section3,self.restart_section4))
             file0.close()
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
