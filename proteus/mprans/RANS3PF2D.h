@@ -11,7 +11,7 @@
 #include "SedClosure.h"
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
-#define CUT_CELL_INTEGRATION 1.0
+#define CUT_CELL_INTEGRATION 0.0
 //////////////////////
 // ***** TODO ***** //
 //////////////////////
@@ -3453,7 +3453,8 @@ namespace proteus
             /* mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element)); */
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
-        std::cout<<std::flush;
+	  if(CUT_CELL_INTEGRATION > 0)
+	    std::cout<<std::flush;
         //
         //loop over the surrogate boundaries in SB method and assembly into residual
         //
