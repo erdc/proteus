@@ -1102,7 +1102,11 @@ class NS_base(object):  # (HasTraits):
 
         #Don't do anything if this is the initial adapt
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            import time
+            recomputeTime1 = time.clock()
             self.PUMI_recomputeStructures(modelListOld)
+            recomputeTime2 = time.clock()
+            self.recomputeTime += recomputeTime2-recomputeTime1
 
             #something different is needed for initial conditions
             if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
@@ -1329,6 +1333,7 @@ class NS_base(object):  # (HasTraits):
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
+                logEvent('numSolveSteps %f ' % self.nSolveSteps)
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
@@ -1392,7 +1397,8 @@ class NS_base(object):  # (HasTraits):
         else:
             p0.domain.PUMIMesh.adaptPUMIMesh(inputString)
         adaptStep2=time.clock()
-        self.adaptTime+= (adaptStep2-adaptStep1)
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.adaptTime+= (adaptStep2-adaptStep1)
         self.numberAdapts+=1
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
@@ -1402,6 +1408,36 @@ class NS_base(object):  # (HasTraits):
         #    p0.domain.PUMIMesh.adaptPUMIMesh()
         #    p0.domain.PUMIMesh.get_local_error()
 
+        #logEvent("Converting PUMI mesh to Proteus")
+        ##ibaned: PUMI conversion #2
+        ##TODO: this code is nearly identical to
+        ##PUMI conversion #1, they should be merged
+        ##into a function
+        #restartTime1 = time.clock()
+        #if p0.domain.nd == 3:
+        #  mesh = MeshTools.TetrahedralMesh()
+        #else:
+        #  mesh = MeshTools.TriangularMesh()
+
+        #mesh.convertFromPUMI(p0.domain.PUMIMesh,
+        #                     p0.domain.faceList,
+        #                     p0.domain.regList,
+        #                     parallel = self.comm.size() > 1,
+        #                     dim = p0.domain.nd)
+
+        #self.PUMI2Proteus(mesh)
+        #restartTime2 = time.clock()
+        #self.restartTime += (restartTime2-restartTime1)
+      ##chitak end Adapt
+
+    def PUMI_restart(self):
+        """
+        Uses a computed error field to construct a size field and adapts
+        the mesh using SCOREC tools (a.k.a. MeshAdapt)
+        """
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
+        import time
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
@@ -1421,8 +1457,10 @@ class NS_base(object):  # (HasTraits):
 
         self.PUMI2Proteus(mesh)
         restartTime2 = time.clock()
-        self.restartTime += (restartTime2-restartTime1)
-      ##chitak end Adapt
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.restartTime += (restartTime2-restartTime1)
+
+
 
     ## compute the solution
 
@@ -1478,6 +1516,19 @@ class NS_base(object):  # (HasTraits):
         #      ))
         #file3.close()
         #exit()
+
+        #Start of timers
+        import time
+        self.solverTime=0 #accounts for time spent in the solver loop
+        self.adaptTime=0 #accounts for time spent in MeshAdapt
+        self.restartTime=0 #accounts for time spent restarting after adapt
+        self.recomputeTime=0 #accounts for time spent recomputing after adapt
+        self.ignoreTime=0 #accounts for times i want to ignore
+        self.triggerTime=0 #accounts for time for detecting trigger
+        self.numberAdapts=0
+        self.initializeTime=0 #accounts for time spent performing initialization excluding initial adapt
+
+        initializationTime1=time.clock() #reference time to compute contribution
 
         logEvent("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(list(range(len(self.modelList))),self.pList,self.nList,self.modelList,self.simOutputList):
@@ -1663,15 +1714,9 @@ class NS_base(object):  # (HasTraits):
         systemStepFailed=False
         stepFailed=False
 
-        #Start of timers
-        import time
-        self.solverTime=0 #accounts for time spent in the solver function
-        self.adaptTime=0 #accounts for time spent in MeshAdapt
-        self.restartTime=0 #accounts for time spent restarting after adapt
-        self.ignoreTime=0 #accounts for time i want to ignore
-        self.triggerTime=0 #accounts for time for detecting trigger
-        self.numberAdapts=0
+        initializationTime2=time.clock() #reference time to compute contribution
 
+        
         #### Perform an initial adapt after applying initial conditions ####
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
@@ -1684,10 +1729,17 @@ class NS_base(object):  # (HasTraits):
             self.PUMI_transferFields()
             logEvent("Initial Adapt before Solve")
             self.PUMI_adaptMesh("interface")
+            self.PUMI_restart()
  
             self.PUMI_transferFields()
             logEvent("Initial Adapt 2 before Solve")
             self.PUMI_adaptMesh("interface")
+            self.PUMI_restart()
+
+
+        initializationTime3=time.clock() #reference time to compute contribution
+        
+        self.initializeTime+=initializationTime3-initializationTime1
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1860,7 +1912,7 @@ class NS_base(object):  # (HasTraits):
                             for index,model in enumerate(self.modelList):
                                 self.archiveSolution(model,index,self.systemStepController.t_system)
                         stepArchiveTime2=time.clock()
-                        self.ignoreTime -= (stepArchiveTime2-stepArchiveTime1)
+                        self.ignoreTime += (stepArchiveTime2-stepArchiveTime1)
                 #end system split operator sequence
                 if systemStepFailed:
                     logEvent("System Step Failed")
@@ -1894,7 +1946,7 @@ class NS_base(object):  # (HasTraits):
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 stepArchiveTime2=time.clock()
-                self.ignoreTime -= (stepArchiveTime2-stepArchiveTime1)
+                self.ignoreTime += (stepArchiveTime2-stepArchiveTime1)
 
                 #can only handle PUMIDomain's for now
                 #if(self.tn < 0.05):
@@ -1906,6 +1958,7 @@ class NS_base(object):  # (HasTraits):
                     triggerTime2=time.clock()
                     self.triggerTime+=(triggerTime2-triggerTime1)
                     self.PUMI_adaptMesh()
+                    self.PUMI_restart()
                 stepFinalTime=time.clock()
                 self.solverTime+=(stepFinalTime-stepInitialTime)
             #end system step iterations
@@ -1933,8 +1986,8 @@ class NS_base(object):  # (HasTraits):
         self.comm=comm
         if(comm.isMaster()):
             file0 = open('timerResults.csv','w')           
-            netSolveTime = self.solverTime - self.adaptTime - self.restartTime - self.ignoreTime - self.triggerTime
-            file0.write('%f,%f,%f,%f,%f,%i\n' % (netSolveTime,self.solverTime,self.triggerTime,self.adaptTime,self.restartTime,self.numberAdapts))
+            #netSolveTime = self.solverTime - self.adaptTime - self.restartTime - self.ignoreTime - self.triggerTime
+            file0.write('%f,%f,%f,%f,%f,%f,%f,%i,%i\n' % (self.initializeTime,self.solverTime,self.triggerTime,self.adaptTime,self.restartTime,self.recomputeTime,self.ignoreTime,self.nSolveSteps,self.numberAdapts))
             file0.close()
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
