@@ -34,6 +34,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*,double,double)
+        int setPredictiveNumber(int)
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
@@ -110,6 +111,8 @@ cdef class MeshAdaptPUMI:
         nu = np.ascontiguousarray(nu)
         g = np.ascontiguousarray(g)
         return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0],deltaT,interfaceBandSize)
+    def setPredictiveNumber(self, int numberOfTimesteps):
+        return self.thisptr.setPredictiveNumber(numberOfTimesteps)
     def transferModelInfo(self, np.ndarray[int,ndim=1,mode="c"] numModelEntities,
                                 np.ndarray[int,ndim=2,mode="c"] edges,
                                 np.ndarray[int,ndim=2,mode="c"] faces,

@@ -140,6 +140,23 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
   return 0;
 }
 
+int MeshAdaptPUMIDrvr::setPredictiveNumber(int numberOfTimesteps)
+/**
+ * @brief Transfer material properties to the MeshAdaptPUMI class
+ * 
+ * There are three material properties that the error estimator requires:
+ * 
+ * \param rho_p is the density
+ * \param nu_p is the kinematic viscosity
+ * \param g_p is the gravitational field (a 3-vector)
+ *
+ */
+{ 
+  numAdaptSteps = numberOfTimesteps;
+  return 0;
+}
+
+
 /*
 int MeshAdaptPUMIDrvr::transferBCtagsToProteus(int* tagArray,int idx, int* ebN, int*eN_global,double* fluxBC)
 {

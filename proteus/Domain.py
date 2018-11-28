@@ -976,6 +976,11 @@ class PUMIDomain(D_base):
       self.faceList=[]
       self.regList=[]
       self.PUMIMesh=None
+      #Timing structures
+      self.adaptWorkflowTime=0 #time spent to perform previous adapt and restart 
+      self.solveLoopTime=0  #time spent since previous adapt
+      self.nSolveSteps_loop = 0 #number of solve steps
+      self.nSolveSteps_previous = 0
       #
       #it would be useful to define a dictionary mapping strings to faces
       #boundariesTags={'bottom':3,'top':5,'front':1,'back':6,'left':2,'right':4}

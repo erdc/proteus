@@ -1763,15 +1763,18 @@ class NS_base(object):  # (HasTraits):
             (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
             self.so.useOneMesh):
 
-            self.PUMI_transferFields()
             logEvent("Initial Adapt before Solve")
+            self.PUMI_transferFields()
             self.PUMI_adaptMesh("interface")
             self.PUMI_restart()
  
-            self.PUMI_transferFields()
             logEvent("Initial Adapt 2 before Solve")
+            workflowTime1 = time.clock()
+            self.PUMI_transferFields()
             self.PUMI_adaptMesh("interface")
             self.PUMI_restart()
+            workflowTime2 = time.clock()
+            self.pList[0].domain.adaptWorkflowTime = workflowTime2-workflowTime1
 
 
         initializationTime3=time.clock() #reference time to compute contribution
@@ -1996,8 +1999,24 @@ class NS_base(object):  # (HasTraits):
                 if(self.PUMI_estimateError()):
                     triggerTime2=time.clock()
                     self.triggerTime+=(triggerTime2-triggerTime1)
+                    self.pList[0].domain.solveLoopTime = stepArchiveTime1-stepInitialTime #will need to think of a more elegant way of doing this
+                    self.pList[0].domain.nSolveSteps_loop = self.nSolveSteps - self.pList[0].domain.nSolveSteps_previous
+                    self.pList[0].domain.nSolveSteps_previous = self.nSolveSteps
+                    if(self.pList[0].domain.adaptWorkflowTime > 1e-12 and self.numberAdapts > 3):
+                        T_alpha = self.pList[0].domain.adaptWorkflowTime
+                        T_solve = self.pList[0].domain.solveLoopTime/self.pList[0].domain.nSolveSteps_loop
+                        desiredRatio = 0.1 #10% of the total solve time
+                        import math 
+                        N_predictive_timesteps = int(math.ceil((T_alpha/T_solve)/desiredRatio))
+                        logEvent("PUMI: Number of timesteps desired "+str(N_predictive_timesteps))
+                        self.pList[0].domain.PUMIMesh.setPredictiveNumber(N_predictive_timesteps)
+                        
+                    workflowTime1 = time.clock()
                     self.PUMI_adaptMesh()
                     self.PUMI_restart()
+                    workflowTime2 = time.clock()
+                    self.pList[0].domain.adaptWorkflowTime = workflowTime2-workflowTime1
+
                 stepFinalTime=time.clock()
                 self.solverTime+=(stepFinalTime-stepInitialTime)
             #end system step iterations
