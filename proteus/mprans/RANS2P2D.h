@@ -804,7 +804,7 @@ namespace proteus
             mom_v_ham = porosity*grad_p[1];
             dmom_v_ham_grad_p[0]=0.0;
             dmom_v_ham_grad_p[1] = porosity;
-            if (use_pseudo_penalty == 0)
+            if (use_pseudo_penalty <= 0)
             {
               //u momentum Hamiltonian (advection)
               mom_u_ham += rho * porosity * (u * grad_u[0] + v * grad_u[1]);
@@ -1148,7 +1148,7 @@ namespace proteus
                                            double *particle_netForces,
                                            double *particle_netMoments,
                                            double *particle_surfaceArea,
-                                           const double use_pseudo_penalty)
+                                           const int use_pseudo_penalty)
     {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s;
         double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
@@ -1242,7 +1242,7 @@ namespace proteus
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
-            if(use_pseudo_penalty==0)// not pseudo-penalty method == IBM
+            if(use_pseudo_penalty<=0)// not pseudo-penalty method == IBM
             if (NONCONSERVATIVE_FORM > 0.0)
             {
                 //(2)
@@ -2778,13 +2778,19 @@ namespace proteus
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
-                if(use_pseudo_penalty>0 && phi[eN_k]<0.0)//One does not have to change Jacobian
+                if(use_pseudo_penalty > 0 && phi_solid[eN_k]<0.0)//Do not have to change Jacobian
                 {
                   double distance,vx,vy;
                   int index_ball = get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance);
                   get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,ball_velocity,ball_angular_velocity,index_ball,x,y,z,vx,vy);
                   mom_u_acc_t = alphaBDF*(mom_u_acc - vx);
                   mom_v_acc_t = alphaBDF*(mom_v_acc - vy);
+                }else if(use_pseudo_penalty == -1 && phi_solid[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
+                {
+                  mom_u_acc_t = 0.0;
+                  mom_v_acc_t = 0.0;
+                  dmom_u_acc_u= 0.0;
+                  dmom_v_acc_v= 0.0;
                 }
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
@@ -4505,6 +4511,13 @@ namespace proteus
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
+                if(use_pseudo_penalty == -1 && phi_solid[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
+                {
+                  mom_u_acc_t = 0.0;
+                  mom_v_acc_t = 0.0;
+                  dmom_u_acc_u = 0.0;
+                  dmom_v_acc_v = 0.0;
+                }
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
                     mom_u_acc_t *= dmom_u_acc_u;
