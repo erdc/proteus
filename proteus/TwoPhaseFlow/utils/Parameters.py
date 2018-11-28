@@ -308,6 +308,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         self.epsFact = epsFact
         self.epsTimeStep = 0.1
         self.nSmoothOut = 0.
+        self.nSmoothIn = 0.
         self.grading = 1.1
         self.grading_type = 2
         self.resetNodeVelocityArray = None
