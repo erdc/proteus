@@ -2002,7 +2002,7 @@ class NS_base(object):  # (HasTraits):
                     self.pList[0].domain.solveLoopTime = stepArchiveTime1-stepInitialTime #will need to think of a more elegant way of doing this
                     self.pList[0].domain.nSolveSteps_loop = self.nSolveSteps - self.pList[0].domain.nSolveSteps_previous
                     self.pList[0].domain.nSolveSteps_previous = self.nSolveSteps
-                    if(self.pList[0].domain.adaptWorkflowTime > 1e-12 and self.numberAdapts > 3):
+                    if(self.pList[0].domain.adaptWorkflowTime > 1e-12):
                         T_alpha = self.pList[0].domain.adaptWorkflowTime
                         T_solve = self.pList[0].domain.solveLoopTime/self.pList[0].domain.nSolveSteps_loop
                         desiredRatio = 0.1 #10% of the total solve time

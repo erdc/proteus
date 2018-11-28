@@ -276,9 +276,12 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
     apf::Field* interfaceBand = m->findField("interfaceBand");
     apf::Field* velocity = m->findField("velocity");
     apf::Field* levelSet = m->findField("phi");
+    apf::Field* pressure = m->findField("p");
+    apf::Field* vof = m->findField("vof");
 
     //get gradient field
     apf::Field *gradphi = apf::recoverGradientByVolume(levelSet);
+    apf::Field *gradPres = apf::recoverGradientByVolume(pressure);
 
     apf::Field* predictInterfaceBand = apf::createLagrangeField(m,"predictInterfaceBand",apf::SCALAR,1);
     apf::copyData(predictInterfaceBand,interfaceBand);
@@ -320,14 +323,39 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
             apf::getVector(velocityElem,edgePoint,localVelocity);
             apf::Vector3 localInterfaceNormal;
             apf::getVector(gradPhiElem,edgePoint,localInterfaceNormal);
+
+            apf::Element* gradPresElem = apf::createElement(gradPres,edge);
+            apf::Vector3 gradPresVec;
+            apf::getVector(gradPresElem,edgePoint,gradPresVec);
+
+            apf::Element* vofElem = apf::createElement(vof,edge);
+            double density = getMPvalue(apf::getScalar(vofElem,edgePoint),rho[0],rho[1]);
+
             apf::destroyElement(phiElem);
             apf::destroyElement(velocityElem);
             apf::destroyElement(gradPhiElem);
+            apf::destroyElement(gradPresElem);
+            apf::destroyElement(vofElem);
 
             //get L_local 
             double L_local = localVelocity.getLength()*numAdaptSteps*delta_T;
         
+
+            //compute L_max and bound L_local by L_max
+            double force_mag = sqrt(g[0]*g[0]+g[1]*g[1]+g[2]*g[2]);
+            double accel = gradPresVec.getLength()/density + force_mag;
+            double gamma = 0.2;
+            double N_max = localVelocity.getLength()/accel*2*gamma/delta_T;
+            double L_max = N_max*localVelocity.getLength()*delta_T;
+            std::cout<<"gradPres "<< gradPresVec.getLength()<<" accel "<<accel<<std::endl;
+            std::cout<<"Density "<<density<<std::endl;
+            std::cout<<"N_max "<<N_max<<std::endl;
+            std::cout<<"L_max "<<L_max<<" L_local "<<L_local<<std::endl;
+            if(L_local > L_max)
+                L_local = L_max;
+            
             L_local += (N_interface_band)*hPhi; //add blending region   
+            //std::exit(1);
 
             //get direction, multiply this with levelSet value to determine if in same direction
             double signValue = localVelocity*localInterfaceNormal;
@@ -480,6 +508,7 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
     apf::copyData(interfaceBand,predictInterfaceBand);
     apf::destroyField(predictInterfaceBand);
     apf::destroyField(gradphi);
+    apf::destroyField(gradPres);
 
     //get all tags for destruction
     apf::MeshIterator* tagIt = m->begin(0);
