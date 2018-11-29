@@ -6,13 +6,12 @@ import numpy as np
 
 nd=2
 
-L=(50.0,1.0)
+L=(10.0,1.0)
 g = 9.81
 
-eps = 0.0
-h1=0.1  - eps
-h2=0.11  - eps
-x0 = 2.0 
+h1=0.10
+h2=0.11
+x0 = 3.0
 D = np.sqrt(g * h2)
 
 T = 4.0
@@ -35,7 +34,7 @@ domain.writePoly("tank2d")
 ######################
 def bathymetry_function(X):
     x=X[0]
-    return 0*x 
+    return 0*x
 
 ##############################
 ##### INITIAL CONDITIONS #####
@@ -47,7 +46,7 @@ def solitary(X,t):
     z = np.sqrt(z1 / z2)
     soliton =  h1 + (h2 - h1) * 1.0/(np.cosh(xi/2.0 * z)**2)
     return soliton
-   
+
 
 def hwInit(X,t):
     xi = X[0] - D*t-x0
@@ -58,7 +57,7 @@ def hwInit(X,t):
     tanh    =  np.tanh(xi/2.0 * z)**2
     init = -D * h1 * ( (h1-h2)*z*sechSqd*tanh )
     return init
-    
+
 class water_height_at_t0:
     def uOfXT(self,X,t):
         return solitary(X,t)
@@ -73,7 +72,7 @@ class heta_at_t0:
 class hw_at_t0:
     def uOfXT(self,X,t):
         return hwInit(X,t)
-      
+
 class Zero:
     def uOfXT(self,x,t):
         return 0.0
@@ -98,11 +97,13 @@ def getDBC_h(x,flag):
     if x[0]==0 or x[0]==L[0]:
       return lambda x,t: solitary(x,t)
 
+
+
 def getDBC_hu(x,flag):
    # None
     if [0]==0 or x[0]==L[0]:
         return lambda x,t: 0.
-    
+
 def getDBC_hv(x,flag):
     return lambda x,t: 0.0
 
@@ -114,7 +115,7 @@ def getDBC_heta(x,flag):
 def getDBC_hw(x,flag):
     None
     #if x[0]==0 or x[0]==L[0]:
-    #    return lambda x,t: 0.0    
+    #    return lambda x,t: 0.0
 
 dirichletConditions = {0:getDBC_h,
                        1:getDBC_hu,
@@ -137,4 +138,3 @@ diffusiveFluxBoundaryConditions = {}
 bathymetry={0:bathymetry_function}
 LevelModelType = DSW2DCV.LevelModel
 coefficients = DSW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,LINEAR_FRICTION=LINEAR_FRICTION,mannings=mannings)
-

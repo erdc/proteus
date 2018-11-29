@@ -35,11 +35,10 @@ outputStepping = ct.mySWFlowProblem.outputStepping
 if sw_model==0: #SWEs
     pnList = [("sw_p", "sw_n")]
 else:
-    raise("Not implemented!")
-    #pnList = [("dsw_p", "dsw_n")]
+    pnList = [("dsw_p", "dsw_n")]
+    #raise("Not implemented!")
 
 # **************************** #
 # ********** tnList ********** #
 # **************************** #
 tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
-
