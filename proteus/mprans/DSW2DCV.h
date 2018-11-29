@@ -2412,27 +2412,21 @@ namespace proteus
 
         // Define things here to make life easier.
         double meshi = std::sqrt(mi);
-        double alphai = lambda / (3.0 * meshi);
+        double alphai = lambda*g / (3.0 * meshi);
         double constanti = lambda * g / meshi;
         double etai = hetai*one_over_hiReg;
-        double eta_over_h_i = etai * one_over_hiReg;
-        double ratio_i =  2.0 * hetai/(std::pow(etai,2.0)+std::pow(hi,2.0)+cut_offi);
-        double x0_i =  fmin(2.0, std::sqrt(1.0+1.0/(2*alphai*(fmax(etai,0.0)+cut_offi))));
 
         /////////////////////
 	      // For Force Terms //
         /////////////////////
-        double hSqd_GammaPi = 4.0*(x0_i-1.0)*hetai+(1-std::pow(x0_i,2.0))*std::pow(hi,2.0);
-        if (etai < 0.0)
+        double hSqd_GammaPi = 6.0 * (etai*hi - std::pow(hi,2.0));
+        if (etai >= hi)
         {
-          hSqd_GammaPi = 0.0;
+          hSqd_GammaPi = 6.0 * (std::pow(etai,2.0)-etai*hi);
         }
-        else if (etai <= x0_i*hi)
-        {
-          hSqd_GammaPi = 3.0*std::pow(etai,2.0)+std::pow(hi,2.0)-4.0*hetai;
-        }
-	      double force_term_hetai = hwi*mi*std::pow(ratio_i,3.0);
-	      double force_term_hwi = -constanti*hSqd_GammaPi*std::pow(ratio_i,3.0)*mi;
+
+	      double force_term_hetai = hwi*mi;
+	      double force_term_hwi = -constanti*hSqd_GammaPi*mi;
 
 
 
@@ -2453,27 +2447,18 @@ namespace proteus
             		  // EJT. Corrected terms to match our paper.
                   double mj = lumped_mass_matrix[j];
                   double meshj = std::sqrt(mj); // local mesh size in 2d
-                  double alphaj = lambda / (3.0 * meshj);
+                  double alphaj = lambda * g / (3.0 * meshj);
                   double etaj = hetaj*one_over_hjReg;
                   double eta_over_h_j = etaj * one_over_hjReg;
-                  double ratio_j =  2.0 * hetaj/(std::pow(etaj,2.0)+std::pow(hj,2.0)+cut_off);
-                  double x0_j =  fmin(2.0, std::sqrt(1.0+1.0/(2*alphaj*(fmax(etaj,0.0)+cut_off))));
 
                   /////////////////////
           	      // For Flux Terms //
                   /////////////////////
-                  double pTildej = -alphaj*g*(std::pow(x0_j,2.0)-1.0)*hetaj*hj;
-                  if (etaj < 0.0)
+                  double pTildej = -alphaj * (etaj*hj - std::pow(hj,2.0));
+                  if (etaj > hj)
                   {
-                    pTildej = 0.0;
+                    pTildej = -alphaj * 2.0 * (std::pow(etaj,3.0)-std::pow(hj,3.0));
                   }
-                  else if (etaj <= x0_j*hj)
-                  {
-                    pTildej = -alphaj*g*etaj*(std::pow(etaj,2.0)-std::pow(hj,2.0));
-                  }
-
-
-
 
                   // Nodal projection of fluxes
                   ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
