@@ -3,7 +3,7 @@ from proteus.default_n import *
 from sw_hump_2d_p import *
 
 refinement=4
-runCFL=0.07
+runCFL=0.1
 SSPOrder=3
 
 multilevelNonlinearSolver  = Newton
