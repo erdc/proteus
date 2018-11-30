@@ -2785,7 +2785,7 @@ namespace proteus
                   get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,ball_velocity,ball_angular_velocity,index_ball,x,y,z,vx,vy);
                   mom_u_acc_t = alphaBDF*(mom_u_acc - vx);
                   mom_v_acc_t = alphaBDF*(mom_v_acc - vy);
-                }else if(use_pseudo_penalty == -1 && phi_solid[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
+                }else if(use_pseudo_penalty == -1 && phi_solid[eN_k]<2.0*h_phi)//no derivative term inside the solid; Has to change Jacobian
                 {
                   mom_u_acc_t = 0.0;
                   mom_v_acc_t = 0.0;
@@ -4511,7 +4511,7 @@ namespace proteus
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
-                if(use_pseudo_penalty == -1 && phi_solid[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
+                if(use_pseudo_penalty == -1 && phi_solid[eN_k]<2.0*h_phi)//no derivative term inside the solid; Has to change Jacobian
                 {
                   mom_u_acc_t = 0.0;
                   mom_v_acc_t = 0.0;
