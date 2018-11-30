@@ -1309,7 +1309,7 @@ class SpInv_shell(InvOperatorShell):
             self.const_null_space.remove(tmp1)
         self.kspSp.solve(tmp1,y)
         assert numpy.isnan(y.norm())==False, "Applying the schur complement \
-resulted in not-a-number."
+        resulted in not-a-number."
 
     def _create_Sp(self):
         self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
