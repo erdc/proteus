@@ -866,11 +866,11 @@ namespace proteus
         //u momentum accumulation
         mom_u_acc=phi_s_effect*u;//trick for non-conservative form
         dmom_u_acc_u=rho*phi_s_effect*porosity;
-  
+
         //v momentum accumulation
         mom_v_acc=phi_s_effect*v;
         dmom_v_acc_v=rho*phi_s_effect*porosity;
-  
+
         //w momentum accumulation
         mom_w_acc=phi_s_effect*w;
         dmom_w_acc_w=rho*phi_s_effect*porosity;
@@ -1006,13 +1006,13 @@ namespace proteus
         dmom_u_ham_grad_u[0]=phi_s_effect*rho*porosity*uStar;
         dmom_u_ham_grad_u[1]=phi_s_effect*rho*porosity*vStar;
         dmom_u_ham_grad_u[2]=phi_s_effect*rho*porosity*wStar;
-  
+
         //v momentum Hamiltonian (advection)
         mom_v_ham += phi_s_effect*rho*porosity*(uStar*grad_v[0]+vStar*grad_v[1]+wStar*grad_v[2]);
         dmom_v_ham_grad_v[0]=phi_s_effect*rho*porosity*uStar;
         dmom_v_ham_grad_v[1]=phi_s_effect*rho*porosity*vStar;
         dmom_v_ham_grad_v[2]=phi_s_effect*rho*porosity*wStar;
-  
+
         //w momentum Hamiltonian (advection)
         mom_w_ham += phi_s_effect*rho*porosity*(uStar*grad_w[0]+vStar*grad_w[1]+wStar*grad_w[2]);
         dmom_w_ham_grad_w[0]=phi_s_effect*rho*porosity*uStar;
@@ -1066,7 +1066,7 @@ namespace proteus
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
         viscosity = nu;//mu; gco check
         // phi_s is porosity in this case - gco check
-        uc = sqrt(u*u+v*v*+w*w); 
+        uc = sqrt(u*u+v*v*+w*w);
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
@@ -2062,7 +2062,7 @@ namespace proteus
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
-                             const double* q_vos,//sed fraction - gco check 
+                             const double* q_vos,//sed fraction - gco check
                              const double* q_dvos_dt,
                              const double* q_grad_vos,
                              const double* q_dragAlpha,
@@ -2633,7 +2633,7 @@ namespace proteus
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //VRANS
                 porosity      = 1.0 - q_vos[eN_k]; // porosity - gco check
-                //meanGrainSize = q_meanGrain[eN_k]; 
+                //meanGrainSize = q_meanGrain[eN_k];
                 //
                 q_x[eN_k_3d+0]=x;
                 q_x[eN_k_3d+1]=y;
@@ -3063,7 +3063,9 @@ namespace proteus
 		  {
 		    double rho = q_rho[eN_k];
 		    double mu = q_rho[eN_k]*q_nu[eN_k];
+
 		    double vel2 = u*u + v*v + w*w;
+
 		    // entropy residual
 		    double Res_in_x =
                       porosity*rho*((u-un)/dt + (u*grad_u[0]+v*grad_u[1]+w*grad_u[2]) - g[0])
@@ -3079,12 +3081,14 @@ namespace proteus
                       - mu*(hess_u[1] + hess_v[4] + hess_w[5]); // u_xy + v_yy + w_yz
                     double Res_in_z =
                       porosity*rho*((w-wn)/dt + (u*grad_w[0]+v*grad_w[1]+w*grad_w[2]) - g[2])
-		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[2] 
+		      + (KILL_PRESSURE_TERM == 1 ? 0 : 1.)*grad_p[2]
 		      - (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcez[eN_k]
                       - mu*(hess_w[0] + hess_w[4] + hess_w[8])  // w_xx + w_yy + w_zz
                       - mu*(hess_u[2] + hess_v[5] + hess_w[8]); // u_xz + v_yz + w_zz
+
 		    // compute entropy residual
 		    double entRes_times_u = Res_in_x*u + Res_in_y*v + Res_in_z*w;
+
 		    double hK = elementDiameter[eN]/order_polynomial;
 		    q_numDiff_u[eN_k] = fmin(cMax*porosity*rho*hK*std::sqrt(vel2),
 					     cE*hK*hK*fabs(entRes_times_u)/(vel2+1E-10));
@@ -5235,7 +5239,7 @@ namespace proteus
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
                 //
                 //VRANS
-                porosity = 1.0 - q_vos[eN_k]; // porosity - gco check 
+                porosity = 1.0 - q_vos[eN_k]; // porosity - gco check
                 //
                 //
                 //calculate pde coefficients and derivatives at quadrature points
@@ -6431,9 +6435,9 @@ namespace proteus
                 bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext;
                 //VRANS
                 porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];//porosity - gco check
-                // 
-                //calculate the internal and external trace of the pde coefficients 
-                // 
+                //
+                //calculate the internal and external trace of the pde coefficients
+                //
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
                                      eps_mu,

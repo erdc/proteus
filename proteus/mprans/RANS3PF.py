@@ -343,7 +343,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
         else:
             self.ball_center = ball_center
-        
+
         if ball_radius is None:
             self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
         else:
@@ -364,7 +364,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         if self.particles:
             self.nParticles = self.particles.size();
-        
+
         mass = {}
         advection = {}
         diffusion = {}
@@ -475,7 +475,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.q_nu = self.model.q[('u', 0)].copy()
         self.ebqe_nu = self.model.ebqe[('u', 0)].copy()
         # DEM particles
-        self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
+        self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]
         self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
         self.particle_centroids = np.zeros((self.nParticles, 3), 'd')
@@ -613,7 +613,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_n = modelList[self.CLSVOF_model].ebqe[('grad(u)', 0)]
             # VOF part #
             self.q_vf = modelList[self.CLSVOF_model].q[('H(u)', 0)]
-            self.ebq_vf = None# Not used. What is this for? 
+            self.ebq_vf = None# Not used. What is this for?
             self.ebqe_vf = modelList[self.CLSVOF_model].ebqe[('H(u)', 0)]
             self.bc_ebqe_vf = 0.5*(1.0+modelList[self.CLSVOF_model].numericalFlux.ebqe[('u',0)]) # Dirichlet BCs for VOF. What I have is BCs for Signed function
         else: # use NCLS-RDLS-VOF-MCORR instead
@@ -705,11 +705,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def initializeMesh(self, mesh):
 
-        
+
         self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10
 
         logEvent("updating {0} particles...".format(self.nParticles))
-        
+
         for i in range(self.nParticles):
             if self.use_ball_as_particle == 1:
                 sdf = lambda x: (np.linalg.norm(x-self.ball_center[i]),0)
@@ -1128,11 +1128,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         logEvent("updating {0} particles...".format(self.nParticles))
         if self.use_ball_as_particle == 0:
             if self.particles is not None:
-                self.particles.moveParticles(self.model.dt_last, 
+                self.particles.moveParticles(self.model.dt_last,
                                              t,
-                                             self.particle_netForces, 
+                                             self.particle_netForces,
                                              self.particle_netMoments)
-                
+
                 self.particles.updateSDF(self.mesh.nodeArray,
                                          self.model.q['x'],
                                          self.model.ebq_global['x'],
@@ -1144,7 +1144,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                          self.ebq_global_phi_s,
                                          self.ebq_global_grad_phi_s,
                                          self.ebq_particle_velocity_s)
-                
+
                 # Temporary hack... see note in attachModels
                 for i in range(self.particles.size()):
                     self.particle_centroids[i,:] = self.particles[i].x()
@@ -1204,7 +1204,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     for ci in range(self.nc):#since nc=nd
                         dof = self.model.offset[ci] + self.model.stride[ci]*ci_fg_dof
                         if self.model.isActiveDOF[dof] < 0.5:
-                            self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]    
+                            self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
         if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
