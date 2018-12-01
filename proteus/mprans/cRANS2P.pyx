@@ -491,6 +491,8 @@ cdef extern from "RANS2P.h" namespace "proteus":
                             int nDOF_mesh_trial_elementIn,
                             int nDOF_trial_elementIn,
                             int nDOF_test_elementIn,
+                            int nDOF_v_trial_elementIn,
+                            int nDOF_v_test_elementIn,
                             int nQuadraturePoints_elementBoundaryIn,
                             int CompKernelFlag)
 
@@ -503,6 +505,8 @@ cdef class cRANS2P_base:
                   int nDOF_mesh_trial_elementIn,
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
+                  int nDOF_v_trial_elementIn,
+                  int nDOF_v_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
                   int CompKernelFlag):
         self.thisptr = newRANS2P(nSpaceIn,
@@ -510,6 +514,8 @@ cdef class cRANS2P_base:
                                  nDOF_mesh_trial_elementIn,
                                  nDOF_trial_elementIn,
                                  nDOF_test_elementIn,
+                                 nDOF_v_trial_elementIn,
+                                 nDOF_v_test_elementIn,
                                  nQuadraturePoints_elementBoundaryIn,
                                  CompKernelFlag)
 
