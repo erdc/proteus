@@ -25,6 +25,7 @@
 // ***** END OF TODO *****
 
 #define CELL_BASED_EV_COEFF 1
+#define POWER_SMOOTHNESS_INDICATOR 2
 
 namespace proteus
 {
@@ -137,6 +138,9 @@ namespace proteus
                                    double* u_dof_old_old,
                                    double* v_dof_old_old,
                                    double* w_dof_old_old,
+				   double* uStar_dof,
+				   double* vStar_dof,
+				   double* wStar_dof,
                                    double* g,
                                    const double useVF,
                                    double *vf,
@@ -286,7 +290,15 @@ namespace proteus
                                    double* ebqe_dynamic_viscosity_as_function,
                                    double order_polynomial,
                                    double* isActiveDOF,
-                                   int USE_SBM
+                                   int USE_SBM,
+				   // For edge based dissipation
+				   double * entropyResidualPerNode,
+				   double * laggedEntropyResidualPerNode,
+				   double * dMatrix,
+				   int numDOFs_1D,
+				   int NNZ_1D,
+				   int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
+				   int *rowptr_1D, int *colind_1D
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -487,7 +499,15 @@ namespace proteus
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
                                    double* ebqe_dynamic_viscosity_as_function,
-                                   int USE_SBM)=0;
+                                   int USE_SBM,
+				   // For edge based dissipation
+				   int ARTIFICIAL_VISCOSITY,
+				   double * dMatrix,
+				   int numDOFs_1D,
+				   int offset_u, int offset_v, int offset_w,
+				   int stride_u, int stride_v, int stride_w,
+				   int *rowptr_1D, int *colind_1D,
+				   int *rowptr, int *colind)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int *exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -2105,6 +2125,9 @@ namespace proteus
                              double* u_dof_old_old,
                              double* v_dof_old_old,
                              double* w_dof_old_old,
+			     double* uStar_dof,
+			     double* vStar_dof,
+			     double* wStar_dof,
                              double* g,
                              const double useVF,
                              double* vf,
@@ -2235,8 +2258,33 @@ namespace proteus
                              double* ebqe_dynamic_viscosity_as_function,
                              double order_polynomial,
                              double* isActiveDOF,
-                             int USE_SBM)
+                             int USE_SBM,
+			     // For edge based discretization
+			     double * entropyResidualPerNode,
+			     double * laggedEntropyResidualPerNode,
+			     double * dMatrix,
+			     int numDOFs_1D,
+			     int NNZ_1D,
+			     int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
+			     int *rowptr_1D, int *colind_1D)
       {
+	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
+	register double psi[numDOFs_1D];
+	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+	  {
+	    for (int i=0; i<NNZ_1D; i++)
+	      {
+		dMatrix[i]=0.;
+		TransportMatrix[i] = 0.;
+		TransposeTransportMatrix[i] = 0.;
+	      }
+	    for (int i=0; i<numDOFs_1D; i++)
+	      {
+		psi[i]=1.;
+		entropyResidualPerNode[i]=0.;
+	      }
+	  }
+
         //
         //Loop over elements to compute volume integrals and load them into element and global residual
         //
@@ -2254,12 +2302,15 @@ namespace proteus
         //std::set<int> active_velocity_dof;
         for(int eN=0;eN<nElements_global;eN++)
           {
+	    register double  elementTransport[nDOF_test_element][nDOF_trial_element];
+	    register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
             //declare local storage for element residual and initialize
             register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
               phisErrorElement[nDOF_test_element],
               //elementResidual_w[nDOF_test_element],
+	      elementEntropyResidual[nDOF_test_element],
               eps_rho,eps_mu;
             //const double* elementResidual_w(NULL);
             double element_active=1.0;//use 1 since by default it is ibm
@@ -2277,6 +2328,15 @@ namespace proteus
                 elementResidual_v[i]=0.0;
                 phisErrorElement[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
+		elementEntropyResidual[i]=0.0;
+		if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		  {
+		    for (int j=0;j<nDOF_trial_element;j++)
+		      {
+			elementTransport[i][j]=0.0;
+			elementTransposeTransport[i][j]=0.0;
+		      }
+		  }
               }//i
             //Use for plotting result
             if(use_ball_as_particle==1)
@@ -2491,6 +2551,8 @@ namespace proteus
                   vel_hess_trial[nDOF_trial_element*nSpace2],
                   p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
                   p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
+		  u_times_vel_grad_test_dV[nDOF_test_element*nSpace], // For entropy residual
+                  v_times_vel_grad_test_dV[nDOF_test_element*nSpace], // For entropy residual
                   dV,x,y,z,xt,yt,zt,
                   //
                   porosity,
@@ -2500,6 +2562,8 @@ namespace proteus
                   dmom_v_source[nSpace],
                   dmom_w_source[nSpace],
                   //
+		  velStar[nSpace],
+		  //
                   G[nSpace*nSpace],G_dd_G,tr_G,norm_Rv,h_phi, dmom_adv_star[nSpace],dmom_adv_sge[nSpace];
                 //get jacobian, etc for mapping reference element
                 ck.calculateMapping_element(eN,
@@ -2568,6 +2632,16 @@ namespace proteus
                       {
                         /* p_grad_test_dV[j*nSpace+I]   = p_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin */
                         vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+			if (ARTIFICIAL_VISCOSITY==4)
+			  {
+			    // mql: for entropy residual. grad(u*phi) and grad(v*phi)
+			    u_times_vel_grad_test_dV[j*nSpace+I] =
+			      u*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_u[I];
+			    v_times_vel_grad_test_dV[j*nSpace+I] =
+			      v*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_v[I];
+			    /*w_times_vel_grad_test_dV[j*nSpace+I] =
+			      w*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_w[I];*/
+			  }
                       }
                   }
                 //cek hack
@@ -3038,7 +3112,7 @@ namespace proteus
 		    //
 		  }
 
-		if (ARTIFICIAL_VISCOSITY==0)
+		if (ARTIFICIAL_VISCOSITY==0 || ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 		  {
 		    q_numDiff_u[eN_k] = 0;
 		    q_numDiff_v[eN_k] = 0;
@@ -3052,7 +3126,7 @@ namespace proteus
 		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
 		  }
-		else // ENTROPY VISCOSITY
+		else // ARTIFICIAL_VISCOSITY==2; i.e, ENTROPY VISCOSITY
 		  {
 		    double rho = q_rho[eN_k];
 		    double mu = q_rho[eN_k]*q_nu[eN_k];
@@ -3137,6 +3211,12 @@ namespace proteus
                                             tgrad_v);
                 // END OF SURFACE TENSION //
 
+		if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		  {
+		    velStar[0] = q_velocity_sge[eN_k_nSpace+0];
+		    velStar[1] = q_velocity_sge[eN_k_nSpace+1];
+		    /*velStar[2] = q_velocity_sge[eN_k_nSpace+2];*/
+		  }
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     register int i_nSpace=i*nSpace;
@@ -3203,7 +3283,61 @@ namespace proteus
                     /*   ck.SubgridError(subgridError_p,Lstar_p_w[i]) +  */
                     /*   ck.SubgridError(subgridError_w,Lstar_w_w[i]) +  */
                     /*   ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]);  */
-                  }//i
+		    if (ARTIFICIAL_VISCOSITY==4)
+		      {
+			// ***** COMPUTE ENTROPY RESIDUAL ***** //
+			// mql. NOTE that the test functions are weighted by the velocity
+			elementEntropyResidual[i] +=
+			  // x-component
+			  ck.Mass_weak(mom_u_acc_t,u*vel_test_dV[i]) + // time derivative
+			  ck.Advection_weak(mom_u_adv,&u_times_vel_grad_test_dV[i_nSpace])+//m.mesh
+			  ck.Diffusion_weak(sdInfo_u_u_rowptr,
+					    sdInfo_u_u_colind,
+					    mom_uu_diff_ten,
+					    grad_u,
+					    &u_times_vel_grad_test_dV[i_nSpace]) +
+			  ck.Diffusion_weak(sdInfo_u_v_rowptr,
+					    sdInfo_u_v_colind,
+					    mom_uv_diff_ten,
+					    grad_v,
+					    &u_times_vel_grad_test_dV[i_nSpace]) +
+			  ck.Reaction_weak(mom_u_source,u*vel_test_dV[i]) + // Force term
+			  ck.Hamiltonian_weak(mom_u_ham,u*vel_test_dV[i])  // Pres + Non-linearity
+			  + // y-component
+			  ck.Mass_weak(mom_v_acc_t,v*vel_test_dV[i]) + // time derivative
+			  ck.Advection_weak(mom_v_adv,&v_times_vel_grad_test_dV[i_nSpace])+//m.mesh
+			  ck.Diffusion_weak(sdInfo_v_u_rowptr,
+					    sdInfo_v_u_colind,
+					    mom_vu_diff_ten,
+					    grad_u,
+					    &v_times_vel_grad_test_dV[i_nSpace])+
+			  ck.Diffusion_weak(sdInfo_v_v_rowptr,
+					    sdInfo_v_v_colind,
+					    mom_vv_diff_ten,
+					    grad_v,
+					    &v_times_vel_grad_test_dV[i_nSpace])+
+			  ck.Reaction_weak(mom_v_source,v*vel_test_dV[i]) + // force term
+			  ck.Hamiltonian_weak(mom_v_ham,v*vel_test_dV[i]); // Pres + Non-linearity
+		      }
+		    if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		      {
+			for(int j=0;j<nDOF_trial_element;j++)
+			  {
+			    int j_nSpace = j*nSpace;
+			    int i_nSpace = i*nSpace;
+			    elementTransport[i][j] += // int[rho*(velStar.grad_wj)*wi*dx]
+			      q_rho[eN_k]*porosity*
+			      ck.AdvectionJacobian_strong(velStar,
+							  &vel_grad_test_dV[j_nSpace])
+			      *vel_trial_ref[k*nDOF_trial_element+i];
+			    elementTransposeTransport[i][j] += // int[rho*(velStar.grad_wi)*wj*dx]
+			      q_rho[eN_k]*porosity*
+			      ck.AdvectionJacobian_strong(velStar,
+							  &vel_grad_test_dV[i_nSpace])
+			      *vel_trial_ref[k*nDOF_trial_element+j];
+			  }
+		      }//j
+		  }//i
               }
 	    // End computation of cell based EV coeff //
 	    if (CELL_BASED_EV_COEFF && ARTIFICIAL_VISCOSITY==2)
@@ -3232,12 +3366,138 @@ namespace proteus
                 globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
+
+		if (ARTIFICIAL_VISCOSITY==4)
+		  {
+		    // DISTRIBUTE ENTROPY RESIDUAL //
+		    entropyResidualPerNode[vel_l2g[eN_i]] += elementEntropyResidual[i];
+		  }
+		if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		  {
+		    for (int j=0;j<nDOF_trial_element;j++)
+		      {
+			int eN_i_j = eN_i*nDOF_trial_element+j;
+			TransportMatrix[csrRowIndeces_1D[eN_i]
+					+ csrColumnOffsets_1D[eN_i_j]]
+			  += elementTransport[i][j];
+			// transpose
+			TransposeTransportMatrix[csrRowIndeces_1D[eN_i]
+						 + csrColumnOffsets_1D[eN_i_j]]
+			  += elementTransposeTransport[i][j];
+		      }//j
+		  }
             }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */
             /* mesh_volume_conservation_weak += mesh_volume_conservation_element_weak; */
             /* mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element)); */
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
+
+	// loop in DOFs for discrete upwinding
+	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+	  {
+	    // FIRST LOOP ON DOFs //
+	    for (int i=0; i<numDOFs_1D; i++)
+	      {
+		if (ARTIFICIAL_VISCOSITY==4) // via entropy viscosity
+		  {
+		    // normalize entropy residual per node
+		    double max_u2i = (std::pow(u_dof[i],2.) +
+				      std::pow(v_dof[i],2.));
+		    double min_u2i = max_u2i;
+		    for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
+		      {
+			int j = colind_1D[offset];
+			double u2j = (std::pow(u_dof[j],2.) +
+				      std::pow(v_dof[j],2.));
+			max_u2i = fmax(max_u2i,u2j);
+			min_u2i = fmin(min_u2i,u2j);
+		      }
+		    double normi = 0.5*(max_u2i + min_u2i) + 1E-10;
+		    entropyResidualPerNode[i] = fabs(entropyResidualPerNode[i])/normi;
+		  }
+		else // via smoothness indicator
+		  {
+		    double uStari = uStar_dof[i];
+		    double vStari = vStar_dof[i];
+
+		    double u_alpha_numerator = 0., u_alpha_denominator = 0.;
+		    double v_alpha_numerator = 0., v_alpha_denominator = 0.;
+
+		    // loop on sparsity pattern
+		    for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
+		      {
+			int j = colind_1D[offset];
+			double uStarj = uStar_dof[j];
+			double vStarj = vStar_dof[j];
+
+			// for u component
+			u_alpha_numerator += (uStarj - uStari);
+			u_alpha_denominator += fabs(uStarj - uStari);
+			// for v component
+			v_alpha_numerator += (vStarj - vStari);
+			v_alpha_denominator += fabs(vStarj - vStari);
+		      }
+		    double u_alpha = fabs(u_alpha_numerator)/(u_alpha_denominator+1E-10);
+		    double v_alpha = fabs(v_alpha_numerator)/(v_alpha_denominator+1E-10);
+		    // compute psi=alpha^power
+		    psi[i] = (POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 :
+			      std::pow(fmax(u_alpha,v_alpha),
+				       POWER_SMOOTHNESS_INDICATOR));
+		  }
+	      }
+
+	    // SECOND LOOP ON DOFs //
+	    int ij=0;
+	    for (int i=0; i<numDOFs_1D; i++)
+	      {
+		int ii;
+		double dii = 0;
+		double ui = u_dof[i];
+		double vi = v_dof[i];
+
+		double ith_u_dissipative_term = 0;
+		double ith_v_dissipative_term = 0;
+
+		for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
+		  {
+		    int j = colind_1D[offset];
+		    if (i!=j)
+		      {
+			double uj = u_dof[j];
+			double vj = v_dof[j];
+
+			if (ARTIFICIAL_VISCOSITY==4) // via entropy viscosity
+			  {
+			    double dEVij = fmax(laggedEntropyResidualPerNode[i],
+						laggedEntropyResidualPerNode[j]);
+			    double dLij = fmax(0.,fmax(TransportMatrix[ij],
+						       TransposeTransportMatrix[ij]));
+			    dMatrix[ij] = fmin(dLij,cE*dEVij);
+			  }
+			else // via smoothness indicator
+			  {
+			    dMatrix[ij] = fmax(0.,fmax(psi[i]*TransportMatrix[ij], // by S. Badia
+						       psi[j]*TransposeTransportMatrix[ij]));
+			  }
+			dii -= dMatrix[ij];
+			//dissipative terms
+			ith_u_dissipative_term += dMatrix[ij]*(uj-ui);
+			ith_v_dissipative_term += dMatrix[ij]*(vj-vi);
+		      }
+		    else
+		      {
+			ii = ij;
+		      }
+		    // update ij
+		    ij++;
+		  }
+		dMatrix[ii] = dii;
+		globalResidual[offset_u+stride_u*i] += -ith_u_dissipative_term;
+		globalResidual[offset_v+stride_v*i] += -ith_v_dissipative_term;
+	      }
+	  }
+
         //
         //loop over the surrogate boundaries in SB method and assembly into residual
         //
@@ -4621,7 +4881,15 @@ namespace proteus
                              double* dynamic_viscosity_as_function,
                              double* ebqe_density_as_function,
                              double* ebqe_dynamic_viscosity_as_function,
-                             int USE_SBM)
+                             int USE_SBM,
+			     // For edge based dissipation
+			     int ARTIFICIAL_VISCOSITY,
+			     double * dMatrix,
+			     int numDOFs_1D,
+			     int offset_u, int offset_v, int offset_w,
+			     int stride_u, int stride_v, int stride_w,
+			     int *rowptr_1D, int *colind_1D,
+			     int *rowptr, int *colind)
       {
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -5587,6 +5855,42 @@ namespace proteus
                   }//j
               }//i
           }//elements
+
+	// loop in DOFs for discrete upwinding
+	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+	  {
+	    int ij=0;
+	    for (int i=0; i<numDOFs_1D; i++)
+	      {
+		// global index for each component
+		int u_gi = offset_u+stride_u*i;
+		int v_gi = offset_v+stride_v*i;
+
+		// pointer to first entry in the ith row for each component
+		int u_ith_row_ptr = rowptr[u_gi];
+		int v_ith_row_ptr = rowptr[v_gi];
+
+		// number of DOFs in the ith row (of the small matrix dMatrix)
+		int numDOFs_ith_row = rowptr_1D[i+1]-rowptr_1D[i];
+		for (int counter = 0; counter < numDOFs_ith_row; counter++)
+		  {
+		    // ij pointer for each component
+		    int uu_ij = u_ith_row_ptr + (offset_u + counter*stride_u);
+		    int vv_ij = v_ith_row_ptr + (offset_v + counter*stride_v);
+
+		    // read ij component of dissipative matrix
+		    double dij = dMatrix[ij];
+
+		    // update global Jacobian
+		    globalJacobian[uu_ij] -= dij;
+		    globalJacobian[vv_ij] -= dij;
+
+		    // update ij
+		    ij++;
+		  }
+	      }
+	  }
+
         if(USE_SBM>0)
           {
             //loop over the surrogate boundaries in SB method and assembly into jacobian

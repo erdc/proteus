@@ -310,7 +310,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # mql: for entropy viscosity
         assert (USE_SUPG==0 or USE_SUPG==1), "USE_SUPG must be 0, or 1"
         self.USE_SUPG=USE_SUPG
-        assert (ARTIFICIAL_VISCOSITY>=0 and ARTIFICIAL_VISCOSITY<=2), "ARTIFICIAL_VISCOSITY must be 0,1 or 2"
+        assert (ARTIFICIAL_VISCOSITY>=0 and ARTIFICIAL_VISCOSITY<=4), "ARTIFICIAL_VISCOSITY must be 0,1, 2, 3 or 4"
         self.ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY
         # ARTIFICIAL_VISCOSITY. 0: No artificial viscosity, 1: shock capturing, 2: entropy viscosity
         self.cMax = cMax
@@ -1066,7 +1066,37 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
-        # Save old solutions
+       if firstStep:
+            self.model.entropyResidualPerNode[:] = 1.E15 # first step use low order stab
+        #
+        self.model.laggedEntropyResidualPerNode[:] = self.model.entropyResidualPerNode[:]
+        ###########################
+        # COMPUTE STAR VELOCITIES #
+        ###########################
+        # Compute 2nd order extrapolation on velocity
+        if (firstStep):
+            self.model.uStar_dof[:] = self.model.u[0].dof
+            self.model.vStar_dof[:] = self.model.u[1].dof
+            if (self.model.nSpace_global == 3):
+                self.model.wStar_dof[:] = self.model.u[2].dof
+            #
+            self.model.q[('velocityStar', 0)][:] = self.model.q[('velocity', 0)]
+        else:
+            if self.model.timeIntegration.timeOrder == 1:
+                r = 1.
+            else:
+                r = old_div(self.model.timeIntegration.dt, self.model.timeIntegration.dt_history[0])
+            #
+            self.model.uStar_dof[:] = (1+r)*self.model.u[0].dof[:] - r*self.model.u_dof_old[:]
+            self.model.vStar_dof[:] = (1+r)*self.model.u[1].dof[:] - r*self.model.v_dof_old[:]
+            if (self.model.nSpace_global == 3):
+                self.model.wStar_dof[:] = (1+r)*self.model.u[2].dof[:] - r*self.model.w_dof_old[:]
+            self.model.q[('velocityStar', 0)][:] = (1 + r) * self.model.q[('velocity', 0)] - r * self.model.q[('velocityOld', 0)]
+        self.model.q[('velocityOld', 0)][:] = self.model.q[('velocity', 0)]
+
+        ######################
+        # SAVE OLD SOLUTIONS #
+        ######################
         # solution at tnm1
         self.model.u_dof_old_old[:] = self.model.u_dof_old[:]
         self.model.v_dof_old_old[:] = self.model.v_dof_old[:]
@@ -1077,16 +1107,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.v_dof_old[:] = self.model.u[1].dof
         if (self.model.nSpace_global == 3):
             self.model.w_dof_old[:] = self.model.u[2].dof
-        # Compute 2nd order extrapolation on velocity
-        if (firstStep):
-            self.model.q[('velocityStar', 0)][:] = self.model.q[('velocity', 0)]
-        else:
-            if self.model.timeIntegration.timeOrder == 1:
-                r = 1.
-            else:
-                r = old_div(self.model.timeIntegration.dt, self.model.timeIntegration.dt_history[0])
-            self.model.q[('velocityStar', 0)][:] = (1 + r) * self.model.q[('velocity', 0)] - r * self.model.q[('velocityOld', 0)]
-        self.model.q[('velocityOld', 0)][:] = self.model.q[('velocity', 0)]
 
         # COMPUTE MATERIAL PARAMETERS AND FORCE TERMS AS FUNCTIONS (if provided)
         if self.model.hasMaterialParametersAsFunctions:
@@ -1462,6 +1482,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u_dof_old_old = numpy.zeros(self.u[0].dof.shape, 'd')
         self.v_dof_old_old = numpy.zeros(self.u[0].dof.shape, 'd')
         self.w_dof_old_old = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.uStar_dof = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.vStar_dof = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.wStar_dof = numpy.zeros(self.u[0].dof.shape, 'd')
         # mesh
         self.ebqe['x'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
@@ -2200,6 +2223,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phisErrorNodal = self.u[0].dof.copy()
         self.velocityErrorNodal = self.u[0].dof.copy()
 
+        # Added by mql for discrete upwinding stab
+        self.entropyResidualPerNode = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.laggedEntropyResidualPerNode = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.dMatrix = None
+        self.numDOFs = None
+
     def updateMaterialParameters(self):
         x = self.q[('x')][:, :, 0]
         y = self.q[('x')][:, :, 1]
@@ -2231,6 +2260,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('force', 2)][:] = self.forceTerms[2](X, t)
         except:
             pass
+
+    def getSparsityPatternForComponents(self):
+        nSpace = self.nSpace_global
+        self.nnz_1D = self.nnz // nSpace // nSpace
+        self.numDOFs_1D = (len(self.rowptr) - 1) // nSpace
+        self.rowptr_1D = numpy.zeros(self.numDOFs_1D + 1, 'i')  # NOTE: rowptr_1D[0]=0
+        self.colind_1D = numpy.zeros(self.nnz_1D, 'i')
+        # fill vector rowptr_scalar
+        for i in range(1, self.rowptr_1D.size):
+            self.rowptr_1D[i]=(self.rowptr_1D[i - 1] +
+                               old_div((self.rowptr[nSpace * (i - 1) + 1] -
+                                        self.rowptr[nSpace * (i - 1)]), nSpace))
+        # fill vector colind_cMatrix
+        ith_row = 0
+        for i in range(len(self.rowptr)-1):  # 0 to total num of DOFs (i.e. num of rows of jacobian)
+            if (i % nSpace == 0):  # Just consider the rows related to the u variable
+                for j, offset in enumerate(range(self.rowptr[i], self.rowptr[i + 1])):
+                    offset_1D = list(range(self.rowptr_1D[ith_row],
+                                           self.rowptr_1D[ith_row + 1]))
+                    if (j % nSpace == 0):
+                        self.colind_1D[offset_1D[old_div(j, nSpace)]] = old_div(self.colind[offset], nSpace)
+                ith_row += 1
 
     def getResidual(self, u, r):
         """
@@ -2316,6 +2367,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.isActiveDOF = np.zeros_like(r)
             else:
                 self.isActiveDOF = np.ones_like(r)
+
+        if self.dMatrix is None:
+            self.getSparsityPatternForComponents()
+            self.dMatrix = numpy.zeros(self.nnz_1D)
+        #
 
         self.rans3pf.calculateResidual(
             self.pressureModel.u[0].femSpace.elementMaps.psi,
@@ -2410,6 +2466,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u_dof_old_old,
             self.v_dof_old_old,
             self.w_dof_old_old,
+            self.uStar_dof,
+            self.vStar_dof,
+            self.wStar_dof,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
@@ -2559,7 +2618,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe['dynamic_viscosity'],
             self.u[0].femSpace.order,
             self.isActiveDOF,
-            self.coefficients.use_sbm)
+            self.coefficients.use_sbm,
+            # For edge based stabilization #
+            self.entropyResidualPerNode,
+            self.laggedEntropyResidualPerNode,
+            self.dMatrix,
+            self.numDOFs_1D,
+            self.nnz_1D,
+            self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
+            old_div(self.csrColumnOffsets[(0, 0)], self.nSpace_global),
+            self.rowptr_1D,
+            self.colind_1D)
         r*=self.isActiveDOF
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
@@ -2612,6 +2681,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
+
         if self.nSpace_global == 2:
             self.csrRowIndeces[(0, 2)] = self.csrRowIndeces[(0, 1)]
             self.csrColumnOffsets[(0, 2)] = self.csrColumnOffsets[(0, 1)]
@@ -2863,7 +2933,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dynamic_viscosity'],
             self.ebqe['density'],
             self.ebqe['dynamic_viscosity'],
-            self.coefficients.use_sbm)
+            self.coefficients.use_sbm,
+            # for edge based dissipation
+            self.coefficients.ARTIFICIAL_VISCOSITY,
+            self.dMatrix,
+            self.numDOFs_1D,
+            self.offset[0],
+            self.offset[1],
+            self.offset[2],
+            self.stride[0],
+            self.stride[1],
+            self.stride[2],
+            self.rowptr_1D,
+            self.colind_1D)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
