@@ -203,7 +203,7 @@ namespace proteus
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
                                    double VELOCITY_SGE,
-                                   double PRESSURE_PROJECTION_STABLIZATION,
+                                   double PRESSURE_PROJECTION_STABILIZATION,
                                    //element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -367,7 +367,7 @@ namespace proteus
                                    int* csrColumnOffsets_eb_w_w,
                                    int* elementFlags,
                                    int* boundaryFlags,
-                                   int  use_ball_as_particle,
+                                   int     use_ball_as_particle,
                                    double* ball_center,
                                    double* ball_radius,
                                    double* ball_velocity,
@@ -455,11 +455,11 @@ namespace proteus
                                                      int* sdInfo_p_p_rowptr, int* sdInfo_p_p_colind,
                                                      int* sdInfo_u_u_rowptr, int* sdInfo_u_u_colind,
                                                      int* sdInfo_v_v_rowptr, int* sdInfo_v_v_colind,
-                                                     int* sdInfo_w_w_rowptr, int* sdInfo_w_w_colind,
+                                                     int* sdInfo_w_w_rowptr, int* sdInfo_w_w_colind,						     
                                                      int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
                                                      int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
                                                      int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
-                                                     int* csrRowIndeces_w_w, int* csrColumnOffsets_w_w,
+                                                     int* csrRowIndeces_w_w, int* csrColumnOffsets_w_w,						     
                                                      double* laplace_matrix)=0;
     virtual void getTwoPhaseScaledMassOperator(int scale_type,
                                                int use_numerical_viscosity,
@@ -497,7 +497,7 @@ namespace proteus
                                                int* csrRowIndeces_v_v,
                                                int* csrColumnOffsets_v_v,
                                                int* csrRowIndeces_w_w,
-                                               int* csrColumnOffsets_w_w,
+                                               int* csrColumnOffsets_w_w,					       
                                                double* mass_matrix)=0;
   };
 
@@ -719,7 +719,6 @@ namespace proteus
         nu += (1.0-LAG_LES)*nu_t + LAG_LES*eddy_viscosity_last;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
         mu += ((1.0-LAG_LES)*nu_t + LAG_LES*eddy_viscosity_last)*rho;
-
         if (NONCONSERVATIVE_FORM > 0.0)
           {
             //u momentum accumulation
@@ -1041,7 +1040,9 @@ namespace proteus
           }
         mom_u_source -= forcex;
         mom_v_source -= forcey;
+        mom_w_source -= forcez;
       }
+
       int get_distance_to_ball(int n_balls,const double* ball_center, const double* ball_radius, const double x, const double y, const double z, double& distance)
       {
           distance = 1e10;
@@ -1528,7 +1529,7 @@ namespace proteus
         assert (turbulenceClosureModel >=3);
         double rho,nu,H_mu,nu_t=0.0,nu_t_keps =0.0, nu_t_komega=0.0;
         double isKEpsilon = 1.0, dynamic_eddy_viscosity = 0.0;
-;
+
         if (turbulenceClosureModel == 4)
           isKEpsilon = 0.0;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -1685,26 +1686,26 @@ namespace proteus
       inline
         void calculateSubgridErrorDerivatives_tauRes(const double& tau_p,
                                                      const double& tau_v,
-                                                     const double dpdeResidualP_du[nDOF_trial_element],
-                                                     const double dpdeResidualP_dv[nDOF_trial_element],
-                                                     const double dpdeResidualP_dw[nDOF_trial_element],
+                                                     const double dpdeResidualP_du[nDOF_v_trial_element],
+                                                     const double dpdeResidualP_dv[nDOF_v_trial_element],
+                                                     const double dpdeResidualP_dw[nDOF_v_trial_element],
                                                      const double dpdeResidualU_dp[nDOF_trial_element],
-                                                     const double dpdeResidualU_du[nDOF_trial_element],
+                                                     const double dpdeResidualU_du[nDOF_v_trial_element],
                                                      const double dpdeResidualV_dp[nDOF_trial_element],
-                                                     const double dpdeResidualV_dv[nDOF_trial_element],
+                                                     const double dpdeResidualV_dv[nDOF_v_trial_element],
                                                      const double dpdeResidualW_dp[nDOF_trial_element],
-                                                     const double dpdeResidualW_dw[nDOF_trial_element],
-                                                     double dsubgridErrorP_du[nDOF_trial_element],
-                                                     double dsubgridErrorP_dv[nDOF_trial_element],
-                                                     double dsubgridErrorP_dw[nDOF_trial_element],
+                                                     const double dpdeResidualW_dw[nDOF_v_trial_element],
+                                                     double dsubgridErrorP_du[nDOF_v_trial_element],
+                                                     double dsubgridErrorP_dv[nDOF_v_trial_element],
+                                                     double dsubgridErrorP_dw[nDOF_v_trial_element],
                                                      double dsubgridErrorU_dp[nDOF_trial_element],
-                                                     double dsubgridErrorU_du[nDOF_trial_element],
+                                                     double dsubgridErrorU_du[nDOF_v_trial_element],
                                                      double dsubgridErrorV_dp[nDOF_trial_element],
-                                                     double dsubgridErrorV_dv[nDOF_trial_element],
+                                                     double dsubgridErrorV_dv[nDOF_v_trial_element],
                                                      double dsubgridErrorW_dp[nDOF_trial_element],
-                                                     double dsubgridErrorW_dw[nDOF_trial_element])
+                                                     double dsubgridErrorW_dw[nDOF_v_trial_element])
       {
-        for (int j=0;j<nDOF_trial_element;j++)
+        for (int j=0;j<nDOF_v_trial_element;j++)
           {
             /* GLS pressure */
             dsubgridErrorP_du[j] = -tau_p*dpdeResidualP_du[j];
@@ -1712,14 +1713,21 @@ namespace proteus
             dsubgridErrorP_dw[j] = -tau_p*dpdeResidualP_dw[j];
             /* GLS  momentum*/
             /* u */
-            dsubgridErrorU_dp[j] = -tau_v*dpdeResidualU_dp[j];
             dsubgridErrorU_du[j] = -tau_v*dpdeResidualU_du[j];
             /* v */
-            dsubgridErrorV_dp[j] = -tau_v*dpdeResidualV_dp[j];
             dsubgridErrorV_dv[j] = -tau_v*dpdeResidualV_dv[j];
             /* w */
-            dsubgridErrorW_dp[j] = -tau_v*dpdeResidualW_dp[j];
             dsubgridErrorW_dw[j] = -tau_v*dpdeResidualW_dw[j];
+          }
+        for (int j=0;j<nDOF_trial_element;j++)
+          {
+            /* GLS  momentum*/
+            /* u */
+            dsubgridErrorU_dp[j] = -tau_v*dpdeResidualU_dp[j];
+            /* v */
+            dsubgridErrorV_dp[j] = -tau_v*dpdeResidualV_dp[j];
+            /* w */
+            dsubgridErrorW_dp[j] = -tau_v*dpdeResidualW_dp[j];
           }
       }
 
@@ -1819,7 +1827,7 @@ namespace proteus
                 flux_wmom += n[0]*f_wmom[0];
               }
             else
-              {
+	      {
 	      if (NONCONSERVATIVE_FORM > 0.0)
 		{
 		  flux_umom+=(bc_u-u)*flowSpeedNormal;
@@ -2356,42 +2364,42 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
-                             double PRESSURE_PROJECTION_STABLIZATION,
-                             double *numerical_viscosity,
+                             double PRESSURE_PROJECTION_STABILIZATION,
+                             double* numerical_viscosity,
                              //element
-                             double *mesh_trial_ref,
-                             double *mesh_grad_trial_ref,
-                             double *mesh_dof,
-                             double *mesh_velocity_dof,
+                             double* mesh_trial_ref,
+                             double* mesh_grad_trial_ref,
+                             double* mesh_dof,
+                             double* mesh_velocity_dof,
                              double MOVING_DOMAIN,
-                             int *mesh_l2g,
-                             double *dV_ref,
-                             double *p_trial_ref,
-                             double *p_grad_trial_ref,
-                             double *p_test_ref,
-                             double *p_grad_test_ref,
-                             double *vel_trial_ref,
-                             double *vel_grad_trial_ref,
-                             double *vel_test_ref,
-                             double *vel_grad_test_ref,
+                             int* mesh_l2g,
+                             double* dV_ref,
+                             double* p_trial_ref,
+                             double* p_grad_trial_ref,
+                             double* p_test_ref,
+                             double* p_grad_test_ref,
+                             double* vel_trial_ref,
+                             double* vel_grad_trial_ref,
+                             double* vel_test_ref,
+                             double* vel_grad_test_ref,
                              //element boundary
-                             double *mesh_trial_trace_ref,
-                             double *mesh_grad_trial_trace_ref,
-                             double *dS_ref,
-                             double *p_trial_trace_ref,
-                             double *p_grad_trial_trace_ref,
-                             double *p_test_trace_ref,
-                             double *p_grad_test_trace_ref,
-                             double *vel_trial_trace_ref,
-                             double *vel_grad_trial_trace_ref,
-                             double *vel_test_trace_ref,
-                             double *vel_grad_test_trace_ref,
-                             double *normal_ref,
-                             double *boundaryJac_ref,
+                             double* mesh_trial_trace_ref,
+                             double* mesh_grad_trial_trace_ref,
+                             double* dS_ref,
+                             double* p_trial_trace_ref,
+                             double* p_grad_trial_trace_ref,
+                             double* p_test_trace_ref,
+                             double* p_grad_test_trace_ref,
+                             double* vel_trial_trace_ref,
+                             double* vel_grad_trial_trace_ref,
+                             double* vel_test_trace_ref,
+                             double* vel_grad_test_trace_ref,
+                             double* normal_ref,
+                             double* boundaryJac_ref,
                              //physics
                              double eb_adjoint_sigma,
-                             double *elementDiameter,
-                             double *nodeDiametersArray,
+                             double* elementDiameter,
+                             double* nodeDiametersArray,
                              double hFactor,
                              int nElements_global,
                              int nElementBoundaries_owned,
@@ -2412,120 +2420,120 @@ namespace proteus
                              double C_dc,
                              double C_b,
                              //VRANS
-                             const double *eps_solid,
-                             const double *phi_solid,
-                             const double *q_velocity_solid,
-                             const double *q_porosity,
-                             const double *q_dragAlpha,
-                             const double *q_dragBeta,
-                             const double *q_mass_source,
-                             const double *q_turb_var_0,
-                             const double *q_turb_var_1,
-                             const double *q_turb_var_grad_0,
+                             const double* eps_solid,
+                             const double* phi_solid,
+                             const double* q_velocity_solid,
+                             const double* q_porosity,
+                             const double* q_dragAlpha,
+                             const double* q_dragBeta,
+                             const double* q_mass_source,
+                             const double* q_turb_var_0,
+                             const double* q_turb_var_1,
+                             const double* q_turb_var_grad_0,
                              const double LAG_LES,
-                             double *q_eddy_viscosity,
-                             double *q_eddy_viscosity_last,
-                             double *ebqe_eddy_viscosity,
-                             double *ebqe_eddy_viscosity_last,
+                             double * q_eddy_viscosity,
+                             double * q_eddy_viscosity_last,
+                             double * ebqe_eddy_viscosity,
+                             double * ebqe_eddy_viscosity_last,
                              //
-                             int *p_l2g,
-                             int *vel_l2g,
-                             int *rp_l2g,
-                             int *rvel_l2g,
-                             double *p_dof,
-                             double *u_dof,
-                             double *v_dof,
-                             double *w_dof,
-                             double *g,
+                             int* p_l2g,
+                             int* vel_l2g,
+                             int* rp_l2g,
+                             int* rvel_l2g,
+                             double* p_dof,
+                             double* u_dof,
+                             double* v_dof,
+                             double* w_dof,
+                             double* g,
                              const double useVF,
-                             double *q_rho,
-                             double *vf,
-                             double *phi,
-                             double *normal_phi,
-                             double *kappa_phi,
-                             double *q_mom_u_acc,
-                             double *q_mom_v_acc,
-                             double *q_mom_w_acc,
-                             double *q_mass_adv,
-                             double *q_mom_u_acc_beta_bdf, double *q_mom_v_acc_beta_bdf, double *q_mom_w_acc_beta_bdf,
-                             double *q_dV,
-                             double *q_dV_last,
-                             double *q_velocity_sge,
-                             double *q_cfl,
-                             double *q_numDiff_u, double *q_numDiff_v, double *q_numDiff_w,
-                             double *q_numDiff_u_last, double *q_numDiff_v_last, double *q_numDiff_w_last,
-                             int *sdInfo_u_u_rowptr, int *sdInfo_u_u_colind,
-                             int *sdInfo_u_v_rowptr, int *sdInfo_u_v_colind,
-                             int *sdInfo_u_w_rowptr, int *sdInfo_u_w_colind,
-                             int *sdInfo_v_v_rowptr, int *sdInfo_v_v_colind,
-                             int *sdInfo_v_u_rowptr, int *sdInfo_v_u_colind,
-                             int *sdInfo_v_w_rowptr, int *sdInfo_v_w_colind,
-                             int *sdInfo_w_w_rowptr, int *sdInfo_w_w_colind,
-                             int *sdInfo_w_u_rowptr, int *sdInfo_w_u_colind,
-                             int *sdInfo_w_v_rowptr, int *sdInfo_w_v_colind,
+                             double* q_rho,
+                             double* vf,
+                             double* phi,
+                             double* normal_phi,
+                             double* kappa_phi,
+                             double* q_mom_u_acc,
+                             double* q_mom_v_acc,
+                             double* q_mom_w_acc,
+                             double* q_mass_adv,
+                             double* q_mom_u_acc_beta_bdf, double* q_mom_v_acc_beta_bdf, double* q_mom_w_acc_beta_bdf,
+                             double* q_dV,
+                             double* q_dV_last,
+                             double* q_velocity_sge,
+                             double* q_cfl,
+                             double* q_numDiff_u, double* q_numDiff_v, double* q_numDiff_w,
+                             double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
+                             int* sdInfo_u_u_rowptr,int* sdInfo_u_u_colind,
+                             int* sdInfo_u_v_rowptr,int* sdInfo_u_v_colind,
+                             int* sdInfo_u_w_rowptr,int* sdInfo_u_w_colind,
+                             int* sdInfo_v_v_rowptr,int* sdInfo_v_v_colind,
+                             int* sdInfo_v_u_rowptr,int* sdInfo_v_u_colind,
+                             int* sdInfo_v_w_rowptr,int* sdInfo_v_w_colind,
+                             int* sdInfo_w_w_rowptr,int* sdInfo_w_w_colind,
+                             int* sdInfo_w_u_rowptr,int* sdInfo_w_u_colind,
+                             int* sdInfo_w_v_rowptr,int* sdInfo_w_v_colind,
                              int offset_p, int offset_u, int offset_v, int offset_w,
                              int stride_p, int stride_u, int stride_v, int stride_w,
-                             double *globalResidual,
+                             double* globalResidual,
                              int nExteriorElementBoundaries_global,
-                             int *exteriorElementBoundariesArray,
-                             int *elementBoundaryElementsArray,
-                             int *elementBoundaryLocalElementBoundariesArray,
-                             double *ebqe_vf_ext,
-                             double *bc_ebqe_vf_ext,
-                             double *ebqe_phi_ext,
-                             double *bc_ebqe_phi_ext,
-                             double *ebqe_normal_phi_ext,
-                             double *ebqe_kappa_phi_ext,
+                             int* exteriorElementBoundariesArray,
+                             int* elementBoundaryElementsArray,
+                             int* elementBoundaryLocalElementBoundariesArray,
+                             double* ebqe_vf_ext,
+                             double* bc_ebqe_vf_ext,
+                             double* ebqe_phi_ext,
+                             double* bc_ebqe_phi_ext,
+                             double* ebqe_normal_phi_ext,
+                             double* ebqe_kappa_phi_ext,
                              //VRANS
-                             const double *ebqe_porosity_ext,
-                             const double *ebqe_turb_var_0,
-                             const double *ebqe_turb_var_1,
+                             const double* ebqe_porosity_ext,
+                             const double* ebqe_turb_var_0,
+                             const double* ebqe_turb_var_1,
                              //VRANS end
-                             int *isDOFBoundary_p,
-                             int *isDOFBoundary_u,
-                             int *isDOFBoundary_v,
-                             int *isDOFBoundary_w,
-                             int *isAdvectiveFluxBoundary_p,
-                             int *isAdvectiveFluxBoundary_u,
-                             int *isAdvectiveFluxBoundary_v,
-                             int *isAdvectiveFluxBoundary_w,
-                             int *isDiffusiveFluxBoundary_u,
-                             int *isDiffusiveFluxBoundary_v,
-                             int *isDiffusiveFluxBoundary_w,
-                             double *ebqe_bc_p_ext,
-                             double *ebqe_bc_flux_mass_ext,
-                             double *ebqe_bc_flux_mom_u_adv_ext,
-                             double *ebqe_bc_flux_mom_v_adv_ext,
-                             double *ebqe_bc_flux_mom_w_adv_ext,
-                             double *ebqe_bc_u_ext,
-                             double *ebqe_bc_flux_u_diff_ext,
-                             double *ebqe_penalty_ext,
-                             double *ebqe_bc_v_ext,
-                             double *ebqe_bc_flux_v_diff_ext,
-                             double *ebqe_bc_w_ext,
-                             double *ebqe_bc_flux_w_diff_ext,
-                             double *q_x,
-                             double *q_velocity,
-                             double *ebqe_velocity,
-                             double *flux,
-                             double *elementResidual_p_save,
-                             int *elementFlags,
-                             int *boundaryFlags,
-                             double *barycenters,
-                             double *wettedAreas,
-                             double *netForces_p,
-                             double *netForces_v,
-                             double *netMoments,
-                             double *velocityError,
-                             double *velocityErrorNodal,
-                             double *forcex,
-                             double *forcey,
-                             double *forcez,
-                             int use_ball_as_particle,
-                             double *ball_center,
-                             double *ball_radius,
-                             double *ball_velocity,
-                             double *ball_angular_velocity,
+                             int* isDOFBoundary_p,
+                             int* isDOFBoundary_u,
+                             int* isDOFBoundary_v,
+                             int* isDOFBoundary_w,
+                             int* isAdvectiveFluxBoundary_p,
+                             int* isAdvectiveFluxBoundary_u,
+                             int* isAdvectiveFluxBoundary_v,
+                             int* isAdvectiveFluxBoundary_w,
+                             int* isDiffusiveFluxBoundary_u,
+                             int* isDiffusiveFluxBoundary_v,
+                             int* isDiffusiveFluxBoundary_w,
+                             double* ebqe_bc_p_ext,
+                             double* ebqe_bc_flux_mass_ext,
+                             double* ebqe_bc_flux_mom_u_adv_ext,
+                             double* ebqe_bc_flux_mom_v_adv_ext,
+                             double* ebqe_bc_flux_mom_w_adv_ext,
+                             double* ebqe_bc_u_ext,
+                             double* ebqe_bc_flux_u_diff_ext,
+                             double* ebqe_penalty_ext,
+                             double* ebqe_bc_v_ext,
+                             double* ebqe_bc_flux_v_diff_ext,
+                             double* ebqe_bc_w_ext,
+                             double* ebqe_bc_flux_w_diff_ext,
+                             double* q_x,
+                             double* q_velocity,
+                             double* ebqe_velocity,
+                             double* flux,
+                             double* elementResidual_p_save,
+                             int* elementFlags,
+                             int* boundaryFlags,
+                             double* barycenters,
+                             double* wettedAreas,
+                             double* netForces_p,
+                             double* netForces_v,
+                             double* netMoments,
+                             double* velocityError,
+                             double* velocityErrorNodal,
+                             double* forcex,
+                             double* forcey,
+                             double* forcez,
+                             int     use_ball_as_particle,
+                             double* ball_center,
+                             double* ball_radius,
+                             double* ball_velocity,
+                             double* ball_angular_velocity,
                              int nParticles,
                              double *particle_netForces,
                              double *particle_netMoments,
@@ -2537,7 +2545,7 @@ namespace proteus
                              double particle_beta,
                              double particle_penalty_constant)
       {
-        logEvent("Entered mprans 3D calculateResidual",6);
+        logEvent("Entered mprans calculateResidual",6);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         
         //
@@ -2895,6 +2903,7 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
+
                 const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 if(nParticles > 0)
                     updateSolidParticleTerms(NONCONSERVATIVE_FORM,
@@ -3300,7 +3309,6 @@ namespace proteus
                       ck.Diffusion_weak(sdInfo_w_w_rowptr,sdInfo_w_w_colind,mom_ww_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +
                       ck.Reaction_weak(mom_w_source+NONCONSERVATIVE_FORM*dmom_w_acc_w*w*div_mesh_velocity,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_w_ham,vel_test_dV[i]) +
-                      MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_w[i]) +
                       MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridError(subgridError_w,Lstar_w_w[i]) +
                       ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]);
                     if (nDOF_test_element == nDOF_v_test_element)
@@ -4270,7 +4278,7 @@ namespace proteus
                                                                      mom_ww_diff_ten_ext,
                                                                      &vel_grad_test_dS[i*nSpace]);
                       }//i
-                  }//if boundaryFlags[ebN] positive
+                  }//if boundary flag positive
               }//kb
             //
             //update the element and global residual storage
@@ -4292,6 +4300,7 @@ namespace proteus
                 globalResidual[offset_w+stride_w*rvel_l2g[eN_i]]+=elementResidual_w[i];
               }//i
           }//ebNE
+
         /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
         /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
         /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
@@ -4302,7 +4311,7 @@ namespace proteus
                              double MOMENTUM_SGE,
                              double PRESSURE_SGE,
                              double VELOCITY_SGE,
-                             double PRESSURE_PROJECTION_STABLIZATION,
+                             double PRESSURE_PROJECTION_STABILIZATION,
                              //element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -4480,9 +4489,8 @@ namespace proteus
                              double particle_beta,
                              double particle_penalty_constant)
       {
-        const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-        std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
-        
+          const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+          std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
         //
@@ -6085,8 +6093,8 @@ namespace proteus
                 //
                 ck.calculateGScale(G,normal,h_penalty);
                 penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
-                if (true)//boundaryFlags[ebN] > 0)
-                  {
+                if(true)//boundaryFlags[ebN] > 0)
+                  { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int j=0;j<nDOF_trial_element;j++)
                       {
                         register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
@@ -6351,7 +6359,7 @@ namespace proteus
               }//kb
           }//ebNE
       }//computeJacobian
-
+        
       void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                     int* exteriorElementBoundariesArray,
                                     int nInteriorElementBoundaries_global,
