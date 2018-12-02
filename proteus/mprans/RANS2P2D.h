@@ -188,11 +188,11 @@ namespace proteus
                                    double* ball_radius,
                                    double* ball_velocity,
                                    double* ball_angular_velocity,
-                                   int nParticles,
+                                   int     nParticles,
                                    double *particle_netForces,
                                    double *particle_netMoments,
                                    double *particle_surfaceArea,
-                                   int nElements_owned,
+                                   int    nElements_owned,
                                    double particle_nitsche,
                                    double particle_epsFact,
                                    double particle_alpha,
@@ -892,7 +892,6 @@ namespace proteus
           {
               d_ball_i = std::sqrt((ball_center[i*3+0]-x)*(ball_center[i*3+0]-x)
                                   +(ball_center[i*3+1]-y)*(ball_center[i*3+1]-y)
-//                                  +(ball_center[i*3+2]-z)*(ball_center[i*3+2]-z)
                                   ) - ball_radius[i];
               if(d_ball_i<distance)
               {
@@ -909,7 +908,6 @@ namespace proteus
       {
           distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
                                     + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
-//                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
                             ) - ball_radius[I];
       }
       void get_normal_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
@@ -919,7 +917,6 @@ namespace proteus
       {
           double distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
                                     + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
-//                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
                             );
           nx = (x - ball_center[I*3+0])/(distance+1e-10);
           ny = (y - ball_center[I*3+1])/(distance+1e-10);
@@ -1692,7 +1689,7 @@ namespace proteus
         dflux_wmom_dv = 0.0;
 
         flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for moving and fixed  domains
-        flowSpeedNormal+=NONCONSERVATIVE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]);//tricky, works for moving and fixed  domains
+        flowSpeedNormal+=NONCONSERVATIVE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]);
         if (isDOFBoundary_u != 1)
           {
             dflux_mass_du += n[0]*df_mass_du[0];
@@ -2086,7 +2083,7 @@ namespace proteus
                              double particle_beta,
                              double particle_penalty_constant)
       {
-        logEvent("Entered mprans 2D calculateResidual",6);
+        logEvent("Entered mprans calculateResidual",6);
 
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         
@@ -4495,7 +4492,9 @@ namespace proteus
                         register int j_nSpace = j*nSpace;
                         if (nDOF_test_element == nDOF_v_trial_element)
                           {
-                            elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) + PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
+                            elementJacobian_p_p[i][j] += (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) +
+                                                         (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) +
+                              PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial_ref[k*nDOF_trial_element+j], 1./3., p_test_ref[k*nDOF_test_element +i],dV);
                           }
                       }
                   }
@@ -5295,7 +5294,7 @@ namespace proteus
                                                                  &vel_grad_trial_trace[j_nSpace],
                                                                  penalty);//ebqe_penalty_ext[ebNE_kb]);
                       }//j
-                  }
+                  }//if boundaryFlags[ebN] positive
                 //
                 //update the global Jacobian from the flux Jacobian
                 //

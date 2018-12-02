@@ -905,10 +905,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi = phiDict
         self.dphi = {}
         self.matType = matType
-        #self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
-        #if self.reuse_test_trial_quadrature:
-        #    for ci in range(1, coefficients.nc):
-        #        assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         # Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh  # assume the same mesh for  all components for now
         self.par_info = LinearAlgebraTools.ParInfo_petsc4py()
@@ -1464,6 +1460,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                        self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                        self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
+                                       self.u[1].femSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                       self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
         self.velocityErrorNodal = self.u[0].dof.copy()

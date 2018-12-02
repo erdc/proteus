@@ -4535,6 +4535,7 @@ def LagrangeCubeFactory(OrderIn):
 # TODO - migrate Q1 to an instance of LagrangeCubeFactor
 Q1 = C0_AffineLinearOnCubeWithNodalBasis
 Q2 = LagrangeCubeFactory(2)
+C0_AffineQuadraticOnCubeWithNodalBasis = Q2
 
 class C0_BernsteinOnCube(C0_AffineLinearOnSimplexWithNodalBasis):
     """

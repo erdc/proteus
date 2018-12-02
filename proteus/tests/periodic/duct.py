@@ -21,6 +21,7 @@ opts = Context.Options([
     ("grid", True, "Use a regular grid"),
     ("triangles", True, "Use triangular or tetrahedral elements"),
     ("spaceOrder", 1, "Use (bi-)linear or (bi-)quadratic spaces"),
+    ("useTaylorHood", False, "Use Taylor-Hood element"),
     ("timeOrder", 1, "Use bdf1 or bdf2"),
     ("periodic", False, "Use periodic boundary conditions"),
     ("weak", True, "Use weak boundary conditions"),
@@ -96,9 +97,10 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      forceStrongDirichlet=not opts.weak,
                                      turbulenceClosureModel=0,
                                      NONCONSERVATIVE_FORM=1.0,
-                                     MOMENTUM_SGE=0.0,
-                                     PRESSURE_SGE=0.0,
-                                     VELOCITY_SGE=0.0)
+                                     MOMENTUM_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     PRESSURE_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     VELOCITY_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     nullSpace=nullSpace)
 
 eps=1.0e-8
 if opts.periodic:
@@ -421,10 +423,9 @@ elif opts.timeOrder == 0:
 n.stepController  = StepControl.Min_dt_cfl_controller
 n.systemStepExact = False
 
-useTaylorHood = True
 if opts.spaceOrder == 1:
     if opts.triangles:
-        if useTaylorHood:
+        if opts.useTaylorHood:
             n.femSpaces = {0:FemTools.C0_AffineLinearOnSimplexWithNodalBasis,
                            1:FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis,
                            2:FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis}
@@ -441,7 +442,7 @@ if opts.spaceOrder == 1:
             n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,3)
             n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
     else:
-        if useTaylorHood:
+        if opts.useTaylorHood:
             n.femSpaces = {0:FemTools.C0_AffineLinearOnCubeWithNodalBasis,
                            1:FemTools.C0_AffineQuadraticOnCubeWithNodalBasis,
                            2:FemTools.C0_AffineQuadraticOnCubeWithNodalBasis}
@@ -578,10 +579,13 @@ else:
 if opts.triangles:
     space_name="p{0}".format(opts.spaceOrder)
 else:
-    space_name="1{0}".format(opts.spaceOrder)
+    space_name="q{0}".format(opts.spaceOrder)
 
+if opts.useTaylorHood:
+    space_name+="TH"
+    
 name = "duct{0}t{1}{2}d{3}he{4}".format(space_name,
-                                               opts.timeOrder,
-                                               opts.nd,
-                                               mesh_name,
-                                               he)
+                                        opts.timeOrder,
+                                        opts.nd,
+                                        mesh_name,
+                                        he)
