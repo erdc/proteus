@@ -127,21 +127,50 @@ if opts.periodic:
                                      2:getPDBC,
                                      3:getPDBC}
 
-pSol = AnalyticalSolutions.PlanePoiseuilleFlow_p(plateSeperation=h,
+pSol2 = AnalyticalSolutions.PlanePoiseuilleFlow_p(plateSeperation=h,
                                                  mu = mu,
                                                  grad_p = -G)
-uSol = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
+uSol2 = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
                                                  mu = mu,
                                                  grad_p = -G)
-vSol = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
+vSol2 = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
                                                  mu = mu,
                                                  grad_p = -G)
+class pRot(AnalyticalSolutions.SteadyState):
+    def __init__(self):
+        pass
+    def uOfX(self, x):
+        if p.nd==3:
+            return pSol2.uOfX([x[0],x[2],x[1]])
+        else:
+            return pSol2.uOfX(x)
 
-p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol}
-if p.nd == 3:
-    p.analyticalSolution[3] = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
-                                                                        mu = mu,
-                                                                        grad_p = -G)
+class uRot(AnalyticalSolutions.SteadyState):
+    def __init__(self):
+        pass
+    def uOfX(self, x):
+        if p.nd==3:
+            return uSol2.uOfX([x[0],x[2],x[1]])
+        else:
+            return uSol2.uOfX(x)
+
+class vRot(AnalyticalSolutions.SteadyState):
+    def __init__(self):
+        pass
+    def uOfX(self, x):
+        if p.nd==3:
+            return vSol2.uOfX([x[0],x[2],x[1]])
+        else:
+            return vSol2.uOfX(x)
+
+pSol = pRot()
+uSol = uRot()
+vSol = vRot()
+
+if p.nd == 2:
+    p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol}
+elif p.nd == 3:
+    p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol, 3: vRot()}
 
 initialConditions = p.analyticalSolution
 

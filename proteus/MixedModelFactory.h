@@ -64,12 +64,34 @@ namespace proteus
                 {
                   if (nDOF_mesh_trial_elementIn == 4) // P1 FE-space. Default nquad=5
                     {
-                      if (nQuadraturePoints_elementIn == 5)
-                        return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,5,4,4,4,4,4,4>());
-                      else if (nQuadraturePoints_elementIn == 4)
-                        return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,4,4,4,4,4,4,3>());
-                      else if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7)
-                        return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,15,4,4,4,4,4,7>());
+                      if (nDOF_v_trial_elementIn == nDOF_trial_elementIn)
+                        {
+                          if (nQuadraturePoints_elementIn == 5)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,5,4,4,4,4,4,4>());
+                          else if (nQuadraturePoints_elementIn == 4)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,4,4,4,4,4,4,3>());
+                          else if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,15,4,4,4,4,4,7>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else if (nDOF_v_trial_elementIn == 10)//P1-P2
+                        {
+                          if (nQuadraturePoints_elementIn == 5)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,10,10>,3,5,4,4,4,10,10,4>());
+                          else if (nQuadraturePoints_elementIn == 4)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,10,10>,3,4,4,4,4,10,10,3>());
+                          else if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,10,10>,3,15,4,4,4,10,10,7>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
                       else
                         {
                           NO_INSTANCE;
@@ -78,26 +100,70 @@ namespace proteus
                     }
                   else if (nDOF_mesh_trial_elementIn == 8) // Q1 FE-space. Default nquad=27
                     {
-                      if (nQuadraturePoints_elementIn == 8)
-                        if ( nQuadraturePoints_elementBoundaryIn == 4)
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,8,8>,3,8,8,8,8,8,8,4>());
-                        else if ( nQuadraturePoints_elementBoundaryIn == 9)
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,8,8>,3,8,8,8,8,8,8,9>());
-                        else
-                          {
-                            NO_INSTANCE;
-                            abort();
-                          }
-                      else if (nQuadraturePoints_elementIn == 27)
-                        if ( nQuadraturePoints_elementBoundaryIn == 4)
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,8,8>,3,27,8,8,8,8,8,4>());
-                        else if ( nQuadraturePoints_elementBoundaryIn == 9)
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,8,8>,3,27,8,8,8,8,8,9>());
-                        else
-                          {
-                            NO_INSTANCE;
-                            abort();
-                          }
+                      if (nDOF_v_trial_elementIn == nDOF_trial_elementIn)
+                        {
+                          if (nQuadraturePoints_elementIn == 8)
+                            {
+                              if ( nQuadraturePoints_elementBoundaryIn == 4)
+                                return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,8,8>,3,8,8,8,8,8,8,4>());
+                              else if ( nQuadraturePoints_elementBoundaryIn == 9)
+                                return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,8,8>,3,8,8,8,8,8,8,9>());
+                              else
+                                {
+                                  NO_INSTANCE;
+                                  abort();
+                                }
+                            }
+                          else if (nQuadraturePoints_elementIn == 27)
+                            {
+                              if ( nQuadraturePoints_elementBoundaryIn == 4)
+                                return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,8,8>,3,27,8,8,8,8,8,4>());
+                              else if ( nQuadraturePoints_elementBoundaryIn == 9)
+                                return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,8,8>,3,27,8,8,8,8,8,9>());
+                              else
+                                {
+                                  NO_INSTANCE;
+                                  abort();
+                                }
+                            }
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else if (nDOF_v_trial_elementIn == 27)
+                        {
+                          if (nQuadraturePoints_elementIn == 8)
+                            {
+                              if ( nQuadraturePoints_elementBoundaryIn == 4)
+                                return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,27,27>,3,8,8,8,8,27,27,4>());
+                              else if ( nQuadraturePoints_elementBoundaryIn == 9)
+                                return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,27,27>,3,8,8,8,8,27,27,9>());
+                              else
+                                {
+                                  NO_INSTANCE;
+                                  abort();
+                                }
+                            }
+                          else if (nQuadraturePoints_elementIn == 27)
+                            {
+                              if ( nQuadraturePoints_elementBoundaryIn == 4)
+                                return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,27,27>,3,27,8,8,8,27,27,4>());
+                              else if ( nQuadraturePoints_elementBoundaryIn == 9)
+                                return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,8,8,8>,CompKernelTemplate_v<3,8,27,27>,3,27,8,8,8,27,27,9>());
+                              else
+                                {
+                                  NO_INSTANCE;
+                                  abort();
+                                }
+                            }
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
                       else
                         {
                           NO_INSTANCE;
@@ -117,25 +183,29 @@ namespace proteus
                   else if (nDOF_mesh_trial_elementIn == 27) // Q2 FE space. Default nquad=27
                     {
                       if (nQuadraturePoints_elementIn == 8)
-                        if ( nQuadraturePoints_elementBoundaryIn == 4)
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,27,27,27>,CompKernelTemplate_v<3,27,27,27>,3,8,27,27,27,27,27,4>());
-                        else if ( nQuadraturePoints_elementBoundaryIn == 9)
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,27,27,27>,CompKernelTemplate_v<3,27,27,27>,3,8,27,27,27,27,27,9>());
-                        else
-                          {
-                            NO_INSTANCE;
-                            abort();
-                          }
+                        {
+                          if ( nQuadraturePoints_elementBoundaryIn == 4)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,27,27,27>,CompKernelTemplate_v<3,27,27,27>,3,8,27,27,27,27,27,4>());
+                          else if ( nQuadraturePoints_elementBoundaryIn == 9)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,27,27,27>,CompKernelTemplate_v<3,27,27,27>,3,8,27,27,27,27,27,9>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
                       else if (nQuadraturePoints_elementIn == 27)
-                        if ( nQuadraturePoints_elementBoundaryIn == 4)
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,27,27,27>,CompKernelTemplate_v<3,27,27,27>,3,27,27,27,27,27,27,4>());
-                        else if ( nQuadraturePoints_elementBoundaryIn == 9)
-                          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,27,27,27>,CompKernelTemplate_v<3,27,27,27>,3,27,27,27,27,27,27,9>());
-                        else
-                          {
-                            NO_INSTANCE;
-                            abort();
-                          }
+                        {
+                          if ( nQuadraturePoints_elementBoundaryIn == 4)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,27,27,27>,CompKernelTemplate_v<3,27,27,27>,3,27,27,27,27,27,27,4>());
+                          else if ( nQuadraturePoints_elementBoundaryIn == 9)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,27,27,27>,CompKernelTemplate_v<3,27,27,27>,3,27,27,27,27,27,27,9>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
                       else
                         {
                           NO_INSTANCE;
