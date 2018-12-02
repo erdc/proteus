@@ -1335,7 +1335,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     interleave_DOF=False
         else:
             interleave_DOF=False
-
         self.setupFieldStrides(interleave_DOF)
         comm = Comm.get()
         self.comm = comm
