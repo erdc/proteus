@@ -17,6 +17,8 @@ def test_meshLoadPUMI(verbose=0):
     mesh = MeshTools.TetrahedralMesh()
     mesh.cmesh = cmeshTools.CMesh()
     meshAdaptInstance.constructFromSerialPUMIMesh(mesh.cmesh)
+    cmeshTools.allocateGeometricInfo_tetrahedron(mesh.cmesh)
+    cmeshTools.computeGeometricInfo_tetrahedron(mesh.cmesh)
     mesh.buildFromC(mesh.cmesh)
     eq(mesh.nElements_global,670)
     eq(mesh.nNodes_global,190)

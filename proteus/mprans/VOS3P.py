@@ -14,7 +14,7 @@ from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
                               C0_AffineLinearOnSimplexWithNodalBasis)
-from proteus.flcbdfWrappers import globalMax
+from proteus.Comm import globalMax
 from proteus.Profiling import memory
 from proteus.Profiling import logEvent
 from proteus.Transport import OneLevelTransport
