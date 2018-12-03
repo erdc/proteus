@@ -1,3 +1,4 @@
+from builtins import object
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
 from proteus.mprans import VOF
@@ -38,7 +39,7 @@ advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].vof_advect
 
 diffusiveFluxBoundaryConditions = {0: {}}
 
-class VF_IC:
+class VF_IC(object):
     def uOfXT(self, x, t):
         return smoothedHeaviside(ct.epsFact_consrv_heaviside*ct.he,x[nd-1]-ct.water_level)
 

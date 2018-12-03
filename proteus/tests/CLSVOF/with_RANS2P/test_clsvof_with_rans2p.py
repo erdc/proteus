@@ -2,6 +2,8 @@
 """
 Test module for clsvof with rans2p
 """
+from builtins import range
+from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -18,7 +20,7 @@ from . import (multiphase_so, multiphase,
                twp_navier_stokes_p,
                twp_navier_stokes_n)
 
-class TestCLSVOFWithRans2p():
+class TestCLSVOFWithRans2p(object):
 
     @classmethod
     def setup_class(cls):

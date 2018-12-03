@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from proteus.default_n import *
 from proteus import (FemTools,
                      Quadrature,
@@ -5,7 +6,10 @@ from proteus import (FemTools,
                      NumericalFlux,
                      NonlinearSolvers,
                      LinearSolvers)
-import moveMesh_p as physics
+try:
+    from . import moveMesh_p as physics
+except:
+    import moveMesh_p as physics
 from proteus import Context
 ct = Context.get()
 domain = ct.domain

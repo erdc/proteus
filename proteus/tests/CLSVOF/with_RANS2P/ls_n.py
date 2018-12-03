@@ -1,12 +1,13 @@
+from __future__ import absolute_import
 from proteus.default_n import *
-import ls_p as physics
+from . import ls_p as physics
 from proteus import (StepControl,
                      TimeIntegration,
                      NonlinearSolvers,
                      LinearSolvers,
                      LinearAlgebraTools)
 from proteus.mprans import NCLS
-from multiphase import *
+from .multiphase import *
 
 if timeDiscretization=='vbdf':
     timeIntegration = TimeIntegration.VBDF

@@ -10,8 +10,11 @@ setHydrostaticPressureOutlet()
 setHydrostaticPressureOutletWithDepth()
 wallFunctions()
 """
+from __future__ import division
 
 
+from past.utils import old_div
+from builtins import object
 import os, sys
 import random
 import unittest
@@ -43,7 +46,7 @@ def get_random_x(start=0., stop=10.):
 def get_time_array(start=0, stop=5, steps=100):
     return np.linspace(0, 5, 100)
 
-class PseudoContext:
+class PseudoContext(object):
     def __init__(self):
         from proteus import Domain
         self.ecH = 3.
@@ -215,8 +218,8 @@ class TestBC(unittest.TestCase):
         # check if other BC are None
 
     def test_open_air(self):
-        BC = create_BC(folder='mprans')
-        BC = create_BC(folder='mprans', b_or=np.array([[1., 1., 1.]]), b_i=0)
+        # BC = create_BC(folder='mprans')
+        BC = create_BC(folder='mprans', b_or=np.array([[0., 0., 1.]]), b_i=0)
         BC.setAtmosphere()
         p_dir, u_dir, v_dir, w_dir, vof_dir, u_diff, v_diff, w_diff, k_diff, k_dir,d_diff     = [], [], [], [], [], [], [], [], [], [], []
         pInc_dir, pInit_dir, us_dir, vs_dir, ws_dir, vos_dir, us_diff, vs_diff, ws_diff = [], [], [], [], [], [], [], [], []
@@ -234,11 +237,11 @@ class TestBC(unittest.TestCase):
             ws_dir += [BC.ws_dirichlet.uOfXT(x, t)]
             vof_dir += [BC.vof_dirichlet.uOfXT(x, t)]
             vos_dir += [BC.vos_dirichlet.uOfXT(x, t)]
-            u_diff += [BC.u_diffusive.uOfXT(x, t)]
-            v_diff += [BC.v_diffusive.uOfXT(x, t)]
+            # u_diff += [BC.u_diffusive.uOfXT(x, t)]
+            # v_diff += [BC.v_diffusive.uOfXT(x, t)]
             w_diff += [BC.w_diffusive.uOfXT(x, t)]
-            us_diff += [BC.us_diffusive.uOfXT(x, t)]
-            vs_diff += [BC.vs_diffusive.uOfXT(x, t)]
+            # us_diff += [BC.us_diffusive.uOfXT(x, t)]
+            # vs_diff += [BC.vs_diffusive.uOfXT(x, t)]
             ws_diff += [BC.ws_diffusive.uOfXT(x, t)]
             k_diff += [BC.k_diffusive.uOfXT(x, t)]
             k_dir += [BC.k_dirichlet.uOfXT(x, t)]
@@ -267,13 +270,126 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(BC.vof_advective.uOfXT, None)
         npt.assert_equal(BC.k_advective.uOfXT, None)
         npt.assert_equal(BC.dissipation_advective.uOfXT, None)
-        npt.assert_equal(u_diff, zeros)
-        npt.assert_equal(v_diff, zeros)
+        npt.assert_equal(BC.u_diffusive.uOfXT, None)
+        npt.assert_equal(BC.v_diffusive.uOfXT, None)
         npt.assert_equal(w_diff, zeros)
         npt.assert_equal(k_diff, zeros)
         npt.assert_equal(d_diff, zeros)
         # check if other BC are None
     # def test_unsteady_two_phase_velocity_inlet(self):
+        BC = create_BC(folder='mprans', b_or=np.array([[0., 1., 0.]]), b_i=0)
+        BC.setAtmosphere()
+        p_dir, u_dir, v_dir, w_dir, vof_dir, u_diff, v_diff, w_diff, k_diff, k_dir,d_diff     = [], [], [], [], [], [], [], [], [], [], []
+        pInc_dir, pInit_dir, us_dir, vs_dir, ws_dir, vos_dir, us_diff, vs_diff, ws_diff = [], [], [], [], [], [], [], [], []
+        t_list = get_time_array()
+        for t in t_list:
+            x = get_random_x()
+            p_dir += [BC.p_dirichlet.uOfXT(x, t)]
+            pInc_dir += [BC.pInc_dirichlet.uOfXT(x, t)]
+            pInit_dir += [BC.pInit_dirichlet.uOfXT(x, t)]
+            u_dir += [BC.u_dirichlet.uOfXT(x, t)]
+            v_dir += [BC.v_dirichlet.uOfXT(x, t)]
+            w_dir += [BC.w_dirichlet.uOfXT(x, t)]
+            us_dir += [BC.us_dirichlet.uOfXT(x, t)]
+            vs_dir += [BC.vs_dirichlet.uOfXT(x, t)]
+            ws_dir += [BC.ws_dirichlet.uOfXT(x, t)]
+            vof_dir += [BC.vof_dirichlet.uOfXT(x, t)]
+            vos_dir += [BC.vos_dirichlet.uOfXT(x, t)]
+            # u_diff += [BC.u_diffusive.uOfXT(x, t)]
+            v_diff += [BC.v_diffusive.uOfXT(x, t)]
+            # w_diff += [BC.w_diffusive.uOfXT(x, t)]
+            # us_diff += [BC.us_diffusive.uOfXT(x, t)]
+            vs_diff += [BC.vs_diffusive.uOfXT(x, t)]
+            # ws_diff += [BC.ws_diffusive.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
+            k_dir += [BC.k_dirichlet.uOfXT(x, t)]
+            d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
+        zeros = np.zeros(len(t_list))
+        vofAir = zeros + 1.
+        ddir = zeros + 1e-30
+        npt.assert_equal(p_dir, zeros)
+        npt.assert_equal(pInc_dir, zeros)
+        npt.assert_equal(pInit_dir, zeros)
+        npt.assert_equal(u_dir, zeros)
+        npt.assert_equal(v_dir, zeros)
+        npt.assert_equal(w_dir, zeros)
+        npt.assert_equal(us_dir, zeros)
+        npt.assert_equal(vs_dir, zeros)
+        npt.assert_equal(ws_dir, zeros)
+        npt.assert_equal(vof_dir, vofAir)
+        npt.assert_equal(k_dir, ddir)
+        npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.p_advective.uOfXT, None)
+        npt.assert_equal(BC.pInc_advective.uOfXT, None)
+        npt.assert_equal(BC.pInit_advective.uOfXT, None)
+        npt.assert_equal(BC.u_advective.uOfXT, None)
+        npt.assert_equal(BC.v_advective.uOfXT, None)
+        npt.assert_equal(BC.w_advective.uOfXT, None)
+        npt.assert_equal(BC.vof_advective.uOfXT, None)
+        npt.assert_equal(BC.k_advective.uOfXT, None)
+        npt.assert_equal(BC.dissipation_advective.uOfXT, None)
+        npt.assert_equal(BC.u_diffusive.uOfXT, None)
+        npt.assert_equal(BC.w_diffusive.uOfXT, None)
+        npt.assert_equal(v_diff, zeros)
+        npt.assert_equal(k_diff, zeros)
+        npt.assert_equal(d_diff, zeros)
+        # other BC orientation
+        BC = create_BC(folder='mprans', b_or=np.array([[1., 0., 0.]]), b_i=0)
+        BC.setAtmosphere()
+        p_dir, u_dir, v_dir, w_dir, vof_dir, u_diff, v_diff, w_diff, k_diff, k_dir,d_diff     = [], [], [], [], [], [], [], [], [], [], []
+        pInc_dir, pInit_dir, us_dir, vs_dir, ws_dir, vos_dir, us_diff, vs_diff, ws_diff = [], [], [], [], [], [], [], [], []
+        t_list = get_time_array()
+        for t in t_list:
+            x = get_random_x()
+            p_dir += [BC.p_dirichlet.uOfXT(x, t)]
+            pInc_dir += [BC.pInc_dirichlet.uOfXT(x, t)]
+            pInit_dir += [BC.pInit_dirichlet.uOfXT(x, t)]
+            u_dir += [BC.u_dirichlet.uOfXT(x, t)]
+            v_dir += [BC.v_dirichlet.uOfXT(x, t)]
+            w_dir += [BC.w_dirichlet.uOfXT(x, t)]
+            us_dir += [BC.us_dirichlet.uOfXT(x, t)]
+            vs_dir += [BC.vs_dirichlet.uOfXT(x, t)]
+            ws_dir += [BC.ws_dirichlet.uOfXT(x, t)]
+            vof_dir += [BC.vof_dirichlet.uOfXT(x, t)]
+            vos_dir += [BC.vos_dirichlet.uOfXT(x, t)]
+            u_diff += [BC.u_diffusive.uOfXT(x, t)]
+            # v_diff += [BC.v_diffusive.uOfXT(x, t)]
+            # w_diff += [BC.w_diffusive.uOfXT(x, t)]
+            us_diff += [BC.us_diffusive.uOfXT(x, t)]
+            # vs_diff += [BC.vs_diffusive.uOfXT(x, t)]
+            # ws_diff += [BC.ws_diffusive.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
+            k_dir += [BC.k_dirichlet.uOfXT(x, t)]
+            d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
+        zeros = np.zeros(len(t_list))
+        vofAir = zeros + 1.
+        ddir = zeros + 1e-30
+        npt.assert_equal(p_dir, zeros)
+        npt.assert_equal(pInc_dir, zeros)
+        npt.assert_equal(pInit_dir, zeros)
+        npt.assert_equal(u_dir, zeros)
+        npt.assert_equal(v_dir, zeros)
+        npt.assert_equal(w_dir, zeros)
+        npt.assert_equal(us_dir, zeros)
+        npt.assert_equal(vs_dir, zeros)
+        npt.assert_equal(ws_dir, zeros)
+        npt.assert_equal(vof_dir, vofAir)
+        npt.assert_equal(k_dir, ddir)
+        npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.p_advective.uOfXT, None)
+        npt.assert_equal(BC.pInc_advective.uOfXT, None)
+        npt.assert_equal(BC.pInit_advective.uOfXT, None)
+        npt.assert_equal(BC.u_advective.uOfXT, None)
+        npt.assert_equal(BC.v_advective.uOfXT, None)
+        npt.assert_equal(BC.w_advective.uOfXT, None)
+        npt.assert_equal(BC.vof_advective.uOfXT, None)
+        npt.assert_equal(BC.k_advective.uOfXT, None)
+        npt.assert_equal(BC.dissipation_advective.uOfXT, None)
+        npt.assert_equal(BC.v_diffusive.uOfXT, None)
+        npt.assert_equal(BC.w_diffusive.uOfXT, None)
+        npt.assert_equal(u_diff, zeros)
+        npt.assert_equal(k_diff, zeros)
+        npt.assert_equal(d_diff, zeros)
 
     def test_set_tank(self):
         BC = create_BC(folder='mprans', b_or=np.array([[0., 1., 0.]]), b_i=0)
@@ -399,11 +515,11 @@ class TestBC(unittest.TestCase):
             U = H*wind_speed + (1-H)*wave_u
             u_calc += [U]
             p_calc += [np.sum(U*b_or[b_i])]
-            if wavePhi >= smoothing/2.:
+            if wavePhi >= old_div(smoothing,2.):
                 Hvof = 1.
-            elif smoothing > 0 and -smoothing/2. < wavePhi < smoothing/2.:
+            elif smoothing > 0 and old_div(-smoothing,2.) < wavePhi < old_div(smoothing,2.):
                 Hvof = smoothedHeaviside(smoothing, wavePhi)
-            elif wavePhi <= -smoothing/2.:
+            elif wavePhi <= old_div(-smoothing,2.):
                 Hvof = 0.
             vof_calc += [Hvof]
         u_calc = np.array(u_calc)
@@ -458,8 +574,8 @@ class TestBC(unittest.TestCase):
         water = 0.
         kInflow = 0.00005
         dissipationInflow = 0.00001
-        kInflowAir = kInflow / 10.
-        dissipationInflowAir = dissipationInflow / 10.
+        kInflowAir = old_div(kInflow, 10.)
+        dissipationInflowAir = old_div(dissipationInflow, 10.)
         BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
         # setting variables
         uDir, vDir, wDir, vofDir, pAdv, kDir, dissipationDir = [],[],[],[],[],[],[]
@@ -484,7 +600,7 @@ class TestBC(unittest.TestCase):
             if phiCalc <= 0.: 
                 Heav = 0.
             elif 0. < phiCalc <= smoothing: 
-                Heav = smoothedHeaviside(smoothing/2., phiCalc - smoothing/2.)
+                Heav = smoothedHeaviside(old_div(smoothing,2.), phiCalc - old_div(smoothing,2.))
             else: 
                 Heav = 1.
             u, v, w = Heav*np.array(Uwind) + (1.-Heav)*np.array(U0)
@@ -590,26 +706,26 @@ class TestBC(unittest.TestCase):
         Cmu = 0.09
         B = 5.57
         # Normal and tangential vectors
-        nV = -b_or_wall/np.sqrt(np.sum(b_or_wall**2))
+        nV = old_div(-b_or_wall,np.sqrt(np.sum(b_or_wall**2)))
         uTan = U0 - U0*(nV**2)
-        tV = uTan/np.sqrt(np.sum(uTan**2))
+        tV = old_div(uTan,np.sqrt(np.sum(uTan**2)))
         uTanAbs = np.sqrt(np.sum(uTan**2))
         # Calculation of turbulent variables
         Re0 = U0abs * Y / 1.004e-6
-        cf = 0.045 / (Re0**0.25)
-        ut = U0abs * np.sqrt(cf/2.)
+        cf = old_div(0.045, (Re0**0.25))
+        ut = U0abs * np.sqrt(old_div(cf,2.))
         Yplus = Y*ut/1.004e-6
         turbModel = 'ke' # 'kw'
-        kappaP = (ut**2) / (Cmu**0.5)
+        kappaP = old_div((ut**2), (Cmu**0.5))
         if turbModel is 'ke':
-            dissipationP = (ut**3) / (0.41*Y) # ke model
+            dissipationP = old_div((ut**3), (0.41*Y)) # ke model
         elif turbModel is 'kw':
-            dissipationP = np.sqrt(kappaP) / (0.41*Y*(Cmu**0.25)) # kw model
+            dissipationP = old_div(np.sqrt(kappaP), (0.41*Y*(Cmu**0.25))) # kw model
         # Log law
         E = np.exp(0.41*B)
         utStar = (kappaP**0.5)*(0.09**0.25)
         uStar = utStar * np.log(E*Yplus) / 0.41
-        ut = utStar * np.sqrt(uTanAbs/uStar)
+        ut = utStar * np.sqrt(old_div(uTanAbs,uStar))
         gradU = (ut/0.41/Y) * tV
         uDir = uTan - gradU*Y
         # Wall objects

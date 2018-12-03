@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from NS_convergence import *
+from .NS_convergence import *
 
 name = "pressureincrement"
 
@@ -35,7 +37,7 @@ def getAdvectiveFlux_qt(x,flag):
 def getDiffusiveFlux_phi(x,flag):
     return lambda x,t: 0.
 
-class getIBC_phi:
+class getIBC_phi(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
