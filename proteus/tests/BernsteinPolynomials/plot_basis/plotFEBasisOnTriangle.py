@@ -1,3 +1,7 @@
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import proteus
 from proteus.FemTools import QuadraticOnSimplexWithNodalBasis
 from proteus.FemTools import LagrangeOnCubeWithNodalBasis
@@ -15,8 +19,8 @@ import matplotlib.cm as cm
 import numpy as np
 
 npts = 40
-x = np.arange(0, 1., 1./(npts-1))
-y = np.arange(0, 1., 1./(npts-1))
+x = np.arange(0, 1., old_div(1.,(npts-1)))
+y = np.arange(0, 1., old_div(1.,(npts-1)))
 xi,yi = np.meshgrid(x,y)
 zi = xi.copy()
 zi[:]=0.0

@@ -1,5 +1,9 @@
+from __future__ import absolute_import
 from proteus.default_n import *
-import added_mass_p as physics
+try:
+    from . import added_mass_p as physics
+except:
+    import added_mass_p as physics
 from proteus import (StepControl,
                      TimeIntegration,
                      NonlinearSolvers,
@@ -29,9 +33,11 @@ matrix = LinearAlgebraTools.SparseMatrix
 
 multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver      = LinearSolvers.KSP_petsc4py
+#multilevelLinearSolver = LinearSolvers.LU
+#levelLinearSolver      = LinearSolvers.LU
 parallelPartitioningType = mesh.parallelPartitioningType
 nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-nonlinearSmoother = NonlinearSolvers.AddedMassNewton
+nonlinearSmoother = None
 linearSmoother    = LinearSolvers.NavierStokesPressureCorrection
 
 linear_solver_options_prefix = 'am_'
@@ -42,9 +48,9 @@ levelNonlinearSolver = NonlinearSolvers.AddedMassNewton
 #linear solve rtolerance
 
 linTolFac = 0.0
-l_atol_res = ct.am_nl_atol_res
+l_atol_res = 1.0e-10#ct.am_nl_atol_res
 tolFac = 0.0
-nl_atol_res = ct.am_nl_atol_res
+nl_atol_res = 1.0e-10#ct.am_nl_atol_res
 
 nonlinearSolverConvergenceTest = 'rits'
 levelNonlinearSolverConvergenceTest = 'rits'

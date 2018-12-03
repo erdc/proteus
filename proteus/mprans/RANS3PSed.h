@@ -81,7 +81,6 @@ namespace proteus
 				   double rho_1,
 				   double nu_1,
 				   double rho_s,
-				   double nu_s,
 				   double smagorinskyConstant,
 				   int turbulenceClosureModel,
 				   double Ct_sge,
@@ -257,7 +256,6 @@ namespace proteus
 				   double rho_1,
 				   double nu_1,
 			       double rho_s,
-		    	   double nu_s, 
 				   double smagorinskyConstant,
 				   int turbulenceClosureModel,
 				   double Ct_sge,
@@ -538,7 +536,6 @@ namespace proteus
 			      const double rho_1,
 			      double nu_1,
 			      const double rho_s,
-			      double nu_s,
 			      const double h_e,
 			      const double smagorinskyConstant,
 			      const int turbulenceClosureModel,
@@ -648,14 +645,14 @@ namespace proteus
       
       rho = rho_s;
       //rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
-      
+      nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
       nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-      nu = nu_s;
+      //      nu = nu_s;
       //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       nu += nu_t;
       
       //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-      mu = rho_s*nu_s;
+      //      mu = rho_s*nu_s;
 
       eddy_viscosity = nu_t;
       // mass (volume accumulation)
@@ -1513,7 +1510,6 @@ namespace proteus
 			   double rho_1,
 			   double nu_1,
                double rho_s,
-               double nu_s,
 			   double smagorinskyConstant,
 			   int turbulenceClosureModel,
 			   double Ct_sge,
@@ -1840,7 +1836,6 @@ namespace proteus
 				   rho_1,
 				   nu_1,
 				   rho_s,
-				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -2490,7 +2485,6 @@ namespace proteus
     				   rho_1,
     				   nu_1,
     				   rho_s,
-    				   nu_s,
     				   elementDiameter[eN],
     				   smagorinskyConstant,
     				   turbulenceClosureModel,
@@ -2566,7 +2560,6 @@ namespace proteus
     				   rho_1,
     				   nu_1,
     				   rho_s,
-    				   nu_s,
     				   elementDiameter[eN],
     				   smagorinskyConstant,
     				   turbulenceClosureModel,
@@ -3093,7 +3086,6 @@ namespace proteus
 			   double rho_1,
 			   double nu_1, 
 			   double rho_s,
-			   double nu_s, 
 			   double smagorinskyConstant,
 			   int turbulenceClosureModel,
 			   double Ct_sge,
@@ -3452,7 +3444,6 @@ namespace proteus
 				   rho_1,
 				   nu_1,
 				   rho_s,
-				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -4183,7 +4174,6 @@ namespace proteus
 				   rho_1,
 				   nu_1,
 				   rho_s,
-				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,
@@ -4259,7 +4249,6 @@ namespace proteus
 				   rho_1,
 				   nu_1,
 				   rho_s,
-				   nu_s,
 				   elementDiameter[eN],
 				   smagorinskyConstant,
 				   turbulenceClosureModel,

@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from cylinder import *
+from .cylinder import *
 from proteus.mprans import Pres
 
 name = "pressure"
@@ -20,7 +22,7 @@ def getFlux(x,flag):
     if not(flag == boundaryTags['right']):
         return lambda x,t: 0.0
 
-class getIBC_p:
+class getIBC_p(object):
     def __init__(self,waterLevel):
         self.waterLevel=waterLevel
     def uOfXT(self,x,t):

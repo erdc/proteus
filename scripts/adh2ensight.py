@@ -1,4 +1,7 @@
 #! /usr/bin/env python
+from __future__ import print_function
+from builtins import zip
+from builtins import range
 from numpy import *
 import proteus
 from proteus.MeshTools import *
@@ -44,7 +47,7 @@ def adh2ensight():
     elif firstWords[0] == 'MESH2D':
         mesh = Mesh2DM(meshFilename)
     else:
-        print firstWords[0]
+        print(firstWords[0])
     mesh.writeMeshEnsight(ensightFilename,ensightFilename)
     if opts.boundaryMesh:
         mesh.buildTriangleArrays()
@@ -59,10 +62,10 @@ def adh2ensight():
         fType= None
         for i in range(7):
             line = funIn.readline()
-            print ("Line %i" % i ) + " = " + line.strip()
+            print(("Line %i" % i ) + " = " + line.strip())
             words = line.split()
             if i==0 and words[0] != 'DATASET':
-                print "%s is not an ADH data file" % filename
+                print("%s is not an ADH data file" % filename)
             if words[0] == 'BEGSCL':
                 ftype = 'scalar'
                 f = numpy.zeros((mesh.nNodes_global,),numpy.float_)
@@ -85,7 +88,7 @@ def adh2ensight():
         ftypeList.append(ftype)
         tList=[]
         while line.strip() != 'ENDDS':
-            print "Reading "+line.strip()
+            print("Reading "+line.strip())
             words = line.split()
             prematureEOF=False
             if ftype == 'scalar':
@@ -155,11 +158,11 @@ def adh2ensight():
             line = funIn.readline()
             tList.append(float(words[-1]))
         funIn.close()
-        print "Read %i timesteps of %s" % (len(tList),ensightDescription)
+        print("Read %i timesteps of %s" % (len(tList),ensightDescription))
         #check time steps
         for i in range(1,len(tList)-1):
             if tList[i-1] == tList[i] or tList[i] == tList[i+1]:
-                print "the time series contains a time step below the output precision, adding a perturbation to preven an error  in ensight"
+                print("the time series contains a time step below the output precision, adding a perturbation to preven an error  in ensight")
                 tList[i] = 0.5*(tList[i-1] + tList[i+1])
     caseOut=open(ensightFilename+'.case','a')
     caseOut.write('VARIABLE\n')
@@ -169,17 +172,17 @@ def adh2ensight():
     ts=1
     for filename,ftype,description in zip(funFilenameList,ftypeList,descriptionList):
         if ftype == 'scalar':
-            caseOut.write('scalar per node: '+`ts`+' '+description+' '+filename+'.scl**\n')
+            caseOut.write('scalar per node: '+repr(ts)+' '+description+' '+filename+'.scl**\n')
             if opts.boundaryMesh:
-                caseBoundaryOut.write('scalar per node: '+`ts`+
+                caseBoundaryOut.write('scalar per node: '+repr(ts)+
                                       ' '+description+' '+filename+'Boundary.scl**\n')
         elif ftype == 'vector':
-            caseOut.write('vector per node: '+`ts`+' '+description+' '+filename+'.vec**\n')
+            caseOut.write('vector per node: '+repr(ts)+' '+description+' '+filename+'.vec**\n')
             if opts.boundaryMesh:
-                caseBoundaryOut.write('vector per node: '+`ts`+
+                caseBoundaryOut.write('vector per node: '+repr(ts)+
                                       ' '+description+' '+filename+'Boundary.vec**\n')
-    lines = ('TIME\n'+'time set: '+`ts`+' '+description+'\n'+
-            'number of steps: '+ `len(tList)`+'\n'+
+    lines = ('TIME\n'+'time set: '+repr(ts)+' '+description+'\n'+
+            'number of steps: '+ repr(len(tList))+'\n'+
             'filename start number: 0\n'+
             'filename increment: 1\n'+
             'time values:')

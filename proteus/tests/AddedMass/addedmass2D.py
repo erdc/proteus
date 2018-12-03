@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import division
+from past.utils import old_div
 import numpy as np
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
@@ -18,7 +21,7 @@ domain = Domain.PlanarStraightLineGraphDomain()
 
 tank_dim = [5.,5.]
 tank = st.Tank2D(domain, dim=tank_dim)
-rect = st.Rectangle(domain, dim=[1.,1.], coords=[tank_dim[0]/2., tank_dim[1]/2.])
+rect = st.Rectangle(domain, dim=[1.,1.], coords=[old_div(tank_dim[0],2.), old_div(tank_dim[1],2.)])
 rect.setHoles(holes=np.array([rect.coords]))
 
 domain.MeshOptions.he = he
@@ -38,7 +41,8 @@ rect.BC['y-'].setNoSlip()
 # CHRONO
 
 system = crb.ProtChSystem(gravity=np.array([0.,-9.81,0.]))
-body = crb.ProtChBody(system=system, shape=rect)
+body = crb.ProtChBody(system=system)
+body.attachShape(rect)
 body.ChBody.SetMass(500.)
 body.ChBody.SetBodyFixed(True)  # fixing body
 
@@ -65,7 +69,7 @@ freezeLevelSet=True
 #----------------------------------------------------
 # Time stepping and velocity
 #----------------------------------------------------
-weak_bc_penalty_constant = 10./nu_0
+weak_bc_penalty_constant = old_div(10.,nu_0)
 dt_init = 0.001
 dt_fixed = 0.001
 T = 0.002
@@ -91,15 +95,15 @@ useRANS = 0.
             # 3 -- K-Omega, 1988
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    print("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    print("INVALID: useMetrics")
     sys.exit()
 
 #  Discretization
@@ -194,7 +198,7 @@ mcorr_nl_atol_res = max(1.0e-6,0.1*tolfac*he**2)
 rd_nl_atol_res = max(1.0e-6,tolfac*he)
 kappa_nl_atol_res = max(1.0e-6,tolfac*he**2)
 dissipation_nl_atol_res = max(1.0e-6,tolfac*he**2)
-mesh_nl_atol_res = max(1.0e-6,tolfac*he**2)
+mesh_nl_atol_res = 1.0e-10#max(1.0e-6,tolfac*he**2)
 am_nl_atol_res = max(1.0e-6,tolfac*he**2)
 
 #turbulence

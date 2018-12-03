@@ -1,5 +1,10 @@
+from __future__ import absolute_import
+from builtins import range
 from proteus.default_so import *
-import risingBubble
+try:
+    from . import risingBubble
+except:
+    import risingBubble
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 

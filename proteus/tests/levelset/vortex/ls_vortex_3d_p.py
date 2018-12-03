@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
-from vortex import *
+from .vortex import *
 from proteus.mprans import NCLS
 #import Profiling
 
@@ -38,7 +40,7 @@ nd=3
 # \image latex save_la_vortex_2d_dgp2_phi.eps "RKDG $P^2$ solution, Cr=0.1, $L^2$ error= 7.84e-3"
 #
 
-class OscillatingVortex3D:
+class OscillatingVortex3D(object):
     #cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self,L):
         self.radius = 0.15*L[0]
@@ -47,7 +49,7 @@ class OscillatingVortex3D:
         self.zc=0.5*L[2]
     def uOfXT(self,x,t):
         return self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2 + (x[2]-self.zc)**2)
-class OscillatingVortex3Dcylinder:
+class OscillatingVortex3Dcylinder(object):
     #cek changed to put sphere inside arbitrary box with dimensions in L
     def __init__(self,L):
         self.radius = 0.15*L[0]
@@ -104,6 +106,7 @@ class UnitSquareVortex(NCLS.Coefficients):
         if self.RD_modelIndex != None:
             #print self.RD_modelIndex,len(modelList)
             self.rdModel = modelList[self.RD_modelIndex]
+            self.ebqe_rd_u = self.rdModel.ebqe[('u',0)]
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,

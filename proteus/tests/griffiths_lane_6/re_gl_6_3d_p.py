@@ -1,9 +1,17 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.richards import Richards
 
 nd=3
-from griffiths_lane_6 import *
+try:
+    from .griffiths_lane_6 import *
+except:
+    from griffiths_lane_6 import *
 genMesh=True
 he = 4.0
 he*=0.5
@@ -13,7 +21,7 @@ he*=0.5
 #he*=0.5
 domain = gl_6_3d(width=he)
 boundaryFlags = domain.boundaryFlags
-domain.regionConstraints = [(he**3)/6.0]
+domain.regionConstraints = [old_div((he**3),6.0)]
 domain.writePoly("gl_6_3d")
 domain.writePLY("gl_6_3d")
 triangleOptions="VApq1.25q12fena"
@@ -48,7 +56,7 @@ rightHead = 7.3
 rightHeadInit  = rightHead
 leftHeadInit  = leftHead
 
-class SaturatedIC:
+class SaturatedIC(object):
     def uOfXT(self,x,t):
         #return leftHeadInit - x[2]
         xL = 33.5+leftHeadInit*tan(2.0*pi*18.0/360.0)
