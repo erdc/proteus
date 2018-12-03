@@ -10,7 +10,8 @@ from proteus.mprans.cRANS2P_IB import *
 import numpy as np
 from . import beamFEM
 from .ArchiveBeams import *
-
+from proteus.Comm import (globalMax,
+                          globalSum)
 
 class Coefficients(proteus.mprans.RANS2P.Coefficients):
     def __init__(self,
@@ -197,8 +198,6 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             return 0.0
 
     def updateBeamLoad(self):
-        from proteus.flcbdfWrappers import globalSum
-
         for I in range(self.nBeams):
             if I % self.comm.size() == self.comm.rank():
                 if self.nd == 3:
@@ -219,7 +218,6 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             self.beamDrag.flat[i] = globalSum(self.beamDrag.flat[i])
 
     def updateBeams(self, t):
-        from proteus.flcbdfWrappers import globalSum
         self.beamDrag = np.array([0.0, 0.0, 0.0])
         loadSteps = 20
         xv_hold = np.copy(self.xv)
@@ -1024,7 +1022,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.elementDiameter = self.mesh.elementDiametersArray
         if self.nSpace_global == 2:
             import copy
-            self.u[3] = copy.deepcopy(self.u[2])
+            self.u[3] = self.u[2].copy()
+            self.u[3].name = 'w'
             self.timeIntegration.m_tmp[3] = self.timeIntegration.m_tmp[2].copy()
             self.timeIntegration.beta_bdf[3] = self.timeIntegration.beta_bdf[2].copy()
             self.coefficients.sdInfo[(1, 3)] = (numpy.array([0, 1, 2], dtype='i'),
@@ -1270,7 +1269,6 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.coefficients.ebqe_dragBeam1,
             self.coefficients.ebqe_dragBeam2,
             self.coefficients.ebqe_dragBeam3)
-        from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
             for I in range(3):
@@ -1698,10 +1696,6 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.q3,
             self.coefficients.vel_avg,
             self.coefficients.netBeamDrag)
-        #import pdb
-        # pdb.set_trace()
-
-        from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.nBeams):
             for j in range(self.coefficients.nBeamElements):
                 for k in range(self.coefficients.beam_quadOrder):
