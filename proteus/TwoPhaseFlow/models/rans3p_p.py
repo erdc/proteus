@@ -43,6 +43,7 @@ useVF = rans3p_parameters['useVF']
 PSTAB = rans3p_parameters['PSTAB']
 USE_SUPG = rans3p_parameters['USE_SUPG']
 ARTIFICIAL_VISCOSITY = rans3p_parameters['ARTIFICIAL_VISCOSITY']
+INT_BY_PARTS_PRESSURE = rans3p_parameters['INT_BY_PARTS_PRESSURE']
 cE = rans3p_parameters['cE']
 cMax = rans3p_parameters['cMax']
 
@@ -100,6 +101,7 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     PSTAB=PSTAB,
                                     USE_SUPG=USE_SUPG,
                                     ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY,
+                                    INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE,
                                     cE=cE, cMax=cMax)
 
 # **************************************** #
