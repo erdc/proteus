@@ -175,7 +175,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if (firstStep==True):
             self.q_v_old[:] = self.q_v
         # GET MAX VELOCITY #
-        self.model.VelMax = max(globalMax(self.q_v.max()),1E-6)
+        self.model.VelMax = 1.0 #max(globalMax(self.q_v.max()),1E-6)
         copyInstructions = {}
         return copyInstructions
 
