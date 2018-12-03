@@ -298,7 +298,9 @@ namespace proteus
 				   int numDOFs_1D,
 				   int NNZ_1D,
 				   int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
-				   int *rowptr_1D, int *colind_1D
+				   int *rowptr_1D, int *colind_1D,
+				   // int by parts pressure
+				   int INT_BY_PARTS_PRESSURE
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -507,7 +509,8 @@ namespace proteus
 				   int offset_u, int offset_v, int offset_w,
 				   int stride_u, int stride_v, int stride_w,
 				   int *rowptr_1D, int *colind_1D,
-				   int *rowptr, int *colind)=0;
+				   int *rowptr, int *colind,
+				   int INT_BY_PARTS_PRESSURE)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int *exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -775,7 +778,9 @@ namespace proteus
                                   double* ball_center,
                                   double* ball_radius,
                                   double* ball_velocity,
-                                  double* ball_angular_velocity)
+                                  double* ball_angular_velocity,
+				  // int by parts pressure
+				  int INT_BY_PARTS_PRESSURE)
       {
         double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -971,15 +976,16 @@ namespace proteus
         /* mom_w_source -= forcez; */
 
         //u momentum Hamiltonian (pressure)
-        mom_u_ham = phi_s_effect * porosity*grad_p[0]*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
-        dmom_u_ham_grad_p[0]=phi_s_effect * porosity*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
+	double aux_pressure = (KILL_PRESSURE_TERM==1 ? 0. : 1.)*(INT_BY_PARTS_PRESSURE==1 ? 0. : 1.);
+        mom_u_ham = phi_s_effect * porosity*grad_p[0]*aux_pressure;
+        dmom_u_ham_grad_p[0]=phi_s_effect * porosity*aux_pressure;
         dmom_u_ham_grad_p[1]=0.0;
         /* dmom_u_ham_grad_p[2]=0.0; */
 
         //v momentum Hamiltonian (pressure)
-        mom_v_ham = phi_s_effect * porosity*grad_p[1]*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
+        mom_v_ham = phi_s_effect * porosity*grad_p[1]*aux_pressure;
         dmom_v_ham_grad_p[0]=0.0;
-        dmom_v_ham_grad_p[1]=phi_s_effect * porosity*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
+        dmom_v_ham_grad_p[1]=phi_s_effect * porosity*aux_pressure;
         /* dmom_v_ham_grad_p[2]=0.0; */
 
         /* //w momentum Hamiltonian (pressure) */
@@ -2267,7 +2273,9 @@ namespace proteus
 			     int numDOFs_1D,
 			     int NNZ_1D,
 			     int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
-			     int *rowptr_1D, int *colind_1D)
+			     int *rowptr_1D, int *colind_1D,
+			     // int by parts pressure
+			     int INT_BY_PARTS_PRESSURE)
       {
 	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
 	register double psi[numDOFs_1D];
@@ -2767,7 +2775,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
 
                 //VRANS
                 mass_source = q_mass_source[eN_k];
@@ -3251,6 +3260,7 @@ namespace proteus
                       /* ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                       ck.Reaction_weak(mom_u_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) +
+		      (INT_BY_PARTS_PRESSURE==1 ? -1.0*p*vel_grad_test_dV[i_nSpace+0] : 0.) + 
                       //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
                       USE_SUPG*ck.SubgridError(subgridError_u,Lstar_u_u[i]) +
                       ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]) +
@@ -3266,6 +3276,7 @@ namespace proteus
                       /* ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                       ck.Reaction_weak(mom_v_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) +
+		      (INT_BY_PARTS_PRESSURE==1 ? -1.0*p*vel_grad_test_dV[i_nSpace+1] : 0.) + 
                       //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
                       USE_SUPG*ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
                       ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]) +
@@ -3281,6 +3292,7 @@ namespace proteus
                     /*   ck.Diffusion_weak(sdInfo_w_w_rowptr,sdInfo_w_w_colind,mom_ww_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                     /*   ck.Reaction_weak(mom_w_source,vel_test_dV[i]) +  */
                     /*   ck.Hamiltonian_weak(mom_w_ham,vel_test_dV[i]) +  */
+		    /*   (INT_BY_PARTS_PRESSURE==1 ? -1.0*p*vel_grad_test_dV[i_nSpace+2] : 0.) + */
                     /*   ck.SubgridError(subgridError_p,Lstar_p_w[i]) +  */
                     /*   ck.SubgridError(subgridError_w,Lstar_w_w[i]) +  */
                     /*   ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]);  */
@@ -4109,7 +4121,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -4204,7 +4217,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
 
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -4558,6 +4572,7 @@ namespace proteus
                     /* elementResidual_p[i] -= DM*ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]),p_test_dS[i]); */
                     /* globalConservationError += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]); */
                     elementResidual_u[i] +=
+		      (INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[0] : 0.) +
                       ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
@@ -4591,7 +4606,9 @@ namespace proteus
                     /*                                         sdInfo_u_w_colind, */
                     /*                                         mom_uw_diff_ten_ext, */
                     /*                                         &vel_grad_test_dS[i*nSpace]); */
-                    elementResidual_v[i] += ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
+                    elementResidual_v[i] +=
+		      (INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[1] : 0.) +
+		      ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
                       ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
@@ -4625,7 +4642,9 @@ namespace proteus
                     /*                                         mom_vw_diff_ten_ext, */
                     /*                                         &vel_grad_test_dS[i*nSpace]);  */
 
-                    /* elementResidual_w[i] += ck.ExteriorElementBoundaryFlux(flux_mom_w_adv_ext,vel_test_dS[i]) + */
+                    /* elementResidual_w[i] += */
+		    /*   (INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[2] : 0.) +*/
+		    /*   ck.ExteriorElementBoundaryFlux(flux_mom_w_adv_ext,vel_test_dS[i]) + */
                     /*   ck.ExteriorElementBoundaryFlux(flux_mom_wu_diff_ext,vel_test_dS[i])+ */
                     /*   ck.ExteriorElementBoundaryFlux(flux_mom_wv_diff_ext,vel_test_dS[i])+ */
                     /*   ck.ExteriorElementBoundaryFlux(flux_mom_ww_diff_ext,vel_test_dS[i])+ */
@@ -4890,7 +4909,8 @@ namespace proteus
 			     int offset_u, int offset_v, int offset_w,
 			     int stride_u, int stride_v, int stride_w,
 			     int *rowptr_1D, int *colind_1D,
-			     int *rowptr, int *colind)
+			     int *rowptr, int *colind,
+			     int INT_BY_PARTS_PRESSURE)
       {
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -5345,7 +5365,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
                 //todo: decide if these should be lagged or not
@@ -6467,7 +6488,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -6562,7 +6584,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {

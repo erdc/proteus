@@ -236,7 +236,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                int numDOFs_1D,
                                int NNZ_1D,
 			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
-                               int *rowptr_1D, int *colind_1D)
+                               int *rowptr_1D, int *colind_1D,
+                               int INT_BY_PARTS_PRESSURE)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -443,7 +444,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       int offset_u, int offset_v, int offset_w,
 			       int stride_u, int stride_v, int stride_w,
                                int *rowptr_1D, int *colind_1D,
-                               int *rowptr, int *colind)
+                               int *rowptr, int *colind,
+                               int INT_BY_PARTS_PRESSURE)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -784,7 +786,8 @@ cdef class RANS3PF:
                           int NNZ_1D,
 			  numpy.ndarray csrRowIndeces_1D, numpy.ndarray csrColumnOffsets_1D,
                           numpy.ndarray rowptr_1D,
-                          numpy.ndarray colind_1D):
+                          numpy.ndarray colind_1D,
+                          int INT_BY_PARTS_PRESSURE):
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1012,7 +1015,8 @@ cdef class RANS3PF:
                                        NNZ_1D,
 				       <int*> csrRowIndeces_1D.data,<int*>csrColumnOffsets_1D.data,
                                        <int*> rowptr_1D.data,
-                                       <int*> colind_1D.data)
+                                       <int*> colind_1D.data,
+                                       INT_BY_PARTS_PRESSURE)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -1218,7 +1222,8 @@ cdef class RANS3PF:
                           int offset_u, int offset_v, int offset_w,
 			  int stride_u, int stride_v, int stride_w,
                           numpy.ndarray rowptr_1D,
-                          numpy.ndarray colind_1D):
+                          numpy.ndarray colind_1D,
+                          int INT_BY_PARTS_PRESSURE):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -1423,7 +1428,8 @@ cdef class RANS3PF:
                                        <int*> rowptr_1D.data,
                                        <int*> colind_1D.data,
                                        <int*> rowptr.data,
-                                       <int*> colind.data)
+                                       <int*> colind.data,
+                                       INT_BY_PARTS_PRESSURE)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -1707,7 +1713,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                int numDOFs_1D,
                                int NNZ_1D,
 			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
-                               int *rowptr_1D, int *colind_1D)
+                               int *rowptr_1D, int *colind_1D,
+                               int INT_BY_PARTS_PRESSURE)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1914,7 +1921,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       int offset_u, int offset_v, int offset_w,
 			       int stride_u, int stride_v, int stride_w,
                                int *rowptr_1D, int *colind_1D,
-                               int *rowptr, int *colind)
+                               int *rowptr, int *colind,
+                               int INT_BY_PARTS_PRESSURE)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -2254,7 +2262,8 @@ cdef class RANS3PF2D:
                           int NNZ_1D,
 			  numpy.ndarray csrRowIndeces_1D, numpy.ndarray csrColumnOffsets_1D,
                           numpy.ndarray rowptr_1D,
-                          numpy.ndarray colind_1D):
+                          numpy.ndarray colind_1D,
+                          int INT_BY_PARTS_PRESSURE):
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -2482,7 +2491,8 @@ cdef class RANS3PF2D:
                                        NNZ_1D,
 				       <int*> csrRowIndeces_1D.data,<int*>csrColumnOffsets_1D.data,
                                        <int*> rowptr_1D.data,
-                                       <int*> colind_1D.data)
+                                       <int*> colind_1D.data,
+                                       INT_BY_PARTS_PRESSURE)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -2688,7 +2698,8 @@ cdef class RANS3PF2D:
                           int offset_u, int offset_v, int offset_w,
 			  int stride_u, int stride_v, int stride_w,
                           numpy.ndarray rowptr_1D,
-                          numpy.ndarray colind_1D):
+                          numpy.ndarray colind_1D,
+                          int INT_BY_PARTS_PRESSURE):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -2893,7 +2904,8 @@ cdef class RANS3PF2D:
                                        <int*> rowptr_1D.data,
                                        <int*> colind_1D.data,
                                        <int*> rowptr.data,
-                                       <int*> colind.data)
+                                       <int*> colind.data,
+                                       INT_BY_PARTS_PRESSURE)
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
                                  numpy.ndarray exteriorElementBoundariesArray,
