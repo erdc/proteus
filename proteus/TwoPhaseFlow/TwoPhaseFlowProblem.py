@@ -250,7 +250,7 @@ default_rans3p_parameters = {'useMetrics': 1.0,
                              'PSTAB': 0,
                              'USE_SUPG': False,
                              'ARTIFICIAL_VISCOSITY': 3, #edge based with smoothness indicator
-                             'INT_BY_PARTS_PRESSURE',1,
+                             'INT_BY_PARTS_PRESSURE': 1,
                              'cE': 1.0,
                              'cMax': 1.0}
 default_clsvof_parameters = {'useMetrics': 1.0,
