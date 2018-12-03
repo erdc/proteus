@@ -294,7 +294,10 @@ namespace proteus
                                    double* ebqe_dynamic_viscosity_as_function,
                                    double order_polynomial,
                                    double* isActiveDOF,
-                                   int USE_SBM
+                                   int USE_SBM,
+                                   double* ncDrag,
+                                   double* betaDrag,
+                                   double* vos_vel_nodes
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -2220,7 +2223,10 @@ namespace proteus
                              double* ebqe_dynamic_viscosity_as_function,
                              double order_polynomial,
                              double* isActiveDOF,
-                             int USE_SBM)
+                             int USE_SBM,
+                             double* ncDrag,
+                             double* betaDrag,
+                             double* vos_vel_nodes)
       {
         //
         //loop over elements to compute volume integrals and load them into element and global residual
