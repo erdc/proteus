@@ -599,6 +599,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_velocityStar_solid = modelList[self.SED_model].q[('velocityStar',0)]
             self.ebqe_velocity_solid = modelList[self.SED_model].ebqe[('velocity',0)]
         else:
+            self.sedModel = None
             self.rho_s = self.rho_0
             self.q_velocity_solid = self.model.q[('velocity', 0)].copy()
             self.q_velocity_solid[:] = 0.0
@@ -1110,10 +1111,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.ebqe[('uncorrectedVelocity',0)][:] = self.model.ebqe[('velocity',0)]
 
         # Correct drag
-        vos = self.model.vos_vel_nodes
-        one_by_vos = (vos**2) / (vos**2 + np.maximum(1.0e-8,vos**2))
-        self.sedModel.u[0].dof += -(one_by_vos*self.model.ncDrag[...,0] - self.sedModel.ncDrag[...,0])/self.sedModel.coefficients.rho_s
-        self.sedModel.u[1].dof += -(one_by_vos*self.model.ncDrag[...,1] - self.sedModel.ncDrag[...,1])/self.sedModel.coefficients.rho_s
+        if self.sedModel is not None:
+            vos = self.model.vos_vel_nodes
+            one_by_vos = (vos**2) / (vos**2 + np.maximum(1.0e-8,vos**2))
+            for i in range(self.nd):
+                self.sedModel.u[i].dof += -(one_by_vos*self.model.ncDrag[...,i] - self.sedModel.ncDrag[...,i])/self.sedModel.coefficients.rho_s
         logEvent("updating {0} particles...".format(self.nParticles))
         if self.use_ball_as_particle == 0:
             if self.particles is not None:
