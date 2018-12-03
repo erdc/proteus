@@ -1072,7 +1072,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
-       if firstStep:
+        if firstStep:
             self.model.entropyResidualPerNode[:] = 1.E15 # first step use low order stab
         #
         self.model.laggedEntropyResidualPerNode[:] = self.model.entropyResidualPerNode[:]
