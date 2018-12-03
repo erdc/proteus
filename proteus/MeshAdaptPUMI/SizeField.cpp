@@ -344,10 +344,11 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
             //compute L_max and bound L_local by L_max
             double force_mag = sqrt(g[0]*g[0]+g[1]*g[1]+g[2]*g[2]);
             double accel = gradPresVec.getLength()/density + force_mag;
-            double gamma = 0.2;
-            double N_max = localVelocity.getLength()/accel*2*gamma/delta_T;
+            double gamma = 0.5;
+            double N_max = localVelocity.getLength()/accel*gamma/delta_T;
             double L_max = N_max*localVelocity.getLength()*delta_T;
             std::cout<<"gradPres "<< gradPresVec.getLength()<<" accel "<<accel<<std::endl;
+            std::cout<<"velocity "<<localVelocity.getLength()<<std::endl;
             std::cout<<"Density "<<density<<std::endl;
             std::cout<<"N_max "<<N_max<<std::endl;
             std::cout<<"L_max "<<L_max<<" L_local "<<L_local<<std::endl;
@@ -355,7 +356,6 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
                 L_local = L_max;
             
             L_local += (N_interface_band)*hPhi; //add blending region   
-            //std::exit(1);
 
             //get direction, multiply this with levelSet value to determine if in same direction
             double signValue = localVelocity*localInterfaceNormal;

@@ -953,7 +953,27 @@ class NS_base(object):  # (HasTraits):
         #may want to trigger garbage collection here
         modelListOld = self.modelList
         logEvent("Allocating models on new mesh")
-        self.allocateModels()
+        from cProfile import Profile
+        import StringIO
+        import pstats
+        prof = Profile()
+        func_return = prof.runcall(self.allocateModels)
+        #self.allocateModels()
+        #prof.dump_stats("testAllocateProfile")
+        profilingLog = StringIO.StringIO()
+        #stats = pstats.Stats("testAllocateProfile", stream=profilingLog)
+        #prof.print_stats(sort="cumulative")
+        #prof.print_stats(sort="time")
+        stats = pstats.Stats(prof, stream=profilingLog)
+        #stats.print_stats(30)
+        stats.sort_stats('cumulative')
+        stats.print_stats(30)
+        stats.sort_stats('time')
+        stats.print_stats(30)
+        logEvent(profilingLog.getvalue())
+        #import pdb; pdb.set_trace()
+
+        #self.allocateModels()
         logEvent("Attach auxiliary variables to new models")
 
         section2end = time.clock()
