@@ -226,9 +226,6 @@ cdef extern from "mesh.h":
     cdef int computeGeometricInfo_quadrilateral(Mesh& mesh)
     cdef int computeGeometricInfo_NURBS(Mesh& mesh)
 
-    cdef int partitionElements(Mesh& mesh,
-                               int nElements_overlap)
-
     cdef int assignElementBoundaryMaterialTypesFromParent(Mesh& parentMesh,
                                                           Mesh& childMesh,
                                                           const int* levelElementParentsArray,

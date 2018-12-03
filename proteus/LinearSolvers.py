@@ -343,34 +343,6 @@ class LU(LinearSolver):
             logEvent("Maximum real part of eigenvalue "+repr(self.eigenvalues_r.max()))
             logEvent("Minimum complex part of eigenvalue "+repr(self.eigenvalues_i.min()))
             logEvent("Maximum complex part of eigenvalue "+repr(self.eigenvalues_i.max()))
-class PETSc(LinearSolver):
-    def __init__(self,L,par_L,prefix=None):
-        from . import flcbdfWrappers
-        LinearSolver.__init__(self,L)
-        assert type(L).__name__ == 'SparseMatrix', "PETSc can only be called with a local sparse matrix"
-        self.solverName  = "PETSc"
-        if prefix is None:
-            self.ksp = flcbdfWrappers.KSP(par_L)
-        else:
-            assert isinstance(prefix,str)
-            prefix.replace(' ','_')
-            self.ksp = flcbdfWrappers.KSP(par_L,prefix)
-        self.par_L = par_L
-        self.par_fullOverlap = True
-    def prepare(self,b=None):
-        overlap = 1
-        if self.par_fullOverlap == False:
-            overlap = 0
-        self.ksp.prepare(self.L,self.par_L,overlap)
-    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
-        self.ksp.solve(par_u.cparVec,par_b.cparVec)
-    def useTrueResidualTest(self,par_u):
-        if par_u is not None:
-            self.ksp.useTrueResidualConvergence(par_u.cparVec)
-    def printPerformance(self):
-        self.ksp.info()
-
-
 
 class KSP_petsc4py(LinearSolver):
     """ A class that interfaces Proteus with PETSc KSP. """
@@ -3033,8 +3005,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                   linearSolverLocalBlockSize=1,
                                   linearSmootherOptions=()):
     logEvent("multilevelLinearSolverChooser type= %s" % multilevelLinearSolverType)
-    if (multilevelLinearSolverType == PETSc or
-        multilevelLinearSolverType == KSP_petsc4py or
+    if (multilevelLinearSolverType == KSP_petsc4py or
         multilevelLinearSolverType == LU or
         multilevelLinearSolverType == Jacobi or
         multilevelLinearSolverType == GaussSeidel or
@@ -3143,13 +3114,6 @@ def multilevelLinearSolverChooser(linearOperatorList,
         for l in range(nLevels):
             levelLinearSolverList.append(LU(linearOperatorList[l],computeEigenvalues))
         levelLinearSolver = levelLinearSolverList
-    elif levelLinearSolverType == PETSc:
-        for l in range(nLevels):
-            levelLinearSolverList.append(PETSc(linearOperatorList[l],par_linearOperatorList[l],
-                                               prefix=solver_options_prefix))
-            if solverConvergenceTest == 'r-true' and par_duList is not None:
-                levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
-        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == KSP_petsc4py:
         for l in range(nLevels):
             levelLinearSolverList.append(KSP_petsc4py(linearOperatorList[l],par_linearOperatorList[l],
@@ -3234,8 +3198,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                     atol    = absoluteTolerance,
                                     printInfo= printSolverInfo,
                                     computeRates = computeSolverRates)
-    elif (multilevelLinearSolverType == PETSc or
-          multilevelLinearSolverType == KSP_petsc4py or
+    elif (multilevelLinearSolverType == KSP_petsc4py or
           multilevelLinearSolverType == LU or
           multilevelLinearSolverType == Jacobi or
           multilevelLinearSolverType == GaussSeidel or
