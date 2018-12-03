@@ -141,10 +141,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
+                 INT_BY_PARTS_PRESSURE=0,
                  MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0,
                  CORRECT_VELOCITY=True,
                  USE_SUPG=1,
-                 ARTIFICIAL_VISCOSITY=1, #0: no art viscosity, 1: shock capturing, 2: entropy viscosity
+                 ARTIFICIAL_VISCOSITY=1, 
                  cMax=1.0,  # For entropy viscosity (mql)
                  cE=1.0,  # For entropy viscosity (mql)
                  epsFact=1.5,
@@ -234,6 +235,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_angular_velocity=None,
                  particles=None
                  ):
+        self.INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE
         self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
         self.CORRECT_VELOCITY = CORRECT_VELOCITY
         self.nParticles = nParticles
@@ -312,7 +314,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.USE_SUPG=USE_SUPG
         assert (ARTIFICIAL_VISCOSITY>=0 and ARTIFICIAL_VISCOSITY<=4), "ARTIFICIAL_VISCOSITY must be 0,1, 2, 3 or 4"
         self.ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY
-        # ARTIFICIAL_VISCOSITY. 0: No artificial viscosity, 1: shock capturing, 2: entropy viscosity
+        #0: no art viscosity,
+        #1: shock capturing,
+        #2: cell based entropy viscosity
+        #3: edge based with smoothness indicator
+        #4: edge based with EV
         self.cMax = cMax
         self.cE = cE
         #
@@ -1066,13 +1072,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
-        ###########################
-        # COMPUTE STAR VELOCITIES #
-        ###########################
-        if firstStep:
+       if firstStep:
             self.model.entropyResidualPerNode[:] = 1.E15 # first step use low order stab
         #
         self.model.laggedEntropyResidualPerNode[:] = self.model.entropyResidualPerNode[:]
+        ###########################
+        # COMPUTE STAR VELOCITIES #
+        ###########################
         # Compute 2nd order extrapolation on velocity
         if (firstStep):
             self.model.uStar_dof[:] = self.model.u[0].dof
@@ -2628,7 +2634,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
             old_div(self.csrColumnOffsets[(0, 0)], self.nSpace_global),
             self.rowptr_1D,
-            self.colind_1D)
+            self.colind_1D,
+            self.coefficients.INT_BY_PARTS_PRESSURE)
         r*=self.isActiveDOF
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
@@ -2945,7 +2952,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stride[1],
             self.stride[2],
             self.rowptr_1D,
-            self.colind_1D)
+            self.colind_1D,
+            self.coefficients.INT_BY_PARTS_PRESSURE)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
