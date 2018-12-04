@@ -24,6 +24,8 @@ class TwoPhaseFlowProblem:
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
+                 # FORCE FIELD FOR NAVIER STOKES #
+                 forceTerms=None,
                  # AUXILIARY VARIABLES #
                  auxVariables=None,
                  # OTHERS #
@@ -44,6 +46,10 @@ class TwoPhaseFlowProblem:
         assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
         assert type(initialConditions)==dict, "Provide dict of initial conditions"
         assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
+        self.forceTerms = forceTerms
+        if forceTerms is not None:
+            assert type(forceTerms)==dict, "forceTerms must be a dictionary"
+            assert len(forceTerms) in [2,3], "forceTerms must have two or three components"
         self.auxVariables = auxVariables
         if auxVariables is not None:
             assert type(auxVariables)==dict, "auxVariables must be a dictionary"

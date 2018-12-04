@@ -14,6 +14,10 @@ rans3p_parameters   = myTpFlowProblem.rans3p_parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
+MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0
+if myTpFlowProblem.forceTerms is not None:
+    forceTerms = myTpFlowProblem.forceTerms
+    MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=1
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
@@ -102,7 +106,8 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     USE_SUPG=USE_SUPG,
                                     ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY,
                                     INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE,
-                                    cE=cE, cMax=cMax)
+                                    cE=cE, cMax=cMax,
+                                    MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
