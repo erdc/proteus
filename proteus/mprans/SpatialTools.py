@@ -408,7 +408,7 @@ class Tank3D(ShapeRANS):
     """
     count = 0
 
-    def __init__(self, domain, dim=(0., 0., 0.), coords=None, from_0=True):
+    def __init__(self, domain, dim=(0., 0., 0.), coords=None, from_0=True,bathyFunc=None):
         super(Tank3D, self).__init__(domain, nd=3)
         self.__class__.count += 1
         self.name = "tank3d" + repr(self.__class__.count)
@@ -460,6 +460,7 @@ class Tank3D(ShapeRANS):
             self.BC_list[i].setTank()
         self.barycenter = np.array([0., 0., 0.])
         self.spongeLayers = {'y+': None, 'y-': None, 'x+': None, 'x-': None}
+        self.bathyFunc = bathyFunc
         self.setDimensions(dim)
 
     def setSponge(self, x_p=None, x_n=None, y_p=None, y_n=None):
@@ -513,6 +514,19 @@ class Tank3D(ShapeRANS):
         y_n = self.spongeLayers['y-'] or 0.
         vertices = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
                     [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]]
+        if self.bathyFunc is not None:
+            assert self.from_0, "from_0 must be true to use bathyFunc"
+            for i in range(4):
+                vertices[i][2] = self.bathyFunc(vertices[i][0],vertices[i][1])
+                print(vertices[i][0],
+                      vertices[i][1],
+                      self.bathyFunc(vertices[i][0],vertices[i][1]),
+                      H)
+                assert vertices[i][2] < H, "tank bottom should be lower than top(H) for this simple approach, z={0:e}".format(vertices[i][2])
+        zx0y0 = vertices[0][2]
+        zx1y0 = vertices[1][2]
+        zx1y1 = vertices[2][2]
+        zx0y1 = vertices[3][2]
         vertexFlags = [bt['z-'], bt['z-'], bt['z-'], bt['z-'],
                        bt['z+'], bt['z+'], bt['z+'], bt['z+']]
         facets = [[[0, 1, 2, 3]], [[4, 5, 6, 7]]]
@@ -540,11 +554,11 @@ class Tank3D(ShapeRANS):
             v2 = v_i + 1
             v3 = v_i + 3
             if corners:
-                vertices += [[x0, ymin, z0], [x0, ymin, z1],
-                             [x1, ymin, z0], [x1, ymin, z1]]
+                vertices += [[x0, ymin, zx0y0], [x0, ymin, z1],
+                             [x1, ymin, zx1y0], [x1, ymin, z1]]
             else:
-                vertices += [[xmin, ymin, z0], [xmin, ymin, z1],
-                             [xmax, ymin, z0], [xmax, ymin, z1]]
+                vertices += [[xmin, ymin, zx0y0], [xmin, ymin, z1],
+                             [xmax, ymin, zx1y0], [xmax, ymin, z1]]
             vertexFlags += [bt['z-'], bt['z+'],
                             bt['z-'], bt['z+']]
             facets += [[[v0, v1, v3, v2]]]
@@ -583,8 +597,8 @@ class Tank3D(ShapeRANS):
         # x+
         if x_p:
             if corners:
-                vertices += [[xmax, y0, z0], [xmax, y0, z1],
-                             [xmax, y1, z0], [xmax, y1, z1]]
+                vertices += [[xmax, y0, zx1y0], [xmax, y0, z1],
+                             [xmax, y1, zx1y1], [xmax, y1, z1]]
                 v0 = v_i
                 v1 = v_i + 2
                 v2 = v_i + 1
@@ -597,13 +611,13 @@ class Tank3D(ShapeRANS):
                 v2 = v_i - 1
                 v3 = v_i + 1
                 if not y_n:
-                    vertices += [[xmax, ymin, z0], [xmax, ymin, z1]]
+                    vertices += [[xmax, ymin, zx1y0], [xmax, ymin, z1]]
                     vertexFlags += [bt['z-'], bt['z+']]
                     v0 = v_i
                     v1 = v_i + 2
                     v2 = v_i + 1
                     v3 = v_i + 3
-                vertices += [[xmax, ymax, z0], [xmax, ymax, z1]]
+                vertices += [[xmax, ymax, zx1y1], [xmax, ymax, z1]]
                 vertexFlags += [bt['z-'], bt['z+']]
             facets += [[[v0, v1, v3, v2]]]
             facetFlags += [bt['x+']]
@@ -641,8 +655,8 @@ class Tank3D(ShapeRANS):
         # y+
         if y_p:
             if corners:
-                vertices += [[x1, ymax, z0], [x1, ymax, z1],
-                             [x0, ymax, z0], [x0, ymax, z1]]
+                vertices += [[x1, ymax, zx1y1], [x1, ymax, z1],
+                             [x0, ymax, zx0y1], [x0, ymax, z1]]
                 v0 = v_i
                 v1 = v_i + 2
                 v2 = v_i + 1
@@ -655,13 +669,13 @@ class Tank3D(ShapeRANS):
                 v2 = v_i - 1
                 v3 = v_i + 1
                 if not x_p:
-                    vertices += [[xmax, ymax, z0], [xmax, ymax, z1]]
+                    vertices += [[xmax, ymax, zx1y1], [xmax, ymax, z1]]
                     vertexFlags += [bt['z-'], bt['z+']]
                     v0 = v_i
                     v1 = v_i + 2
                     v2 = v_i + 1
                     v3 = v_i + 3
-                vertices += [[xmin, ymax, z0], [xmin, ymax, z1]]
+                vertices += [[xmin, ymax, zx1y1], [xmin, ymax, z1]]
                 vertexFlags += [bt['z-'], bt['z+']]
             facets += [[[v0, v1, v3, v2]]]
             volumes[0][0] += [f_i]
@@ -700,8 +714,8 @@ class Tank3D(ShapeRANS):
         if x_n:
             volumes[0][0] += [f_i]
             if corners:
-                vertices += [[xmin, y0, z0], [xmin, y0, z1],
-                             [xmin, y1, z0], [xmin, y1, z1]]
+                vertices += [[xmin, y0, zx0y0], [xmin, y0, z1],
+                             [xmin, y1, zx0y1], [xmin, y1, z1]]
                 v0 = v_i
                 v1 = v_i + 2
                 v2 = v_i + 1
@@ -710,14 +724,14 @@ class Tank3D(ShapeRANS):
                                 bt['z-'], bt['z+']]
             else:
                 if not y_p:
-                    vertices += [[xmin, ymax, z0], [xmin, ymax, z1]]
+                    vertices += [[xmin, ymax, zx0y1], [xmin, ymax, z1]]
                     v0 = v_i - 2
                     v1 = v_i
                     v2 = v_i - 1
                     v3 = v_i + 1
                     vertexFlags += [bt['z-'], bt['z+']]
                 if not y_n:
-                    vertices += [[xmin, ymin, z0], [xmin, ymin, z1]]
+                    vertices += [[xmin, ymin, zx0y0], [xmin, ymin, z1]]
                     if not y_p:
                         v0 = v_i + 2
                         v1 = v_i
