@@ -4373,6 +4373,13 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
 			 elementNeighbors_subdomain,
 			 PETSC_NULL,//weights_subdomain,
 			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+
+  //PetscMallocs need to have corresponding frees
+  PetscFree(elementNeighborsOffsets_subdomain);
+  PetscFree(elementNeighbors_subdomain);
+  PetscFree(weights_subdomain);
+
+
   MatPartitioning petscPartition;
   MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
