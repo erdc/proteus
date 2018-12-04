@@ -565,6 +565,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
       }
     }
   }
+  m->end(it);
   PCU_Comm_Send();
   while(PCU_Comm_Receive())
   {
@@ -587,6 +588,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
     int vID = localNumber(f);
     mesh.nodeMaterialTypes[vID] = apf::getScalar(nodeMaterials,f,0);
   }
+  m->end(it);
 
   //First iterate over all faces in 3D, get the model tag and apply to all downward adjacencies
   int dim = m->getDimension()-1;

@@ -24,7 +24,6 @@ static int countTotal(apf::Mesh* m, int dim)
 
 int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh)
 {
-  mesh.subdomainp = new Mesh();
   mesh.subdomainp = &subdomain_mesh;
   initializeMesh(subdomain_mesh);
   if (!PCU_Comm_Self())
