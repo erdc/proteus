@@ -4374,9 +4374,10 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
 			 PETSC_NULL,//weights_subdomain,
 			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
 
-  //PetscMallocs need to have corresponding frees
-  PetscFree(elementNeighborsOffsets_subdomain);
-  PetscFree(elementNeighbors_subdomain);
+  //PetscMallocs need to have corresponding frees except that
+  //elementNeighbors* are the i,j objects that will be freed when petscAdjacency is destroyed
+  //PetscFree(elementNeighborsOffsets_subdomain);
+  //PetscFree(elementNeighbors_subdomain);
   PetscFree(weights_subdomain);
 
 
@@ -4389,7 +4390,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   IS elementPartitioningIS_new;
   MatPartitioningApply(petscPartition,&elementPartitioningIS_new); 
   MatPartitioningDestroy(&petscPartition);
-  //MatDestroy(&petscAdjacency);
+  MatDestroy(&petscAdjacency);
   //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
     
   //experiment with metis
