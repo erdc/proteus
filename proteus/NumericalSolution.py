@@ -1113,6 +1113,11 @@ class NS_base(object):  # (HasTraits):
                         index,
                         self.systemStepController.t_system_last+1.0e-6)
 
+        #del modelListOld to free up memory
+        del modelListOld
+        import gc; gc.collect()
+
+
     def PUMI_transferFields(self):
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
