@@ -1103,14 +1103,15 @@ class NS_base(object):  # (HasTraits):
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
             self.PUMI_recomputeStructures(modelListOld)
 
-        if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
-            #hack for archiving initial solution on adapted mesh
-            self.tCount+=1
-            for index,model in enumerate(self.modelList):
-                self.archiveSolution(
-                    model,
-                    index,
-                    self.systemStepController.t_system_last+1.0e-6)
+            #something different is needed for initial conditions
+            if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+                #hack for archiving initial solution on adapted mesh
+                self.tCount+=1
+                for index,model in enumerate(self.modelList):
+                    self.archiveSolution(
+                        model,
+                        index,
+                        self.systemStepController.t_system_last+1.0e-6)
 
     def PUMI_transferFields(self):
         p0 = self.pList[0].ct
@@ -1122,6 +1123,11 @@ class NS_base(object):  # (HasTraits):
 
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
+        #but needs to be returned to the original form if not actually adapting....be careful with the following statements, unsure if this doesn't break something else 
+        import copy
+        for m in self.modelList:
+            for lm in m.levelModelList:
+                lm.u_store = copy.deepcopy(lm.u)
         self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
         self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
 
@@ -1330,6 +1336,12 @@ class NS_base(object):  # (HasTraits):
             else:
               adaptMeshNow=True
               logEvent("Need to Adapt")
+            #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
+            if(adaptMeshNow == False):
+                for m in self.modelList:
+                    for lm in m.levelModelList:
+                        lm.u[0].dof[:]=lm.u_store[0].dof
+                
         return adaptMeshNow
 
 
