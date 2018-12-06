@@ -368,6 +368,7 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
 
   //get current size field
   apf::Field* currentField;
+/*
   if(!size_iso) //if no previous size field
   {
     currentField = samSz::isoSize(m);
@@ -377,7 +378,10 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
     currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
     apf::copyData(currentField,size_iso);
   }
+*/
 
+  currentField = samSz::isoSize(m);
+  double edgeRatio = 1.5; //need to be taken from MeshAdapt library
 
   //get banded size field
   double L_band = (N_interface_band)*hPhi;
@@ -393,7 +397,7 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
   {
     double h_current = apf::getScalar(currentField,ent,0);
     double h_needed = apf::getScalar(interfaceField,ent,0);
-    if(h_current>h_needed){
+    if(h_current/h_needed > edgeRatio){
       adaptFlag=1;        
       break;
     }  
