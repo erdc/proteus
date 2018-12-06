@@ -1,6 +1,13 @@
 #ifndef NUMERICAL_FLUX_H
 #define NUMERICAL_FLUX_H
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <strings.h>
+#include <string.h>
+#include <assert.h>
+
 /**
  \file numericalFlux.h
  \brief C implementations of numericalFlux calculations
@@ -420,22 +427,22 @@ extern void calculateExteriorNumericalAdvectiveFlux_average(
   double *flux,
   double *dflux
 );
-extern void calculateExteriorInflowNumericalAdvectiveFlux(
-  int nExteriorElementBoundaries_global,
-  int nElementBoundaries_element,
-  int nQuadraturePoints_elementBoundary,
-  int nSpace,
-  int *exteriorElementBoundaries,
-  int *elementBoundaryElements,
-  int *elementBoundaryLocalElementBoundaries,
-  int *inflowFlag,
-  double *inflowFlux,
-  double *n,
-  double *f,
-  double *df,
-  double *flux,
-  double *dflux_left
-);
+// extern void calculateExteriorInflowNumericalAdvectiveFlux(
+//   int nExteriorElementBoundaries_global,
+//   int nElementBoundaries_element,
+//   int nQuadraturePoints_elementBoundary,
+//   int nSpace,
+//   int *exteriorElementBoundaries,
+//   int *elementBoundaryElements,
+//   int *elementBoundaryLocalElementBoundaries,
+//   int *inflowFlag,
+//   double *inflowFlux,
+//   double *n,
+//   double *f,
+//   double *df,
+//   double *flux,
+//   double *dflux_left
+// );
 extern void updateExteriorNumericalAdvectiveFluxJacobian(
   int nExteriorElementBoundaries_global,
   int nElementBoundaries_element,
@@ -1080,27 +1087,27 @@ extern void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian(
 									 double * fluxJacobian_wm,
 									 double * fluxJacobian_mw,
 									 double * fluxJacobian_mm);
-extern void calculateGlobalExteriorNumericalStressTrace(int nExteriorElementBoundaries_global,
-						 int nQuadraturePoints_elementBoundary,
-						 int nSpace,
-						 int* exteriorElementBoundaries,
-						 int* elementBoundaryElements,
-						 int* elementBoundaryLocalElementBoundaries,
-						 int *isDOFBoundary_u,
-						 int *isDOFBoundary_v,
-						 int *isDOFBoundary_w,
-						 double* n,
-						 double* bc_u,
-						 double* bc_v,
-						 double* bc_w,
-						 double* bc_stress,
-						 double* u,
-						 double* v,
-						 double* w,
-						 double* penalty,
-						 double* stressTrace_u,
-						 double* stressTrace_v,
-						 double* stressTrace_w);
+// extern void calculateGlobalExteriorNumericalStressTrace(int nExteriorElementBoundaries_global,
+// 						 int nQuadraturePoints_elementBoundary,
+// 						 int nSpace,
+// 						 int* exteriorElementBoundaries,
+// 						 int* elementBoundaryElements,
+// 						 int* elementBoundaryLocalElementBoundaries,
+// 						 int *isDOFBoundary_u,
+// 						 int *isDOFBoundary_v,
+// 						 int *isDOFBoundary_w,
+// 						 double* n,
+// 						 double* bc_u,
+// 						 double* bc_v,
+// 						 double* bc_w,
+// 						 double* bc_stress,
+// 						 double* u,
+// 						 double* v,
+// 						 double* w,
+// 						 double* penalty,
+// 						 double* stressTrace_u,
+// 						 double* stressTrace_v,
+// 						 double* stressTrace_w);
 extern void updateExteriorNumericalStressFluxJacobian(int nExteriorElementBoundaries_global,
 					       int nQuadraturePoints_elementBoundary,
 					       int nDOF_trial_element,
