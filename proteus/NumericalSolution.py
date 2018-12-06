@@ -946,38 +946,33 @@ class NS_base(object):  # (HasTraits):
             mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
             mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
         section1end = time.clock()
-        self.restart_section1 += section1end-section1begin
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.restart_section1 += section1end-section1begin
         
         #Section 2 - model allocation
         section2begin = time.clock()
         #may want to trigger garbage collection here
         modelListOld = self.modelList
         logEvent("Allocating models on new mesh")
-        from cProfile import Profile
-        import StringIO
-        import pstats
-        prof = Profile()
-        func_return = prof.runcall(self.allocateModels)
-        #self.allocateModels()
-        #prof.dump_stats("testAllocateProfile")
-        profilingLog = StringIO.StringIO()
+        #from cProfile import Profile
+        #import StringIO
+        #import pstats
+        #prof = Profile()
+        #func_return = prof.runcall(self.allocateModels)
+        #profilingLog = StringIO.StringIO()
         #stats = pstats.Stats("testAllocateProfile", stream=profilingLog)
-        #prof.print_stats(sort="cumulative")
-        #prof.print_stats(sort="time")
-        stats = pstats.Stats(prof, stream=profilingLog)
+        #stats.sort_stats('cumulative')
         #stats.print_stats(30)
-        stats.sort_stats('cumulative')
-        stats.print_stats(30)
-        stats.sort_stats('time')
-        stats.print_stats(30)
-        logEvent(profilingLog.getvalue())
-        #import pdb; pdb.set_trace()
+        #stats.sort_stats('time')
+        #stats.print_stats(30)
+        #logEvent(profilingLog.getvalue())
 
-        #self.allocateModels()
+        self.allocateModels()
         logEvent("Attach auxiliary variables to new models")
 
         section2end = time.clock()
-        self.restart_section2 += section2end-section2begin
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.restart_section2 += section2end-section2begin
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
         self.auxiliaryVariables = {}
@@ -1047,7 +1042,8 @@ class NS_base(object):  # (HasTraits):
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
 
         section3end = time.clock()
-        self.restart_section3 += section3end-section3begin
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.restart_section3 += section3end-section3begin
         
         #Section 4 - Transfer and setup
         section4begin = time.clock()
@@ -1150,8 +1146,10 @@ class NS_base(object):  # (HasTraits):
         self.systemStepController.choose_dt_system()
         
         section4end = time.clock()
-        self.restart_section4 += section4end-section4begin
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.restart_section4 += section4end-section4begin
 
+        section5begin = time.clock()
         #Don't do anything if this is the initial adapt
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
             import time
@@ -1169,14 +1167,21 @@ class NS_base(object):  # (HasTraits):
                         model,
                         index,
                         self.systemStepController.t_system_last+1.0e-6)
+        section5end = time.clock()
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.restart_section5 += section5end-section5begin
+
 
         #del modelListOld to free up memory
+        section6begin = time.clock()
         del modelListOld
         import gc;
         gc.disable()
         gc.collect()
         self.comm.barrier()
-
+        section6end = time.clock()
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+            self.restart_section6 += section6end-section6begin
 
 
     def PUMI_transferFields(self):
@@ -1584,6 +1589,8 @@ class NS_base(object):  # (HasTraits):
         self.restart_section2=0
         self.restart_section3=0
         self.restart_section4=0
+        self.restart_section5=0
+        self.restart_section6=0
 
         initializationTime1=time.clock() #reference time to compute contribution
 
@@ -2067,7 +2074,7 @@ class NS_base(object):  # (HasTraits):
             file0 = open('timerResults.csv','a')           
             #netSolveTime = self.solverTime - self.adaptTime - self.restartTime - self.ignoreTime - self.triggerTime
             file0.write('%f,%f,%f,%f,%f,%f,%f,%f,%i,%i\n' % (self.initializeTime,self.outerSolveTime,self.solverTime,self.triggerTime,self.adaptTime,self.restartTime,self.recomputeTime,self.ignoreTime,self.nSolveSteps,self.numberAdapts))
-            file0.write('%f,%f,%f,%f\n' % (self.restart_section1,self.restart_section2,self.restart_section3,self.restart_section4))
+            file0.write('%f,%f,%f,%f,%f,%f\n' % (self.restart_section1,self.restart_section2,self.restart_section3,self.restart_section4,self.restart_section5,self.restart_section6))
             file0.close()
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
