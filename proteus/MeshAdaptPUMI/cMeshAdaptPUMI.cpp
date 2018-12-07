@@ -86,6 +86,13 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   initialReconstructed = 0;
   maxAspect = maxAspectRatio;
   gradingFactor = gradingFact;
+
+  errorSizeFieldTime = 0;
+  interfaceSizeFieldTime = 0;
+  gradationTime = 0 ;
+  predictiveResolutionTime = 0;
+  adaptTime = 0;
+  writeTime = 0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -477,17 +484,28 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
     //calculateSizeField(L_band);
     double L_band = (N_interface_band+1)*hPhi;
+    double t1 = PCU_Time();
     calculateSizeField(L_band);
-    if(nAdapt>2)
+    double t2 = PCU_Time();
+    if(nAdapt>=2)
+    {
         predictiveInterfacePropagation();
+    }
+    double t3 = PCU_Time();
     getERMSizeField(total_error);
+    double t4 = PCU_Time();
+    interfaceSizeFieldTime += t2-t1;
+    predictiveResolutionTime+= t3-t2;
+    errorSizeFieldTime += t4-t3;
   }
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
   }
-
+  double t5 = PCU_Time();
   isotropicIntersect();
+  double t6 = PCU_Time();
+  gradationTime+=t6-t5;  
 
   if(logging_config=="on"){
     char namebuffer[50];
@@ -559,6 +577,73 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   //ma::adapt(in);
   ma::adaptVerbose(in);
   double t2 = PCU_Time();
+  if(nAdapt>1) //need to disregard initial adapts to align with other timer file
+    adaptTime+= t2-t1;
+
+  //mesh statistics
+  double t3 = PCU_Time();
+  int numLocalVertices = m->count(0);
+  int numLocalElements = m->count(m->getDimension());
+
+  numLocalVertices_min = numLocalVertices;
+  numLocalVertices_max = numLocalVertices;
+  numLocalElements_min = numLocalElements;
+  numLocalElements_max = numLocalElements;
+
+/*
+  if(PCU_Comm_Self()==0)
+      std::cout<<"What is the number of vertices 0 "<<numLocalVertices<<std::endl;
+  PCU_Barrier();
+  if(PCU_Comm_Self()==1)
+      std::cout<<"What is the number of vertices 1 "<<numLocalVertices<<std::endl;
+
+  if(PCU_Comm_Self()==0)
+      std::cout<<"What is the number of elements 0 "<<numLocalElements<<std::endl;
+  PCU_Barrier();
+  if(PCU_Comm_Self()==1)
+      std::cout<<"What is the number of elements 1 "<<numLocalElements<<std::endl;
+*/
+
+  PCU_Add_Ints(&numLocalVertices,1);
+  PCU_Add_Ints(&numLocalElements,1);
+  PCU_Min_Ints(&numLocalVertices_min,1);
+  PCU_Min_Ints(&numLocalElements_min,1);
+  PCU_Max_Ints(&numLocalVertices_max,1);
+  PCU_Max_Ints(&numLocalElements_max,1);
+
+  numLocalVertices_mean = numLocalVertices/PCU_Proc_Peers()*1.0;
+  numLocalElements_mean = numLocalElements/PCU_Proc_Peers()*1.0;
+  numGlobalVertices = numLocalVertices;
+  numGlobalElements = numLocalElements;
+
+  if(PCU_Comm_Self()==0)
+  {
+  std::ofstream myfile;
+  if(nAdapt == 1) //starting from second initial adapt I start counting
+    myfile.open("statistics_mesh.txt", std::ios::out);
+  else if(nAdapt>1)
+    myfile.open("statistics_mesh.txt", std::ios::app);
+  myfile <<numGlobalVertices<<","<<numLocalVertices_min<<","<<numLocalVertices_max<<","<<numLocalVertices_mean<<","<<numGlobalElements<<","<<numLocalElements_min<<","<<numLocalElements_max<<","<<numLocalElements_mean<<std::endl;
+  myfile.close();
+  }
+
+/*
+  if(PCU_Comm_Self()==0)
+      std::cout<<"2nd What is the number of vertices 0 "<<numLocalVertices_mean<<std::endl;
+  PCU_Barrier();
+  if(PCU_Comm_Self()==1)
+      std::cout<<"2nd What is the number of vertices 1 "<<numLocalVertices_mean<<std::endl;
+
+  if(PCU_Comm_Self()==0)
+      std::cout<<"2nd What is the number of elements 0 "<<numLocalElements_mean<<std::endl;
+  PCU_Barrier();
+  if(PCU_Comm_Self()==1)
+      std::cout<<"2nd What is the number of elements 1 "<<numLocalElements_mean<<std::endl;
+*/
+  double t4 = PCU_Time();
+  if(nAdapt>1)
+    writeTime += t4-t3;
+  
 
   m->verify();
   //double mass_after = getTotalMass();
@@ -659,4 +744,55 @@ double MeshAdaptPUMIDrvr::getTotalMass()
 void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile){
   m->writeNative(meshFile);
   apf::writeVtkFiles(meshFile,m);
+
+  //also output times
+  //first collect
+
+/*
+  if(PCU_Comm_Self()==0)
+      std::cout<<"Number of ranks "<<PCU_Proc_Peers()<<std::endl;
+  PCU_Barrier();
+  if(PCU_Comm_Self()==0)
+      //std::cout<<"first error size field time 0 "<<errorSizeFieldTime<<std::endl;
+      printf("first error size field time 0 %.15f\n",errorSizeFieldTime);
+  PCU_Barrier();
+  if(PCU_Comm_Self()==1)
+      //std::cout<<"error size field time 1 "<<errorSizeFieldTime<<std::endl;
+      printf("first error size field time 1 %.15f\n",errorSizeFieldTime);
+*/
+
+  PCU_Add_Doubles(&errorSizeFieldTime,1);
+  PCU_Add_Doubles(&interfaceSizeFieldTime,1);
+  PCU_Add_Doubles(&gradationTime,1);
+  PCU_Add_Doubles(&predictiveResolutionTime,1);
+  PCU_Add_Doubles(&adaptTime,1);
+
+  errorSizeFieldTime = errorSizeFieldTime/PCU_Proc_Peers()*1.0;
+  interfaceSizeFieldTime = interfaceSizeFieldTime/PCU_Proc_Peers();
+  gradationTime = gradationTime/PCU_Proc_Peers();
+  predictiveResolutionTime = predictiveResolutionTime/PCU_Proc_Peers();
+  adaptTime = adaptTime/PCU_Proc_Peers();
+
+/*
+  if(PCU_Comm_Self()==0)
+      //std::cout<<"error size field time 0 "<<errorSizeFieldTime<<std::endl;
+      printf("second error size field time 0 %.15f\n",errorSizeFieldTime);
+  PCU_Barrier();
+  if(PCU_Comm_Self()==1)
+      //std::cout<<"error size field time 1 "<<errorSizeFieldTime<<std::endl;
+      printf("second error size field time 1 %.15f\n",errorSizeFieldTime);
+*/
+
+  if(PCU_Comm_Self()==0)
+  {
+      std::ofstream myfile;
+      myfile.open("timers_meshAdapt.txt", std::ios::out );
+      myfile << "errorSizeField\n"<<errorSizeFieldTime<<std::endl;
+      myfile << "interfaceSizeField\n"<<interfaceSizeFieldTime<<std::endl;
+      myfile << "gradationTime\n"<<gradationTime<<std::endl;
+      myfile << "predictiveResolution\n"<<predictiveResolutionTime<<std::endl;
+      myfile << "adaptTime\n"<<adaptTime<<std::endl;
+      myfile << "writeTime\n"<<writeTime<<std::endl;
+      myfile.close();
+  }   
 }

@@ -174,6 +174,24 @@ class MeshAdaptPUMIDrvr{
   int target_element_count; //How many elements in the mesh are desired?
   double domainVolume; //Volume of the domain
   double THRESHOLD; //threshold of error before adapt
+
+  //timers
+  double errorSizeFieldTime;
+  double interfaceSizeFieldTime;
+  double gradationTime;
+  double predictiveResolutionTime;
+  double adaptTime;
+  double writeTime;
+
+  //mesh statistics
+  int numGlobalVertices;
+  int numGlobalElements;
+  int numLocalVertices_min;
+  int numLocalVertices_max;
+  double numLocalVertices_mean;
+  int numLocalElements_min;
+  int numLocalElements_max;
+  double numLocalElements_mean;
 };
 
 
