@@ -1900,7 +1900,7 @@ class NS_base(object):  # (HasTraits):
                                 m.t_mesh = self.systemStepController.t_system_last
                                 m.updateAfterMeshMotion()
                                 m.tLast_mesh = m.t_mesh
-
+                        
                         self.preStep(model)
                         self.setWeakDirichletConditions(model)
 

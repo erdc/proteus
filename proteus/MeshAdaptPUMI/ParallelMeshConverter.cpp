@@ -107,6 +107,43 @@ int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   std::string s = ss.str();
   m->writeNative(s.c_str());
 */
+
+  //mesh statistics
+  double t3 = PCU_Time();
+ 
+  int numLocalVertices = numLocNodes;
+  int numLocalElements = numLocElem;
+  numLocalVertices_min = numLocNodes;
+  numLocalVertices_max = numLocNodes;
+  numLocalElements_min = numLocElem;
+  numLocalElements_max = numLocElem;
+
+  PCU_Add_Ints(&numLocalVertices,1);
+  PCU_Add_Ints(&numLocalElements,1);
+  PCU_Min_Ints(&numLocalVertices_min,1);
+  PCU_Min_Ints(&numLocalElements_min,1);
+  PCU_Max_Ints(&numLocalVertices_max,1);
+  PCU_Max_Ints(&numLocalElements_max,1);
+
+  numLocalVertices_mean = numLocalVertices/PCU_Proc_Peers()*1.0;
+  numLocalElements_mean = numLocalElements/PCU_Proc_Peers()*1.0;
+  numGlobalVertices = mesh.nNodes_global;
+  numGlobalElements = mesh.nElements_global;
+
+  if(PCU_Comm_Self()==0)
+  {
+  std::ofstream myfile;
+  if(nAdapt == 2) //starting from second initial adapt I start counting
+    myfile.open("statistics_mesh.txt", std::ios::out);
+  else if(nAdapt>2)
+    myfile.open("statistics_mesh.txt", std::ios::app);
+  myfile <<numGlobalVertices<<","<<numLocalVertices_min<<","<<numLocalVertices_max<<","<<numLocalVertices_mean<<","<<numGlobalElements<<","<<numLocalElements_min<<","<<numLocalElements_max<<","<<numLocalElements_mean<<std::endl;
+  myfile.close();
+  }
+  double t4 = PCU_Time();
+  if(nAdapt>2)
+    writeTime += t4-t3;
+
   return 0;
 } 
 
