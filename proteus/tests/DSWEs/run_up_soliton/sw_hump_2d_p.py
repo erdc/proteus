@@ -8,7 +8,7 @@ nd=2
 
 # set up stufff #
 L=(45.0,0.8)
-X_coords = (-35.0,10.0)
+X_coords = (-35.0,15.0)
 domain = RectangularDomain(L=L,x=[-35.0,0,0])
 T=20.1
 nDTout=200
