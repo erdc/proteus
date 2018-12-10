@@ -3169,8 +3169,8 @@ def updateExteriorNumericalDiffusiveFluxJacobian_sd(np.ndarray rowptr,
                                                     np.ndarray grad_v,
                                                     np.ndarray penalty,
                                                     np.ndarray fluxJacobian,
-                                                    int scale_penalty,
-                                                    double penalty_floor):
+                                                    int scale_penalty=0,
+                                                    double penalty_floor=0.0):
     if grad_v.ndim == 5:
         cupdateExteriorNumericalDiffusiveFluxJacobian_sd( scale_penalty,
                                                     penalty_floor,
@@ -4752,8 +4752,8 @@ def calculateExteriorNumericalDiffusiveFlux_sd(np.ndarray rowptr,
                                             np.ndarray u,
                                             np.ndarray penalty,
                                             np.ndarray flux,
-                                            int scale_penalty,
-                                            double penalty_floor):
+                                            int scale_penalty=0,
+                                            double penalty_floor=0.0):
     if grad_phi.ndim == 4:
         ccalculateExteriorNumericalDiffusiveFlux_sd(scale_penalty,
                                                 penalty_floor,
