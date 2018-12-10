@@ -8,7 +8,7 @@ import importlib
 
 comm = Comm.get()
 Profiling.logLevel = 7
-Profiling.verbose = False
+Profiling.verbose = True
 import numpy as np
 
 
@@ -85,4 +85,4 @@ class Test_ibm():
                 tables.open_file( my_so.name + '.h5') as actual:
             assert np.allclose(expected.root.u_t2,
                                actual.root.u_t2,
-                               atol=1e-10)
+                               atol=1e-10), "Max error={0:e}".format(np.absolute((expected.root.u_t2.read() - actual.root.u_t2.read())).max())
