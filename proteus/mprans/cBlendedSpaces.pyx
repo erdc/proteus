@@ -62,6 +62,7 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
 			       double* aux_grad_test_ref,
 			       double* dLow,
                                double epsilon,
+                               int PROBLEM_TYPE,
                                double * quantDOFs)
         void calculateJacobian(double dt,
                                double * mesh_trial_ref,
@@ -107,7 +108,8 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
 			       double* aux_test_ref,
 			       double* aux_grad_test_ref,
 			       double* dLow,
-			       double epsilon)
+			       double epsilon,
+                               int PROBLEM_TYPE)
         void calculateMetricsAtEOS(double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -225,6 +227,7 @@ cdef class cBlendedSpaces_base:
 			  numpy.ndarray aux_grad_test_ref,
                           numpy.ndarray dLow,
                           double epsilon,
+                          int PROBLEM_TYPE,
                           numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual(dt,
                                        < double * > mesh_trial_ref.data,
@@ -282,6 +285,7 @@ cdef class cBlendedSpaces_base:
 				       <double*> aux_grad_test_ref.data,
 				       <double*> dLow.data,
                                        epsilon,
+                                       PROBLEM_TYPE,
                                        < double * > quantDOFs.data)
     def calculateJacobian(self,
                           double dt,
@@ -326,7 +330,8 @@ cdef class cBlendedSpaces_base:
 			  numpy.ndarray aux_test_ref,
 			  numpy.ndarray aux_grad_test_ref,
 			  numpy.ndarray dLow,
-			  double epsilon):
+			  double epsilon,
+                          int PROBLEM_TYPE):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(dt,
@@ -373,7 +378,8 @@ cdef class cBlendedSpaces_base:
 			 	       <double*> aux_test_ref.data,
 			 	       <double*> aux_grad_test_ref.data,
 				       <double*> dLow.data,
-				       epsilon)
+				       epsilon,
+                                       PROBLEM_TYPE)
     def calculateMetricsAtEOS(self,
                               numpy.ndarray mesh_trial_ref,
                               numpy.ndarray mesh_grad_trial_ref,

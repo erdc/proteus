@@ -6,7 +6,6 @@
 #include "ModelFactory.h"
 
 #define ALPHA_VIA_LINEAR_SPACE 1
-#define POISSON_EQUATION 1
 
 namespace proteus
 {
@@ -75,6 +74,8 @@ namespace proteus
 				   double* aux_grad_test_ref,
 				   double* dLow,
 				   double epsilon,
+				   // Type of problem to solve
+				   int PROBLEM_TYPE,
                                    // AUX QUANTITIES OF INTEREST
                                    double* quantDOFs)=0;
     virtual void calculateJacobian(//element
@@ -125,7 +126,9 @@ namespace proteus
 				   double* aux_test_ref,
 				   double* aux_grad_test_ref,
 				   double* dLow,
-				   double epsilon)=0;
+				   double epsilon,
+				   // Type of problem to solve
+				   int PROBLEM_TYPE)=0;
     virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
                                        double* mesh_trial_ref,
                                        double* mesh_grad_trial_ref,
@@ -216,6 +219,49 @@ namespace proteus
 	  }
       }
 
+      inline void MULT(const double A[nSpace*nSpace],
+		       const double B[nSpace*nSpace],
+		       double *mat)
+      {
+	for (int I=0; I<nSpace; I++)
+	  {
+	    for (int J=0; J<nSpace; J++)
+	      {
+		mat[I*nSpace+J] = 0;
+		for (int K=0; K<nSpace; K++)
+		  {
+		    mat[I*nSpace+J] += A[I*nSpace+K] * B[K*nSpace+J];
+		  }
+	      }
+	  }
+      }
+
+      inline void calculateDTensor(double *DTensor)
+      {
+	double k1 = 1000.0;
+	double k2 = 1.0;
+	double theta = M_PI/6;
+	double visc[nSpace*nSpace], RLeft[nSpace*nSpace], RRight[nSpace*nSpace], aux[nSpace*nSpace];
+
+	visc[0] = k1;
+	visc[1] = 0;
+	visc[2] = 0;
+	visc[3] = k2;
+
+	RLeft[0] = cos(-theta);
+	RLeft[1] = sin(-theta);
+	RLeft[2] = -sin(-theta);
+	RLeft[3] = cos(-theta);
+
+	RRight[0] = cos(theta);
+	RRight[1] = sin(theta);
+	RRight[2] = -sin(theta);
+	RRight[3] = cos(theta);
+
+	MULT(visc,RRight,aux);
+	MULT(RLeft,aux,DTensor);
+      }
+
       void calculateResidual(//element
 			     double dt,
 			     double* mesh_trial_ref,
@@ -276,6 +322,8 @@ namespace proteus
 			     double* aux_grad_test_ref,
 			     double* dLow,
 			     double epsilon,
+			     // Type of problem to solve
+			     int PROBLEM_TYPE,
 			     // AUX QUANTITIES OF INTEREST
 			     double* quantDOFs)
       {
@@ -391,7 +439,8 @@ namespace proteus
 		  eN_k_nSpace = eN_k*nSpace,
 		  eN_nDOF_trial_element = eN*nDOF_trial_element;
 		register double
-		  u=0.0,grad_u[nSpace],
+		  u=0.0,grad_u[nSpace],D_times_grad_u[nSpace],DTensor[nSpace*nSpace],
+		  D_times_u_grad_trial_j[nSpace], D_times_u_grad_trial_i[nSpace],
 		  jac[nSpace*nSpace],
 		  jacDet,
 		  jacInv[nSpace*nSpace],
@@ -410,7 +459,7 @@ namespace proteus
 					    jacInv,
 					    x,y,z);
 		//get the physical integration weight
-		dV = fabs(jacDet)*dV_ref[k];
+ 		dV = fabs(jacDet)*dV_ref[k];
 		//get the trial function gradients based on the blended functions
 		ck.gradTrialFromRef(&blended_grad_test_ref[k*nDOF_trial_element*nSpace],
 				    jacInv,
@@ -425,6 +474,12 @@ namespace proteus
 			       &u_l2g[eN_nDOF_trial_element],
 			       u_grad_trial,
 			       grad_u);
+		//multiply D times grad_u
+		if (PROBLEM_TYPE==2)
+		  {
+		    calculateDTensor(DTensor);
+		    Mult(DTensor,grad_u,D_times_grad_u);
+		  }
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
@@ -447,17 +502,16 @@ namespace proteus
 
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
-		    //register int eN_k_i=eN_k*nDOF_test_element+i,
-                    //eN_k_i_nSpace = eN_k_i*nSpace,
 		    register int i_nSpace=i*nSpace;
-		    if (POISSON_EQUATION==1)
+
+		    if (PROBLEM_TYPE==0)
 		      {
 			// poisson equation //
 			elementResidual_u[i] +=
 			  ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
 			  - force[eN_k]*u_test_dV[i];
 		      }
-		    else
+		    else if (PROBLEM_TYPE==1)
 		      {
 			// STEADY ADVECTION-DIFFUSION //
 			elementResidual_u[i] +=
@@ -467,14 +521,10 @@ namespace proteus
 			  +epsilon*ck.NumericalDiffusion(1.0,
 							 grad_u,
 							 &u_grad_test_dV[i_nSpace]);
-		      }
-		    if (POISSON_EQUATION != 1)
-		      {
 			// j-th LOOP // To construct transport matrices
 			for(int j=0;j<nDOF_trial_element;j++)
 			  {
 			    int j_nSpace = j*nSpace;
-			    int i_nSpace = i*nSpace;
 			    elementTransport[i][j] += // int[(vel.grad_wj)*wi*dx]
 			      ck.Advection_strong(velocityBeta,
 						  &u_grad_test_dV[j_nSpace])
@@ -486,6 +536,29 @@ namespace proteus
 			      *blended_test_ref[k*nDOF_trial_element+j];
 			  }
 		      }
+		    else // PROBLEM_TYPE==2
+		      {
+			// poisson equation //
+			elementResidual_u[i] += (ck.NumericalDiffusion(1.0,
+								       D_times_grad_u,
+								       &u_grad_test_dV[i_nSpace])
+						 - force[eN_k]*u_test_dV[i]);
+			Mult(DTensor,&u_grad_trial[i_nSpace],D_times_u_grad_trial_i);
+			// j-th LOOP // To construct transport matrices
+			for(int j=0;j<nDOF_trial_element;j++)
+			  {
+			    int j_nSpace = j*nSpace;
+			    Mult(DTensor,&u_grad_trial[j_nSpace],D_times_u_grad_trial_j);
+			    elementTransport[i][j] += // int[(D*grad_wj).grad_wi*dx]
+			      ck.NumericalDiffusion(1.0,
+						    D_times_u_grad_trial_j,
+						    &u_grad_test_dV[i_nSpace]);
+			    elementTransposeTransport[i][j] += // int[(D*grad_wi).grad_wj*dx]
+			      ck.NumericalDiffusion(1.0,
+						    D_times_u_grad_trial_i,
+						    &u_grad_test_dV[j_nSpace]);
+			  }
+		      }
 		  }//i
 	      }
 	    //
@@ -495,7 +568,7 @@ namespace proteus
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
 		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
-		if (POISSON_EQUATION != 1)
+		if (PROBLEM_TYPE==1 || PROBLEM_TYPE==2)
 		  {
 		    // distribute transport matrices
 		    for (int j=0;j<nDOF_trial_element;j++)
@@ -512,7 +585,7 @@ namespace proteus
 	      }//i
 	  }//elements
 
-	if (POISSON_EQUATION !=1 )
+	if (PROBLEM_TYPE==1 or PROBLEM_TYPE==2)
 	  {
 	    // LOOP in DOFs //
 	    int ij=0;
@@ -520,7 +593,6 @@ namespace proteus
 	      {
 		double solni = u_dof[i]; // solution at time tn for the ith DOF
 		double ith_dissipative_term = 0;
-		double ith_flux_term = 0;
 		double dLii = 0.;
 		int ii=0;
 		double alphai = alpha_dof[i];
@@ -533,12 +605,14 @@ namespace proteus
 		    double alphaj = alpha_dof[j];
 		    double dij;
 
-		    ith_flux_term += TransportMatrix[ij]*solnj;
-
 		    if (i != j)
 		      {
-			dij = fmax(fabs((1-alphai)*TransportMatrix[ij]),
-				   fabs((1-alphaj)*TransposeTransportMatrix[ij]));
+			if (PROBLEM_TYPE==1)
+			  dij = fmax(fabs((1-alphai)*TransportMatrix[ij]),
+				     fabs((1-alphaj)*TransposeTransportMatrix[ij]));
+			else
+			  dij = fmax(0,fmax((1-alphai)*TransportMatrix[ij],
+					    (1-alphaj)*TransposeTransportMatrix[ij]));
 			dLow[ij] = dij;
 			//dissipative terms
 			ith_dissipative_term += dij*(solnj-solni);
@@ -551,7 +625,7 @@ namespace proteus
 		    //update ij
 		    ij+=1;
 		  }
-		dLow[ii]=dLii;
+		dLow[ii] = dLii;
 		// update residual
 		globalResidual[i] += -ith_dissipative_term;
 	      }
@@ -608,7 +682,9 @@ namespace proteus
 			     double* aux_test_ref,
 			     double* aux_grad_test_ref,
 			     double* dLow,
-			     double epsilon)
+			     double epsilon,
+			     // Type of problem to solve
+			     int PROBLEM_TYPE)
       {
 	//
 	//loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -699,6 +775,7 @@ namespace proteus
 
 		//declare local storage
 		register double
+		  D_times_u_grad_trial_j[nSpace], DTensor[nSpace*nSpace],
 		  jac[nSpace*nSpace],
 		  jacDet,
 		  jacInv[nSpace*nSpace],
@@ -731,6 +808,9 @@ namespace proteus
 		    for (int I=0;I<nSpace;I++)
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 		  }
+		// get DTensor
+		if (PROBLEM_TYPE==2)
+		  calculateDTensor(DTensor);
 
 		// coefficient of steady advection - diffusion
 		double velocityBeta[2];
@@ -745,7 +825,7 @@ namespace proteus
 			int j_nSpace = j*nSpace;
 			int i_nSpace = i*nSpace;
 
-			if (POISSON_EQUATION==1)
+			if (PROBLEM_TYPE==0)
 			  {
 			    // poisson equation //
 			    elementJacobian_u_u[i][j] +=
@@ -753,7 +833,7 @@ namespace proteus
 						    &u_grad_trial[j_nSpace],
 						    &u_grad_test_dV[i_nSpace]);
 			  }
-			else
+			else if (PROBLEM_TYPE==1)
 			  {
 			    // STEADY ADVECTION-DIFFUSION //
 			    elementJacobian_u_u[i][j] +=
@@ -763,6 +843,15 @@ namespace proteus
 			      +epsilon*ck.NumericalDiffusion(1.0,
 							     &u_grad_trial[j_nSpace],
 							     &u_grad_test_dV[i_nSpace]);
+			  }
+			else // PROBLEM_TYPE==2
+			  {
+			    Mult(DTensor,&u_grad_trial[j_nSpace],D_times_u_grad_trial_j);
+			    // poisson equation //
+			    elementJacobian_u_u[i][j] +=
+			      ck.NumericalDiffusion(1.0,
+						    D_times_u_grad_trial_j,
+						    &u_grad_test_dV[i_nSpace]);
 			  }
 		      }//j
 		  }//i
@@ -781,7 +870,7 @@ namespace proteus
 	      }//i
 	  }//elements
 
-	if (POISSON_EQUATION != 1)
+	if (PROBLEM_TYPE == 1 or PROBLEM_TYPE==2)
 	  {
 	    int ij=0;
 	    for (int i=0; i<numDOFs; i++)

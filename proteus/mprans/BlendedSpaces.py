@@ -28,8 +28,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
                  #NULLSPACE INFO
-                 epsilon=0.01):
+                 epsilon=0.01,
+                 PROBLEM_TYPE=0):
 
+        self.PROBLEM_TYPE=PROBLEM_TYPE
         self.epsilon=epsilon
         self.variableNames = ['u']
         nc = 1
@@ -96,8 +98,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         print "********************... ", self.model.u[0].dof.min(), self.model.u[0].dof.max()
         print "********************... ", len(self.model.u[0].dof)
-        #tolerance = 1.0E-12
-        #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof > 1.0+tolerance) - 1.0*(self.model.u[0].dof < 0.0-tolerance)
+        tolerance = 1.0E-10
+        MIN=-1.0
+        MAX=1.0
+        self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof > MAX+tolerance) - 1.0*(self.model.u[0].dof < MIN-tolerance)
+        #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof < MIN-tolerance)
+        #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof >= MAX+tolerance)
 
         # COMPUTE NORMS #
         self.model.getMetricsAtEOS()
@@ -455,6 +461,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # mql. For edge based stabilization
         self.dLow=None
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.boundaryValues = None
+        self.isBoundary = None
 
         # mql. For blending functions
         self.blendingFunctionDOFs = numpy.zeros(self.u[0].dof.shape,'d')
@@ -644,13 +652,52 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof, self.globalResidualDummy)
 
+    def getBoundaryValues(self):
+        # get x,y coordinates of all DOFs #
+        l2g = self.l2g[0]['freeGlobal']
+        self.dofsXCoord = numpy.zeros(self.u[0].dof.shape,'d')
+        self.dofsYCoord = numpy.zeros(self.u[0].dof.shape,'d')
+        for eN in range(self.mesh.nElements_global):
+            for k in range(self.nQuadraturePoints_element):
+                for i in range(self.nDOF_test_element[0]):
+                    gi = self.offset[0]+self.stride[0]*l2g[eN,i]
+                    self.dofsXCoord[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
+                    self.dofsYCoord[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
+        #
+        # Get DOFs values #
+        self.isBoundary = numpy.zeros(self.u[0].dof.shape,'d')
+        self.boundaryValues = {} #numpy.zeros(0,'d')
+
+        eps = 0.1/(np.sqrt(self.u[0].dof.size)-1)
+        for gi in range(self.u[0].dof.shape[0]):
+            x = self.dofsXCoord[gi]
+            y = self.dofsYCoord[gi]
+            # OUTTER BOUNDARY #
+            #if x==0.0 or x==1.0 or y==0.0 or y==1.0:
+            #    value=-1.0
+            #    self.boundaryValues[gi] = value
+            #    self.isBoundary[gi] = 1.0
+            # INTERNAL BOUNDARY #
+            #if (x >= 4./9-eps and x <= 5./9+eps and y >= 4./9-eps and y <= 5./9+eps):
+            #    value=1.0
+            #    self.boundaryValues[gi] = value
+            #    self.isBoundary[gi] = 1.0
+            if x==0:
+                self.boundaryValues[gi] = -1.
+                self.isBoundary[gi]=1.0
+            elif x==1:
+                self.boundaryValues[gi] = 1.
+                self.isBoundary[gi]=1.0
+        #
+
     def getResidual(self, u, r):
         import pdb
         import copy
         """
         Calculate the element residuals and add in to the global residual
         """
-
+        if self.boundaryValues is None:
+            self.getBoundaryValues()
         # JACOBIANS (FOR ELEMENT TRANSFORMATION)
         self.q[('J')] = np.zeros((self.mesh.nElements_global,
                                   self.nQuadraturePoints_element,
@@ -763,6 +810,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.aux[0].femSpace.grad_psi,
             self.dLow,
             self.coefficients.epsilon,
+            self.coefficients.PROBLEM_TYPE,
             self.quantDOFs)
 
         if self.forceStrongConditions:
@@ -821,19 +869,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.aux[0].femSpace.psi,
             self.aux[0].femSpace.grad_psi,
             self.dLow,
-            self.coefficients.epsilon)
+            self.coefficients.epsilon,
+            self.coefficients.PROBLEM_TYPE)
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0
             for dofN in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys()):
-                global_dofN = dofN
-                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
-                    if (self.colind[i] == global_dofN):
+                gi = dofN
+                for i in range(self.rowptr[gi], self.rowptr[gi + 1]):
+                    gj = self.colind[i]
+                    if (gj == gi):
                         self.nzval[i] = scaling
                     else:
                         self.nzval[i] = 0.0
+                        #for k in range(self.rowptr[gj], self.rowptr[gj + 1]):
+                        #    if (self.colind[k] == gi):
+                        #        self.nzval[k] = 0.
         #
+
         logEvent("Jacobian ", level=10, data=jacobian)
         self.nonlinear_function_jacobian_evaluations += 1
         jacobian.fwrite("matdebug_p%s.vof.txt" % self.comm.rank())
