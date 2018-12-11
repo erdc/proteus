@@ -1572,6 +1572,76 @@ class ModelInfo(object):
     def get_dof_order_class(self):
         return self.dof_order_class
 
+class NSEMomentumPrecon(KSP_Preconditioner):
+    """Base class for PETSc NSE Momentum equation preconditioner.  """
+    def __init__(self,
+                 L,
+                 prefix=None):
+        self.PCType = 'NSE_momentum'
+        self.L = L
+        self._initializePC(prefix)
+        self._initialize_without_solver_info() # ARB - this will be treated
+                                               # different because no pressure block
+        self._initializeIS()
+        self.pc.setFromOptions()
+
+    def _initializeIS(self):
+        r"""Sets the index set (IP) for the pressure and velocity
+
+        Notes
+        -----
+        Proteus orders unknown degrees of freedom for saddle point
+        problems as blocked or end-to-end. Blocked systems are used
+        for equal order finite element spaces (e.g. P1-P1).  In this
+        case, the degrees of freedom are interlaced (e.g. p[0], u[0],
+        v[0], p[1], u[1], v[1], ...).
+        """
+        L_range = self.L.getOwnershipRange()
+        neqns = self.L.getSizes()[0][0]
+        dof_order_cls = self.model_info.get_dof_order_class()
+        dof_arrays = dof_order_cls.create_DOF_lists(L_range,
+                                                    neqns,
+                                                    self.model_info.nc)
+        self.isp = p4pyPETSc.IS()
+        self.isp.createGeneral(dof_arrays[1],comm=p4pyPETSc.COMM_WORLD)
+        self.isv = p4pyPETSc.IS()
+        self.isv.createGeneral(dof_arrays[0],comm=p4pyPETSc.COMM_WORLD)
+        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
+
+    def _initializePC(self,
+                      prefix):
+        r"""
+        Intiailizes the PETSc precondition.
+
+        Parameters
+        ----------
+        prefix : str
+            Prefix identifier for command line PETSc options.
+        """
+        self.pc = p4pyPETSc.PC().create()
+        self.pc.setOptionsPrefix(prefix)
+
+    def _initialize_without_solver_info(self):
+        """
+        Initializes the ModelInfo needed to create a Schur Complement
+        preconditioner.
+        """
+        nc = self.L.pde.nc
+        L_range = self.L.getOwnershipRanges()
+        neqns = self.L.getSizes()[0][0]
+        if len(self.L.pde.u[0].dof) == len(self.L.pde.u[1].dof):
+            self.model_info = ModelInfo('interlaced',
+                                        nc,
+                                        L_range = L_range,
+                                        neqns = neqns)
+        else:
+            self.model_info = ModelInfo('blocked',
+                                        nc,
+                                        L_range,
+                                        neqns,
+                                        self.L.pde.u[0].dof.size)
+        # ARB - this will come from coefficients, not pde.        
+    
 class SchurPrecon(KSP_Preconditioner):
     """ Base class for PETSc Schur complement preconditioners. """
     def __init__(self,
