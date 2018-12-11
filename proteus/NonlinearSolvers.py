@@ -1101,6 +1101,40 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
         # Nonlinear solved finished.
         # L2 projection of corrected VOF solution at quad points
 
+class myLinearSolver(Newton):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        symmetrize = True
+        # Get RHS of system (if BCs are imposed by Proteus)#
+        self.F.getResidual(u,r)
+        r[:]=0
+        if self.F.forceStrongConditions:
+            for dofN,g in list(self.F.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
+                r[dofN] = g(self.F.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
+                            self.F.timeIntegration.t)
+        # Get Matrix #
+        self.F.getJacobian(self.J)
+        if self.F.forceStrongConditions==False:
+            for dofN in self.F.boundaryValues:
+                gi = int(dofN)
+                # update RHS
+                r[gi] = self.F.boundaryValues[gi]
+                for i in range(self.F.rowptr[gi], self.F.rowptr[gi + 1]):
+                    gj = self.F.colind[i]
+                    if (gj == gi):
+                        self.F.nzval[i] = 1.0
+                    else:
+                        self.F.nzval[i] = 0.0
+                        if symmetrize:
+                            for k in range(self.F.rowptr[gj], self.F.rowptr[gj + 1]):
+                                if self.F.colind[k] == gi:
+                                    r[gj] -= self.F.nzval[k]*r[gi]
+                                    self.F.nzval[k] = 0
+        # Solve System #
+        self.linearSolver.prepare(b=r)
+        self.du[:]=0.0
+        self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+        self.F.u[0].dof[:]=self.du
+
 class CLSVOFNewton(Newton):
     def spinUpStep(self,u,r=None,b=None,par_u=None,par_r=None):
         # Assemble residual and Jacobian for spin up step
@@ -3227,6 +3261,8 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
         levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
     elif (levelNonlinearSolverType == CLSVOFNewton):
         levelNonlinearSolverType = CLSVOFNewton
+    elif (levelNonlinearSolverType == myLinearSolver):
+        levelNonlinearSolverType = myLinearSolver
     elif (multilevelNonlinearSolverType == Newton or
         multilevelNonlinearSolverType == NLJacobi or
         multilevelNonlinearSolverType == NLGaussSeidel or
