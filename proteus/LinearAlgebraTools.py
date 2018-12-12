@@ -1444,6 +1444,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         have Dirichlet boundary conditions.  At the end, the solution
         is then loaded into the original y-vector.
         """
+#        solve_stage = p4pyPETSc.Log.Stage('pcd_shell_apply')
+#        solve_stage.push()
         comm = Comm.get()
         x_tmp = self._create_copy_vec(x)
         tmp1 = self._create_copy_vec(x_tmp)
@@ -1471,18 +1473,19 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         if self.options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
             self.const_null_space.remove(tmp2)
 
-        zero_array = numpy.zeros(len(self.known_dof_is.getIndices()))
+#        zero_array = numpy.zeros(len(self.known_dof_is.getIndices()))
 
-        tmp2.setValues(self.known_dof_is.getIndices(),zero_array)
-        tmp2.assemblyEnd()
+#        tmp2.setValues(self.known_dof_is.getIndices(),zero_array)
+#        tmp2.assemblyEnd()
 
         self.kspAp_rho.solve(tmp2, tmp1)
         y.axpy(1.,tmp1)
-        y.setValues(self.known_dof_is.getIndices(),zero_array)
-        y.assemblyEnd()
+#        y.setValues(self.known_dof_is.getIndices(),zero_array)
+#        y.assemblyEnd()
 
         assert numpy.isnan(y.norm())==False, "Applying the schur complement \
         resulted in not-a-number."
+#        solve_stage.pop()
 
 def l2Norm(x):
     """
