@@ -2105,9 +2105,8 @@ class NS_base(object):  # (HasTraits):
         self.comm.barrier()
         #print(testBufrec)
         self.comm.barrier()
-        with numpy.nditer(testBufrec, op_flags=['readwrite']) as it:
-            for x in it:
-                x[...] = x/self.comm.size()
+        for x in numpy.nditer(testBufrec, op_flags=['readwrite']):
+            x[...] = x/self.comm.size()
 
         #print(testBufrec)
         if(self.comm.isMaster()):
