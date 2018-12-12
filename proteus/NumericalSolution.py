@@ -1115,7 +1115,11 @@ class NS_base(object):  # (HasTraits):
 
         #del modelListOld to free up memory
         del modelListOld
-        import gc; gc.collect()
+        import gc;
+        gc.disable()
+        gc.collect()
+        self.comm.barrier()
+
 
 
     def PUMI_transferFields(self):
@@ -1868,6 +1872,7 @@ class NS_base(object):  # (HasTraits):
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
+                import gc; gc.collect()
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
             #end system step iterations
