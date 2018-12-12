@@ -434,7 +434,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('mt',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['dV'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['dV_last'] = -1000*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('m_tmp',0)] = self.q[('u',0)]
+        self.q[('m_tmp',0)] = self.q[('u',0)].copy()
         self.q[('cfl',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('numDiff',0,0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.ebqe[('u',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
