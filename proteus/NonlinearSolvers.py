@@ -1243,7 +1243,84 @@ class CLSVOFNewton(Newton):
                 else:
                     self.F.projected_qz_tStar[:]=0
 
+    def project_disc_ICs(self,u,r=None,b=None,par_u=None,par_r=None):
+        self.F.getRhsL2Proj()
+        self.F.projected_disc_ICs[:] = old_div(self.F.rhs_l2_proj,self.F.lumped_mass_matrix)
+        self.F.par_projected_disc_ICs.scatter_forward_insert()
+        # output of this function
+        u[:] = self.F.projected_disc_ICs
+        # pass u to self.F.u[0].dof and recompute interface locator
+        self.F.preRedistancingStage = 0
+        self.computeResidual(u,r,b)
+        # save projected solution also in old DOFs
+        self.F.u_dof_old[:] = self.F.projected_disc_ICs
+
+    def redistance_disc_ICs(self,u,r=None,b=None,par_u=None,par_r=None,max_num_iters=100):
+        # save and set some variables
+        self.F.preRedistancingStage = 1
+        maxIts = self.maxIts
+        self.maxIts=1
+        # set tolerances for this spin up stage
+        tol = 1E-10
+        norm_r0 = self.norm(r)
+        norm_r = 1.0*norm_r0
+        num_iters = 0
+        # Loop
+        while (norm_r > tol or num_iters==0):
+            self.getNormalReconstruction(u,r,b,par_u,par_r)
+            Newton.solve(self,u,r,b,par_u,par_r)
+            self.F.u_dof_old[:] = self.F.u[0].dof
+            # compute norm
+            norm_r = self.norm(r)
+            num_iters += 1
+            # break if num of iterations is large
+            if num_iters > max_num_iters:
+                break
+        # set back variables
+        self.maxIts = maxIts
+        self.F.preRedistancingStage = 0
+        self.failedFlag=False
+
+    def spinup_for_disc_ICs(self,u,r=None,b=None,par_u=None,par_r=None):
+        logEvent("+++++ Spin up to start with disc ICs +++++",level=2)
+        ########################
+        # lumped L2 projection #
+        ########################
+        self.project_disc_ICs(u,r,b,par_u,par_r)
+
+        ################################
+        # redistance initial condition #
+        ################################
+        # save alpha and freeze_interface_...
+        alpha = self.F.coefficients.alpha
+        freeze_interface = self.F.coefficients.freeze_interface_during_preRedistancing
+        # STEP 2: Do redistancing with interface frozen
+        self.F.coefficients.alpha = 0
+        self.F.coefficients.freeze_interface_during_preRedistancing = True
+        self.redistance_disc_ICs(u,r,b,par_u,par_r,max_num_iters=100) # no more than 100 steps
+        # STEP 3: Do 1 step of redistancing with all but the interface frozen
+        self.F.coefficients.alpha = 0
+        self.F.coefficients.freeze_interface_during_preRedistancing = True
+        self.F.interface_locator[:] = np.logical_not(self.F.interface_locator)
+        self.redistance_disc_ICs(u,r,b,par_u,par_r,max_num_iters=1)
+        # STEP 4: Do 1 step of redistancing with nothing frozen
+        self.F.coefficients.alpha = 1E9
+        self.F.coefficients.freeze_interface_during_preRedistancing = False
+        self.redistance_disc_ICs(u,r,b,par_u,par_r,max_num_iters=1)
+        # to recompute interface locator
+        self.F.preRedistancingStage = 0
+        self.computeResidual(u,r,b)
+        # set back alpha and freeze_interface_...
+        self.F.coefficients.alpha = alpha
+        self.F.coefficients.freeze_interface_during_preRedistancing = freeze_interface
+        # save computed solution into old dofs
+        self.F.u_dof_old[:] = self.F.u[0].dof
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        if self.F.coefficients.disc_ICs:
+            self.spinup_for_disc_ICs(u,r,b,par_u,par_r)
+            self.F.coefficients.disc_ICs=False
+
         # ************************************************ #
         # *************** PRE REDISTANCING *************** #
         # ************************************************ #
@@ -1915,7 +1992,7 @@ class NewtonNS(NonlinearSolver):
                     self.norm_2_Jinv_current = old_div(1.0,sqrt(min(self.JLsolver.eigenvalues_r)))
                     self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
                     self.betaK_current = self.norm_2_Jinv_current
-                self.linearSolver.prepare(b=r)
+                self.linearSolver.prepare(b=r,newton_its=self.its-1)
             self.du[:]=0.0
             if not self.directSolver:
                 if self.EWtol:
