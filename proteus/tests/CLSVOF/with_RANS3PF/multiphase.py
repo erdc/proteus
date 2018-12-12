@@ -7,9 +7,12 @@ import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
-from .parameters import *
+try:
+    from .parameters import *
+except:
+    from parameters import *
 
-AUTOMATED_TEST=True
+AUTOMATED_TEST=False
 #ct.test_case=1 #1 or 2
 # see parameters.py
 # 1: falling drop in 2D
@@ -20,7 +23,7 @@ useCLSVOF=True
 epsFactHeaviside_clsvof=1.5 #epsilon parameter on heaviside functions
 lambdaFact_clsvof=10.0 #lambda parameter in paper
 computeMetrics_clsvof=0 #0: no metrics, 1: at EOS (needs exact solution) or 2: EOS and ETS
-eps_tolerance_clsvof=False #Set tol on nonlinear solver to machine zero?
+eps_tolerance_clsvof=True #Set tol on nonlinear solver to machine zero?
 #clsvof_nl_atol_res # tol on nonlinear solver. If eps_tolerance=False. Search below.
 
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
@@ -78,7 +81,7 @@ useMetrics = 1.0
 applyCorrection = True
 useVF = 0.0
 useOnlyVF = False
-openTop=True
+openTop=False
 
 # Input checks
 if spaceOrder not in [1, 2]:
