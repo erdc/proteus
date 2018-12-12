@@ -881,7 +881,7 @@ namespace proteus
 		    // SAVE SOLUTION // for other models
 		    ///////////////////
 		    q_u[eN_k] = u;
-		    q_m[eN_k] = u;
+		    q_m[eN_k] = porosity*Hnp1;
 		    q_H[eN_k] = Hnp1;
 		    q_mH[eN_k] = porosity*Hnp1; //porosity*H(\phi)=(1-q_vos)*H(\phi)
 		    // gradient //
