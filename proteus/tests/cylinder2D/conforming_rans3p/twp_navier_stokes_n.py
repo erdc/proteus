@@ -24,6 +24,7 @@ else:
 
 femSpaces = {0:basis,
 	     1:basis}
+
 #femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis,
 #             1:C0_AffineQuadraticOnSimplexWithNodalBasis}
 
@@ -40,8 +41,8 @@ multilevelNonlinearSolver = Newton
 levelNonlinearSolver      = Newton
 
 nonlinearSmoother = None
-
-linearSmoother    = None#SimpleNavierStokes2D
+linearSmoother= NSEMomentumPrecon #None#SimpleNavierStokes2D
+useSuperlu = False
 
 matrix = SparseMatrix
 
@@ -56,7 +57,7 @@ if useSuperlu:
     multilevelLinearSolver = LU
     levelLinearSolver      = LU
 
-linear_solver_options_prefix = 'rans2p_'
+linear_solver_options_prefix = 'rans3p_'
 nonlinearSolverConvergenceTest = 'rits'
 levelNonlinearSolverConvergenceTest = 'rits'
 linearSolverConvergenceTest             = 'r-true'

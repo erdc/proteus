@@ -724,6 +724,10 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner = NavierStokesPressureCorrection(par_L,
                                                                      prefix)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == NSEMomentumPrecon:
+                self.preconditioner = NSEMomentumPrecon(par_L,
+                                                        prefix)
+                self.pc = self.preconditioner.pc
 
     def _set_null_space_class(self):
         current_module = sys.modules[__name__]
@@ -1246,13 +1250,30 @@ class KSP_Preconditioner(object):
     def setup(self, global_ksp=None):
         pass
 
+    def _initializePC(self,
+                      prefix=None,
+                      PC_type=None):
+        r"""
+        Intiailizes the PETSc precondition.
+
+        Parameters
+        ----------
+        prefix : str
+            Prefix identifier for command line PETSc options.
+        PC_type : str
+            PETSc PC type
+        """
+        self.pc = p4pyPETSc.PC().create()
+        self.pc.setOptionsPrefix(prefix)
+        self.pc.setType(PC_type)
+
 class petsc_ASM(KSP_Preconditioner):
     """ASM PETSc preconditioner class.
 
     This class provides an ASM preconditioners for PETSc4py KSP
     objects.
     """
-    def __init__(self, 
+    def __init__(self,
                  L,
                  prefix=None):
         """
@@ -1266,15 +1287,9 @@ class petsc_ASM(KSP_Preconditioner):
         """
         self.PCType = 'asm'
         self.L = L
-        self._initializePC(prefix)
+        self._initializePC(prefix,
+                           self.PCType)
         self.pc.setFromOptions()
-
-    def _initializePC(self,
-                      prefix=None):
-        """ Create the pc object. """
-        self.pc = p4pyPETSc.PC().create()
-        self.pc.setOptionsPrefix(prefix)
-        self.pc.setType('asm')
 
     def setUp(self,global_ksp=None):
         self.pc.setUp()
@@ -1298,22 +1313,9 @@ class petsc_LU(KSP_Preconditioner):
         """
         self.PCType = 'lu'
         self.L = L
-        self._initializePC(prefix)
+        self._initializePC(prefix,
+                           self.PCType)
         self.pc.setFromOptions()
-
-    def _initializePC(self,
-                      prefix):
-        r"""
-        Intiailizes the PETSc precondition.
-
-        Parameters
-        ----------
-        prefix : str
-            Prefix identifier for command line PETSc options.
-        """
-        self.pc = p4pyPETSc.PC().create()
-        self.pc.setOptionsPrefix(prefix)
-        self.pc.setType('lu')
 
     def setUp(self,global_ksp=None):
         pass
@@ -1333,6 +1335,12 @@ class DofOrderInfo(object):
         self.dof_order_type = dof_order_type
         self.set_model_info(model_info)
 
+    @staticmethod
+    def create_IS(dof_array):
+        idx_set = p4pyPETSc.IS()
+        idx_set.createGeneral(dof_array,comm=p4pyPETSc.COMM_WORLD)
+        return idx_set
+
     def create_DOF_lists(self,
                          ownership_range,
                          num_equations,
@@ -1345,12 +1353,6 @@ class DofOrderInfo(object):
 
     def get_model_info(self, model_info):
         return self._model_info
-
-    def create_IS(self,
-                  dof_array):
-        idx_set = p4pyPETSc.IS()
-        idx_set.createGeneral(dof_array,comm=p4pyPETSc.COMM_WORLD)
-        return idx_set
 
 class BlockedDofOrderType(DofOrderInfo):
     """Manages the DOF for blocked velocity and pressure ordering.
@@ -1403,6 +1405,49 @@ class BlockedDofOrderType(DofOrderInfo):
                                    step=1,
                                    dtype="i")
         return [velocityDOF, pressureDOF]
+
+class InterlacedVelocityDofOrderType(DofOrderInfo):
+    """Manages the DOF for interlaced velocity ordering.
+
+    Notes
+    -----
+    Interlaced degrees of occur when the degrees of freedom are
+    ordered as (u[0], v[0], u[1], ..., u[n], v[n]).
+    """
+    def __init__(self,
+                 model_info = 'no model info set'):
+        DofOrderInfo.__init__(self,
+                              'interlaced',
+                              model_info = model_info)
+    def create_DOF_lists(self,
+                         ownership_range,
+                         num_equations,
+                         num_components):
+        """Build interlaced velocity DOF arrays.
+
+        Parameters
+        ----------
+        ownership_range: tuple
+            Local ownership range of DOF
+        num_equations: int
+            Number of local equations
+        num_components: int
+            Number of velocity components
+
+        Returns
+        -------
+        DOF_output : lst of arrays
+            This function returns a list of arrays with the DOF order.
+            (e.g. [u, v, w])
+        """
+        velocityDOF = []
+        for start in range(num_components):
+            velocityDOF.append(numpy.arange(start=ownership_range[0]+start,
+                                            stop=ownership_range[0]+num_equations,
+                                            step=num_components,
+                                            dtype="i"))
+#        velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
+        return velocityDOF
 
 class InterlacedDofOrderType(DofOrderInfo):
     """Manages the DOF for interlaced velocity and pressure ordering.
@@ -1573,15 +1618,15 @@ class ModelInfo(object):
         return self.dof_order_class
 
 class NSEMomentumPrecon(KSP_Preconditioner):
-    """Base class for PETSc NSE Momentum equation preconditioner.  """
+    """Base class for PETSc NSE Momentum equation preconditioner."""
     def __init__(self,
                  L,
                  prefix=None):
-        self.PCType = 'NSE_momentum'
+        self.PCType = 'fieldsplit'
         self.L = L
-        self._initializePC(prefix)
-        self._initialize_without_solver_info() # ARB - this will be treated
-                                               # different because no pressure block
+        self._initializePC(prefix,
+                           self.PCType)
+        self._initialize_without_solver_info()
         self._initializeIS()
         self.pc.setFromOptions()
 
@@ -1593,55 +1638,76 @@ class NSEMomentumPrecon(KSP_Preconditioner):
         Proteus orders unknown degrees of freedom for saddle point
         problems as blocked or end-to-end. Blocked systems are used
         for equal order finite element spaces (e.g. P1-P1).  In this
-        case, the degrees of freedom are interlaced (e.g. p[0], u[0],
-        v[0], p[1], u[1], v[1], ...).
+        case, the degrees of freedom are interlaced (e.g. u[0],
+        v[0], u[1], v[1], ...).
         """
-        L_range = self.L.getOwnershipRange()
+        ownership_range = self.L.getOwnershipRange()
         neqns = self.L.getSizes()[0][0]
-        dof_order_cls = self.model_info.get_dof_order_class()
-        dof_arrays = dof_order_cls.create_DOF_lists(L_range,
-                                                    neqns,
-                                                    self.model_info.nc)
-        self.isp = p4pyPETSc.IS()
-        self.isp.createGeneral(dof_arrays[1],comm=p4pyPETSc.COMM_WORLD)
-        self.isv = p4pyPETSc.IS()
-        self.isv.createGeneral(dof_arrays[0],comm=p4pyPETSc.COMM_WORLD)
-        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
+        num_components = self.get_num_components()
+#        dof_order_cls = self.model_info.get_dof_order_class()
+        vel_is = []
+        for i in range(num_components):
+            vel_is.append(DofOrderInfo.create_IS(numpy.arange(start=ownership_range[0] + i,
+                                                              stop=ownership_range[0] + neqns,
+                                                              step=num_components,
+                                                              dtype="i")))
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_1 = "is_vel_" + var
+            setattr(self,name_1,vel_is[i])
+        is_lst = []
+        for var in self.get_velocity_var_names():
+            is_name = "is_vel_" + var
+            is_ = getattr(self,is_name)
+            is_lst.append((var, is_))
+        self.pc.setFieldSplitIS(*is_lst)
 
-    def _initializePC(self,
-                      prefix):
-        r"""
-        Intiailizes the PETSc precondition.
-
-        Parameters
-        ----------
-        prefix : str
-            Prefix identifier for command line PETSc options.
-        """
-        self.pc = p4pyPETSc.PC().create()
-        self.pc.setOptionsPrefix(prefix)
+#        dof_arrays = dof_order_cls.create_DOF_lists(L_range,
+#                                                    neqns,
+#                                                    self.model_info.nc)
+#        self.isv = p4pyPETSc.IS()
+#        self.isv.createGeneral(dof_arrays[0],comm=p4pyPETSc.COMM_WORLD)
+#        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
 
     def _initialize_without_solver_info(self):
         """
         Initializes the ModelInfo needed to create a Schur Complement
         preconditioner.
         """
-        nc = self.L.pde.nc
-        L_range = self.L.getOwnershipRanges()
-        neqns = self.L.getSizes()[0][0]
-        if len(self.L.pde.u[0].dof) == len(self.L.pde.u[1].dof):
-            self.model_info = ModelInfo('interlaced',
-                                        nc,
-                                        L_range = L_range,
-                                        neqns = neqns)
-        else:
-            self.model_info = ModelInfo('blocked',
-                                        nc,
-                                        L_range,
-                                        neqns,
-                                        self.L.pde.u[0].dof.size)
-        # ARB - this will come from coefficients, not pde.        
+        # nc = self.L.pde.nc
+        # L_range = self.L.getOwnershipRanges()
+        # neqns = self.L.getSizes()[0][0]
+        # if len(self.L.pde.u[0].dof) == len(self.L.pde.u[1].dof):
+        #     self.model_info = ModelInfo('interlaced',
+        #                                 nc,
+        #                                 L_range = L_range,
+        #                                 neqns = neqns)
+        # else:
+        #     assert 0 == 1
+        #     # self.model_info = ModelInfo('blocked',
+        #     #                             nc,
+        #     #                             L_range,
+        #     #                             neqns,
+        #     #                             self.L.pde.u[0].dof.size)
+        self._set_velocity_var_names()
+
+    def _set_velocity_var_names(self):
+        nc = self.get_num_components()
+        var_names = ('u','v','w')
+        self._var_names = [var_names[i] for i in range(nc)]
+
+    def get_velocity_var_names(self):
+        return self._var_names
+
+    def get_num_components(self):
+        return self.L.pde.nc
     
+    def setUp(self, global_ksp):
+        from . import Comm
+        comm = Comm.get()
+        for i in range(self.get_num_components()):
+            global_ksp.pc.getFieldSplitSubKSP()[i].pc.setFromOptions()
+            global_ksp.pc.getFieldSplitSubKSP()[i].pc.setUp()
+
 class SchurPrecon(KSP_Preconditioner):
     """ Base class for PETSc Schur complement preconditioners. """
     def __init__(self,
@@ -1663,7 +1729,8 @@ class SchurPrecon(KSP_Preconditioner):
         """
         self.PCType = 'schur'
         self.L = L
-        self._initializePC(prefix)
+        self._initializePC(prefix,
+                           self.PCType)
 
         if solver_info==None:
             self._initialize_without_solver_info()
@@ -1738,20 +1805,6 @@ class SchurPrecon(KSP_Preconditioner):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
-
-    def _initializePC(self,
-                      prefix):
-        r"""
-        Intiailizes the PETSc precondition.
-
-        Parameters
-        ----------
-        prefix : str
-            Prefix identifier for command line PETSc options.
-        """
-        self.pc = p4pyPETSc.PC().create()
-        self.pc.setOptionsPrefix(prefix)
-        self.pc.setType('fieldsplit')
 
     def _initializeIS(self):
         r"""Sets the index set (IP) for the pressure and velocity
@@ -1889,7 +1942,7 @@ class NavierStokesSchur(SchurPrecon):
     def _initialize_velocity_idx(self):
         """
         This function creates index sets so that a block
-        preconditioner ca be used for the velocity solve. One index
+        preconditioner can be used for the velocity solve. One index
         set (e.g. is_vel_*) describes the global dof associated
         with the * component of the velocity.  The second
         is (e.g. is*_local) describes the local dof
@@ -1899,7 +1952,7 @@ class NavierStokesSchur(SchurPrecon):
         neqns = self.L.getSizes()[0][0]
 
         vel_is_func = self.model_info.dof_order_class.create_vel_DOF_IS
-        
+
         velocity_DOF_full, velocity_DOF_local = vel_is_func(L_range,
                                                             neqns,
                                                             self.model_info.nc)
@@ -2294,7 +2347,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
                                                                 isp)
 
-
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
         #        time steps.
@@ -2324,16 +2376,15 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                                 isp)
         self.Qp_rho = self.Q_rho.getSubMatrix(isp,
                                               isp)
+        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
+                                                                isp)
+        
         try:
             if self.velocity_block_preconditioner_set is False:
                 self._initialize_velocity_block_preconditioner(global_ksp)
                 self.velocity_block_preconditioner_set = True
         except AttributeError:
             pass
-        self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
-                                                                isp)
-        if self.velocity_block_preconditioner:
-            self._setup_velocity_block_preconditioner(global_ksp)
 
         L_sizes = self.Qp_rho.size
         L_range = self.Qp_rho.owner_range
@@ -2366,7 +2417,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
 
         self._setSchurlog(global_ksp)
         self._get_null_space_cls().apply_to_schur_block(global_ksp)
-        self._setSchurlog(global_ksp)
+#        self._setSchurlog(global_ksp) # ARB - duplicate code ???
 
 class Schur_LSC(SchurPrecon):
     """
