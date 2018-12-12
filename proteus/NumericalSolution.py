@@ -2030,7 +2030,11 @@ class NS_base(object):  # (HasTraits):
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
+                gcTime1 = time.time()
                 import gc; gc.collect()
+                gcTime2 = time.time()
+                self.ignoreTime += gcTime2 - gcTime1                
+
                 triggerTime1=time.time()
                 if(self.PUMI_estimateError()):
                     triggerTime2=time.time()
