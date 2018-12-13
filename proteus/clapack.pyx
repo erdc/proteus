@@ -86,9 +86,7 @@ cdef lapackWrappersDenseCalculateEigenvalues(char* jobvl,
             &ldvr,
             <double *> work.data,
             &nwork,
-            &info)
-           
-                                             
+            &info)             
 
 def blasCopy(n,
              mat,
@@ -137,7 +135,37 @@ def denseCalculateEigenvalues(jobvl,
                               rightEigenvectors,
                               ldvr,
                               work,
-                              nwork):
+                              lwork):
+    """
+    Parameters
+    ----------
+    jobvl (input) : str
+        'N' indicates left eigenvectors are not computed
+        'V' indicates left eigenvectors are computed
+    jobvr (input) : str
+        'N' indicates right eigenvectors are not computed
+        'V' indicates right eigenvectors are computed
+    n (input) : int
+        order of matrix A
+    leig (input / output) : np array
+        on entry matrix A, on exit overwritten
+    lda (input) : int
+        leading dimension of the array A
+    eigenvalues_r (output) : array
+        real part of computed eigenvalues
+    eigenvalues_i (output) : array
+        imaginary part of computed eigenvalues
+    vl (output) : array
+        storage container for left eigenvectors
+    ldvl (input) : int
+        leading dimension of the array vl
+    vr (output) : array
+        storage container for right eigenvectos
+    ldvr (input) : int
+        leading dimension of array vr
+    work (workspace / output) : array
+    lwork (input) : int
+    """
 
     lapackWrappersDenseCalculateEigenvalues(jobvl,
                                             jobvr,
@@ -151,5 +179,5 @@ def denseCalculateEigenvalues(jobvl,
                                             rightEigenvectors,
                                             ldvr,
                                             work,
-                                            nwork)
+                                            lwork)
     
