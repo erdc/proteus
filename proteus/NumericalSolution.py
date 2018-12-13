@@ -1178,6 +1178,7 @@ class NS_base(object):  # (HasTraits):
         import gc;
         gc.disable()
         gc.collect()
+        logEvent("Collected garbage")
         self.comm.barrier()
         section6end = time.time()
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
@@ -1464,6 +1465,44 @@ class NS_base(object):  # (HasTraits):
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
             self.adaptTime+= (adaptStep2-adaptStep1)
         self.numberAdapts+=1
+    
+        maxTimeIgnore1 = time.time()
+
+        if(self.numberAdapts>2):
+            self.adaptMaxTime_mesh=adaptStep2-adaptStep1
+            testBufsend = numpy.zeros(3,dtype=numpy.double)
+            testBufsend[0] = self.restartMaxTime_mesh
+            testBufsend[1] = self.solveMaxTime_mesh - self.ignoreMaxTime_mesh
+            testBufsend[2] = self.adaptMaxTime_mesh
+            testBufrec = numpy.zeros(3,dtype=numpy.double)
+            comm_world = self.comm.comm.tompi4py()
+            from mpi4py import MPI
+            comm_world.Allreduce(testBufsend,testBufrec,op=MPI.MAX)
+            if(self.comm.isMaster()):
+                file0 = open('timers_permesh.csv','a')
+                #if(self.numberAdapts==3):
+                #    file0 = open('timers_permesh.csv','w')
+                #else:
+                #    file0 = open('timers_permesh.csv','a')
+                file0.write('%f,%f,%f,%i\n' % (
+                    testBufrec[0],
+                    testBufrec[1],
+                    testBufrec[2],
+                    self.nSolveSteps_mesh
+                    ))
+                file0.close()
+            #need to get maximum and then write to file
+            self.restartMaxTime_mesh = 0
+            self.solveMaxTime_mesh = 0
+            self.adaptMaxTime_mesh = 0
+            self.ignoreMaxTime_mesh=0
+            self.nSolveSteps_mesh = 0
+            self.savedInfo=1
+            self.comm.barrier() 
+            
+        maxTimeIgnore2 = time.time()
+        self.ignoreTime += maxTimeIgnore2-maxTimeIgnore1
+
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
         #if(sfConfig=="ERM"):
@@ -1523,7 +1562,8 @@ class NS_base(object):  # (HasTraits):
         restartTime2 = time.time()
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
             self.restartTime += (restartTime2-restartTime1)
-
+        if(self.numberAdapts >= 2):
+            self.restartMaxTime_mesh = restartTime2-restartTime1
 
 
     ## compute the solution
@@ -1600,6 +1640,14 @@ class NS_base(object):  # (HasTraits):
         self.restart_section4=0
         self.restart_section5=0
         self.restart_section6=0
+        self.restartMaxTime_mesh=0 # max time for restart
+        self.solveMaxTime_mesh=0 #max time for mesh
+        self.adaptMaxTime_mesh=0 #max time for adapt
+        self.ignoreMaxTime_mesh=0 #ignore Times for max computations
+        self.nSolveSteps_mesh=0
+        self.savedInfo=0
+        file0 = open('timers_permesh.csv','w') #clear the file
+        file0.close()
 
         initializationTime1=time.time() #reference time to compute contribution
 
@@ -1991,6 +2039,7 @@ class NS_base(object):  # (HasTraits):
                                 self.archiveSolution(model,index,self.systemStepController.t_system)
                         stepArchiveTime2=time.time()
                         self.ignoreTime += (stepArchiveTime2-stepArchiveTime1)
+                        self.ignoreMaxTime_mesh += (stepArchiveTime2-stepArchiveTime1)
                 #end system split operator sequence
                 if systemStepFailed:
                     logEvent("System Step Failed")
@@ -2025,15 +2074,19 @@ class NS_base(object):  # (HasTraits):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                 stepArchiveTime2=time.time()
                 self.ignoreTime += (stepArchiveTime2-stepArchiveTime1)
+                self.ignoreMaxTime_mesh += (stepArchiveTime2-stepArchiveTime1)
 
                 #can only handle PUMIDomain's for now
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
+                self.nSolveSteps_mesh+=1
                 gcTime1 = time.time()
                 import gc; gc.collect()
                 gcTime2 = time.time()
-                self.ignoreTime += gcTime2 - gcTime1                
+                self.ignoreTime += gcTime2 - gcTime1               
+                self.ignoreMaxTime_mesh += gcTime2-gcTime1
+                self.savedInfo=0
 
                 triggerTime1=time.time()
                 if(self.PUMI_estimateError()):
@@ -2059,6 +2112,7 @@ class NS_base(object):  # (HasTraits):
 
                 stepFinalTime=time.time()
                 self.solverTime+=(stepFinalTime-stepInitialTime)
+                self.solveMaxTime_mesh += stepFinalTime-stepInitialTime 
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
@@ -2154,6 +2208,28 @@ class NS_base(object):  # (HasTraits):
             ))
 
             file0.close()
+
+        #mesh level timers
+        logEvent("Getting to mesh level timers last")
+        if(self.savedInfo==0):
+            testBufsend = numpy.zeros(3,dtype=numpy.double)
+            testBufsend[0] = self.restartMaxTime_mesh
+            testBufsend[1] = self.solveMaxTime_mesh
+            testBufsend[2] = self.adaptMaxTime_mesh
+            testBufrec = numpy.zeros(3,dtype=numpy.double)
+            comm_world = self.comm.comm.tompi4py()
+            from mpi4py import MPI
+            comm_world.Allreduce(testBufsend,testBufrec,op=MPI.MAX)
+            if(self.comm.isMaster()):
+                file0 = open('timers_permesh.csv','a')
+                file0.write('%f,%f,%f,%i\n' % (
+                    testBufrec[0],
+                    testBufrec[1],
+                    testBufrec[2],
+                    self.nSolveSteps_mesh
+                    ))
+                file0.close()
+
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
             if hasattr(model.levelModelList[-1],'runAtEOS'):
