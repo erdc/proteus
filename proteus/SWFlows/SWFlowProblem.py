@@ -89,7 +89,7 @@ class SWFlowProblem:
         if sw_model==1: # dispersive SWEs
             assert 'h_times_eta' in boundaryConditions, 'Provide auxiliary function h*eta in BCs'
             assert 'h_times_w' in boundaryConditions, 'Provide auxiliary function h*w in BCs'
-            
+
 class OutputStepping:
     """
     OutputStepping handles how often the solution is outputted.
@@ -147,4 +147,6 @@ default_physical_parameters ={'gravity': 9.81,
 default_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
                           'SSPOrder': 3,
                           'cE': 1}
-default_dswe_parameters = {}
+default_dswe_parameters = {'LUMPED_MASS_MATRIX': 1,
+                          'SSPOrder': 3,
+                          'cE': 1}
