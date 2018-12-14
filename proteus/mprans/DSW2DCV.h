@@ -2,11 +2,9 @@
 #define DSW2DCV_H
 #include <cmath>
 #include <iostream>
-#include <fstream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include <assert.h>
-
 
 //cek todo
 //2. Get stabilization right
@@ -14,41 +12,67 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
-#define lambda 1.0 // For Dispersive Model
-#define WHICH_DISP_MODEL 1
-// EJT.
-// Recall this is the hyperbolic modification of the Green Naghdi
-// equations. See Guermond, Popov, Tovar.
-
+#define GLOBAL_FCT 0
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 
+namespace proteus
+{
 // FOR CELL BASED ENTROPY VISCOSITY
-#define ENTROPY(g,h,hu,hv,z,one_over_hReg) 0.5*(g*h*h + one_over_hReg*(hu*hu+hv*hv) + 2.*g*h*z)
-#define DENTROPY_DH(g,h,hu,hv,z,one_over_hReg) g*h - 0.5*(hu*hu+hv*hv)*std::pow(one_over_hReg,2) + g*z
-#define DENTROPY_DHU(g,h,hu,hv,z,one_over_hReg) hu*one_over_hReg
-#define DENTROPY_DHV(g,h,hu,hv,z,one_over_hReg) hv*one_over_hReg
-
-#define ENTROPY_FLUX1(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hu*one_over_hReg
-#define ENTROPY_FLUX2(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hv*one_over_hReg
-
+        inline double ENTROPY(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+                return 0.5*(g*h*h + one_over_hReg*(hu*hu+hv*hv) + 2.*g*h*z);
+        }
+        inline double DENTROPY_DH(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+                return g*h - 0.5*(hu*hu+hv*hv)*std::pow(one_over_hReg,2) + g*z;
+        }
+        inline double DENTROPY_DHU(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+                return hu*one_over_hReg;
+        }
+        inline double DENTROPY_DHV(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+                return hv*one_over_hReg;
+        }
+        inline double ENTROPY_FLUX1(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+                return (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hu*one_over_hReg;
+        }
+        inline double ENTROPY_FLUX2(const double& g, const double& h, const double& hu, const double& hv, const double& z, const double& one_over_hReg){
+                return (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hv*one_over_hReg;
+        }
 // FOR ESTIMATING MAX WAVE SPEEDS
-#define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
-#define phi(g,h,hL,hR,uL,uR) ( f(g,h,hL) + f(g,h,hR) + uR - uL )
-
-#define fp(g,h,hZ) ( (h <= hZ) ? sqrt(g/h) : g*(2*h*h+h*hZ+hZ*hZ)/(2*sqrt(2*g)*h*h*hZ*sqrt(1/h+1/hZ)) )
-#define phip(g,h,hL,hR) ( fp(g,h,hL) + fp(g,h,hR) )
-
-#define nu1(g,hStar,hL,uL) ( uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0.0)) * (1+fmax((hStar-hL)/hL,0.)) ) )
-#define nu3(g,hStar,hR,uR) ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0.0)) * (1+fmax((hStar-hR)/hR,0.)) ) )
-
-#define phiDiff(g,h1k,h2k,hL,hR,uL,uR)   ( (phi(g,h2k,hL,hR,uL,uR) - phi(g,h1k,hL,hR,uL,uR))/(h2k-h1k)    )
-#define phiDDiff1(g,h1k,h2k,hL,hR,uL,uR) ( (phiDiff(g,h1k,h2k,hL,hR,uL,uR) - phip(g,h1k,hL,hR))/(h2k-h1k) )
-#define phiDDiff2(g,h1k,h2k,hL,hR,uL,uR) ( (phip(g,h2k,hL,hR) - phiDiff(g,h1k,h2k,hL,hR,uL,uR))/(h2k-h1k) )
-
-#define hStarLFromQuadPhiFromAbove(g,hStarL,hStarR,hL,hR,uL,uR) ( hStarL-2*phi(g,hStarL,hL,hR,uL,uR)/(phip(g,hStarL,hL,hR)+sqrt(std::pow(phip(g,hStarL,hL,hR),2)-4*phi(g,hStarL,hL,hR,uL,uR)*phiDDiff1(g,hStarL,hStarR,hL,hR,uL,uR))) )
-#define hStarRFromQuadPhiFromBelow(g,hStarL,hStarR,hL,hR,uL,uR) ( hStarR-2*phi(g,hStarR,hL,hR,uL,uR)/(phip(g,hStarR,hL,hR)+sqrt(std::pow(phip(g,hStarR,hL,hR),2)-4*phi(g,hStarR,hL,hR,uL,uR)*phiDDiff2(g,hStarL,hStarR,hL,hR,uL,uR))) )
+        inline double f(const double& g, const double& h, const double& hZ){
+                return ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) );
+        }
+        inline double phi(const double& g, const double& h, const double& hL, const double& hR, const double& uL, const double& uR){
+                return ( f(g,h,hL) + f(g,h,hR) + uR - uL );
+        }
+        inline double fp(const double& g, const double& h, const double& hZ){
+                return ( (h <= hZ) ? sqrt(g/h) : g*(2*h*h+h*hZ+hZ*hZ)/(2*sqrt(2*g)*h*h*hZ*sqrt(1/h+1/hZ)) );
+        }
+        inline double phip(const double& g, const double& h, const double& hL, const double& hR){
+                return ( fp(g,h,hL) + fp(g,h,hR) );
+        }
+        inline double nu1(const double& g, const double& hStar, const double& hL, const double& uL){
+                return ( uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0.0)) * (1+fmax((hStar-hL)/hL,0.)) ) );
+        }
+        inline double nu3(const double& g, const double& hStar, const double& hR, const double& uR){
+                return ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0.0)) * (1+fmax((hStar-hR)/hR,0.)) ) );
+        }
+        inline double phiDiff(const double& g, const double& h1k, const double& h2k, const double& hL, const double& hR, const double& uL, const double& uR){
+                return ( (phi(g,h2k,hL,hR,uL,uR) - phi(g,h1k,hL,hR,uL,uR))/(h2k-h1k) );
+        }
+        inline double phiDDiff1(const double& g, const double& h1k, const double& h2k, const double& hL, const double& hR, const double& uL, const double& uR){
+                return ( (phiDiff(g,h1k,h2k,hL,hR,uL,uR) - phip(g,h1k,hL,hR))/(h2k-h1k) );
+        }
+        inline double phiDDiff2(const double& g, const double& h1k, const double& h2k, const double& hL, const double& hR, const double& uL, const double& uR){
+                return ( (phip(g,h2k,hL,hR) - phiDiff(g,h1k,h2k,hL,hR,uL,uR))/(h2k-h1k) );
+        }
+        inline double hStarLFromQuadPhiFromAbove(const double& g, const double& hStarL, const double& hStarR, const double& hL, const double& hR, const double& uL, const double& uR){
+                return ( hStarL-2*phi(g,hStarL,hL,hR,uL,uR)/(phip(g,hStarL,hL,hR)+sqrt(std::pow(phip(g,hStarL,hL,hR),2)-4*phi(g,hStarL,hL,hR,uL,uR)*phiDDiff1(g,hStarL,hStarR,hL,hR,uL,uR))) );
+        }
+        inline double hStarRFromQuadPhiFromBelow(const double& g, const double& hStarL, const double& hStarR, const double& hL, const double& hR, const double& uL, const double& uR){
+                return ( hStarR-2*phi(g,hStarR,hL,hR,uL,uR)/(phip(g,hStarR,hL,hR)+sqrt(std::pow(phip(g,hStarR,hL,hR),2)-4*phi(g,hStarR,hL,hR,uL,uR)*phiDDiff2(g,hStarL,hStarR,hL,hR,uL,uR))) );
+        }
+}
 
 namespace proteus
 {
@@ -57,41 +81,76 @@ namespace proteus
 public:
                 virtual ~DSW2DCV_base(){
                 }
-                virtual void FCTStep(
-                        double dt,
-                        int NNZ,     //number on non-zero entries on sparsity pattern
-                        int numDOFs,     //number of DOFs
-                        double* lumped_mass_matrix,     //lumped mass matrix (as vector)
-                        double* h_old,     //DOFs of solution at last stage
-                        double* hu_old,
-                        double* hv_old,
-                        double* heta_old,
-                        double* hw_old,
-                        double* b_dof,
-                        double* high_order_hnp1,     //DOFs of high order solution at tnp1
-                        double* high_order_hunp1,
-                        double* high_order_hvnp1,
-                        double* high_order_hetanp1,
-                        double* high_order_hwnp1,
-                        double* low_order_hnp1,     //operators to construct low order solution
-                        double* low_order_hunp1,
-                        double* low_order_hvnp1,
-                        double* low_order_hetanp1,
-                        double* low_order_hwnp1,
-                        double* limited_hnp1,
-                        double* limited_hunp1,
-                        double* limited_hvnp1,
-                        double* limited_hetanp1,
-                        double* limited_hwnp1,
-                        int* csrRowIndeces_DofLoops,     //csr row indeces
-                        int* csrColumnOffsets_DofLoops,     //csr column offsets
-                        double* MassMatrix,     //mass matrix
-                        double* dH_minus_dL,
-                        double* muH_minus_muL,
-                        double hEps,
-                        double* hReg,
-                        int LUMPED_MASS_MATRIX
-                        )=0;
+                virtual void FCTStep(double dt,
+                                     int NNZ, //number on non-zero entries on sparsity pattern
+                                     int numDOFs, //number of DOFs
+                                     double* lumped_mass_matrix, //lumped mass matrix (as vector)
+                                     double* h_old, //DOFs of solution at last stage
+                                     double* hu_old,
+                                     double* hv_old,
+                                     double* heta_old,
+                                     double* hw_old,
+                                     double* b_dof,
+                                     double* high_order_hnp1, //DOFs of high order solution at tnp1
+                                     double* high_order_hunp1,
+                                     double* high_order_hvnp1,
+                                     double* high_order_hetanp1,
+                                     double* high_order_hwnp1,
+                                     double* extendedSourceTerm_hu,
+                                     double* extendedSourceTerm_hv,
+                                     double* extendedSourceTerm_heta,
+                                     double* extendedSourceTerm_hw,
+                                     double* limited_hnp1,
+                                     double* limited_hunp1,
+                                     double* limited_hvnp1,
+                                     double* limited_hetanp1,
+                                     double* limited_hwnp1,
+                                     int* csrRowIndeces_DofLoops, //csr row indeces
+                                     int* csrColumnOffsets_DofLoops, //csr column offsets
+                                     double* MassMatrix, //mass matrix
+                                     double* dH_minus_dL,
+                                     double* muH_minus_muL,
+                                     double hEps,
+                                     double* hReg,
+                                     int LUMPED_MASS_MATRIX,
+                                     // LOCAL LIMITING
+                                     double* dLow,
+                                     double* hBT,
+                                     double* huBT,
+                                     double* hvBT,
+                                     double* hetaBT,
+                                     double* hwBT
+                                     )=0;
+                virtual void convexLimiting(double dt,
+                                            int NNZ, //number on non-zero entries on sparsity pattern
+                                            int numDOFs, //number of DOFs
+                                            double* lumped_mass_matrix, //lumped mass matrix (as vector)
+                                            double* h_old, //DOFs of solution at last stage
+                                            double* hu_old,
+                                            double* hv_old,
+                                            double* b_dof,
+                                            double* high_order_hnp1, //DOFs of high order solution at tnp1
+                                            double* high_order_hunp1,
+                                            double* high_order_hvnp1,
+                                            double* extendedSourceTerm_hu,
+                                            double* extendedSourceTerm_hv,
+                                            double* limited_hnp1,
+                                            double* limited_hunp1,
+                                            double* limited_hvnp1,
+                                            int* csrRowIndeces_DofLoops, //csr row indeces
+                                            int* csrColumnOffsets_DofLoops, //csr column offsets
+                                            double* MassMatrix, //mass matrix
+                                            double* dH_minus_dL,
+                                            double* muH_minus_muL,
+                                            double hEps,
+                                            double* hReg,
+                                            int LUMPED_MASS_MATRIX,
+                                            // LOCAL LIMITING
+                                            double* dLow,
+                                            double* hBT,
+                                            double* huBT,
+                                            double* hvBT
+                                            )=0;
                 virtual double calculateEdgeBasedCFL(double g,
                                                      int numDOFsPerEqn, //number of DOFs
                                                      double* lumped_mass_matrix, //lumped mass matrix (as vector)
@@ -109,9 +168,10 @@ public:
                                                      double* CTy,
                                                      double* dLow,
                                                      double run_cfl,
-                                                     double* edge_based_cfl
+                                                     double* edge_based_cfl,
+                                                     int debug
                                                      )=0;
-                virtual void calculateResidual_entropy_viscosity(// last EDGE BASED version
+                virtual void calculateResidual( // last EDGE BASED version
                         double* mesh_trial_ref,
                         double* mesh_grad_trial_ref,
                         double* mesh_dof,
@@ -172,14 +232,7 @@ public:
                         double* q_mass_acc_beta_bdf,
                         double* q_mom_hu_acc_beta_bdf,
                         double* q_mom_hv_acc_beta_bdf,
-                        double* q_velocity_sge,
                         double* q_cfl,
-                        double* q_numDiff_h,
-                        double* q_numDiff_hu,
-                        double* q_numDiff_hv,
-                        double* q_numDiff_h_last,
-                        double* q_numDiff_hu_last,
-                        double* q_numDiff_hv_last,
                         int* sdInfo_hu_hu_rowptr,
                         int* sdInfo_hu_hu_colind,
                         int* sdInfo_hu_hv_rowptr,
@@ -244,11 +297,10 @@ public:
                         double* hunp1_at_quad_point,
                         double* hvnp1_at_quad_point,
                         // TO COMPUTE LOW ORDER
-                        double* low_order_hnp1,
-                        double* low_order_hunp1,
-                        double* low_order_hvnp1,
-                        double* low_order_hetanp1,
-                        double* low_order_hwnp1,
+                        double* extendedSourceTerm_hu,
+                        double* extendedSourceTerm_hv,
+                        double* extendedSourceTerm_heta,
+                        double* extendedSourceTerm_hw,
                         // FOR FCT
                         double* dH_minus_dL,
                         double* muH_minus_muL,
@@ -265,10 +317,14 @@ public:
                         double* normalx,
                         double* normaly,
                         double* dLow,
+                        double* hBT,
+                        double* huBT,
+                        double* hvBT,
+                        double* hetaBT,
+                        double* hwBT,
                         int lstage
                         )=0;
-
-                virtual void calculateMassMatrix(//element
+                virtual void calculateMassMatrix( //element
                         double* mesh_trial_ref,
                         double* mesh_grad_trial_ref,
                         double* mesh_dof,
@@ -318,11 +374,7 @@ public:
                         double* q_mass_acc_beta_bdf,
                         double* q_mom_hu_acc_beta_bdf,
                         double* q_mom_hv_acc_beta_bdf,
-                        double* q_velocity_sge,
                         double* q_cfl,
-                        double* q_numDiff_h_last,
-                        double* q_numDiff_hu_last,
-                        double* q_numDiff_hv_last,
                         int* sdInfo_hu_hu_rowptr,
                         int* sdInfo_hu_hu_colind,
                         int* sdInfo_hu_hv_rowptr,
@@ -386,6 +438,7 @@ public:
                         int* csrColumnOffsets_hw_heta,
                         int* csrRowIndeces_hw_hw,
                         int* csrColumnOffsets_hw_hw,
+                        //
                         double* globalJacobian,
                         int nExteriorElementBoundaries_global,
                         int* exteriorElementBoundariesArray,
@@ -468,11 +521,7 @@ public:
                         double* q_mass_acc_beta_bdf,
                         double* q_mom_hu_acc_beta_bdf,
                         double* q_mom_hv_acc_beta_bdf,
-                        double* q_velocity_sge,
                         double* q_cfl,
-                        double* q_numDiff_h_last,
-                        double* q_numDiff_hu_last,
-                        double* q_numDiff_hv_last,
                         int* sdInfo_hu_hu_rowptr,
                         int* sdInfo_hu_hu_colind,
                         int* sdInfo_hu_hv_rowptr,
@@ -560,405 +609,6 @@ public:
                 }
 
                 inline
-                void evaluateCoefficients(const double nu,
-                                          const double g,
-                                          const double grad_b[nSpace],
-                                          const double& h,
-                                          const double& hu,
-                                          const double& hv,
-                                          double& mass_acc,
-                                          double& dmass_acc_h,
-                                          double& mom_hu_acc,
-                                          double& dmom_hu_acc_h,
-                                          double& dmom_hu_acc_hu,
-                                          double& mom_hv_acc,
-                                          double& dmom_hv_acc_h,
-                                          double& dmom_hv_acc_hv,
-                                          double mass_adv[nSpace],
-                                          double dmass_adv_h[nSpace],
-                                          double dmass_adv_hu[nSpace],
-                                          double dmass_adv_hv[nSpace],
-                                          double mom_hu_adv[nSpace],
-                                          double dmom_hu_adv_h[nSpace],
-                                          double dmom_hu_adv_hu[nSpace],
-                                          double dmom_hu_adv_hv[nSpace],
-                                          double mom_hv_adv[nSpace],
-                                          double dmom_hv_adv_h[nSpace],
-                                          double dmom_hv_adv_hu[nSpace],
-                                          double dmom_hv_adv_hv[nSpace],
-                                          double mom_hu_diff_ten[nSpace],
-                                          double mom_hv_diff_ten[nSpace],
-                                          double mom_huhv_diff_ten[1],
-                                          double mom_hvhu_diff_ten[1],
-                                          double& mom_hu_source,
-                                          double& dmom_hu_source_h,
-                                          double& mom_hv_source,
-                                          double& dmom_hv_source_h)
-                {
-                        double hStar = fmax(1.0e-8,h);
-                        //mass accumulation
-                        mass_acc = h;
-                        dmass_acc_h = 1.0;
-
-                        //u momentum accumulation
-                        mom_hu_acc=hu;
-                        dmom_hu_acc_h=0.0;
-                        dmom_hu_acc_hu=1.0;
-
-                        //v momentum accumulation
-                        mom_hv_acc=hv;
-                        dmom_hv_acc_h=0.0;
-                        dmom_hv_acc_hv=1.0;
-
-                        //mass advective flux
-                        mass_adv[0]=hu;
-                        mass_adv[1]=hv;
-
-                        dmass_adv_h[0]=0.0;
-                        dmass_adv_h[1]=0.0;
-
-                        dmass_adv_hu[0]=1.0;
-                        dmass_adv_hu[1]=0.0;
-
-                        dmass_adv_hv[0]=0.0;
-                        dmass_adv_hv[1]=1.0;
-
-                        //u momentum advective flux
-                        mom_hu_adv[0]=hu*hu/hStar  + 0.5*g*h*h;
-                        mom_hu_adv[1]=hu*hv/hStar;
-
-                        dmom_hu_adv_h[0]=-hu*hu/(hStar*hStar) + g*h;
-                        dmom_hu_adv_h[1]=-hu*hv/(hStar*hStar);
-
-                        dmom_hu_adv_hu[0]=2.0*hu/hStar;
-                        dmom_hu_adv_hu[1]=hv/hStar;
-
-                        dmom_hu_adv_hv[0]=0.0;
-                        dmom_hu_adv_hv[1]=hu/hStar;
-
-                        //v momentum advective_flux
-                        mom_hv_adv[0]=hv*hu/hStar;
-                        mom_hv_adv[1]=hv*hv/hStar + 0.5*g*h*h;
-
-                        dmom_hv_adv_h[0]=-hv*hu/(hStar*hStar);
-                        dmom_hv_adv_h[1]=-hv*hv/(hStar*hStar) + g*h;
-
-                        dmom_hv_adv_hu[0]=hv/hStar;
-                        dmom_hv_adv_hu[1]=0.0;
-
-                        dmom_hv_adv_hv[0]=hu/hStar;
-                        dmom_hv_adv_hv[1]=2.0*hv/hStar;
-
-                        //u momentum diffusion tensor
-                        mom_hu_diff_ten[0] = 2.0*nu;
-                        mom_hu_diff_ten[1] = nu;
-
-                        mom_huhv_diff_ten[0]=nu;
-
-                        //v momentum diffusion tensor
-                        mom_hv_diff_ten[0] = nu;
-                        mom_hv_diff_ten[1] = 2.0*nu;
-
-                        mom_hvhu_diff_ten[0]=nu;
-
-                        //momentum sources
-                        mom_hu_source = g*h*grad_b[0];
-                        dmom_hu_source_h = g*grad_b[0];
-
-                        mom_hv_source = g*h*grad_b[1];
-                        dmom_hv_source_h = g*grad_b[1];
-                }
-
-                inline
-                void evaluateCoefficientsForResidual(const double g,
-                                                     const double grad_b[nSpace],
-                                                     const double& h,
-                                                     const double& hu,
-                                                     const double& hv,
-                                                     double& mass_acc,
-                                                     double& mom_hu_acc,
-                                                     double& mom_hv_acc,
-                                                     double mass_adv[nSpace],
-                                                     double mom_hu_adv[nSpace],
-                                                     double mom_hv_adv[nSpace],
-                                                     double& mom_hu_source,
-                                                     double& mom_hv_source)
-                {
-                        double hStar = fmax(1.0e-8,h);
-                        //mass accumulation
-                        mass_acc = h;
-                        //u momentum accumulation
-                        mom_hu_acc=hu;
-                        //v momentum accumulation
-                        mom_hv_acc=hv;
-                        //mass advective flux
-                        mass_adv[0]=hu;
-                        mass_adv[1]=hv;
-                        //u momentum advective flux
-                        mom_hu_adv[0]=hu*hu/hStar  + 0.5*g*h*h;
-                        mom_hu_adv[1]=hu*hv/hStar;
-                        //v momentum advective_flux
-                        mom_hv_adv[0]=hv*hu/hStar;
-                        mom_hv_adv[1]=hv*hv/hStar + 0.5*g*h*h;
-                        //momentum sources
-                        mom_hu_source = g*h*grad_b[0];
-                        mom_hv_source = g*h*grad_b[1];
-                }
-
-                inline
-                void evaluateCoefficientsForJacobian(const double g,
-                                                     const double grad_b[nSpace],
-                                                     const double& h,
-                                                     const double& hu,
-                                                     const double& hv,
-                                                     double& mass_acc,
-                                                     double& dmass_acc_h,
-                                                     double& mom_hu_acc,
-                                                     double& dmom_hu_acc_h,
-                                                     double& dmom_hu_acc_hu,
-                                                     double& mom_hv_acc,
-                                                     double& dmom_hv_acc_h,
-                                                     double& dmom_hv_acc_hv,
-                                                     double mass_adv[nSpace],
-                                                     double dmass_adv_h[nSpace],
-                                                     double dmass_adv_hu[nSpace],
-                                                     double dmass_adv_hv[nSpace],
-                                                     double mom_hu_adv[nSpace],
-                                                     double dmom_hu_adv_h[nSpace],
-                                                     double dmom_hu_adv_hu[nSpace],
-                                                     double dmom_hu_adv_hv[nSpace],
-                                                     double mom_hv_adv[nSpace],
-                                                     double dmom_hv_adv_h[nSpace],
-                                                     double dmom_hv_adv_hu[nSpace],
-                                                     double dmom_hv_adv_hv[nSpace],
-                                                     double& mom_hu_source,
-                                                     double& dmom_hu_source_h,
-                                                     double& mom_hv_source,
-                                                     double& dmom_hv_source_h)
-                {
-                        double hStar = fmax(1.0e-8,h);
-                        //mass accumulation
-                        mass_acc = h;
-                        dmass_acc_h = 1.0;
-
-                        //u momentum accumulation
-                        mom_hu_acc=hu;
-                        dmom_hu_acc_h=0.0;
-                        dmom_hu_acc_hu=1.0;
-
-                        //v momentum accumulation
-                        mom_hv_acc=hv;
-                        dmom_hv_acc_h=0.0;
-                        dmom_hv_acc_hv=1.0;
-
-                        //mass advective flux
-                        mass_adv[0]=hu;
-                        mass_adv[1]=hv;
-
-                        dmass_adv_h[0]=0.0;
-                        dmass_adv_h[1]=0.0;
-
-                        dmass_adv_hu[0]=1.0;
-                        dmass_adv_hu[1]=0.0;
-
-                        dmass_adv_hv[0]=0.0;
-                        dmass_adv_hv[1]=1.0;
-
-                        //u momentum advective flux
-                        mom_hu_adv[0]=hu*hu/hStar  + 0.5*g*h*h;
-                        mom_hu_adv[1]=hu*hv/hStar;
-
-                        dmom_hu_adv_h[0]=-hu*hu/(hStar*hStar) + g*h;
-                        dmom_hu_adv_h[1]=-hu*hv/(hStar*hStar);
-
-                        dmom_hu_adv_hu[0]=2.0*hu/hStar;
-                        dmom_hu_adv_hu[1]=hv/hStar;
-
-                        dmom_hu_adv_hv[0]=0.0;
-                        dmom_hu_adv_hv[1]=hu/hStar;
-
-                        //v momentum advective_flux
-                        mom_hv_adv[0]=hv*hu/hStar;
-                        mom_hv_adv[1]=hv*hv/hStar + 0.5*g*h*h;
-
-                        dmom_hv_adv_h[0]=-hv*hu/(hStar*hStar);
-                        dmom_hv_adv_h[1]=-hv*hv/(hStar*hStar) + g*h;
-
-                        dmom_hv_adv_hu[0]=hv/hStar;
-                        dmom_hv_adv_hu[1]=0.0;
-
-                        dmom_hv_adv_hv[0]=hu/hStar;
-                        dmom_hv_adv_hv[1]=2.0*hv/hStar;
-
-                        //momentum sources
-                        mom_hu_source = g*h*grad_b[0];
-                        dmom_hu_source_h = g*grad_b[0];
-
-                        mom_hv_source = g*h*grad_b[1];
-                        dmom_hv_source_h = g*grad_b[1];
-                }
-
-                inline
-                void calculateSubgridError_tau(const double& elementDiameter,
-                                               const double& nu,
-                                               const double& g,
-                                               const double& h,
-                                               const double& hu,
-                                               const double& hv,
-                                               double tau[9],
-                                               double& cfl)
-                {
-                        double rx[9],ry[9],rxInv[9],ryInv[9],rn=0.0,c=sqrt(fmax(g*1.0e-8,g*h)),lambdax[3],lambday[3],tauxHat[3],tauyHat[3],taux[9],tauy[9],tauc[9],cflx,cfly,L[9],hStar=fmax(1.0e-8,h),u,v;
-                        u = hu/hStar;
-                        v = hv/hStar;
-                        //eigenvalues and eigenvectors for conservation variables h,hu,hv
-                        lambdax[0] = u - c;
-                        lambdax[1] = u;
-                        lambdax[2] = u + c;
-                        if (u > 0.0)
-                                cflx = (u+c)/elementDiameter;
-                        else
-                                cflx = fabs(u-c)/elementDiameter;
-
-                        rn = sqrt(1.0 + (u-c)*(u-c) + v*v);
-                        //rn = 1.0;
-                        rx[0*3+0] = 1.0/rn;
-                        rx[1*3+0] = (u - c)/rn;
-                        rx[2*3+0] = v/rn;
-
-                        rx[0*3+1] = 0.0;
-                        rx[1*3+1] = 0.0;
-                        rx[2*3+1] = 1.0;
-
-                        rn = sqrt(1.0 + (u+c)*(u+c) + v*v);
-                        //rn = 1.0;
-                        rx[0*3+2] = 1.0/rn;
-                        rx[1*3+2] = (u + c)/rn;
-                        rx[2*3+2] = v/rn;
-
-                        rxInv[0*3+0] = 1.0 - (c - u)/(2.0*c);
-                        rxInv[1*3+0] = -v;
-                        rxInv[2*3+0] = (c-u)/(2.0*c);
-
-                        rxInv[0*3+1] = -1.0/(2.0*c);
-                        rxInv[1*3+1] =  0.0;
-                        rxInv[2*3+1] =  1.0/(2.0*c);
-
-                        rxInv[0*3+2] = 0.0;
-                        rxInv[1*3+2] = 1.0;
-                        rxInv[2*3+2] = 0.0;
-
-                        /* //cek hack assume no viscosity for now */
-                        /* num = 0.5*fabs(lambdax[0])*elementDiameter + 1.0e-8; */
-                        /* den = nu + num*1.0e-8; */
-                        /* pe = num/den; */
-                        /* tauxHat[0] = 0.5*h*(1.0/tanh(pe) - 1.0/pe)/(Vlin+1.0e-8); */
-
-                        tauxHat[0] = 0.5*elementDiameter/(fabs(lambdax[0])+1.0e-8);
-                        tauxHat[1] = 0.5*elementDiameter/(fabs(lambdax[1])+1.0e-8);
-                        tauxHat[2] = 0.5*elementDiameter/(fabs(lambdax[2])+1.0e-8);
-
-                        lambday[0] = v - c;
-                        lambday[1] = v;
-                        lambday[2] = v + c;
-
-                        rn=sqrt(1.0 + u*u+(v-c)*(v-c));
-                        //rn = 1.0;
-                        ry[0*3+0] = 1.0/rn;
-                        ry[1*3+0] = u/rn;
-                        ry[2*3+0] = (v - c)/rn;
-
-                        ry[0*3+1] =  0.0;
-                        ry[1*3+1] = -1.0;
-                        ry[2*3+1] =  0.0;
-
-                        rn = sqrt(1.0 + u*u + (v+c)*(v+c));
-                        //rn = 1.0;
-                        ry[0*3+2] = 1.0/rn;
-                        ry[1*3+2] = u/rn;
-                        ry[2*3+2] = (v + c)/rn;
-
-                        ryInv[0*3+0] = 1.0 - (c - v)/(2*c);
-                        ryInv[1*3+0] = u;
-                        ryInv[2*3+0] = (c-v)/(2*c);
-
-                        ryInv[0*3+1] =  0.0;
-                        ryInv[1*3+1] = -1.0;
-                        ryInv[2*3+1] =  0.0;
-
-                        ryInv[0*3+2] = -1.0/(2*c);
-                        ryInv[1*3+2] =  0.0;
-                        ryInv[2*3+2] =  1.0/(2*c);
-
-                        //cek hack assume no viscosity for now
-                        tauyHat[0] = 0.5*elementDiameter/(fabs(lambday[0])+1.0e-8);
-                        tauyHat[1] = 0.5*elementDiameter/(fabs(lambday[1])+1.0e-8);
-                        tauyHat[2] = 0.5*elementDiameter/(fabs(lambday[2])+1.0e-8);
-                        if (v > 0.0)
-                                cfly = (v+c)/elementDiameter;
-                        else
-                                cfly = fabs(v-c)/elementDiameter;
-                        cfl = sqrt(cflx*cflx+cfly*cfly);//hack, conservative estimate
-
-                        //project back to solution variables
-                        //initialize, hack do with memset
-                        double tmpx[9],tmpy[9];
-                        for (int i=0; i<3; i++)
-                                for (int j=0; j<3; j++)
-                                {
-                                        taux[i*3+j] = 0.0;
-                                        tauy[i*3+j] = 0.0;
-                                        tauc[i*3+j] = 0.0;
-                                        tau[i*3+j] = 0.0;
-                                        tmpx[i*3+j] = 0.0;
-                                        tmpy[i*3+j] = 0.0;
-                                        L[i*3+j] = 0.0;
-                                        /* double Ix=0,Iy=0.0; */
-                                        /* for (int k=0;k<3;k++) */
-                                        /*   { */
-                                        /*  Ix += rx[i*3+k]*rx[j*3+k]; */
-                                        /*  Iy += ry[i*3+k]*ry[j*3+k]; */
-                                        /*   } */
-                                        /* std::cout<<i<<'\t'<<j<<'\t'<<Ix<<'\t'<<Iy<<std::endl; */
-                                }
-                        //transform from characteristic variables to conservation variables
-                        for (int i=0; i<3; i++)
-                                for (int j=0; j<3; j++)
-                                        for (int m=0; m<3; m++)
-                                        {
-                                                if (m==j)
-                                                {
-                                                        tmpx[i*3+m] += rx[i*3+m]*tauxHat[m];
-                                                        tmpy[i*3+m] += ry[i*3+m]*tauyHat[m];
-                                                }
-                                        }
-                        for (int i=0; i<3; i++)
-                                for (int j=0; j<3; j++)
-                                        for (int m=0; m<3; m++)
-                                        {
-                                                taux[i*3+j] += tmpx[i*3+m]*rx[j*3 + m];
-                                                tauy[i*3+j] += tmpy[i*3+m]*ry[j*3 + m];
-                                        }
-                        //matrix norm
-                        for (int i=0; i<3; i++)
-                                for (int j=0; j<3; j++)
-                                {
-                                        tauc[i*3+j] = sqrt(taux[i*3+j]*taux[i*3+j] + tauy[i*3+j]*tauy[i*3+j]);
-                                        tau[i*3+j] = tauc[i*3+j];
-                                        tau[i*3+j] = 0.0;//hack
-                                }
-                        /* std::cout<<"tau"<<std::endl; */
-                        /* for (int i=0;i<3;i++) */
-                        /*        { */
-                        /*          for (int j=0;j<3;j++) */
-                        /*            { */
-                        /*              std::cout<<tau[i*3+j]<<'\t'; */
-                        /*            } */
-                        /*          std::cout<<std::endl; */
-                        /*        } */
-                }
-
-                inline
                 double maxWaveSpeedSharpInitialGuess(double g, double nx, double ny,
                                                      double hL, double huL, double hvL,
                                                      double hR, double huR, double hvR,
@@ -993,12 +643,17 @@ public:
                         {
                                 lambda1 = velR-2*sqrt(g*hR);
                                 lambda3 = velR+sqrt(g*hR);
+                                if (debugging)
+                                {
+                                        std::cout << "hL=0" << std::endl;
+                                        std::cout << lambda1 << "\t" << lambda3 << std::endl;
+                                }
                         }
                         else if (hR==0) // right dry state
                         {
                                 lambda1 = velL-sqrt(g*hL);
                                 lambda3 = velL+2*sqrt(g*hL);
-                                if (debugging && false)
+                                if (debugging)
                                 {
                                         std::cout << "hR=0" << std::endl;
                                         std::cout << lambda1 << "\t" << lambda3 << std::endl;
@@ -1014,7 +669,7 @@ public:
                                 double fMin = phi(g,x0*hMin,hL,hR,velL,velR);
                                 double fMax = phi(g,x0*hMax,hL,hR,velL,velR);
 
-                                if (debugging && false)
+                                if (debugging)
                                         std::cout << "hMin, hMax, fMin, fMax: "
                                                   << hMin << ", " << hMax << ", "
                                                   << fMin << ", " << fMax
@@ -1042,8 +697,12 @@ public:
                                 lambda1 = nu1(g,hStar,hL,velL);
                                 lambda3 = nu3(g,hStar,hR,velR);
                         }
-                        if (debugging && false)
+                        if (debugging)
+                        {
                                 std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
+                                if (isinf(lambda1)==1 || isinf(lambda3)==1)
+                                        abort();
+                        }
                         //return fmax(fmax(0.,-lambda1), fmax(0,lambda3));
                         return fmax(lambda1, lambda3);
                 }
@@ -1244,353 +903,6 @@ public:
                         cfl = sqrt(cflx*cflx+cfly*cfly);//hack, conservative estimate
                 }
 
-                inline
-                void exteriorNumericalAdvectiveFlux(const int& isDOFBoundary_h,
-                                                    const int& isDOFBoundary_hu,
-                                                    const int& isDOFBoundary_hv,
-                                                    const int& isFluxBoundary_h,
-                                                    const int& isFluxBoundary_hu,
-                                                    const int& isFluxBoundary_hv,
-                                                    const double n[nSpace],
-                                                    const double& bc_h,
-                                                    const double bc_f_mass[nSpace],
-                                                    const double bc_f_humom[nSpace],
-                                                    const double bc_f_hvmom[nSpace],
-                                                    const double& bc_flux_mass,
-                                                    const double& bc_flux_humom,
-                                                    const double& bc_flux_hvmom,
-                                                    const double& h,
-                                                    const double f_mass[nSpace],
-                                                    const double f_humom[nSpace],
-                                                    const double f_hvmom[nSpace],
-                                                    const double df_mass_dh[nSpace],
-                                                    const double df_mass_du[nSpace],
-                                                    const double df_mass_dv[nSpace],
-                                                    const double df_humom_dh[nSpace],
-                                                    const double df_humom_du[nSpace],
-                                                    const double df_humom_dv[nSpace],
-                                                    const double df_hvmom_dh[nSpace],
-                                                    const double df_hvmom_du[nSpace],
-                                                    const double df_hvmom_dv[nSpace],
-                                                    double& flux_mass,
-                                                    double& flux_humom,
-                                                    double& flux_hvmom,
-                                                    double* velocity)
-                {
-                        //cek todo, need to do the Riemann solve
-                        /* double flowDirection; */
-                        flux_mass = 0.0;
-                        flux_humom = 0.0;
-                        flux_hvmom = 0.0;
-                        /* flowDirection=n[0]*f_mass[0]+n[1]*f_mass[1]; */
-                        /* if (isDOFBoundary_hu != 1) */
-                        /*        { */
-                        /*          flux_mass += n[0]*f_mass[0]; */
-                        /*          velocity[0] = f_mass[0]; */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              flux_humom += n[0]*f_humom[0]; */
-                        /*              flux_hvmom += n[0]*f_hvmom[0]; */
-                        /*            } */
-                        /*        } */
-                        /* else */
-                        /*        { */
-                        /*          flux_mass += n[0]*bc_f_mass[0]; */
-                        /*          velocity[0] = bc_f_mass[0]; */
-                        /*          //cek still upwind the advection for Dirichlet? */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              flux_humom += n[0]*f_humom[0]; */
-                        /*              flux_hvmom += n[0]*f_hvmom[0]; */
-                        /*            } */
-                        /*          else */
-                        /*            { */
-                        /*              flux_humom+=n[0]*bc_f_humom[0]; */
-                        /*              flux_hvmom+=n[0]*bc_f_hvmom[0]; */
-                        /*            } */
-                        /*        } */
-                        /* if (isDOFBoundary_hv != 1) */
-                        /*        { */
-                        /*          flux_mass+=n[1]*f_mass[1]; */
-                        /*          velocity[1] = f_mass[1]; */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              flux_humom+=n[1]*f_humom[1]; */
-                        /*              flux_hvmom+=n[1]*f_hvmom[1]; */
-                        /*            } */
-                        /*        } */
-                        /* else */
-                        /*        { */
-                        /*          flux_mass+=n[1]*bc_f_mass[1]; */
-                        /*          velocity[1] = bc_f_mass[1]; */
-                        /*          //cek still upwind the advection for Dirichlet? */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              flux_humom+=n[1]*f_humom[1]; */
-                        /*              flux_hvmom+=n[1]*f_hvmom[1]; */
-                        /*            } */
-                        /*          else */
-                        /*            { */
-                        /*              flux_humom+=n[1]*bc_f_humom[1]; */
-                        /*              flux_hvmom+=n[1]*bc_f_hvmom[1]; */
-                        /*            } */
-                        /*        } */
-                        /* else */
-                        /*        { */
-                        /*          flux_mass +=n[2]*bc_f_mass[2]; */
-                        /*          velocity[2] = bc_f_mass[2]; */
-                        /*          //cek still upwind the advection for Dirichlet? */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              flux_humom+=n[2]*f_humom[2]; */
-                        /*              flux_hvmom+=n[2]*f_hvmom[2]; */
-                        /*            } */
-                        /*          else */
-                        /*            { */
-                        /*              flux_humom+=n[2]*bc_f_humom[2]; */
-                        /*              flux_hvmom+=n[2]*bc_f_hvmom[2]; */
-                        /*            } */
-                        /*        } */
-                        /* if (isDOFBoundary_h == 1) */
-                        /*        { */
-                        /*          flux_humom+= n[0]*(bc_h-p)*oneByRho; */
-                        /*          flux_hvmom+= n[1]*(bc_h-p)*oneByRho; */
-                        /*        } */
-                        if (isFluxBoundary_h == 1)
-                        {
-                                //cek todo, not sure if we'll need this for SW2
-                                //velocity[0] += (bc_flux_mass - flux_mass)*n[0];
-                                //velocity[1] += (bc_flux_mass - flux_mass)*n[1];
-                                //velocity[2] += (bc_flux_mass - flux_mass)*n[2];
-                                flux_mass = bc_flux_mass;
-                        }
-                        if (isFluxBoundary_hu == 1)
-                        {
-                                flux_humom = bc_flux_humom;
-                        }
-                        if (isFluxBoundary_hv == 1)
-                        {
-                                flux_hvmom = bc_flux_hvmom;
-                        }
-                }
-
-                inline
-                void exteriorNumericalAdvectiveFluxDerivatives(const int& isDOFBoundary_h,
-                                                               const int& isDOFBoundary_hu,
-                                                               const int& isDOFBoundary_hv,
-                                                               const int& isFluxBoundary_h,
-                                                               const int& isFluxBoundary_hu,
-                                                               const int& isFluxBoundary_hv,
-                                                               const double n[nSpace],
-                                                               const double& bc_h,
-                                                               const double bc_f_mass[nSpace],
-                                                               const double bc_f_humom[nSpace],
-                                                               const double bc_f_hvmom[nSpace],
-                                                               const double& bc_flux_mass,
-                                                               const double& bc_flux_humom,
-                                                               const double& bc_flux_hvmom,
-                                                               const double& h,
-                                                               const double f_mass[nSpace],
-                                                               const double f_humom[nSpace],
-                                                               const double f_hvmom[nSpace],
-                                                               const double df_mass_du[nSpace],
-                                                               const double df_mass_dv[nSpace],
-                                                               const double df_humom_dh[nSpace],
-                                                               const double df_humom_du[nSpace],
-                                                               const double df_humom_dv[nSpace],
-                                                               const double df_hvmom_dh[nSpace],
-                                                               const double df_hvmom_du[nSpace],
-                                                               const double df_hvmom_dv[nSpace],
-                                                               double& dflux_mass_dh,
-                                                               double& dflux_mass_du,
-                                                               double& dflux_mass_dv,
-                                                               double& dflux_humom_dh,
-                                                               double& dflux_humom_du,
-                                                               double& dflux_humom_dv,
-                                                               double& dflux_hvmom_dh,
-                                                               double& dflux_hvmom_du,
-                                                               double& dflux_hvmom_dv)
-                {
-                        double flowDirection;
-                        dflux_mass_dh = 0.0;
-                        dflux_mass_du = 0.0;
-                        dflux_mass_dv = 0.0;
-
-                        dflux_humom_dh = 0.0;
-                        dflux_humom_du = 0.0;
-                        dflux_humom_dv = 0.0;
-
-                        dflux_hvmom_dh = 0.0;
-                        dflux_hvmom_du = 0.0;
-                        dflux_hvmom_dv = 0.0;
-
-                        flowDirection=n[0]*f_mass[0]+n[1]*f_mass[1];
-                        /* if (isDOFBoundary_hu != 1) */
-                        /*        { */
-                        /*          dflux_mass_du += n[0]*df_mass_du[0]; */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              dflux_humom_du += n[0]*df_humom_du[0]; */
-                        /*              dflux_hvmom_du += n[0]*df_hvmom_du[0]; */
-                        /*              dflux_hvmom_dv += n[0]*df_hvmom_dv[0]; */
-                        /*            } */
-                        /*        } */
-                        /* else */
-                        /*        { */
-                        /*          //cek still upwind the advection for Dirichlet? */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              dflux_humom_du += n[0]*df_humom_du[0]; */
-                        /*              dflux_hvmom_du += n[0]*df_hvmom_du[0]; */
-                        /*              dflux_hvmom_dv += n[0]*df_hvmom_dv[0]; */
-                        /*            } */
-                        /*          else */
-                        /*            { */
-                        /*              if (isDOFBoundary_hv != 1) */
-                        /*                dflux_hvmom_dv += n[0]*df_hvmom_dv[0]; */
-                        /*            } */
-                        /*        } */
-                        /* if (isDOFBoundary_hv != 1) */
-                        /*        { */
-                        /*          dflux_mass_dv += n[1]*df_mass_dv[1]; */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              dflux_humom_du += n[1]*df_humom_du[1]; */
-                        /*              dflux_humom_dv += n[1]*df_humom_dv[1]; */
-                        /*              dflux_hvmom_dv += n[1]*df_hvmom_dv[1]; */
-                        /*            } */
-                        /*        } */
-                        /* else */
-                        /*        { */
-                        /*          //cek still upwind the advection for Dirichlet? */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              dflux_humom_du += n[1]*df_humom_du[1]; */
-                        /*              dflux_humom_dv += n[1]*df_humom_dv[1]; */
-                        /*              dflux_hvmom_dv += n[1]*df_hvmom_dv[1]; */
-                        /*            } */
-                        /*          else */
-                        /*            { */
-                        /*              if (isDOFBoundary_hu != 1) */
-                        /*                dflux_humom_du += n[1]*df_humom_du[1]; */
-                        /*            } */
-                        /*        } */
-                        /* else */
-                        /*        { */
-                        /*          //cek still upwind the advection for Dirichlet? */
-                        /*          if (flowDirection >= 0.0) */
-                        /*            { */
-                        /*              dflux_humom_du += n[2]*df_humom_du[2]; */
-                        /*              dflux_humom_dw += n[2]*df_humom_dw[2]; */
-                        /*              dflux_hvmom_dv += n[2]*df_hvmom_dv[2]; */
-                        /*            } */
-                        /*          else */
-                        /*            { */
-                        /*              if (isDOFBoundary_hu != 1) */
-                        /*                dflux_humom_du += n[2]*df_humom_du[2]; */
-                        /*              if (isDOFBoundary_hv != 1) */
-                        /*                dflux_hvmom_dv += n[2]*df_hvmom_dv[2]; */
-                        /*            } */
-                        /*        } */
-                        /* if (isDOFBoundary_h == 1) */
-                        /*        { */
-                        /*          dflux_humom_dp= -n[0]*oneByRho; */
-                        /*          dflux_hvmom_dp= -n[1]*oneByRho; */
-                        /*        } */
-                        if (isFluxBoundary_h == 1)
-                        {
-                                dflux_mass_dh = 0.0;
-                                dflux_mass_du = 0.0;
-                                dflux_mass_dv = 0.0;
-                        }
-                        if (isFluxBoundary_hu == 1)
-                        {
-                                dflux_humom_dh = 0.0;
-                                dflux_humom_du = 0.0;
-                                dflux_humom_dv = 0.0;
-                        }
-                        if (isFluxBoundary_hv == 1)
-                        {
-                                dflux_hvmom_dh = 0.0;
-                                dflux_hvmom_du = 0.0;
-                                dflux_hvmom_dv = 0.0;
-                        }
-                }
-
-                /* inline */
-                /* void exteriorNumericalDiffusiveFlux(const double& eps, */
-                /*                                  int* rowptr, */
-                /*                                  int* colind, */
-                /*                                  const int& isDOFBoundary, */
-                /*                                  const int& isFluxBoundary, */
-                /*                                  const double n[nSpace], */
-                /*                                  double* bc_a, */
-                /*                                  const double& bc_hu, */
-                /*                                  const double& bc_flux, */
-                /*                                  double* a, */
-                /*                                  const double grad_phi[nSpace], */
-                /*                                  const double& u, */
-                /*                                  const double& penalty, */
-                /*                                  double& flux) */
-                /* { */
-                /*   double diffusiveVelocityComponent_I,penaltyFlux,max_a; */
-                /*   if(isDOFBoundary == 1) */
-                /*  { */
-                /*    flux = 0.0; */
-                /*    max_a=0.0; */
-                /*    for(int I=0;I<nSpace;I++) */
-                /*      { */
-                /*        diffusiveVelocityComponent_I=0.0; */
-                /*        for(int m=rowptr[I];m<rowptr[I+1];m++) */
-                /*          { */
-                /*            diffusiveVelocityComponent_I -= a[m]*grad_phi[colind[m]]; */
-                /*            max_a = fmax(max_a,a[m]); */
-                /*          } */
-                /*        flux+= diffusiveVelocityComponent_I*n[I]; */
-                /*      } */
-                /*    penaltyFlux = max_a*penalty*(u-bc_hu); */
-                /*    flux += penaltyFlux; */
-                /*  } */
-                /*   else if(isFluxBoundary == 1) */
-                /*  { */
-                /*    flux = bc_flux; */
-                /*  } */
-                /*   else */
-                /*  { */
-                /*    std::cerr<<"warning, diffusion term with no boundary condition set, setting diffusive flux to 0.0"<<std::endl; */
-                /*    flux = 0.0; */
-                /*  } */
-                /* } */
-
-                /* inline */
-                /* double ExteriorNumericalDiffusiveFluxJacobian(const double& eps, */
-                /*                                            int* rowptr, */
-                /*                                            int* colind, */
-                /*                                            const int& isDOFBoundary, */
-                /*                                            const double n[nSpace], */
-                /*                                            double* a, */
-                /*                                            const double& v, */
-                /*                                            const double grad_hv[nSpace], */
-                /*                                            const double& penalty) */
-                /* { */
-                /*   double dvel_I,tmp=0.0,max_a=0.0; */
-                /*   if(isDOFBoundary >= 1) */
-                /*  { */
-                /*    for(int I=0;I<nSpace;I++) */
-                /*      { */
-                /*        dvel_I=0.0; */
-                /*        for(int m=rowptr[I];m<rowptr[I+1];m++) */
-                /*          { */
-                /*            dvel_I -= a[m]*grad_hv[colind[m]]; */
-                /*            max_a = fmax(max_a,a[m]); */
-                /*          } */
-                /*        tmp += dvel_I*n[I]; */
-                /*      } */
-                /*    tmp +=max_a*penalty*v; */
-                /*  } */
-                /*   return tmp; */
-                /* } */
-
                 void FCTStep(double dt,
                              int NNZ, //number on non-zero entries on sparsity pattern
                              int numDOFs, //number of DOFs
@@ -1606,11 +918,10 @@ public:
                              double* high_order_hvnp1,
                              double* high_order_hetanp1,
                              double* high_order_hwnp1,
-                             double* low_order_hnp1, //operators to construct low order solution
-                             double* low_order_hunp1,
-                             double* low_order_hvnp1,
-                             double* low_order_hetanp1,
-                             double* low_order_hwnp1,
+                             double* extendedSourceTerm_hu,
+                             double* extendedSourceTerm_hv,
+                             double* extendedSourceTerm_heta,
+                             double* extendedSourceTerm_hw,
                              double* limited_hnp1,
                              double* limited_hunp1,
                              double* limited_hvnp1,
@@ -1623,61 +934,109 @@ public:
                              double* muH_minus_muL,
                              double hEps,
                              double* hReg,
-                             int LUMPED_MASS_MATRIX
-                             )
+                             int LUMPED_MASS_MATRIX,
+                             double* dLow,
+                             double* hBT,
+                             double* huBT,
+                             double* hvBT,
+                             double* hetaBT,
+                             double* hwBT)
                 {
-                        register double Rneg[numDOFs];
-                        //////////////////
-                        // LOOP in DOFs //
-                        //////////////////
+                        register double Rneg[numDOFs],Rpos[numDOFs],
+                                        hLow[numDOFs],huLow[numDOFs],hvLow[numDOFs],
+                                        hetaLow[numDOFs], hwLow[numDOFs];
+
+                        ////////////////////////
+                        // FIRST LOOP in DOFs //
+                        ////////////////////////
                         int ij=0;
                         for (int i=0; i<numDOFs; i++)
                         {
                                 //read some vectors
                                 double high_order_hnp1i  = high_order_hnp1[i];
-                                double hni = h_old[i];
+                                double hi = h_old[i];
+                                double hui = hu_old[i];
+                                double hvi = hv_old[i];
+                                double hetai = heta_old[i];
+                                double hwi = hw_old[i];
                                 double Zi = b_dof[i];
                                 double mi = lumped_mass_matrix[i];
 
-                                double minH=0.;
-                                double Pnegi=0.;
+                                double hiMin = hi;
+                                double hiMax = hi;
+                                double Pnegi=0., Pposi=0.;
+
+                                // LOW ORDER SOLUTION without extended source term. Eqn 6.23
+                                hLow[i]  = hi;
+                                huLow[i] = hui;
+                                hvLow[i] = hvi;
+                                hetaLow[i] = hetai;
+                                hwLow[i] = hwi;
+
                                 // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
                                 for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
                                 {
                                         int j = csrColumnOffsets_DofLoops[offset];
                                         // read some vectors
-                                        double hnj = h_old[j];
+                                        double hj = h_old[j];
                                         double Zj = b_dof[j];
 
                                         // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
-                                        double hStarij  = fmax(0., hni + Zi - fmax(Zi,Zj));
-                                        double hStarji  = fmax(0., hnj + Zj - fmax(Zi,Zj));
+                                        double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
+                                        double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
 
                                         // i-th row of flux correction matrix
-                                        double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+                                        double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. :
+                                                              (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
                                         double FluxCorrectionMatrix1 =
-                                                ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni))
+                                                ML_minus_MC*(high_order_hnp1[j]-hj - (high_order_hnp1i-hi))
                                                 + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hStarji-hStarij)
-                                                + dt*muH_minus_muL[ij]*(hnj-hni);
+                                                + dt*muH_minus_muL[ij]*(hj-hi);
 
                                         // COMPUTE P VECTORS //
                                         Pnegi += FluxCorrectionMatrix1*((FluxCorrectionMatrix1 < 0) ? 1. : 0.);
+                                        Pposi += FluxCorrectionMatrix1*((FluxCorrectionMatrix1 > 0) ? 1. : 0.);
 
+                                        // COMPUTE LOCAL BOUNDS //
+                                        hiMin = std::min(hiMin, hBT[ij]);
+                                        hiMax = std::max(hiMax, hBT[ij]);
+
+                                        // COMPUTE LOW ORDER SOLUTION (WITHOUT EXTENDED SOURCE) //
+                                        if (i!=j)
+                                        {
+                                                hLow[i]  += hi*(-dt/mi*2*dLow[ij])  + dt/mi*(2*dLow[ij]*hBT[ij]);
+                                                huLow[i] += hui*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*huBT[ij]);
+                                                hvLow[i] += hvi*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hvBT[ij]);
+                                                hetaLow[i] += hetai*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hetaBT[ij]);
+                                                hwLow[i] += hwi*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hwBT[ij]);
+                                        }
                                         //update ij
                                         ij+=1;
                                 }
+                                // clean up hLow from round off error
+                                if (hLow[i] < hEps)
+                                        hLow[i]=0;
                                 ///////////////////////
                                 // COMPUTE Q VECTORS //
                                 ///////////////////////
-                                double Qnegi = mi*(minH-low_order_hnp1[i]);
+                                if (GLOBAL_FCT==1)
+                                        hiMin=0;
+                                double Qnegi = mi*(hiMin-hLow[i]);
+                                double Qposi = mi*(hiMax-hLow[i]);
 
                                 ///////////////////////
                                 // COMPUTE R VECTORS //
                                 ///////////////////////
                                 if (high_order_hnp1[i] <= hReg[i]) //hEps
+                                {
                                         Rneg[i] = 0.;
+                                        Rpos[i] = 0.;
+                                }
                                 else
+                                {
                                         Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+                                        Rpos[i] = ((Pposi==0) ? 1. : std::min(1.0,Qposi/Pposi));
+                                }
                         } // i DOFs
 
                         //////////////////////
@@ -1692,53 +1051,54 @@ public:
                                 double high_order_hvnp1i = high_order_hvnp1[i];
                                 double high_order_hetanp1i = high_order_hetanp1[i];
                                 double high_order_hwnp1i = high_order_hwnp1[i];
-                                double hni = h_old[i];
+                                double hi = h_old[i];
                                 double huni = hu_old[i];
                                 double hvni = hv_old[i];
                                 double hetani = heta_old[i];
                                 double hwni = hw_old[i];
                                 double Zi = b_dof[i];
                                 double mi = lumped_mass_matrix[i];
-                                double one_over_hiReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2)); //hEps
+                                double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
 
                                 double ith_Limiter_times_FluxCorrectionMatrix1 = 0.;
                                 double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
                                 double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
                                 double ith_Limiter_times_FluxCorrectionMatrix4 = 0.;
                                 double ith_Limiter_times_FluxCorrectionMatrix5 = 0.;
-                                double Rnegi = Rneg[i];
+
                                 // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
                                 for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
                                 {
                                         int j = csrColumnOffsets_DofLoops[offset];
                                         // read some vectors
-                                        double hnj = h_old[j];
+                                        double hj = h_old[j];
                                         double hunj = hu_old[j];
                                         double hvnj = hv_old[j];
                                         double hetanj = heta_old[j];
                                         double hwnj = hw_old[j];
                                         double Zj = b_dof[j];
-                                        double one_over_hjReg = 2*hnj/(hnj*hnj+std::pow(fmax(hnj,hEps),2)); //hEps
+                                        double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
 
                                         // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
-                                        double hStarij  = fmax(0., hni + Zi - fmax(Zi,Zj));
+                                        double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
                                         double huStarij = huni*hStarij*one_over_hiReg;
                                         double hvStarij = hvni*hStarij*one_over_hiReg;
                                         double hetaStarij = hetani*hStarij*one_over_hiReg;
                                         double hwStarij = hwni*hStarij*one_over_hiReg;
 
-                                        double hStarji  = fmax(0., hnj + Zj - fmax(Zi,Zj));
+                                        double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
                                         double huStarji = hunj*hStarji*one_over_hjReg;
                                         double hvStarji = hvnj*hStarji*one_over_hjReg;
                                         double hetaStarji = hetanj*hStarji*one_over_hjReg;
                                         double hwStarji = hwnj*hStarji*one_over_hjReg;
 
                                         // COMPUTE FLUX CORRECTION MATRICES
-                                        double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+                                        double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. :
+                                                              (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
                                         double FluxCorrectionMatrix1 =
-                                                ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni))
+                                                ML_minus_MC*(high_order_hnp1[j]-hj - (high_order_hnp1i-hi))
                                                 + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hStarji-hStarij)
-                                                + dt*muH_minus_muL[ij]*(hnj-hni);
+                                                + dt*muH_minus_muL[ij]*(hj-hi);
 
                                         double FluxCorrectionMatrix2 =
                                                 ML_minus_MC*(high_order_hunp1[j]-hunj - (high_order_hunp1i-huni))
@@ -1760,38 +1120,329 @@ public:
                                                 + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hwStarji-hwStarij)
                                                 + dt*muH_minus_muL[ij]*(hwnj-hwni);
 
-                                        // compute limiter based on water height
-                                        double Lij = (FluxCorrectionMatrix1 > 0. ? std::min(1.,Rneg[j]) : std::min(Rnegi,1.));
+                                        // COMPUTE LIMITER // based on water height
+                                        double Lij = 0.;
+                                        if (FluxCorrectionMatrix1 >= 0)
+                                                Lij = std::min(Rpos[i],Rneg[j]);
+                                        else
+                                                Lij = std::min(Rneg[i],Rpos[j]);
+                                        if (GLOBAL_FCT==1)
+                                                Lij = (FluxCorrectionMatrix1 >= 0. ? std::min(1.,Rneg[j]) : std::min(Rneg[i],1.));
 
+                                        // COMPUTE LIMITED FLUX //
                                         ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1;
                                         ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2;
                                         ith_Limiter_times_FluxCorrectionMatrix3 += Lij*FluxCorrectionMatrix3;
                                         ith_Limiter_times_FluxCorrectionMatrix4 += Lij*FluxCorrectionMatrix4;
                                         ith_Limiter_times_FluxCorrectionMatrix5 += Lij*FluxCorrectionMatrix5;
+
                                         //update ij
                                         ij+=1;
                                 }
-
                                 double one_over_mi = 1.0/lumped_mass_matrix[i];
-                                limited_hnp1[i]  = low_order_hnp1[i]  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
-                                limited_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
-                                limited_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
-                                limited_hetanp1[i] = low_order_hetanp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix4;
-                                limited_hwnp1[i] = low_order_hwnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix5;
-                                if (limited_hnp1[i] < -1E-14 && dt < 1.0)
+                                limited_hnp1[i]  = hLow[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+                                limited_hunp1[i] = ((huLow[i] - dt/mi*extendedSourceTerm_hu[i]) // low_order_hunp1+...
+                                                    +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2);
+                                limited_hvnp1[i] = ((hvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
+                                                    +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3);
+                                limited_hetanp1[i] = ((hetaLow[i] - dt/mi*extendedSourceTerm_heta[i]) // low_order_hetanp1+...
+                                                      +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix4);
+                                limited_hwnp1[i] = ((hwLow[i] - dt/mi*extendedSourceTerm_hw[i]) // low_order_hwnp1+...
+                                                    +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix5);
+
+                                if (limited_hnp1[i] < -hEps && dt < 1.0)
                                 {
                                         std::cout << "Limited water height is negative: "
-                                                  <<  limited_hnp1[i]
+                                                  << "hLow: " << hLow[i] << "\t"
+                                                  << "hHigh: " << limited_hnp1[i] << "\t"
                                                   << " ... aborting!" << std::endl;
                                         abort();
                                 }
                                 else
                                 {
-                                        limited_hnp1[i] = fmax(limited_hnp1[i],0.);
+                                        // clean up uHigh from round off error
+                                        if (limited_hnp1[i] < hEps)
+                                                limited_hnp1[i] = 0;
                                         //double aux = fmax(limited_hnp1[i],hEps); // hEps
-                                        double aux = fmax(limited_hnp1[i],hReg[i]); // hEps. Using hReg makes the code more robust
-                                        limited_hunp1[i] *= 2*std::pow(limited_hnp1[i],VEL_FIX_POWER)/(std::pow(limited_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
-                                        limited_hvnp1[i] *= 2*std::pow(limited_hnp1[i],VEL_FIX_POWER)/(std::pow(limited_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
+                                        double aux = fmax(limited_hnp1[i],hReg[i]); // hReg makes the code more robust
+                                        limited_hunp1[i] *=
+                                                2*std::pow(limited_hnp1[i],VEL_FIX_POWER)
+                                                /(std::pow(limited_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
+                                        limited_hvnp1[i] *=
+                                                2*std::pow(limited_hnp1[i],VEL_FIX_POWER)
+                                                /(std::pow(limited_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
+                                }
+                        }
+                }
+
+                void convexLimiting(double dt,
+                                    int NNZ, //number on non-zero entries on sparsity pattern
+                                    int numDOFs, //number of DOFs
+                                    double* lumped_mass_matrix, //lumped mass matrix (as vector))
+                                    double* h_old, //DOFs of solution at last stage
+                                    double* hu_old,
+                                    double* hv_old,
+                                    double* b_dof,
+                                    double* high_order_hnp1, //DOFs of high order solution at tnp1
+                                    double* high_order_hunp1,
+                                    double* high_order_hvnp1,
+                                    double* extendedSourceTerm_hu,
+                                    double* extendedSourceTerm_hv,
+                                    double* limited_hnp1,
+                                    double* limited_hunp1,
+                                    double* limited_hvnp1,
+                                    int* csrRowIndeces_DofLoops, //csr row indeces
+                                    int* csrColumnOffsets_DofLoops, //csr column offsets
+                                    double* MassMatrix, //mass matrix
+                                    double* dH_minus_dL,
+                                    double* muH_minus_muL,
+                                    double hEps,
+                                    double* hReg,
+                                    int LUMPED_MASS_MATRIX,
+                                    double* dLow,
+                                    double* hBT,
+                                    double* huBT,
+                                    double* hvBT)
+                {
+                        register double Rneg[numDOFs],Rpos[numDOFs],
+                                        Kmax[numDOFs], hLow[numDOFs],huLow[numDOFs],hvLow[numDOFs];
+
+                        ////////////////////////
+                        // FIRST LOOP in DOFs //
+                        ////////////////////////
+                        int ij=0;
+                        for (int i=0; i<numDOFs; i++)
+                        {
+                                //read some vectors
+                                double high_order_hnp1i  = high_order_hnp1[i];
+                                double hi = h_old[i];
+                                double hui = hu_old[i];
+                                double hvi = hv_old[i];
+                                double Zi = b_dof[i];
+                                double mi = lumped_mass_matrix[i];
+
+                                double hiMin = hi;
+                                double hiMax = hi;
+                                double Pnegi=0., Pposi=0.;
+
+                                // LOW ORDER SOLUTION without extended source term. Eqn 6.23
+                                hLow[i]  = hi;
+                                huLow[i] = hui;
+                                hvLow[i] = hvi;
+                                Kmax[i] = 0;
+
+                                // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+                                for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+                                {
+                                        int j = csrColumnOffsets_DofLoops[offset];
+                                        double psi_ij = 0;
+                                        if (hBT != 0)
+                                                psi_ij = 1/(2*hBT[ij])*(huBT[ij]*huBT[ij] + huBT[ij]*huBT[ij]); // Eqn (6.29)
+                                        Kmax[i] = fmax(psi_ij,Kmax[i]);
+
+                                        // read some vectors
+                                        double hj = h_old[j];
+                                        double Zj = b_dof[j];
+
+                                        // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
+                                        double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
+                                        double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
+
+                                        // i-th row of flux correction matrix
+                                        double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. :
+                                                              (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+                                        double FluxCorrectionMatrix1 =
+                                                ML_minus_MC*(high_order_hnp1[j]-hj - (high_order_hnp1i-hi))
+                                                + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hStarji-hStarij)
+                                                + dt*muH_minus_muL[ij]*(hj-hi);
+
+                                        // COMPUTE P VECTORS //
+                                        Pnegi += FluxCorrectionMatrix1*((FluxCorrectionMatrix1 < 0) ? 1. : 0.);
+                                        Pposi += FluxCorrectionMatrix1*((FluxCorrectionMatrix1 > 0) ? 1. : 0.);
+
+                                        // COMPUTE LOCAL BOUNDS //
+                                        hiMin = std::min(hiMin, hBT[ij]);
+                                        hiMax = std::max(hiMax, hBT[ij]);
+
+                                        // COMPUTE LOW ORDER SOLUTION (WITHOUT EXTENDED SOURCE) //
+                                        if (i!=j)
+                                        {
+                                                hLow[i]  += hi*(-dt/mi*2*dLow[ij])  + dt/mi*(2*dLow[ij]*hBT[ij]);
+                                                huLow[i] += hui*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*huBT[ij]);
+                                                hvLow[i] += hvi*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hvBT[ij]);
+                                        }
+                                        // UPDATE ij //
+                                        ij+=1;
+                                }
+                                // clean up hLow from round off error
+                                if (hLow[i] < hEps)
+                                        hLow[i]=0;
+                                ///////////////////////
+                                // COMPUTE Q VECTORS //
+                                ///////////////////////
+                                double Qnegi = mi*(hiMin-hLow[i]);
+                                double Qposi = mi*(hiMax-hLow[i]);
+
+                                ///////////////////////
+                                // COMPUTE R VECTORS //
+                                ///////////////////////
+                                if (high_order_hnp1[i] <= hReg[i]) //hEps
+                                {
+                                        Rneg[i] = 0.;
+                                        Rpos[i] = 0.;
+                                }
+                                else
+                                {
+                                        Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+                                        Rpos[i] = ((Pposi==0) ? 1. : std::min(1.0,Qposi/Pposi));
+                                }
+                        } // i DOFs
+
+                        //////////////////////
+                        // COMPUTE LIMITERS //
+                        //////////////////////
+                        ij=0;
+                        for (int i=0; i<numDOFs; i++)
+                        {
+                                //read some vectors
+                                double high_order_hnp1i  = high_order_hnp1[i];
+                                double high_order_hunp1i = high_order_hunp1[i];
+                                double high_order_hvnp1i = high_order_hvnp1[i];
+                                double hi = h_old[i];
+                                double huni = hu_old[i];
+                                double hvni = hv_old[i];
+                                double Zi = b_dof[i];
+                                double mi = lumped_mass_matrix[i];
+                                double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
+
+                                double ith_Limiter_times_FluxCorrectionMatrix1 = 0.;
+                                double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
+                                double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
+
+                                double ci = Kmax[i]*hLow[i]-0.5*(huLow[i]*huLow[i]+hvLow[i]*hvLow[i]); // for conv. lim.
+
+                                // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+                                for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+                                {
+                                        int j = csrColumnOffsets_DofLoops[offset];
+                                        // read some vectors
+                                        double hj = h_old[j];
+                                        double hunj = hu_old[j];
+                                        double hvnj = hv_old[j];
+                                        double Zj = b_dof[j];
+                                        double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
+
+                                        // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
+                                        double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
+                                        double huStarij = huni*hStarij*one_over_hiReg;
+                                        double hvStarij = hvni*hStarij*one_over_hiReg;
+
+                                        double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
+                                        double huStarji = hunj*hStarji*one_over_hjReg;
+                                        double hvStarji = hvnj*hStarji*one_over_hjReg;
+
+                                        // COMPUTE FLUX CORRECTION MATRICES
+                                        double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. :
+                                                              (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+                                        double FluxCorrectionMatrix1 =
+                                                ML_minus_MC*(high_order_hnp1[j]-hj - (high_order_hnp1i-hi))
+                                                + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hStarji-hStarij)
+                                                + dt*muH_minus_muL[ij]*(hj-hi);
+
+                                        double FluxCorrectionMatrix2 =
+                                                ML_minus_MC*(high_order_hunp1[j]-hunj - (high_order_hunp1i-huni))
+                                                + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(huStarji-huStarij)
+                                                + dt*muH_minus_muL[ij]*(hunj-huni);
+
+                                        double FluxCorrectionMatrix3 =
+                                                ML_minus_MC*(high_order_hvnp1[j]-hvnj - (high_order_hvnp1i-hvni))
+                                                + dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hvStarji-hvStarij)
+                                                + dt*muH_minus_muL[ij]*(hvnj-hvni);
+
+                                        // compute limiter based on water height
+                                        double Lij = 0.;
+                                        if (FluxCorrectionMatrix1 >= 0)
+                                                Lij = std::min(Rpos[i],Rneg[j]);
+                                        else
+                                                Lij = std::min(Rneg[i],Rpos[j]);
+
+                                        // CONVEX LIMITING // for kinetic energy
+                                        // root of ith-DOF
+                                        double lambdaj = csrRowIndeces_DofLoops[i+1]-csrRowIndeces_DofLoops[i]-1;
+                                        double Ph_ij = FluxCorrectionMatrix1/mi/lambdaj;
+                                        double Phu_ij = FluxCorrectionMatrix2/mi/lambdaj;
+                                        double Phv_ij = FluxCorrectionMatrix3/mi/lambdaj;
+
+                                        double ai = -0.5*(Phu_ij*Phu_ij+Phv_ij*Phv_ij);
+                                        double bi = Kmax[i]*Ph_ij-(huLow[i]*Phu_ij + hvLow[i]*Phv_ij);
+
+                                        double r1 = ai==0 ? (bi==0 ? 1. : -ci/bi) : (-bi + std::sqrt(bi*bi-4*ai*ci))/2./ai;
+                                        double r2 = ai==0 ? (bi==0 ? 1. : -ci/bi) : (-bi - std::sqrt(bi*bi-4*ai*ci))/2./ai;
+                                        if (r1<0 && r2<0)
+                                        {
+                                                r1=1.;
+                                                r2=1.;
+                                        }
+                                        double ri = fabs(fmax(r1,r2));
+
+                                        // root of jth-DOF (To compute transpose component)
+                                        double lambdai = csrRowIndeces_DofLoops[j+1]-csrRowIndeces_DofLoops[j]-1;
+                                        double mj = lumped_mass_matrix[j];
+                                        double cj = Kmax[j]*hLow[j]-0.5*(huLow[j]*huLow[j]+hvLow[j]*hvLow[j]);
+                                        double Ph_ji  = -FluxCorrectionMatrix1/mj/lambdai;//Aij=-Aji
+                                        double Phu_ji = -FluxCorrectionMatrix2/mj/lambdai;
+                                        double Phv_ji = -FluxCorrectionMatrix3/mj/lambdai;
+                                        double aj = -0.5*(Phu_ji*Phu_ji+Phv_ji*Phv_ji);
+                                        double bj = Kmax[j]*Ph_ji-(huLow[j]*Phu_ji + hvLow[j]*Phv_ji);
+
+                                        r1 = aj==0 ? (bj==0 ? 1. : -cj/bj) : (-bj + std::sqrt(bj*bj-4*aj*cj))/2./aj;
+                                        r2 = aj==0 ? (bj==0 ? 1. : -cj/bj) : (-bj - std::sqrt(bj*bj-4*aj*cj))/2./aj;
+                                        if (r1<0 && r2<0)
+                                        {
+                                                r1=1.;
+                                                r2=1.;
+                                        }
+                                        double rj = fabs(fmax(r1,r2));
+
+                                        // COMPUTE LIMITER //
+                                        Lij = fmin(fmin(ri,Lij),fmin(rj,Lij)); //Lij=Lji
+
+                                        // COMPUTE LIMITED FLUX //
+                                        ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1;
+                                        ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2;
+                                        ith_Limiter_times_FluxCorrectionMatrix3 += Lij*FluxCorrectionMatrix3;
+
+                                        //update ij
+                                        ij+=1;
+                                }
+                                double one_over_mi = 1.0/lumped_mass_matrix[i];
+                                limited_hnp1[i]  = hLow[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+                                limited_hunp1[i] = ((huLow[i] - dt/mi*extendedSourceTerm_hu[i]) // low_order_hunp1+...
+                                                    +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2);
+                                limited_hvnp1[i] = ((hvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
+                                                    +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3);
+
+                                if (limited_hnp1[i] < -hEps && dt < 1.0)
+                                {
+                                        std::cout << "Limited water height is negative: "
+                                                  << "hLow: " << hLow[i] << "\t"
+                                                  << "hHigh: " << limited_hnp1[i] << "\t"
+                                                  << " ... aborting!" << std::endl;
+                                        abort();
+                                }
+                                else
+                                {
+                                        // clean up uHigh from round off error
+                                        if (limited_hnp1[i] < hEps)
+                                                limited_hnp1[i] = 0;
+                                        //double aux = fmax(limited_hnp1[i],hEps); // hEps
+                                        double aux = fmax(limited_hnp1[i],hReg[i]); // hReg makes the code more robust
+                                        limited_hunp1[i] *=
+                                                2*std::pow(limited_hnp1[i],VEL_FIX_POWER)
+                                                /(std::pow(limited_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
+                                        limited_hvnp1[i] *=
+                                                2*std::pow(limited_hnp1[i],VEL_FIX_POWER)
+                                                /(std::pow(limited_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
                                 }
                         }
                 }
@@ -1813,7 +1464,8 @@ public:
                                              double* CTy,
                                              double* dLow,
                                              double run_cfl,
-                                             double* edge_based_cfl)
+                                             double* edge_based_cfl,
+                                             int debug)
                 {
                         register double psi[numDOFsPerEqn];
                         double max_edge_based_cfl = 0.;
@@ -1847,11 +1499,11 @@ public:
                                                 dLow[ij] = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
                                                                                               hi,hui,hvi,
                                                                                               hj,huj,hvj,
-                                                                                              hEps,hEps,false)*cij_norm, //hEps
+                                                                                              hEps,hEps,debug)*cij_norm, //hEps
                                                                 maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
                                                                                               hj,huj,hvj,
                                                                                               hi,hui,hvi,
-                                                                                              hEps,hEps,false)*cji_norm); //hEps
+                                                                                              hEps,hEps,debug)*cji_norm); //hEps
                                                 dLowii -= dLow[ij];
 
                                                 // FOR SMOOTHNESS INDICATOR //
@@ -1885,7 +1537,7 @@ public:
                                 if (POWER_SMOOTHNESS_INDICATOR==0)
                                         psi[i] = 1.0;
                                 else
-                                        psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+                                        psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: alpha^2 in the paper
                         }
 
                         if (REESTIMATE_MAX_EDGE_BASED_CFL==1)
@@ -1958,7 +1610,7 @@ public:
                         return max_edge_based_cfl;
                 }
 
-                void calculateResidual_entropy_viscosity(// last EDGE BASED version
+                void calculateResidual( // last EDGE BASED version
                         double* mesh_trial_ref,
                         double* mesh_grad_trial_ref,
                         double* mesh_dof,
@@ -2019,14 +1671,7 @@ public:
                         double* q_mass_acc_beta_bdf,
                         double* q_mom_hu_acc_beta_bdf,
                         double* q_mom_hv_acc_beta_bdf,
-                        double* q_velocity_sge,
                         double* q_cfl,
-                        double* q_numDiff_h,
-                        double* q_numDiff_hu,
-                        double* q_numDiff_hv,
-                        double* q_numDiff_h_last,
-                        double* q_numDiff_hu_last,
-                        double* q_numDiff_hv_last,
                         int* sdInfo_hu_hu_rowptr,
                         int* sdInfo_hu_hu_colind,
                         int* sdInfo_hu_hv_rowptr,
@@ -2091,11 +1736,10 @@ public:
                         double* hunp1_at_quad_point,
                         double* hvnp1_at_quad_point,
                         // TO COMPUTE LOW ORDER
-                        double* low_order_hnp1,
-                        double* low_order_hunp1,
-                        double* low_order_hvnp1,
-                        double* low_order_hetanp1,
-                        double* low_order_hwnp1,
+                        double* extendedSourceTerm_hu,
+                        double* extendedSourceTerm_hv,
+                        double* extendedSourceTerm_heta,
+                        double* extendedSourceTerm_hw,
                         // FOR FCT
                         double* dH_minus_dL,
                         double* muH_minus_muL,
@@ -2112,6 +1756,12 @@ public:
                         double* normalx,
                         double* normaly,
                         double* dLow,
+                        // LOCAL LIMITING
+                        double* hBT,
+                        double* huBT,
+                        double* hvBT,
+                        double* heatBT,
+                        double* hwBT,
                         int lstage)
                 {
                         //FOR FRICTION//
@@ -2175,17 +1825,47 @@ public:
                                         //get the physical integration weight
                                         dV = fabs(jacDet)*dV_ref[k];
                                         //get the solution at current time
-                                        ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
-                                        ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
-                                        ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
-                                        ck.valFromDOF(heta_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],heta);
-                                        ck.valFromDOF(hw_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hw);
+                                        ck.valFromDOF(h_dof,
+                                                      &h_l2g[eN_nDOF_trial_element],
+                                                      &h_trial_ref[k*nDOF_trial_element],
+                                                      h);
+                                        ck.valFromDOF(hu_dof,
+                                                      &vel_l2g[eN_nDOF_trial_element],
+                                                      &vel_trial_ref[k*nDOF_trial_element],
+                                                      hu);
+                                        ck.valFromDOF(hv_dof,
+                                                      &vel_l2g[eN_nDOF_trial_element],
+                                                      &vel_trial_ref[k*nDOF_trial_element],
+                                                      hv);
+                                        ck.valFromDOF(heta_dof,
+                                                      &vel_l2g[eN_nDOF_trial_element],
+                                                      &vel_trial_ref[k*nDOF_trial_element],
+                                                      heta);
+                                        ck.valFromDOF(hw_dof,
+                                                      &vel_l2g[eN_nDOF_trial_element],
+                                                      &vel_trial_ref[k*nDOF_trial_element],
+                                                      hw);
                                         // get the solution at the lstage
-                                        ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_old);
-                                        ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_old);
-                                        ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_old);
-                                        ck.valFromDOF(heta_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],heta_old);
-                                        ck.valFromDOF(hw_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hw_old);
+                                        ck.valFromDOF(h_dof_old,
+                                                      &h_l2g[eN_nDOF_trial_element],
+                                                      &h_trial_ref[k*nDOF_trial_element],
+                                                      h_old);
+                                        ck.valFromDOF(hu_dof_old,
+                                                      &vel_l2g[eN_nDOF_trial_element],
+                                                      &vel_trial_ref[k*nDOF_trial_element],
+                                                      hu_old);
+                                        ck.valFromDOF(hv_dof_old,
+                                                      &vel_l2g[eN_nDOF_trial_element],
+                                                      &vel_trial_ref[k*nDOF_trial_element],
+                                                      hv_old);
+                                        ck.valFromDOF(heta_dof_old,
+                                                      &vel_l2g[eN_nDOF_trial_element],
+                                                      &vel_trial_ref[k*nDOF_trial_element],
+                                                      heta_old);
+                                        ck.valFromDOF(hw_dof_old,
+                                                      &vel_l2g[eN_nDOF_trial_element],
+                                                      &vel_trial_ref[k*nDOF_trial_element],
+                                                      hw_old);
                                         // calculate cell based CFL to keep a reference
                                         calculateCFL(elementDiameter[eN],
                                                      g,
@@ -2197,7 +1877,8 @@ public:
                                         //precalculate test function products with integration weights
                                         for (int j=0; j<nDOF_trial_element; j++)
                                                 h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
-                                        //save velocity at quadrature points for other models to use
+
+                                        // SAVE VELOCITY // at quadrature points for other models to use
                                         q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
                                         q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
                                         hnp1_at_quad_point[eN_k] = h;
@@ -2231,95 +1912,196 @@ public:
                         }
                         // ********** END OF CELL LOOPS ********** //
 
-                        if (SECOND_CALL_CALCULATE_RESIDUAL==0) // This is to same some time
+                        if (SECOND_CALL_CALCULATE_RESIDUAL==0) // This is to save some time
                         {
-                                ///////////////////////////////////////////
-                                // ********** COMPUTE ENTROPY ********** //
-                                ///////////////////////////////////////////
-                                // compute entropy (defined as eta) corresponding to ith node
+                                //////////////////////////////////////////////
+                                // ********** FIRST LOOP ON DOFs ********** //
+                                //////////////////////////////////////////////
+                                // To compute:
+                                //     * Entropy at i-th node
                                 register double eta[numDOFsPerEqn];
                                 for (int i=0; i<numDOFsPerEqn; i++)
                                 {
                                         // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
-                                        double hni = h_dof_old[i];
-                                        double one_over_hniReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2)); //hEps
-                                        eta[i] = ENTROPY(g,hni,hu_dof_old[i],hv_dof_old[i],0.,one_over_hniReg);
+                                        double hi = h_dof_old[i];
+                                        double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
+                                        eta[i] = ENTROPY(g,hi,hu_dof_old[i],hv_dof_old[i],0.,one_over_hiReg);
                                 }
-                                // ********** END OF COMPUTING ENTROPY ********** //
+                                // ********** END OF FIRST LOOP ON DOFs ********** //
 
-                                ////////////////////////////////////////////////////////////////////////////////////////
-                                // ********** COMPUTE SMOOTHNESS INDICATOR, GLOBAL ENTROPY RESIDUAL and dL ********** //
-                                ////////////////////////////////////////////////////////////////////////////////////////
-                                // Smoothness indicator is based on the solution. psi_i = psi_i(alpha_i);
-                                // alpha_i = |sum(uj-ui)|/sum|uj-ui|
+                                ///////////////////////////////////////////////
+                                // ********** SECOND LOOP ON DOFs ********** //
+                                ///////////////////////////////////////////////
+                                // To compute:
+                                //     * Hyperbolic part of the flux
+                                //     * Extended source term (eqn 6.19)
+                                //     * Smoothness indicator
+                                //     * global entropy residual
                                 int ij = 0;
-                                register double global_entropy_residual[numDOFsPerEqn];
-                                register double psi[numDOFsPerEqn], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
+                                register double
+                                        hyp_flux_h[numDOFsPerEqn],
+                                        hyp_flux_hu[numDOFsPerEqn],
+                                        hyp_flux_hv[numDOFsPerEqn],
+                                        hyp_flux_heta[numDOFsPerEqn],
+                                        hyp_flux_hw[numDOFsPerEqn],
+                                        global_entropy_residual[numDOFsPerEqn],
+                                        psi[numDOFsPerEqn],
+                                        etaMax[numDOFsPerEqn],
+                                        etaMin[numDOFsPerEqn];
                                 for (int i=0; i<numDOFsPerEqn; i++)
                                 {
                                         double hi = h_dof_old[i]; // solution at time tn for the ith DOF
                                         double hui = hu_dof_old[i];
                                         double hvi = hv_dof_old[i];
+                                        double hetai = heta_dof_old[i];
+                                        double hwi = hw_dof_old[i];
                                         double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
+                                        double ui = hui*one_over_hiReg;
+                                        double vi = hvi*one_over_hiReg;
+                                        double etai = hetai*one_over_hiReg;
+                                        double wi = hwi*one_over_hiReg;
+                                        double mi = lumped_mass_matrix[i];
 
                                         // For eta min and max
                                         etaMax[i] = fabs(eta[i]);
                                         etaMin[i] = fabs(eta[i]);
 
-                                        // FOR ENTROPY RESIDUAL
+                                        // COMPUTE EXTENDED SOURCE TERM //
+                                        // FRICTION //
+                                        if (LINEAR_FRICTION==1)
+                                        {
+                                                extendedSourceTerm_hu[i] = mannings*hui*mi;
+                                                extendedSourceTerm_hv[i] = mannings*hvi*mi;
+                                        }
+                                        else
+                                        {
+                                                double veli_norm = std::sqrt(ui*ui+vi*vi);
+                                                double hi_to_the_gamma = std::pow(hi,gamma);
+                                                double friction_aux =
+                                                        veli_norm == 0. ? 0. : (2*g*n2*veli_norm*mi/
+                                                                                (hi_to_the_gamma +
+                                                                                 fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm)));
+                                                extendedSourceTerm_hu[i] = friction_aux*hui;
+                                                extendedSourceTerm_hv[i] = friction_aux*hvi;
+                                        }
+                                        // Define things here to make life easier
+                                        // this is for modified Green Naghdi equations
+                                        // -EJT
+                                        double lambda = 1.0;
+                                        double meshi = std::sqrt(mi);
+                                        double constanti = lambda * g / meshi;
+
+                                        /////////////////////////
+                                        // For mGN Force Terms //
+                                        /////////////////////////
+                                        double hSqd_GammaPi = 6.0 * (etai*hi - std::pow(hi,2.0));
+                                        extendedSourceTerm_heta[i] = -constanti*hSqd_GammaPi*mi;
+                                        if (etai >= hi)
+                                        {
+                                                hSqd_GammaPi = 6.0 * (std::pow(etai,2.0)-etai*hi);
+                                                extendedSourceTerm_hw[i] = hSqd_GammaPi;
+                                        }
+
+                                        double force_term_hetai = hwi*mi;
+                                        extendedSourceTerm_heta[i] = force_term_hetai;
+
+                                        // HYPERBOLIC FLUXES //
+                                        hyp_flux_h[i]=0;
+                                        hyp_flux_hu[i]=0;
+                                        hyp_flux_hv[i]=0;
+                                        hyp_flux_heta[i]=0;
+                                        hyp_flux_hw[i]=0;
+
+                                        // FOR ENTROPY RESIDUAL //
                                         double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
+                                        double ith_flux_term4 = 0., ith_flux_term5=0.;
                                         double entropy_flux=0.;
-                                        double eta_prime1 = DENTROPY_DH(g,hi,hui,hvi,0.,one_over_hiReg); // NOTE: WE CONSIDER A FLAT BOTTOM
-                                        double eta_prime2 = DENTROPY_DHU(g,hi,hui,hvi,0.,one_over_hiReg);
-                                        double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,0.,one_over_hiReg);
 
                                         // FOR SMOOTHNESS INDICATOR //
                                         double alphai; // smoothness indicator of solution
                                         double alpha_numerator = 0;
                                         double alpha_denominator = 0;
+
                                         for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
                                         { //loop in j (sparsity pattern)
                                                 int j = csrColumnOffsets_DofLoops[offset];
                                                 double hj = h_dof_old[j]; // solution at time tn for the jth DOF
                                                 double huj = hu_dof_old[j];
                                                 double hvj = hv_dof_old[j];
+                                                double hetaj = heta_dof_old[j];
+                                                double hwj = hw_dof_old[j];
                                                 double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
                                                 double uj = huj*one_over_hjReg;
                                                 double vj = hvj*one_over_hjReg;
-                                                // NOTE: WE CONSIDER FLAT BOTTOM. i.e., Zj=0
-                                                double Zj = 0.;
+                                                double etaj = hetaj*one_over_hjReg;
+                                                double wj = hwj*one_over_hjReg;
+                                                double Zj = b_dof[j];
+                                                // For mGN stuff. -EJT
+                                                double mj = lumped_mass_matrix[j];
+                                                double meshj = std::sqrt(mj); // local mesh size in 2d
+                                                double lambda = 1.0;
+                                                double mgnalphaj = lambda * g / (3.0 * meshj);
 
-                                                // FOR ENTROPY RESIDUAL //
-                                                ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
-                                                ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + g*hi*(hj+Zj)*Cx[ij];
-                                                ith_flux_term3 += vj*huj*Cx[ij] + vj*hvj*Cy[ij] + g*hi*(hj+Zj)*Cy[ij];
+                                                ////////////////////////
+                                                // For mGN Flux Terms //
+                                                ////////////////////////
+                                                double pTildej = -mgnalphaj * (etaj*hj - std::pow(hj,2.0));
+                                                if (etaj >= hj)
+                                                {
+                                                        pTildej = -mgnalphaj * 2.0 * (std::pow(etaj,3.0)-std::pow(hj,3.0));
+                                                }
+
+                                                // auxiliary functions to compute fluxes
+                                                double aux_h = huj*Cx[ij] + hvj*Cy[ij]; // f1*C = hj*(uj*Cx[ij] + vj*Cy[ij]);
+                                                double aux_hu = uj*huj*Cx[ij] + uj*hvj*Cy[ij] + pTildej * Cx[ij];
+                                                double aux_hv = vj*huj*Cx[ij] + vj*hvj*Cy[ij] + pTildej * Cy[ij];
+                                                double aux_heta = hetaj*uj*Cx[ij] + hetaj*vj*Cy[ij];
+                                                double aux_hw = hwj*uj*Cx[ij] + hwj*vj*Cy[ij];
+
+                                                // HYPERBOLIC FLUX //
+                                                hyp_flux_h[i]  += aux_h;
+                                                hyp_flux_hu[i] += aux_hu;
+                                                hyp_flux_hv[i] += aux_hv;
+                                                hyp_flux_heta[i] += aux_heta;
+                                                hyp_flux_hw[i] += aux_hw;
+
+                                                // EXTENDED SOURCE //
+                                                extendedSourceTerm_hu[i] += g*hi*(hj+Zj)*Cx[ij];
+                                                extendedSourceTerm_hv[i] += g*hi*(hj+Zj)*Cy[ij];
+
+                                                // flux for entropy
+                                                ith_flux_term1 += aux_h;
+                                                ith_flux_term2 += aux_hu + g*hi*(hj+0.)*Cx[ij]; // NOTE: Zj=0
+                                                ith_flux_term3 += aux_hv + g*hi*(hj+0.)*Cy[ij]; // NOTE: Zj=0
+                                                ith_flux_term4 += aux_heta;
+                                                ith_flux_term5 += aux_hw;
 
                                                 // NOTE: WE CONSIDER FLAT BOTTOM
                                                 entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0.,one_over_hjReg) +
                                                                   Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,0.,one_over_hjReg) );
 
-                                                /////////////////////////////////
                                                 // COMPUTE ETA MIN AND ETA MAX //
-                                                /////////////////////////////////
                                                 etaMax[i] = fmax(etaMax[i],fabs(eta[j]));
                                                 etaMin[i] = fmin(etaMin[i],fabs(eta[j]));
 
                                                 // FOR SMOOTHNESS INDICATOR //
                                                 alpha_numerator += hj - hi;
                                                 alpha_denominator += fabs(hj - hi);
+
                                                 //update ij
                                                 ij+=1;
                                         }
-                                        /////////////////////////////////////
-                                        // COMPUTE GLOBAL ENTROPY RESIDUAL //
-                                        /////////////////////////////////////
+                                        // COMPUTE ENTROPY RESIDUAL //
                                         double one_over_entNormFactori = 2./(etaMax[i]-etaMin[i]+1E-15);
+                                        double eta_prime1 = DENTROPY_DH(g,hi,hui,hvi,0.,one_over_hiReg); // NOTE: FLAT BOTTOM
+                                        double eta_prime2 = DENTROPY_DHU(g,hi,hui,hvi,0.,one_over_hiReg);
+                                        double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,0.,one_over_hiReg);
                                         global_entropy_residual[i] = one_over_entNormFactori*
-                                                                     fabs(entropy_flux -(ith_flux_term1*eta_prime1 + ith_flux_term2*eta_prime2 + ith_flux_term3*eta_prime3));
+                                                                     fabs(entropy_flux -(ith_flux_term1*eta_prime1 +
+                                                                                         ith_flux_term2*eta_prime2 +
+                                                                                         ith_flux_term3*eta_prime3));
 
-                                        //////////////////////////////////
                                         // COMPUTE SMOOTHNESS INDICATOR //
-                                        //////////////////////////////////
                                         if (hi <= hReg[i]) //hEps, hReg makes the method more robust
                                         {
                                                 alphai = 1.;
@@ -2327,7 +2109,7 @@ public:
                                         }
                                         else
                                         {
-                                                if (fabs(alpha_numerator) <= hEps) //hEps. Force alphai=0 in constant states. This for well balancing wrt friction
+                                                if (fabs(alpha_numerator) <= hEps) //hEps. Force alphai=0 in constant states
                                                         alphai = 0.;
                                                 else
                                                         alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
@@ -2335,51 +2117,31 @@ public:
                                         if (POWER_SMOOTHNESS_INDICATOR==0)
                                                 psi[i] = 1.0;
                                         else
-                                                psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
-
+                                                psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: alpha^2 in the paper
                                 }
-                                // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
+                                // ********** END OF 2nd LOOP ON DOFS ********** //
 
-                                //double max_ui = 0.; //TMP
-                                //double max_vi = 0.;
-                                //double max_hui = 0.; //TMP
-                                //double max_hvi = 0.;
-                                //double max_hxui = 0.;
-                                //double max_hxvi = 0.;
-
-                                ////////////////////////////////////////
-                                // ********** Loop on DOFs ********** // to compute flux and dissipative terms
-                                ////////////////////////////////////////
+                                /////////////////////////////////////////////
+                                // ********** MAIN LOOP ON DOFs ********** // to compute flux and dissipative terms
+                                /////////////////////////////////////////////
                                 ij = 0;
-
                                 for (int i=0; i<numDOFsPerEqn; i++)
                                 {
                                         double hi = h_dof_old[i];
                                         double hui = hu_dof_old[i];
                                         double hvi = hv_dof_old[i];
+                                        // for mGN model. -EJT
                                         double hetai = heta_dof_old[i];
                                         double hwi = hw_dof_old[i];
-
                                         double Zi = b_dof[i];
                                         double mi = lumped_mass_matrix[i];
-                                        double cut_offi = 1.0/std::pow(10.0,8.0);
-                                        double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,cut_offi),2)); // hEps
+                                        double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); // hEps
                                         double ui = hui*one_over_hiReg;
                                         double vi = hvi*one_over_hiReg;
+                                        double etai = hetai*one_over_hiReg;
+                                        double wi = hwi*one_over_hiReg;
 
-                                        double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0., ith_flux_term4=0., ith_flux_term5=0.;
-                                        // LOW ORDER DISSIPATIVE TERMS
-                                        double
-                                                ith_dLij_minus_muLij_times_hStarStates=0.,
-                                                ith_dLij_minus_muLij_times_huStarStates=0.,
-                                                ith_dLij_minus_muLij_times_hvStarStates=0.,
-                                                ith_dLij_minus_muLij_times_hetaStarStates=0.,
-                                                ith_dLij_minus_muLij_times_hwStarStates=0.,
-                                                ith_muLij_times_hStates=0.,
-                                                ith_muLij_times_huStates=0.,
-                                                ith_muLij_times_hvStates=0.,
-                                                ith_muLij_times_hetaStates=0.,
-                                                ith_muLij_times_hwStates=0.;
+
 
                                         // HIGH ORDER DISSIPATIVE TERMS
                                         double
@@ -2394,43 +2156,6 @@ public:
                                                 ith_muHij_times_hetaStates=0.,
                                                 ith_muHij_times_hwStates=0.;
 
-                                        ///////////////////
-                                        // FRICTION TERM //
-                                        ///////////////////
-                                        double veli_norm = std::sqrt(ui*ui+vi*vi);
-                                        double hi_to_the_gamma = std::pow(hi,gamma);
-                                        double friction_aux =
-                                                veli_norm == 0. ? 0. : (2*g*n2*veli_norm*mi/
-                                                                        (hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm)));
-                                        double ith_friction_term2 = friction_aux*hui;
-                                        double ith_friction_term3 = friction_aux*hvi;
-
-                                        if (LINEAR_FRICTION==1)
-                                        {
-                                                ith_friction_term2 = mannings*hui*mi;
-                                                ith_friction_term3 = mannings*hvi*mi;
-                                        }
-
-                                        // Define things here to make life easier.
-                                        double meshi = std::sqrt(mi);
-                                        double alphai = lambda*g / (3.0 * meshi);
-                                        double constanti = lambda * g / meshi;
-                                        double etai = hetai*one_over_hiReg;
-
-                                        /////////////////////
-                                        // For Force Terms //
-                                        /////////////////////
-                                        double hSqd_GammaPi = 6.0 * (etai*hi - std::pow(hi,2.0));
-                                        if (etai >= hi)
-                                        {
-                                                hSqd_GammaPi = 6.0 * (std::pow(etai,2.0)-etai*hi);
-                                        }
-
-                                        double force_term_hetai = hwi*mi;
-                                        double force_term_hwi = -constanti*hSqd_GammaPi*mi;
-
-
-
                                         // loop over the sparsity pattern of the i-th DOF
                                         for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
                                         {
@@ -2441,32 +2166,14 @@ public:
                                                 double hetaj = heta_dof_old[j];
                                                 double hwj = hw_dof_old[j];
                                                 double Zj = b_dof[j];
-                                                double cut_off = 1.0 / std::pow(10.0,8.0);
-                                                double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,cut_off),2)); //hEps
+                                                double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
                                                 double uj = huj*one_over_hjReg;
                                                 double vj = hvj*one_over_hjReg;
-                                                // EJT. Corrected terms to match our paper.
-                                                double mj = lumped_mass_matrix[j];
-                                                double meshj = std::sqrt(mj); // local mesh size in 2d
-                                                double alphaj = lambda * g / (3.0 * meshj);
                                                 double etaj = hetaj*one_over_hjReg;
+                                                double wj = hwj*one_over_hjReg;
                                                 double eta_over_h_j = etaj * one_over_hjReg;
 
-                                                /////////////////////
-                                                // For Flux Terms //
-                                                /////////////////////
-                                                double pTildej = -alphaj * (etaj*hj - std::pow(hj,2.0));
-                                                if (etaj >= hj)
-                                                {
-                                                        pTildej = -alphaj * 2.0 * (std::pow(etaj,3.0)-std::pow(hj,3.0));
-                                                }
 
-                                                // Nodal projection of fluxes
-                                                ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
-                                                ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cx[ij];
-                                                ith_flux_term3 += vj*huj*Cx[ij] + vj*hvj*Cy[ij] + (g*hi*(hj+Zj) + pTildej )*Cy[ij];
-                                                ith_flux_term4 += hetaj*uj*Cx[ij] + hetaj*vj*Cy[ij];
-                                                ith_flux_term5 += hwj*uj*Cx[ij] + hwj*vj*Cy[ij];
 
                                                 // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
                                                 double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
@@ -2500,35 +2207,77 @@ public:
                                                                 dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
                                                                                                             hi,hui,hvi,
                                                                                                             hj,huj,hvj,
-                                                                                                            hEps,hEps,false)*cij_norm, //hEps
+                                                                                                            hEps,hEps,false)*cij_norm,
                                                                               maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
                                                                                                             hj,huj,hvj,
                                                                                                             hi,hui,hvi,
-                                                                                                            hEps,hEps,false)*cji_norm); //hEps
+                                                                                                            hEps,hEps,false)*cji_norm);
                                                         }
                                                         dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+                                                        dLow[ij]=dLij; // save dLow for limiting step
 
                                                         ///////////////////////////////////////
                                                         // WELL BALANCING DISSIPATIVE MATRIX //
                                                         ///////////////////////////////////////
-                                                        muLowij = fmax(fmax(0.,-(ui*Cx[ij] + vi*Cy[ij])),fmax(0,(uj*Cx[ij] + vj*Cy[ij])));
+                                                        muLowij = fmax(fmax(0.,-(ui*Cx[ij] + vi*Cy[ij])),
+                                                                       fmax(0,(uj*Cx[ij] + vj*Cy[ij])));
                                                         muLij = muLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+
+                                                        ////////////////////////
+                                                        // COMPUTE BAR STATES //
+                                                        ////////////////////////
+                                                        double hBar_ij = 0, hTilde_ij = 0,
+                                                               huBar_ij = 0, huTilde_ij = 0,
+                                                               hvBar_ij = 0, hvTilde_ij = 0,
+                                                               hetaBar_ij = 0, hetaTilde_ij = 0,
+                                                               hwBar_ij = 0, hwTilde_ij = 0;
+                                                        if (dLij != 0)
+                                                        {
+                                                                // h component
+                                                                hBar_ij = -1./(2*dLij)*((huj-hui)*Cx[ij] + (hvj-hvi)*Cy[ij])+0.5*(hj+hi);
+                                                                hTilde_ij = (dLij-muLij)/(2*dLij)*((hStarji-hj)-(hStarij-hi));
+                                                                // hu component
+                                                                huBar_ij = -1./(2*dLij)*((uj*huj-ui*hui)*Cx[ij] +
+                                                                                         (uj*hvj-ui*hvi)*Cy[ij]) +0.5*(huj+hui);
+                                                                huTilde_ij = (dLij-muLij)/(2*dLij)*((huStarji-huj)-(huStarij-hui));
+                                                                // hv component
+                                                                hvBar_ij = -1./(2*dLij)*((vj*huj-vi*hui)*Cx[ij] +
+                                                                                         (vj*hvj-vi*hvi)*Cy[ij]) +0.5*(hvj+hvi);
+                                                                hvTilde_ij = (dLij-muLij)/(2*dLij)*((hvStarji-hvj)-(hvStarij-hvi));
+
+                                                                // heta component
+                                                                hetaBar_ij = -1./(2*dLij)*((etaj*hetaj-etai*hetai)*Cx[ij] +
+                                                                                         (etaj*hetaj-etai*hetai)*Cy[ij]) +0.5*(hetaj+hetai);
+                                                                huTilde_ij = (dLij-muLij)/(2*dLij)*((hetaStarji-hetaj)-(hetaStarij-hetai));
+                                                                // hw component
+                                                                hwBar_ij = -1./(2*dLij)*((wj*hwj-wi*hwi)*Cx[ij] +
+                                                                                         (wj*hwj-wi*hwi)*Cy[ij]) +0.5*(hwj+hwi);
+                                                                hwTilde_ij = (dLij-muLij)/(2*dLij)*((hwStarji-hwj)-(hwStarij-hwi));
+
+                                                        }
+                                                        hBT[ij] = hBar_ij + hTilde_ij;
+                                                        huBT[ij] = huBar_ij + huTilde_ij;
+                                                        hvBT[ij] = hvBar_ij + hvTilde_ij;
+                                                        // hetaBT[ij] = hetaBar_ij + hetaTilde_ij;
+                                                        // hwBT[ij] = hwBar_ij + hwTilde_ij;
 
                                                         ///////////////////////
                                                         // ENTROPY VISCOSITY //
                                                         ///////////////////////
                                                         double dEVij = cE*fmax(global_entropy_residual[i],global_entropy_residual[j]);
+                                                        dHij  = fmin(dLowij,dEVij);
+                                                        muHij = fmin(muLowij,dEVij);
 
-                                                        if (cE < 1000) // Hack to quickly deactivate EV
-                                                        {
-                                                                dHij  = fmin(dLowij,dEVij);
-                                                                muHij = fmin(muLowij,dEVij);
-                                                        }
-                                                        else
-                                                        {
-                                                                dHij  = dLij;
-                                                                muHij = muLij;
-                                                        }
+                                                        // if (cE < 1000) // Hack to quickly deactivate EV
+                                                        // {
+                                                        //         dHij  = fmin(dLowij,dEVij);
+                                                        //         muHij = fmin(muLowij,dEVij);
+                                                        // }
+                                                        // else
+                                                        // {
+                                                        dHij  = dLij;
+                                                        muHij = muLij;
+                                                        // }
 
                                                         // compute dij_minus_muij times star solution terms
                                                         ith_dHij_minus_muHij_times_hStarStates  += (dHij - muHij)*(hStarji-hStarij);
@@ -2537,24 +2286,12 @@ public:
                                                         ith_dHij_minus_muHij_times_hetaStarStates += (dHij - muHij)*(hetaStarji-hetaStarij);
                                                         ith_dHij_minus_muHij_times_hwStarStates += (dHij - muHij)*(hwStarji-hwStarij);
 
-                                                        ith_dLij_minus_muLij_times_hStarStates  += (dLij - muLij)*(hStarji-hStarij);
-                                                        ith_dLij_minus_muLij_times_huStarStates += (dLij - muLij)*(huStarji-huStarij);
-                                                        ith_dLij_minus_muLij_times_hvStarStates += (dLij - muLij)*(hvStarji-hvStarij);
-                                                        ith_dLij_minus_muLij_times_hetaStarStates += (dLij - muLij)*(hetaStarji-hetaStarij);
-                                                        ith_dLij_minus_muLij_times_hwStarStates += (dLij - muLij)*(hwStarji-hwStarij);
-
                                                         // compute muij times solution terms
                                                         ith_muHij_times_hStates  += muHij*(hj-hi);
                                                         ith_muHij_times_huStates += muHij*(huj-hui);
                                                         ith_muHij_times_hvStates += muHij*(hvj-hvi);
                                                         ith_muHij_times_hetaStates += muHij*(hetaj-hetai);
                                                         ith_muHij_times_hwStates += muHij*(hwj-hwi);
-
-                                                        ith_muLij_times_hStates  += muLij*(hj-hi);
-                                                        ith_muLij_times_huStates += muLij*(huj-hui);
-                                                        ith_muLij_times_hvStates += muLij*(hvj-hvi);
-                                                        ith_muLij_times_hetaStates += muLij*(hetaj-hetai);
-                                                        ith_muLij_times_hwStates += muLij*(hwj-hwi);
 
                                                         // compute dH_minus_dL
                                                         dH_minus_dL[ij] = dHij - dLij;
@@ -2568,142 +2305,73 @@ public:
                                                 // update ij
                                                 ij+=1;
                                         }
-
-                                        ////////////////////////
-                                        // LOW ORDER SOLUTION //: lumped mass matrix and low order dissipative matrix
-                                        ////////////////////////
-
-
-                                        low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1
-                                                                          - ith_dLij_minus_muLij_times_hStarStates
-                                                                          - ith_muLij_times_hStates);
-
-                                        low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2
-                                                                          - ith_dLij_minus_muLij_times_huStarStates
-                                                                          - ith_muLij_times_huStates//);
-                                                                          + ith_friction_term2);
-                                        // EJT. Set v = 0 for 1d setting.
-                                        low_order_hvnp1[i] = 0.0*( hvi - dt/mi*(ith_flux_term3
-                                                                                - ith_dLij_minus_muLij_times_hvStarStates
-                                                                                - ith_muLij_times_hvStates));
-
-                                        low_order_hetanp1[i] = hetai - dt/mi*(ith_flux_term4
-                                                                              - ith_dLij_minus_muLij_times_hetaStarStates
-                                                                              - ith_muLij_times_hetaStates) + dt/mi*force_term_hetai;
-
-                                        low_order_hwnp1[i] = hwi - dt/mi*(ith_flux_term5
-                                                                          - ith_dLij_minus_muLij_times_hwStarStates
-                                                                          - ith_muLij_times_hwStates) + dt/mi*force_term_hwi;
-                                        // FIX LOW ORDER SOLUTION //
-                                        if (low_order_hnp1[i] < -1E-12 && dt < 1.0)
+                                        if (LUMPED_MASS_MATRIX==1)
                                         {
-                                                std::cout << "dt taken: " << dt
-                                                          << std::endl;
-                                                std::cout << "********.... "
-                                                          << "Low order water height is negative: "
-                                                          << hi << "\t"
-                                                          << low_order_hnp1[i]
-                                                          << " ... aborting!" << std::endl;
-                                                abort();
-                                        }
-                                        else
-                                        {
-                                                low_order_hnp1[i] = fmax(low_order_hnp1[i],0.);
-                                                //double aux = fmax(low_order_hnp1[i],hEps); //hEps
-                                                double aux = fmax(low_order_hnp1[i],hReg[i]); //hEps. Using hReg makes the code more robust
-                                                low_order_hunp1[i] *= 2*std::pow(low_order_hnp1[i],VEL_FIX_POWER)/(std::pow(low_order_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
-                                                low_order_hvnp1[i] *= 2*std::pow(low_order_hnp1[i],VEL_FIX_POWER)/(std::pow(low_order_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
-                                                //low_order_hetanp1[i] = fmax(std::pow(low_order_hnp1[i],2.0),0.);
-                                                //  low_order_hwnp1[i] *= 2*std::pow(low_order_hnp1[i],VEL_FIX_POWER)/(std::pow(low_order_hnp1[i],VEL_FIX_POWER)+std::pow(aux,VEL_FIX_POWER));
-                                        }
-                                        int LOW_ORDER_SOLUTION=0; // FOR DEBUGGING
-                                        if (LOW_ORDER_SOLUTION==1)
-                                        {
-                                                globalResidual[offset_h+stride_h*i]   = low_order_hnp1[i];
-                                                globalResidual[offset_hu+stride_hu*i] = low_order_hunp1[i];
-                                                globalResidual[offset_hv+stride_hv*i] = low_order_hvnp1[i];
-                                                globalResidual[offset_heta+stride_heta*i] = low_order_hetanp1[i];
-                                                globalResidual[offset_hw+stride_hw*i] = low_order_hwnp1[i];
-                                        }
-                                        else
-                                        {
-                                                if (LUMPED_MASS_MATRIX==1)
-                                                {
-                                                        globalResidual[offset_h+stride_h*i]
-                                                                = hi - dt/mi*(ith_flux_term1
-                                                                              - ith_dHij_minus_muHij_times_hStarStates
-                                                                              - ith_muHij_times_hStates);
-                                                        globalResidual[offset_hu+stride_hu*i]
-                                                                = hui - dt/mi*(ith_flux_term2
-                                                                               - ith_dHij_minus_muHij_times_huStarStates
-                                                                               - ith_muHij_times_huStates//);
-                                                                               + ith_friction_term2);
-                                                        globalResidual[offset_hv+stride_hv*i]
-                                                                = 0.0* ( hvi - dt/mi*(ith_flux_term3
-                                                                                      - ith_dHij_minus_muHij_times_hvStarStates
-                                                                                      - ith_muHij_times_hvStates)// );
-                                                                         + ith_friction_term3);
-                                                        globalResidual[offset_heta+stride_heta*i]
-                                                                = hetai - dt/mi*(ith_flux_term4
-                                                                                 - ith_dHij_minus_muHij_times_hetaStarStates
-                                                                                 - ith_muHij_times_hetaStates)
-                                                                  + dt/mi * force_term_hetai;
-                                                        globalResidual[offset_hw+stride_hw*i]
-                                                                = hwi - dt/mi*(ith_flux_term5
-                                                                               - ith_dHij_minus_muHij_times_hwStarStates
-                                                                               - ith_muHij_times_hwStates)
-                                                                  + dt/mi * force_term_hwi;
-                                                        // clean up potential negative water height due to machine precision
-                                                        if (globalResidual[offset_h+stride_h*i] >= -1E-14)
-                                                                globalResidual[offset_h+stride_h*i] = fmax(globalResidual[offset_h+stride_h*i],0.);
-                                                }
-                                                else
-                                                {
-                                                        // Distribute residual
-                                                        // NOTE: MASS MATRIX IS CONSISTENT
-                                                        globalResidual[offset_h+stride_h*i]
-                                                                += dt*(ith_flux_term1
-                                                                       - ith_dHij_minus_muHij_times_hStarStates
-                                                                       - ith_muHij_times_hStates);
-                                                        globalResidual[offset_hu+stride_hu*i]
-                                                                += dt*(ith_flux_term2
+                                                globalResidual[offset_h+stride_h*i]
+                                                        = hi - dt/mi*(hyp_flux_h[i]
+                                                                      - ith_dHij_minus_muHij_times_hStarStates
+                                                                      - ith_muHij_times_hStates);
+                                                globalResidual[offset_hu+stride_hu*i]
+                                                        = hui - dt/mi*(hyp_flux_hu[i]
+                                                                       + extendedSourceTerm_hu[i]
                                                                        - ith_dHij_minus_muHij_times_huStarStates
-                                                                       - ith_muHij_times_huStates//);
-                                                                       + ith_friction_term2);
-                                                        globalResidual[offset_hv+stride_hv*i]
-                                                                += dt*(ith_flux_term3
+                                                                       - ith_muHij_times_huStates);
+                                                globalResidual[offset_hv+stride_hv*i]
+                                                        = (hvi - dt/mi*(hyp_flux_hv[i]
+                                                                       + extendedSourceTerm_hu[i]
                                                                        - ith_dHij_minus_muHij_times_hvStarStates
-                                                                       - ith_muHij_times_hvStates//);
-                                                                       + ith_friction_term3);
-                                                        globalResidual[offset_heta+stride_heta*i]
-                                                                +=dt*(ith_flux_term4
-                                                                      - ith_dHij_minus_muHij_times_hetaStarStates
-                                                                      - ith_muHij_times_hetaStates
-                                                                      + force_term_hetai);
-                                                        globalResidual[offset_hw+stride_hw*i]
-                                                                +=dt*(ith_flux_term5
-                                                                      - ith_dHij_minus_muHij_times_hwStarStates
-                                                                      - ith_muHij_times_hwStates
-                                                                      + force_term_hwi);
-                                                }
+                                                                       - ith_muHij_times_hvStates))*0.0;
+                                                 globalResidual[offset_heta+stride_heta*i]
+                                                         = hetai - dt/mi*(hyp_flux_heta[i]
+                                                                          + extendedSourceTerm_heta[i]
+                                                                          - ith_dHij_minus_muHij_times_hetaStarStates
+                                                                          - ith_muHij_times_hetaStates);
+                                                 globalResidual[offset_hw+stride_hw*i]
+                                                         = hwi - dt/mi*(hyp_flux_hw[i]
+                                                                        + extendedSourceTerm_hw[i]
+                                                                        - ith_dHij_minus_muHij_times_hwStarStates
+                                                                        - ith_muHij_times_hwStates);
+                                                // clean up potential negative water height due to machine precision
+                                                if (globalResidual[offset_h+stride_h*i] >= -hEps && globalResidual[offset_h+stride_h*i] < hEps)
+                                                        globalResidual[offset_h+stride_h*i] = 0;
+                                        }
+                                        else
+                                        {
+                                                // Distribute residual
+                                                // NOTE: MASS MATRIX IS CONSISTENT
+                                                globalResidual[offset_h+stride_h*i]
+                                                        += dt*(hyp_flux_h[i]
+                                                               - ith_dHij_minus_muHij_times_hStarStates
+                                                               - ith_muHij_times_hStates
+                                                               );
+                                                globalResidual[offset_hu+stride_hu*i]
+                                                        += dt*(hyp_flux_hu[i]
+                                                               + extendedSourceTerm_hu[i]
+                                                               - ith_dHij_minus_muHij_times_huStarStates
+                                                               - ith_muHij_times_huStates
+                                                               );
+                                                globalResidual[offset_hv+stride_hv*i]
+                                                        += dt*(hyp_flux_hv[i]
+                                                               + extendedSourceTerm_hu[i]
+                                                               - ith_dHij_minus_muHij_times_hvStarStates
+                                                               - ith_muHij_times_hvStates
+                                                               );
+                                                 globalResidual[offset_heta+stride_heta*i]
+                                                         +=dt*(hyp_flux_heta[i]
+                                                               - ith_dHij_minus_muHij_times_hetaStarStates
+                                                               - ith_muHij_times_hetaStates
+                                                               + extendedSourceTerm_heta[i]);
+                                                 globalResidual[offset_hw+stride_hw*i]
+                                                         +=dt*(hyp_flux_hw[i]
+                                                               - ith_dHij_minus_muHij_times_hwStarStates
+                                                               - ith_muHij_times_hwStates
+                                                               + extendedSourceTerm_hw[i]);
                                         }
                                 }
-                                //std::cout << "Max of vel: "
-                                //        << max_ui << "\t"
-                                //        << max_vi << std::endl;
-                                //std::cout << "Max of hu: "
-                                //        << max_hui << "\t"
-                                //        << max_hvi << std::endl;
-                                //std::cout << "Max of hxu: "
-                                //        << max_hxui << "\t"
-                                //        << max_hxvi << std::endl;
-
                                 // ********** END OF LOOP IN DOFs ********** //
                         }
 
-                        ///////////////////////////////////////////
                         // ********** COMPUTE NORMALS ********** //
-                        ///////////////////////////////////////////
                         if (COMPUTE_NORMALS==1)
                         {
                                 // This is to identify the normals and create a vector of normal components
@@ -2759,13 +2427,10 @@ public:
                                         }
                                 }
                         }
-                        ////////////////////////////////////////////////////
                         // ********** END OF COMPUTING NORMALS ********** //
-                        ////////////////////////////////////////////////////
                 }
 
-
-                void calculateMassMatrix(//element
+                void calculateMassMatrix( //element
                         double* mesh_trial_ref,
                         double* mesh_grad_trial_ref,
                         double* mesh_dof,
@@ -2815,11 +2480,7 @@ public:
                         double* q_mass_acc_beta_bdf,
                         double* q_mom_hu_acc_beta_bdf,
                         double* q_mom_hv_acc_beta_bdf,
-                        double* q_velocity_sge,
                         double* q_cfl,
-                        double* q_numDiff_h_last,
-                        double* q_numDiff_hu_last,
-                        double* q_numDiff_hv_last,
                         int* sdInfo_hu_hu_rowptr,
                         int* sdInfo_hu_hu_colind,
                         int* sdInfo_hu_hv_rowptr,
@@ -2828,7 +2489,6 @@ public:
                         int* sdInfo_hv_hv_colind,
                         int* sdInfo_hv_hu_rowptr,
                         int* sdInfo_hv_hu_colind,
-                        // h
                         int* csrRowIndeces_h_h,
                         int* csrColumnOffsets_h_h,
                         int* csrRowIndeces_h_hu,
@@ -2839,7 +2499,6 @@ public:
                         int* csrColumnOffsets_h_heta,
                         int* csrRowIndeces_h_hw,
                         int* csrColumnOffsets_h_hw,
-                        // hu
                         int* csrRowIndeces_hu_h,
                         int* csrColumnOffsets_hu_h,
                         int* csrRowIndeces_hu_hu,
@@ -2850,7 +2509,6 @@ public:
                         int* csrColumnOffsets_hu_heta,
                         int* csrRowIndeces_hu_hw,
                         int* csrColumnOffsets_hu_hw,
-                        // hv
                         int* csrRowIndeces_hv_h,
                         int* csrColumnOffsets_hv_h,
                         int* csrRowIndeces_hv_hu,
@@ -2922,69 +2580,18 @@ public:
                         for(int eN=0; eN<nElements_global; eN++)
                         {
                                 register double
-                                //h
                                         elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_h_hu[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_h_hv[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_h_heta[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_h_hw[nDOF_test_element][nDOF_trial_element],
-                                //hu
-                                        elementJacobian_hu_h[nDOF_test_element][nDOF_trial_element],
                                         elementJacobian_hu_hu[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hu_hv[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hu_heta[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hu_hw[nDOF_test_element][nDOF_trial_element],
-                                //hv
-                                        elementJacobian_hv_h[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hv_hu[nDOF_test_element][nDOF_trial_element],
                                         elementJacobian_hv_hv[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hv_heta[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hv_hw[nDOF_test_element][nDOF_trial_element],
-                                //heta
-                                        elementJacobian_heta_h[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_heta_hu[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_heta_hv[nDOF_test_element][nDOF_trial_element],
                                         elementJacobian_heta_heta[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_heta_hw[nDOF_test_element][nDOF_trial_element],
-                                //hw
-                                        elementJacobian_hw_h[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hw_hu[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hw_hv[nDOF_test_element][nDOF_trial_element],
-                                        elementJacobian_hw_heta[nDOF_test_element][nDOF_trial_element],
                                         elementJacobian_hw_hw[nDOF_test_element][nDOF_trial_element];
-
                                 for (int i=0; i<nDOF_test_element; i++)
                                         for (int j=0; j<nDOF_trial_element; j++)
                                         {
-                                                // h
                                                 elementJacobian_h_h[i][j]=0.0;
-                                                elementJacobian_h_hu[i][j]=0.0;
-                                                elementJacobian_h_hv[i][j]=0.0;
-                                                elementJacobian_h_heta[i][j]=0.0;
-                                                elementJacobian_h_hw[i][j]=0.0;
-                                                // hu
-                                                elementJacobian_hu_h[i][j]=0.0;
                                                 elementJacobian_hu_hu[i][j]=0.0;
-                                                elementJacobian_hu_hv[i][j]=0.0;
-                                                elementJacobian_hu_heta[i][j]=0.0;
-                                                elementJacobian_hu_hw[i][j]=0.0;
-                                                // hv
-                                                elementJacobian_hv_h[i][j]=0.0;
-                                                elementJacobian_hv_hu[i][j]=0.0;
                                                 elementJacobian_hv_hv[i][j]=0.0;
-                                                elementJacobian_hv_heta[i][j]=0.0;
-                                                elementJacobian_hv_hw[i][j]=0.0;
-                                                // heta
-                                                elementJacobian_heta_h[i][j]=0.0;
-                                                elementJacobian_heta_hu[i][j]=0.0;
-                                                elementJacobian_heta_hv[i][j]=0.0;
                                                 elementJacobian_heta_heta[i][j]=0.0;
-                                                elementJacobian_heta_hw[i][j]=0.0;
-                                                // hw
-                                                elementJacobian_hw_h[i][j]=0.0;
-                                                elementJacobian_hw_hu[i][j]=0.0;
-                                                elementJacobian_hw_hv[i][j]=0.0;
-                                                elementJacobian_hw_heta[i][j]=0.0;
                                                 elementJacobian_hw_hw[i][j]=0.0;
                                         }
                                 for  (int k=0; k<nQuadraturePoints_element; k++)
@@ -3027,52 +2634,9 @@ public:
                                                 for(int j=0; j<nDOF_trial_element; j++)
                                                 {
                                                         register int j_nSpace = j*nSpace;
-                                                        //////////////////////
-                                                        // h: h_h, h_u, h_v //
-                                                        //////////////////////
-                                                        // EXPLICIT AND LUMPED
                                                         elementJacobian_h_h[i][j] += h_trial_ref[k*nDOF_trial_element+j]*h_test_dV[i];
-                                                        elementJacobian_h_hu[i][j] += 0;
-                                                        elementJacobian_h_hv[i][j] += 0;
-                                                        elementJacobian_h_heta[i][j] += 0;
-                                                        elementJacobian_h_hw[i][j] += 0;
-
-                                                        //////////////////////
-                                                        // u: u_h, u_u, u_v //
-                                                        //////////////////////
-                                                        elementJacobian_hu_h[i][j] += 0;
                                                         elementJacobian_hu_hu[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
-                                                        elementJacobian_hu_hv[i][j] += 0;
-                                                        elementJacobian_hu_heta[i][j] += 0;
-                                                        elementJacobian_hu_hw[i][j] += 0;
-
-                                                        //////////////////////
-                                                        // v: v_h, v_u, v_v //
-                                                        //////////////////////
-                                                        elementJacobian_hv_h[i][j] += 0;
-                                                        elementJacobian_hv_hu[i][j] += 0;
                                                         elementJacobian_hv_hv[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
-                                                        elementJacobian_hv_heta[i][j] += 0;
-                                                        elementJacobian_hv_hw[i][j] += 0;
-
-                                                        //////////////////////
-                                                        // heta: v_h, v_u, v_v //
-                                                        //////////////////////
-                                                        elementJacobian_heta_h[i][j] += 0;
-                                                        elementJacobian_heta_hu[i][j] += 0;
-                                                        elementJacobian_heta_hv[i][j] += 0;
-                                                        elementJacobian_heta_heta[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
-                                                        elementJacobian_heta_hw[i][j] += 0;
-
-                                                        //////////////////////
-                                                        // hw: v_h, v_u, v_v //
-                                                        //////////////////////
-                                                        elementJacobian_hw_h[i][j] += 0;
-                                                        elementJacobian_hw_hu[i][j] += 0;
-                                                        elementJacobian_hw_hv[i][j] += 0;
-                                                        elementJacobian_hw_heta[i][j] += 0;
-                                                        elementJacobian_hw_hw[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
-
                                                 }//j
                                         }//i
                                 }//k
@@ -3085,43 +2649,19 @@ public:
                                         for (int j=0; j<nDOF_trial_element; j++)
                                         {
                                                 register int eN_i_j = eN_i*nDOF_trial_element+j;
-                                                globalJacobian[csrRowIndeces_h_h[eN_i] + csrColumnOffsets_h_h[eN_i_j]] += elementJacobian_h_h[i][j];
-                                                globalJacobian[csrRowIndeces_h_hu[eN_i] + csrColumnOffsets_h_hu[eN_i_j]] += elementJacobian_h_hu[i][j];
-                                                globalJacobian[csrRowIndeces_h_hv[eN_i] + csrColumnOffsets_h_hv[eN_i_j]] += elementJacobian_h_hv[i][j];
-                                                globalJacobian[csrRowIndeces_h_heta[eN_i] + csrColumnOffsets_h_heta[eN_i_j]] += elementJacobian_h_heta[i][j];
-                                                globalJacobian[csrRowIndeces_h_hw[eN_i] + csrColumnOffsets_h_hw[eN_i_j]] += elementJacobian_h_hw[i][j];
-
-                                                globalJacobian[csrRowIndeces_hu_h[eN_i] + csrColumnOffsets_hu_h[eN_i_j]] += elementJacobian_hu_h[i][j];
-                                                globalJacobian[csrRowIndeces_hu_hu[eN_i] + csrColumnOffsets_hu_hu[eN_i_j]] += elementJacobian_hu_hu[i][j];
-                                                globalJacobian[csrRowIndeces_hu_hv[eN_i] + csrColumnOffsets_hu_hv[eN_i_j]] += elementJacobian_hu_hv[i][j];
-                                                globalJacobian[csrRowIndeces_hu_heta[eN_i] + csrColumnOffsets_hu_heta[eN_i_j]] += elementJacobian_hu_heta[i][j];
-                                                globalJacobian[csrRowIndeces_hu_hw[eN_i] + csrColumnOffsets_hu_hw[eN_i_j]] += elementJacobian_hu_hw[i][j];
-
-                                                globalJacobian[csrRowIndeces_hv_h[eN_i] + csrColumnOffsets_hv_h[eN_i_j]] += elementJacobian_hv_h[i][j];
-                                                globalJacobian[csrRowIndeces_hv_hu[eN_i] + csrColumnOffsets_hv_hu[eN_i_j]] += elementJacobian_hv_hu[i][j];
-                                                globalJacobian[csrRowIndeces_hv_hv[eN_i] + csrColumnOffsets_hv_hv[eN_i_j]] += elementJacobian_hv_hv[i][j];
-                                                globalJacobian[csrRowIndeces_hv_heta[eN_i] + csrColumnOffsets_hv_heta[eN_i_j]] += elementJacobian_hv_heta[i][j];
-                                                globalJacobian[csrRowIndeces_hv_hw[eN_i] + csrColumnOffsets_hv_hw[eN_i_j]] += elementJacobian_hv_hw[i][j];
-
-                                                globalJacobian[csrRowIndeces_heta_h[eN_i] + csrColumnOffsets_heta_h[eN_i_j]] += elementJacobian_heta_h[i][j];
-                                                globalJacobian[csrRowIndeces_heta_hu[eN_i] + csrColumnOffsets_heta_hu[eN_i_j]] += elementJacobian_heta_hu[i][j];
-                                                globalJacobian[csrRowIndeces_heta_hv[eN_i] + csrColumnOffsets_heta_hv[eN_i_j]] += elementJacobian_heta_hv[i][j];
-                                                globalJacobian[csrRowIndeces_heta_heta[eN_i] + csrColumnOffsets_heta_heta[eN_i_j]] += elementJacobian_heta_heta[i][j];
-                                                globalJacobian[csrRowIndeces_heta_hw[eN_i] + csrColumnOffsets_heta_hw[eN_i_j]] += elementJacobian_heta_hw[i][j];
-
-                                                globalJacobian[csrRowIndeces_hw_h[eN_i] + csrColumnOffsets_hw_h[eN_i_j]] += elementJacobian_hw_h[i][j];
-                                                globalJacobian[csrRowIndeces_hw_hu[eN_i] + csrColumnOffsets_hw_hu[eN_i_j]] += elementJacobian_hw_hu[i][j];
-                                                globalJacobian[csrRowIndeces_hw_hv[eN_i] + csrColumnOffsets_hw_hv[eN_i_j]] += elementJacobian_hw_hv[i][j];
-                                                globalJacobian[csrRowIndeces_hw_heta[eN_i] + csrColumnOffsets_hw_heta[eN_i_j]] += elementJacobian_hw_heta[i][j];
-                                                globalJacobian[csrRowIndeces_hw_hw[eN_i] + csrColumnOffsets_hw_hw[eN_i_j]] += elementJacobian_hw_hw[i][j];
+                                                globalJacobian[csrRowIndeces_h_h[eN_i] +
+                                                               csrColumnOffsets_h_h[eN_i_j]] += elementJacobian_h_h[i][j];
+                                                globalJacobian[csrRowIndeces_hu_hu[eN_i] +
+                                                               csrColumnOffsets_hu_hu[eN_i_j]] += elementJacobian_hu_hu[i][j];
+                                                globalJacobian[csrRowIndeces_hv_hv[eN_i] +
+                                                               csrColumnOffsets_hv_hv[eN_i_j]] += elementJacobian_hv_hv[i][j];
                                         }//j
                                 }//i
                         }//elements
 
                 }
 
-                ////
-                void calculateLumpedMassMatrix(//element
+                void calculateLumpedMassMatrix( //element
                         double* mesh_trial_ref,
                         double* mesh_grad_trial_ref,
                         double* mesh_dof,
@@ -3171,11 +2711,7 @@ public:
                         double* q_mass_acc_beta_bdf,
                         double* q_mom_hu_acc_beta_bdf,
                         double* q_mom_hv_acc_beta_bdf,
-                        double* q_velocity_sge,
                         double* q_cfl,
-                        double* q_numDiff_h_last,
-                        double* q_numDiff_hu_last,
-                        double* q_numDiff_hv_last,
                         int* sdInfo_hu_hu_rowptr,
                         int* sdInfo_hu_hu_colind,
                         int* sdInfo_hu_hv_rowptr,
@@ -3240,26 +2776,15 @@ public:
                         //
                         for(int eN=0; eN<nElements_global; eN++)
                         {
-                                register double elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
-                                                elementJacobian_h_hu[nDOF_test_element][nDOF_trial_element],
-                                                elementJacobian_h_hv[nDOF_test_element][nDOF_trial_element],
-                                                elementJacobian_hu_h[nDOF_test_element][nDOF_trial_element],
-                                                elementJacobian_hu_hu[nDOF_test_element][nDOF_trial_element],
-                                                elementJacobian_hu_hv[nDOF_test_element][nDOF_trial_element],
-                                                elementJacobian_hv_h[nDOF_test_element][nDOF_trial_element],
-                                                elementJacobian_hv_hu[nDOF_test_element][nDOF_trial_element],
-                                                elementJacobian_hv_hv[nDOF_test_element][nDOF_trial_element];
+                                register double
+                                        elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
+                                        elementJacobian_hu_hu[nDOF_test_element][nDOF_trial_element],
+                                        elementJacobian_hv_hv[nDOF_test_element][nDOF_trial_element];
                                 for (int i=0; i<nDOF_test_element; i++)
                                         for (int j=0; j<nDOF_trial_element; j++)
                                         {
                                                 elementJacobian_h_h[i][j]=0.0;
-                                                elementJacobian_h_hu[i][j]=0.0;
-                                                elementJacobian_h_hv[i][j]=0.0;
-                                                elementJacobian_hu_h[i][j]=0.0;
                                                 elementJacobian_hu_hu[i][j]=0.0;
-                                                elementJacobian_hu_hv[i][j]=0.0;
-                                                elementJacobian_hv_h[i][j]=0.0;
-                                                elementJacobian_hv_hu[i][j]=0.0;
                                                 elementJacobian_hv_hv[i][j]=0.0;
                                         }
                                 for  (int k=0; k<nQuadraturePoints_element; k++)
@@ -3303,26 +2828,8 @@ public:
                                                 for(int j=0; j<nDOF_trial_element; j++)
                                                 {
                                                         register int j_nSpace = j*nSpace;
-                                                        //////////////////////
-                                                        // h: h_h, h_u, h_v //
-                                                        //////////////////////
-                                                        // EXPLICIT AND LUMPED
                                                         elementJacobian_h_h[i][j] += (i==j ? 1.0 : 0.0)*h_test_dV[i];
-                                                        elementJacobian_h_hu[i][j] += 0;
-                                                        elementJacobian_h_hv[i][j] += 0;
-
-                                                        //////////////////////
-                                                        // u: u_h, u_u, u_v //
-                                                        //////////////////////
-                                                        elementJacobian_hu_h[i][j] += 0;
                                                         elementJacobian_hu_hu[i][j] += (i==j ? 1.0 : 0.0)*vel_test_dV[i];
-                                                        elementJacobian_hu_hv[i][j] += 0;
-
-                                                        //////////////////////
-                                                        // v: v_h, v_u, v_v //
-                                                        //////////////////////
-                                                        elementJacobian_hv_h[i][j] += 0;
-                                                        elementJacobian_hv_hu[i][j] += 0;
                                                         elementJacobian_hv_hv[i][j] += (i==j ? 1.0 : 0.0)*vel_test_dV[i];
                                                 }//j
                                         }//i
@@ -3337,15 +2844,7 @@ public:
                                         {
                                                 register int eN_i_j = eN_i*nDOF_trial_element+j;
                                                 globalJacobian[csrRowIndeces_h_h[eN_i] + csrColumnOffsets_h_h[eN_i_j]] += elementJacobian_h_h[i][j];
-                                                globalJacobian[csrRowIndeces_h_hu[eN_i] + csrColumnOffsets_h_hu[eN_i_j]] += elementJacobian_h_hu[i][j];
-                                                globalJacobian[csrRowIndeces_h_hv[eN_i] + csrColumnOffsets_h_hv[eN_i_j]] += elementJacobian_h_hv[i][j];
-
-                                                globalJacobian[csrRowIndeces_hu_h[eN_i] + csrColumnOffsets_hu_h[eN_i_j]] += elementJacobian_hu_h[i][j];
                                                 globalJacobian[csrRowIndeces_hu_hu[eN_i] + csrColumnOffsets_hu_hu[eN_i_j]] += elementJacobian_hu_hu[i][j];
-                                                globalJacobian[csrRowIndeces_hu_hv[eN_i] + csrColumnOffsets_hu_hv[eN_i_j]] += elementJacobian_hu_hv[i][j];
-
-                                                globalJacobian[csrRowIndeces_hv_h[eN_i] + csrColumnOffsets_hv_h[eN_i_j]] += elementJacobian_hv_h[i][j];
-                                                globalJacobian[csrRowIndeces_hv_hu[eN_i] + csrColumnOffsets_hv_hu[eN_i_j]] += elementJacobian_hv_hu[i][j];
                                                 globalJacobian[csrRowIndeces_hv_hv[eN_i] + csrColumnOffsets_hv_hv[eN_i_j]] += elementJacobian_hv_hv[i][j];
                                         }//j
                                 }//i
