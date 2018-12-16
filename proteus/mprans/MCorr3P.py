@@ -217,7 +217,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 ('grad(u)', 0)] += self.massCorrModel.ebqe[('grad(u)', 0)]
             # vof
             self.massCorrModel.setMassQuadrature()
-            self.vofModel.q[('m_tmp',0)][:] = self.vofModel.coefficients.q_porosity*self.vofModel.q[('u',0)]
+            self.vofModel.q[('m_tmp',0)][:] = (1.0 - self.vofModel.coefficients.q_vos)*self.vofModel.q[('u',0)]
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
             # print "********************max
             # VOF************************",max(self.vofModel.q[('u',0)].flat[:])

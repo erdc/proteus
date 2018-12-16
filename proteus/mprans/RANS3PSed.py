@@ -875,6 +875,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         if firstStep==True:
             self.model.firstStep=False
+            self.model.LAG_MU_FR=1.0
+        self.model.q['mu_fr_last'][:] = self.model.q['mu_fr']
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.model.vosModel:
@@ -1209,6 +1211,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('numDiff', 2, 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['mu_fr'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['mu_fr_last'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.LAG_MU_FR=0.0
         self.ebqe[
             ('u',
              0)] = numpy.zeros(
@@ -2010,7 +2017,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
             self.coefficients.netMoments,
-            self.ncDrag)
+            self.ncDrag,
+            self.LAG_MU_FR,
+            self.q['mu_fr_last'],
+            self.q['mu_fr'])
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -2257,7 +2267,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 0)],
             self.csrColumnOffsets_eb[(2, 1)],
             self.csrColumnOffsets_eb[(2, 2)],
-            self.mesh.elementMaterialTypes)
+            self.mesh.elementMaterialTypes,
+            self.LAG_MU_FR,
+            self.q['mu_fr_last'],
+            self.q['mu_fr'])
         self.q[('cfl', 0)][:]=0.0
 
         if not self.forceStrongConditions and max(
