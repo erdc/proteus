@@ -599,13 +599,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.q_grad_vos = modelList[self.VOF_model].q[('grad(u)',0)].copy()
                 self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
         if self.SED_model is not None:
+            self.sedModel = modelList[self.SED_model]
             self.rho_s = modelList[self.SED_model].coefficients.rho_s
             self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
+            self.q_velocityStar_solid = modelList[self.SED_model].q[('velocityStar',0)]
             self.ebqe_velocity_solid = modelList[self.SED_model].ebqe[('velocity',0)]
         else:
+            self.sedModel = None
             self.rho_s = self.rho_0
             self.q_velocity_solid = self.model.q[('velocity', 0)].copy()
             self.q_velocity_solid[:] = 0.0
+            self.q_velocityStar_solid = self.model.q[('velocity', 0)].copy()
+            self.q_velocityStar_solid[:] = 0.0
             self.ebqe_velocity_solid = self.model.ebqe[('velocity', 0)].copy()
             self.ebqe_velocity_solid[:] = 0.0
         if self.CLSVOF_model is not None: # use CLSVOF
@@ -1131,6 +1136,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.q[('uncorrectedVelocity',0)][:] = self.model.q[('velocity',0)]
         self.model.ebqe[('uncorrectedVelocity',0)][:] = self.model.ebqe[('velocity',0)]
 
+        # Correct drag
+        if self.sedModel is not None:
+            vos = self.model.vos_vel_nodes
+            one_by_vos = (vos**2) / (vos**2 + np.maximum(1.0e-8,vos**2))
+            for i in range(self.nd):
+                self.sedModel.u[i].dof += -(one_by_vos*self.model.ncDrag[...,i] - self.sedModel.ncDrag[...,i])/self.sedModel.coefficients.rho_s
         logEvent("updating {0} particles...".format(self.nParticles))
         if self.use_ball_as_particle == 0:
             if self.particles is not None:
@@ -1385,6 +1396,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element = sum(self.nDOF_trial_element)
         self.nFreeVDOF_global = sum(self.nFreeDOF_global)
+        self.ncDrag = np.zeros((self.nFreeDOF_global[0],self.nc),'d')
+        self.betaDrag = np.zeros((self.nFreeDOF_global[0],),'d')
+        self.vos_vel_nodes = np.zeros((self.nFreeDOF_global[0],),'d')
         #
         NonlinearEquation.__init__(self, self.nFreeVDOF_global)
         #
@@ -2373,7 +2387,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.isActiveDOF = np.zeros_like(r)
             else:
                 self.isActiveDOF = np.ones_like(r)
-
+        self.ncDrag[:]=0.0
+        self.betaDrag[:]=0.0
+        self.vos_vel_nodes[:]=0.0
+        
         if self.dMatrix is None:
             self.getSparsityPatternForComponents()
             self.dMatrix = numpy.zeros(self.nnz_1D)
@@ -2450,6 +2467,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
+            self.coefficients.q_velocityStar_solid,
             self.coefficients.q_vos,#sed fraction - gco check
             self.coefficients.q_dvos_dt,
             self.coefficients.q_grad_vos,
@@ -2625,7 +2643,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.order,
             self.isActiveDOF,
             self.coefficients.use_sbm,
-            # For edge based stabilization #
+            self.ncDrag,
+            self.betaDrag,
+            self.vos_vel_nodes,
+          # For edge based stabilization #
             self.entropyResidualPerNode,
             self.laggedEntropyResidualPerNode,
             self.dMatrix,
@@ -2784,6 +2805,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
+            self.coefficients.q_velocityStar_solid,
             self.coefficients.q_vos,#sed fraction - gco check
             self.coefficients.q_dvos_dt,
             self.coefficients.q_grad_vos,
