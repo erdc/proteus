@@ -1203,7 +1203,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()        
         limitedFlux = np.zeros(self.nnz)
         limited_solution = np.zeros((len(rowptr) - 1),'d')
-        #limited_solution[:] = self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage]
         fromFreeToGlobal=0 #direction copying
         cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
                                                                self.offset[0],
@@ -1234,8 +1233,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             rowptr,
             colind)
 
-        self.timeIntegration.u[:] = limited_solution        
-        #self.u[0].dof[:] = limited_solution
+        self.timeIntegration.u[:] = limited_solution
         fromFreeToGlobal=1 #direction copying
         cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
                                                                self.offset[0],

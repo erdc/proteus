@@ -517,12 +517,12 @@ namespace proteus
       double flow=0.0;
       for (int I=0; I < nSpace; I++)
         flow += n[I]*velocity[I];
-      //std::cout<<" isDOFBoundary_u= "<<isDOFBoundary_u<<" flow= "<<flow<<std::endl;
       if (isDOFBoundary_u == 1)
         {
-          //std::cout<<"Dirichlet boundary u and bc_u "<<u<<'\t'<<bc_u<<std::endl;
           if (flow >= 0.0)
             {
+              /* std::cout<<" isDOFBoundary_u= "<<isDOFBoundary_u<<" flow= "<<flow<<std::endl; */
+              /* std::cout<<"Dirichlet boundary u and bc_u "<<u<<'\t'<<bc_u<<std::endl; */
               flux = u*flow;
               //flux = flow;
             }
@@ -2245,8 +2245,10 @@ namespace proteus
 
               if (flow >= 0 && isFluxBoundary_u[ebNE_kb] != 1 )  //outflow. This is handled via the transport matrices. Then flux_ext=0 and dflux_ext!=0
                 {
+                  /* if (x_ext > 1.0e-8) */
+                  /*   std::cout<<"Outflow boundary VOS3P "<<flow<<" u_ext "<<u_ext<<" x "<<x_ext<<" y "<<y_ext<<std::endl; */
                   dflux_ext = flow;
-                  flux_ext = 0;
+                  flux_ext = 0.0;
                   // save external u
                   ebqe_u[ebNE_kb] = u_ext;
                 }
