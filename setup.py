@@ -621,6 +621,8 @@ def setup_given_extensions(extensions):
                         'proteus/tests/ci/comparison_files/phi_t_0.000000_000.tgz']),
                       (os.path.join(proteus_install_path,'tests','LS_with_edgeBased_EV','VOF','comparison_files'),
                        ['proteus/tests/LS_with_edgeBased_EV/VOF/comparison_files/vof_level_3_SmoothnessBased.h5',
+                        'proteus/tests/LS_with_edgeBased_EV/VOF/comparison_files/vof_level_3_TaylorGalerkin.h5',
+                        'proteus/tests/LS_with_edgeBased_EV/VOF/comparison_files/vof_level_3_stab4.h5',
                         'proteus/tests/LS_with_edgeBased_EV/VOF/comparison_files/vof_level_3_EV1.h5',
                         'proteus/tests/LS_with_edgeBased_EV/VOF/comparison_files/vof_level_3_SUPG.h5',
                         'proteus/tests/LS_with_edgeBased_EV/VOF/comparison_files/vof_level_3_EV2.h5']),
