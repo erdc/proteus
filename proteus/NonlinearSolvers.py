@@ -537,8 +537,9 @@ class Newton(NonlinearSolver):
                     self.setLinearSolverTolerance(r)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed()
+                self.linearSolverFailed = self.linearSolver.failed()                
             u-=self.du
+
             if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
@@ -732,7 +733,7 @@ class TwoStageNewton(Newton):
             return self.failedFlag
 
 class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
-    """
+    """ 
     This is a fake solver meant to be used with optimized code
     A simple iterative solver that is Newton's method
     if you give it the right Jacobian
@@ -812,6 +813,23 @@ class ExplicitLumpedMassMatrix(Newton):
     """
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        # compute fluxes
+        self.computeResidual(u,r,b)
+        #u[:]=self.F.uLow
+        
+        ############
+        # FCT STEP #
+        ############
+        self.F.kth_FCT_step()
+        
+        ###########################################
+        # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+        
+    def no_solve(self,u,r=None,b=None,par_u=None,par_r=None):
         self.computeResidual(u,r,b)
         u[:] = r
         ############

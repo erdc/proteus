@@ -92,7 +92,9 @@ class TestCLSVOF_with_RANS3PF(object):
         expected_path = 'comparison_files/multiphase_2D_falling_bubble.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('multiphase_2D_falling_bubble.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8)
+        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8), "min={0:e} max={0:e}".format(
+            (expected.root.phi_t2[:]-actual.root.phi_t2[:]).min(),
+            (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
         expected.close()
         actual.close()
 
@@ -129,7 +131,9 @@ class TestCLSVOF_with_RANS3PF(object):
         expected_path = 'comparison_files/multiphase_3D_falling_bubble.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('multiphase_3D_falling_bubble.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8)
+        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8), "min={0:e} max={1:e}".format(
+            (expected.root.phi_t2[:]-actual.root.phi_t2[:]).min(),
+            (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
         expected.close()
         actual.close()        
 

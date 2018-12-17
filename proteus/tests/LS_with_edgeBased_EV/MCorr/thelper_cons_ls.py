@@ -20,8 +20,8 @@ ct=Context.Options([
     ("DO_REDISTANCING",True,"Solve Eikonal type equation after transport?"),    
     ("cE_ncls",1.0,"Entropy viscosity constant"),
     # PARAMETERS FOR VOF #
-    ("STABILIZATION_TYPE_vof",1,"0: SUPG, 1: EV, 2: smoothness based indicator"),
-    ("ENTROPY_TYPE_vof",2,"1: quadratic, 2: logarithmic"),
+    ("STABILIZATION_TYPE_vof",1,"0: SUPG, 1: TG, 2: edge based EV, 3: edge based smoothness ind."),
+    ("ENTROPY_TYPE_vof",1,"0: quadratic, 1: logarithmic"),
     ("FCT",True,"Use Flux Corrected Transport"),
     ("cE_vof",0.1,"Entropy viscosity constant"),
     ("cK",1.0,"Artificial compression constant")
