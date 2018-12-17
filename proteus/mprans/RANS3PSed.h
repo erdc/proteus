@@ -1164,9 +1164,9 @@ namespace proteus
         flux_umom = 0.0;
         flux_vmom = 0.0;
         flux_wmom = 0.0;
-        flowSpeedNormal=vos*(n[0]*velocity_star[0] +
-                             n[1]*velocity_star[1] +
-                             n[2]*velocity_star[2]);
+        flowSpeedNormal=(n[0]*velocity_star[0] +
+                         n[1]*velocity_star[1] +
+                         n[2]*velocity_star[2]);
         velocity[0] = u;
         velocity[1] = v;
         velocity[2] = w;
@@ -1322,9 +1322,9 @@ namespace proteus
         dflux_wmom_du = 0.0;
         dflux_wmom_dv = 0.0;
         dflux_wmom_dw = 0.0;
-        flowSpeedNormal=vos*(n[0]*velocity_star[0] +
-                             n[1]*velocity_star[1] +
-                             n[2]*velocity_star[2]);
+        flowSpeedNormal=(n[0]*velocity_star[0] +
+                         n[1]*velocity_star[1] +
+                         n[2]*velocity_star[2]);
         if (isDOFBoundary_u != 1)
           {
             dflux_mass_du += n[0]*df_mass_du[0];
