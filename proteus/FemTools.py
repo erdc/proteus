@@ -6500,7 +6500,6 @@ class C0_AffineP1P0BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
 """
 Members of the finite element space.
 """
-from .LinearAlgebraTools import ParVec
 from . import Comm
 
 class FiniteElementFunction(object):
@@ -6765,7 +6764,7 @@ class FiniteElementFunction(object):
         subdomain2global = self.femSpace.dofMap.subdomain2global
         max_dof_neighbors= self.femSpace.dofMap.max_dof_neighbors
         par_bs = self.dim_dof
-        self.par_dof = ParVec(self.dof,par_bs,par_n,par_N,par_nghost,subdomain2global)
+        self.par_dof = ParVec_petsc4py(self.dof,par_bs,par_n,par_N,par_nghost,subdomain2global)
 
 """
 Boundary Conditions

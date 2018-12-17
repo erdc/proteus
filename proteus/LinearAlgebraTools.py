@@ -22,8 +22,8 @@ from . import superluWrappers
 from . import Comm
 from .superluWrappers import *
 from .Profiling import logEvent
-from petsc4py import PETSc as p4pyPETSc
 from . import flcbdfWrappers
+from petsc4py import PETSc as p4pyPETSc
 
 # PETSc Matrix Functions
 
@@ -416,40 +416,6 @@ def split_PETSc_Mat(mat):
     S.aypx(-1.0,mat.transpose())
     S.scale(0.5)
     return H, S
-
-class ParVec(object):
-    """
-    A parallel vector built on top of daetk's wrappers for petsc
-    """
-    def __init__(self,
-                 array,
-                 blockSize,
-                 n,
-                 N,
-                 nghosts=None,
-                 subdomain2global=None,
-                 blockVecType="simple"):#"block"
-        from . import flcbdfWrappers
-        self.dim_proc=n*blockSize
-        if nghosts is None:
-            if blockVecType=="simple":
-                self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,-1,None,array,0)
-            else:
-                self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,-1,None,array,1)
-        else:
-            assert nghosts >= 0, "The number of ghostnodes must be non-negative"
-            assert subdomain2global.shape[0] == (n+nghosts), ("The subdomain2global map is the wrong length n=%i,nghosts=%i,shape=%i \n" % (n,n+nghosts,subdomain2global.shape[0]))
-            assert len(array.flat) == (n+nghosts)*blockSize, ("%i  != (%i+%i)*%i \n"%(len(array.flat),  n,nghosts,blockSize))
-            if blockVecType=="simple":
-                self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,nghosts,subdomain2global,array,0)
-            else:
-                self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,nghosts,subdomain2global,array,1)
-        self.nghosts = nghosts
-    def scatter_forward_insert(self):
-       self.cparVec.scatter_forward_insert()
-    def scatter_reverse_add(self):
-       self.cparVec.scatter_reverse_add()
-
 
 class ParVec_petsc4py(p4pyPETSc.Vec):
     """

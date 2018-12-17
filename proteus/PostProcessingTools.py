@@ -1840,7 +1840,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
         #have to directly modify the type now to set to optimized
         self.postProcessingType = 'pwl-opt'
 
-        from .LinearAlgebraTools import ParVec
+        from .LinearAlgebraTools import ParVec_petsc4py as ParVec
 
         self.ebq_v_par_local = self.vt.ebq_global[('velocity',self.vtComponents[0])].copy()
         self.ebq_v_par = ParVec(self.ebq_v_par_local,
@@ -4219,7 +4219,7 @@ class VelocityPostProcessor_Original(object):
                 #
                 #allocate par vecs to do communication
                 if self.useOpt:
-                    from .LinearAlgebraTools import ParVec
+                    from .LinearAlgebraTools import ParVec_petsc4py as ParVec
                     self.ebq_v_par_local = self.vt.ebq_global[('velocity',ci)].copy()
                     self.ebq_v_par = ParVec(self.ebq_v_par_local,
                                             self.vt.nElementBoundaryQuadraturePoints_elementBoundary*self.vt.nSpace_global,#block size
