@@ -391,148 +391,148 @@ class SSP(BackwardEuler_cfl):
         self.isAdaptive=True
         self.isSSP=True
 
-class FLCBDF(TI_base):
-    from . import flcbdfWrappers
-    def __init__(self,transport):
-        from . import flcbdfWrappers
-        TI_base.__init__(self,transport)
-        self.initCalls=0
-        #masses
-        self.flcbdf = dict([(ci,flcbdfWrappers.FLCBDF_integrator(transport.q[('m',ci)],transport.name + 'm' + str(ci))) for ci in self.massComponents])
-        #dof cek could turn this off to save storage and/or look at robustness of predictor
-        for ci in range(self.nc):
-            self.flcbdf[('u',ci)] = flcbdfWrappers.FLCBDF_integrator(transport.u[ci].dof,transport.u[ci].name)
-        self.Ddof_Dt= dict([(ci,numpy.zeros(self.transport.u[ci].dof.shape,'d'))
-                            for ci in range(self.nc)])
-        #cek todo get rid of dummy
-        self.dummy= dict([(ci,numpy.ones(self.transport.u[ci].dof.shape,'d'))
-                            for ci in range(self.nc)])
-        self.calls=0
-        self.m={}
-        self.m_tmp={}
-        self.beta_bdf={}
-        self.alpha_bdf=0.0
-        print("mass components=====================",self.massComponents)
-        for ci in self.massComponents:
-            self.m_tmp[ci] = transport.q[('m',ci)]
-            self.m[ci]=transport.q[('m',ci)]
-            self.beta_bdf[ci] = transport.q[('m',ci)].copy()
-            self.beta_bdf[ci][:]=0.0
-        self.beta_bdf_dummy = self.beta_bdf[ci].copy()#cek hack assumes all components have same quadrature
-        self.beta_bdf_dummy[:]=0.0
-        self.beta_bdf_dummy2 = self.beta_bdf[ci].copy()#cek hack assumes all components have same quadrature
-        self.beta_bdf_dummy2[:]=0.0
-        self.isAdaptive=True
-        self.provides_initialGuess = True
-    def initialize_dt(self,t0,tOut,q):
-        self.tLast = t0
-        self.dt = min([self.flcbdf[ci].initialize_dt(t0,tOut,q[('m',ci)],q[('mt',ci)]) for ci in self.massComponents])
-        logEvent("Warning!!! FLDBDF initial dt will be different in parallel until we fix estimate_mt!")
-        #mwf hack
-        #import Comm
-        #comm = Comm.get()
-        #print "rank= %s FLCBDF chose dt= %s |mt,0|_max= %s |mt,1|_max= %s  forcing to (tOut-t)/1000 = %s " % (comm.rank(),self.dt,
-        #                                                                                                      numpy.absolute(q[('mt',0)].flat).max(),
-        #                                                                                                      numpy.absolute(q[('mt',1)].flat).max(),
-        #                                                                                                      (tOut-t0)*1.0e-3)
-        #self.dt = (tOut-t0)*1.0e-3
-        for ci in range(self.nc): self.flcbdf[('u',ci)].initialize_dt(t0,tOut,self.transport.u[ci].dof,self.Ddof_Dt[ci])
-        self.t = self.tLast + self.dt
-    def initializeTimeHistory(self,resetFromDOF=False):
-        logEvent("Initializing FLCBDF time history")
-        self.initCalls +=1
-        for ci in self.massComponents:
-            self.flcbdf[ci].initializeTimeHistory(self.transport.q[('m',ci)],self.transport.q[('mt',ci)])
-        for ci in range(self.nc): self.flcbdf[('u',ci)].initializeTimeHistory(self.transport.u[ci].dof,self.Ddof_Dt[ci])
-    def calculateCoefs(self):
-        logEvent("Calculating alpha_bdf and beta_bdf for FLCBDF")
-        for ci in self.massComponents:
-            self.alpha_bdf = self.flcbdf[ci].getCurrentAlpha()
-            self.flcbdf[ci].calculate_yprime(self.beta_bdf_dummy,self.beta_bdf_dummy,self.beta_bdf[ci],self.beta_bdf_dummy2)
-    def calculateElementCoefficients(self,q):
-        for ci in self.massComponents:
-            #! \todo fix dm,dmt calculation for non-diagonal nonlinearity
-            #mwf hack what to do if no diagonal dependence at all?
-            if ('dm',ci,ci) in q:
-                self.flcbdf[ci].calculate_yprime(q[('m',ci)],q[('dm',ci,ci)],q[('mt',ci)],q[('dmt',ci,ci)])
+# class FLCBDF(TI_base):
+#     from . import flcbdfWrappers
+#     def __init__(self,transport):
+#         from . import flcbdfWrappers
+#         TI_base.__init__(self,transport)
+#         self.initCalls=0
+#         #masses
+#         self.flcbdf = dict([(ci,flcbdfWrappers.FLCBDF_integrator(transport.q[('m',ci)],transport.name + 'm' + str(ci))) for ci in self.massComponents])
+#         #dof cek could turn this off to save storage and/or look at robustness of predictor
+#         for ci in range(self.nc):
+#             self.flcbdf[('u',ci)] = flcbdfWrappers.FLCBDF_integrator(transport.u[ci].dof,transport.u[ci].name)
+#         self.Ddof_Dt= dict([(ci,numpy.zeros(self.transport.u[ci].dof.shape,'d'))
+#                             for ci in range(self.nc)])
+#         #cek todo get rid of dummy
+#         self.dummy= dict([(ci,numpy.ones(self.transport.u[ci].dof.shape,'d'))
+#                             for ci in range(self.nc)])
+#         self.calls=0
+#         self.m={}
+#         self.m_tmp={}
+#         self.beta_bdf={}
+#         self.alpha_bdf=0.0
+#         print("mass components=====================",self.massComponents)
+#         for ci in self.massComponents:
+#             self.m_tmp[ci] = transport.q[('m',ci)]
+#             self.m[ci]=transport.q[('m',ci)]
+#             self.beta_bdf[ci] = transport.q[('m',ci)].copy()
+#             self.beta_bdf[ci][:]=0.0
+#         self.beta_bdf_dummy = self.beta_bdf[ci].copy()#cek hack assumes all components have same quadrature
+#         self.beta_bdf_dummy[:]=0.0
+#         self.beta_bdf_dummy2 = self.beta_bdf[ci].copy()#cek hack assumes all components have same quadrature
+#         self.beta_bdf_dummy2[:]=0.0
+#         self.isAdaptive=True
+#         self.provides_initialGuess = True
+#     def initialize_dt(self,t0,tOut,q):
+#         self.tLast = t0
+#         self.dt = min([self.flcbdf[ci].initialize_dt(t0,tOut,q[('m',ci)],q[('mt',ci)]) for ci in self.massComponents])
+#         logEvent("Warning!!! FLDBDF initial dt will be different in parallel until we fix estimate_mt!")
+#         #mwf hack
+#         #import Comm
+#         #comm = Comm.get()
+#         #print "rank= %s FLCBDF chose dt= %s |mt,0|_max= %s |mt,1|_max= %s  forcing to (tOut-t)/1000 = %s " % (comm.rank(),self.dt,
+#         #                                                                                                      numpy.absolute(q[('mt',0)].flat).max(),
+#         #                                                                                                      numpy.absolute(q[('mt',1)].flat).max(),
+#         #                                                                                                      (tOut-t0)*1.0e-3)
+#         #self.dt = (tOut-t0)*1.0e-3
+#         for ci in range(self.nc): self.flcbdf[('u',ci)].initialize_dt(t0,tOut,self.transport.u[ci].dof,self.Ddof_Dt[ci])
+#         self.t = self.tLast + self.dt
+#     def initializeTimeHistory(self,resetFromDOF=False):
+#         logEvent("Initializing FLCBDF time history")
+#         self.initCalls +=1
+#         for ci in self.massComponents:
+#             self.flcbdf[ci].initializeTimeHistory(self.transport.q[('m',ci)],self.transport.q[('mt',ci)])
+#         for ci in range(self.nc): self.flcbdf[('u',ci)].initializeTimeHistory(self.transport.u[ci].dof,self.Ddof_Dt[ci])
+#     def calculateCoefs(self):
+#         logEvent("Calculating alpha_bdf and beta_bdf for FLCBDF")
+#         for ci in self.massComponents:
+#             self.alpha_bdf = self.flcbdf[ci].getCurrentAlpha()
+#             self.flcbdf[ci].calculate_yprime(self.beta_bdf_dummy,self.beta_bdf_dummy,self.beta_bdf[ci],self.beta_bdf_dummy2)
+#     def calculateElementCoefficients(self,q):
+#         for ci in self.massComponents:
+#             #! \todo fix dm,dmt calculation for non-diagonal nonlinearity
+#             #mwf hack what to do if no diagonal dependence at all?
+#             if ('dm',ci,ci) in q:
+#                 self.flcbdf[ci].calculate_yprime(q[('m',ci)],q[('dm',ci,ci)],q[('mt',ci)],q[('dmt',ci,ci)])
 
-            else:
-                if ('dm_q',ci,ci) not in self.dummy:
-                    self.dummy[('dm_q',ci,ci)] = numpy.zeros(q[('m',ci)].shape,'d')
-                    self.dummy[('dmt_q',ci,ci)]    = numpy.zeros(q[('m',ci)].shape,'d')
-                self.flcbdf[ci].calculate_yprime(q[('m',ci)],self.dummy[('dm_q',ci,ci)],q[('mt',ci)],self.dummy[('dmt_q',ci,ci)])
-            #mwf duplicate for subgrid error
-            for cj in range(self.nc):
-                #mwf what happens if off diagonal dmt calculation?
-                if ('dmt',ci,cj) in q:
-                    #mwf debug
-                    #import pdb
-                    #pdb.set_trace()
-                    alpha = self.flcbdf[ci].getCurrentAlpha()
-                    self.alpha_bdf = alpha
-                    q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
-                    q[('dmt',ci,cj)] *= alpha
-                    #mwf debug
-                    logEvent("FLCBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,alpha))
-                if ('dmt_sge',ci,cj) in q:
-                    #mwf debug
-                    #import pdb
-                    #pdb.set_trace()
-                    alpha = self.flcbdf[ci].getCurrentAlpha()
-                    self.alpha_bdf = alpha
-                    q[('dmt_sge',ci,cj)].flat[:] = q[('dm_sge',ci,cj)].flat
-                    q[('dmt_sge',ci,cj)] *= alpha
+#             else:
+#                 if ('dm_q',ci,ci) not in self.dummy:
+#                     self.dummy[('dm_q',ci,ci)] = numpy.zeros(q[('m',ci)].shape,'d')
+#                     self.dummy[('dmt_q',ci,ci)]    = numpy.zeros(q[('m',ci)].shape,'d')
+#                 self.flcbdf[ci].calculate_yprime(q[('m',ci)],self.dummy[('dm_q',ci,ci)],q[('mt',ci)],self.dummy[('dmt_q',ci,ci)])
+#             #mwf duplicate for subgrid error
+#             for cj in range(self.nc):
+#                 #mwf what happens if off diagonal dmt calculation?
+#                 if ('dmt',ci,cj) in q:
+#                     #mwf debug
+#                     #import pdb
+#                     #pdb.set_trace()
+#                     alpha = self.flcbdf[ci].getCurrentAlpha()
+#                     self.alpha_bdf = alpha
+#                     q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
+#                     q[('dmt',ci,cj)] *= alpha
+#                     #mwf debug
+#                     logEvent("FLCBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,alpha))
+#                 if ('dmt_sge',ci,cj) in q:
+#                     #mwf debug
+#                     #import pdb
+#                     #pdb.set_trace()
+#                     alpha = self.flcbdf[ci].getCurrentAlpha()
+#                     self.alpha_bdf = alpha
+#                     q[('dmt_sge',ci,cj)].flat[:] = q[('dm_sge',ci,cj)].flat
+#                     q[('dmt_sge',ci,cj)] *= alpha
 
 
-#                 mwfHackedAyprime = False
-#                 for cj in range(self.nc):
-#                     try:
-#                         self.flcbdf[ci].calculate_yprime(q[('m',ci)],q[('dm',ci,cj)],q[('mt',ci)],q[('dmt',ci,cj)])
-#                         mwfHackedAyprime=True
-#                         break
-#                     except:
-#                         pass
-#                 assert mwfHackedAyprime, "couldn't find a key for dm,%s " % ci
-            if numpy.isnan(q[('mt',ci)]).any():
-                import pdb
-                pdb.set_trace()
-        for ci in range(self.nc):
-            self.flcbdf[('u',ci)].calculate_yprime(self.transport.u[ci].dof,self.dummy[ci],self.Ddof_Dt[ci],self.dummy[ci])
-    def choose_dt(self):
-        logEvent("choosing dt for FLCBDF")
-        self.dt = min([self.flcbdf[ci].choose_dt(self.tLast,self.tLast+100.0*self.dt) for ci in self.massComponents])
-        for ci in range(self.nc): self.flcbdf[('u',ci)].choose_dt(self.tLast,self.tLast+100.0*self.dt)
-        self.t = self.tLast + self.dt
-    def set_dt(self,DTSET):
-        logEvent("setting dt for FLCBDF")
-        self.dt = DTSET
-        self.t = self.tLast + self.dt
-        for ci in self.massComponents: self.flcbdf[ci].set_dt(DTSET)
-        for ci in range(self.nc): self.flcbdf[('u',ci)].set_dt(DTSET)
-    def updateTimeHistory(self,resetFromDOF=False):
-        logEvent("updating time history for FLCBDF")
-        self.tLast = self.t
-        for ci in self.massComponents: self.flcbdf[ci].stepTaken(self.m[ci])
-        for ci in range(self.nc): self.flcbdf[('u',ci)].stepTaken(self.transport.u[ci].dof)
-    def updateStage(self):
-        """
-        increment stage counters and push necessary information
-        into stage arrays
-        """
-        pass
-    def setInitialStageValues(self):
-        """
-        set the all stage values assuming this is the first step
-        after a problem reset
-        """
-        pass
-    def lastStepErrorOk(self):
-        logEvent("checking error for FLCBDF")
-        OK=True
-        for ci in self.massComponents:
-            OK = (OK and bool(self.flcbdf[ci].lastStepErrorOk(self.m[ci])))
-        for ci in range(self.nc): self.flcbdf[('u',ci)].lastStepErrorOk(self.transport.u[ci].dof)
-        return OK
+# #                 mwfHackedAyprime = False
+# #                 for cj in range(self.nc):
+# #                     try:
+# #                         self.flcbdf[ci].calculate_yprime(q[('m',ci)],q[('dm',ci,cj)],q[('mt',ci)],q[('dmt',ci,cj)])
+# #                         mwfHackedAyprime=True
+# #                         break
+# #                     except:
+# #                         pass
+# #                 assert mwfHackedAyprime, "couldn't find a key for dm,%s " % ci
+#             if numpy.isnan(q[('mt',ci)]).any():
+#                 import pdb
+#                 pdb.set_trace()
+#         for ci in range(self.nc):
+#             self.flcbdf[('u',ci)].calculate_yprime(self.transport.u[ci].dof,self.dummy[ci],self.Ddof_Dt[ci],self.dummy[ci])
+#     def choose_dt(self):
+#         logEvent("choosing dt for FLCBDF")
+#         self.dt = min([self.flcbdf[ci].choose_dt(self.tLast,self.tLast+100.0*self.dt) for ci in self.massComponents])
+#         for ci in range(self.nc): self.flcbdf[('u',ci)].choose_dt(self.tLast,self.tLast+100.0*self.dt)
+#         self.t = self.tLast + self.dt
+#     def set_dt(self,DTSET):
+#         logEvent("setting dt for FLCBDF")
+#         self.dt = DTSET
+#         self.t = self.tLast + self.dt
+#         for ci in self.massComponents: self.flcbdf[ci].set_dt(DTSET)
+#         for ci in range(self.nc): self.flcbdf[('u',ci)].set_dt(DTSET)
+#     def updateTimeHistory(self,resetFromDOF=False):
+#         logEvent("updating time history for FLCBDF")
+#         self.tLast = self.t
+#         for ci in self.massComponents: self.flcbdf[ci].stepTaken(self.m[ci])
+#         for ci in range(self.nc): self.flcbdf[('u',ci)].stepTaken(self.transport.u[ci].dof)
+#     def updateStage(self):
+#         """
+#         increment stage counters and push necessary information
+#         into stage arrays
+#         """
+#         pass
+#     def setInitialStageValues(self):
+#         """
+#         set the all stage values assuming this is the first step
+#         after a problem reset
+#         """
+#         pass
+#     def lastStepErrorOk(self):
+#         logEvent("checking error for FLCBDF")
+#         OK=True
+#         for ci in self.massComponents:
+#             OK = (OK and bool(self.flcbdf[ci].lastStepErrorOk(self.m[ci])))
+#         for ci in range(self.nc): self.flcbdf[('u',ci)].lastStepErrorOk(self.transport.u[ci].dof)
+#         return OK
 
 class PsiTCtte(BackwardEuler_cfl):
     from .ctimeIntegration import psiTCtteDT
@@ -3670,8 +3670,8 @@ class ForwardIntegrator(object):
         self.dtMeth    = dtMeth
         self.tLast     = None
         self.stepExact = stepExact
-        if self.dtMeth == FLCBDF: #takes care of step exact?
-            self.stepExact = False
+#        if self.dtMeth == FLCBDF: #takes care of step exact?
+#            self.stepExact = False
         self.dtSET     = None
         self.tstring   = None
         self.nOptions  = nOptions
@@ -4052,37 +4052,37 @@ class SignedDistanceIntegrator(ForwardIntegrator):
 #add a special FLCBDF integrator for Two-phase Darcy flow to take care of offdiagonal problems
 #when have incompressible flow
 #current FLCBDF doesn't handle non-diagonal nonlinearity yet
-class FLCBDF_TwophaseDarcy_fc(FLCBDF):
-    def __init__(self,transport):
-        FLCBDF.__init__(self,transport)
-    def calculateElementCoefficients(self,q):
-        #w equation (aq mass balance)
-        #mwf now what about if have compressibility
-        ci = 0;
-        for cj in [0]: #calculate S_w as beflre
-            self.flcbdf[ci].calculate_yprime(q[('m',ci)],q[('dm',ci,cj)],q[('mt',ci)],q[('dmt',ci,cj)])
-        self.m[ci]=q[('m',ci)]
-        #current flcbdf ignores arguments in subsequent calls to calculate_yprime
-        cj = 1;
-        if ('dm',ci,cj) in q:
-            alpha = self.flcbdf[ci].getCurrentAlpha()
-            q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
-            q[('dmt',ci,cj)] *= alpha
+# class FLCBDF_TwophaseDarcy_fc(FLCBDF):
+#     def __init__(self,transport):
+#         FLCBDF.__init__(self,transport)
+#     def calculateElementCoefficients(self,q):
+#         #w equation (aq mass balance)
+#         #mwf now what about if have compressibility
+#         ci = 0;
+#         for cj in [0]: #calculate S_w as beflre
+#             self.flcbdf[ci].calculate_yprime(q[('m',ci)],q[('dm',ci,cj)],q[('mt',ci)],q[('dmt',ci,cj)])
+#         self.m[ci]=q[('m',ci)]
+#         #current flcbdf ignores arguments in subsequent calls to calculate_yprime
+#         cj = 1;
+#         if ('dm',ci,cj) in q:
+#             alpha = self.flcbdf[ci].getCurrentAlpha()
+#             q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
+#             q[('dmt',ci,cj)] *= alpha
 
-        #n equation (napl mass balance)
-        ci = 1;
-        for cj in [0]: #which diagonal to use, sand getting a lot of failures either way with comp.?
-            self.flcbdf[ci].calculate_yprime(q[('m',ci)],q[('dm',ci,cj)],q[('mt',ci)],q[('dmt',ci,cj)])
-        self.m[ci]=q[('m',ci)]
-        #
-        cj = 1;
-        if ('dm',ci,cj) in q:
-            alpha = self.flcbdf[ci].getCurrentAlpha()
-            q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
-            q[('dmt',ci,cj)] *= alpha
+#         #n equation (napl mass balance)
+#         ci = 1;
+#         for cj in [0]: #which diagonal to use, sand getting a lot of failures either way with comp.?
+#             self.flcbdf[ci].calculate_yprime(q[('m',ci)],q[('dm',ci,cj)],q[('mt',ci)],q[('dmt',ci,cj)])
+#         self.m[ci]=q[('m',ci)]
+#         #
+#         cj = 1;
+#         if ('dm',ci,cj) in q:
+#             alpha = self.flcbdf[ci].getCurrentAlpha()
+#             q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
+#             q[('dmt',ci,cj)] *= alpha
 
-        for ci in range(self.nc):
-            self.flcbdf[('u',ci)].calculate_yprime(self.transport.u[ci].dof,self.dummy[ci],self.Ddof_Dt[ci],self.dummy[ci])
+#         for ci in range(self.nc):
+#             self.flcbdf[('u',ci)].calculate_yprime(self.transport.u[ci].dof,self.dummy[ci],self.Ddof_Dt[ci],self.dummy[ci])
 
 
 class CentralDifference_2ndD(TI_base):

@@ -153,6 +153,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  PRESSURE_model=7,
                  FLUID_model=6,
                  VOS_model=0,
+                 CLSVOF_model=None,
                  LS_model=None,
                  VOF_model=None,
                  KN_model=None,
@@ -253,6 +254,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.FLUID_model = FLUID_model
         self.PRESSURE_model = PRESSURE_model
         self.VOS_model = VOS_model
+        self.CLSVOF_model = CLSVOF_model
         self.LS_model = LS_model
         self.VOF_model = VOF_model
         self.KN_model = KN_model
@@ -394,6 +396,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model = modelList[self.ME_model]
         if self.FLUID_model is not None:
             self.model.q_velocity_fluid = modelList[self.FLUID_model].q[('velocity', 0)]
+            self.model.q_velocityStar_fluid = modelList[self.FLUID_model].q[('velocityStar', 0)]
             self.model.ebqe_velocity_fluid = modelList[self.FLUID_model].ebqe[('velocity', 0)]
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -414,47 +417,62 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_vos = self.model.ebqe_vos   
             self.ebq_vos = self.model.ebq_vos   
             self.q_grad_vos = modelList[self.VOS_model].q[('grad(u)',0)]
-        if self.LS_model is not None:
-            self.q_phi = modelList[self.LS_model].q[('u', 0)]
-            if ('u', 0) in modelList[self.LS_model].ebq:
-                self.ebq_phi = modelList[self.LS_model].ebq[('u', 0)]
+        if self.CLSVOF_model is not None: # use CLSVOF
+            # LS part #
+            self.q_phi = modelList[self.CLSVOF_model].q[('u', 0)]
+            self.ebq_phi = None # Not used. What is this for?
+            self.ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)]
+            self.bc_ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)] #Dirichlet BCs for level set. I don't have it since I impose 1 or -1. Therefore I attach the soln at boundary
+            self.q_n = modelList[self.CLSVOF_model].q[('grad(u)', 0)]
+            self.ebq_n = None # Not used. What is this for?
+            self.ebqe_n = modelList[self.CLSVOF_model].ebqe[('grad(u)', 0)]
+            # VOF part #
+            self.q_vf = modelList[self.CLSVOF_model].q[('H(u)', 0)]
+            self.ebq_vf = None# Not used. What is this for?
+            self.ebqe_vf = modelList[self.CLSVOF_model].ebqe[('H(u)', 0)]
+            self.bc_ebqe_vf = 0.5*(1.0+modelList[self.CLSVOF_model].numericalFlux.ebqe[('u',0)]) # Dirichlet BCs for VOF. What I have is BCs for Signed function
+        else:  # use NCLS-RDLS-VOF-MCORR instead
+            if self.LS_model is not None:
+                self.q_phi = modelList[self.LS_model].q[('u', 0)]
+                if ('u', 0) in modelList[self.LS_model].ebq:
+                    self.ebq_phi = modelList[self.LS_model].ebq[('u', 0)]
+                else:
+                    self.ebq_phi = None
+                self.ebqe_phi = modelList[self.LS_model].ebqe[('u', 0)]
+                self.bc_ebqe_phi = modelList[
+                    self.LS_model].numericalFlux.ebqe[
+                        ('u', 0)]
+                # normal
+                self.q_n = modelList[self.LS_model].q[('grad(u)', 0)]
+                if ('grad(u)', 0) in modelList[self.LS_model].ebq:
+                    self.ebq_n = modelList[self.LS_model].ebq[('grad(u)', 0)]
+                else:
+                    self.ebq_n = None
+                self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
             else:
-                self.ebq_phi = None
-            self.ebqe_phi = modelList[self.LS_model].ebqe[('u', 0)]
-            self.bc_ebqe_phi = modelList[
-                self.LS_model].numericalFlux.ebqe[
-                ('u', 0)]
-            # normal
-            self.q_n = modelList[self.LS_model].q[('grad(u)', 0)]
-            if ('grad(u)', 0) in modelList[self.LS_model].ebq:
-                self.ebq_n = modelList[self.LS_model].ebq[('grad(u)', 0)]
+                self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 0)].shape, 'd')
+                self.ebqe_phi = 10.0 * \
+                                numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
+                self.bc_ebqe_phi = 10.0 * \
+                                   numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
+                self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
+                self.ebqe_n = numpy.ones(
+                    self.model.ebqe[
+                        ('velocity', 0)].shape, 'd')
+            if self.VOF_model is not None:
+                self.q_vf = modelList[self.VOF_model].q[('u', 0)]
+                if ('u', 0) in modelList[self.VOF_model].ebq:
+                    self.ebq_vf = modelList[self.VOF_model].ebq[('u', 0)]
+                else:
+                    self.ebq_vf = None
+                self.ebqe_vf = modelList[self.VOF_model].ebqe[('u', 0)]
+                self.bc_ebqe_vf = modelList[
+                    self.VOF_model].numericalFlux.ebqe[
+                        ('u', 0)]
             else:
-                self.ebq_n = None
-            self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
-        else:
-            self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 0)].shape, 'd')
-            self.ebqe_phi = 10.0 * \
-                numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
-            self.bc_ebqe_phi = 10.0 * \
-                numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
-            self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
-            self.ebqe_n = numpy.ones(
-                self.model.ebqe[
-                    ('velocity', 0)].shape, 'd')
-        if self.VOF_model is not None:
-            self.q_vf = modelList[self.VOF_model].q[('u', 0)]
-            if ('u', 0) in modelList[self.VOF_model].ebq:
-                self.ebq_vf = modelList[self.VOF_model].ebq[('u', 0)]
-            else:
-                self.ebq_vf = None
-            self.ebqe_vf = modelList[self.VOF_model].ebqe[('u', 0)]
-            self.bc_ebqe_vf = modelList[
-                self.VOF_model].numericalFlux.ebqe[
-                ('u', 0)]
-        else:
-            self.q_vf = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
-            self.ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
-            self.bc_ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
+                self.q_vf = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
+                self.ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
+                self.bc_ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
         # curvature
         if self.KN_model is not None:
             self.q_kappa = modelList[self.KN_model].q[('u', 0)]
@@ -857,6 +875,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         if firstStep==True:
             self.model.firstStep=False
+            self.model.LAG_MU_FR=1.0
+        self.model.q['mu_fr_last'][:] = self.model.q['mu_fr']
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.model.vosModel:
@@ -864,8 +884,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_grad_vos = self.model.q_grad_vos
             #if self.q_grad_vos.all != 0.0:
             #    logEvent('q_grad_vos from RANS3PSed.py --> %s ' % self.q_grad_vos)
-
-
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
@@ -1008,6 +1026,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element = sum(self.nDOF_trial_element)
         self.nFreeVDOF_global = sum(self.nFreeDOF_global)
+        self.ncDrag = np.zeros((self.nFreeDOF_global[0],self.nc),'d')
         #
         NonlinearEquation.__init__(self, self.nFreeVDOF_global)
         #
@@ -1192,6 +1211,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('numDiff', 2, 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['mu_fr'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['mu_fr_last'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.LAG_MU_FR=0.0
         self.ebqe[
             ('u',
              0)] = numpy.zeros(
@@ -1817,7 +1841,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         cj].DOFBoundaryConditionsDict.items()):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                             dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-
+        self.ncDrag[:]=0.0
         self.rans3psed.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -1877,6 +1901,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.penalty_constant,
             self.coefficients.epsFact_solid,
             self.q_velocity_fluid,
+            self.q_velocityStar_fluid,
             self.q_vos,
             self.q_dvos_dt,
             self.coefficients.q_grad_vos,
@@ -1991,7 +2016,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.wettedAreas,
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
-            self.coefficients.netMoments)
+            self.coefficients.netMoments,
+            self.ncDrag,
+            self.LAG_MU_FR,
+            self.q['mu_fr_last'],
+            self.q['mu_fr'])
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -2008,7 +2037,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                         dofN], self.timeIntegration.t)# - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
-
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         log("Maximum CFL = " + str(cflMax), level=2)
         if self.stabilization:
@@ -2107,6 +2135,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # VRANS start
             self.coefficients.epsFact_solid,
             self.q_velocity_fluid,
+            self.q_velocityStar_fluid,
             self.q_vos,
             self.q_dvos_dt,
             self.coefficients.q_grad_vos,
@@ -2238,7 +2267,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 0)],
             self.csrColumnOffsets_eb[(2, 1)],
             self.csrColumnOffsets_eb[(2, 2)],
-            self.mesh.elementMaterialTypes)
+            self.mesh.elementMaterialTypes,
+            self.LAG_MU_FR,
+            self.q['mu_fr_last'],
+            self.q['mu_fr'])
+        self.q[('cfl', 0)][:]=0.0
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(

@@ -64,6 +64,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double C_b,
                                double * eps_solid,
                                double * q_velocity_fluid,
+                               double * q_velocityStar_fluid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_grad_vos,
@@ -178,7 +179,11 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * wettedAreas,
                                double * netForces_p,
                                double * netForces_v,
-                               double * netMoments)
+                               double * netMoments,
+                               double * ncDrag,
+                               double LAG_MU_FR,
+                               double* q_mu_fr_last,
+                               double* q_mu_fr)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -238,7 +243,8 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double C_b,
                                # VRANS start
                                double * eps_solid,
-                               double * q_velocity_solid,
+                               double * q_velocity_fluid,
+                               double * q_velocityStar_fluid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_grad_vos,
@@ -345,7 +351,10 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                int * csrColumnOffsets_eb_w_u,
                                int * csrColumnOffsets_eb_w_v,
                                int * csrColumnOffsets_eb_w_w,
-                               int * elementFlags)
+                               int * elementFlags,
+                               double LAG_MU_FR,
+                               double* q_mu_fr_last,
+                               double* q_mu_fr)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -513,6 +522,7 @@ cdef class RANS3PSed:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray q_velocity_fluid,
+                          numpy.ndarray q_velocityStar_fluid,
                           numpy.ndarray q_vos,
                           numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_grad_vos,
@@ -609,7 +619,11 @@ cdef class RANS3PSed:
                           numpy.ndarray wettedAreas,
                           numpy.ndarray netForces_p,
                           numpy.ndarray netForces_v,
-                          numpy.ndarray netMoments):
+                          numpy.ndarray netMoments,
+                          numpy.ndarray ncDrag,
+                          double LAG_MU_FR,
+                          numpy.ndarray q_mu_fr_last,
+                          numpy.ndarray q_mu_fr):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -669,6 +683,7 @@ cdef class RANS3PSed:
                                        # VRANS start
                                         < double * > eps_solid.data,
                                         < double * > q_velocity_fluid.data,
+                                        < double * > q_velocityStar_fluid.data,
                                         < double * > q_vos.data,
                                         < double * > q_dvos_dt.data,
                                         < double * > q_grad_vos.data,
@@ -765,7 +780,11 @@ cdef class RANS3PSed:
                                         < double * > wettedAreas.data,
                                         < double * > netForces_p.data,
                                         < double * > netForces_v.data,
-                                        < double * > netMoments.data)
+                                        < double * > netMoments.data,
+                                        < double * > ncDrag.data,
+                                        LAG_MU_FR,
+                                        < double * > q_mu_fr_last.data,
+                                        < double * > q_mu_fr.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -826,6 +845,7 @@ cdef class RANS3PSed:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray q_velocity_fluid,
+                          numpy.ndarray q_velocityStar_fluid,
                           numpy.ndarray q_vos,
                           numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_grad_vos,
@@ -932,7 +952,10 @@ cdef class RANS3PSed:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags,
+                          LAG_MU_FR,
+                          numpy.ndarray q_mu_fr_last,
+                          numpy.ndarray q_mu_fr):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double *> mesh_trial_ref.data,
@@ -993,6 +1016,7 @@ cdef class RANS3PSed:
                                        # VRANS start
                                         < double * > eps_solid.data,
                                         < double * > q_velocity_fluid.data,
+                                        < double * > q_velocityStar_fluid.data,
                                         < double * > q_vos.data,
                                         < double * > q_dvos_dt.data,
                                         < double * > q_grad_vos.data,
@@ -1099,7 +1123,10 @@ cdef class RANS3PSed:
                                         < int * > csrColumnOffsets_eb_w_u.data,
                                         < int * > csrColumnOffsets_eb_w_v.data,
                                         < int * > csrColumnOffsets_eb_w_w.data,
-                                        < int * > elementFlags.data)
+                                        < int * > elementFlags.data,
+                                       LAG_MU_FR,
+                                       < double * > q_mu_fr_last.data,
+                                       < double * > q_mu_fr.data)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -1208,6 +1235,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                # VRANS start
                                double * eps_solid,
                                double * q_velocity_fluid,
+                               double * q_velocityStar_fluid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_grad_vos,
@@ -1305,7 +1333,11 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * wettedAreas,
                                double * netForces_p,
                                double * netForces_v,
-                               double * netMoments)
+                               double * netMoments,
+                               double * ncDrag,
+                               double LAG_MU_FR,
+                               double* q_mu_fr_last,
+                               double* q_mu_fr)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1364,6 +1396,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                # VRANS start
                                double * eps_solid,
                                double * q_velocity_fluid,
+                               double * q_velocityStar_fluid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_grad_vos,
@@ -1471,7 +1504,10 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                int * csrColumnOffsets_eb_w_u,
                                int * csrColumnOffsets_eb_w_v,
                                int * csrColumnOffsets_eb_w_w,
-                               int * elementFlags)
+                               int * elementFlags,
+                               double LAG_MU_FR,
+                               double* q_mu_fr_last,
+                               double* q_mu_fr)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -1639,6 +1675,7 @@ cdef class RANS3PSed2D:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray q_velocity_fluid,
+                          numpy.ndarray q_velocityStar_fluid,
                           numpy.ndarray q_vos,
                           numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_grad_vos,
@@ -1735,7 +1772,11 @@ cdef class RANS3PSed2D:
                           numpy.ndarray wettedAreas,
                           numpy.ndarray netForces_p,
                           numpy.ndarray netForces_v,
-                          numpy.ndarray netMoments):
+                          numpy.ndarray netMoments,
+                          numpy.ndarray ncDrag,
+                          double LAG_MU_FR,
+                          numpy.ndarray q_mu_fr_last,
+                          numpy.ndarray q_mu_fr):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1795,6 +1836,7 @@ cdef class RANS3PSed2D:
                                        # VRANS start
                                         < double * > eps_solid.data,
                                         < double * > q_velocity_fluid.data,
+                                        < double * > q_velocityStar_fluid.data,
                                         < double * > q_vos.data,
                                         < double * > q_dvos_dt.data,
                                         < double * > q_grad_vos.data,
@@ -1891,7 +1933,11 @@ cdef class RANS3PSed2D:
                                         < double * > wettedAreas.data,
                                         < double * > netForces_p.data,
                                         < double * > netForces_v.data,
-                                        < double * > netMoments.data)
+                                        < double * > netMoments.data,
+                                        < double * > ncDrag.data,
+                                        LAG_MU_FR,
+                                        < double * > q_mu_fr_last.data,
+                                        < double * > q_mu_fr.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1952,6 +1998,7 @@ cdef class RANS3PSed2D:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray q_velocity_fluid,
+                          numpy.ndarray q_velocityStar_fluid,
                           numpy.ndarray q_vos,
                           numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_grad_vos,
@@ -2058,7 +2105,10 @@ cdef class RANS3PSed2D:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags,
+                          LAG_MU_FR,
+                          numpy.ndarray q_mu_fr_last,
+                          numpy.ndarray q_mu_fr):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double *> mesh_trial_ref.data,
@@ -2119,6 +2169,7 @@ cdef class RANS3PSed2D:
                                        # VRANS start
                                         < double * > eps_solid.data,
                                         < double * > q_velocity_fluid.data,
+                                        < double * > q_velocityStar_fluid.data,
                                         < double * > q_vos.data,
                                         < double * > q_dvos_dt.data,
                                         < double * > q_grad_vos.data,
@@ -2225,7 +2276,10 @@ cdef class RANS3PSed2D:
                                         < int * > csrColumnOffsets_eb_w_u.data,
                                         < int * > csrColumnOffsets_eb_w_v.data,
                                         < int * > csrColumnOffsets_eb_w_w.data,
-                                        < int * > elementFlags.data)
+                                        < int * > elementFlags.data,
+                                       LAG_MU_FR,
+                                       < double * > q_mu_fr_last.data,
+                                       < double * > q_mu_fr.data)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
