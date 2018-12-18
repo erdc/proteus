@@ -215,7 +215,7 @@ class OneLevelTransport(NonlinearEquation):
             self.unique_test_trial_range  = list(range(1))
             self.duplicate_test_trial_range = list(range(1,coefficients.nc))
         self.u = uDict
-        self.ua = {}#analytical solutions
+        self.u_save = {}#analytical solutions
         self.phi  = phiDict
         self.dphi={}
         for ck,phi in phiDict.items():
@@ -1658,9 +1658,10 @@ class OneLevelTransport(NonlinearEquation):
         if analyticalSolutionsDict is None:
             return
         for cj,sol in analyticalSolutionsDict.items():
-            if cj not in self.ua:
-                self.ua[cj] = copy.deepcopy(self.u[cj])
-                self.ua[cj].name=self.u[cj].name+'_analytical'
+            if cj not in self.u_save:
+                self.u_save[cj] = (self.u[cj].dof.copy(), self.u[cj].name)
+            else:
+                self.u_save[cj][0][:] = self.u[cj].dof
             interpolationValues = numpy.zeros((self.mesh.nElements_global,
                                                self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints),
                                               'd')
@@ -1673,8 +1674,11 @@ class OneLevelTransport(NonlinearEquation):
                 for eN in range(self.mesh.nElements_global):
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T)
-            self.ua[cj].projectFromInterpolationConditions(interpolationValues)
-            self.u[cj].femSpace.writeFunctionXdmf(archive,self.ua[cj],tCount)
+            self.u[cj].projectFromInterpolationConditions(interpolationValues)
+            self.u[cj].name += '_analytical'
+            self.u[cj].femSpace.writeFunctionXdmf(archive,self.u[cj],tCount)
+            self.u[cj].dof[:] = self.u_save[cj][0]
+            self.u[cj].name = self.u_save[cj][1]
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def setInitialConditionsFromDofs(self,getInitialConditionDofs,T=0.0):
         self.timeIntegration.t=T

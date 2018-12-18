@@ -581,9 +581,9 @@ class Mesh(object):
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
     def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from . import cmeshToolsTest as cmeshTools
         from . import Comm
-        from . import flcbdfWrappers
+        from . import flcbdfWrappersTest as flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
         logEvent(memory("partitionMesh 1","MeshTools"),level=4)
@@ -602,7 +602,7 @@ class Mesh(object):
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodes(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodes(comm.comm.tompi4py(), nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
@@ -611,7 +611,7 @@ class Mesh(object):
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElements(comm.comm.tompi4py(), nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
@@ -991,7 +991,7 @@ class Mesh(object):
                     SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
             #done with material types
     def buildFromC(self,cmesh):
-        from . import cmeshTools
+        from . import cmeshToolsTest as cmeshTools
         #
         logEvent(memory("buildFromC","MeshTools"),level=4)
         self.cmesh = cmesh
@@ -1683,7 +1683,7 @@ class MultilevelMesh(Mesh):
         self.meshList=[]
         self.elementParents=None
     def buildFromC(self,cmultilevelMesh):
-        from . import cmeshTools
+        from . import cmeshToolsTest as cmeshTools
         self.cmultilevelMesh = cmultilevelMesh
         (self.nLevels,
          self.cmeshList,
@@ -2272,7 +2272,7 @@ class TetrahedralMesh(Mesh):
         from . import cmeshTools
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
     def generateTetrahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
-        from . import cmeshTools
+        from . import cmeshToolsTest as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateTetrahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz,self.cmesh)
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
@@ -3708,7 +3708,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                  skipInit=False,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from . import cmeshToolsTest as cmeshTools
         from . import Comm
         MultilevelMesh.__init__(self)
         self.useC = True
