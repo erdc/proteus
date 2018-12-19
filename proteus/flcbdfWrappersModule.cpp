@@ -673,7 +673,7 @@ extern "C"
 
   }
 
-  static PyMethodDef flcbdfWrappersMethods[] = {
+  static PyMethodDef flcbdfWrappersOldMethods[] = {
     { "globalSum",
       flcbdfWrappersGlobalSum,
       METH_VARARGS,
@@ -721,12 +721,12 @@ extern "C"
 #define PyMODINIT_FUNC void
 #endif
   PyMODINIT_FUNC
-  initflcbdfWrappers(void)
+  initflcbdfWrappersOld(void)
   {
     PyObject *m,*d,*c_api_object;
-    static void* PyFLCBDFWrappers_API[1];
-    m = Py_InitModule3("flcbdfWrappers",
-                       flcbdfWrappersMethods,
+    static void* PyFLCBDFWrappersOld_API[1];
+    m = Py_InitModule3("flcbdfWrappersOld",
+                       flcbdfWrappersOldMethods,
                        "flcbdf wrappers module");
     d = PyModule_GetDict(m);
     import_array();
@@ -738,8 +738,8 @@ extern "C"
     // Set up default Proteus communicator
     PROTEUS_COMM_WORLD = PETSC_COMM_WORLD;
 
-    PyFLCBDFWrappers_API[0] = (void*)(&PROTEUS_COMM_WORLD);
-    c_api_object = PyCObject_FromVoidPtr((void*)PyFLCBDFWrappers_API,NULL);
+    PyFLCBDFWrappersOld_API[0] = (void*)(&PROTEUS_COMM_WORLD);
+    c_api_object = PyCObject_FromVoidPtr((void*)PyFLCBDFWrappersOld_API,NULL);
     PyModule_AddObject(m,"_C_API",c_api_object);
   }
 }

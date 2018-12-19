@@ -26,7 +26,7 @@ extern "C"
 #include "partitioning.h"
 
 /**
-   \defgroup flcbdfWrappers flcbdfWrappers
+   \defgroup flcbdfWrappersOld flcbdfWrappersOld
    \brief Python interface to adaptive BDF code (daetk)
    @{ 
 */
@@ -36,13 +36,13 @@ extern "C"
 #ifdef FLCBDF_WRAPPERS_MODULE
   static MPI_Comm PROTEUS_COMM_WORLD;
 #else
-  static void **PyFLCBDFWrappers_API;
+  static void **PyFLCBDFWrappersOld_API;
   #define PROTEUS_COMM_WORLD \
-    *(MPI_Comm*)(PyFLCBDFWrappers_API[0])
+    *(MPI_Comm*)(PyFLCBDFWrappersOld_API[0])
   static int
-  import_flcbdfWrappers(void)
+  import_flcbdfWrappersOld(void)
   {
-    PyObject* module = PyImport_ImportModule("proteus.flcbdfWrappers");
+    PyObject* module = PyImport_ImportModule("proteus.flcbdfWrappersOld");
     
     if (module != NULL)
       {
@@ -50,7 +50,7 @@ extern "C"
 	if (c_api_object == NULL)
 	  return -1;
 	if (PyCObject_Check(c_api_object))
-	  PyFLCBDFWrappers_API = (void **)PyCObject_AsVoidPtr(c_api_object);
+	  PyFLCBDFWrappersOld_API = (void **)PyCObject_AsVoidPtr(c_api_object);
 	Py_DECREF(c_api_object);
       }
     return 0;

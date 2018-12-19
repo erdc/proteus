@@ -6,7 +6,7 @@
 #include <map>
 #include <set>
 /** \file cmeshToolsModule.cpp
-    \defgroup cmeshTools cmeshTools
+    \defgroup cmeshToolsOld cmeshTools
     \brief Python interface to mesh library 
     @{
 */
@@ -41,7 +41,7 @@ CMesh_dealloc(CMesh* self)
 static PyTypeObject CMeshType = {    
   PyObject_HEAD_INIT(NULL)
   0,                         /*ob_size*/
-  "cmeshTools.CMesh",             /*tp_name*/
+  "cmeshToolsOld.CMesh",             /*tp_name*/
   sizeof(CMesh), /*tp_basicsize*/
   0,                         /*tp_itemsize*/
   (destructor)CMesh_dealloc,                         /*tp_dealloc*/
@@ -531,7 +531,7 @@ CMultilevelMesh_dealloc(CMultilevelMesh* self)
 static PyTypeObject CMultilevelMeshType = {    
   PyObject_HEAD_INIT(NULL)
   0,                         /*ob_size*/
-  "cmeshTools.CMultilevelMesh",             /*tp_name*/
+  "cmeshToolsOld.CMultilevelMesh",             /*tp_name*/
   sizeof(CMultilevelMesh), /*tp_basicsize*/
   0,                         /*tp_itemsize*/
   (destructor)CMultilevelMesh_dealloc,                         /*tp_dealloc*/
@@ -1928,7 +1928,7 @@ static PyMethodDef SparsityInfo_methods[] = {
 static PyTypeObject SparsityInfoType = {    
   PyObject_HEAD_INIT(NULL)
   0,                         /*ob_size*/
-  "cmeshTools.SparsityInfo",             /*tp_name*/
+  "cmeshToolsOld.SparsityInfo",             /*tp_name*/
   sizeof(SparsityInfo), /*tp_basicsize*/
   0,                         /*tp_itemsize*/
   (destructor) SparsityInfo_dealloc,                         /*tp_dealloc*/
@@ -2011,7 +2011,7 @@ static PyTypeObject SparsityInfoType = {
 }
 
 
-static PyMethodDef cmeshToolsMethods[] = {
+static PyMethodDef cmeshToolsOldMethods[] = {
 //   {"commInit",
 //    (PyCFunction)cmeshToolsCommInit,
 //    METH_VARARGS | METH_KEYWORDS,
@@ -2187,7 +2187,7 @@ static PyMethodDef cmeshToolsMethods[] = {
   { NULL,NULL,0,NULL}
 };
 
-PyMODINIT_FUNC initcmeshTools(void)
+PyMODINIT_FUNC initcmeshToolsOld(void)
 {
   PyObject *m,*d;
   if (PyType_Ready(&CMeshType) < 0)
@@ -2202,9 +2202,9 @@ PyMODINIT_FUNC initcmeshTools(void)
     return;
   if (PyType_Ready(&SparsityInfoType) < 0)
     return;
-  m = Py_InitModule3("cmeshTools", 
-                     cmeshToolsMethods,
-                     "cmeshTools module");
+  m = Py_InitModule3("cmeshToolsOld", 
+                     cmeshToolsOldMethods,
+                     "cmeshToolsOld module");
 //   Py_INCREF(&CKSPType);
 //   PyModule_AddObject(m, "KSP", (PyObject *)&CKSPType);
 //   Py_INCREF(&ParVecType);

@@ -80,6 +80,8 @@ cdef class CMesh:
             self.W_KNOT = np.asarray(<double[:self.meshlink.mesh.nz+self.meshlink.mesh.pz+1]> self.meshlink.mesh.W_KNOT)
         else:
             self.W_KNOT = np.empty(0)
+        print("nElements_global {0:d}".format(self.meshlink.mesh.nElements_global))
+        print(self.meshlink.mesh.elementDiametersArray)
         self.elementDiametersArray = np.asarray(<double[:self.meshlink.mesh.nElements_global]> self.meshlink.mesh.elementDiametersArray)
         self.elementInnerDiametersArray = np.asarray(<double[:self.meshlink.mesh.nElements_global]> self.meshlink.mesh.elementInnerDiametersArray)
         self.elementBoundaryDiametersArray = np.asarray(<double[:self.meshlink.mesh.nElementBoundaries_global]> self.meshlink.mesh.elementBoundaryDiametersArray)

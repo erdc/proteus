@@ -581,9 +581,9 @@ class Mesh(object):
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
     def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshToolsTest as cmeshTools
+        from . import cmeshTools as cmeshTools
         from . import Comm
-        from . import flcbdfWrappersTest as flcbdfWrappers
+        from . import flcbdfWrappers as flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
         logEvent(memory("partitionMesh 1","MeshTools"),level=4)
@@ -648,9 +648,9 @@ class Mesh(object):
         # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
     def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         from . import Comm
-        from . import flcbdfWrappers
+        from . import flcbdfWrappers as flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
         logEvent(memory("partitionMesh 1","MeshTools"),level=4)
@@ -673,7 +673,12 @@ class Mesh(object):
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(comm.comm.tompi4py(),
+                                                                                                 filebase,
+                                                                                                 base,
+                                                                                                 nLayersOfOverlap,
+                                                                                                 self.cmesh,
+                                                                                                 self.subdomainMesh.cmesh)
         else:
             logEvent("Starting element partitioning")
             (self.elementOffsets_subdomain_owned,
@@ -683,7 +688,12 @@ class Mesh(object):
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElementsFromTetgenFiles(comm.comm.tompi4py(),
+                                                                                                    filebase,
+                                                                                                    base,
+                                                                                                    nLayersOfOverlap,
+                                                                                                    self.cmesh,
+                                                                                                    self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.buildFromCNoArrays(self.cmesh)
@@ -991,7 +1001,7 @@ class Mesh(object):
                     SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
             #done with material types
     def buildFromC(self,cmesh):
-        from . import cmeshToolsTest as cmeshTools
+        from . import cmeshTools as cmeshTools
         #
         logEvent(memory("buildFromC","MeshTools"),level=4)
         self.cmesh = cmesh
@@ -1088,7 +1098,7 @@ class Mesh(object):
         self.nEdges_owned = self.nEdges_global
         logEvent(memory("buildFromC","MeshTools"),level=4)
     def buildFromCNoArrays(self,cmesh):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         #
         logEvent(memory("buildFromC","MeshTools"),level=4)
         self.cmesh = cmesh
@@ -1584,9 +1594,9 @@ class Mesh(object):
         input('Please press return to continue... \n')
 
     def convertFromPUMI(self, PUMIMesh, faceList,regList, parallel=False, dim=3):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         from . import MeshAdaptPUMI
-        from . import flcbdfWrappers
+        from . import flcbdfWrappers as flcbdfWrappers
         from . import Comm
         comm = Comm.get()
         self.cmesh = cmeshTools.CMesh()
@@ -1683,7 +1693,7 @@ class MultilevelMesh(Mesh):
         self.meshList=[]
         self.elementParents=None
     def buildFromC(self,cmultilevelMesh):
-        from . import cmeshToolsTest as cmeshTools
+        from . import cmeshTools as cmeshTools
         self.cmultilevelMesh = cmultilevelMesh
         (self.nLevels,
          self.cmeshList,
@@ -2269,10 +2279,10 @@ class TetrahedralMesh(Mesh):
     def meshType(self):
         return 'simplex'
     def computeGeometricInfo(self):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
     def generateTetrahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
-        from . import cmeshToolsTest as cmeshTools
+        from . import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateTetrahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz,self.cmesh)
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
@@ -2630,7 +2640,7 @@ class TetrahedralMesh(Mesh):
         meshOut.close()
 
     def writeMeshADH(self,filename,adhBase=1):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         cmeshTools.write3dmFiles(self.cmesh,filename,adhBase)
 
     def writeBoundaryFacesADH(self,filename,adhBase=1):
@@ -2799,8 +2809,8 @@ class TetrahedralMesh(Mesh):
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
 
-    def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
-        from . import cmeshTools
+    def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=False,parallel=False):
+        from . import cmeshTools as cmeshTools
         logEvent(memory("declaring CMesh"),level=4)
         self.cmesh = cmeshTools.CMesh()
         logEvent(memory("Initializing CMesh"),level=4)
@@ -2815,14 +2825,14 @@ class TetrahedralMesh(Mesh):
         self.buildFromC(self.cmesh)
         logEvent(memory("calling buildFromC"),level=4)
     def generateFrom3DMFile(self,filebase,base=1):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFrom3DMFile(self.cmesh,filebase,base)
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
     def writeTetgenFiles(self,filebase,base):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         cmeshTools.writeTetgenFiles(self.cmesh,filebase,base)
     def meshInfo(self):
         minfo = """Number of tetrahedra : %d
@@ -2860,11 +2870,11 @@ class HexahedralMesh(Mesh):
     def meshType(self):
         return 'cuboid'
     def computeGeometricInfo(self):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         print("no info yet for hexahedral mesh")
         #cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
     def generateHexahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateHexahedralMeshFromRectangularGrid(nx,ny,nz,0,0,0,Lx,Ly,Lz,self.cmesh)
         cmeshTools.allocateGeometricInfo_hexahedron(self.cmesh)
@@ -3025,7 +3035,7 @@ min(h_k)             : %d\n""" % (self.nElements_global,
         Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Hexahedron",tCount,EB=EB)
 
     def generateFromHexFile(self,filebase,base=0):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFromHexFile(self.cmesh,filebase,base)
         cmeshTools.allocateGeometricInfo_hexahedron(self.cmesh)
@@ -3708,7 +3718,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                  skipInit=False,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshToolsTest as cmeshTools
+        from . import cmeshTools as cmeshTools
         from . import Comm
         MultilevelMesh.__init__(self)
         self.useC = True
@@ -3744,7 +3754,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
         self.meshList = []
@@ -3777,7 +3787,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
             self.buildArrayLists()
 
     def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         self.meshList = []
         self.meshList.append(mesh0)
         self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
@@ -3787,7 +3797,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
 
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         if filebase==None:
             filebase="mesh"
         assert(refinementLevels==1)
@@ -3825,7 +3835,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                  skipInit=False,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         from . import Comm
         MultilevelMesh.__init__(self)
         if refinementLevels == 1:
@@ -3862,7 +3872,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
         self.meshList = []
@@ -3954,10 +3964,10 @@ class TriangularMesh(Mesh):
     def meshType(self):
         return 'simplex'
     def computeGeometricInfo(self):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
     def generateTriangularMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
-        from . import cmeshTools
+        from . import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,self.cmesh,triangleFlag)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
@@ -4031,24 +4041,24 @@ class TriangularMesh(Mesh):
     #mwf debug switch to redblac
     rectangularToTriangular = rectangularToTriangularOrientedOtherWay#rectangularToTriangularOriented
     def generateFromTriangleMesh(self,ctrirep,base):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFromTriangleMesh(self.cmesh,ctrirep,base)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
         self.buildFromC(self.cmesh)
     def generateFromTriangleFiles(self,filebase,base):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFromTriangleFiles(self.cmesh,filebase,base)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
         self.buildFromC(self.cmesh)
     def writeTriangleFiles(self,filebase,base):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         cmeshTools.writeTriangleFiles(self.cmesh,filebase,base)
     def generateFrom2DMFile(self,filebase,base=1):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFrom2DMFile(self.cmesh,filebase,base)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
@@ -4443,7 +4453,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
         meshOut.close()
 
     def writeMeshADH(self,filename,adhBase=1):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         cmeshTools.write2dmFiles(self.cmesh,filename,adhBase)
     def writeAsymptote(self,fileprefix,L,x,units="m"):
         """
@@ -4634,7 +4644,7 @@ class QuadrilateralMesh(Mesh):
         self.buildNodeDiameterArray()
 
     def generateQuadrilateralMeshFromRectangularGrid(self,nx,ny,Lx,Ly):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateQuadrilateralMeshFromRectangularGrid(nx,ny,0,0,Lx,Ly,self.cmesh)
         cmeshTools.allocateGeometricInfo_quadrilateral(self.cmesh)
@@ -4890,7 +4900,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
 
 class MultilevelTriangularMesh(MultilevelMesh):
     """A hierarchical  multilevel mesh of triangular cells"""
-    from . import cmeshTools
+    from .import cmeshTools as cmeshTools
     def __init__(self,
                  nx, ny, nz,
                  x=0.0, y=0.0, z=0.0,
@@ -4938,7 +4948,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
     #mwf what's the best way to build from an existing mesh
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
         self.meshList = []
@@ -4967,7 +4977,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
                 logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
     def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         self.meshList = []
         self.meshList.append(mesh0)
         self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
@@ -5018,7 +5028,7 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0,
                  useC=True):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = useC  # Implementing with C will take a bit more work. Disabling for now.
         if refinementLevels > 1:
@@ -5609,10 +5619,10 @@ class EdgeMesh(Mesh):
         self.edgeDict={}
         self.oldToNewNode=[]
     def computeGeometricInfo(self):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         cmeshTools.computeGeometricInfo_edge(self.cmesh)
     def generateEdgeMeshFromRectangularGrid(self,nx,Lx):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateEdgeMeshFromRectangularGrid(nx,Lx,self.cmesh)
         cmeshTools.allocateGeometricInfo_edge(self.cmesh)
@@ -5744,7 +5754,7 @@ Number of nodes : %d\n""" % (self.nElements_global,self.nNodes_global)
 
 class MultilevelEdgeMesh(MultilevelMesh):
     """A hierarchical multilevel mesh of intervals (edges)"""
-    from . import cmeshTools
+    from .import cmeshTools as cmeshTools
     def __init__(self,
                  nx, ny, nz,
                  x=0.0, y=0.0, z=0.0,
@@ -6107,7 +6117,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
                  skipInit=False,
                  nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         from . import Comm
         MultilevelMesh.__init__(self)
         self.useC = True
@@ -6130,7 +6140,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
 
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.node):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
         self.meshList = []
@@ -6171,7 +6181,7 @@ class NURBSMesh(HexahedralMesh):
         generateNURBSMeshFromRectangularGrid(self,nx,ny,nz,1,1,1,Lx,Ly,Lz)
 
     def generateNURBSMeshFromRectangularGrid(self,nx,ny,nz,px,py,pz,Lx,Ly,Lz):
-        from . import cmeshTools
+        from .import cmeshTools as cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateNURBSMeshFromRectangularGrid(nx,ny,nz,px,py,pz,Lx,Ly,Lz,self.cmesh)
         cmeshTools.allocateGeometricInfo_NURBS(self.cmesh)

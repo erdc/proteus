@@ -1,10 +1,18 @@
+# A type of -*- python -*- file
 from mpi4py.libmpi cimport MPI_Comm
 cimport mesh
 
 cdef extern from "partitioning.h" namespace "proteus":
-    extern int c_partitionNodes "proteus::partitionNodes" (const MPI_Comm& PROTEUS_COMM_WORLD, mesh.Mesh& mesh, int nNodes_overlap);
-    extern int partitionNodesFromTetgenFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const char* filebase, int indexBase, mesh.Mesh& newMesh, int nNodes_overlap);
-    extern int c_partitionElements "proteus::partitionElements" (const MPI_Comm& PROTEUS_COMM_WORLD, mesh.Mesh& mesh, int nElements_overlap);
+    extern int c_partitionNodes "proteus::partitionNodes" (const MPI_Comm& PROTEUS_COMM_WORLD,
+                                                           mesh.Mesh& mesh,
+                                                           int nNodes_overlap);
+    extern int c_partitionNodesFromTetgenFiles "proteus::partitionNodesFromTetgenFiles" (const MPI_Comm& PROTEUS_COMM_WORLD,
+                                                                                         const char* filebase,
+                                                                                         int indexBase, mesh.Mesh& newMesh,
+                                                                                         int nNodes_overlap);
+    extern int c_partitionElements "proteus::partitionElements" (const MPI_Comm& PROTEUS_COMM_WORLD,
+                                                                 mesh.Mesh& mesh,
+                                                                 int nElements_overlap);
     extern int buildQuadraticSubdomain2GlobalMappings_1d(const MPI_Comm& PROTEUS_COMM_WORLD, mesh.Mesh& mesh,
                                                          const int *elementOffsets_subdomain_owned,
                                                          const int *nodeOffsets_subdomain_owned,
