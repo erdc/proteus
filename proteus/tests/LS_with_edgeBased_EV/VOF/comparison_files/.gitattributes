@@ -1,0 +1,6 @@
+vof_level_3_stab4.h5 filter=lfs diff=lfs merge=lfs -text
+vof_level_3_TaylorGalerkin.h5 filter=lfs diff=lfs merge=lfs -text
+vof_level_3_EV1.h5 filter=lfs diff=lfs merge=lfs -text
+vof_level_3_EV2.h5 filter=lfs diff=lfs merge=lfs -text
+vof_level_3_SmoothnessBased.h5 filter=lfs diff=lfs merge=lfs -text
+vof_level_3_SUPG.h5 filter=lfs diff=lfs merge=lfs -text
