@@ -71,3 +71,4 @@ cdef extern from "partitioning.h" namespace "proteus":
                                                                   int *offsets_subdomain_owned, #starting point of local dofs on each processor (nProcs+1)
                                                                   int * subdomain_l2g, #local to global dof mapping on subdomain
                                                                   int* subdomain2global);#subdomain dof to global (parallel) numbering
+    
