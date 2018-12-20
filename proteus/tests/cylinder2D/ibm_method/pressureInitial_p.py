@@ -3,7 +3,10 @@ from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from .cylinder import *
+try:
+    from .cylinder import *
+except:
+    from cylinder import *
 from proteus.mprans import PresInit
 
 #domain = ctx.domain

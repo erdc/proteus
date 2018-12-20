@@ -183,6 +183,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # vof
             if self.edgeBasedStabilizationMethods == False:
                 self.massCorrModel.setMassQuadrature()
+                self.vofModel.q[('m_tmp',0)][:] = self.vofModel.coefficients.q_porosity*self.vofModel.q[('u',0)]
+
             # else setMassQuadratureEdgeBasedStabilizationMethods is called within specialized nolinear solver
 
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
