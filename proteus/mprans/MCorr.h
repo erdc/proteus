@@ -508,7 +508,7 @@ namespace proteus
 				  double& r,
 				  double& dr)
       {
-	r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
+	r = porosity*(smoothedHeaviside(epsHeaviside,phi+u) - H);
 	dr = porosity*smoothedDirac(epsDirac,phi+u);
       }
 
@@ -2466,10 +2466,10 @@ namespace proteus
 
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		q_H[eN_k] = q_porosity[eN_k]*smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
+		q_H[eN_k] = smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
 
 		for (int i=0;i<nDOF_trial_element;i++)
-		  element_rhs_mass_correction [i] += q_H[eN_k]*u_test_dV[i];
+		  element_rhs_mass_correction [i] += q_porosity[eN_k]*q_H[eN_k]*u_test_dV[i];
 	      }//k
 	    // distribute rhs for mass correction
 	    for (int i=0;i<nDOF_trial_element;i++)
