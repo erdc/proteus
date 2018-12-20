@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+from cpython.cobject cimport PyCObject_AsVoidPtr
 import cython
 cimport cython
 import numpy as np
@@ -33,16 +34,21 @@ cdef class CMesh:
         self.max_nNodeNeighbors_node = self.meshlink.mesh.max_nNodeNeighbors_node
         self.elementNodesArray = np.asarray(<int[:self.meshlink.mesh.nElements_global, :self.meshlink.mesh.nNodes_element]> self.meshlink.mesh.elementNodesArray)
         if self.meshlink.mesh.nodeElementOffsets != NULL:
-            self.nodeElementsArray = np.asarray(<int[:self.meshlink.mesh.nNodes_global]> self.meshlink.mesh.nodeElementsArray)
+            self.nodeElementsArray = np.asarray(<int[:self.meshlink.mesh.nodeElementOffsets[self.meshlink.mesh.nNodes_global]]> self.meshlink.mesh.nodeElementsArray)
+            self.nodeElementOffsets = np.asarray(<int[:self.meshlink.mesh.nNodes_global+1]> self.meshlink.mesh.nodeElementOffsets)
         else:
             self.nodeElementsArray = np.empty(0, dtype=np.int32)
-        self.nodeElementOffsets = np.asarray(<int[:self.meshlink.mesh.nNodes_global+1]> self.meshlink.mesh.nodeElementOffsets)
+            self.nodeElementOffsets = np.empty(0, dtype=np.int32)
+
         self.elementNeighborsArray = np.asarray(<int[:self.meshlink.mesh.nElements_global, :self.meshlink.mesh.nElementBoundaries_element]> self.meshlink.mesh.elementNeighborsArray)
         self.elementBoundariesArray = np.asarray(<int[:self.meshlink.mesh.nElements_global, :self.meshlink.mesh.nElementBoundaries_element]> self.meshlink.mesh.elementBoundariesArray)
         self.elementBoundaryNodesArray = np.asarray(<int[:self.meshlink.mesh.nElementBoundaries_global, :self.meshlink.mesh.nNodes_elementBoundary]> self.meshlink.mesh.elementBoundaryNodesArray)
         self.elementBoundaryElementsArray = np.asarray(<int[:self.meshlink.mesh.nElementBoundaries_global, :2]> self.meshlink.mesh.elementBoundaryElementsArray)
         self.elementBoundaryLocalElementBoundariesArray = np.asarray(<int[:self.meshlink.mesh.nElementBoundaries_global, :2]> self.meshlink.mesh.elementBoundaryLocalElementBoundariesArray)
-        self.interiorElementBoundariesArray = np.asarray(<int[:self.meshlink.mesh.nInteriorElementBoundaries_global]> self.meshlink.mesh.interiorElementBoundariesArray)
+        if self.meshlink.mesh.nInteriorElementBoundaries_global:
+            self.interiorElementBoundariesArray = np.asarray(<int[:self.meshlink.mesh.nInteriorElementBoundaries_global]> self.meshlink.mesh.interiorElementBoundariesArray)
+        else:
+            self.interiorElementBoundariesArray = np.empty(0, dtype=np.int32)
         self.exteriorElementBoundariesArray = np.asarray(<int[:self.meshlink.mesh.nExteriorElementBoundaries_global]> self.meshlink.mesh.exteriorElementBoundariesArray)
         self.edgeNodesArray = np.asarray(<int[:self.meshlink.mesh.nEdges_global, :2]> self.meshlink.mesh.edgeNodesArray)
         if self.meshlink.mesh.nodeStarOffsets != NULL:
@@ -80,15 +86,35 @@ cdef class CMesh:
             self.W_KNOT = np.asarray(<double[:self.meshlink.mesh.nz+self.meshlink.mesh.pz+1]> self.meshlink.mesh.W_KNOT)
         else:
             self.W_KNOT = np.empty(0)
-        print("nElements_global {0:d}".format(self.meshlink.mesh.nElements_global))
-        print(self.meshlink.mesh.elementDiametersArray)
         self.elementDiametersArray = np.asarray(<double[:self.meshlink.mesh.nElements_global]> self.meshlink.mesh.elementDiametersArray)
         self.elementInnerDiametersArray = np.asarray(<double[:self.meshlink.mesh.nElements_global]> self.meshlink.mesh.elementInnerDiametersArray)
         self.elementBoundaryDiametersArray = np.asarray(<double[:self.meshlink.mesh.nElementBoundaries_global]> self.meshlink.mesh.elementBoundaryDiametersArray)
-        self.elementBarycentersArray = np.asarray(<double[:self.meshlink.mesh.nElements_global, :3]> self.meshlink.mesh.elementBarycentersArray)
-        self.elementBoundaryBarycentersArray = np.asarray(<double[:self.meshlink.mesh.nElementBoundaries_global, :3]> self.meshlink.mesh.elementBoundaryBarycentersArray)
-        self.nodeDiametersArray = np.asarray(<double[:self.meshlink.mesh.nNodes_global]> self.meshlink.mesh.nodeDiametersArray)
-        self.nodeSupportArray = np.asarray(<double[:self.meshlink.mesh.nNodes_global]> self.meshlink.mesh.nodeSupportArray)
+        if self.meshlink.mesh.elementBarycentersArray:
+            self.elementBarycentersArray = np.asarray(<double[:self.meshlink.mesh.nElements_global, :3]> self.meshlink.mesh.elementBarycentersArray)
+        if self.meshlink.mesh.elementBoundaryBarycentersArray: 
+            self.elementBoundaryBarycentersArray = np.asarray(<double[:self.meshlink.mesh.nElementBoundaries_global, :3]> self.meshlink.mesh.elementBoundaryBarycentersArray)
+        if self.meshlink.mesh.nodeDiametersArray:
+            self.nodeDiametersArray = np.asarray(<double[:self.meshlink.mesh.nNodes_global]> self.meshlink.mesh.nodeDiametersArray)
+        if self.meshlink.mesh.nodeSupportArray:
+            self.nodeSupportArray = np.asarray(<double[:self.meshlink.mesh.nNodes_global]> self.meshlink.mesh.nodeSupportArray)
+        self.h = self.meshlink.mesh.h
+        self.hMin = self.meshlink.mesh.hMin
+        self.sigmaMax = self.meshlink.mesh.sigmaMax
+        self.volume = self.meshlink.mesh.volume
+    
+    def buildPythonMeshInterfaceNoArrays(self):
+        cdef int dim1
+        self.nElements_global = self.meshlink.mesh.nElements_global
+        self.nNodes_global = self.meshlink.mesh.nNodes_global
+        self.nNodes_element = self.meshlink.mesh.nNodes_element
+        self.nNodes_elementBoundary = self.meshlink.mesh.nNodes_elementBoundary
+        self.nElementBoundaries_element = self.meshlink.mesh.nElementBoundaries_element
+        self.nElementBoundaries_global = self.meshlink.mesh.nElementBoundaries_global
+        self.nInteriorElementBoundaries_global = self.meshlink.mesh.nInteriorElementBoundaries_global
+        self.nExteriorElementBoundaries_global = self.meshlink.mesh.nExteriorElementBoundaries_global
+        self.max_nElements_node = self.meshlink.mesh.max_nElements_node
+        self.nEdges_global = self.meshlink.mesh.nEdges_global
+        self.max_nNodeNeighbors_node = self.meshlink.mesh.max_nNodeNeighbors_node
         self.h = self.meshlink.mesh.h
         self.hMin = self.meshlink.mesh.hMin
         self.sigmaMax = self.meshlink.mesh.sigmaMax
@@ -150,6 +176,27 @@ def buildPythonMeshInterface(cmesh):
             cmesh.sigmaMax,
             cmesh.volume)
 
+def buildPythonMeshInterfaceNoArrays(cmesh):
+    """
+    function to be conform to old module, and to calls from MeshTools
+    """
+    cmesh.buildPythonMeshInterfaceNoArrays()
+    return (cmesh.nElements_global,
+            cmesh.nNodes_global,
+            cmesh.nNodes_element,
+            cmesh.nNodes_elementBoundary,
+            cmesh.nElementBoundaries_element,
+            cmesh.nElementBoundaries_global,
+            cmesh.nInteriorElementBoundaries_global,
+            cmesh.nExteriorElementBoundaries_global,
+            cmesh.max_nElements_node,
+            cmesh.nEdges_global,
+            cmesh.max_nNodeNeighbors_node,
+            cmesh.h,
+            cmesh.hMin,
+            cmesh.sigmaMax,
+            cmesh.volume)
+
 cdef CMesh CMesh_FromMesh(cppm.Mesh mesh):
     CMeshnew = CMesh()
     CMeshnew.meshlink.mesh = mesh
@@ -172,17 +219,18 @@ cdef class CMultilevelMesh:
     def __init__(self, CMesh cmesh, nLevels):
         self.multilevelMeshLink = CMultilevelMeshLink()
         if cmesh.meshlink.mesh.nNodes_element == 2:
+            cppm.globallyRefineEdgeMesh(nLevels,
+                                        cmesh.meshlink.mesh,
+                                        self.multilevelMeshLink.multilevelMesh,
+                                        False);
             for i in range(1, nLevels):
-                cppm.globallyRefineEdgeMesh(nLevels,
-                                            cmesh.meshlink.mesh,
-                                            self.multilevelMeshLink.multilevelMesh,
-                                            False);
+                cppm.constructElementBoundaryElementsArray_edge(self.multilevelMeshLink.multilevelMesh.meshArray[i]);
                 cppm.allocateGeometricInfo_edge(self.multilevelMeshLink.multilevelMesh.meshArray[i]);
                 cppm.computeGeometricInfo_edge(self.multilevelMeshLink.multilevelMesh.meshArray[i]);
                 cppm.assignElementBoundaryMaterialTypesFromParent(self.multilevelMeshLink.multilevelMesh.meshArray[i-1],
-                                                             self.multilevelMeshLink.multilevelMesh.meshArray[i],
-                                                             self.multilevelMeshLink.multilevelMesh.elementParentsArray[i],
-                                                             1);
+                                                                  self.multilevelMeshLink.multilevelMesh.meshArray[i],
+                                                                  self.multilevelMeshLink.multilevelMesh.elementParentsArray[i],
+                                                                  1);
         elif cmesh.meshlink.mesh.nNodes_element == 3:
             cppm.globallyRefineTriangularMesh(nLevels,
                                               cmesh.meshlink.mesh,
@@ -252,12 +300,11 @@ cdef class CMultilevelMesh:
         for n in range(1, self.multilevelMeshLink.multilevelMesh.nLevels):
             self.cmeshList += [CMesh_FromMesh(self.multilevelMeshLink.multilevelMesh.meshArray[n])]
             dim = self.multilevelMeshLink.multilevelMesh.meshArray[n].nElements_global
-            self.elementParentsList += [np.asarray(<int[:dim]> self.multilevelMeshLink.multilevelMesh.elementParentsArray[n])]
+            self.elementParentsArrayList += [np.asarray(<int[:dim]> self.multilevelMeshLink.multilevelMesh.elementParentsArray[n])]
             dim = self.multilevelMeshLink.multilevelMesh.elementChildrenOffsets[n-1][self.multilevelMeshLink.multilevelMesh.meshArray[n-1].nElements_global]
-            self.elementChildrenList += [np.asarray(<int[:dim]> self.multilevelMeshLink.multilevelMesh.elementChildrenArray[n-1])]
-            dim = self.cmultilevelMesh.meshArray[n-1].nElements_global+1;
+            self.elementChildrenArrayList += [np.asarray(<int[:dim]> self.multilevelMeshLink.multilevelMesh.elementChildrenArray[n-1])]
+            dim = self.multilevelMeshLink.multilevelMesh.meshArray[n-1].nElements_global+1;
             self.elementChildrenOffsetsList += [np.asarray(<int[:dim]> self.multilevelMeshLink.multilevelMesh.elementChildrenOffsets[n-1])]
-        print(self.cmeshList)
 
 def buildPythonMultilevelMeshInterface(cmultilevelMesh):
     cmultilevelMesh.buildPythonMultilevelMeshInterface()
@@ -285,6 +332,19 @@ cpdef void cmeshToolsComputeGeometricInfo_tetrahedron(CMesh cmesh):
 # cdef static void cmeshToolsLocallyRefineMultilevelMesh(CMultilevelMesh cmesh,
 
 
+def generateFromTriangleMesh(CMesh cmesh,
+                             object trimesh,
+			     int base):
+    cppm.setFromTriangleElements(<cppm.triangulateio*>(PyCObject_AsVoidPtr(trimesh)),
+                                 cmesh.meshlink.mesh,
+                                 base)
+    cppm.setFromTriangleNodes(<cppm.triangulateio*>(PyCObject_AsVoidPtr(trimesh)),
+                              cmesh.meshlink.mesh,
+                              base)
+    cppm.constructElementBoundaryElementsArray_triangle(cmesh.meshlink.mesh)
+    cppm.copyElementBoundaryMaterialTypesFromTriangle(<cppm.triangulateio*>(PyCObject_AsVoidPtr(trimesh)),
+					              cmesh.meshlink.mesh,
+                                                      base)
 
 cpdef void generateFromTriangleFiles(CMesh cmesh,
                                     const char* filebase,
@@ -453,3 +513,47 @@ cpdef void computeGeometricInfo_NURBS(CMesh cmesh):
 
 cpdef void allocateGeometricInfo_NURBS(CMesh cmesh):
     cppm.allocateGeometricInfo_NURBS(cmesh.meshlink.mesh);
+
+def locallyRefineMultilevelMesh(int nSpace,
+                                          CMultilevelMesh cmultilevelMesh,
+                                          np.ndarray elementTagArray,
+                                          int refineTypeFlag=0):
+    cdef int failed,finestLevel
+    if nSpace == 1:
+        failed = cppm.locallyRefineEdgeMesh(cmultilevelMesh.multilevelMeshLink.multilevelMesh,
+                                            <int*>(elementTagArray.data))
+        finestLevel = cmultilevelMesh.multilevelMeshLink.multilevelMesh.nLevels
+        cppm.constructElementBoundaryElementsArray_edge(cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-1])
+        cppm.allocateGeometricInfo_edge(cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-1])
+        cppm.computeGeometricInfo_edge(cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-1])
+        if finestLevel > 1:
+            cppm.assignElementBoundaryMaterialTypesFromParent(cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-2],
+                                                              cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-1],
+                                                              cmultilevelMesh.multilevelMeshLink.multilevelMesh.elementParentsArray[finestLevel-1],
+                                                              1)
+    elif nSpace == 2:
+        if refineTypeFlag==1:
+            failed = cppm.locallyRefineTriangleMesh_4T(cmultilevelMesh.multilevelMeshLink.multilevelMesh,
+                                                       <int*>(elementTagArray.data))
+        elif refineTypeFlag==2:
+            failed = cppm.locallyRefineTriangleMesh_redGreen(cmultilevelMesh.multilevelMeshLink.multilevelMesh,<int*>(elementTagArray.data))
+        else:
+            failed = cppm.locallyRefineTriangleMesh(cmultilevelMesh.multilevelMeshLink.multilevelMesh,
+                                                    <int*>(elementTagArray.data))
+        finestLevel = cmultilevelMesh.multilevelMeshLink.multilevelMesh.nLevels
+        cppm.constructElementBoundaryElementsArray_triangle(cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-1])
+        cppm.allocateGeometricInfo_triangle(cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-1])
+        cppm.computeGeometricInfo_triangle(cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-1])
+        if finestLevel > 1:
+            cppm.assignElementBoundaryMaterialTypesFromParent(cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-2],
+                                                              cmultilevelMesh.multilevelMeshLink.multilevelMesh.meshArray[finestLevel-1],
+                                                              cmultilevelMesh.multilevelMeshLink.multilevelMesh.elementParentsArray[finestLevel-1],
+                                                              2)
+    else:
+        print("locallyRefine nSpace= {0:d} not implemented! Returning.".format(nSpace))
+
+def setNewestNodeBases(int nSpace, CMultilevelMesh cmultilevelMesh):
+    if nSpace == 2:
+        failed = cppm.setNewestNodeBasesToLongestEdge(cmultilevelMesh.multilevelMeshLink.multilevelMesh)
+    else:
+        print("setNewestNodeBases= {0:d} not implemented! Returning".format(nSpace))

@@ -215,7 +215,6 @@ class OneLevelTransport(NonlinearEquation):
             self.unique_test_trial_range  = list(range(1))
             self.duplicate_test_trial_range = list(range(1,coefficients.nc))
         self.u = uDict
-        self.u_save = {}#analytical solutions
         self.phi  = phiDict
         self.dphi={}
         for ck,phi in phiDict.items():
@@ -1658,6 +1657,8 @@ class OneLevelTransport(NonlinearEquation):
         if analyticalSolutionsDict is None:
             return
         for cj,sol in analyticalSolutionsDict.items():
+            if not hasattr(self,'u_save'):
+                self.u_save = {}
             if cj not in self.u_save:
                 self.u_save[cj] = (self.u[cj].dof.copy(), self.u[cj].name)
             else:

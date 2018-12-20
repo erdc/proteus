@@ -2315,12 +2315,15 @@ class DiscontinuousGalerkinDOFMap(DOFMap):
         """
         Fix nDOF_all_processes, nDOF_subdomain, and max_dof_neighbors
         """
+        from . import Comm
+        mpi_comm = Comm.get().comm.tompi4py()
         self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
         (self.nDOF_all_processes,
          self.nDOF_subdomain,
-         self.max_dof_neighbors) = flcbdfWrappers.buildDiscontinuousGalerkinLocal2GlobalMappings(self.local_dim,
+         self.max_dof_neighbors) = flcbdfWrappers.buildDiscontinuousGalerkinLocal2GlobalMappings(mpi_comm,
+                                                                                                 self.local_dim,
                                                                                                  globalMesh.cmesh,
                                                                                                  globalMesh.subdomainMesh.cmesh,
                                                                                                  globalMesh.elementOffsets_subdomain_owned,
@@ -2405,6 +2408,8 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
         """
         Fix self.nDOF_all_processes,self.nDOF_subdomain, self.max_dof_neighbors
         """
+        from . import Comm
+        mpi_comm = Comm.get().comm.tompi4py()
         if self.nd==2:
             # start with the vertex DoFs
             for i,node in enumerate(globalMesh.nodeArray):
@@ -2458,7 +2463,8 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
             self.subdomain2global = numpy.zeros((self.nDOF),'i')
             (self.nDOF_all_processes,
              self.nDOF_subdomain,
-             self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticCubeLocal2GlobalMappings(self.nd,
+             self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticCubeLocal2GlobalMappings(mpi_comm,
+                                                                                             self.nd,
                                                                                              globalMesh.cmesh,
                                                                                              globalMesh.subdomainMesh.cmesh,
                                                                                              globalMesh.elementOffsets_subdomain_owned,
@@ -2523,11 +2529,14 @@ class QuadraticLagrangeDOFMap(DOFMap):
         """
         Fix self.nDOF_all_processes,self.nDOF_subdomain, self.max_dof_neighbors
         """
+        from . import Comm
+        mpi_comm = Comm.get().comm.tompi4py()
         self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
         (self.nDOF_all_processes,self.nDOF_subdomain,
-         self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticLocal2GlobalMappings(self.nd,
+         self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticLocal2GlobalMappings(mpi_comm,
+                                                                                     self.nd,
                                                                                      globalMesh.cmesh,
                                                                                      globalMesh.subdomainMesh.cmesh,
                                                                                      globalMesh.elementOffsets_subdomain_owned,
@@ -2556,12 +2565,15 @@ class p0DOFMap(DOFMap):
         """
         Fix self.nDOF_all_processes,self.nDOF_subdomain, self.max_dof_neighbors
         """
+        from . import Comm
+        mpi_comm = Comm.get().comm.tompi4py()
         local_dim = 1
         self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
         (self.nDOF_all_processes,self.nDOF_subdomain,
-         self.max_dof_neighbors) = flcbdfWrappers.buildDiscontinuousGalerkinLocal2GlobalMappings(local_dim,
+         self.max_dof_neighbors) = flcbdfWrappers.buildDiscontinuousGalerkinLocal2GlobalMappings(mpi_comm,
+                                                                                                 local_dim,
                                                                                                  globalMesh.cmesh,
                                                                                                  globalMesh.subdomainMesh.cmesh,
                                                                                                  globalMesh.elementOffsets_subdomain_owned,
@@ -6543,7 +6555,7 @@ class FiniteElementFunction(object):
             #: numpy array of degree-of-freedom values used to
             #: calculate the finite element function.
             self.dof=dof
-            self.dof_last=dof_last
+            self.dof_last=dof.copy()
         else:
             self.dof = numpy.zeros((self.femSpace.dim*dim_dof),
                                      'd')
@@ -6557,6 +6569,13 @@ class FiniteElementFunction(object):
         self.meshNodeValues = None
         #: for parallel FiniteElementFunciton capability
         self.par_dof = None
+
+    def copy(self):
+        return FiniteElementFunction(finiteElementSpace=self.femSpace,
+                                     dof=self.dof.copy(),
+                                     dim_dof=self.dim_dof,
+                                     name=self.name,
+                                     isVector=self.isVector)
 
     def projectFromInterpolationConditions(self,interpolationValues):
         if self.useC and self.femSpace.referenceFiniteElement.interpolationConditions.projectFiniteElementFunctionFromInterpolationConditions_opt is not None:

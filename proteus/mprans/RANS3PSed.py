@@ -1699,7 +1699,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter = self.mesh.elementDiametersArray
         if self.nSpace_global == 2:
             import copy
-            self.u[2] = copy.deepcopy(self.u[1])
+            self.u[2] = self.u[1].copy()
+            self.u[2].name = 'w'
             self.timeIntegration.m_tmp[
                 2] = self.timeIntegration.m_tmp[1].copy()
             self.timeIntegration.beta_bdf[

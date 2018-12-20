@@ -22,11 +22,12 @@ extern "C"
   static int
   ensure_comm()
   {
-    if (PROTEUS_COMM_WORLD == MPI_COMM_NULL) {
-      PyErr_SetString(PyExc_RuntimeError, "flcbdfWrappersModule is not initialized!");
-      return 0;
-    }
     return 1;
+    // if (PROTEUS_COMM_WORLD == MPI_COMM_NULL) {
+    //   PyErr_SetString(PyExc_RuntimeError, "flcbdfWrappersModule is not initialized!");
+    //   return 0;
+    // }
+    // return 1;
   }
 
   static PyObject* flcbdfWrappersGlobalSum(PyObject* self, PyObject* args)
