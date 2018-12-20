@@ -7,7 +7,10 @@ import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
-from .parameters import *
+try:
+    from .parameters import *
+except:
+    from parameters import *
 
 AUTOMATED_TEST=True
 #ct.test_case=1 #1 or 2
@@ -78,7 +81,7 @@ useMetrics = 1.0
 applyCorrection = True
 useVF = 0.0
 useOnlyVF = False
-openTop=True
+openTop=True#False
 
 # Input checks
 if spaceOrder not in [1, 2]:
