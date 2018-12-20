@@ -2,7 +2,10 @@ from __future__ import absolute_import
 from builtins import object
 from proteus import *
 from proteus.default_p import *
-from .multiphase import *
+try:
+    from .multiphase import *
+except:
+    from multiphase import *
 from proteus.mprans import RANS3PF
 
 #No RANS
