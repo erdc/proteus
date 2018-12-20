@@ -88,7 +88,7 @@ def test_periodic_2D(load_periodic_opts_2D,
     script_dir = os.path.dirname(__file__)
     relpath = 'comparison_files/basic_2d_test.h5'
     expected = tables.open_file(os.path.join(script_dir,relpath))
-    actual = tables.open_file('duct11t12dpghe0.0975609756098.h5')
+    actual = tables.open_file('ductq1t12dpghe0.0975609756098.h5')
 
     assert numpy.allclose(expected.root.velocity_t59.read(),
                           actual.root.velocity_t59.read(),
