@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .clsvof_p import *
+try:
+    from .clsvof_p import *
+except:
+    from clsvof_p import *
 
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = CLSVOFNewton
