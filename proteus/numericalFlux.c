@@ -1,9 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <strings.h>
-#include <string.h>
-#include <assert.h>
+#include "numericalFlux.h"
 
 #define TR_ALPHA 0.5
 #define TR_ALPHA_EXT 1.0
