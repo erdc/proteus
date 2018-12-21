@@ -166,7 +166,7 @@ virtual void calculateResidual(    // last EDGE BASED version
         double* mesh_grad_trial_ref,
         double* mesh_dof,
         double* mesh_velocity_dof,
-        double MOVING_DOMAIN,                           //0 or 1
+        double MOVING_DOMAIN,       //0 or 1
         int* mesh_l2g,
         double* dV_ref,
         double* h_trial_ref,
