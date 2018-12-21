@@ -602,6 +602,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hv_dof_old = None
         self.heta_dof_old = None
         self.hw_dof_old = None
+        self.heta_dof_old = None
+        self.hw_dof_old = None
+
 
         # Vector for mass matrix
         self.check_positivity_water_height = True

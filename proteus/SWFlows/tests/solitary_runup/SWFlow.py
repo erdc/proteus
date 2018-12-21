@@ -37,7 +37,6 @@ opts = Context.Options([
     ("cfl", 0.1, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level")
 ])
-print opts.sw_model
 
 ###################
 # DOMAIN AND MESH #
