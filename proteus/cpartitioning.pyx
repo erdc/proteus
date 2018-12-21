@@ -4,11 +4,9 @@ import numpy as np
 cimport numpy as np
 from mpi4py.MPI cimport (Comm,
                          Op)
-
 from mpi4py.libmpi cimport MPI_Comm
 cimport mesh
 from proteus cimport cmeshTools
-from proteus import flcbdfWrappersOld
 from proteus.partitioning cimport (c_partitionElements,
                                    c_partitionNodes,
                                    c_partitionNodesFromTetgenFiles,
@@ -17,24 +15,6 @@ from proteus.partitioning cimport (c_partitionElements,
                                    buildQuadraticSubdomain2GlobalMappings_3d,
                                    buildQuadraticCubeSubdomain2GlobalMappings_3d,
                                    buildDiscontinuousGalerkinSubdomain2GlobalMappings)
-
-def globalSum(double value):
-    return flcbdfWrappersOld.globalSum(value)
-#    cdef double value_new
-#    proteus_Comm.get().comm.tompi4py.Allreduce(value, value_new, Op.SUM)
-#    return value_new
-
-def globalMax(double value):
-    return flcbdfWrappersOld.globalMax(value)
-#    cdef double value_new
-#    proteus_Comm.get().comm.tompi4py.Allreduce(value, value_new, Op.MAX)
-#    return value_new
-
-def globalMin(double value):
-    return flcbdfWrappersOld.globalMin(value)
-#    cdef double value_new
-#    proteus_Comm.get().comm.tompi4py.Allreduce(value, value_new, Op.MIN)
-#    return value_new
 
 def partitionElements(Comm comm, int nLayersOfOverlap, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
     cmesh.meshlink.mesh.subdomainp = &subdomain_cmesh.meshlink.mesh
@@ -153,7 +133,6 @@ def buildQuadraticLocal2GlobalMappings(Comm comm,
             nDOF_subdomain,
             max_dof_neighbors)
     
-
 def buildQuadraticCubeLocal2GlobalMappings(Comm comm,
                                            int nSpace,
                                            cmeshTools.CMesh cmesh,

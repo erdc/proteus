@@ -43,7 +43,8 @@ class TestRichards(object):
         for f in filenames:
             if os.path.exists(f):
                 try:
-                    os.remove(f)
+                    pass
+#                    os.remove(f)
                 except OSError as e:
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:

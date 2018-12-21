@@ -583,7 +583,7 @@ class Mesh(object):
     def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
         from . import cmeshTools as cmeshTools
         from . import Comm
-        from . import flcbdfWrappers as flcbdfWrappers
+        from . import cpartitioning
         comm = Comm.get()
         self.comm=comm
         logEvent(memory("partitionMesh 1","MeshTools"),level=4)
@@ -602,7 +602,10 @@ class Mesh(object):
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodes(comm.comm.tompi4py(), nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = cpartitioning.partitionNodes(comm.comm.tompi4py(),
+                                                                                 nLayersOfOverlap,
+                                                                                 self.cmesh,
+                                                                                 self.subdomainMesh.cmesh)
         else:
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
@@ -611,7 +614,10 @@ class Mesh(object):
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElements(comm.comm.tompi4py(), nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = cpartitioning.partitionElements(comm.comm.tompi4py(),
+                                                                                    nLayersOfOverlap,
+                                                                                    self.cmesh,
+                                                                                    self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
@@ -650,7 +656,7 @@ class Mesh(object):
     def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
         from . import cmeshTools as cmeshTools
         from . import Comm
-        from . import flcbdfWrappers as flcbdfWrappers
+        from . import cpartitioning
         comm = Comm.get()
         self.comm=comm
         logEvent(memory("partitionMesh 1","MeshTools"),level=4)
@@ -673,12 +679,12 @@ class Mesh(object):
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(comm.comm.tompi4py(),
-                                                                                                 filebase,
-                                                                                                 base,
-                                                                                                 nLayersOfOverlap,
-                                                                                                 self.cmesh,
-                                                                                                 self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = cpartitioning.partitionNodesFromTetgenFiles(comm.comm.tompi4py(),
+                                                                                                filebase,
+                                                                                                base,
+                                                                                                nLayersOfOverlap,
+                                                                                                self.cmesh,
+                                                                                                self.subdomainMesh.cmesh)
         else:
             logEvent("Starting element partitioning")
             (self.elementOffsets_subdomain_owned,
@@ -688,12 +694,12 @@ class Mesh(object):
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElementsFromTetgenFiles(comm.comm.tompi4py(),
-                                                                                                    filebase,
-                                                                                                    base,
-                                                                                                    nLayersOfOverlap,
-                                                                                                    self.cmesh,
-                                                                                                    self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = cpartitioning.partitionElementsFromTetgenFiles(comm.comm.tompi4py(),
+                                                                                                   filebase,
+                                                                                                   base,
+                                                                                                   nLayersOfOverlap,
+                                                                                                   self.cmesh,
+                                                                                                   self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.buildFromCNoArrays(self.cmesh)
@@ -1596,7 +1602,7 @@ class Mesh(object):
     def convertFromPUMI(self, PUMIMesh, faceList,regList, parallel=False, dim=3):
         from . import cmeshTools as cmeshTools
         from . import MeshAdaptPUMI
-        from . import flcbdfWrappers as flcbdfWrappers
+        from . import cpartitioning
         from . import Comm
         comm = Comm.get()
         self.cmesh = cmeshTools.CMesh()
@@ -1636,8 +1642,8 @@ class Mesh(object):
            self.elementBoundaryNumbering_subdomain2global,
            self.edgeOffsets_subdomain_owned,
            self.edgeNumbering_subdomain2global) = (
-              flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh,
-                  self.subdomainMesh.cmesh))
+               cpartitioning.convertPUMIPartitionToPython(self.cmesh,
+                                                          self.subdomainMesh.cmesh))
           self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
           self.subdomainMesh.nElements_owned = (
               self.elementOffsets_subdomain_owned[comm.rank()+1] -

@@ -17,6 +17,7 @@ from .MeshTools import *
 from .LinearAlgebraTools import *
 from .Quadrature import *
 from . import cfemIntegrals
+from . import cpartitioning
 from .Profiling import logEvent
 import numpy as np
 
@@ -2322,15 +2323,15 @@ class DiscontinuousGalerkinDOFMap(DOFMap):
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
         (self.nDOF_all_processes,
          self.nDOF_subdomain,
-         self.max_dof_neighbors) = flcbdfWrappers.buildDiscontinuousGalerkinLocal2GlobalMappings(mpi_comm,
-                                                                                                 self.local_dim,
-                                                                                                 globalMesh.cmesh,
-                                                                                                 globalMesh.subdomainMesh.cmesh,
-                                                                                                 globalMesh.elementOffsets_subdomain_owned,
-                                                                                                 globalMesh.elementNumbering_subdomain2global,
-                                                                                                 self.dof_offsets_subdomain_owned,
-                                                                                                 self.l2g,
-                                                                                                 self.subdomain2global)
+         self.max_dof_neighbors) = cpartitioning.buildDiscontinuousGalerkinLocal2GlobalMappings(mpi_comm,
+                                                                                                self.local_dim,
+                                                                                                globalMesh.cmesh,
+                                                                                                globalMesh.subdomainMesh.cmesh,
+                                                                                                globalMesh.elementOffsets_subdomain_owned,
+                                                                                                globalMesh.elementNumbering_subdomain2global,
+                                                                                                self.dof_offsets_subdomain_owned,
+                                                                                                self.l2g,
+                                                                                                self.subdomain2global)
 #end disc.map
 class ElementBoundaryDOFMap(DOFMap):
     """
@@ -2463,22 +2464,22 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
             self.subdomain2global = numpy.zeros((self.nDOF),'i')
             (self.nDOF_all_processes,
              self.nDOF_subdomain,
-             self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticCubeLocal2GlobalMappings(mpi_comm,
-                                                                                             self.nd,
-                                                                                             globalMesh.cmesh,
-                                                                                             globalMesh.subdomainMesh.cmesh,
-                                                                                             globalMesh.elementOffsets_subdomain_owned,
-                                                                                             globalMesh.nodeOffsets_subdomain_owned,
-                                                                                             globalMesh.elementBoundaryOffsets_subdomain_owned,
-                                                                                             globalMesh.edgeOffsets_subdomain_owned,
-                                                                                             globalMesh.elementNumbering_subdomain2global,
-                                                                                             globalMesh.nodeNumbering_subdomain2global,
-                                                                                             globalMesh.elementBoundaryNumbering_subdomain2global,
-                                                                                             globalMesh.edgeNumbering_subdomain2global,
-                                                                                             self.dof_offsets_subdomain_owned,
-                                                                                             self.l2g,
-                                                                                             self.subdomain2global,
-                                                                                             self.lagrangeNodesArray)
+             self.max_dof_neighbors) = cpartitioning.buildQuadraticCubeLocal2GlobalMappings(mpi_comm,
+                                                                                            self.nd,
+                                                                                            globalMesh.cmesh,
+                                                                                            globalMesh.subdomainMesh.cmesh,
+                                                                                            globalMesh.elementOffsets_subdomain_owned,
+                                                                                            globalMesh.nodeOffsets_subdomain_owned,
+                                                                                            globalMesh.elementBoundaryOffsets_subdomain_owned,
+                                                                                            globalMesh.edgeOffsets_subdomain_owned,
+                                                                                            globalMesh.elementNumbering_subdomain2global,
+                                                                                            globalMesh.nodeNumbering_subdomain2global,
+                                                                                            globalMesh.elementBoundaryNumbering_subdomain2global,
+                                                                                            globalMesh.edgeNumbering_subdomain2global,
+                                                                                            self.dof_offsets_subdomain_owned,
+                                                                                            self.l2g,
+                                                                                            self.subdomain2global,
+                                                                                            self.lagrangeNodesArray)
             assert self.nDOF == self.nDOF_subdomain
 #QuadraticDOFMap
 
@@ -2535,22 +2536,22 @@ class QuadraticLagrangeDOFMap(DOFMap):
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
         (self.nDOF_all_processes,self.nDOF_subdomain,
-         self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticLocal2GlobalMappings(mpi_comm,
-                                                                                     self.nd,
-                                                                                     globalMesh.cmesh,
-                                                                                     globalMesh.subdomainMesh.cmesh,
-                                                                                     globalMesh.elementOffsets_subdomain_owned,
-                                                                                     globalMesh.nodeOffsets_subdomain_owned,
-                                                                                     globalMesh.elementBoundaryOffsets_subdomain_owned,
-                                                                                     globalMesh.edgeOffsets_subdomain_owned,
-                                                                                     globalMesh.elementNumbering_subdomain2global,
-                                                                                     globalMesh.nodeNumbering_subdomain2global,
-                                                                                     globalMesh.elementBoundaryNumbering_subdomain2global,
-                                                                                     globalMesh.edgeNumbering_subdomain2global,
-                                                                                     self.dof_offsets_subdomain_owned,
-                                                                                     self.l2g,
-                                                                                     self.subdomain2global,
-                                                                                     self.lagrangeNodesArray)
+         self.max_dof_neighbors) = cpartitioning.buildQuadraticLocal2GlobalMappings(mpi_comm,
+                                                                                    self.nd,
+                                                                                    globalMesh.cmesh,
+                                                                                    globalMesh.subdomainMesh.cmesh,
+                                                                                    globalMesh.elementOffsets_subdomain_owned,
+                                                                                    globalMesh.nodeOffsets_subdomain_owned,
+                                                                                    globalMesh.elementBoundaryOffsets_subdomain_owned,
+                                                                                    globalMesh.edgeOffsets_subdomain_owned,
+                                                                                    globalMesh.elementNumbering_subdomain2global,
+                                                                                    globalMesh.nodeNumbering_subdomain2global,
+                                                                                    globalMesh.elementBoundaryNumbering_subdomain2global,
+                                                                                    globalMesh.edgeNumbering_subdomain2global,
+                                                                                    self.dof_offsets_subdomain_owned,
+                                                                                    self.l2g,
+                                                                                    self.subdomain2global,
+                                                                                    self.lagrangeNodesArray)
         assert self.nDOF == self.nDOF_subdomain
  #QuadraticDOFMap
 
@@ -2572,15 +2573,15 @@ class p0DOFMap(DOFMap):
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
         (self.nDOF_all_processes,self.nDOF_subdomain,
-         self.max_dof_neighbors) = flcbdfWrappers.buildDiscontinuousGalerkinLocal2GlobalMappings(mpi_comm,
-                                                                                                 local_dim,
-                                                                                                 globalMesh.cmesh,
-                                                                                                 globalMesh.subdomainMesh.cmesh,
-                                                                                                 globalMesh.elementOffsets_subdomain_owned,
-                                                                                                 globalMesh.elementNumbering_subdomain2global,
-                                                                                                 self.dof_offsets_subdomain_owned,
-                                                                                                 self.l2g,
-                                                                                                 self.subdomain2global)
+         self.max_dof_neighbors) = cpartitioning.buildDiscontinuousGalerkinLocal2GlobalMappings(mpi_comm,
+                                                                                                local_dim,
+                                                                                                globalMesh.cmesh,
+                                                                                                globalMesh.subdomainMesh.cmesh,
+                                                                                                globalMesh.elementOffsets_subdomain_owned,
+                                                                                                globalMesh.elementNumbering_subdomain2global,
+                                                                                                self.dof_offsets_subdomain_owned,
+                                                                                                self.l2g,
+                                                                                                self.subdomain2global)
 
 class P1BubbleDOFMap(DOFMap):
     """

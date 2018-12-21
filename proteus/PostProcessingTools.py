@@ -1866,7 +1866,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
         Galerkin solution has already been found
         Setup for optimized parallel codes
         """
-        from .flcbdfWrappers import globalSum,globalMax
+        from .Comm import globalSum,globalMax
 
         self.nodeStarFactors[ci].setU(0.0)
         if self.solutionTestSpaceIsNotPWL:
@@ -4691,7 +4691,7 @@ class VelocityPostProcessor_Original(object):
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
 
     def postprocessPWL_opt(self,ci,verbose=0):
-        from .flcbdfWrappers import globalSum,globalMax
+        from .Comm import globalSum,globalMax
         """
         New optimized/less general implementation of Larson Niklasson post-processing scheme
         """

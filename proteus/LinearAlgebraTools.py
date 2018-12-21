@@ -20,9 +20,9 @@ import math
 import sys
 from . import superluWrappers
 from . import Comm
+from .Comm import globalSum, globalMax
 from .superluWrappers import *
 from .Profiling import logEvent
-from . import flcbdfWrappers
 from petsc4py import PETSc as p4pyPETSc
 
 # PETSc Matrix Functions
@@ -1454,7 +1454,7 @@ def l2Norm(x):
     """
     Compute the parallel :math:`l_2` norm
     """
-    return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    return math.sqrt(globalSum(numpy.dot(x,x)))
 
 
 def l1Norm(x):
@@ -1478,7 +1478,7 @@ def l1Norm(x):
     :param x: numpy array of length n
     :return: float
     """
-    return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(x)))
+    return globalSum(numpy.sum(numpy.abs(x)))
 
 
 def lInfNorm(x):
@@ -1498,7 +1498,7 @@ def lInfNorm(x):
     :param x: numpy array of length n
     :return: float
     """
-    return flcbdfWrappers.globalMax(numpy.linalg.norm(x,numpy.inf))
+    return globalMax(numpy.linalg.norm(x,numpy.inf))
 
 
 def wDot(x,y,h):
@@ -1518,27 +1518,27 @@ def wDot(x,y,h):
     :param x,y,h: numpy arrays for vectors and weight
     :return: the weighted dot product
     """
-    return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
+    return globalSum(numpy.sum(x*y*h))
 
 def wl2Norm(x,h):
     """
     Compute the parallel weighted l_2 norm with weight h
     """
-    return math.sqrt(flcbdfWrappers.globalSum(wDot(x,x,h)))
+    return math.sqrt(globalSum(wDot(x,x,h)))
 
 
 def wl1Norm(x,h):
     """
     Compute the parallel weighted l_1 norm with weight h
     """
-    return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(h*x)))
+    return globalSum(numpy.sum(numpy.abs(h*x)))
 
 
 def wlInfNorm(x,h):
     """
     Compute the parallel weighted l_{\infty} norm with weight h
     """
-    return flcbdfWrappers.globalMax(numpy.linalg.norm(h*x,numpy.inf))
+    return globalMax(numpy.linalg.norm(h*x,numpy.inf))
 
 def energyDot(x,y,A):
     """
@@ -1556,8 +1556,8 @@ def l2NormAvg(x):
     """
     Compute the arithmetic averaged l_2 norm (root mean squared norm)
     """
-    scale = old_div(1.0,flcbdfWrappers.globalSum(len(x.flat)))
-    return math.sqrt(scale*flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    scale = old_div(1.0,globalSum(len(x.flat)))
+    return math.sqrt(scale*globalSum(numpy.dot(x,x)))
 
 
 rmsNorm = l2NormAvg
