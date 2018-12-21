@@ -10,7 +10,10 @@ nd=2
 L=(45.0,0.8)
 X_coords = (-35.0,15.0)
 domain = RectangularDomain(L=L,x=[-35.0,0,0])
-T=20.1
+Tfake = 20.0
+g = 9.81
+h0 = 1.0
+T = Tfake * np.sqrt(h0 / g)
 nDTout=200
 cE=1001.0
 LUMPED_MASS_MATRIX=1

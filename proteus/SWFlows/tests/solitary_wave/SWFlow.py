@@ -4,6 +4,7 @@ from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2DCV
+from proteus.mprans import DSW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context,

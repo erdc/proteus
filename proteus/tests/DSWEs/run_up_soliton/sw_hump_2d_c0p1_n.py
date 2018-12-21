@@ -46,12 +46,12 @@ he = L[0]/float(nnx-1)
 triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
 
 #added flag for using SUPG stabilization based on Berger and Stockstill, 95
-try_supg_stabilization = True
-subgridError = DSW2DCV.SubgridError(coefficients,nd,lag=True)
+#try_supg_stabilization = True
+#subgridError = DSW2DCV.SubgridError(coefficients,nd,lag=True)
 
 massLumping=False
 
-shockCapturing = DSW2DCV.ShockCapturing(coefficients,nd,shockCapturingFactor=0.1,lag=True)
+#shockCapturing = DSW2DCV.ShockCapturing(coefficients,nd,shockCapturingFactor=0.1,lag=True)
 numericalFluxType = DSW2DCV.NumericalFlux
 
 tolFac = 0.0

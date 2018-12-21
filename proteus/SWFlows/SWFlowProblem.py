@@ -147,6 +147,6 @@ default_physical_parameters ={'gravity': 9.81,
 default_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
                           'SSPOrder': 3,
                           'cE': 1}
-default_dswe_parameters = {'LUMPED_MASS_MATRIX': 1,
+default_dswe_parameters = {'LUMPED_MASS_MATRIX': 0,
                           'SSPOrder': 3,
                           'cE': 1}
