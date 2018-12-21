@@ -1,223 +1,110 @@
 # A type of -*- python -*- file
-from proteus import Comm as proteus_Comm
 import numpy as np
 cimport numpy as np
-from mpi4py.MPI cimport (Comm,
-                         Op)
 
-from mpi4py.libmpi cimport MPI_Comm
-cimport mesh
-from proteus cimport cmeshTools
-from proteus import flcbdfWrappersOld
-from proteus.partitioning cimport (c_partitionElements,
-                                   c_partitionNodes,
-                                   c_partitionNodesFromTetgenFiles,
-                                   buildQuadraticSubdomain2GlobalMappings_1d,
-                                   buildQuadraticSubdomain2GlobalMappings_2d,
-                                   buildQuadraticSubdomain2GlobalMappings_3d,
-                                   buildQuadraticCubeSubdomain2GlobalMappings_3d,
-                                   buildDiscontinuousGalerkinSubdomain2GlobalMappings)
+cdef class FLCBDF_integrator:
+    def choose_dt(self, double t, double tout):
+        return self.flcbdf.chooseDT(t,tout)
 
-def globalSum(double value):
-    return flcbdfWrappersOld.globalSum(value)
-#    cdef double value_new
-#    proteus_Comm.get().comm.tompi4py.Allreduce(value, value_new, Op.SUM)
-#    return value_new
+    def set_dt(self, double DT):
+        self.flcbdf.setDT(DT)
+        return DT
 
-def globalMax(double value):
-    return flcbdfWrappersOld.globalMax(value)
-#    cdef double value_new
-#    proteus_Comm.get().comm.tompi4py.Allreduce(value, value_new, Op.MAX)
-#    return value_new
+    def set_order(self, int k):
+        self.flcbdf.useFixedOrder(k)
+        return k
 
-def globalMin(double value):
-    return flcbdfWrappersOld.globalMin(value)
-#    cdef double value_new
-#    proteus_Comm.get().comm.tompi4py.Allreduce(value, value_new, Op.MIN)
-#    return value_new
+    def initialize_dt(self,
+                       double t0,
+                       double tOut,
+                       np.ndarray y,
+                       np.ndarray yPrime):
+        cdef Vec *yVec = new Vec(REF, <double*>(y.data), self.flcbdf.yn.ldim_)
+        cdef Vec *yPrimeVec = new Vec(REF, <double*>(yPrime.data),self.flcbdf.yn.ldim_)
+        DT = self.flcbdf.chooseInitialStepSize(t0,tOut,yVec[0],yPrimeVec[0])
+        del yVec
+        del yPrimeVec
+        return DT
 
-def partitionElements(Comm comm, int nLayersOfOverlap, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
-    cmesh.meshlink.mesh.subdomainp = &subdomain_cmesh.meshlink.mesh
-    c_partitionElements(comm.ob_mpi,
-                        cmesh.meshlink.mesh,
-                        nLayersOfOverlap)
-    return (
-        np.asarray(<int[:(comm.size+1)]> cmesh.meshlink.mesh.elementOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElements_global]> cmesh.meshlink.mesh.elementNumbering_subdomain2global),
-        np.asarray(<int[:(comm.size+1)]> cmesh.meshlink.mesh.nodeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nNodes_global]> cmesh.meshlink.mesh.nodeNumbering_subdomain2global),
-        np.asarray(<int[:(comm.size+1)]> cmesh.meshlink.mesh.elementBoundaryOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElementBoundaries_global]> cmesh.meshlink.mesh.elementBoundaryNumbering_subdomain2global),
-        np.asarray(<int[:(comm.size+1)]> cmesh.meshlink.mesh.edgeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nEdges_global]> cmesh.meshlink.mesh.edgeNumbering_subdomain2global)
-    )
+    def setInitialGuess(self, np.ndarray y):
+        yn = np.asarray(<double[:self.flcbdf.yn.ldim_]> self.flcbdf.yn.p_)
+        y[:] = yn
+        
+    def lastStepErrorOk(self, np.ndarray y):
+        cdef Vec *yVec = new Vec(REF,<double*>(y.data),self.flcbdf.yn.ldim_)
+        Ok =  not self.flcbdf.errorForStepTooLarge(yVec[0])
+        del yVec
+        return int(Ok)
 
-def partitionNodes(Comm comm, int nLayersOfOverlap, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
-    cmesh.meshlink.mesh.subdomainp = &subdomain_cmesh.meshlink.mesh
-    c_partitionNodes(comm.ob_mpi,
-                     cmesh.meshlink.mesh,
-                     nLayersOfOverlap)
-    return (
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.elementOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElements_global]> cmesh.meshlink.mesh.elementNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.nodeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nNodes_global]> cmesh.meshlink.mesh.nodeNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.elementBoundaryOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElementBoundaries_global]> cmesh.meshlink.mesh.elementBoundaryNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.edgeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nEdges_global]> cmesh.meshlink.mesh.edgeNumbering_subdomain2global)
-    )
+    def calculate_yprime(self,
+                          np.ndarray y,
+                          np.ndarray Dy,
+                          np.ndarray yprime,
+                          np.ndarray Dyprime):
+        if self.yVec is NULL:
+            self.yVec = new Vec(REF, <double*>(y.data), self.flcbdf.yn.ldim_)
+            self.DyVec = new Vec(REF, <double*>(Dy.data), self.flcbdf.yn.ldim_)
+            self.yprimeVec = new Vec(REF, <double*>(yprime.data), self.flcbdf.yn.ldim_)
+            self.DyprimeVec = new Vec(REF, <double*>(Dyprime.data), self.flcbdf.yn.ldim_)
+        self.flcbdf.calculate_yprime(self.yVec[0], self.DyVec[0], self.yprimeVec[0], self.DyprimeVec[0])
 
-def partitionNodesFromTetgenFiles(Comm comm, object filebase, int indexBase, int nLayersOfOverlap, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
-    cmesh.meshlink.mesh.subdomainp = &subdomain_cmesh.meshlink.mesh
-    if not isinstance(filebase, bytes):
-        filebase = filebase.encode()
-    c_partitionNodesFromTetgenFiles(comm.ob_mpi,
-                                    <const char*>(<char*>filebase),
-                                    indexBase,
-                                    cmesh.meshlink.mesh,
-                                    nLayersOfOverlap)
-    return (
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.elementOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElements_global]> cmesh.meshlink.mesh.elementNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.nodeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nNodes_global]> cmesh.meshlink.mesh.nodeNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.elementBoundaryOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElementBoundaries_global]> cmesh.meshlink.mesh.elementBoundaryNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.edgeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nEdges_global]> cmesh.meshlink.mesh.edgeNumbering_subdomain2global)
-    )
+    def stepTaken(self, np.ndarray y):
+        cdef Vec *yVec = new Vec(REF,<double*>(y.data),self.flcbdf.yn.ldim_)
+        self.flcbdf.estimateError(yVec[0])
+        del yVec
+        
+    def retryStep_errorFailure(self):
+        cdef double h
+        h = self.flcbdf.retryStep_errorFailure()
+        return h
 
-def buildQuadraticLocal2GlobalMappings(Comm comm,
-                                       int nSpace,
-                                       cmeshTools.CMesh cmesh,
-                                       cmeshTools.CMesh subdomain_cmesh,
-                                       np.ndarray elementOffsets_subdomain_owned,
-                                       np.ndarray nodeOffsets_subdomain_owned,
-                                       np.ndarray elementBoundaryOffsets_subdomain_owned,
-                                       np.ndarray edgeOffsets_subdomain_owned,
-                                       np.ndarray elementNumbering_subdomain2global,
-                                       np.ndarray nodeNumbering_subdomain2global,
-                                       np.ndarray elementBoundaryNumbering_subdomain2global,
-                                       np.ndarray edgeNumbering_subdomain2global,
-                                       np.ndarray quadratic_dof_offsets_subdomain_owned,
-                                       np.ndarray quadratic_subdomain_l2g,
-                                       np.ndarray quadraticNumbering_subdomain2global,
-                                       np.ndarray quadratic_lagrangeNodes):
-    cdef int nDOF_all_processes=0
-    cdef int nDOF_subdomain=0
-    cdef int max_dof_neighbors=0
-    if nSpace == 1:
-        buildQuadraticSubdomain2GlobalMappings_1d(comm.ob_mpi,
-                                                  cmesh.meshlink.mesh,
-                                                  <int*>(elementOffsets_subdomain_owned.data),
-                                                  <int*>(nodeOffsets_subdomain_owned.data),
-                                                  <int*>(elementNumbering_subdomain2global.data),
-                                                  <int*>(nodeNumbering_subdomain2global.data),
-                                                  nDOF_all_processes,
-                                                  nDOF_subdomain,
-                                                  max_dof_neighbors,
-                                                  <int*>(quadratic_dof_offsets_subdomain_owned.data),
-                                                  <int*>(quadratic_subdomain_l2g.data),
-                                                  <int*>(quadraticNumbering_subdomain2global.data),
-                                                  <double*>(quadratic_lagrangeNodes.data));
-    elif nSpace == 2:
-        buildQuadraticSubdomain2GlobalMappings_2d(comm.ob_mpi,
-                                                  cmesh.meshlink.mesh,
-                                                  <int*>(elementBoundaryOffsets_subdomain_owned.data),
-                                                  <int*>(nodeOffsets_subdomain_owned.data),
-                                                  <int*>(elementBoundaryNumbering_subdomain2global.data),
-                                                  <int*>(nodeNumbering_subdomain2global.data),
-                                                  nDOF_all_processes,
-                                                  nDOF_subdomain,
-                                                  max_dof_neighbors,
-                                                  <int*>(quadratic_dof_offsets_subdomain_owned.data),
-                                                  <int*>(quadratic_subdomain_l2g.data),
-                                                  <int*>(quadraticNumbering_subdomain2global.data),
-                                                  <double*>(quadratic_lagrangeNodes.data))
-    else:
-        buildQuadraticSubdomain2GlobalMappings_3d(comm.ob_mpi,
-                                                  cmesh.meshlink.mesh,
-                                                  <int*>(edgeOffsets_subdomain_owned.data),
-                                                  <int*>(nodeOffsets_subdomain_owned.data),
-                                                  <int*>(edgeNumbering_subdomain2global.data),
-                                                  <int*>(nodeNumbering_subdomain2global.data),
-                                                  nDOF_all_processes,
-                                                  nDOF_subdomain,
-                                                  max_dof_neighbors,
-                                                  <int*>(quadratic_dof_offsets_subdomain_owned.data),
-                                                  <int*>(quadratic_subdomain_l2g.data),
-                                                  <int*>(quadraticNumbering_subdomain2global.data),
-                                                  <double*>(quadratic_lagrangeNodes.data))
-    return (nDOF_all_processes,
-            nDOF_subdomain,
-            max_dof_neighbors)
-    
+    def retryStep_solverFailure(self):
+        cdef double h
+        h = self.flcbdf.retryStep_solverFailure()
+        return h
 
-def buildQuadraticCubeLocal2GlobalMappings(Comm comm,
-                                           int nSpace,
-                                           cmeshTools.CMesh cmesh,
-                                           cmeshTools.CMesh subdomain_cmesh,
-                                           np.ndarray elementOffsets_subdomain_owned,
-                                           np.ndarray nodeOffsets_subdomain_owned,
-                                           np.ndarray elementBoundaryOffsets_subdomain_owned,
-                                           np.ndarray edgeOffsets_subdomain_owned,
-                                           np.ndarray elementNumbering_subdomain2global,
-                                           np.ndarray nodeNumbering_subdomain2global,
-                                           np.ndarray elementBoundaryNumbering_subdomain2global,
-                                           np.ndarray edgeNumbering_subdomain2global,
-                                           np.ndarray quadratic_dof_offsets_subdomain_owned,
-                                           np.ndarray quadratic_subdomain_l2g,
-                                           np.ndarray quadraticNumbering_subdomain2global,
-                                           np.ndarray quadratic_lagrangeNodes):
-    cdef int nDOF_all_processes=0
-    cdef int nDOF_subdomain=0
-    cdef int max_dof_neighbors=0
-    if nSpace == 1:
-        assert(False),"buildQuadraticCubeSubdomain2GlobalMappings_1d not implemented!!"
-    elif nSpace == 2:
-        assert(False),"buildQuadraticCubeSubdomain2GlobalMappings_2d not implemented!!"
-    else:
-        buildQuadraticCubeSubdomain2GlobalMappings_3d(comm.ob_mpi,
-                                                      cmesh.meshlink.mesh,
-                                                      <int*>(edgeOffsets_subdomain_owned.data),
-                                                      <int*>(nodeOffsets_subdomain_owned.data),
-                                                      <int*>(edgeNumbering_subdomain2global.data),
-                                                      <int*>(nodeNumbering_subdomain2global.data),
-                                                      nDOF_all_processes,
-                                                      nDOF_subdomain,
-                                                      max_dof_neighbors,
-                                                      <int*>(quadratic_dof_offsets_subdomain_owned.data),
-                                                      <int*>(quadratic_subdomain_l2g.data),
-                                                      <int*>(quadraticNumbering_subdomain2global.data),
-                                                      <double*>(quadratic_lagrangeNodes.data))
-    return (nDOF_all_processes,
-            nDOF_subdomain,
-            max_dof_neighbors)
+    def initializeTimeHistory(self,
+                               np.ndarray y,
+                               np.ndarray yPrime):
+        cdef Vec *yVec = new Vec(REF,<double*>(y.data),self.flcbdf.yn.ldim_)
+        cdef Vec *yPrimeVec = new Vec(REF,<double*>(yPrime.data),self.flcbdf.yn.ldim_)
+        self.flcbdf.initializeTimeHistory(yVec[0],yPrimeVec[0])
+        del yVec
+        del yPrimeVec
+        
+    def setTolerances(self,
+                      double atol,
+                      double rtol,
+                      np.ndarray dV):
+        cdef Vec *dV_Vec  = new Vec(REF,<double*>(dV.data),self.flcbdf.yn.ldim_)
+        self.wNormp.setTolerances(atol,rtol,dV_Vec[0])
+        del dV_Vec
+        
+    def getCurrentAlpha(self):
+        cdef double alpha
+        alpha = self.flcbdf.getCurrentAlpha()
+        return alpha
 
-def buildDiscontinuousGalerkinLocal2GlobalMappings(Comm comm,
-                                                   int nDOF_element,
-                                                   cmeshTools.CMesh cmesh,
-                                                   np.ndarray subdomain_cmesh,
-                                                   np.ndarray elementOffsets_subdomain_owned,
-                                                   np.ndarray elementNumbering_subdomain2global,
-                                                   np.ndarray dg_dof_offsets_subdomain_owned,
-                                                   np.ndarray dg_subdomain_l2g,
-                                                   np.ndarray dgNumbering_subdomain2global):
-    cdef int nDOF_all_processes=0
-    cdef int nDOF_subdomain=0
-    cdef int max_dof_neighbors=0
-    buildDiscontinuousGalerkinSubdomain2GlobalMappings(comm.ob_mpi,
-                                                       cmesh.meshlink.mesh,
-                                                       <int*>(elementOffsets_subdomain_owned.data),
-                                                       <int*>(elementNumbering_subdomain2global.data),
-                                                       nDOF_element,
-                                                       nDOF_all_processes,
-                                                       nDOF_subdomain,
-                                                       max_dof_neighbors,
-                                                       <int*>(dg_dof_offsets_subdomain_owned.data),
-                                                       <int*>(dg_subdomain_l2g.data),
-                                                       <int*>(dgNumbering_subdomain2global.data))
-    return (nDOF_all_processes,
-            nDOF_subdomain,
-            max_dof_neighbors)
+    def __cinit__(self,
+                   np.ndarray y,
+                   object yName):
+        initialized=True
+        cdef int ignore1
+        cdef char** ignore2
+        self.petscSys = new Sys(ignore1, ignore2, NULL, NULL)
+        cdef int dim=y.size
+        self.sizeVec = new Vec(REF,<double*>(y.data),dim)#this is so we have a parallel vector in the registry
+        self.sizeVec.setExample()
+        self.wNormp = new WeightedL2Norm(dim)
+        if not isinstance(yName, bytes):
+            yName = yName.encode()
+        dataFilename = "data_{0:d}_{1:s}.txt".format(dim,yName)
+        self.data = new FullDataFile(0.0, dataFilename)
+        self.flcbdf = new FLCBDF_lite(dim, self.wNormp[0], self.data[0])
+
+    def __dealloc__(self):
+        del self.wNormp
+        del self.petscSys
+        del self.data
+        del self.flcbdf
+        del self.sizeVec

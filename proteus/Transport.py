@@ -31,7 +31,6 @@ from .TransportCoefficients import *
 from . import NumericalFlux
 from . import cnumericalFlux
 from . import Comm
-from . import flcbdfWrappers
 from . import cmeshToolsOld
 from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc

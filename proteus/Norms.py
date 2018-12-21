@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from builtins import range
 from .FemTools import *
 from .Quadrature import *
-from .flcbdfWrappers import globalSum,globalMax
+from .Comm import globalSum,globalMax
 from . import  cfemIntegrals
 
 useC = True
