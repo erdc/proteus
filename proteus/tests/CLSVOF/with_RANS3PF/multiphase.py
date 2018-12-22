@@ -23,7 +23,7 @@ useCLSVOF=True
 epsFactHeaviside_clsvof=1.5 #epsilon parameter on heaviside functions
 lambdaFact_clsvof=10.0 #lambda parameter in paper
 computeMetrics_clsvof=0 #0: no metrics, 1: at EOS (needs exact solution) or 2: EOS and ETS
-eps_tolerance_clsvof=False #Set tol on nonlinear solver to machine zero?
+eps_tolerance_clsvof=True #Set tol on nonlinear solver to machine zero?
 #clsvof_nl_atol_res # tol on nonlinear solver. If eps_tolerance=False. Search below.
 
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
