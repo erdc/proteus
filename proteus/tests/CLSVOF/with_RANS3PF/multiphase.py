@@ -304,7 +304,7 @@ else:
     dissipation_sc_uref = 1.0
     dissipation_sc_beta = 1.0
 
-ns_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
+ns_nl_atol_res = 1.0e-12#max(1.0e-10, 0.01 * he ** 2)
 ns_sed_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 vof_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 vos_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
