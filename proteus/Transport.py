@@ -31,7 +31,7 @@ from .TransportCoefficients import *
 from . import NumericalFlux
 from . import cnumericalFlux
 from . import Comm
-from . import cmeshToolsOld
+from . import csparsity
 from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
 from . import superluWrappers
@@ -4276,7 +4276,7 @@ class OneLevelTransport(NonlinearEquation):
 
         columnIndecesDict={}#replace with C++ map (this  collects column indeces for each row)
         logEvent("Building sparse matrix structure",level=2)
-        self.sparsityInfo = cmeshToolsOld.SparsityInfo()
+        self.sparsityInfo = csparsity.PySparsityInfo()
         useC=True
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]: #if we make stencil an array this can pass to C++
@@ -4469,7 +4469,7 @@ class OneLevelTransport(NonlinearEquation):
                     self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((0,),'i')
                 logEvent(memory("csrColumnOffsets_eb_eNebN","OneLevelTransport"),level=4)
                 if useC:
-                    self.sparsityInfo.setOffsets_CSR(self.mesh.nElements_global,
+                    self.sparsityInfo.getOffsets_CSR(self.mesh.nElements_global,
                                                      self.nDOF_test_element[ci],
                                                      self.nDOF_trial_element[cj],
                                                      self.l2g[ci]['nFreeDOF'],
