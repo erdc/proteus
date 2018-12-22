@@ -70,22 +70,22 @@ cdef class MeshAdaptPUMI:
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
     def reconstructFromProteus(self,cmeshTools.CMesh cmesh,cmeshTools.CMesh global_cmesh,hasModel=0):
-        return self.thisptr.reconstructFromProteus(cmesh.meshlink.mesh,global_cmesh.meshlink.mesh,hasModel)
+        return self.thisptr.reconstructFromProteus(cmesh.mesh,global_cmesh.mesh,hasModel)
     def reconstructFromProteus2(self,cmeshTools.CMesh cmesh,np.ndarray[int,ndim=1,mode="c"] isModelVert,
                                 np.ndarray[int,ndim=2,mode="c"] bFaces):
         isModelVert = np.ascontiguousarray(isModelVert)
-        return self.thisptr.reconstructFromProteus2(cmesh.meshlink.mesh,&isModelVert[0], <int *> bFaces.data)
+        return self.thisptr.reconstructFromProteus2(cmesh.mesh,&isModelVert[0], <int *> bFaces.data)
     def constructFromSerialPUMIMesh(self, cmeshTools.CMesh cmesh):
-        return self.thisptr.constructFromSerialPUMIMesh(cmesh.meshlink.mesh)
+        return self.thisptr.constructFromSerialPUMIMesh(cmesh.mesh)
     def constructFromParallelPUMIMesh(self, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
-        return self.thisptr.constructFromParallelPUMIMesh(cmesh.meshlink.mesh, subdomain_cmesh.meshlink.mesh)
+        return self.thisptr.constructFromParallelPUMIMesh(cmesh.mesh, subdomain_cmesh.mesh)
     def updateMaterialArrays(self, cmeshTools.CMesh cmesh, dim=None,bdryId=None, geomTag=None):
         if(dim is None):
-            return self.thisptr.updateMaterialArrays(cmesh.meshlink.mesh)
+            return self.thisptr.updateMaterialArrays(cmesh.mesh)
         else:
-            return self.thisptr.updateMaterialArrays(cmesh.meshlink.mesh,dim, bdryId, geomTag)
+            return self.thisptr.updateMaterialArrays(cmesh.mesh,dim, bdryId, geomTag)
     def updateMaterialArrays2(self, cmeshTools.CMesh cmesh):
-        return self.thisptr.updateMaterialArrays2(cmesh.meshlink.mesh)
+        return self.thisptr.updateMaterialArrays2(cmesh.mesh)
     def transferFieldToPUMI(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
         inArray = np.ascontiguousarray(inArray)
         return self.thisptr.transferFieldToPUMI(name, &inArray[0,0], inArray.shape[1], inArray.shape[0])
@@ -123,7 +123,7 @@ cdef class MeshAdaptPUMI:
     def adaptPUMIMesh(self):
         return self.thisptr.adaptPUMIMesh()
     def dumpMesh(self, cmeshTools.CMesh cmesh):
-        return self.thisptr.dumpMesh(cmesh.meshlink.mesh)
+        return self.thisptr.dumpMesh(cmesh.mesh)
     def getERMSizeField(self, err_total):
         return self.thisptr.getERMSizeField(err_total);
     def getMPvalue(self,field_val,val_0,val_1):

@@ -17,55 +17,55 @@ from proteus.partitioning cimport (c_partitionElements,
                                    buildDiscontinuousGalerkinSubdomain2GlobalMappings)
 
 def partitionElements(Comm comm, int nLayersOfOverlap, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
-    cmesh.meshlink.mesh.subdomainp = &subdomain_cmesh.meshlink.mesh
+    cmesh.mesh.subdomainp = &subdomain_cmesh.mesh
     c_partitionElements(comm.ob_mpi,
-                        cmesh.meshlink.mesh,
+                        cmesh.mesh,
                         nLayersOfOverlap)
     return (
-        np.asarray(<int[:(comm.size+1)]> cmesh.meshlink.mesh.elementOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElements_global]> cmesh.meshlink.mesh.elementNumbering_subdomain2global),
-        np.asarray(<int[:(comm.size+1)]> cmesh.meshlink.mesh.nodeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nNodes_global]> cmesh.meshlink.mesh.nodeNumbering_subdomain2global),
-        np.asarray(<int[:(comm.size+1)]> cmesh.meshlink.mesh.elementBoundaryOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElementBoundaries_global]> cmesh.meshlink.mesh.elementBoundaryNumbering_subdomain2global),
-        np.asarray(<int[:(comm.size+1)]> cmesh.meshlink.mesh.edgeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nEdges_global]> cmesh.meshlink.mesh.edgeNumbering_subdomain2global)
+        np.asarray(<int[:(comm.size+1)]> cmesh.mesh.elementOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nElements_global]> cmesh.mesh.elementNumbering_subdomain2global),
+        np.asarray(<int[:(comm.size+1)]> cmesh.mesh.nodeOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nNodes_global]> cmesh.mesh.nodeNumbering_subdomain2global),
+        np.asarray(<int[:(comm.size+1)]> cmesh.mesh.elementBoundaryOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nElementBoundaries_global]> cmesh.mesh.elementBoundaryNumbering_subdomain2global),
+        np.asarray(<int[:(comm.size+1)]> cmesh.mesh.edgeOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nEdges_global]> cmesh.mesh.edgeNumbering_subdomain2global)
     )
 
 def partitionNodes(Comm comm, int nLayersOfOverlap, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
-    cmesh.meshlink.mesh.subdomainp = &subdomain_cmesh.meshlink.mesh
+    cmesh.mesh.subdomainp = &subdomain_cmesh.mesh
     c_partitionNodes(comm.ob_mpi,
-                     cmesh.meshlink.mesh,
+                     cmesh.mesh,
                      nLayersOfOverlap)
     return (
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.elementOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElements_global]> cmesh.meshlink.mesh.elementNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.nodeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nNodes_global]> cmesh.meshlink.mesh.nodeNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.elementBoundaryOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElementBoundaries_global]> cmesh.meshlink.mesh.elementBoundaryNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.edgeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nEdges_global]> cmesh.meshlink.mesh.edgeNumbering_subdomain2global)
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.elementOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nElements_global]> cmesh.mesh.elementNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.nodeOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nNodes_global]> cmesh.mesh.nodeNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.elementBoundaryOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nElementBoundaries_global]> cmesh.mesh.elementBoundaryNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.edgeOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nEdges_global]> cmesh.mesh.edgeNumbering_subdomain2global)
     )
 
 def partitionNodesFromTetgenFiles(Comm comm, object filebase, int indexBase, int nLayersOfOverlap, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
-    cmesh.meshlink.mesh.subdomainp = &subdomain_cmesh.meshlink.mesh
+    cmesh.mesh.subdomainp = &subdomain_cmesh.mesh
     if not isinstance(filebase, bytes):
         filebase = filebase.encode()
     c_partitionNodesFromTetgenFiles(comm.ob_mpi,
                                     <const char*>(<char*>filebase),
                                     indexBase,
-                                    cmesh.meshlink.mesh,
+                                    cmesh.mesh,
                                     nLayersOfOverlap)
     return (
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.elementOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElements_global]> cmesh.meshlink.mesh.elementNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.nodeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nNodes_global]> cmesh.meshlink.mesh.nodeNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.elementBoundaryOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nElementBoundaries_global]> cmesh.meshlink.mesh.elementBoundaryNumbering_subdomain2global),
-        np.asarray(<int[:comm.size+1]> cmesh.meshlink.mesh.edgeOffsets_subdomain_owned),
-        np.asarray(<int[:cmesh.meshlink.mesh.subdomainp.nEdges_global]> cmesh.meshlink.mesh.edgeNumbering_subdomain2global)
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.elementOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nElements_global]> cmesh.mesh.elementNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.nodeOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nNodes_global]> cmesh.mesh.nodeNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.elementBoundaryOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nElementBoundaries_global]> cmesh.mesh.elementBoundaryNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.edgeOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nEdges_global]> cmesh.mesh.edgeNumbering_subdomain2global)
     )
 
 def buildQuadraticLocal2GlobalMappings(Comm comm,
@@ -89,7 +89,7 @@ def buildQuadraticLocal2GlobalMappings(Comm comm,
     cdef int max_dof_neighbors=0
     if nSpace == 1:
         buildQuadraticSubdomain2GlobalMappings_1d(comm.ob_mpi,
-                                                  cmesh.meshlink.mesh,
+                                                  cmesh.mesh,
                                                   <int*>(elementOffsets_subdomain_owned.data),
                                                   <int*>(nodeOffsets_subdomain_owned.data),
                                                   <int*>(elementNumbering_subdomain2global.data),
@@ -103,7 +103,7 @@ def buildQuadraticLocal2GlobalMappings(Comm comm,
                                                   <double*>(quadratic_lagrangeNodes.data));
     elif nSpace == 2:
         buildQuadraticSubdomain2GlobalMappings_2d(comm.ob_mpi,
-                                                  cmesh.meshlink.mesh,
+                                                  cmesh.mesh,
                                                   <int*>(elementBoundaryOffsets_subdomain_owned.data),
                                                   <int*>(nodeOffsets_subdomain_owned.data),
                                                   <int*>(elementBoundaryNumbering_subdomain2global.data),
@@ -117,7 +117,7 @@ def buildQuadraticLocal2GlobalMappings(Comm comm,
                                                   <double*>(quadratic_lagrangeNodes.data))
     else:
         buildQuadraticSubdomain2GlobalMappings_3d(comm.ob_mpi,
-                                                  cmesh.meshlink.mesh,
+                                                  cmesh.mesh,
                                                   <int*>(edgeOffsets_subdomain_owned.data),
                                                   <int*>(nodeOffsets_subdomain_owned.data),
                                                   <int*>(edgeNumbering_subdomain2global.data),
@@ -158,7 +158,7 @@ def buildQuadraticCubeLocal2GlobalMappings(Comm comm,
         assert(False),"buildQuadraticCubeSubdomain2GlobalMappings_2d not implemented!!"
     else:
         buildQuadraticCubeSubdomain2GlobalMappings_3d(comm.ob_mpi,
-                                                      cmesh.meshlink.mesh,
+                                                      cmesh.mesh,
                                                       <int*>(edgeOffsets_subdomain_owned.data),
                                                       <int*>(nodeOffsets_subdomain_owned.data),
                                                       <int*>(edgeNumbering_subdomain2global.data),
@@ -187,7 +187,7 @@ def buildDiscontinuousGalerkinLocal2GlobalMappings(Comm comm,
     cdef int nDOF_subdomain=0
     cdef int max_dof_neighbors=0
     buildDiscontinuousGalerkinSubdomain2GlobalMappings(comm.ob_mpi,
-                                                       cmesh.meshlink.mesh,
+                                                       cmesh.mesh,
                                                        <int*>(elementOffsets_subdomain_owned.data),
                                                        <int*>(elementNumbering_subdomain2global.data),
                                                        nDOF_element,

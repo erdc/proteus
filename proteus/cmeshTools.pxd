@@ -2,15 +2,8 @@
 cimport numpy as np
 cimport mesh as cppm
 
-cdef class CMeshLink:
-    """
-    Need to have this intermediate class for CMesh in order to make CMesh a
-    pickable class..
-    """
-    cdef cppm.Mesh mesh
-
 cdef class CMesh:
-    cdef CMeshLink meshlink
+    cdef cppm.Mesh mesh
     cdef public:
         cdef int nElements_global
         cdef int nNodes_global
