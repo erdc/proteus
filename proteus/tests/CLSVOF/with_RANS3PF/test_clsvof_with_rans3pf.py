@@ -7,7 +7,7 @@ from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
-Profiling.logLevel=1
+Profiling.logLevel=7
 Profiling.verbose=True
 import os
 import numpy as np
