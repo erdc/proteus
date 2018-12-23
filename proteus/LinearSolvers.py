@@ -15,7 +15,7 @@ from past.utils import old_div
 from .LinearAlgebraTools import *
 from . import LinearAlgebraTools as LAT
 from . import FemTools
-from . import lapackWrappers
+from . import clapack
 from . import superluWrappers
 from . import TransportCoefficients
 from . import cfemIntegrals
@@ -276,7 +276,7 @@ class LU(LinearSolver):
         if type(L).__name__ == 'SparseMatrix':
             self.sparseFactor = superluWrappers.SparseFactor(self.n)
         elif type(L).__name__ == 'ndarray':#mwf was array
-            self.denseFactor = lapackWrappers.DenseFactor(self.n)
+            self.denseFactor = clapack.DenseFactor(self.n)
         self.solverName = "LU"
         self.computeEigenvalues = computeEigenvalues or (computeEigenvectors is not None)
         if computeEigenvectors in ['left','both']:
@@ -301,9 +301,9 @@ class LU(LinearSolver):
             if self.computeEigenvalues:
                 self.Leig[:]=self.L
                 self.calculateEigenvalues()
-            lapackWrappers.denseFactorPrepare(self.n,
-                                              self.L,
-                                              self.denseFactor)
+            clapack.denseFactorPrepare(self.n,
+                                       self.L,
+                                       self.denseFactor)
         #
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
         (r,b) = self.solveInitialize(u,r,b,initialGuessIsZero)
@@ -314,28 +314,28 @@ class LU(LinearSolver):
         if type(self.L).__name__ == 'SparseMatrix':
             superluWrappers.sparseFactorSolve(self.sparseFactor,u)
         elif type(self.L).__name__ == 'ndarray':
-            lapackWrappers.denseFactorSolve(self.n,
-                                            self.L,
-                                            self.denseFactor,
-                                            u)
+            clapack.denseFactorSolve(self.n,
+                                     self.L,
+                                     self.denseFactor,
+                                     u)
         self.computeResidual(u,r,b)
         self.du -= u
         self.converged(r)
     def calculateEigenvalues(self):
         if type(self.L).__name__ == 'ndarray':
-            lapackWrappers.denseCalculateEigenvalues(self.JOBVL,
-                                                     self.JOBVR,
-                                                     self.n,
-                                                     self.Leig,
-                                                     self.n,
-                                                     self.eigenvalues_r,
-                                                     self.eigenvalues_i,
-                                                     self.leftEigenvectors,
-                                                     self.n,
-                                                     self.rightEigenvectors,
-                                                     self.n,
-                                                     self.work,
-                                                     5*self.n)
+            clapack.denseCalculateEigenvalues(self.JOBVL,
+                                              self.JOBVR,
+                                              self.n,
+                                              self.Leig,
+                                              self.n,
+                                              self.eigenvalues_r,
+                                              self.eigenvalues_i,
+                                              self.leftEigenvectors,
+                                              self.n,
+                                              self.rightEigenvectors,
+                                              self.n,
+                                              self.work,
+                                              5*self.n)
             eigen_mags = numpy.sqrt(self.eigenvalues_r**2 + self.eigenvalues_i**2)
             logEvent("Minimum eigenvalue magnitude"+repr(eigen_mags.min()))
             logEvent("Maximum eigenvalue magnitude"+repr(eigen_mags.max()))

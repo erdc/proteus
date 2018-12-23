@@ -15,7 +15,7 @@ from .NumericalFlux import *
 from .NonlinearSolvers import *
 from .LinearAlgebraTools import *
 from .LinearSolvers import *
-from .lapackWrappers import *
+from .clapack import *
 from .StepControl import *
 from .AuxiliaryVariables import *
 from .MeshTools import *
