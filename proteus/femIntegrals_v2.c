@@ -4,7 +4,7 @@
 #include <string.h>
 #include <strings.h>
 #include <assert.h>
-#include "femIntegrals.h"
+#include "femIntegrals_v2.h"
 #include PROTEUS_LAPACK_H
 
 /**

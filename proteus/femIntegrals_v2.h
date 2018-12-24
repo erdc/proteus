@@ -1,5 +1,5 @@
-#ifndef FEMINTEGRALS_H
-#define FEMINTEGRALS_H
+#ifndef FEMINTEGRALS_V2_H
+#define FEMINTEGRALS_V2_H
 
 /*!
  \file femIntegrals.h
