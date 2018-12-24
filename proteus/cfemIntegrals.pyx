@@ -2,7 +2,7 @@
 import numpy as np
 cimport numpy as np
 
-cdef extern from "femIntegrals_v2.h":
+cdef extern from "femIntegrals.h":
      void cparametricFiniteElementSpace_getHessianValues "parametricFiniteElementSpace_getHessianValues"(int nElements_global,
      							                                                 int nQuadraturePoints_element,
 							                                                 int nDOF_element,	
@@ -155,7 +155,6 @@ cdef extern from "femIntegrals_v2.h":
 						                                               double *dS,
 						                                               double *n,
 						                                               double *F)
-     ##################### HERE
      void ccopyLeftElementBoundaryInfo "copyLeftElementBoundaryInfo"(int nElementBoundaries_element,
                                                                      int nElementBoundaryQuadraturePoints_elementBoundary,
                                                                      int nSpace_global,
@@ -2079,7 +2078,6 @@ def calculateExteriorElementBoundaryStress2D(int nExteriorElementBoundaries_glob
 					      <double*> dS.data,
 					      <double*> n.data,
 					      <double*> F.data)
-    ########################################## HERE
 def copyLeftElementBoundaryInfo(int nElementBoundaries_element,
                                 int nElementBoundaryQuadraturePoints_elementBoundary,
                                 int nSpace_global,
@@ -5320,4 +5318,3 @@ def copyGlobalUnknownsToFreeUnknowns(int nDOF2set,
 				      <int*> freeDOFids.data,
 				      <double*> u.data,
 				      <double*> free_u.data)
-########################################## HERE
