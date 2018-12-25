@@ -1972,6 +1972,7 @@ void copyGlobalUnknownsToFreeUnknowns(int nDOF2set,
 				      const int* freeDOFids,
 				      const double * u,
 				      double * free_u);
+extern
 void updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundaries_global,
 						   int nElementBoundaries_element,
 						   int nQuadraturePoints_elementBoundary,
@@ -1987,6 +1988,7 @@ void updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundarie
 						   double* grad_w,
 						   double* dS,
 						   double* residual);
+extern
 void updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundaries_global,
 						   int nQuadraturePoints_elementBoundary,
 						   int nDOF_test_element,
@@ -2003,6 +2005,7 @@ void updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundarie
 						   double* grad_w,
 						   double* dS,
 						   double* residual);
+extern
 void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int nInteriorElementBoundaries_global,
 									   int nElementBoundaries_element,
 									   int nQuadraturePoints_elementBoundary,
@@ -2030,6 +2033,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int n
 									   double* grad_w,
 									   double* dS,
 									   double* jac);
+extern
 void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int nExteriorElementBoundaries_global,
 									   int nQuadraturePoints_elementBoundary,
 									   int nDOF_test_element,
@@ -2057,6 +2061,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int n
 									   double* grad_w,
 									   double* dS,
 									   double* jac);
+extern
 void updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBoundaries_global,
 						      int nElementBoundaries_element,
 						      int nQuadraturePoints_elementBoundary,
@@ -2074,6 +2079,7 @@ void updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBounda
 						      double* grad_w,
 						      double* dS,
 						      double* residual);
+extern
 void updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBoundaries_global,
 						      int nQuadraturePoints_elementBoundary,
 						      int nDOF_test_element,
@@ -2092,6 +2098,7 @@ void updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBounda
 						      double* grad_w,
 						      double* dS,
 						      double* residual);
+extern
 void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(int nInteriorElementBoundaries_global,
 									      int nElementBoundaries_element,
 									      int nQuadraturePoints_elementBoundary,
@@ -2121,6 +2128,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(in
 									      double* grad_w,
 									      double* dS,
 									      double* jac);
+extern
 void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(int nExteriorElementBoundaries_global,
 									      int nQuadraturePoints_elementBoundary,
 									      int nDOF_test_element,
@@ -2150,6 +2158,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(in
 									      double* grad_w,
 									      double* dS,
 									      double* jac);
+extern
 void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int nInteriorElementBoundaries_global,
 									    int nElementBoundaries_element,
 									    int nQuadraturePoints_elementBoundary,
@@ -2181,6 +2190,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
 									    double* grad_w,
 									    double* dS,
 									    double* jac);
+extern
 void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int nExteriorElementBoundaries_global,
 									    int nQuadraturePoints_elementBoundary,
 									    int nDOF_test_element,
@@ -2212,17 +2222,20 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
 									    double* grad_w,
 									    double* dS,
 									    double* jac);
+extern
 void update_f_movingDomain_q(int nElements_global,
 			     int nQuadraturePoints_element,
 			     int nSpace,
 			     double* xt,
 			     double* m,
 			     double* f);
+extern
 void update_f_movingDomain_constantMass_q(int nElements_global,
 					  int nQuadraturePoints_element,
 					  int nSpace,
 					  double* xt,
 					  double* f);
+extern
 void update_f_movingDomain_ebq(int nElements_global,
 			       int nElementBoundaries_element,
 			       int nQuadraturePoints_elementBoundary,
@@ -2230,12 +2243,14 @@ void update_f_movingDomain_ebq(int nElements_global,
 			       double* xt,
 			       double* m,
 			       double* f);
+extern
 void update_f_movingDomain_constantMass_ebq(int nElements_global,
 					    int nElementBoundaries_element,
 					    int nQuadraturePoints_elementBoundary,
 					    int nSpace,
 					    double* xt,
 					    double* f);
+extern
 void updateStress_weak(int nElements_global,
 		       int nQuadraturePoints_element,
 		       int nDOF_test_element,
@@ -2245,6 +2260,7 @@ void updateStress_weak(int nElements_global,
 		       double* weak_residual_x,
 		       double* weak_residual_y,
 		       double* weak_residual_z);
+extern
 void updateStressJacobian_weak(int nElements_global,
 			       int nQuadraturePoints_element,
 			       int nDOF_trial_element,
@@ -2270,6 +2286,7 @@ void updateStressJacobian_weak(int nElements_global,
 			       double* jacobian_weak_residual_zx,
 			       double* jacobian_weak_residual_zy,
 			       double* jacobian_weak_residual_zz);
+extern
 void projectFromNodalInterpolationConditions(int nElements_global,
 					     int nDOF_element,
 					     int dim_dof,
