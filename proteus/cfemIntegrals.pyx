@@ -196,12 +196,12 @@ cdef extern from "femIntegrals.h":
                                                                                                                      int *permutations,
                                                                                                                      double *inverseJacobianArray,
                                                                                                                      double *grad_vArray)
-     void cparametricMaps_getPermutations "cparametricMaps_getPermutations"(int nElements_global,
-                                                                            int nElementBoundaries_element,
-                                                                            int nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                            int nSpace_global,
-                                                                            double *xiArray,
-                                                                            int *permutations)
+     void cparametricMaps_getPermutations "parametricMaps_getPermutations"(int nElements_global,
+                                                                           int nElementBoundaries_element,
+                                                                           int nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                           int nSpace_global,
+                                                                           double *xiArray,
+                                                                           int *permutations)
      void cparametricMaps_getValues "parametricMaps_getValues"(int nElements_global,
                                                                int nQuadraturePoints_element,
                                                                int nDOF_element,
@@ -984,11 +984,11 @@ cdef extern from "femIntegrals.h":
                                                          double *jac)
      void czeroJacobian_CSR "zeroJacobian_CSR"(int nNonzeros,
                                                double *jac)
-     void csetInflowFlux "setInflowFlux"(int nExteriorElementBoundaries_global,
-                                         int nQuadraturePoints_elementBoundary,
-                                         int *exteriorElementBoundaries,
-                                         double *inflowFlux,
-                                         double *flux)
+     #void csetInflowFlux "setInflowFlux"(int nExteriorElementBoundaries_global,
+     #                                    int nQuadraturePoints_elementBoundary,
+     #                                    int *exteriorElementBoundaries,
+     #                                    double *inflowFlux,
+     #                                    double *flux)
      void ccalculateInteriorElementBoundaryVelocities "calculateInteriorElementBoundaryVelocities"(int nInteriorElementBoundaries_global,
                                                                                                    int nElementBoundaries_element,
                                                                                                    int nQuadraturePoints_elementBoundary,
@@ -1396,28 +1396,28 @@ cdef extern from "femIntegrals.h":
                                                    double* w_dV,
                                                    double* elementSpatialResidual,
                                                    double* mt)
-     double cscalarDomainIntegral(int nElements_global,
-                                  int nQuadraturePoints_element,
-                                  double* dV,
-                                  double* nValueArray)
-     double cscalarHeavisideDomainIntegral(int nElements_global,
-                                           int nQuadraturePoints_element,
-                                           double* dV,
-                                           double* nValueArray)
-     double cscalarSmoothedHeavisideDomainIntegral(int nElements_global,
-						   int nQuadraturePoints_element,
-						   double epsFact,
-						   double* elementDiameter,
-						   double* dV,
-						   double* nValueArray)
-     double cfluxDomainBoundaryIntegral(int nExteriorElementBoundaries,
-				        int nElementBoundaries_owned,
-                                        int nQuadraturePoints_elementBoundary,
-                                        int* flag,
-                                        int* exteriorElementBoundariesArray,
-                                        double* dS,
-                                        double* nValueArray)
-     double cfluxDomainBoundaryIntegralFromVector(int nExteriorElementBoundaries,
+     double cscalarDomainIntegral "scalarDomainIntegral"(int nElements_global,
+                                                         int nQuadraturePoints_element,
+                                                         double* dV,
+                                                         double* nValueArray)
+     double cscalarHeavisideDomainIntegral "scalarHeavisideDomainIntegral"(int nElements_global,
+                                                                           int nQuadraturePoints_element,
+                                                                           double* dV,
+                                                                           double* nValueArray)
+     double cscalarSmoothedHeavisideDomainIntegral "scalarSmoothedHeavisideDomainIntegral"(int nElements_global,
+						                                           int nQuadraturePoints_element,
+						                                           double epsFact,
+						                                           double* elementDiameter,
+						                                           double* dV,
+						                                           double* nValueArray)
+     double cfluxDomainBoundaryIntegral "fluxDomainBoundaryIntegral"(int nExteriorElementBoundaries,
+				                                     int nElementBoundaries_owned,
+                                                                     int nQuadraturePoints_elementBoundary,
+                                                                     int* flag,
+                                                                     int* exteriorElementBoundariesArray,
+                                                                     double* dS,
+                                                                     double* nValueArray)
+     double cfluxDomainBoundaryIntegralFromVector "fluxDomainBoundaryIntegralFromVector"(int nExteriorElementBoundaries,
 						  int nElementBoundaries_owned,
 						  int nQuadraturePoints_elementBoundary,
 						  int nSpace,
@@ -1770,7 +1770,6 @@ cdef extern from "femIntegrals.h":
 				                                               int* freeDOFids,
 				                                               double * u,
 				                                               double * free_u)
-     ################################## HERE
 def parametricFiniteElementSpace_getHessianValues(int nElements_global,
      						  int nQuadraturePoints_element,
 						  int nDOF_element,	
@@ -2078,12 +2077,7 @@ def calculateExteriorElementBoundaryStress2D(int nExteriorElementBoundaries_glob
 					      <double*> dS.data,
 					      <double*> n.data,
 					      <double*> F.data)
-def copyLeftElementBoundaryInfo(int nElementBoundaries_element,
-                                int nElementBoundaryQuadraturePoints_elementBoundary,
-                                int nSpace_global,
-                                int nExteriorElementBoundaries_global,
-                                int nInteriorElementBoundaries_global,
-                                np.ndarray elementBoundaryElementsArray,
+def copyLeftElementBoundaryInfo(np.ndarray elementBoundaryElementsArray,
                                 np.ndarray elementBoundaryLocalElementBoundariesArray,
                                 np.ndarray exteriorElementBoundariesArray,
                                 np.ndarray interiorElementBoundariesArray,
@@ -2091,6 +2085,11 @@ def copyLeftElementBoundaryInfo(int nElementBoundaries_element,
                                 np.ndarray n,
                                 np.ndarray xg,
                                 np.ndarray ng):
+    cdef int nElementBoundaries_element = n.shape[1]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = n.shape[2]
+    cdef int nSpace_global = n.shape[3]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundariesArray.shape[0]
     ccopyLeftElementBoundaryInfo(nElementBoundaries_element,
                                  nElementBoundaryQuadraturePoints_elementBoundary,
                                  nSpace_global,
@@ -2104,23 +2103,23 @@ def copyLeftElementBoundaryInfo(int nElementBoundaries_element,
                                  <double*>n.data,
                                  <double*>xg.data,
                                  <double*>ng.data)
-def parametricFiniteElementSpace_getValues(int nElements_global,
-                                           int nQuadraturePoints_element,
-                                           int nDOF_element,
-                                           np.ndarray psi,
+def parametricFiniteElementSpace_getValues(np.ndarray psi,
                                            np.ndarray vArray):
+    cdef int nElements_global = vArray.shape[0]
+    cdef int nQuadraturePoints_element = vArray.shape[1]
+    cdef int nDOF_element = vArray.shape[2]
     cparametricFiniteElementSpace_getValues(nElements_global,
                                             nQuadraturePoints_element,
                                             nDOF_element,
                                             <double*>psi.data,
                                             <double*>vArray.data)
-def parametricFiniteElementSpace_getValuesTrace(int nElements_global,
-                                                int nElementBoundaries_element,
-                                                int nElementBoundaryQuadraturePoints_elementBoundary,
-                                                int nDOF_element,
-                                                np.ndarray psi,
+def parametricFiniteElementSpace_getValuesTrace(np.ndarray psi,
                                                 np.ndarray permutations,
                                                 np.ndarray vArray):
+    cdef int nElements_global = vArray.shape[0]
+    cdef int nElementBoundaries_element = vArray.shape[1]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = vArray.shape[2]
+    cdef int nDOF_element = vArray.shape[3]
     cparametricFiniteElementSpace_getValuesTrace(nElements_global,
                                                  nElementBoundaries_element,
                                                  nElementBoundaryQuadraturePoints_elementBoundary,
@@ -2128,13 +2127,13 @@ def parametricFiniteElementSpace_getValuesTrace(int nElements_global,
                                                  <double*>psi.data,
                                                  <int *>permutations.data,
                                                  <double*>vArray.data)
-def parametricFiniteElementSpace_getGradientValues(int nElements_global,
-                                                   int nQuadraturePoints_element,
-                                                   int nDOF_element,
-                                                   int nSpace_global,
-                                                   np.ndarray grad_psi,
+def parametricFiniteElementSpace_getGradientValues(np.ndarray grad_psi,
                                                    np.ndarray inverseJacobianArray,
                                                    np.ndarray grad_vArray):
+    cdef int nElements_global = grad_vArray.shape[0]
+    cdef int nQuadraturePoints_element = grad_vArray.shape[1]
+    cdef int nDOF_element = grad_vArray.shape[2]
+    cdef int nSpace_global = grad_vArray.shape[3]
     cparametricFiniteElementSpace_getGradientValues(nElements_global,
                                                     nQuadraturePoints_element,
                                                     nDOF_element,
@@ -2142,15 +2141,15 @@ def parametricFiniteElementSpace_getGradientValues(int nElements_global,
                                                     <double*>grad_psi.data,
                                                     <double*>inverseJacobianArray.data,
                                                     <double*>grad_vArray.data)
-def parametricFiniteElementSpace_getGradientValuesTrace(int nElements_global,
-                                                        int nElementBoundaries_element,
-                                                        int nElementBoundaryQuadraturePoints_elementBoundary,
-                                                        int nDOF_element,
-                                                        int nSpace_global,
-                                                        np.ndarray grad_psi,
+def parametricFiniteElementSpace_getGradientValuesTrace(np.ndarray grad_psi,
                                                         np.ndarray permutations,
                                                         np.ndarray inverseJacobianArray,
                                                         np.ndarray grad_vArray):
+    cdef int nElements_global = grad_vArray.shape[0]
+    cdef int nElementBoundaries_element = grad_vArray.shape[1]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = grad_vArray.shape[2]
+    cdef int nDOF_element = grad_vArray.shape[3]
+    cdef int nSpace_global = grad_vArray.shape[4]
     cparametricFiniteElementSpace_getGradientValuesTrace(nElements_global,
                                                          nElementBoundaries_element,
                                                          nElementBoundaryQuadraturePoints_elementBoundary,
@@ -2160,26 +2159,26 @@ def parametricFiniteElementSpace_getGradientValuesTrace(int nElements_global,
                                                          <int *>permutations.data,
                                                          <double*>inverseJacobianArray.data,
                                                          <double*>grad_vArray.data)
-def parametricMaps_getPermutations(int nElements_global,
-                                   int nElementBoundaries_element,
-                                   int nElementBoundaryQuadraturePoints_elementBoundary,
-                                   int nSpace_global,
-                                   np.ndarray xiArray,
+def parametricMaps_getPermutations(np.ndarray xiArray,
                                    np.ndarray permutations):
+    cdef int nElements_global = xiArray.shape[0]
+    cdef int nElementBoundaries_element = xiArray.shape[1]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = xiArray.shape[2]
+    cdef int nSpace_global = xiArray.shape[3]
     cparametricMaps_getPermutations(nElements_global,
                                     nElementBoundaries_element,
                                     nElementBoundaryQuadraturePoints_elementBoundary,
                                     nSpace_global,
                                     <double*>xiArray.data,
                                     <int *>permutations.data)
-def parametricMaps_getValues(int nElements_global,
-                             int nQuadraturePoints_element,
-                             int nDOF_element,
-                             int nSpace_global,
-                             np.ndarray psi,
+def parametricMaps_getValues(np.ndarray psi,
                              np.ndarray l2g,
                              np.ndarray nodeArray,
                              np.ndarray xArray):
+    cdef int nElements_global = xArray.shape[0]
+    cdef int nQuadraturePoints_element = xArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
+    cdef int nSpace_global = xArray.shape[2]
     cparametricMaps_getValues(nElements_global,
                               nQuadraturePoints_element,
                               nDOF_element,
@@ -2188,15 +2187,15 @@ def parametricMaps_getValues(int nElements_global,
                               <int *>l2g.data,
                               <double*>nodeArray.data,
                               <double*>xArray.data)
-def parametricMaps_getValuesTrace(int nElements_global,
-                                  int nElementBoundaries_element,
-                                  int nQuadraturePoints_element,
-                                  int nDOF_element,
-                                  int nSpace_global,
-                                  np.ndarray psi,
+def parametricMaps_getValuesTrace(np.ndarray psi,
                                   np.ndarray l2g,
                                   np.ndarray nodeArray,
                                   np.ndarray xArray):
+    cdef int nElements_global = xArray.shape[0]
+    cdef int nElementBoundaries_element = xArray.shape[1]
+    cdef int nQuadraturePoints_element = xArray.shape[2]
+    cdef int nDOF_element = l2g.shape[1]
+    cdef int nSpace_global = xArray.shape[3]
     cparametricMaps_getValuesTrace(nElements_global,
                                    nElementBoundaries_element,
                                    nQuadraturePoints_element,
@@ -2224,16 +2223,16 @@ def parametricMaps_getInverseValues(int nElements_global,
                                      <double*>nodeArray.data,
                                      <double*>xArray.data,
                                      <double*>xiArray.data)
-def parametricMaps_getInverseValuesTrace(int nElements_global,
-                                         int nElementBoundaries_element,
-                                         int nElementBoundaryQuadraturePoints_elementBoundary,
-                                         int nDOF_element,
-                                         int nSpace_global,
-                                         np.ndarray inverseJacobian,
+def parametricMaps_getInverseValuesTrace(np.ndarray inverseJacobian,
                                          np.ndarray l2g,
                                          np.ndarray nodeArray,
                                          np.ndarray xArray,
                                          np.ndarray xiArray):
+    cdef int nElements_global = xArray.shape[0]
+    cdef int nElementBoundaries_element = xArray.shape[1]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = xArray.shape[2]
+    cdef int nDOF_element = l2g.shape[1]
+    cdef int nSpace_global = inverseJacobian.shape[3]
     cparametricMaps_getInverseValuesTrace(nElements_global,
                                           nElementBoundaries_element,
                                           nElementBoundaryQuadraturePoints_elementBoundary,
@@ -2244,138 +2243,106 @@ def parametricMaps_getInverseValuesTrace(int nElements_global,
                                           <double*>nodeArray.data,
                                           <double*>xArray.data,
                                           <double*>xiArray.data)
-def parametricMaps_getJacobianValues3D(int nElements_global,
-                                       int nQuadraturePoints_element,
-                                       int nDOF_element,
-                                       np.ndarray grad_psi,
-                                       np.ndarray l2g,
-                                       np.ndarray nodeArray,
-                                       np.ndarray jacobianArray,
-                                       np.ndarray jacobianDeterminantArray,
-                                       np.ndarray jacobianInverseArray):
-    cparametricMaps_getJacobianValues3D(nElements_global,
-                                        nQuadraturePoints_element,
-                                        nDOF_element,
-                                        <double*>grad_psi.data,
-                                        <int *>l2g.data,
-                                        <double*>nodeArray.data,
-                                        <double*>jacobianArray.data,
-                                        <double*>jacobianDeterminantArray.data,
-                                        <double*>jacobianInverseArray.data)
-def parametricMaps_getJacobianValues2D(int nElements_global,
-                                       int nQuadraturePoints_element,
-                                       int nDOF_element,
-                                       np.ndarray grad_psi,
-                                       np.ndarray l2g,
-                                       np.ndarray nodeArray,
-                                       np.ndarray jacobianArray,
-                                       np.ndarray jacobianDeterminantArray,
-                                       np.ndarray jacobianInverseArray):
-    cparametricMaps_getJacobianValues2D(nElements_global,
-                                        nQuadraturePoints_element,
-                                        nDOF_element,
-                                        <double*>grad_psi.data,
-                                        <int *>l2g.data,
-                                        <double*>nodeArray.data,
-                                        <double*>jacobianArray.data,
-                                        <double*>jacobianDeterminantArray.data,
-                                        <double*>jacobianInverseArray.data)
-def parametricMaps_getJacobianValues1D(int nElements_global,
-                                       int nQuadraturePoints_element,
-                                       int nDOF_element,
-                                       np.ndarray grad_psi,
-                                       np.ndarray l2g,
-                                       np.ndarray nodeArray,
-                                       np.ndarray jacobianArray,
-                                       np.ndarray jacobianDeterminantArray,
-                                       np.ndarray jacobianInverseArray):
-    cparametricMaps_getJacobianValues1D(nElements_global,
-                                        nQuadraturePoints_element,
-                                        nDOF_element,
-                                        <double*>grad_psi.data,
-                                        <int *>l2g.data,
-                                        <double*>nodeArray.data,
-                                        <double*>jacobianArray.data,
-                                        <double*>jacobianDeterminantArray.data,
-                                        <double*>jacobianInverseArray.data)
-def parametricMaps_getJacobianValuesTrace3D(int nElements_global,
-                                            int nElementBoundaries_element,
-                                            int nQuadraturePoints_element,
-                                            int nDOF_element,
-                                            np.ndarray grad_psi,
-                                            np.ndarray boundaryNormals,
-                                            np.ndarray boundaryJacobians,
-                                            np.ndarray l2g,
-                                            np.ndarray nodeArray,
-                                            np.ndarray jacobianInverseArray,
-                                            np.ndarray metricTensorArray,
-                                            np.ndarray metricTensorDeterminantSqrtArray,
-                                            np.ndarray unitNormalArray):
-    cparametricMaps_getJacobianValuesTrace3D(nElements_global,
-                                             nElementBoundaries_element,
-                                             nQuadraturePoints_element,
-                                             nDOF_element,
-                                             <double*>grad_psi.data,
-                                             <double*>boundaryNormals.data,
-                                             <double*>boundaryJacobians.data,
-                                             <int *>l2g.data,
-                                             <double*>nodeArray.data,
-                                             <double*>jacobianInverseArray.data,
-                                             <double*>metricTensorArray.data,
-                                             <double*>metricTensorDeterminantSqrtArray.data,
-                                             <double*>unitNormalArray.data)
-def parametricMaps_getJacobianValuesTrace2D(int nElements_global,
-                                            int nElementBoundaries_element,
-                                            int nQuadraturePoints_element,
-                                            int nDOF_element,
-                                            np.ndarray grad_psi,
-                                            np.ndarray boundaryNormals,
-                                            np.ndarray boundaryJacobians,
-                                            np.ndarray l2g,
-                                            np.ndarray nodeArray,
-                                            np.ndarray jacobianInverseArray,
-                                            np.ndarray metricTensorArray,
-                                            np.ndarray metricTensorDeterminantSqrtArray,
-                                            np.ndarray unitNormalArray):
-    cparametricMaps_getJacobianValuesTrace2D(nElements_global,
-                                             nElementBoundaries_element,
-                                             nQuadraturePoints_element,
-                                             nDOF_element,
-                                             <double*>grad_psi.data,
-                                             <double*>boundaryNormals.data,
-                                             <double*>boundaryJacobians.data,
-                                             <int *>l2g.data,
-                                             <double*>nodeArray.data,
-                                             <double*>jacobianInverseArray.data,
-                                             <double*>metricTensorArray.data,
-                                             <double*>metricTensorDeterminantSqrtArray.data,
-                                             <double*>unitNormalArray.data)
-def parametricMaps_getJacobianValuesTrace1D(int nElements_global,
-                                            int nElementBoundaries_element,
-                                            int nQuadraturePoints_element,
-                                            int nDOF_element,
-                                            np.ndarray grad_psi,
-                                            np.ndarray boundaryNormals,
-                                            np.ndarray boundaryJacobians,
-                                            np.ndarray l2g,
-                                            np.ndarray nodeArray,
-                                            np.ndarray jacobianInverseArray,
-                                            np.ndarray metricTensorArray,
-                                            np.ndarray metricTensorDeterminantSqrtArray,
-                                            np.ndarray unitNormalArray):
-    cparametricMaps_getJacobianValuesTrace1D(nElements_global,
-                                             nElementBoundaries_element,
-                                             nQuadraturePoints_element,
-                                             nDOF_element,
-                                             <double*>grad_psi.data,
-                                             <double*>boundaryNormals.data,
-                                             <double*>boundaryJacobians.data,
-                                             <int *>l2g.data,
-                                             <double*>nodeArray.data,
-                                             <double*>jacobianInverseArray.data,
-                                             <double*>metricTensorArray.data,
-                                             <double*>metricTensorDeterminantSqrtArray.data,
-                                             <double*>unitNormalArray.data)
+def parametricMaps_getJacobianValues(np.ndarray grad_psi,
+                                     np.ndarray l2g,
+                                     np.ndarray nodeArray,
+                                     np.ndarray jacobianArray,
+                                     np.ndarray jacobianDeterminantArray,
+                                     np.ndarray jacobianInverseArray):
+    cdef int nd = jacobianArray.shape[2]
+    cdef int nElements_global = jacobianArray.shape[0]
+    cdef int nQuadraturePoints_element = jacobianArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
+    if nd == 1:
+        cparametricMaps_getJacobianValues1D(nElements_global,
+                                            nQuadraturePoints_element,
+                                            nDOF_element,
+                                            <double*>grad_psi.data,
+                                            <int *>l2g.data,
+                                            <double*>nodeArray.data,
+                                            <double*>jacobianArray.data,
+                                            <double*>jacobianDeterminantArray.data,
+                                            <double*>jacobianInverseArray.data)
+    elif nd == 2:
+        cparametricMaps_getJacobianValues2D(nElements_global,
+                                            nQuadraturePoints_element,
+                                            nDOF_element,
+                                            <double*>grad_psi.data,
+                                            <int *>l2g.data,
+                                            <double*>nodeArray.data,
+                                            <double*>jacobianArray.data,
+                                            <double*>jacobianDeterminantArray.data,
+                                            <double*>jacobianInverseArray.data)
+    elif nd == 3:
+        cparametricMaps_getJacobianValues3D(nElements_global,
+                                            nQuadraturePoints_element,
+                                            nDOF_element,
+                                            <double*>grad_psi.data,
+                                            <int *>l2g.data,
+                                            <double*>nodeArray.data,
+                                            <double*>jacobianArray.data,
+                                            <double*>jacobianDeterminantArray.data,
+                                            <double*>jacobianInverseArray.data)
+    else:
+        print("error in getJacobianValues...jacobian not sized properly")
+def parametricMaps_getJacobianValuesTrace(np.ndarray grad_psi,
+                                          np.ndarray boundaryNormals,
+                                          np.ndarray boundaryJacobians,
+                                          np.ndarray l2g,
+                                          np.ndarray nodeArray,
+                                          np.ndarray jacobianInverseArray,
+                                          np.ndarray metricTensorArray,
+                                          np.ndarray metricTensorDeterminantSqrtArray,
+                                          np.ndarray unitNormalArray):
+    cdef int nd = jacobianInverseArray.shape[3]
+    cdef int nElements_global = jacobianInverseArray.shape[0]
+    cdef int nElementBoundaries_element = jacobianInverseArray.shape[1]
+    cdef int nQuadraturePoints_element = jacobianInverseArray.shape[2]
+    cdef int nDOF_element = l2g.shape[1]
+    if nd == 1:
+        cparametricMaps_getJacobianValuesTrace1D(nElements_global,
+                                                 nElementBoundaries_element,
+                                                 nQuadraturePoints_element,
+                                                 nDOF_element,
+                                                 <double*>grad_psi.data,
+                                                 <double*>boundaryNormals.data,
+                                                 <double*>boundaryJacobians.data,
+                                                 <int *>l2g.data,
+                                                 <double*>nodeArray.data,
+                                                 <double*>jacobianInverseArray.data,
+                                                 <double*>metricTensorArray.data,
+                                                 <double*>metricTensorDeterminantSqrtArray.data,
+                                                 <double*>unitNormalArray.data)
+    elif nd == 2:
+        cparametricMaps_getJacobianValuesTrace2D(nElements_global,
+                                                 nElementBoundaries_element,
+                                                 nQuadraturePoints_element,
+                                                 nDOF_element,
+                                                 <double*>grad_psi.data,
+                                                 <double*>boundaryNormals.data,
+                                                 <double*>boundaryJacobians.data,
+                                                 <int *>l2g.data,
+                                                 <double*>nodeArray.data,
+                                                 <double*>jacobianInverseArray.data,
+                                                 <double*>metricTensorArray.data,
+                                                 <double*>metricTensorDeterminantSqrtArray.data,
+                                                 <double*>unitNormalArray.data)
+    elif nd == 3:
+        cparametricMaps_getJacobianValuesTrace3D(nElements_global,
+                                                 nElementBoundaries_element,
+                                                 nQuadraturePoints_element,
+                                                 nDOF_element,
+                                                 <double*>grad_psi.data,
+                                                 <double*>boundaryNormals.data,
+                                                 <double*>boundaryJacobians.data,
+                                                 <int *>l2g.data,
+                                                 <double*>nodeArray.data,
+                                                 <double*>jacobianInverseArray.data,
+                                                 <double*>metricTensorArray.data,
+                                                 <double*>metricTensorDeterminantSqrtArray.data,
+                                                 <double*>unitNormalArray.data)
+    else:
+        print("error in getJacobianValuesTrace...jacobianInverse not sized properly")
 def updateMass_weak(int nElements_global,
                     int nQuadraturePoints_element,
                     int nDOF_test_element,
@@ -3456,13 +3423,13 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarra
                                                                         <double*>elementBoundaryFluxJacobian_eb.data,
                                                                         <double*>w_dS.data,
                                                                         <double*>jac.data)
-def calculateWeightedShape(int nElements_global,
-                           int nQuadraturePoints_element,
-                           int nDOF_test_element,
-                           np.ndarray dVR,
+def calculateWeightedShape(np.ndarray dVR,
                            np.ndarray abs_det_jac,
                            np.ndarray w,
                            np.ndarray w_dV):
+    cdef int nElements_global = w_dV.shape[0]
+    cdef int nQuadraturePoints_element = w_dV.shape[1]
+    cdef int nDOF_test_element = w_dV.shape[2]
     ccalculateWeightedShape(nElements_global,
                             nQuadraturePoints_element,
                             nDOF_test_element,
@@ -3470,14 +3437,14 @@ def calculateWeightedShape(int nElements_global,
                             <double*>abs_det_jac.data,
                             <double*>w.data,
                             <double*>w_dV.data)
-def calculateWeightedShapeGradients(int nElements_global,
-                                    int nQuadraturePoints_element,
-                                    int nDOF_test_element,
-                                    int nSpace,
-                                    np.ndarray dVR,
+def calculateWeightedShapeGradients(np.ndarray dVR,
                                     np.ndarray abs_det_jac,
                                     np.ndarray grad_w,
                                     np.ndarray grad_w_dV):
+    cdef int nElements_global = grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_w_dV.shape[1]
+    cdef int nDOF_test_element = grad_w_dV.shape[2]
+    cdef int nSpace = grad_w_dV.shape[3]
     ccalculateWeightedShapeGradients(nElements_global,
                                      nQuadraturePoints_element,
                                      nDOF_test_element,
@@ -3548,14 +3515,14 @@ def calculateGradShape_X_weightedGradShape(int nElements_global,
                                             <double*>grad_v.data,
                                             <double*>grad_w_dV.data,
                                             <double*>grad_v_X_grad_w_dV.data)
-def calculateWeightedShapeTrace(int nElements_global,
-                                int nElementBoundaries_element,
-                                int nElementBoundaryQuadraturePoints_elementBoundary,
-                                int nDOF_test_element,
-                                np.ndarray dSR,
+def calculateWeightedShapeTrace(np.ndarray dSR,
                                 np.ndarray sqrt_det_g,
                                 np.ndarray w,
                                 np.ndarray w_dS):
+    cdef int nElements_global = w_dS.shape[0]
+    cdef int nElementBoundaries_element = w_dS.shape[1]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = w_dS.shape[2]
+    cdef int nDOF_test_element = w_dS.shape[3]
     ccalculateWeightedShapeTrace(nElements_global,
                                  nElementBoundaries_element,
                                  nElementBoundaryQuadraturePoints_elementBoundary,
@@ -3598,22 +3565,22 @@ def calculateGradShape_X_weightedShapeTrace(int nElements_global,
                                              <double*>grad_v.data,
                                              <double*>w_dS.data,
                                              <double*>grad_v_X_w_dS.data)
-def calculateIntegrationWeights(int nElements_global,
-                                int nQuadraturePoints_element,
-                                np.ndarray abs_det_J,
+def calculateIntegrationWeights(np.ndarray abs_det_J,
                                 np.ndarray referenceWeights,
                                 np.ndarray weights):
+    cdef int nElements_global = abs_det_J.shape[0]
+    cdef int nQuadraturePoints_element = abs_det_J.shape[1]
     ccalculateIntegrationWeights(nElements_global,
                                  nQuadraturePoints_element,
                                  <double*>abs_det_J.data,
                                  <double*>referenceWeights.data,
                                  <double*>weights.data)
-def calculateElementBoundaryIntegrationWeights(int nElements_global,
-                                               int nElementBoundaries_element,
-                                               int nQuadraturePoints_elementBoundary,
-                                               np.ndarray sqrt_det_g,
+def calculateElementBoundaryIntegrationWeights(np.ndarray sqrt_det_g,
                                                np.ndarray referenceWeights,
                                                np.ndarray weights):
+    cdef int nElements_global = sqrt_det_g.shape[0]
+    cdef int nElementBoundaries_element = sqrt_det_g.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = sqrt_det_g.shape[2]
     ccalculateElementBoundaryIntegrationWeights(nElements_global,
                                                 nElementBoundaries_element,
                                                 nQuadraturePoints_elementBoundary,
@@ -3736,16 +3703,16 @@ def zeroJacobian_CSR(int nNonzeros,
                      np.ndarray jac):
     czeroJacobian_CSR(nNonzeros,
                       <double*>jac.data)
-def setInflowFlux(int nExteriorElementBoundaries_global,
-                  int nQuadraturePoints_elementBoundary,
-                  np.ndarray exteriorElementBoundaries,
-                  np.ndarray inflowFlux,
-                  np.ndarray flux):
-    csetInflowFlux(nExteriorElementBoundaries_global,
-                   nQuadraturePoints_elementBoundary,
-                   <int *>exteriorElementBoundaries.data,
-                   <double*>inflowFlux.data,
-                   <double*>flux.data)
+#def setInflowFlux(int nExteriorElementBoundaries_global,
+#                  int nQuadraturePoints_elementBoundary,
+#                  np.ndarray exteriorElementBoundaries,
+#                  np.ndarray inflowFlux,
+#                  np.ndarray flux):
+#    csetInflowFlux(nExteriorElementBoundaries_global,
+#                   nQuadraturePoints_elementBoundary,
+#                   <int *>exteriorElementBoundaries.data,
+#                   <double*>inflowFlux.data,
+#                   <double*>flux.data)
 def calculateInteriorElementBoundaryVelocities(int nInteriorElementBoundaries_global,
                                                int nElementBoundaries_element,
                                                int nQuadraturePoints_elementBoundary,
@@ -4610,7 +4577,7 @@ def fluxDomainBoundaryIntegral(int nExteriorElementBoundaries,
                                          <double*> dS.data,
                                          <double*> nValueArray.data)
     return output
-def luxDomainBoundaryIntegralFromVector(int nExteriorElementBoundaries,
+def fluxDomainBoundaryIntegralFromVector(int nExteriorElementBoundaries,
 					int nElementBoundaries_owned,
 					int nQuadraturePoints_elementBoundary,
 					int nSpace,
@@ -4768,15 +4735,15 @@ def computeC0P1InterpolantDGP12(int nElements_global,
 				 <int*> l2g.data,
 				 <double*> dof.data,
 				 <double*> nodalAverage.data)
-def parametricFiniteElementSpace_getValuesGlobalExteriorTrace(int nElementBoundaries_element,
-							      int nElementBoundaryQuadraturePoints_elementBoundary,
-							      int nDOF_element,
-							      int nExteriorElementBoundaries_global,
-							      np.ndarray exteriorElementBoundariesArray,
+def parametricFiniteElementSpace_getValuesGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
 							      np.ndarray elementBoundaryElementsArray,
 							      np.ndarray elementBoundaryLocalElementBoundariesArray,
 							      np.ndarray psi,
 							      np.ndarray vArray):
+    cdef int nElementBoundaries_element = psi.shape[0]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = psi.shape[1]
+    cdef int nDOF_element = psi.shape[2]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
     cparametricFiniteElementSpace_getValuesGlobalExteriorTrace(nElementBoundaries_element,
 							       nElementBoundaryQuadraturePoints_elementBoundary,
 							       nDOF_element,
@@ -4786,17 +4753,17 @@ def parametricFiniteElementSpace_getValuesGlobalExteriorTrace(int nElementBounda
 							       <int*> elementBoundaryLocalElementBoundariesArray.data,
 							       <double*> psi.data,
 							       <double*> vArray.data)
-def parametricFiniteElementSpace_getGradientValuesGlobalExteriorTrace(int nElementBoundaries_element,
-								      int nElementBoundaryQuadraturePoints_elementBoundary,
-								      int nDOF_element,
-								      int nSpace_global,
-								      int nExteriorElementBoundaries_global,
-								      np.ndarray exteriorElementBoundariesArray,
+def parametricFiniteElementSpace_getGradientValuesGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
 								      np.ndarray elementBoundaryElementsArray,
 								      np.ndarray elementBoundaryLocalElementBoundariesArray,
 								      np.ndarray grad_psi,
 								      np.ndarray inverseJacobianArray,
 								      np.ndarray grad_vArray):
+    cdef int nElementBoundaries_element = grad_psi.shape[0]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = grad_psi.shape[1]
+    cdef int nDOF_element = grad_psi.shape[2]
+    cdef int nSpace_global = grad_vArray.shape[3]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
     cparametricFiniteElementSpace_getGradientValuesGlobalExteriorTrace(nElementBoundaries_element,
 								       nElementBoundaryQuadraturePoints_elementBoundary,
 								       nDOF_element,
@@ -4808,17 +4775,17 @@ def parametricFiniteElementSpace_getGradientValuesGlobalExteriorTrace(int nEleme
 								       <double*> grad_psi.data,
 								       <double*> inverseJacobianArray.data,
 								       <double*> grad_vArray.data)
-def parametricMaps_getValuesGlobalExteriorTrace(int nQuadraturePoints_elementBoundary,
-						int nDOF_element,
-						int nSpace_global,
-						int nExteriorElementBoundaries_global,
-						np.ndarray exteriorElementBoundariesArray,
+def parametricMaps_getValuesGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
 						np.ndarray elementBoundaryElementsArray,
 						np.ndarray elementBoundaryLocalElementBoundariesArray,
 						np.ndarray psi,
 						np.ndarray l2g,
 						np.ndarray nodeArray,
 						np.ndarray xArray):
+    cdef int nQuadraturePoints_elementBoundary = xArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
+    cdef int nSpace_global = xArray.shape[2]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
     cparametricMaps_getValuesGlobalExteriorTrace(nQuadraturePoints_elementBoundary,
 						 nDOF_element,
 						 nSpace_global,
@@ -4854,96 +4821,72 @@ def parametricMaps_getInverseValuesGlobalExteriorTrace(int nElementBoundaryQuadr
 						        <double*> nodeArray.data,
 						        <double*> xArray.data,
 						        <double*> xiArray.data)
-def parametricMaps_getJacobianValuesGlobalExteriorTrace1D(int nQuadraturePoints_element,
-							  int nDOF_element,
-							  int nExteriorElementBoundaries_global,
-							  np.ndarray exteriorElementBoundariesArray,
-							  np.ndarray elementBoundaryElementsArray,
-							  np.ndarray elementBoundaryLocalElementBoundariesArray,
-							  np.ndarray grad_psi,
-							  np.ndarray boundaryNormals,
-							  np.ndarray boundaryJacobians,
-							  np.ndarray l2g,
-							  np.ndarray nodeArray,
-							  np.ndarray jacobianInverseArray,
-							  np.ndarray metricTensorArray,
-							  np.ndarray metricTensorDeterminantSqrtArray,
-							  np.ndarray unitNormalArray):
-    cparametricMaps_getJacobianValuesGlobalExteriorTrace1D(nQuadraturePoints_element,
-							   nDOF_element,
-							   nExteriorElementBoundaries_global,
-							   <int *> exteriorElementBoundariesArray.data,
-							   <int *> elementBoundaryElementsArray.data,
-							   <int *> elementBoundaryLocalElementBoundariesArray.data,
-							   <double*> grad_psi.data,
-							   <double*> boundaryNormals.data,
-							   <double*> boundaryJacobians.data,
-							   <int*> l2g.data,
-							   <double*> nodeArray.data,
-							   <double*> jacobianInverseArray.data,
-							   <double*> metricTensorArray.data,
-							   <double*> metricTensorDeterminantSqrtArray.data,
-							   <double*> unitNormalArray.data)
-def parametricMaps_getJacobianValuesGlobalExteriorTrace2D(int nQuadraturePoints_element,
-							  int nDOF_element,
-							  int nExteriorElementBoundaries_global,
-							  np.ndarray  exteriorElementBoundariesArray,
-							  np.ndarray  elementBoundaryElementsArray,
-							  np.ndarray  elementBoundaryLocalElementBoundariesArray,
-							  np.ndarray grad_psi,
-							  np.ndarray boundaryNormals,
-							  np.ndarray boundaryJacobians,
-							  np.ndarray l2g,
-							  np.ndarray nodeArray,
-							  np.ndarray jacobianInverseArray,
-							  np.ndarray metricTensorArray,
-							  np.ndarray metricTensorDeterminantSqrtArray,
-							  np.ndarray unitNormalArray):
-    cparametricMaps_getJacobianValuesGlobalExteriorTrace2D(nQuadraturePoints_element,
-							   nDOF_element,
-							   nExteriorElementBoundaries_global,
-							   <int *> exteriorElementBoundariesArray.data,
-							   <int *> elementBoundaryElementsArray.data,
-							   <int *> elementBoundaryLocalElementBoundariesArray.data,
-							   <double*> grad_psi.data,
-							   <double*> boundaryNormals.data,
-							   <double*> boundaryJacobians.data,
-							   <int*> l2g.data,
-							   <double*> nodeArray.data,
-							   <double*> jacobianInverseArray.data,
-							   <double*> metricTensorArray.data,
-							   <double*> metricTensorDeterminantSqrtArray.data,
-							   <double*> unitNormalArray.data)
-def parametricMaps_getJacobianValuesGlobalExteriorTrace3D(int nQuadraturePoints_element,
-							  int nDOF_element,
-							  int nExteriorElementBoundaries_global,
-							  np.ndarray  exteriorElementBoundariesArray,
-							  np.ndarray  elementBoundaryElementsArray,
-							  np.ndarray  elementBoundaryLocalElementBoundariesArray,
-							  np.ndarray grad_psi,
-							  np.ndarray boundaryNormals,
-							  np.ndarray boundaryJacobians,
-							  np.ndarray l2g,
-							  np.ndarray nodeArray,
-							  np.ndarray jacobianInverseArray,
-							  np.ndarray metricTensorArray,
-							  np.ndarray metricTensorDeterminantSqrtArray,
-							  np.ndarray unitNormalArray):
-    cparametricMaps_getJacobianValuesGlobalExteriorTrace3D(nQuadraturePoints_element,
-							   nDOF_element,
-							   nExteriorElementBoundaries_global,
-							   <int *> exteriorElementBoundariesArray.data,
-							   <int *> elementBoundaryElementsArray.data,
-							   <int *> elementBoundaryLocalElementBoundariesArray.data,
-							   <double*> grad_psi.data,
-							   <double*> boundaryNormals.data,
-							   <double*> boundaryJacobians.data,
-							   <int*> l2g.data,
-							   <double*> nodeArray.data,
-							   <double*> jacobianInverseArray.data,
-							   <double*> metricTensorArray.data,
-							   <double*> metricTensorDeterminantSqrtArray.data,
-							   <double*> unitNormalArray.data)
+def parametricMaps_getJacobianValuesGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
+							np.ndarray elementBoundaryElementsArray,
+							np.ndarray elementBoundaryLocalElementBoundariesArray,
+							np.ndarray grad_psi,
+							np.ndarray boundaryNormals,
+							np.ndarray boundaryJacobians,
+							np.ndarray l2g,
+							np.ndarray nodeArray,
+							np.ndarray jacobianInverseArray,
+							np.ndarray metricTensorArray,
+							np.ndarray metricTensorDeterminantSqrtArray,
+							np.ndarray unitNormalArray):
+    cdef int nd = jacobianInverseArray.shape[2]
+    cdef int nQuadraturePoints_element = jacobianInverseArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
+    if nd == 1:
+        cparametricMaps_getJacobianValuesGlobalExteriorTrace1D(nQuadraturePoints_element,
+							       nDOF_element,
+							       nExteriorElementBoundaries_global,
+							       <int *> exteriorElementBoundariesArray.data,
+							       <int *> elementBoundaryElementsArray.data,
+							       <int *> elementBoundaryLocalElementBoundariesArray.data,
+							       <double*> grad_psi.data,
+							       <double*> boundaryNormals.data,
+							       <double*> boundaryJacobians.data,
+							       <int*> l2g.data,
+							       <double*> nodeArray.data,
+							       <double*> jacobianInverseArray.data,
+							       <double*> metricTensorArray.data,
+							       <double*> metricTensorDeterminantSqrtArray.data,
+							       <double*> unitNormalArray.data)
+    elif nd == 2:
+        cparametricMaps_getJacobianValuesGlobalExteriorTrace2D(nQuadraturePoints_element,
+							       nDOF_element,
+							       nExteriorElementBoundaries_global,
+							       <int *> exteriorElementBoundariesArray.data,
+							       <int *> elementBoundaryElementsArray.data,
+							       <int *> elementBoundaryLocalElementBoundariesArray.data,
+							       <double*> grad_psi.data,
+							       <double*> boundaryNormals.data,
+							       <double*> boundaryJacobians.data,
+							       <int*> l2g.data,
+							       <double*> nodeArray.data,
+							       <double*> jacobianInverseArray.data,
+							       <double*> metricTensorArray.data,
+							       <double*> metricTensorDeterminantSqrtArray.data,
+							       <double*> unitNormalArray.data)
+    elif nd == 3:
+        cparametricMaps_getJacobianValuesGlobalExteriorTrace3D(nQuadraturePoints_element,
+							       nDOF_element,
+							       nExteriorElementBoundaries_global,
+							       <int *> exteriorElementBoundariesArray.data,
+							       <int *> elementBoundaryElementsArray.data,
+							       <int *> elementBoundaryLocalElementBoundariesArray.data,
+							       <double*> grad_psi.data,
+							       <double*> boundaryNormals.data,
+							       <double*> boundaryJacobians.data,
+							       <int*> l2g.data,
+							       <double*> nodeArray.data,
+							       <double*> jacobianInverseArray.data,
+							       <double*> metricTensorArray.data,
+							       <double*> metricTensorDeterminantSqrtArray.data,
+							       <double*> unitNormalArray.data)
+    else:
+        print("error in getJacobianValuesTrace...jacobianInverse not sized properly")
 def updateGlobalExteriorElementBoundaryFlux(int nExteriorElementBoundaries_global,
 					    int nQuadraturePoints_elementBoundary,
 					    int nDOF_test_element,
@@ -5120,16 +5063,16 @@ def updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(np.
 									      <double*> elementBoundaryFluxJacobian_eb.data,
 									      <double*> w_dS.data,
 									      <double*> jac.data)
-def calculateWeightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoints_elementBoundary,
-					      int nDOF_test_element,
-					      int nExteriorElementBoundaries_global,
-					      np.ndarray exteriorElementBoundariesArray,
+def calculateWeightedShapeGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
 					      np.ndarray elementBoundaryElementsArray,
 					      np.ndarray elementBoundaryLocalElementBoundariesArray,
 					      np.ndarray dSR,
 					      np.ndarray sqrt_det_g,
 					      np.ndarray w,
 					      np.ndarray w_dS):
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = w_dS.shape[1]
+    cdef int nDOF_test_element = w_dS.shape[2]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
     ccalculateWeightedShapeGlobalExteriorTrace(nElementBoundaryQuadraturePoints_elementBoundary,
 					       nDOF_test_element,
 					       nExteriorElementBoundaries_global,
