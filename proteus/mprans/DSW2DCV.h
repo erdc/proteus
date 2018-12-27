@@ -2000,7 +2000,7 @@ void calculateResidual(    // last EDGE BASED version
                         {
                                 hSqd_GammaPi = 6.0 * (std::pow(etai,2.0)-etai*hi);
                                 extendedSourceTerm_hw[i] = hSqd_GammaPi;
-                        //std::cout<<"we got here"<<std::endl;        
+                        //std::cout<<"we got here"<<std::endl;
                         }
 
                                     double force_term_hetai = hwi*mi;
@@ -2046,6 +2046,8 @@ void calculateResidual(    // last EDGE BASED version
                                 ////////////////////////
                                 // For mGN Flux Terms //
                                 ////////////////////////
+                                std::cout<<" this is etaj " << etaj << std::endl;
+                                std::cout<<" this is hj   " << hj << std::endl;
                                 double pTildej = -mgnalphaj * (etaj*hj - std::pow(hj,2.0));
                                 if (etaj >= hj)
                                 {
