@@ -86,6 +86,19 @@ extern void parametricMaps_getPermutations(
   double *xiArray,
   int *permutations
 );
+extern void parametricMaps_getPermutationsGlobalExterior(int nElementBoundaryQuadraturePoints_elementBoundary,
+							 int nSpace_global,
+							 int nExteriorElementBoundaries_global,
+							 const int * exteriorElementBoundariesArray,
+							 const int * elementBoundaryElementsArray,
+							 const int * elementBoundaryLocalElementBoundariesArray,
+							 double* xiArray,
+							 int* permutations);
+extern void getPermutationsGlobal(int nElementBoundaries_global,
+				  int nElementBoundaryQuadraturePoints_elementBoundary,
+				  double* xArray,
+				  double* xArrayNew,
+				  int* permutations);
 extern void parametricMaps_getValues(
   int nElements_global,
   int nQuadraturePoints_element,
@@ -379,6 +392,16 @@ extern void updateDiffusion_weak_lowmem(int nElements_global,
                                  double* grad_phi,
                                  double* grad_w_dV,
                                  double* weak_residual);
+extern void updateDiffusion_weak_sd(int nElements_global,
+				    int nQuadraturePoints_element,
+				    int nDOF_test_element,
+				    int nSpace,
+				    int* rowptr,
+				    int* colind,
+				    double* a,
+				    double* grad_phi,
+				    double* grad_w_dV,
+				    double* weak_residual);
 extern void updateDiffusionJacobian_weak(
   int nElements_global,
   int nQuadraturePoints_element,
@@ -408,6 +431,22 @@ extern void updateDiffusionJacobian_weak_lowmem(int nElements_global,
                                                 double* v,
                                                 double* grad_v,
                                                 double* jacobian_weak_residual);
+extern void updateDiffusionJacobian_weak_sd(int nElements_global,
+					    int nQuadraturePoints_element,
+					    int nDOF_trial_element,
+					    int nDOF_test_element,
+					    int nSpace,
+					    int* rowptr,
+					    int* colind,
+					    int* l2g,
+					    double* a,
+					    double* da,
+					    double* grad_phi,
+					    double* grad_w_dV,
+					    double* dphi,
+					    double* v,
+					    double* grad_v,
+					    double* jacobian_weak_residual);
 extern void updateDiffusion_strong(
   int nElements_global,
   int nQuadraturePoints_element,
