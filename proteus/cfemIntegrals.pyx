@@ -3367,11 +3367,7 @@ def updateInteriorElementBoundaryFlux(int nInteriorElementBoundaries_global,
                                        <double*>flux.data,
                                        <double*>w_dS.data,
                                        <double*>residual.data)
-def updateExteriorElementBoundaryFlux(#int nExteriorElementBoundaries_global,
-                                      #int nElementBoundaries_element,
-                                      #int nQuadraturePoints_elementBoundary,
-                                      #int nDOF_test_element,
-                                      np.ndarray exteriorElementBoundaries,
+def updateExteriorElementBoundaryFlux(np.ndarray exteriorElementBoundaries,
                                       np.ndarray elementBoundaryElements,
                                       np.ndarray elementBoundaryLocalElementBoundaries,
                                       np.ndarray flux,
@@ -4057,7 +4053,6 @@ def calculateFiniteElementFunctionValues(np.ndarray l2g,
                                          np.ndarray dof,
                                          np.ndarray v,
                                          np.ndarray u):
-    ############ HERE
     cdef int nElements_global = v.shape[0]
     cdef int nQuadraturePoints_element = v.shape[1]
     cdef int nDOF_trial_element = v.shape[2]
@@ -5720,7 +5715,7 @@ def copyBetweenFreeUnknownsAndGlobalUnknowns(int nDOF2set,
 				          <double*> free_u.data,
 				          <double*> u.data)
     elif nDOF2set == 0:
-        ccopyGlobalUnknownsToFreeUnknowns(nDOF2set,
+        ccopyGlobalUnknownsToFreeUnknowns(globalDOFids.shape[0],
 				          offset,
 				          stride,
 				          <int*> globalDOFids.data,
