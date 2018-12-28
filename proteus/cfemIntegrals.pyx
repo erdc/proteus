@@ -1607,6 +1607,22 @@ cdef extern from "femIntegrals.h":
 							                                                                 double* metricTensorArray,
 							                                                                 double* metricTensorDeterminantSqrtArray,
 							                                                                 double* unitNormalArray)
+     void cparametricMaps_getJacobianValuesGlobalExteriorTrace2D_movingDomain "parametricMaps_getJacobianValuesGlobalExteriorTrace2D_movingDomain"(int nQuadraturePoints_element,
+                                                                                                                                                   int nDOF_element,
+                                                                                                                                                   int nExteriorElementBoundaries_global,
+								                                                                                   int* exteriorElementBoundariesArray,
+								                                                                                   int* elementBoundaryElementsArray,
+								                                                                                   int* elementBoundaryLocalElementBoundariesArray,
+								                                                                                   double* xtArray,
+								                                                                                   double* grad_psi,
+								                                                                                   double* boundaryNormals,
+								                                                                                   double* boundaryJacobians,
+								                                                                                   int* l2g,
+								                                                                                   double* nodeArray,
+								                                                                                   double* jacobianInverseArray,
+								                                                                                   double* metricTensorArray,
+								                                                                                   double* metricTensorDeterminantSqrtArray,
+								                                                                                   double* unitNormalArray)
      void cparametricMaps_getJacobianValuesGlobalExteriorTrace3D "parametricMaps_getJacobianValuesGlobalExteriorTrace3D"(int nQuadraturePoints_element,
 							                                                                 int nDOF_element,
 							                                                                 int nExteriorElementBoundaries_global,
@@ -5375,6 +5391,74 @@ def parametricMaps_getJacobianValuesGlobalExteriorTrace(np.ndarray exteriorEleme
 #					    np.ndarray flux,
 #					    np.ndarray w_dS,
 #					    np.ndarray residual):
+def parametricMaps_getJacobianValuesGlobalExteriorTrace_movingDomain(np.ndarray exteriorElementBoundariesArray,
+								       np.ndarray elementBoundaryElementsArray,
+								       np.ndarray elementBoundaryLocalElementBoundariesArray,
+								       np.ndarray xtArray,
+								       np.ndarray grad_psi,
+								       np.ndarray boundaryNormals,
+								       np.ndarray boundaryJacobians,
+								       np.ndarray l2g,
+								       np.ndarray nodeArray,
+								       np.ndarray jacobianInverseArray,
+								       np.ndarray metricTensorArray,
+								       np.ndarray metricTensorDeterminantSqrtArray,
+								       np.ndarray unitNormalArray):
+    cdef int nQuadraturePoints_element = jacobianInverseArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
+    cdef int nd = jacobianInverseArray.shape[2]
+    if nd == 1:
+        cparametricMaps_getJacobianValuesGlobalExteriorTrace1D(nQuadraturePoints_element,
+                                                               nDOF_element,
+                                                               nExteriorElementBoundaries_global,
+							       <int*> exteriorElementBoundariesArray.data,
+							       <int*> elementBoundaryElementsArray.data,
+							       <int*> elementBoundaryLocalElementBoundariesArray.data,
+							       <double*> grad_psi.data,
+							       <double*> boundaryNormals.data,
+							       <double*> boundaryJacobians.data,
+							       <int*> l2g.data,
+							       <double*> nodeArray.data,
+							       <double*> jacobianInverseArray.data,
+							       <double*> metricTensorArray.data,
+							       <double*> metricTensorDeterminantSqrtArray.data,
+							       <double*> unitNormalArray.data)
+    elif nd == 2:
+        cparametricMaps_getJacobianValuesGlobalExteriorTrace2D_movingDomain(nQuadraturePoints_element,
+                                                                            nDOF_element,
+                                                                            nExteriorElementBoundaries_global,
+								            <int*> exteriorElementBoundariesArray.data,
+								            <int*> elementBoundaryElementsArray.data,
+								            <int*> elementBoundaryLocalElementBoundariesArray.data,
+								            <double*> xtArray.data,
+								            <double*> grad_psi.data,
+								            <double*> boundaryNormals.data,
+								            <double*> boundaryJacobians.data,
+								            <int*> l2g.data,
+								            <double*> nodeArray.data,
+								            <double*> jacobianInverseArray.data,
+								            <double*> metricTensorArray.data,
+								            <double*> metricTensorDeterminantSqrtArray.data,
+								            <double*> unitNormalArray.data)
+    elif nd == 3:
+        cparametricMaps_getJacobianValuesGlobalExteriorTrace3D(nQuadraturePoints_element,
+                                                               nDOF_element,
+                                                               nExteriorElementBoundaries_global,
+							       <int*> exteriorElementBoundariesArray.data,
+							       <int*> elementBoundaryElementsArray.data,
+							       <int*> elementBoundaryLocalElementBoundariesArray.data,
+							       <double*> grad_psi.data,
+							       <double*> boundaryNormals.data,
+							       <double*> boundaryJacobians.data,
+							       <int*> l2g.data,
+							       <double*> nodeArray.data,
+							       <double*> jacobianInverseArray.data,
+							       <double*> metricTensorArray.data,
+							       <double*> metricTensorDeterminantSqrtArray.data,
+							       <double*> unitNormalArray.data)
+    else:
+        print("error in getJacobianValuesTrace...jacobianInverse not sized properly")
 def updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(np.ndarray elementNeighbors,
 									       int nElements_global,
 									       int nExteriorElementBoundaries_global,
@@ -5928,11 +6012,7 @@ def updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBoundar
 						      <double*> grad_w.data,
 						      <double*> dS.data,
 						      <double*> residual.data)
-def updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBoundaries_global,
-						     int nQuadraturePoints_elementBoundary,
-						     int nDOF_test_element,
-						     int nSpace,
-						     np.ndarray rowptr,
+def updateExteriorElementBoundaryDiffusionAdjoint_sd(np.ndarray rowptr,
 						     np.ndarray colind,
 						     np.ndarray isDOFBoundary,
 						     np.ndarray exteriorElementBoundaries,
@@ -5946,11 +6026,15 @@ def updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBoundar
 						     np.ndarray grad_w,
 						     np.ndarray dS,
 						     np.ndarray residual):
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[1]
+    cdef int nDOF_test_element = grad_w.shape[2]
+    cdef int nSpace = grad_w.shape[3]
     cupdateExteriorElementBoundaryDiffusionAdjoint_sd(nExteriorElementBoundaries_global,
-						      nQuadraturePoints_elementBoundary,
-						      nDOF_test_element,
-						      nSpace,
-						      <int*> rowptr.data,
+                                                      nQuadraturePoints_elementBoundary,
+                                                      nDOF_test_element,
+                                                      nSpace,
+                                                      <int*> rowptr.data,
 						      <int*> colind.data,
 						      <int*> isDOFBoundary.data,
 						      <int*> exteriorElementBoundaries.data,
@@ -6142,12 +6226,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int n
 									    <double*> grad_w.data,
 									    <double*> dS.data,
 									    <double*> jac.data)
-def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int nExteriorElementBoundaries_global,
-									   int nQuadraturePoints_elementBoundary,
-									   int nDOF_test_element,
-									   int nDOF_trial_element,
-									   int nSpace,
-									   np.ndarray rowptr,
+def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.ndarray rowptr,
 									   np.ndarray colind,
 									   int offset_r,
 									   int stride_r,
@@ -6172,7 +6251,14 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int n
 									   np.ndarray a,
 									   np.ndarray grad_w,
 									   np.ndarray dS,
-									   np.ndarray jac):
+									   jac):
+    cdef np.ndarray rowptr_dummy, colind_dummy, jac_array
+    (rowptr_dummy,colind_dummy,jac_array) = jac.getCSRrepresentation()
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[1]
+    cdef int nDOF_test_element = grad_w.shape[2]
+    cdef int nDOF_trial_element = v.shape[2]
+    cdef int nSpace = n.shape[2]
     cupdateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(nExteriorElementBoundaries_global,
 									    nQuadraturePoints_elementBoundary,
 									    nDOF_test_element,
@@ -6203,7 +6289,7 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int n
 									    <double*> a.data,
 									    <double*> grad_w.data,
 									    <double*> dS.data,
-									    <double*> jac.data)
+									    <double*> jac_array.data)
 def update_f_movingDomain_q(int nElements_global,
 			    int nQuadraturePoints_element,
 			    int nSpace,
