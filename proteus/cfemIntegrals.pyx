@@ -3392,8 +3392,8 @@ def updateExteriorElementBoundaryFlux(np.ndarray exteriorElementBoundaries,
                                            <double*>residual.data)
     else:
         cupdateGlobalExteriorElementBoundaryFlux(nExteriorElementBoundaries_global,
+                                                 nElementBoundaries_element,
 					         nQuadraturePoints_elementBoundary,
-					         nDOF_test_element,
 					         <int*> exteriorElementBoundaries.data,
 					         <int*> elementBoundaryElements.data,
 					         <int*> elementBoundaryLocalElementBoundaries.data,
