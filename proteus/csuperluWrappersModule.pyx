@@ -30,13 +30,13 @@ cdef extern from "../linux2/include/slu_ddefs.h":
     ctypedef enum _trans_t "trans_t":
         _NOTRANS 'NOTRANS'
         _TRANS 'TRANS'
-        _CONJ 'CONJ'        
+        _CONJ 'CONJ'
     ctypedef struct _SuperLUStat_t 'SuperLUStat_t':
         pass
     ctypedef struct _GlobalLU_t "GlobalLU_t":
         pass
     ctypedef struct _superlu_options_t "superlu_options_t":
-        pass    
+        passx
     ctypedef struct _SuperMatrix 'SuperMatrix':
         _Stype_t Stype
         _Dtype_t Dtype
@@ -50,7 +50,7 @@ cdef extern from "../linux2/include/slu_ddefs.h":
     void cset_default_options "set_default_options"(_superlu_options_t *)
 
 class SparseMatrix(object):
-    
+
     def __init__(self,
                  nr,
                  nc,
@@ -62,7 +62,7 @@ class SparseMatrix(object):
 
     def matvec(self, x, y):
         """
-o        Compute the sparse matrix-vector product y = Ax
+        Compute the sparse matrix-vector product y = Ax
 
         Arguments
         ---------
@@ -98,7 +98,7 @@ o        Compute the sparse matrix-vector product y = Ax
 
     def getSubMatCSRrepresentation():
         """  Get the CSR representation for a submatrix.
-        
+
         Arguments
         ---------
         range_start : int
@@ -114,7 +114,7 @@ o        Compute the sparse matrix-vector product y = Ax
 cdef class SparseFactor(object):
 
     cdef _superlu_options_t options
-    
+
     cdef _SuperMatrix A
     cdef _SuperMatrix AC
     cdef _SuperMatrix L
@@ -122,14 +122,14 @@ cdef class SparseFactor(object):
     cdef _SuperMatrix X
 
     cdef _SuperLUStat_t stat
-    
+
     cdef unsigned int *perm_c
     cdef unsigned int *perm_r
     cdef unsigned int *etree
 
     cdef unsigned int use_same_perm_c
     cdef unsigned int use_same_sparsity
-    
+
     cdef public int dim
 
     def __init__(self, dim):
@@ -142,11 +142,11 @@ cdef class SparseFactor(object):
         cStatInit(&self.stat)
         cset_default_options(&self.options)
         self._set_mat_types()
-        self.dim = dim        
+        self.dim = dim
         self.A.nrow = dim ; self.A.ncol = dim
         self.AC.nrow = dim ; self.AC.ncol = dim
         self.L.nrow = dim ; self.L.ncol = dim
-        self.U.nrow = dim ; self.U.ncol = dim        
+        self.U.nrow = dim ; self.U.ncol = dim
         self.X.nrow = dim ; self.X.ncol = 1
         self.use_same_perm_c = 0
         self.use_same_sparsity = 0
@@ -155,7 +155,7 @@ cdef class SparseFactor(object):
         self.A.Stype = _SLU_NC
         self.A.Dtype = _SLU_D
         self.A.Mtype = _SLU_GE
-    
+
         self.AC.Stype = _SLU_NCP
         self.AC.Dtype = _SLU_D
         self.AC.Mtype = _SLU_GE
