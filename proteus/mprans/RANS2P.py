@@ -539,13 +539,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     he = self.elementDiameter[i]
                     self.ebqe_phi[i, j] = self.phaseFunction(pt)
                     self.ebqe_vf[i, j] = smoothedHeaviside(self.epsFact * he, self.phaseFunction(pt))
-        self.particle_signed_distances = 1e10*numpy.ones((self.nParticles,self.q['x'][0],self.q['x'][1]),'d')
-        self.particle_signed_distance_normals = 1e10*numpy.ones((self.nParticles,self.q['x'][0],self.q['x'][1], 3),'d')
-        self.particle_velocities = 1e10*numpy.ones((self.nParticles,self.nParticles,self.q['x'][0],self.q['x'][1], 3),'d')
-        self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
-        self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
-        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
-        self.ebq_particle_velocity_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
+        self.particle_signed_distances        = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1]),'d')
+        self.particle_signed_distance_normals = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
+        self.particle_velocities              = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
+        self.phisField                        = 1e10*numpy.ones((self.model.q['x'].shape[0],self.model.q['x'].shape[1]), 'd')
+        self.ebq_global_phi_s        = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1]),'d') * 1e10
+        self.ebq_global_grad_phi_s   = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
+        self.ebq_particle_velocity_s = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
 
     def initializeMesh(self, mesh):
         
