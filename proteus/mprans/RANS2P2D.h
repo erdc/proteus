@@ -192,6 +192,13 @@ namespace proteus
                                    double *ball_radius,
                                    double *ball_velocity,
                                    double *ball_angular_velocity,
+                                   double* particle_signed_distances,
+                                   double* particle_signed_distance_normals,
+                                   double* particle_velocities,
+                                   double* particle_centroids,
+                                   double* ebq_global_phi_s,
+                                   double* ebq_global_grad_phi_s,
+                                   double* ebq_particle_velocity_s,
                                    int     nParticles,
                                    double *particle_netForces,
                                    double *particle_netMoments,
@@ -202,7 +209,8 @@ namespace proteus
                                    double particle_alpha,
                                    double particle_beta,
                                    double particle_penalty_constant,
-                                   double *phi_solid_nodes,
+                                   double* phi_solid_nodes,
+                                   double* distance_to_solids,
                                    const int use_pseudo_penalty) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
@@ -381,6 +389,15 @@ namespace proteus
                                    double *ball_radius,
                                    double *ball_velocity,
                                    double *ball_angular_velocity,
+                                   double* particle_signed_distances,
+                                   double* particle_signed_distance_normals,
+                                   double* particle_velocities,
+                                   double* particle_centroids,
+                                   double* ebq_global_phi_s,
+                                   double* ebq_global_grad_phi_s,
+                                   double* ebq_particle_velocity_s,
+                                   double* phi_solid_nodes,
+                                   double* distance_to_solids,
                                    int nParticles,
                                    int nElements_owned,
                                    double particle_nitsche,
@@ -1096,10 +1113,10 @@ namespace proteus
                                            const double dV,
                                            const int nParticles,
                                            const int sd_offset,
-//                                           double *particle_signed_distances,
-//                                           double *particle_signed_distance_normals,
-//                                           double *particle_velocities,
-//                                           double *particle_centroids,
+                                           double* particle_signed_distances,
+                                           double* particle_signed_distance_normals,
+                                           double* particle_velocities,
+                                           double* particle_centroids,
                                            const int use_ball_as_particle,
                                            const double* ball_center,
                                            const double* ball_radius,
@@ -1194,15 +1211,13 @@ namespace proteus
             }
             else
             {
-//                phi_s = particle_signed_distances[i * sd_offset];
-//                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
-//                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
-//                vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
-//                vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
-//                center[0] = particle_centroids[3*i+0];
-//                center[1] = particle_centroids[3*i+1];
-                std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!YY: use_ball_as_particle should be 1"<<std::endl;
-
+                phi_s = particle_signed_distances[i * sd_offset];
+                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * 3 + 0];
+                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * 3 + 1];
+                vel[0] = particle_velocities[i * sd_offset * 3 + 0];
+                vel[1] = particle_velocities[i * sd_offset * 3 + 1];
+                center[0] = particle_centroids[3*i+0];
+                center[1] = particle_centroids[3*i+1];
             }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
@@ -2237,6 +2252,13 @@ namespace proteus
                              double* ball_radius,
                              double* ball_velocity,
                              double* ball_angular_velocity,
+                             double* particle_signed_distances,
+                             double* particle_signed_distance_normals,
+                             double* particle_velocities,
+                             double* particle_centroids,
+                             double* ebq_global_phi_s,
+                             double* ebq_global_grad_phi_s,
+                             double* ebq_particle_velocity_s,
                              int nParticles,
                              double *particle_netForces,
                              double *particle_netMoments,
@@ -2247,7 +2269,8 @@ namespace proteus
                              double particle_alpha,
                              double particle_beta,
                              double particle_penalty_constant,
-                             double *phi_solid_nodes,
+                             double* phi_solid_nodes,
+                             double* distance_to_solids,
                              const int use_pseudo_penalty)
       {
         logEvent("Entered mprans calculateResidual",6);
@@ -2295,6 +2318,8 @@ namespace proteus
                                                 mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
                                                 mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
                                                 phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
+            }else{
+                //phi_solid_nodes is updated in PreStep
             }
             //
             //loop over quadrature points and compute integrands
@@ -2504,8 +2529,13 @@ namespace proteus
 
                 if (use_ball_as_particle == 1)
                 {
-                    get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,phi_solid[eN_k]);
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance_to_solids[eN_k]);
+                }else{
+                  //distance_to_solids is given in Prestep
                 }
+                if (nParticles > 0)
+                    phi_solid[eN_k] = distance_to_solids[eN_k];
+                
                 //
                 //calculate pde coefficients at quadrature points
                 //
@@ -2651,10 +2681,10 @@ namespace proteus
                                             dV,
                                             nParticles,
                                             nQuadraturePoints_global,
-//                                            &particle_signed_distances[eN_k],
-//                                            &particle_signed_distance_normals[eN_k_nSpace],
-//                                            particle_velocities,
-//                                            particle_centroids,
+                                            &particle_signed_distances[eN_k],
+                                            &particle_signed_distance_normals[eN_k_nSpace],
+                                            particle_velocities,
+                                            particle_centroids,
                                             use_ball_as_particle,
                                             ball_center,
                                             ball_radius,
@@ -2821,7 +2851,7 @@ namespace proteus
                   get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,ball_velocity,ball_angular_velocity,index_ball,x,y,z,vx,vy);
                   mom_u_acc_t = alphaBDF*(mom_u_acc - vx);
                   mom_v_acc_t = alphaBDF*(mom_v_acc - vy);
-                }else if(use_pseudo_penalty == -1 && phi_solid[eN_k]<2.0*h_phi)//no derivative term inside the solid; Has to change Jacobian
+                }else if(use_pseudo_penalty == -1 && phi_solid[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
                 {
                   mom_u_acc_t = 0.0;
                   mom_v_acc_t = 0.0;
@@ -3304,10 +3334,11 @@ namespace proteus
                 //
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
                 double rho;
-                double distance_to_solid = 1e10;
                 if (use_ball_as_particle == 1)
                 {
-                    get_distance_to_ball(nParticles, ball_center, ball_radius,x_ext,y_ext,z_ext,distance_to_solid);
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,x_ext,y_ext,z_ext,ebq_global_phi_s[ebNE_kb]);
+                }else{
+                    //ebq_global_phi_s[ebNE_kb] is computed in Prestep
                 }
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
@@ -3329,7 +3360,7 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
-                                     distance_to_solid,
+                                     ebq_global_phi_s[ebNE_kb],
                                      p_old,
                                      u_old,
                                      v_old,
@@ -3426,7 +3457,7 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
-                                     distance_to_solid,
+                                     ebq_global_phi_s[ebNE_kb],
                                      p_old,
                                      u_old,
                                      v_old,
@@ -4027,6 +4058,15 @@ namespace proteus
                              double* ball_radius,
                              double* ball_velocity,
                              double* ball_angular_velocity,
+                             double* particle_signed_distances,
+                             double* particle_signed_distance_normals,
+                             double* particle_velocities,
+                             double* particle_centroids,
+                             double* ebq_global_phi_s,
+                             double* ebq_global_grad_phi_s,
+                             double* ebq_particle_velocity_s,
+                             double* phi_solid_nodes,
+                             double* distance_to_solids,
                              int nParticles,
                              int nElements_owned,
                              double particle_nitsche,
@@ -4440,10 +4480,10 @@ namespace proteus
                                             dV,
                                             nParticles,
                                             nQuadraturePoints_global,
-//                                            &particle_signed_distances[eN_k],
-//                                            &particle_signed_distance_normals[eN_k_nSpace],
-//                                            particle_velocities,
-//                                            particle_centroids,
+                                            &particle_signed_distances[eN_k],
+                                            &particle_signed_distance_normals[eN_k_nSpace],
+                                            particle_velocities,
+                                            particle_centroids,
                                             use_ball_as_particle,
                                             ball_center,
                                             ball_radius,
@@ -4592,7 +4632,7 @@ namespace proteus
                        dmom_v_acc_v,
                        mom_v_acc_t,
                        dmom_v_acc_v_t);
-                if(use_pseudo_penalty == -1 && phi_solid[eN_k]<2.0*h_phi)//no derivative term inside the solid; Has to change Jacobian
+                if(use_pseudo_penalty == -1 && phi_solid[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
                 {
                   mom_u_acc_t = 0.0;
                   mom_v_acc_t = 0.0;
@@ -5167,10 +5207,11 @@ namespace proteus
                 //
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now
                 double rho;
-                double distance_to_solid = 1e10;
                 if (use_ball_as_particle == 1)
                 {
-                    get_distance_to_ball(nParticles, ball_center, ball_radius,x_ext,y_ext,z_ext,distance_to_solid);
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,x_ext,y_ext,z_ext,ebq_global_phi_s[ebNE_kb]);
+                }else{
+                    //distance_to_solids is updated in PreStep
                 }
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
@@ -5192,7 +5233,7 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
-                                     distance_to_solid,
+                                     ebq_global_phi_s[ebNE_kb],
                                      p_old,
                                      u_old,
                                      v_old,
@@ -5289,7 +5330,7 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
-                                     distance_to_solid,
+                                     ebq_global_phi_s[ebNE_kb],
                                      p_old,
                                      u_old,
                                      v_old,

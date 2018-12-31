@@ -141,8 +141,6 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
                                                                          globalMax(self.numDiff_last[2].max()),
                                                                          globalMax(self.numDiff_last[3].max())))
-
-
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
@@ -218,6 +216,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_radius=None,
                  ball_velocity=None,
                  ball_angular_velocity=None,
+                 particle_velocities=None,
+                 particle_centroids=None,
+                 particle_sdfList=[],
+                 particle_velocityList=[],
                  nParticles = 0,
                  particle_epsFact=3.0,
                  particle_alpha=1000.0,
@@ -255,6 +257,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
         else:
             self.ball_angular_velocity = ball_angular_velocity
+        if particle_centroids is None:
+            self.particle_centroids = 1e10*numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.particle_centroids = particle_centroids
+        self.particle_sdfList = particle_sdfList
+        self.particle_velocityList = particle_velocityList
+
         self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
@@ -530,6 +539,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     he = self.elementDiameter[i]
                     self.ebqe_phi[i, j] = self.phaseFunction(pt)
                     self.ebqe_vf[i, j] = smoothedHeaviside(self.epsFact * he, self.phaseFunction(pt))
+        self.particle_signed_distances = 1e10*numpy.ones((self.nParticles,self.q['x'][0],self.q['x'][1]),'d')
+        self.particle_signed_distance_normals = 1e10*numpy.ones((self.nParticles,self.q['x'][0],self.q['x'][1], 3),'d')
+        self.particle_velocities = 1e10*numpy.ones((self.nParticles,self.nParticles,self.q['x'][0],self.q['x'][1], 3),'d')
+        self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
+        self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
+        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
+        self.ebq_particle_velocity_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
 
     def initializeMesh(self, mesh):
         
@@ -820,7 +836,35 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
-        pass
+
+        if self.nParticles > 0 and self.use_ball_as_particle == 0:
+            self.phi_s[:] = 1e10
+            self.phisField[:] = 1e10
+            self.ebq_global_phi_s[:] = 1e10
+            self.ebq_global_grad_phi_s[:] = 1e10
+            self.ebq_particle_velocity_s[:] = 1e10
+
+            for i in range(self.nParticles):
+                vel = lambda x: self.particle_velocityList[i](t, x)
+                sdf = lambda x: self.particle_sdfList[i](t, x)
+
+                for j in range(self.mesh.nodeArray.shape[0]):
+                    sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
+                    if (sdf_at_node < self.phi_s[j]):
+                        self.phi_s[j] = sdf_at_node
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k] = vel(self.model.q['x'][eN, k])
+                        if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
+                            self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
+                for ebN in range(self.model.ebq_global['x'].shape[0]):
+                    for kb in range(self.model.ebq_global['x'].shape[1]):
+                        sdf_ebN_kb,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb])
+                        if ( sdf_ebN_kb < self.ebq_global_phi_s[ebN,kb]):
+                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
+                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
+                            self.ebq_particle_velocity_s[ebN,kb,:] = vel(corresponding_point_on_boundary,i)
         # if self.comm.isMaster():
         # print "wettedAreas"
         # print self.wettedAreas[:]
@@ -851,7 +895,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.particle_forceHistory.flush()
                 self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
                 self.particle_momentHistory.flush()
-
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
@@ -1716,6 +1759,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
+                                      self.coefficients.particle_signed_distances,
+                                      self.coefficients.particle_signed_distance_normals,
+                                      self.coefficients.particle_velocities,
+                                      self.coefficients.particle_centroids,
+                                      self.coefficients.ebq_global_phi_s,
+                                      self.coefficients.ebq_global_grad_phi_s,
+                                      self.coefficients.ebq_particle_velocity_s,
                                       self.coefficients.nParticles,
                                       self.coefficients.particle_netForces,
                                       self.coefficients.particle_netMoments,
@@ -1727,6 +1777,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant,
                                       self.coefficients.phi_s,
+                                      self.coefficients.phisField,
                                       self.coefficients.use_pseudo_penalty)
         # from proteus.flcbdfWrappers import globalSum
         # for i in range(self.coefficients.netForces_p.shape[0]):
@@ -2006,6 +2057,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
+                                      self.coefficients.particle_signed_distances,
+                                      self.coefficients.particle_signed_distance_normals,
+                                      self.coefficients.particle_velocities,
+                                      self.coefficients.particle_centroids,
+                                      self.coefficients.ebq_global_phi_s,
+                                      self.coefficients.ebq_global_grad_phi_s,
+                                      self.coefficients.ebq_particle_velocity_s,
+                                      self.coefficients.phi_s,
+                                      self.coefficients.phisField,
                                       self.coefficients.nParticles,
                                       self.mesh.nElements_owned,
                                       self.coefficients.particle_nitsche,
