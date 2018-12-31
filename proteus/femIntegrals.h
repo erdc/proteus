@@ -14,8 +14,24 @@
 
 extern void parametricFiniteElementSpace_getHessianValues(int nElements_global, int nQuadraturePoints_element, int nDOF_element, int nSpace_global, double *Hessian_psi, double *inverseJacobianArray, double *Hessian_vArray);
 extern void     updateDiffusion2_strong(int nElements_global, int nQuadraturePoints_element, int nSpace, double *a, double *Hess_phi, double *strong_residual);
+extern void updateDiffusion2_strong_sd(int nElements_global, int nQuadraturePoints_element,int nSpace, int* rowptr, int* colind, double* a, double* Hess_phi, double* strong_residual);
 extern void     updateDiffusionJacobian2_strong(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, int *l2g, double *a, double *da, double *v, double *Hess_phi, double *dphi, double *Hess_v, double *dstrong_residual);
+extern void updateDiffusionJacobian2_strong_sd(int nElements_global, 
+					       int nQuadraturePoints_element,
+					       int nDOF_trial_element,
+					       int nSpace,
+					       int* rowptr,
+					       int* colind,
+					       int* l2g,
+					       double* a,
+					       double* da,
+					       double* v,
+					       double* Hess_phi,
+					       double* dphi,
+					       double* Hess_v,
+					       double* dstrong_residual);
 extern void     updateDiffusion2_adjoint(int nElements_global, int nQuadraturePoints_element, int nDOF_test_element, int nSpace, double *a, double *Hess_w_dV, double *Lstar_w_dV);
+void updateDiffusion2_adjoint_sd(int nElements_global, int nQuadraturePoints_element, int nDOF_test_element, int nSpace, int* rowptr, int* colind, double* a, double* Hess_w_dV, double* Lstar_w_dV);
 extern void     calculateWeightedShapeHessians(int nElements_global, int nQuadraturePoints_element, int nDOF_test_element, int nSpace, double *dVR, double *abs_det_jac, double *Hess_w, double *Hess_w_dV);
 extern void     calculateFiniteElementFunctionHessianValues(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nComponents, int nSpace, int *l2g, double *dof, double *Hessian_v, double *Hessian_u);
 extern void     updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(int nInteriorElementBoundaries_global, int nElementBoundaries_element, int nQuadraturePoints_elementBoundary, int nDOF_test_element, int nDOF_trial_element, int *interiorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, int *nFreeDOF_element_r, int *freeLocal_r, int *nFreeDOF_element_u, int *freeLocal_u, int *csrRowIndeces_ru, int *csrColumnOffsets_eb_ru, double *elementBoundaryFluxJacobian_2sided, double *w_dS, double *jac);
@@ -456,6 +472,15 @@ extern void updateDiffusion_strong(
   double *grad_u,
   double *strong_residual
 );
+extern void updateDiffusion_strong_sd(int nElements_global,
+				      int nQuadraturePoints_element,
+				      int nSpace,
+				      int* rowptr,
+				      int* colind,
+				      double* da,
+				      double* grad_phi,
+				      double* grad_u,
+				      double* strong_residual);
 extern void updateDiffusionJacobian_strong(
   int nElements_global,
   int nQuadraturePoints_element,
@@ -469,6 +494,19 @@ extern void updateDiffusionJacobian_strong(
   double *grad_v,
   double *dstrong_residual
 );
+extern void updateDiffusionJacobian_strong_sd(int nElements_global,
+					      int nQuadraturePoints_element,
+					      int nDOF_trial_element,
+					      int nSpace,
+					      int* rowptr,
+					      int* colind,
+					      int* l2g,
+					      double* da,
+					      double* dphi,
+					      double* grad_phi,
+					      double* grad_u,
+					      double* grad_v,
+					      double* dstrong_residual);
 extern void updateDiffusion_adjoint(
   int nElements_global,
   int nQuadraturePoints_element,
@@ -479,6 +517,16 @@ extern void updateDiffusion_adjoint(
   double *grad_w_dV,
   double *Lstar_w_dV
 );
+extern void updateDiffusion_adjoint_sd(int nElements_global,
+				       int nQuadraturePoints_element,
+				       int nDOF_test_element,
+				       int nSpace,
+				       int* rowptr,
+				       int* colind,
+				       double* da,
+				       double* grad_phi,
+				       double* grad_w_dV,
+				       double* Lstar_w_dV);
 extern void updateReaction_weak(
   int nElements_global,
   int nQuadraturePoints_element,
@@ -1213,6 +1261,18 @@ extern void updateInteriorElementBoundaryDiffusiveVelocity(
   double *grad_phi,
   double *velocity
 );
+extern void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBoundaries_global,
+							      int nElementBoundaries_element,
+							      int nQuadraturePoints_elementBoundary,
+							      int nSpace,
+							      int* rowptr,
+							      int* colind,
+							      int* interiorElementBoundaries,
+							      int* elementBoundaryElements,
+							      int* elementBoundaryLocalElementBoundaries,
+							      double* a,
+							      double* grad_phi,
+							      double* velocity);
 extern void updateExteriorElementBoundaryDiffusiveVelocity(
   int nExteriorElementBoundaries_global,
   int nElementBoundaries_element,
@@ -1225,6 +1285,18 @@ extern void updateExteriorElementBoundaryDiffusiveVelocity(
   double *grad_phi,
   double *velocity
 );
+extern void updateExteriorElementBoundaryDiffusiveVelocity_sd(int nExteriorElementBoundaries_global,
+							      int nElementBoundaries_element,
+							      int nQuadraturePoints_elementBoundary,
+							      int nSpace,
+							      int* rowptr,
+							      int* colind,
+							      int* exteriorElementBoundaries,
+							      int* elementBoundaryElements,
+							      int* elementBoundaryLocalElementBoundaries,
+							      double* a,
+							      double* grad_phi,
+							      double* velocity);
 extern void updateInteriorElementBoundaryAdvectiveVelocity(
   int nInteriorElementBoundaries_global,
   int nElementBoundaries_element,
@@ -1760,11 +1832,23 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace2D(int nQuadraturePoints
 							   double* metricTensorArray,
 							   double* metricTensorDeterminantSqrtArray,
 							   double* unitNormalArray);
-
-
-
-
-
+extern
+void parametricMaps_getJacobianValuesGlobalExteriorTrace2D_movingDomain(int nQuadraturePoints_element,
+									int nDOF_element,
+									int nExteriorElementBoundaries_global,
+									const int * exteriorElementBoundariesArray,
+									const int * elementBoundaryElementsArray,
+									const int * elementBoundaryLocalElementBoundariesArray,
+									double* xtArray,
+									double* grad_psi,
+									double* boundaryNormals,
+									double* boundaryJacobians,
+									int* l2g,
+									double* nodeArray,
+									double* jacobianInverseArray,
+									double* metricTensorArray,
+									double* metricTensorDeterminantSqrtArray,
+									double* unitNormalArray);
 extern
 void parametricMaps_getJacobianValuesGlobalExteriorTrace3D(int nQuadraturePoints_element,
 							   int nDOF_element,
