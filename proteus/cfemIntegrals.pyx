@@ -2526,10 +2526,7 @@ def checkElementBoundaryAndExteriorElementBoundaryArraysSame(double tolerance,
 								       <double*> ebqe_val.data,
 								       <int*> firstBadIndex.data)
     return output
-def checkGlobalElementBoundaryAndExteriorElementBoundaryArraysSame(int nExteriorElementBoundaries_global,
-								   int nQuadraturePoints_elementBoundary,
-								   int nValuesPerQuadraturePoint,
-								   double tolerance,
+def checkGlobalElementBoundaryAndExteriorElementBoundaryArraysSame(double tolerance,
 								   np.ndarray exteriorElementBoundariesArray,
 								   np.ndarray elementBoundaryElementsArray,
 								   np.ndarray elementBoundaryLocalElementBoundariesArray,
@@ -2537,6 +2534,13 @@ def checkGlobalElementBoundaryAndExteriorElementBoundaryArraysSame(int nExterior
 								   np.ndarray ebqe_val,
 								   np.ndarray firstBadIndex):
     cdef int output
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
+    cdef int nQuadraturePoints_elementBoundary = ebqe_val.shape[1]
+    cdef int nValuesPerQuadraturePoint = 1
+    cdef int nd = ebqe_val
+    if nd > 2:
+        for i in range(2,nd):
+            nValuesPerQuadraturePoint *= ebqe_val.shape[i]        
     output = ccheckGlobalElementBoundaryAndExteriorElementBoundaryArraysSame(nExteriorElementBoundaries_global,
 									     nQuadraturePoints_elementBoundary,
 									     nValuesPerQuadraturePoint,
@@ -2547,9 +2551,7 @@ def checkGlobalElementBoundaryAndExteriorElementBoundaryArraysSame(int nExterior
 									     <double*> ebq_global_val.data,
 									     <double*> ebqe_val.data,
 									     <int*> firstBadIndex.data)
-def calculateExteriorElementBoundaryStress3D(int nExteriorElementBoundaries_global,
-					     int nQuadraturePoints_elementBoundary,
-					     np.ndarray elementBoundaryMaterialTypes,
+def calculateExteriorElementBoundaryStress3D(np.ndarray elementBoundaryMaterialTypes,
 					     np.ndarray exteriorElementBoundaries,
 					     np.ndarray elementBoundaryElements,
 					     np.ndarray elementBoundaryLocalElementBoundaries,
@@ -2560,9 +2562,11 @@ def calculateExteriorElementBoundaryStress3D(int nExteriorElementBoundaries_glob
 					     np.ndarray dS,
 					     np.ndarray n,
 					     np.ndarray F):
+    cdef int nExteriorElementBoundaries_global = p.shape[0]
+    cdef int nQuadraturePoints_elementBoundary = p.shape[1]
     ccalculateExteriorElementBoundaryStress3D(nExteriorElementBoundaries_global,
 					      nQuadraturePoints_elementBoundary,
-					      <int*> elementBoundaryMaterialTypes.data,
+                                              <int*> elementBoundaryMaterialTypes.data,
 					      <int*> exteriorElementBoundaries.data,
 					      <int*> elementBoundaryElements.data,
 					      <int*> elementBoundaryLocalElementBoundaries.data,
@@ -2573,9 +2577,7 @@ def calculateExteriorElementBoundaryStress3D(int nExteriorElementBoundaries_glob
 					      <double*> dS.data,
 					      <double*> n.data,
 					      <double*> F.data)
-def calculateExteriorElementBoundaryStress2D(int nExteriorElementBoundaries_global,
-					     int nQuadraturePoints_elementBoundary,
-					     np.ndarray elementBoundaryMaterialTypes,
+def calculateExteriorElementBoundaryStress2D(np.ndarray elementBoundaryMaterialTypes,
 					     np.ndarray exteriorElementBoundaries,
 					     np.ndarray elementBoundaryElements,
 					     np.ndarray elementBoundaryLocalElementBoundaries,
@@ -2585,6 +2587,8 @@ def calculateExteriorElementBoundaryStress2D(int nExteriorElementBoundaries_glob
 					     np.ndarray dS,
 					     np.ndarray n,
 					     np.ndarray F):
+    cdef int nExteriorElementBoundaries_global = p.shape[0]
+    cdef int nQuadraturePoints_elementBoundary = p.shape[1]
     ccalculateExteriorElementBoundaryStress2D(nExteriorElementBoundaries_global,
 					      nQuadraturePoints_elementBoundary,
 					      <int*> elementBoundaryMaterialTypes.data,
@@ -2691,18 +2695,18 @@ def parametricMaps_getPermutations(np.ndarray xiArray,
                                     nSpace_global,
                                     <double*>xiArray.data,
                                     <int *>permutations.data)
-def parametricMaps_getPermutationsGlobalExterior(int nElementBoundaryQuadraturePoints_elementBoundary,
-						 int nSpace_global,
-						 int nExteriorElementBoundaries_global,
-						 np.ndarray exteriorElementBoundariesArray,
+def parametricMaps_getPermutationsGlobalExterior(np.ndarray exteriorElementBoundariesArray,
 						 np.ndarray elementBoundaryElementsArray,
 						 np.ndarray elementBoundaryLocalElementBoundariesArray,
 						 np.ndarray xiArray,
 						 np.ndarray permutations):
+    nElementBoundaryQuadraturePoints_elementBoundary = xiArray.shape[1]
+    nSpace_global = xiArray.shape[2]
+    nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
     cparametricMaps_getPermutationsGlobalExterior(nElementBoundaryQuadraturePoints_elementBoundary,
 						  nSpace_global,
 						  nExteriorElementBoundaries_global,
-						  <int*> exteriorElementBoundariesArray.data,
+                                                  <int*> exteriorElementBoundariesArray.data,
 						  <int*> elementBoundaryElementsArray.data,
 						  <int*> elementBoundaryLocalElementBoundariesArray.data,
 						  <double*> xiArray.data,
@@ -2751,15 +2755,15 @@ def parametricMaps_getValuesTrace(np.ndarray psi,
                                    <int *>l2g.data,
                                    <double*>nodeArray.data,
                                    <double*>xArray.data)
-def parametricMaps_getInverseValues(int nElements_global,
-                                    int nQuadraturePoints_element,
-                                    int nDOF_element,
-                                    int nSpace_global,
-                                    np.ndarray inverseJacobian,
+def parametricMaps_getInverseValues(np.ndarray inverseJacobian,
                                     np.ndarray l2g,
                                     np.ndarray nodeArray,
                                     np.ndarray xArray,
                                     np.ndarray xiArray):
+    cdef int nElements_global = xArray.shape[0]
+    cdef int nQuadraturePoints_element = xArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
+    cdef int nSpace_global = inverseJacobian.shape[2]
     cparametricMaps_getInverseValues(nElements_global,
                                      nQuadraturePoints_element,
                                      nDOF_element,
@@ -2901,13 +2905,13 @@ def updateMass_weak(np.ndarray mt,
                      <double*>mt.data,
                      <double*>w_dV.data,
                      <double*>weak_residual.data)
-def updateMassJacobian_weak(int nElements_global,
-                            int nQuadraturePoints_element,
-                            int nDOF_trial_element,
-                            int nDOF_test_element,
-                            np.ndarray dmt,
+def updateMassJacobian_weak(np.ndarray dmt,
                             np.ndarray v_X_w_dV,
                             np.ndarray jacobian_weak_residual):
+    cdef int nElements_global = v_X_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = v_X_w_dV.shape[1]
+    cdef int nDOF_trial_element = v_X_w_dV.shape[2]
+    cdef int nDOF_test_element = v_X_w_dV.shape[3]
     cupdateMassJacobian_weak(nElements_global,
                              nQuadraturePoints_element,
                              nDOF_trial_element,
@@ -2951,12 +2955,12 @@ def updateMassJacobian_strong(np.ndarray dmt,
                                <double*>dmt.data,
                                <double*>v.data,
                                <double*>dstrong_residual.data)
-def updateMass_adjoint(int nElements_global,
-                       int nQuadraturePoints_element,
-                       int nDOF_test_element,
-                       np.ndarray dmt,
+def updateMass_adjoint(np.ndarray dmt,
                        np.ndarray w_dV,
                        np.ndarray Lstar_w_dV):
+    cdef int nElements_global = w_dV.shape[0]
+    cdef int nQuadraturePoints_element = w_dV.shape[1]
+    cdef int nDOF_test_element = w_dV.shape[2]
     cupdateMass_adjoint(nElements_global,
                         nQuadraturePoints_element,
                         nDOF_test_element,
@@ -2977,14 +2981,14 @@ def updateAdvection_weak(np.ndarray f,
                           <double*>f.data,
                           <double*>grad_w_dV.data,
                           <double*>weak_residual.data)
-def updateAdvectionJacobian_weak(int nElements_global,
-                                 int nQuadraturePoints_element,
-                                 int nDOF_trial_element,
-                                 int nDOF_test_element,
-                                 int nSpace,
-                                 np.ndarray df,
+def updateAdvectionJacobian_weak(np.ndarray df,
                                  np.ndarray v_X_grad_w_dV,
                                  np.ndarray jacobian_weak_residual):
+    cdef int nElements_global = v_X_grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = v_X_grad_w_dV.shape[1]
+    cdef int nDOF_trial_element = v_X_grad_w_dV.shape[2]
+    cdef int nDOF_test_element = v_X_grad_w_dV.shape[3]
+    cdef int nSpace = v_X_grad_w_dV.shape[4]
     cupdateAdvectionJacobian_weak(nElements_global,
                                   nQuadraturePoints_element,
                                   nDOF_trial_element,
@@ -3051,26 +3055,26 @@ def updateAdvection_adjoint(np.ndarray df,
                              <double*>df.data,
                              <double*>grad_w_dV.data,
                              <double*>Lstar_w_dV.data)
-def updateHamiltonian_weak(int nElements_global,
-                           int nQuadraturePoints_element,
-                           int nDOF_test_element,
-                           np.ndarray H,
+def updateHamiltonian_weak(np.ndarray H,
                            np.ndarray w_dV,
                            np.ndarray weak_residual):
+    cdef int nElements_global = w_dV.shape[0]
+    cdef int nQuadraturePoints_element = w_dV.shape[1]
+    cdef int nDOF_test_element = w_dV.shape[2]
     cupdateHamiltonian_weak(nElements_global,
                             nQuadraturePoints_element,
                             nDOF_test_element,
                             <double*>H.data,
                             <double*>w_dV.data,
                             <double*>weak_residual.data)
-def updateHamiltonianJacobian_weak(int nElements_global,
-                                   int nQuadraturePoints_element,
-                                   int nDOF_trial_element,
-                                   int nDOF_test_element,
-                                   int nSpace,
-                                   np.ndarray dH,
+def updateHamiltonianJacobian_weak(np.ndarray dH,
                                    np.ndarray grad_v_X_w_dV,
                                    np.ndarray jacobian_weak_residual):
+    cdef int nElements_global = grad_v_X_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_v_X_w_dV.shape[1]
+    cdef int nDOF_trial_element = grad_v_X_w_dV.shape[2]
+    cdef int nDOF_test_element = grad_v_X_w_dV.shape[3]
+    cdef int nSpace = grad_v_X_w_dV.shape[4]
     cupdateHamiltonianJacobian_weak(nElements_global,
                                     nQuadraturePoints_element,
                                     nDOF_trial_element,
@@ -3097,25 +3101,25 @@ def updateHamiltonianJacobian_weak_lowmem(np.ndarray dH,
                                            <double*> grad_v.data,
                                            <double*> w_dV.data,
                                            <double*> jacobian_weak_residual.data)
-def updateHamiltonian_strong(int nElements_global,
-                             int nQuadraturePoints_element,
-                             int nSpace,
-                             np.ndarray dH,
+def updateHamiltonian_strong(np.ndarray dH,
                              np.ndarray grad_u,
                              np.ndarray strong_residual):
+    cdef int nElements_global = grad_u.shape[0]
+    cdef int nQuadraturePoints_element = grad_u.shape[1]
+    cdef int nSpace = grad_u.shape[2]
     cupdateHamiltonian_strong(nElements_global,
                               nQuadraturePoints_element,
                               nSpace,
                               <double*>dH.data,
                               <double*>grad_u.data,
                               <double*>strong_residual.data)
-def updateHamiltonianJacobian_strong(int nElements_global,
-                                     int nQuadraturePoints_element,
-                                     int nDOF_trial_element,
-                                     int nSpace,
-                                     np.ndarray dH,
+def updateHamiltonianJacobian_strong(np.ndarray dH,
                                      np.ndarray grad_v,
                                      np.ndarray dstrong_residual):
+    cdef int nElements_global = grad_v.shape[0]
+    cdef int nQuadraturePoints_element = grad_v.shape[1]
+    cdef int nDOF_trial_element = grad_v.shape[2]
+    cdef int nSpace = grad_v.shape[3]
     cupdateHamiltonianJacobian_strong(nElements_global,
                                       nQuadraturePoints_element,
                                       nDOF_trial_element,
@@ -3123,13 +3127,13 @@ def updateHamiltonianJacobian_strong(int nElements_global,
                                       <double*>dH.data,
                                       <double*>grad_v.data,
                                       <double*>dstrong_residual.data)
-def updateHamiltonian_adjoint(int nElements_global,
-                              int nQuadraturePoints_element,
-                              int nDOF_test_element,
-                              int nSpace,
-                              np.ndarray dH,
+def updateHamiltonian_adjoint(np.ndarray dH,
                               np.ndarray grad_w_dV,
                               np.ndarray Lstar_w_dV):
+    cdef int nElements_global = grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_w_dV.shape[1]
+    cdef int nDOF_test_element = grad_w_dV.shape[2]
+    cdef int nSpace = grad_w_dV.shape[3]
     cupdateHamiltonian_adjoint(nElements_global,
                                nQuadraturePoints_element,
                                nDOF_test_element,
@@ -3137,13 +3141,13 @@ def updateHamiltonian_adjoint(int nElements_global,
                                <double*>dH.data,
                                <double*>grad_w_dV.data,
                                <double*>Lstar_w_dV.data)
-def updateDiffusion_weak(int nElements_global,
-                         int nQuadraturePoints_element,
-                         int nDOF_test_element,
-                         int nSpace,
-                         np.ndarray a,
+def updateDiffusion_weak(np.ndarray a,
                          np.ndarray grad_phi_X_grad_w_dV,
                          np.ndarray weak_residual):
+    cdef int nElements_global = grad_phi_X_grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_phi_X_grad_w_dV.shape[1]
+    cdef int nDOF_test_element = grad_phi_X_grad_w_dV.shape[2]
+    cdef int nSpace = grad_phi_X_grad_w_dV.shape[3]
     cupdateDiffusion_weak(nElements_global,
                           nQuadraturePoints_element,
                           nDOF_test_element,
@@ -3151,14 +3155,14 @@ def updateDiffusion_weak(int nElements_global,
                           <double*>a.data,
                           <double*>grad_phi_X_grad_w_dV.data,
                           <double*>weak_residual.data)
-def updateDiffusion_weak_lowmem(int nElements_global,
-                                int nQuadraturePoints_element,
-                                int nDOF_test_element,
-                                int nSpace,
-                                np.ndarray a,
+def updateDiffusion_weak_lowmem(np.ndarray a,
                                 np.ndarray grad_phi,
                                 np.ndarray grad_w_dV,
                                 np.ndarray weak_residual):
+    nElements_global = grad_w_dV.shape[0]
+    nQuadraturePoints_element = grad_w_dV.shape[1]
+    nDOF_test_element = grad_w_dV.shape[2]
+    nSpace = grad_w_dV.shape[3]
     cupdateDiffusion_weak_lowmem(nElements_global,
                                  nQuadraturePoints_element,
                                  nDOF_test_element,
@@ -3187,12 +3191,7 @@ def updateDiffusion_weak_sd(np.ndarray rowptr,
                              <double*> grad_phi.data,
                              <double*> grad_w_dV.data,
                              <double*> weak_residual.data)
-def updateDiffusionJacobian_weak(int nElements_global,
-                                 int nQuadraturePoints_element,
-                                 int nDOF_trial_element,
-                                 int nDOF_test_element,
-                                 int nSpace,
-                                 np.ndarray l2g,
+def updateDiffusionJacobian_weak(np.ndarray l2g,
                                  np.ndarray a,
                                  np.ndarray da,
                                  np.ndarray grad_phi_X_grad_w_dV,
@@ -3200,6 +3199,11 @@ def updateDiffusionJacobian_weak(int nElements_global,
                                  np.ndarray v,
                                  np.ndarray grad_v_X_grad_w_dV,
                                  np.ndarray jacobian_weak_residual):
+    cdef int nElements_global = grad_v_X_grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_v_X_grad_w_dV.shape[1]
+    cdef int nDOF_trial_element = grad_v_X_grad_w_dV.shape[2]
+    cdef int nDOF_test_element = grad_v_X_grad_w_dV.shape[3]
+    cdef int nSpace = grad_v_X_grad_w_dV.shape[4]
     cupdateDiffusionJacobian_weak(nElements_global,
                                   nQuadraturePoints_element,
                                   nDOF_trial_element,
@@ -3213,12 +3217,7 @@ def updateDiffusionJacobian_weak(int nElements_global,
                                   <double*>v.data,
                                   <double*>grad_v_X_grad_w_dV.data,
                                   <double*>jacobian_weak_residual.data)
-def updateDiffusionJacobian_weak_lowmem(int nElements_global,
-                                        int nQuadraturePoints_element,
-                                        int nDOF_trial_element,
-                                        int nDOF_test_element,
-                                        int nSpace,
-                                        np.ndarray l2g,
+def updateDiffusionJacobian_weak_lowmem(np.ndarray l2g,
                                         np.ndarray a,
                                         np.ndarray da,
                                         np.ndarray grad_phi,
@@ -3227,6 +3226,11 @@ def updateDiffusionJacobian_weak_lowmem(int nElements_global,
                                         np.ndarray v,
                                         np.ndarray grad_v,
                                         np.ndarray jacobian_weak_residual):
+    cdef int nElements_global = grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_w_dV.shape[1]
+    cdef int nDOF_trial_element = grad_v.shape[2]
+    cdef int nDOF_test_element = grad_w_dV.shape[2]
+    cdef int nSpace = grad_w_dV.shape[3]
     cupdateDiffusionJacobian_weak_lowmem(nElements_global,
                                          nQuadraturePoints_element,
                                          nDOF_trial_element,
@@ -3273,13 +3277,13 @@ def updateDiffusionJacobian_weak_sd(np.ndarray rowptr,
 				     <double*> v.data,
 				     <double*> grad_v.data,
 				     <double*> jacobian_weak_residual.data)
-def updateDiffusion_strong(int nElements_global,
-                           int nQuadraturePoints_element,
-                           int nSpace,
-                           np.ndarray da,
+def updateDiffusion_strong(np.ndarray da,
                            np.ndarray grad_phi,
                            np.ndarray grad_u,
                            np.ndarray strong_residual):
+    cdef int nElements_global = grad_u.shape[0]
+    cdef int nQuadraturePoints_element = grad_u.shape[1]
+    cdef int nSpace = grad_u.shape[2]
     cupdateDiffusion_strong(nElements_global,
                             nQuadraturePoints_element,
                             nSpace,
@@ -3305,17 +3309,17 @@ def updateDiffusion_strong_sd(np.ndarray rowptr,
                                <double*> grad_phi.data,
                                <double*> grad_u.data,
                                <double*> strong_residual.data)
-def updateDiffusionJacobian_strong(int nElements_global,
-                                   int nQuadraturePoints_element,
-                                   int nDOF_trial_element,
-                                   int nSpace,
-                                   np.ndarray l2g,
+def updateDiffusionJacobian_strong(np.ndarray l2g,
                                    np.ndarray da,
                                    np.ndarray dphi,
                                    np.ndarray grad_phi,
                                    np.ndarray grad_u,
                                    np.ndarray grad_v,
                                    np.ndarray dstrong_residual):
+    cdef int nElements_global = grad_v.shape[0]
+    cdef int nQuadraturePoints_element = grad_v.shape[1]
+    cdef int nDOF_trial_element = grad_v.shape[2]
+    cdef int nSpace = grad_v.shape[3]
     cupdateDiffusionJacobian_strong(nElements_global,
                                     nQuadraturePoints_element,
                                     nDOF_trial_element,
@@ -3353,14 +3357,14 @@ def updateDiffusionJacobian_strong_sd(np.ndarray rowptr,
 				       <double*> grad_u.data,
 				       <double*> grad_v.data,
 				       <double*> dstrong_residual.data)
-def updateDiffusion_adjoint(int nElements_global,
-                            int nQuadraturePoints_element,
-                            int nDOF_test_element,
-                            int nSpace,
-                            np.ndarray da,
+def updateDiffusion_adjoint(np.ndarray da,
                             np.ndarray grad_phi,
                             np.ndarray grad_w_dV,
                             np.ndarray Lstar_w_dV):
+    cdef int nElements_global = grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_w_dV.shape[1]
+    cdef int nDOF_test_element = grad_w_dV.shape[2]
+    cdef int nSpace = grad_w_dV.shape[3]
     cupdateDiffusion_adjoint(nElements_global,
                              nQuadraturePoints_element,
                              nDOF_test_element,
@@ -3401,13 +3405,13 @@ def updateReaction_weak(np.ndarray r,
                          <double*>r.data,
                          <double*>w_dV.data,
                          <double*>weak_residual.data)
-def updateReactionJacobian_weak(int nElements_global,
-                                int nQuadraturePoints_element,
-                                int nDOF_trial_element,
-                                int nDOF_test_element,
-                                np.ndarray dr,
+def updateReactionJacobian_weak(np.ndarray dr,
                                 np.ndarray v_X_w_dV,
                                 np.ndarray jacobian_weak_residual):
+    cdef int nElements_global = v_X_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = v_X_w_dV.shape[1]
+    cdef int nDOF_trial_element = v_X_w_dV.shape[2]
+    cdef int nDOF_test_element = v_X_w_dV.shape[3]
     cupdateReactionJacobian_weak(nElements_global,
                                  nQuadraturePoints_element,
                                  nDOF_trial_element,
@@ -3489,13 +3493,13 @@ def updateSubgridErrorJacobian(np.ndarray derror,
                                 <double*>derror.data,
                                 <double*>Lstar_w_dV.data,
                                 <double*>jacobian_weak_residual.data)
-def updateNumericalDiffusion(int nElements_global,
-                             int nQuadraturePoints_element,
-                             int nDOF_test_element,
-                             int nSpace,
-                             np.ndarray numDiff,
+def updateNumericalDiffusion(np.ndarray numDiff,
                              np.ndarray grad_u_X_grad_w_dV,
                              np.ndarray weak_residual):
+    cdef int nElements_global = grad_u_X_grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_u_X_grad_w_dV.shape[1]
+    cdef int nDOF_test_element = grad_u_X_grad_w_dV.shape[2]
+    cdef int nSpace = grad_u_X_grad_w_dV.shape[3]
     cupdateNumericalDiffusion(nElements_global,
                               nQuadraturePoints_element,
                               nDOF_test_element,
@@ -3519,14 +3523,14 @@ def updateNumericalDiffusion_lowmem(np.ndarray numDiff,
                                      <double*> grad_u.data,
                                      <double*> grad_w_dV.data,
                                      <double*> weak_residual.data)
-def updateNumericalDiffusionJacobian(int nElements_global,
-                                     int nQuadraturePoints_element,
-                                     int nDOF_trial_element,
-                                     int nDOF_test_element,
-                                     int nSpace,
-                                     np.ndarray numDiff,
+def updateNumericalDiffusionJacobian(np.ndarray numDiff,
                                      np.ndarray grad_v_X_grad_w_dV,
                                      np.ndarray jacobian_weak_residual):
+    cdef int nElements_global = grad_v_X_grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_v_X_grad_w_dV.shape[1]
+    cdef int nDOF_trial_element = grad_v_X_grad_w_dV.shape[2]
+    cdef int nDOF_test_element = grad_v_X_grad_w_dV.shape[3]
+    cdef int nSpace = grad_v_X_grad_w_dV.shape[4]
     cupdateNumericalDiffusionJacobian(nElements_global,
                                       nQuadraturePoints_element,
                                       nDOF_trial_element,
@@ -3553,50 +3557,50 @@ def updateNumericalDiffusionJacobian_lowmem(np.ndarray numDiff,
                                              <double*> grad_v.data,
                                              <double*> grad_w_dV.data,
                                              <double*> jacobian_weak_residual.data)
-def calculateScalarScalarProduct(int nElements_global,
-                                 int nQuadraturePoints_element,
-                                 np.ndarray s1,
+def calculateScalarScalarProduct(np.ndarray s1,
                                  np.ndarray s2,
                                  np.ndarray sResult):
+    cdef int nElements_global = s1.shape[0]
+    cdef int nQuadraturePoints_element = s1.shape[1]
     ccalculateScalarScalarProduct(nElements_global,
                                   nQuadraturePoints_element,
                                   <double*>s1.data,
                                   <double*>s2.data,
                                   <double*>sResult.data)
-def calculateVectorScalarProduct(int nElements_global,
-                                 int nQuadraturePoints_element,
-                                 int nSpace,
-                                 np.ndarray v,
+def calculateVectorScalarProduct(np.ndarray v,
                                  np.ndarray s,
                                  np.ndarray vResult):
+    cdef int nElements_global = v.shape[0]
+    cdef int nQuadraturePoints_element = v.shape[1]
+    cdef int nSpace = v.shape[2]
     ccalculateVectorScalarProduct(nElements_global,
                                   nQuadraturePoints_element,
                                   nSpace,
                                   <double*>v.data,
                                   <double*>s.data,
                                   <double*>vResult.data)
-def calculateTensorScalarProduct(int nElements_global,
-                                 int nQuadraturePoints_element,
-                                 int nSpace,
-                                 np.ndarray t,
+def calculateTensorScalarProduct(np.ndarray t,
                                  np.ndarray s,
                                  np.ndarray tResult):
+    cdef int nElements_global = t.shape[0]
+    cdef int nQuadraturePoints_element = t.shape[1]
+    cdef int nSpace = t.shape[2]
     ccalculateTensorScalarProduct(nElements_global,
                                   nQuadraturePoints_element,
                                   nSpace,
                                   <double*>t.data,
                                   <double*>s.data,
                                   <double*>tResult.data)
-def updateInteriorElementBoundaryFlux(int nInteriorElementBoundaries_global,
-                                      int nElementBoundaries_element,
-                                      int nQuadraturePoints_elementBoundary,
-                                      int nDOF_test_element,
-                                      np.ndarray interiorElementBoundaries, 
+def updateInteriorElementBoundaryFlux(np.ndarray interiorElementBoundaries, 
                                       np.ndarray elementBoundaryElements,
                                       np.ndarray elementBoundaryLocalElementBoundaries,
                                       np.ndarray flux,
                                       np.ndarray w_dS,
                                       np.ndarray residual):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = w_dS.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
+    cdef int nDOF_test_element = w_dS.shape[3]
     cupdateInteriorElementBoundaryFlux(nInteriorElementBoundaries_global,
                                        nElementBoundaries_element,
                                        nQuadraturePoints_elementBoundary,
@@ -3658,10 +3662,7 @@ def updateGlobalResidualFromElementResidual(int offset_r,
                                              <int *>freeGlobal_r.data,
                                              <double*>elementResidual.data,
                                              <double*>globalResidual.data)
-def updateGlobalJacobianFromElementJacobian_dense(int nElements_global,
-                                                  int nDOF_test_element,
-                                                  int nDOF_trial_element,
-                                                  int offset_r,
+def updateGlobalJacobianFromElementJacobian_dense(int offset_r,
                                                   int stride_r,
                                                   int offset_u,
                                                   int stride_u,
@@ -3674,6 +3675,9 @@ def updateGlobalJacobianFromElementJacobian_dense(int nElements_global,
                                                   np.ndarray freeGlobal_u,
                                                   np.ndarray elementJacobian,
                                                   np.ndarray globalJacobian):
+    cdef int nElements_global = elementJacobian.shape[0]
+    cdef int nDOF_test_element = elementJacobian.shape[1]
+    cdef int nDOF_trial_element = elementJacobian.shape[2]
     cupdateGlobalJacobianFromElementJacobian_dense(nElements_global,
                                                    nDOF_test_element,
                                                    nDOF_trial_element,
@@ -3691,10 +3695,6 @@ def updateGlobalJacobianFromElementJacobian_dense(int nElements_global,
                                                    <double*>elementJacobian.data,
                                                    <double*>globalJacobian.data)
 def updateGlobalJacobianFromElementJacobian_eb_dense(np.ndarray elementNeighbors,
-                                                     int nElements_global,
-                                                     int nElementBoundaries_element,
-                                                     int nDOF_test_element,
-                                                     int nDOF_trial_element,
                                                      int offset_r,
                                                      int stride_r,
                                                      int offset_u,
@@ -3708,6 +3708,10 @@ def updateGlobalJacobianFromElementJacobian_eb_dense(np.ndarray elementNeighbors
                                                      np.ndarray freeGlobal_u,
                                                      np.ndarray elementJacobian_eb,
                                                      np.ndarray globalJacobian):
+    cdef int nElements_global = elementJacobian_eb.shape[0]
+    cdef int nElementBoundaries_element = elementJacobian_eb.shape[1]
+    cdef int nDOF_test_element = elementJacobian_eb.shape[2]
+    cdef int nDOF_trial_element = elementJacobian_eb.shape[3]
     cupdateGlobalJacobianFromElementJacobian_eb_dense(<int *>elementNeighbors.data,
                                                       nElements_global,
                                                       nElementBoundaries_element,
@@ -3726,12 +3730,7 @@ def updateGlobalJacobianFromElementJacobian_eb_dense(np.ndarray elementNeighbors
                                                       <int *>freeGlobal_u.data,
                                                       <double*>elementJacobian_eb.data,
                                                       <double*>globalJacobian.data)
-def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInteriorElementBoundaries_global,
-                                                                      int nElementBoundaries_element,
-                                                                      int nQuadraturePoints_elementBoundary,
-                                                                      int nDOF_test_element,
-                                                                      int nDOF_trial_element,
-                                                                      int offset_r,
+def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int offset_r,
                                                                       int stride_r,
                                                                       int offset_u,
                                                                       int stride_u,
@@ -3748,35 +3747,35 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInter
                                                                       np.ndarray elementBoundaryFluxJacobian,
                                                                       np.ndarray w_dS,
                                                                       np.ndarray jac):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = w_dS.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
+    cdef int nDOF_test_element = w_dS.shape[3]
+    cdef int nDOF_trial_element = elementBoundaryFluxJacobian.shape[3]
     cupdateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(nInteriorElementBoundaries_global,
-                                                                      nElementBoundaries_element,
-                                                                      nQuadraturePoints_elementBoundary,
-                                                                      nDOF_test_element,
-                                                                      nDOF_trial_element,
-                                                                      offset_r,
-                                                                      stride_r,
-                                                                      offset_u,
-                                                                      stride_u,
-                                                                      nFreeVDOF_global,
-                                                                      <int *>interiorElementBoundaries.data,
-                                                                      <int *>elementBoundaryElements.data,
-                                                                      <int *>elementBoundaryLocalElementBoundaries.data,
-                                                                      <int *>nFreeDOF_element_r.data,
-                                                                      <int *>nFreeDOF_element_u.data,
-                                                                      <int *>freeLocal_r.data,
-                                                                      <int *>freeGlobal_r.data,
-                                                                      <int *>freeLocal_u.data,
-                                                                      <int *>freeGlobal_u.data,
-                                                                      <double*>elementBoundaryFluxJacobian.data,
-                                                                      <double*>w_dS.data,
-                                                                      <double*>jac.data)
+                                                                       nElementBoundaries_element,
+                                                                       nQuadraturePoints_elementBoundary,
+                                                                       nDOF_test_element,
+                                                                       nDOF_trial_element,
+                                                                       offset_r,
+                                                                       stride_r,
+                                                                       offset_u,
+                                                                       stride_u,
+                                                                       nFreeVDOF_global,
+                                                                       <int *>interiorElementBoundaries.data,
+                                                                       <int *>elementBoundaryElements.data,
+                                                                       <int *>elementBoundaryLocalElementBoundaries.data,
+                                                                       <int *>nFreeDOF_element_r.data,
+                                                                       <int *>nFreeDOF_element_u.data,
+                                                                       <int *>freeLocal_r.data,
+                                                                       <int *>freeGlobal_r.data,
+                                                                       <int *>freeLocal_u.data,
+                                                                       <int *>freeGlobal_u.data,
+                                                                       <double*>elementBoundaryFluxJacobian.data,
+                                                                       <double*>w_dS.data,
+                                                                       <double*>jac.data)
 def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(np.ndarray elementNeighbors,
                                                                          int nElements_global,
-                                                                         int nInteriorElementBoundaries_global,
-                                                                         int nElementBoundaries_element,
-                                                                         int nQuadraturePoints_elementBoundary,
-                                                                         int nDOF_test_element,
-                                                                         int nDOF_trial_element,
                                                                          int offset_r,
                                                                          int stride_r,
                                                                          int offset_u,
@@ -3794,6 +3793,11 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(np.ndar
                                                                          np.ndarray elementBoundaryFluxJacobian_eb,
                                                                          np.ndarray w_dS,
                                                                          np.ndarray jac):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = w_dS.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
+    cdef int nDOF_test_element = w_dS.shape[3]
+    cdef int nDOF_trial_element = elementBoundaryFluxJacobian_eb.shape[4]
     cupdateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(<int *>elementNeighbors.data,
                                                                           nElements_global,
                                                                           nInteriorElementBoundaries_global,
@@ -3818,12 +3822,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(np.ndar
                                                                           <double*>elementBoundaryFluxJacobian_eb.data,
                                                                           <double*>w_dS.data,
                                                                           <double*>jac.data)
-def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExteriorElementBoundaries_global,
-                                                                      int nElementBoundaries_element,
-                                                                      int nQuadraturePoints_elementBoundary,
-                                                                      int nDOF_test_element,
-                                                                      int nDOF_trial_element,
-                                                                      int offset_r,
+def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int offset_r,
                                                                       int stride_r,
                                                                       int offset_u,
                                                                       int stride_u,
@@ -3840,28 +3839,60 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExter
                                                                       np.ndarray elementBoundaryFluxJacobian,
                                                                       np.ndarray w_dS,
                                                                       np.ndarray jac):
-    cupdateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(nExteriorElementBoundaries_global,
-                                                                       nElementBoundaries_element,
-                                                                       nQuadraturePoints_elementBoundary,
-                                                                       nDOF_test_element,
-                                                                       nDOF_trial_element,
-                                                                       offset_r,
-                                                                       stride_r,
-                                                                       offset_u,
-                                                                       stride_u,
-                                                                       nFreeVDOF_global,
-                                                                       <int *>exteriorElementBoundaries.data,
-                                                                       <int *>elementBoundaryElements.data,
-                                                                       <int *>elementBoundaryLocalElementBoundaries.data,
-                                                                       <int *>nFreeDOF_element_r.data,
-                                                                       <int *>nFreeDOF_element_u.data,
-                                                                       <int *>freeLocal_r.data,
-                                                                       <int *>freeGlobal_r.data,
-                                                                       <int *>freeLocal_u.data,
-                                                                       <int *>freeGlobal_u.data,
-                                                                       <double*>elementBoundaryFluxJacobian.data,
-                                                                       <double*>w_dS.data,
-                                                                       <double*>jac.data)
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = w_dS.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
+    cdef int nDOF_test_element = w_dS.shape[3]
+    cdef int nDOF_trial_element = elementBoundaryFluxJacobian.shape[3]
+    cdef int nd = w_dS.ndim
+    if nd > 3:
+        assert elementBoundaryFluxJacobian.ndim == 4
+        cupdateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(nExteriorElementBoundaries_global,
+                                                                           nElementBoundaries_element,
+                                                                           nQuadraturePoints_elementBoundary,
+                                                                           nDOF_test_element,
+                                                                           nDOF_trial_element,
+                                                                           offset_r,
+                                                                           stride_r,
+                                                                           offset_u,
+                                                                           stride_u,
+                                                                           nFreeVDOF_global,
+                                                                           <int *>exteriorElementBoundaries.data,
+                                                                           <int *>elementBoundaryElements.data,
+                                                                           <int *>elementBoundaryLocalElementBoundaries.data,
+                                                                           <int *>nFreeDOF_element_r.data,
+                                                                           <int *>nFreeDOF_element_u.data,
+                                                                           <int *>freeLocal_r.data,
+                                                                           <int *>freeGlobal_r.data,
+                                                                           <int *>freeLocal_u.data,
+                                                                           <int *>freeGlobal_u.data,
+                                                                           <double*>elementBoundaryFluxJacobian.data,
+                                                                           <double*>w_dS.data,
+                                                                           <double*>jac.data)
+    else:
+        assert elementBoundaryFluxJacobian.ndim == 3
+        nDOF_trial_element = elementBoundaryFluxJacobian.shape[2]
+        cupdateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(nExteriorElementBoundaries_global,
+                                                                                 nElementBoundaries_element,
+									         nQuadraturePoints_elementBoundary,
+									         nDOF_trial_element,
+									         offset_r,
+									         stride_r,
+									         offset_u,
+									         stride_u,
+									         nFreeVDOF_global,
+									         <int*> exteriorElementBoundaries.data,
+									         <int*> elementBoundaryElements.data,
+									         <int*> elementBoundaryLocalElementBoundaries.data,
+									         <int*> nFreeDOF_element_r.data,
+									         <int*> nFreeDOF_element_u.data,
+									         <int*> freeLocal_r.data,
+									         <int*> freeGlobal_r.data,
+									         <int*> freeLocal_u.data,
+									         <int*> freeGlobal_u.data,
+									         <double*> elementBoundaryFluxJacobian.data,
+									         <double*> w_dS.data,
+									         <double*> jac.data)
 def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(np.ndarray elementNeighbors,
                                                                          int nElements_global,
                                                                          int nExteriorElementBoundaries_global,
@@ -3886,30 +3917,56 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(np.ndar
                                                                          np.ndarray elementBoundaryFluxJacobian_eb,
                                                                          np.ndarray w_dS,
                                                                          np.ndarray jac):
-    cupdateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(<int *>elementNeighbors.data,
-                                                                          nElements_global,
-                                                                          nExteriorElementBoundaries_global,
-                                                                          nElementBoundaries_element,
-                                                                          nQuadraturePoints_elementBoundary,
-                                                                          nDOF_test_element,
-                                                                          nDOF_trial_element,
-                                                                          offset_r,
-                                                                          stride_r,
-                                                                          offset_u,
-                                                                          stride_u,
-                                                                          nFreeVDOF_global,
-                                                                          <int *>exteriorElementBoundaries.data,
-                                                                          <int *>elementBoundaryElements.data,
-                                                                          <int *>elementBoundaryLocalElementBoundaries.data,
-                                                                          <int *>nFreeDOF_element_r.data,
-                                                                          <int *>nFreeDOF_element_u.data,
-                                                                          <int *>freeLocal_r.data,
-                                                                          <int *>freeGlobal_r.data,
-                                                                          <int *>freeLocal_u.data,
-                                                                          <int *>freeGlobal_u.data,
-                                                                          <double*>elementBoundaryFluxJacobian_eb.data,
-                                                                          <double*>w_dS.data,
-                                                                          <double*>jac.data)
+    if w_dS.ndim > 3:
+        cupdateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(<int *>elementNeighbors.data,
+                                                                              nElements_global,
+                                                                              exteriorElementBoundaries.shape[0],
+                                                                              w_dS.shape[1],
+                                                                              w_dS.shape[2],
+                                                                              w_dS.shape[3],
+                                                                              elementBoundaryFluxJacobian_eb.shape[4],
+                                                                              offset_r,
+                                                                              stride_r,
+                                                                              offset_u,
+                                                                              stride_u,
+                                                                              nFreeVDOF_global,
+                                                                              <int *>exteriorElementBoundaries.data,
+                                                                              <int *>elementBoundaryElements.data,
+                                                                              <int *>elementBoundaryLocalElementBoundaries.data,
+                                                                              <int *>nFreeDOF_element_r.data,
+                                                                              <int *>nFreeDOF_element_u.data,
+                                                                              <int *>freeLocal_r.data,
+                                                                              <int *>freeGlobal_r.data,
+                                                                              <int *>freeLocal_u.data,
+                                                                              <int *>freeGlobal_u.data,
+                                                                              <double*>elementBoundaryFluxJacobian_eb.data,
+                                                                              <double*>w_dS.data,
+                                                                              <double*>jac.data)
+    else:
+        cupdateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(<int*> elementNeighbors.data,
+									            nElements_global,
+									            exteriorElementBoundaries.shape[0],
+                                                                                    elementBoundaryFluxJacobian_eb.shape[2],
+                                                                                    w_dS.shape[1],
+                                                                                    w_dS.shape[2],
+                                                                                    elementBoundaryFluxJacobian_eb.shape[4],
+									            offset_r,
+									            stride_r,
+									            offset_u,
+									            stride_u,
+									            nFreeVDOF_global,
+									            <int*> exteriorElementBoundaries.data,
+									            <int*> elementBoundaryElements.data,
+									            <int*> elementBoundaryLocalElementBoundaries.data,
+									            <int*> nFreeDOF_element_r.data,
+									            <int*> nFreeDOF_element_u.data,
+									            <int*> freeLocal_r.data,
+									            <int*> freeGlobal_r.data,
+									            <int*> freeLocal_u.data,
+									            <int*> freeGlobal_u.data,
+									            <double*> elementBoundaryFluxJacobian_eb.data,
+									            <double*> w_dS.data,
+									            <double*> jac.data)
 def updateGlobalJacobianFromElementJacobian_CSR(np.ndarray nFreeDOF_element_r,
                                                 np.ndarray freeLocal_r,
                                                 np.ndarray nFreeDOF_element_u,
@@ -3935,10 +3992,6 @@ def updateGlobalJacobianFromElementJacobian_CSR(np.ndarray nFreeDOF_element_r,
                                                  <double*>elementJacobian.data,
                                                  <double*>globalJacobian_array.data)
 def updateGlobalJacobianFromElementJacobian_eb_CSR(np.ndarray elementNeighbors,
-                                                   int nElements_global,
-                                                   int nElementBoundaries_element,
-                                                   int nDOF_test_element,
-                                                   int nDOF_trial_element,
                                                    np.ndarray nFreeDOF_element_r,
                                                    np.ndarray freeLocal_r,
                                                    np.ndarray nFreeDOF_element_u,
@@ -3947,6 +4000,10 @@ def updateGlobalJacobianFromElementJacobian_eb_CSR(np.ndarray elementNeighbors,
                                                    np.ndarray csrColumnOffsets_eb_ru,
                                                    np.ndarray elementJacobian_eb,
                                                    np.ndarray globalJacobian):
+    cdef int nElements_global = elementJacobian_eb.shape[0]
+    cdef int nElementBoundaries_element = elementJacobian_eb.shape[1]
+    cdef int nDOF_test_element = elementJacobian_eb.shape[2]
+    cdef int nDOF_trial_element = elementJacobian_eb.shape[3]
     cupdateGlobalJacobianFromElementJacobian_eb_CSR(<int *>elementNeighbors.data,
                                                     nElements_global,
                                                     nElementBoundaries_element,
@@ -3960,12 +4017,7 @@ def updateGlobalJacobianFromElementJacobian_eb_CSR(np.ndarray elementNeighbors,
                                                     <int *>csrColumnOffsets_eb_ru.data,
                                                     <double*>elementJacobian_eb.data,
                                                     <double*>globalJacobian.data)
-def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteriorElementBoundaries_global,
-                                                                    int nElementBoundaries_element,
-                                                                    int nQuadraturePoints_elementBoundary,
-                                                                    int nDOF_test_element,
-                                                                    int nDOF_trial_element,
-                                                                    np.ndarray interiorElementBoundaries,
+def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(np.ndarray interiorElementBoundaries,
                                                                     np.ndarray elementBoundaryElements,
                                                                     np.ndarray elementBoundaryLocalElementBoundaries,
                                                                     np.ndarray nFreeDOF_element_r,
@@ -3977,6 +4029,11 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInterio
                                                                     np.ndarray elementBoundaryFluxJacobian,
                                                                     np.ndarray w_dS,
                                                                     np.ndarray jac):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = w_dS.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
+    cdef int nDOF_test_element = w_dS.shape[3]
+    cdef int nDOF_trial_element = elementBoundaryFluxJacobian.shape[3]                                                                     
     cupdateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(nInteriorElementBoundaries_global,
                                                                      nElementBoundaries_element,
                                                                      nQuadraturePoints_elementBoundary,
@@ -4053,12 +4110,7 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(np.ndarray e
 									       <double*> elementBoundaryFluxJacobian.data,
 									       <double*> w_dS.data,
 									       <double*> jac_array.data)
-def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarray elementNeighbors,
-                                                                       int nInteriorElementBoundaries_global,
-                                                                       int nElementBoundaries_element,
-                                                                       int nQuadraturePoints_elementBoundary,
-                                                                       int nDOF_test_element,
-                                                                       int nDOF_trial_element,
+def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarray elementNeighbors,                                                                       
                                                                        np.ndarray interiorElementBoundaries,
                                                                        np.ndarray elementBoundaryElements,
                                                                        np.ndarray elementBoundaryLocalElementBoundaries,
@@ -4071,6 +4123,11 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarra
                                                                        np.ndarray elementBoundaryFluxJacobian_eb,
                                                                        np.ndarray w_dS,
                                                                        np.ndarray jac):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = w_dS.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
+    cdef int nDOF_test_element = w_dS.shape[3]
+    cdef int nDOF_trial_element = elementBoundaryFluxJacobian_eb.shape[4]
     cupdateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(<int *>elementNeighbors.data,
                                                                         nInteriorElementBoundaries_global,
                                                                         nElementBoundaries_element,
@@ -4107,24 +4164,44 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarra
                                                                        np.ndarray elementBoundaryFluxJacobian_eb,
                                                                        np.ndarray w_dS,
                                                                        np.ndarray jac):
-    cupdateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(<int *>elementNeighbors.data,
-                                                                        nExteriorElementBoundaries_global,
-                                                                        nElementBoundaries_element,
-                                                                        nQuadraturePoints_elementBoundary,
-                                                                        nDOF_test_element,
-                                                                        nDOF_trial_element,
-                                                                        <int *>exteriorElementBoundaries.data,
-                                                                        <int *>elementBoundaryElements.data,
-                                                                        <int *>elementBoundaryLocalElementBoundaries.data,
-                                                                        <int *>nFreeDOF_element_r.data,
-                                                                        <int *>freeLocal_r.data,
-                                                                        <int *>nFreeDOF_element_u.data,
-                                                                        <int *>freeLocal_u.data,
-                                                                        <int *>csrRowIndeces_ru.data,
-                                                                        <int *>csrColumnOffsets_eb_eNebN_ru.data,
-                                                                        <double*>elementBoundaryFluxJacobian_eb.data,
-                                                                        <double*>w_dS.data,
-                                                                        <double*>jac.data)
+    if w_dS.ndim > 3:
+        cupdateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(<int *>elementNeighbors.data,
+                                                                            exteriorElementBoundaries.shape[0],
+                                                                            w_dS.shape[1],
+                                                                            w_dS.shape[2],
+                                                                            w_dS.shape[3],
+                                                                            elementBoundaryFluxJacobian_eb.shape[4],
+                                                                            <int *>exteriorElementBoundaries.data,
+                                                                            <int *>elementBoundaryElements.data,
+                                                                            <int *>elementBoundaryLocalElementBoundaries.data,
+                                                                            <int *>nFreeDOF_element_r.data,
+                                                                            <int *>freeLocal_r.data,
+                                                                            <int *>nFreeDOF_element_u.data,
+                                                                            <int *>freeLocal_u.data,
+                                                                            <int *>csrRowIndeces_ru.data,
+                                                                            <int *>csrColumnOffsets_eb_eNebN_ru.data,
+                                                                            <double*>elementBoundaryFluxJacobian_eb.data,
+                                                                            <double*>w_dS.data,
+                                                                            <double*>jac.data)
+    else:
+        cupdateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(<int*> elementNeighbors.data,
+                                                                                  exteriorElementBoundaries.shape[0],
+                                                                                  elementBoundaryFluxJacobian_eb.shape[2],
+                                                                                  w_dS.shape[1],
+                                                                                  w_dS.shape[2],
+                                                                                  elementBoundaryFluxJacobian_eb.shape[4],
+									          <int*> exteriorElementBoundaries.data,
+									          <int*> elementBoundaryElements.data,
+									          <int*> elementBoundaryLocalElementBoundaries.data,
+									          <int*> nFreeDOF_element_r.data,
+									          <int*> freeLocal_r.data,
+									          <int*> nFreeDOF_element_u.data,
+									          <int*> freeLocal_u.data,
+									          <int*> csrRowIndeces_ru.data,
+									          <int*> csrColumnOffsets_eb_eNebN_ru.data,
+									          <double*> elementBoundaryFluxJacobian_eb.data,
+									          <double*> w_dS.data,
+									          <double*> jac.data)
 def calculateWeightedShape(np.ndarray dVR,
                            np.ndarray abs_det_jac,
                            np.ndarray w,
@@ -4155,13 +4232,13 @@ def calculateWeightedShapeGradients(np.ndarray dVR,
                                      <double*>abs_det_jac.data,
                                      <double*>grad_w.data,
                                      <double*>grad_w_dV.data)
-def calculateShape_X_weightedShape(int nElements_global,
-                                   int nQuadraturePoints_element,
-                                   int nDOF_trial_element,
-                                   int nDOF_test_element,
-                                   np.ndarray v,
+def calculateShape_X_weightedShape(np.ndarray v,
                                    np.ndarray w_dV,
                                    np.ndarray v_X_w_dV):
+    cdef int nElements_global = v_X_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = v_X_w_dV.shape[1]
+    cdef int nDOF_trial_element = v_X_w_dV.shape[2]
+    cdef int nDOF_test_element = v_X_w_dV.shape[3]
     ccalculateShape_X_weightedShape(nElements_global,
                                     nQuadraturePoints_element,
                                     nDOF_trial_element,
@@ -4169,14 +4246,14 @@ def calculateShape_X_weightedShape(int nElements_global,
                                     <double*>v.data,
                                     <double*>w_dV.data,
                                     <double*>v_X_w_dV.data)
-def calculateShape_X_weightedGradShape(int nElements_global,
-                                       int nQuadraturePoints_element,
-                                       int nDOF_trial_element,
-                                       int nDOF_test_element,
-                                       int nSpace,
-                                       np.ndarray v,
+def calculateShape_X_weightedGradShape(np.ndarray v,
                                        np.ndarray grad_w_dV,
                                        np.ndarray v_X_grad_w_dV):
+    cdef int nElements_global = v_X_grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = v_X_grad_w_dV.shape[1]
+    cdef int nDOF_trial_element = v_X_grad_w_dV.shape[2]
+    cdef int nDOF_test_element = v_X_grad_w_dV.shape[3]
+    cdef int nSpace = v_X_grad_w_dV.shape[4]
     ccalculateShape_X_weightedGradShape(nElements_global,
                                         nQuadraturePoints_element,
                                         nDOF_trial_element,
@@ -4185,14 +4262,14 @@ def calculateShape_X_weightedGradShape(int nElements_global,
                                         <double*>v.data,
                                         <double*>grad_w_dV.data,
                                         <double*>v_X_grad_w_dV.data)
-def calculateGradShape_X_weightedShape(int nElements_global,
-                                       int nQuadraturePoints_element,
-                                       int nDOF_trial_element,
-                                       int nDOF_test_element,
-                                       int nSpace,
-                                       np.ndarray grad_v,
+def calculateGradShape_X_weightedShape(np.ndarray grad_v,
                                        np.ndarray w_dV,
                                        np.ndarray grad_v_X_w_dV):
+    cdef int nElements_global = grad_v_X_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_v_X_w_dV.shape[1]
+    cdef int nDOF_trial_element = grad_v_X_w_dV.shape[2]
+    cdef int nDOF_test_element = grad_v_X_w_dV.shape[3]
+    cdef int nSpace = grad_v_X_w_dV.shape[4]
     ccalculateGradShape_X_weightedShape(nElements_global,
                                         nQuadraturePoints_element,
                                         nDOF_trial_element,
@@ -4201,14 +4278,14 @@ def calculateGradShape_X_weightedShape(int nElements_global,
                                         <double*>grad_v.data,
                                         <double*>w_dV.data,
                                         <double*>grad_v_X_w_dV.data)
-def calculateGradShape_X_weightedGradShape(int nElements_global,
-                                           int nQuadraturePoints_element,
-                                           int nDOF_trial_element,
-                                           int nDOF_test_element,
-                                           int nSpace,
-                                           np.ndarray grad_v,
+def calculateGradShape_X_weightedGradShape(np.ndarray grad_v,
                                            np.ndarray grad_w_dV,
                                            np.ndarray grad_v_X_grad_w_dV):
+    cdef int nElements_global = grad_v_X_grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_v_X_grad_w_dV.shape[1]
+    cdef int nDOF_trial_element = grad_v_X_grad_w_dV.shape[2]
+    cdef int nDOF_test_element = grad_v_X_grad_w_dV.shape[3]
+    cdef int nSpace = grad_v_X_grad_w_dV.shape[4]
     ccalculateGradShape_X_weightedGradShape(nElements_global,
                                             nQuadraturePoints_element,
                                             nDOF_trial_element,
@@ -4233,14 +4310,14 @@ def calculateWeightedShapeTrace(np.ndarray dSR,
                                  <double*>sqrt_det_g.data,
                                  <double*>w.data,
                                  <double*>w_dS.data)
-def calculateShape_X_weightedShapeTrace(int nElements_global,
-                                        int nElementBoundaries_element,
-                                        int nElementBoundaryQuadraturePoints_elementBoundary,
-                                        int nDOF_trial_element,
-                                        int nDOF_test_element,
-                                        np.ndarray v,
+def calculateShape_X_weightedShapeTrace(np.ndarray v,
                                         np.ndarray w_dS,
                                         np.ndarray v_X_w_dS):
+    cdef int nElements_global = v_X_w_dS.shape[0]
+    cdef int nElementBoundaries_element = v_X_w_dS.shape[1]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = v_X_w_dS.shape[2]
+    cdef int nDOF_trial_element = v_X_w_dS.shape[3]
+    cdef int nDOF_test_element = v_X_w_dS.shape[4]
     ccalculateShape_X_weightedShapeTrace(nElements_global,
                                          nElementBoundaries_element,
                                          nElementBoundaryQuadraturePoints_elementBoundary,
@@ -4249,15 +4326,15 @@ def calculateShape_X_weightedShapeTrace(int nElements_global,
                                          <double*>v.data,
                                          <double*>w_dS.data,
                                          <double*>v_X_w_dS.data)
-def calculateGradShape_X_weightedShapeTrace(int nElements_global,
-                                            int nElementBoundaries_element,
-                                            int nElementBoundaryQuadraturePoints_elementBoundary,
-                                            int nDOF_trial_element,
-                                            int nDOF_test_element,
-                                            int nSpace,
-                                            np.ndarray grad_v,
+def calculateGradShape_X_weightedShapeTrace(np.ndarray grad_v,
                                             np.ndarray w_dS,
                                             np.ndarray grad_v_X_w_dS):
+    cdef int nElements_global = grad_v_X_w_dS.shape[0]
+    cdef int nElementBoundaries_element = grad_v_X_w_dS.shape[1]
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = grad_v_X_w_dS.shape[2]
+    cdef int nDOF_trial_element = grad_v_X_w_dS.shape[3]
+    cdef int nDOF_test_element = grad_v_X_w_dS.shape[4]
+    cdef int nSpace = grad_v_X_w_dS.shape[5]
     ccalculateGradShape_X_weightedShapeTrace(nElements_global,
                                              nElementBoundaries_element,
                                              nElementBoundaryQuadraturePoints_elementBoundary,
@@ -4334,16 +4411,22 @@ def calculateFiniteElementFunctionGradientValues(np.ndarray l2g,
                                                   <double*>dof.data,
                                                   <double*>grad_v.data,
                                                   <double*>grad_u.data)
-def calculateFiniteElementFunctionGradientTensorValues(int nElements_global,
-                                                       int nQuadraturePoints_element,
-                                                       int nDOF_trial_element,
-                                                       int nDOF_test_element,
-                                                       int nComponents,
-                                                       int nSpace,
-                                                       np.ndarray l2g,
+def calculateFiniteElementFunctionGradientTensorValues(np.ndarray l2g,
                                                        np.ndarray dof,
                                                        np.ndarray grad_v_X_grad_w_dV,
                                                        np.ndarray grad_u_X_grad_w_dV):
+    cdef int nElements_global = grad_v_X_grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_v_X_grad_w_dV.shape[1]
+    cdef int nDOF_trial_element = grad_v_X_grad_w_dV.shape[2]
+    cdef int nDOF_test_element = grad_v_X_grad_w_dV.shape[3]
+    cdef int nComponents = 1 
+    cdef int nSpace = 1
+    if grad_u_X_grad_w_dV.ndim == 6:
+        nComponents = grad_u_X_grad_w_dV.shape[3]
+        nSpace = grad_u_X_grad_w_dV.shape[4]
+    else:
+        nComponents = 1
+        nSpace = grad_u_X_grad_w_dV.shape[3]        
     ccalculateFiniteElementFunctionGradientTensorValues(nElements_global,
                                                         nQuadraturePoints_element,
                                                         nDOF_trial_element,
@@ -4404,13 +4487,13 @@ def calculateFiniteElementFunctionGradientValuesTrace(np.ndarray l2g,
                                                        <double*>dof.data,
                                                        <double*>grad_v.data,
                                                        <double*>grad_u.data)
-def calculateFlowVelocity(int nElements_global,
-                          int nQuadraturePoints_element,
-                          int nSpace,
-                          np.ndarray f,
+def calculateFlowVelocity(np.ndarray f,
                           np.ndarray a,
                           np.ndarray grad_phi,
                           np.ndarray v):
+    cdef int nElements_global = f.shape[0]
+    cdef int nQuadraturePoints_element = f.shape[1]
+    cdef int nSpace = f.shape[2]
     ccalculateFlowVelocity(nElements_global,
                            nQuadraturePoints_element,
                            nSpace,
@@ -4430,16 +4513,6 @@ def zeroJacobian_CSR(int nNonzeros,
     (rowptr,colind,jac_array) = jac.getCSRrepresentation()
     czeroJacobian_CSR(nNonzeros,
                       <double*>jac_array.data)
-#def setInflowFlux(int nExteriorElementBoundaries_global,
-#                  int nQuadraturePoints_elementBoundary,
-#                  np.ndarray exteriorElementBoundaries,
-#                  np.ndarray inflowFlux,
-#                  np.ndarray flux):
-#    csetInflowFlux(nExteriorElementBoundaries_global,
-#                   nQuadraturePoints_elementBoundary,
-#                   <int *>exteriorElementBoundaries.data,
-#                   <double*>inflowFlux.data,
-#                   <double*>flux.data)
 def calculateInteriorElementBoundaryVelocities(int nInteriorElementBoundaries_global,
                                                int nElementBoundaries_element,
                                                int nQuadraturePoints_elementBoundary,
@@ -4660,13 +4733,13 @@ def calculateDimensionlessNumbersADR(int nElements_global,
                                       <double*>dmt.data,
                                       <double*>pe.data,
                                       <double*>cfl.data)
-def calculateCFLADR(int nElements_global,
-                    int nQuadraturePoints_element,
-                    int nSpace,
-                    np.ndarray elementDiameter,
+def calculateCFLADR(np.ndarray elementDiameter,
                     np.ndarray dm,
                     np.ndarray df,
                     np.ndarray cfl):
+    cdef int nElements_global = df.shape[0]
+    cdef int nQuadraturePoints_element = df.shape[1]
+    cdef int nSpace = df.shape[2]
     ccalculateCFLADR(nElements_global,
                      nQuadraturePoints_element,
                      nSpace,
@@ -4825,17 +4898,17 @@ def updateExteriorElementBoundaryAdvectiveVelocity(np.ndarray exteriorElementBou
 							      <int*> elementBoundaryLocalElementBoundaries.data,
 							      <double*> f.data,
 							      <double*> velocity.data)
-def updateInteriorElementBoundaryShockCapturingVelocity(int nInteriorElementBoundaries_global,
-                                                        int nElementBoundaries_element,
-                                                        int nQuadraturePoints_elementBoundary,
-                                                        int nQuadraturePoints_element,
-                                                        int nSpace,
-                                                        np.ndarray interiorElementBoundaries,
+def updateInteriorElementBoundaryShockCapturingVelocity(np.ndarray interiorElementBoundaries,
                                                         np.ndarray elementBoundaryElements,
                                                         np.ndarray elementBoundaryLocalElementBoundaries,
                                                         np.ndarray numDiff,
                                                         np.ndarray grad_u,
                                                         np.ndarray velocity):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = grad_u.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = grad_u.shape[2]
+    cdef int nQuadraturePoints_element = numDiff.shape[1]
+    cdef int nSpace = grad_u.shape[3]
     cupdateInteriorElementBoundaryShockCapturingVelocity(nInteriorElementBoundaries_global,
                                                          nElementBoundaries_element,
                                                          nQuadraturePoints_elementBoundary,
@@ -4847,28 +4920,36 @@ def updateInteriorElementBoundaryShockCapturingVelocity(int nInteriorElementBoun
                                                          <double*>numDiff.data,
                                                          <double*>grad_u.data,
                                                          <double*>velocity.data)
-def updateExteriorElementBoundaryShockCapturingVelocity(int nExteriorElementBoundaries_global,
-                                                        int nElementBoundaries_element,
-                                                        int nQuadraturePoints_elementBoundary,
-                                                        int nQuadraturePoints_element,
-                                                        int nSpace,
-                                                        np.ndarray exteriorElementBoundaries,
+def updateExteriorElementBoundaryShockCapturingVelocity(np.ndarray exteriorElementBoundaries,
                                                         np.ndarray elementBoundaryElements,
                                                         np.ndarray elementBoundaryLocalElementBoundaries,
                                                         np.ndarray numDiff,
                                                         np.ndarray grad_u,
                                                         np.ndarray velocity):
-    cupdateExteriorElementBoundaryShockCapturingVelocity(nExteriorElementBoundaries_global,
-                                                         nElementBoundaries_element,
-                                                         nQuadraturePoints_elementBoundary,
-                                                         nQuadraturePoints_element,
-                                                         nSpace,
-                                                         <int *>exteriorElementBoundaries.data,
-                                                         <int *>elementBoundaryElements.data,
-                                                         <int *>elementBoundaryLocalElementBoundaries.data,
-                                                         <double*>numDiff.data,
-                                                         <double*>grad_u.data,
-                                                         <double*>velocity.data)
+    if grad_u.ndim > 3:
+        assert numDiff.shape[0] == grad_u.shape[0]
+        cupdateExteriorElementBoundaryShockCapturingVelocity(exteriorElementBoundaries.shape[0],
+                                                             grad_u.shape[1],
+                                                             grad_u.shape[2],
+                                                             numDiff.shape[1],
+                                                             grad_u.shape[3],
+                                                             <int *>exteriorElementBoundaries.data,
+                                                             <int *>elementBoundaryElements.data,
+                                                             <int *>elementBoundaryLocalElementBoundaries.data,
+                                                             <double*>numDiff.data,
+                                                             <double*>grad_u.data,
+                                                             <double*>velocity.data)
+    else:
+        assert numDiff.shape[0] == grad_u.shape[0]
+        cupdateGlobalExteriorElementBoundaryShockCapturingVelocity(exteriorElementBoundaries.shape[0],
+                                                                   grad_u.shape[1],
+                                                                   grad_u.shape[2],
+							           <int*> exteriorElementBoundaries.data,
+							           <int*> elementBoundaryElements.data,
+							           <int*> elementBoundaryLocalElementBoundaries.data,
+							           <double*> numDiff.data,
+							           <double*> grad_u.data,
+							           <double*> velocity.data)
 def calculateInteriorElementBoundaryAverageVelocity(np.ndarray interiorElementBoundaries,
                                                     np.ndarray elementBoundaryElements,
                                                     np.ndarray elementBoundaryLocalElementBoundaries,
@@ -4913,16 +4994,16 @@ def calculateConservationResidualDG(np.ndarray elementResidual,
                                      nDOF_test_element,
                                      <double*>elementResidual.data,
                                      <double*>conservationResidual.data)
-def calculateConservationResidual(int nElements_global,
-                                  int nDOF_test_element,
-                                  int nElementBoundaries_element,
-                                  int nQuadraturePoints_elementBoundary,
-                                  int nSpace,
-                                  np.ndarray n,
+def calculateConservationResidual(np.ndarray n,
                                   np.ndarray dS_u,
                                   np.ndarray elementResidual,
                                   np.ndarray velocity,
                                   np.ndarray conservationResidual):
+    cdef int nElements_global = elementResidual.shape[0]
+    cdef int nDOF_test_element = elementResidual.shape[1]
+    cdef int nElementBoundaries_element = n.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = n.shape[2]
+    cdef int nSpace = n.shape[3]
     ccalculateConservationResidual(nElements_global,
                                    nDOF_test_element,
                                    nElementBoundaries_element,
@@ -5032,9 +5113,6 @@ def calculateInteriorNumericalTrace_Potential(np.ndarray interiorElementBoundari
                                                <double*>dphi_trace_left.data,
                                                <double*>dphi_trace_right.data)
 def calculateExteriorNumericalTrace_Potential(np.ndarray isDOFBoundary,
-                                              int nExteriorElementBoundaries_global,
-                                              int nElementBoundaries_element,
-                                              int nQuadraturePoints_elementBoundary,
                                               np.ndarray exteriorElementBoundaries,
                                               np.ndarray elementBoundaryElements,
                                               np.ndarray elementBoundaryLocalElementBoundaries,
@@ -5043,6 +5121,9 @@ def calculateExteriorNumericalTrace_Potential(np.ndarray isDOFBoundary,
                                               np.ndarray dphi,
                                               np.ndarray phi_trace,
                                               np.ndarray dphi_trace_left):
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = phi.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = phi.shape[2]
     ccalculateExteriorNumericalTrace_Potential(<int *>isDOFBoundary.data,
                                                nExteriorElementBoundaries_global,
                                                nElementBoundaries_element,
@@ -5245,24 +5326,24 @@ def calculateVelocityQuadrature_MixedForm_Jacobian(np.ndarray A_inv,
                                                     <double*>qv.data,
                                                     <double*>qDV.data,
                                                     <double*>qDV_eb.data)
-def calculateVelocityProjectionMatrixLDG(int nElements_global,
-                                         int nQuadraturePoints_element,
-                                         int nDOF_element,
-                                         np.ndarray vXw_dV,
+def calculateVelocityProjectionMatrixLDG(np.ndarray vXw_dV,
                                          np.ndarray A_inv):
+    cdef int nElements_global = vXw_dV.shape[0]
+    cdef int nQuadraturePoints_element = vXw_dV.shape[1]
+    cdef int nDOF_element = vXw_dV.shape[2]
     ccalculateVelocityProjectionMatrixLDG(nElements_global,
                                           nQuadraturePoints_element,
                                           nDOF_element,
                                           <double*>vXw_dV.data,
                                           <double*>A_inv.data)
-def updateDiffusion_MixedForm_weak(int nElements_global,
-                                   int nQuadraturePoints_element,
-                                   int nDOF_test_element,
-                                   int nSpace,
-                                   np.ndarray a,
+def updateDiffusion_MixedForm_weak(np.ndarray a,
                                    np.ndarray qV,
                                    np.ndarray grad_w_dV,
                                    np.ndarray weak_residual):
+    cdef int nElements_global = grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_w_dV.shape[1]
+    cdef int nDOF_test_element = grad_w_dV.shape[2]
+    cdef int nSpace = grad_w_dV.shape[3]
     cupdateDiffusion_MixedForm_weak(nElements_global,
                                     nQuadraturePoints_element,
                                     nDOF_test_element,
@@ -5271,13 +5352,7 @@ def updateDiffusion_MixedForm_weak(int nElements_global,
                                     <double*>qV.data,
                                     <double*>grad_w_dV.data,
                                     <double*>weak_residual.data)
-def updateDiffusionJacobian_MixedForm_weak(int nElements_global,
-                                           int nElementBoundaries_element,
-                                           int nQuadraturePoints_element,
-                                           int nDOF_trial_element,
-                                           int nDOF_test_element,
-                                           int nSpace,
-                                           np.ndarray a,
+def updateDiffusionJacobian_MixedForm_weak(np.ndarray a,
                                            np.ndarray da,
                                            np.ndarray qV,
                                            np.ndarray qDV,
@@ -5286,6 +5361,12 @@ def updateDiffusionJacobian_MixedForm_weak(int nElements_global,
                                            np.ndarray v,
                                            np.ndarray jacobian_weak_residual,
                                            np.ndarray jacobian_weak_residual_eb):
+    cdef int nElements_global = qDV_eb.shape[0]
+    cdef int nElementBoundaries_element = qDV_eb.shape[1]
+    cdef int nQuadraturePoints_element = qDV_eb.shape[2]
+    cdef int nDOF_trial_element = qDV_eb.shape[3]
+    cdef int nDOF_test_element = grad_w_dV.shape[2]
+    cdef int nSpace = grad_w_dV.shape[3]
     cupdateDiffusionJacobian_MixedForm_weak(nElements_global,
                                             nElementBoundaries_element,
                                             nQuadraturePoints_element,
@@ -5301,13 +5382,13 @@ def updateDiffusionJacobian_MixedForm_weak(int nElements_global,
                                             <double*>v.data,
                                             <double*>jacobian_weak_residual.data,
                                             <double*>jacobian_weak_residual_eb.data)
-def estimate_mt(int nElements_global,
-                int nQuadraturePoints_element,
-                int nDOF_element,
-                np.ndarray v,
+def estimate_mt(np.ndarray v,
                 np.ndarray vXw_dV,
                 np.ndarray elementSpatialResidual,
                 np.ndarray mt):
+    cdef int nElements_global = vXw_dV.shape[0]
+    cdef int nQuadraturePoints_element = vXw_dV.shape[1]
+    cdef int nDOF_element = vXw_dV.shape[2]
     cestimate_mt(nElements_global,
                  nQuadraturePoints_element,
                  nDOF_element,
@@ -5363,14 +5444,14 @@ def scalarSmoothedHeavisideDomainIntegral(double epsFact,
 						    <double*> dV.data,
 						    <double*> nValueArray.data)
     return output
-def fluxDomainBoundaryIntegral(int nExteriorElementBoundaries,
-			       int nElementBoundaries_owned,
-                               int nQuadraturePoints_elementBoundary,
+def fluxDomainBoundaryIntegral(int nElementBoundaries_owned,
                                np.ndarray flag,
                                np.ndarray exteriorElementBoundariesArray,
                                np.ndarray dS,
                                np.ndarray nValueArray):
-    cdef double output
+    nExteriorElementBoundaries = nValueArray.shape[0]
+    nQuadraturePoints_elementBoundary = nValueArray.shape[1]
+    cdef double output    
     output = cfluxDomainBoundaryIntegral(nExteriorElementBoundaries,
 				         nElementBoundaries_owned,
                                          nQuadraturePoints_elementBoundary,
@@ -5399,16 +5480,20 @@ def fluxDomainBoundaryIntegralFromVector(int nElementBoundaries_owned,
 						   <double*> nValueArray.data,
 						   <double*> normal.data)
     return output
-def copyExteriorElementBoundaryValuesFromElementBoundaryValues(int nExteriorElementBoundaries_global,
-							       int nElements_global,
-							       int nElementBoundaries_element,
-							       int nQuadraturePoints_elementBoundary,
-							       int nValuesPerQuadraturePoint,
-							       np.ndarray exteriorElementBoundaries,
+def copyExteriorElementBoundaryValuesFromElementBoundaryValues(np.ndarray exteriorElementBoundaries,
 							       np.ndarray elementBoundaryElements,
 							       np.ndarray elementBoundaryLocalElementBoundaries,
 							       np.ndarray  ebq_val,
 							       np.ndarray  ebqe_val):
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
+    cdef int nElements_global = ebq_val.shape[0]
+    cdef int nElementBoundaries_element = ebq_val.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = ebq_val.shape[2]
+    cdef int nValuesPerQuadraturePoint = 1
+    cdef int nd = ebq_val.ndim
+    if nd > 3:
+        for i in range(3,nd):
+            nValuesPerQuadraturePoint *= ebq_val.shape[i]
     ccopyExteriorElementBoundaryValuesFromElementBoundaryValues(nExteriorElementBoundaries_global,
 							        nElements_global,
 							        nElementBoundaries_element,
@@ -5505,17 +5590,17 @@ def computeC0P1InterpolantDGP0(np.ndarray elementNodesArray,
 			        <int*> l2g.data,
 			        <double*> dof.data,
 			        <double*> nodalAverage.data)
-def computeC0P1InterpolantNCP1(int nElements_global,
-			       int nNodes_global,
-			       int nNodes_element,
-			       int nDOF_element,
-			       int dim_dof,
+def computeC0P1InterpolantNCP1(int dim_dof,
 			       np.ndarray elementNodesArray,
 			       np.ndarray nodeElementOffsets,
 			       np.ndarray nodeElementsArray,
 			       np.ndarray l2g,
 			       np.ndarray  dof,
 			       np.ndarray nodalAverage):
+    cdef int nElements_global = elementNodesArray.shape[0]
+    cdef int nNodes_global = nodeElementOffsets.shape[0]-1
+    cdef int nNodes_element = elementNodesArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
     ccomputeC0P1InterpolantNCP1(nElements_global,
 			        nNodes_global,
 			        nNodes_element,
@@ -5527,17 +5612,17 @@ def computeC0P1InterpolantNCP1(int nElements_global,
 			        <int*> l2g.data,
 			        <double*> dof.data,
 			        <double*> nodalAverage.data)
-def computeC0P1InterpolantDGP12(int nElements_global,
-				int nNodes_global,
-				int nNodes_element,
-				int nDOF_element,
-				int dim_dof,
+def computeC0P1InterpolantDGP12(int dim_dof,
 				np.ndarray elementNodesArray,
 				np.ndarray nodeElementOffsets,
 				np.ndarray nodeElementsArray,
 				np.ndarray l2g,
 				np.ndarray  dof,
 				np.ndarray nodalAverage):
+    cdef int nElements_global = elementNodesArray.shape[0]
+    cdef int nNodes_global = nodeElementOffsets.shape[0]-1
+    cdef int nNodes_element = elementNodesArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
     ccomputeC0P1InterpolantDGP12(nElements_global,
 				 nNodes_global,
 				 nNodes_element,
@@ -5611,11 +5696,7 @@ def parametricMaps_getValuesGlobalExteriorTrace(np.ndarray exteriorElementBounda
 						 <int*> l2g.data,
 						 <double*> nodeArray.data,
 						 <double*> xArray.data)
-def parametricMaps_getInverseValuesGlobalExteriorTrace(int nElementBoundaryQuadraturePoints_elementBoundary,
-						       int nDOF_element,
-						       int nSpace_global,
-						       int nExteriorElementBoundaries_global,
-						       np.ndarray exteriorElementBoundariesArray,
+def parametricMaps_getInverseValuesGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
 						       np.ndarray elementBoundaryElementsArray,
 						       np.ndarray elementBoundaryLocalElementBoundariesArray,
 						       np.ndarray inverseJacobian,
@@ -5623,6 +5704,10 @@ def parametricMaps_getInverseValuesGlobalExteriorTrace(int nElementBoundaryQuadr
 						       np.ndarray nodeArray,
 						       np.ndarray xArray,
 						       np.ndarray xiArray):
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = xArray.shape[1]
+    cdef int nDOF_element = l2g.shape[1]
+    cdef int nSpace_global = inverseJacobian.shape[3]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
     cparametricMaps_getInverseValuesGlobalExteriorTrace(nElementBoundaryQuadraturePoints_elementBoundary,
 						        nDOF_element,
 						        nSpace_global,
@@ -5701,28 +5786,19 @@ def parametricMaps_getJacobianValuesGlobalExteriorTrace(np.ndarray exteriorEleme
 							       <double*> unitNormalArray.data)
     else:
         print("error in getJacobianValuesTrace...jacobianInverse not sized properly")
-#def updateGlobalExteriorElementBoundaryFlux(int nExteriorElementBoundaries_global,
-#					    int nQuadraturePoints_elementBoundary,
-#					    int nDOF_test_element,
-#					    np.ndarray exteriorElementBoundaries,
-#					    np.ndarray elementBoundaryElements,
-#					    np.ndarray elementBoundaryLocalElementBoundaries,
-#					    np.ndarray flux,
-#					    np.ndarray w_dS,
-#					    np.ndarray residual):
 def parametricMaps_getJacobianValuesGlobalExteriorTrace_movingDomain(np.ndarray exteriorElementBoundariesArray,
-								       np.ndarray elementBoundaryElementsArray,
-								       np.ndarray elementBoundaryLocalElementBoundariesArray,
-								       np.ndarray xtArray,
-								       np.ndarray grad_psi,
-								       np.ndarray boundaryNormals,
-								       np.ndarray boundaryJacobians,
-								       np.ndarray l2g,
-								       np.ndarray nodeArray,
-								       np.ndarray jacobianInverseArray,
-								       np.ndarray metricTensorArray,
-								       np.ndarray metricTensorDeterminantSqrtArray,
-								       np.ndarray unitNormalArray):
+								     np.ndarray elementBoundaryElementsArray,
+								     np.ndarray elementBoundaryLocalElementBoundariesArray,
+								     np.ndarray xtArray,
+								     np.ndarray grad_psi,
+								     np.ndarray boundaryNormals,
+								     np.ndarray boundaryJacobians,
+								     np.ndarray l2g,
+								     np.ndarray nodeArray,
+								     np.ndarray jacobianInverseArray,
+								     np.ndarray metricTensorArray,
+								     np.ndarray metricTensorDeterminantSqrtArray,
+								     np.ndarray unitNormalArray):
     cdef int nQuadraturePoints_element = jacobianInverseArray.shape[1]
     cdef int nDOF_element = l2g.shape[1]
     cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
@@ -5778,148 +5854,6 @@ def parametricMaps_getJacobianValuesGlobalExteriorTrace_movingDomain(np.ndarray 
 							       <double*> unitNormalArray.data)
     else:
         print("error in getJacobianValuesTrace...jacobianInverse not sized properly")
-def updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(np.ndarray elementNeighbors,
-									       int nElements_global,
-									       int nExteriorElementBoundaries_global,
-									       int nElementBoundaries_element,
-									       int nQuadraturePoints_elementBoundary,
-									       int nDOF_test_element,
-									       int nDOF_trial_element,
-									       int offset_r,
-									       int stride_r,
-									       int offset_u,
-									       int stride_u,
-									       int nFreeVDOF_global,
-									       np.ndarray exteriorElementBoundaries,
-									       np.ndarray elementBoundaryElements,
-									       np.ndarray elementBoundaryLocalElementBoundaries,
-									       np.ndarray nFreeDOF_element_r,
-									       np.ndarray nFreeDOF_element_u,
-									       np.ndarray freeLocal_r,
-									       np.ndarray freeGlobal_r,
-									       np.ndarray freeLocal_u,
-									       np.ndarray freeGlobal_u,
-									       np.ndarray elementBoundaryFluxJacobian_eb,
-									       np.ndarray w_dS,
-									       np.ndarray jac):
-    cupdateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(<int*> elementNeighbors.data,
-									        nElements_global,
-									        nExteriorElementBoundaries_global,
-									        nElementBoundaries_element,
-									        nQuadraturePoints_elementBoundary,
-									        nDOF_test_element,
-									        nDOF_trial_element,
-									        offset_r,
-									        stride_r,
-									        offset_u,
-									        stride_u,
-									        nFreeVDOF_global,
-									        <int*> exteriorElementBoundaries.data,
-									        <int*> elementBoundaryElements.data,
-									        <int*> elementBoundaryLocalElementBoundaries.data,
-									        <int*> nFreeDOF_element_r.data,
-									        <int*> nFreeDOF_element_u.data,
-									        <int*> freeLocal_r.data,
-									        <int*> freeGlobal_r.data,
-									        <int*> freeLocal_u.data,
-									        <int*> freeGlobal_u.data,
-									        <double*> elementBoundaryFluxJacobian_eb.data,
-									        <double*> w_dS.data,
-									        <double*> jac.data)
-def updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(int nExteriorElementBoundaries_global,
-									    int nQuadraturePoints_elementBoundary,
-									    int nDOF_test_element,
-									    int nDOF_trial_element,
-									    int offset_r,
-									    int stride_r,
-									    int offset_u,
-									    int stride_u,
-									    int nFreeVDOF_global,
-									    np.ndarray exteriorElementBoundaries,
-									    np.ndarray elementBoundaryElements,
-									    np.ndarray elementBoundaryLocalElementBoundaries,
-									    np.ndarray nFreeDOF_element_r,
-									    np.ndarray nFreeDOF_element_u,
-									    np.ndarray freeLocal_r,
-									    np.ndarray freeGlobal_r,
-									    np.ndarray freeLocal_u,
-									    np.ndarray freeGlobal_u,
-									    np.ndarray elementBoundaryFluxJacobian,
-									    np.ndarray w_dS,
-									    np.ndarray jac):
-    cupdateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(nExteriorElementBoundaries_global,
-									     nQuadraturePoints_elementBoundary,
-									     nDOF_test_element,
-									     nDOF_trial_element,
-									     offset_r,
-									     stride_r,
-									     offset_u,
-									     stride_u,
-									     nFreeVDOF_global,
-									     <int*> exteriorElementBoundaries.data,
-									     <int*> elementBoundaryElements.data,
-									     <int*> elementBoundaryLocalElementBoundaries.data,
-									     <int*> nFreeDOF_element_r.data,
-									     <int*> nFreeDOF_element_u.data,
-									     <int*> freeLocal_r.data,
-									     <int*> freeGlobal_r.data,
-									     <int*> freeLocal_u.data,
-									     <int*> freeGlobal_u.data,
-									     <double*> elementBoundaryFluxJacobian.data,
-									     <double*> w_dS.data,
-									     <double*> jac.data)
-#def updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_CSR(int nExteriorElementBoundaries_global,
-#									  int nQuadraturePoints_elementBoundary,
-#									  int nDOF_test_element,
-#									  int nDOF_trial_element,
-#									  np.ndarray exteriorElementBoundaries,
-#									  np.ndarray elementBoundaryElements,
-#									  np.ndarray elementBoundaryLocalElementBoundaries,
-#									  np.ndarray nFreeDOF_element_r,
-#									  np.ndarray freeLocal_r,
-#									  np.ndarray nFreeDOF_element_u,
-#									  np.ndarray freeLocal_u,
-#									  np.ndarray csrRowIndeces_ru,
-#									  np.ndarray csrColumnOffsets_eb_ru,
-#									  np.ndarray elementBoundaryFluxJacobian,
-#									  np.ndarray w_dS,
-#									  np.ndarray jac):
-def updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarray elementNeighbors,
-									     int nExteriorElementBoundaries_global,
-									     int nElementBoundaries_element,
-									     int nQuadraturePoints_elementBoundary,
-									     int nDOF_test_element,
-									     int nDOF_trial_element,
-									     np.ndarray exteriorElementBoundaries,
-									     np.ndarray elementBoundaryElements,
-									     np.ndarray elementBoundaryLocalElementBoundaries,
-									     np.ndarray nFreeDOF_element_r,
-									     np.ndarray freeLocal_r,
-									     np.ndarray nFreeDOF_element_u,
-									     np.ndarray freeLocal_u,
-									     np.ndarray csrRowIndeces_ru,
-									     np.ndarray csrColumnOffsets_eb_eNebN_ru,
-									     np.ndarray elementBoundaryFluxJacobian_eb,
-									     np.ndarray w_dS,
-									     np.ndarray jac):
-    cupdateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(<int*> elementNeighbors.data,
-									      nExteriorElementBoundaries_global,
-									      nElementBoundaries_element,
-									      nQuadraturePoints_elementBoundary,
-									      nDOF_test_element,
-									      nDOF_trial_element,
-									      <int*> exteriorElementBoundaries.data,
-									      <int*> elementBoundaryElements.data,
-									      <int*> elementBoundaryLocalElementBoundaries.data,
-									      <int*> nFreeDOF_element_r.data,
-									      <int*> freeLocal_r.data,
-									      <int*> nFreeDOF_element_u.data,
-									      <int*> freeLocal_u.data,
-									      <int*> csrRowIndeces_ru.data,
-									      <int*> csrColumnOffsets_eb_eNebN_ru.data,
-									      <double*> elementBoundaryFluxJacobian_eb.data,
-									      <double*> w_dS.data,
-									      <double*> jac.data)
 def calculateWeightedShapeGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
 					      np.ndarray elementBoundaryElementsArray,
 					      np.ndarray elementBoundaryLocalElementBoundariesArray,
@@ -5940,16 +5874,16 @@ def calculateWeightedShapeGlobalExteriorTrace(np.ndarray exteriorElementBoundari
 					       <double*> sqrt_det_g.data,
 					       <double*> w.data,
 					       <double*> w_dS.data)
-def calculateShape_X_weightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoints_elementBoundary,
-						      int nDOF_trial_element,
-						      int nDOF_test_element,
-						      int nExteriorElementBoundaries_global,
-						      np.ndarray exteriorElementBoundariesArray,
+def calculateShape_X_weightedShapeGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
 						      np.ndarray elementBoundaryElementsArray,
 						      np.ndarray elementBoundaryLocalElementBoundariesArray,
 						      np.ndarray v,
 						      np.ndarray w_dS,
 						      np.ndarray v_X_w_dS):
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = v_X_w_dS.shape[1]
+    cdef int nDOF_trial_element = v_X_w_dS.shape[2]
+    cdef int nDOF_test_element = v_X_w_dS.shape[3]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
     ccalculateShape_X_weightedShapeGlobalExteriorTrace(nElementBoundaryQuadraturePoints_elementBoundary,
 						       nDOF_trial_element,
 						       nDOF_test_element,
@@ -5960,17 +5894,17 @@ def calculateShape_X_weightedShapeGlobalExteriorTrace(int nElementBoundaryQuadra
 						       <double*> v.data,
 						       <double*> w_dS.data,
 						       <double*> v_X_w_dS.data)
-def calculateGradShape_X_weightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoints_elementBoundary,
-							  int nDOF_trial_element,
-							  int nDOF_test_element,
-							  int nSpace,
-							  int nExteriorElementBoundaries_global,
-							  np.ndarray exteriorElementBoundariesArray,
+def calculateGradShape_X_weightedShapeGlobalExteriorTrace(np.ndarray exteriorElementBoundariesArray,
 							  np.ndarray elementBoundaryElementsArray,
 							  np.ndarray elementBoundaryLocalElementBoundariesArray,
 							  np.ndarray grad_v,
 							  np.ndarray w_dS,
 							  np.ndarray grad_v_X_w_dS):
+    cdef int nElementBoundaryQuadraturePoints_elementBoundary = grad_v_X_w_dS.shape[1]
+    cdef int nDOF_trial_element = grad_v_X_w_dS.shape[2]
+    cdef int nDOF_test_element = grad_v_X_w_dS.shape[3]
+    cdef int nSpace = grad_v_X_w_dS.shape[4]
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundariesArray.shape[0]
     ccalculateGradShape_X_weightedShapeGlobalExteriorTrace(nElementBoundaryQuadraturePoints_elementBoundary,
 							   nDOF_trial_element,
 							   nDOF_test_element,
@@ -6050,41 +5984,6 @@ def calculateFiniteElementFunctionGradientValuesGlobalExteriorTrace(np.ndarray e
 								     <double*> dof.data,
 								     <double*> grad_v.data,
 								     <double*> grad_u.data)
-#def updateGlobalExteriorElementBoundaryDiffusiveVelocity(int nExteriorElementBoundaries_global,
-#							 int nQuadraturePoints_elementBoundary,
-#							 int nSpace,
-#							 np.ndarray exteriorElementBoundaries,
-#							 np.ndarray elementBoundaryElements,
-#							 np.ndarray elementBoundaryLocalElementBoundaries,
-#							 np.ndarray a,
-#							 np.ndarray grad_phi,
-#							 np.ndarray velocity):
-#def updateGlobalExteriorElementBoundaryAdvectiveVelocity(int nExteriorElementBoundaries_global,
-#							 int nQuadraturePoints_elementBoundary,
-#							 int nSpace,
-#							 np.ndarray exteriorElementBoundaries,
-#							 np.ndarray elementBoundaryElements,
-#							 np.ndarray elementBoundaryLocalElementBoundaries,
-#							 np.ndarray f,
-#							 np.ndarray velocity):
-def updateGlobalExteriorElementBoundaryShockCapturingVelocity(int nExteriorElementBoundaries_global,
-							      int nQuadraturePoints_elementBoundary,
-							      int nSpace,
-							      np.ndarray exteriorElementBoundaries,
-							      np.ndarray elementBoundaryElements,
-							      np.ndarray elementBoundaryLocalElementBoundaries,
-							      np.ndarray numDiff,
-							      np.ndarray grad_u,
-							      np.ndarray velocity):
-    cupdateGlobalExteriorElementBoundaryShockCapturingVelocity(nExteriorElementBoundaries_global,
-							       nQuadraturePoints_elementBoundary,
-							       nSpace,
-							       <int*> exteriorElementBoundaries.data,
-							       <int*> elementBoundaryElements.data,
-							       <int*> elementBoundaryLocalElementBoundaries.data,
-							       <double*> numDiff.data,
-							       <double*> grad_u.data,
-							       <double*> velocity.data)
 def copyBetweenFreeUnknownsAndGlobalUnknowns(int nDOF2set,
 				             int offset,
 				             int stride,
@@ -6110,12 +6009,7 @@ def copyBetweenFreeUnknownsAndGlobalUnknowns(int nDOF2set,
 				          <double*> free_u.data)
     else:
         print("error copyFromFreeToGlobal = ", nDOF2set, " not recognized quitting\n")
-def updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundaries_global,
-						  int nElementBoundaries_element,
-						  int nQuadraturePoints_elementBoundary,
-						  int nDOF_test_element,
-						  int nSpace,
-						  np.ndarray interiorElementBoundaries,
+def updateInteriorElementBoundaryDiffusionAdjoint(np.ndarray interiorElementBoundaries,
 						  np.ndarray elementBoundaryElements,
 						  np.ndarray elementBoundaryLocalElementBoundaries,
 						  double sigma,
@@ -6125,6 +6019,11 @@ def updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundaries
 						  np.ndarray grad_w,
 						  np.ndarray dS,
 						  np.ndarray residual):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = grad_w.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[2]
+    cdef int nDOF_test_element = grad_w.shape[3]
+    cdef int nSpace = grad_w.shape[4]
     cupdateInteriorElementBoundaryDiffusionAdjoint(nInteriorElementBoundaries_global,
 						   nElementBoundaries_element,
 						   nQuadraturePoints_elementBoundary,
@@ -6140,11 +6039,7 @@ def updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundaries
 						   <double*> grad_w.data,
 						   <double*> dS.data,
 						   <double*> residual.data)
-def updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundaries_global,
-						  int nQuadraturePoints_elementBoundary,
-						  int nDOF_test_element,
-						  int nSpace,
-						  np.ndarray isDOFBoundary,
+def updateExteriorElementBoundaryDiffusionAdjoint(np.ndarray isDOFBoundary,
 						  np.ndarray exteriorElementBoundaries,
 						  np.ndarray elementBoundaryElements,
 						  np.ndarray elementBoundaryLocalElementBoundaries,
@@ -6156,6 +6051,10 @@ def updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundaries
 						  np.ndarray grad_w,
 						  np.ndarray dS,
 						  np.ndarray residual):
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[1]
+    cdef int nDOF_test_element = grad_w.shape[2]
+    cdef int nSpace = grad_w.shape[3]
     cupdateExteriorElementBoundaryDiffusionAdjoint(nExteriorElementBoundaries_global,
 						   nQuadraturePoints_elementBoundary,
 						   nDOF_test_element,
@@ -6172,13 +6071,7 @@ def updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundaries
 						   <double*> grad_w.data,
 						   <double*> dS.data,
 						   <double*> residual.data)
-def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int nInteriorElementBoundaries_global,
-									  int nElementBoundaries_element,
-									  int nQuadraturePoints_elementBoundary,
-									  int nDOF_test_element,
-									  int nDOF_trial_element,
-									  int nSpace,
-									  int offset_r,
+def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int offset_r,
 									  int stride_r,
 									  int offset_u,
 									  int stride_u,
@@ -6199,6 +6092,12 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int nI
 									  np.ndarray grad_w,
 									  np.ndarray dS,
 									  np.ndarray jac):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = grad_w.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[2]
+    cdef int nDOF_test_element = grad_w.shape[3]
+    cdef int nDOF_trial_element = v.shape[3]
+    cdef int nSpace = n.shape[3]
     cupdateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(nInteriorElementBoundaries_global,
 									   nElementBoundaries_element,
 									   nQuadraturePoints_elementBoundary,
@@ -6226,12 +6125,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int nI
 									   <double*> grad_w.data,
 									   <double*> dS.data,
 									   <double*> jac.data)
-def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int nExteriorElementBoundaries_global,
-									  int nQuadraturePoints_elementBoundary,
-									  int nDOF_test_element,
-									  int nDOF_trial_element,
-									  int nSpace,
-									  int offset_r,
+def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int offset_r,
 									  int stride_r,
 									  int offset_u,
 									  int stride_u,
@@ -6253,6 +6147,11 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int nE
 									  np.ndarray grad_w,
 									  np.ndarray dS,
 									  np.ndarray jac):
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[1]
+    cdef int nDOF_test_element = grad_w.shape[2]
+    cdef int nDOF_trial_element = v.shape[2]
+    cdef int nSpace = n.shape[2]
     cupdateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(nExteriorElementBoundaries_global,
 									   nQuadraturePoints_elementBoundary,
 									   nDOF_test_element,
@@ -6280,12 +6179,7 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int nE
 									   <double*> grad_w.data,
 									   <double*> dS.data,
 									   <double*> jac.data)
-def updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBoundaries_global,
-						     int nElementBoundaries_element,
-						     int nQuadraturePoints_elementBoundary,
-						     int nDOF_test_element,
-						     int nSpace,
-						     np.ndarray rowptr,
+def updateInteriorElementBoundaryDiffusionAdjoint_sd(np.ndarray rowptr,
 						     np.ndarray colind,
 						     np.ndarray interiorElementBoundaries,
 						     np.ndarray elementBoundaryElements,
@@ -6297,6 +6191,11 @@ def updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBoundar
 						     np.ndarray grad_w,
 						     np.ndarray dS,
 						     np.ndarray residual):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = grad_w.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[2]
+    cdef int nDOF_test_element = grad_w.shape[3]
+    cdef int nSpace = grad_w.shape[4]
     cupdateInteriorElementBoundaryDiffusionAdjoint_sd(nInteriorElementBoundaries_global,
 						      nElementBoundaries_element,
 						      nQuadraturePoints_elementBoundary,
@@ -6350,13 +6249,7 @@ def updateExteriorElementBoundaryDiffusionAdjoint_sd(np.ndarray rowptr,
 						      <double*> grad_w.data,
 						      <double*> dS.data,
 						      <double*> residual.data)
-def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(int nInteriorElementBoundaries_global,
-									     int nElementBoundaries_element,
-									     int nQuadraturePoints_elementBoundary,
-									     int nDOF_test_element,
-									     int nDOF_trial_element,
-									     int nSpace,
-									     np.ndarray rowptr,
+def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(np.ndarray rowptr,
 									     np.ndarray colind,
 									     int offset_r,
 									     int stride_r,
@@ -6379,6 +6272,12 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(int
 									     np.ndarray grad_w,
 									     np.ndarray dS,
 									     np.ndarray jac):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = grad_w.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[2]
+    cdef int nDOF_test_element = grad_w.shape[3]
+    cdef int nDOF_trial_element = v.shape[3]
+    cdef int nSpace = n.shape[3]
     cupdateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(nInteriorElementBoundaries_global,
 									      nElementBoundaries_element,
 									      nQuadraturePoints_elementBoundary,
@@ -6408,12 +6307,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(int
 									      <double*> grad_w.data,
 									      <double*> dS.data,
 									      <double*> jac.data)
-def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(int nExteriorElementBoundaries_global,
-									     int nQuadraturePoints_elementBoundary,
-									     int nDOF_test_element,
-									     int nDOF_trial_element,
-									     int nSpace,
-									     np.ndarray rowptr,
+def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(np.ndarray rowptr,
 									     np.ndarray colind,
 									     int offset_r,
 									     int stride_r,
@@ -6437,6 +6331,11 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(int
 									     np.ndarray grad_w,
 									     np.ndarray dS,
 									     np.ndarray jac):
+    cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[1]
+    cdef int nDOF_test_element = grad_w.shape[2]
+    cdef int nDOF_trial_element = v.shape[2]
+    cdef int nSpace = n.shape[2]
     cupdateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(nExteriorElementBoundaries_global,
 									      nQuadraturePoints_elementBoundary,
 									      nDOF_test_element,
@@ -6466,13 +6365,7 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(int
 									      <double*> grad_w.data,
 									      <double*> dS.data,
 									      <double*> jac.data)
-def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int nInteriorElementBoundaries_global,
-									   int nElementBoundaries_element,
-									   int nQuadraturePoints_elementBoundary,
-									   int nDOF_test_element,
-									   int nDOF_trial_element,
-									   int nSpace,
-									   np.ndarray rowptr,
+def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.ndarray rowptr,
 									   np.ndarray colind,
 									   int offset_r,
 									   int stride_r,
@@ -6497,6 +6390,12 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int n
 									   np.ndarray grad_w,
 									   np.ndarray dS,
 									   np.ndarray jac):
+    cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
+    cdef int nElementBoundaries_element = grad_w.shape[1]
+    cdef int nQuadraturePoints_elementBoundary = grad_w.shape[2]
+    cdef int nDOF_test_element = grad_w.shape[3]
+    cdef int nDOF_trial_element = v.shape[3]
+    cdef int nSpace = n.shape[3]
     cupdateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(nInteriorElementBoundaries_global,
 									    nElementBoundaries_element,
 									    nQuadraturePoints_elementBoundary,
@@ -6592,63 +6491,48 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.nd
 									    <double*> grad_w.data,
 									    <double*> dS.data,
 									    <double*> jac_array.data)
-def update_f_movingDomain_q(int nElements_global,
-			    int nQuadraturePoints_element,
-			    int nSpace,
-			    np.ndarray xt,
-			    np.ndarray m,
-			    np.ndarray f):
-    cupdate_f_movingDomain_q(nElements_global,
-			     nQuadraturePoints_element,
-			     nSpace,
-			     <double*> xt.data,
-			     <double*> m.data,
-			     <double*> f.data)
-def update_f_movingDomain_constantMass_q(int nElements_global,
-					 int nQuadraturePoints_element,
-					 int nSpace,
-					 np.ndarray xt,
-					 np.ndarray f):
-    cupdate_f_movingDomain_constantMass_q(nElements_global,
-					  nQuadraturePoints_element,
-					  nSpace,
-					  <double*> xt.data,
-					  <double*> f.data)
-def update_f_movingDomain_ebq(int nElements_global,
-			      int nElementBoundaries_element,
-			      int nQuadraturePoints_elementBoundary,
-			      int nSpace,
-			      np.ndarray xt,
-			      np.ndarray m,
-			      np.ndarray f):
-    cupdate_f_movingDomain_ebq(nElements_global,
-			       nElementBoundaries_element,
-			       nQuadraturePoints_elementBoundary,
-			       nSpace,
-			       <double*> xt.data,
-			       <double*> m.data,
-			       <double*> f.data)
-def update_f_movingDomain_constantMass_ebq(int nElements_global,
-					   int nElementBoundaries_element,
-					   int nQuadraturePoints_elementBoundary,
-					   int nSpace,
-					   np.ndarray xt,
-					   np.ndarray f):
-    cupdate_f_movingDomain_constantMass_ebq(nElements_global,
-					    nElementBoundaries_element,
-					    nQuadraturePoints_elementBoundary,
-					    nSpace,
-					    <double*> xt.data,
-					    <double*> f.data)
-def updateStress_weak(int nElements_global,
-		      int nQuadraturePoints_element,
-		      int nDOF_test_element,
-		      int nSpace,
-		      np.ndarray sigma,
+def update_f_movingDomain(np.ndarray xt,
+			  np.ndarray m,
+			  np.ndarray f):
+    if m.ndim == 2: 
+        cupdate_f_movingDomain_q(f.shape[0],
+                                 f.shape[1],
+                                 f.shape[2],
+			         <double*> xt.data,
+			         <double*> m.data,
+			         <double*> f.data)
+    elif m.ndim == 3:
+        cupdate_f_movingDomain_ebq(f.shape[0],
+                                   f.shape[1],
+                                   f.shape[2],
+                                   f.shape[3],
+			           <double*> xt.data,
+			           <double*> m.data,
+			           <double*> f.data)        
+def update_f_movingDomain_constantMass(np.ndarray xt,
+				       np.ndarray f):
+    if f.ndim == 3:
+        cupdate_f_movingDomain_constantMass_q(f.shape[0],
+                                              f.shape[0],
+                                              f.shape[0],
+					      <double*> xt.data,
+					      <double*> f.data)
+    elif f.ndim == 4:
+        cupdate_f_movingDomain_constantMass_ebq(f.shape[0],
+                                                f.shape[1],
+                                                f.shape[2],
+                                                f.shape[3],
+					        <double*> xt.data,
+					        <double*> f.data)       
+def updateStress_weak(np.ndarray sigma,
 		      np.ndarray grad_w_dV,
 		      np.ndarray weak_residual_x,
 		      np.ndarray weak_residual_y,
 		      np.ndarray weak_residual_z):
+    cdef int nElements_global = grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_w_dV.shape[1]
+    cdef int nDOF_test_element = grad_w_dV.shape[2]
+    cdef int nSpace = grad_w_dV.shape[3]
     cupdateStress_weak(nElements_global,
 		       nQuadraturePoints_element,
 		       nDOF_test_element,
@@ -6658,12 +6542,7 @@ def updateStress_weak(int nElements_global,
 		       <double*> weak_residual_x.data,
 		       <double*> weak_residual_y.data,
 		       <double*> weak_residual_z.data)
-def updateStressJacobian_weak(int nElements_global,
-			      int nQuadraturePoints_element,
-			      int nDOF_trial_element,
-			      int nDOF_test_element,
-			      int nSpace,
-			      np.ndarray dsigma_xx,
+def updateStressJacobian_weak(np.ndarray dsigma_xx,
 			      np.ndarray dsigma_xy,
 			      np.ndarray dsigma_xz,
 			      np.ndarray dsigma_yx,
@@ -6683,6 +6562,11 @@ def updateStressJacobian_weak(int nElements_global,
 			      np.ndarray jacobian_weak_residual_zx,
 			      np.ndarray jacobian_weak_residual_zy,
 			      np.ndarray jacobian_weak_residual_zz):
+    cdef int nElements_global = grad_w_dV.shape[0]
+    cdef int nQuadraturePoints_element = grad_w_dV.shape[1]
+    cdef int nDOF_trial_element = grad_w_dV.shape[2]
+    cdef int nDOF_test_element = grad_w_dV.shape[2]
+    cdef int nSpace = grad_w_dV.shape[3]
     cupdateStressJacobian_weak(nElements_global,
 			       nQuadraturePoints_element,
 			       nDOF_trial_element,
