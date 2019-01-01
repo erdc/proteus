@@ -216,6 +216,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_radius=None,
                  ball_velocity=None,
                  ball_angular_velocity=None,
+                 ball_center_acceleration=None,
+                 ball_angular_acceleration=None,
+                 ball_density=None,
                  particle_velocities=None,
                  particle_centroids=None,
                  particle_sdfList=[],
@@ -257,13 +260,27 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
         else:
             self.ball_angular_velocity = ball_angular_velocity
+
+        if ball_center_acceleration is None:
+            self.ball_center_acceleration = numpy.zeros((self.nParticles,3),'d')
+        else:
+            self.ball_center_acceleration = ball_center_acceleration
+
+        if ball_angular_acceleration is None:
+        else:
+            self.ball_angular_acceleration = ball_angular_acceleration
+
+        if ball_density is None:
+            self.ball_density = rho_0*numpy.ones((self.nParticles,1),'d')
+        else:
+            self.ball_density = ball_density
         if particle_centroids is None:
             self.particle_centroids = 1e10*numpy.zeros((self.nParticles,3),'d')
         else:
             self.particle_centroids = particle_centroids
         self.particle_sdfList = particle_sdfList
         self.particle_velocityList = particle_velocityList
-
+        
         self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
         self.NONCONSERVATIVE_FORM=NONCONSERVATIVE_FORM
@@ -1520,6 +1537,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('force', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
+        if options is not None:
+            try:
+                self.chrono_model = options.chrono_model
+            except AttributeError:
+                logEvent('WARNING: did not find chrono model')
+                pass
+
     def getResidual(self, u, r):
         """
         Calculate the element residuals and add in to the global residual
@@ -1759,6 +1783,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
+                                      self.coefficients.ball_center_acceleration,
+                                      self.coefficients.ball_angular_acceleration,
+                                      self.coefficients.ball_density,
                                       self.coefficients.particle_signed_distances,
                                       self.coefficients.particle_signed_distance_normals,
                                       self.coefficients.particle_velocities,
@@ -2057,6 +2084,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
+                                      self.coefficients.ball_center_acceleration,
+                                      self.coefficients.ball_angular_acceleration,
+                                      self.coefficients.ball_density,
                                       self.coefficients.particle_signed_distances,
                                       self.coefficients.particle_signed_distance_normals,
                                       self.coefficients.particle_velocities,
