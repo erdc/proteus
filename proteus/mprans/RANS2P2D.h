@@ -2721,8 +2721,8 @@ namespace proteus
                                             nParticles,
                                             nQuadraturePoints_global,
                                             &particle_signed_distances[eN_k],
-                                            &particle_signed_distance_normals[eN_k_nSpace],
-                                            particle_velocities,
+                                            &particle_signed_distance_normals[eN_k_3d],
+                                            &particle_velocities[eN_k_3d],
                                             particle_centroids,
                                             use_ball_as_particle,
                                             ball_center,
@@ -4178,6 +4178,7 @@ namespace proteus
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
                   eN_k_nSpace = eN_k*nSpace,
+                  eN_k_3d = eN_k*3,
                   eN_nDOF_trial_element = eN*nDOF_trial_element, //index to a vector at a quadrature point
                   eN_nDOF_v_trial_element = eN*nDOF_v_trial_element; //index to a vector at a quadrature point
 
@@ -4526,8 +4527,8 @@ namespace proteus
                                             nParticles,
                                             nQuadraturePoints_global,
                                             &particle_signed_distances[eN_k],
-                                            &particle_signed_distance_normals[eN_k_nSpace],
-                                            particle_velocities,
+                                            &particle_signed_distance_normals[eN_k_3d],
+                                            &particle_velocities[eN_k_3d],
                                             particle_centroids,
                                             use_ball_as_particle,
                                             ball_center,
