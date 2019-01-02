@@ -3,6 +3,9 @@ cimport numpy as np
 
 # cdef extern from "proteus_superlu.h"  -- ARB: need to use this or some other non-hardcoded approach ...
 cdef extern from "../linux2/include/slu_ddefs.h":
+    ctypedef enum _fact_t 'fact_t':
+        _DOFACT 'DFACT'
+        _SamePattern_SameRowPerm "SamePattern_SameRowPerm"
     ctypedef enum _Stype_t 'Stype_t':
         _SLU_NC 'SLU_NC'
         _SLU_NCP 'SLU_NCP'
@@ -36,7 +39,7 @@ cdef extern from "../linux2/include/slu_ddefs.h":
     ctypedef struct _GlobalLU_t "GlobalLU_t":
         pass
     ctypedef struct _superlu_options_t "superlu_options_t":
-        passx
+        pass
     ctypedef struct _SuperMatrix 'SuperMatrix':
         _Stype_t Stype
         _Dtype_t Dtype
@@ -44,10 +47,15 @@ cdef extern from "../linux2/include/slu_ddefs.h":
         int nrow
         int ncol
         void * Store
-    void cdgstrs "dgstrs"(trans_t, _SuperMatrix *, _SuperMatrix *, int *, int *, _SuperMatrix *, _SuperLUStat_t*, int *)
+    void cdgstrs "dgstrs"(_trans_t, _SuperMatrix *, _SuperMatrix *, int *, int *, _SuperMatrix *, _SuperLUStat_t*, int *)
     void cdgstrf "dgstrf"(_superlu_options_t *, _SuperMatrix *, int, int, int *, void *, int, int *, int *, _SuperMatrix *, _SuperMatrix *, _GlobalLU_t*, _SuperLUStat_t *, int *)
     void cStatInit "StatInit"(_SuperLUStat_t *)
     void cset_default_options "set_default_options"(_superlu_options_t *)
+    void cget_perm_c "get_perm_c"(int, _SuperMatrix *, int *)
+    void cDestroy_CompCol_Permuted "Destroy_CompCol_Permuted"(_SuperMatrix *)
+    void cDestroy_SuperNode_Matrix "Destroy_SuperNode_Matrix"(_SuperMatrix *)
+    void cDestroy_CompCol_Matrix "Destroy_CompCol_Matrix"(_SuperMatrix *)
+    void csp_preorder "sp_preorder"(_superlu_options_t *, _SuperMatrix *, int *, int *, _SuperMatrix *)
 
 class SparseMatrix(object):
 
@@ -121,11 +129,12 @@ cdef class SparseFactor(object):
     cdef _SuperMatrix U
     cdef _SuperMatrix X
 
+    cdef _GlobalLU_t Glu
     cdef _SuperLUStat_t stat
 
-    cdef unsigned int *perm_c
-    cdef unsigned int *perm_r
-    cdef unsigned int *etree
+    cdef int *perm_c
+    cdef int *perm_r
+    cdef int *etree
 
     cdef unsigned int use_same_perm_c
     cdef unsigned int use_same_sparsity
@@ -183,11 +192,81 @@ def sparseFactorPrepare(mat,
     sparseFactor: superluWrappers.SparseFactor
 
     """
-    pass
+    superluWrappersSparseFactorPrepare(mat,
+                                       sparseFactor)
 
 cdef superluWrappersSparseFactorPrepare(mat,
-                                        sparseFactor):
+                                        SparseFactor sparseFactor):
+    cdef int permc_spec = 3
+    cdef int n
+    cdef int relax=1
+    cdef int panel_size = 10
+    cdef int lwork = 0
+    cdef int info = 0
+    cdef void *work = NULL
+    
     sparseFactor.nnz = mat.A.nnz
+    sparseFactor.nzval = mat.A.nzval
+    sparseFactor.colptr = mat.A.rowptr
+    sparseFactor.rowind = mat.A.colind
 
-def sparseFactorSolve():
-    pass
+    if sparseFactor.use_same_perm_c == 0:
+        cget_perm_c(permc_spec,
+                    &sparseFactor.A,
+                    sparseFactor.perm_c)
+        sparseFactor.use_same_perm_c =1
+
+    if sparseFactor.use_same_sparsity == 0:
+        if sparseFactor.AC.Store != NULL:
+            cDestroy_CompCol_Permuted(&sparseFactor.AC)
+            cDestroy_SuperNode_Matrix(&sparseFactor.L)
+            cDestroy_CompCol_Matrix(&sparseFactor.U)
+        csp_preorder(&sparseFactor.options,
+                     &sparseFactor.A,
+                     sparseFactor.perm_c,
+                     sparseFactor.etree,
+                     &sparseFactor.AC)
+        sparseFactor.use_same_sparsity = 1
+    else:
+        pass
+        #     # ARB - need to lookinto this part in more detail,
+        #     # i'm not following all the typecasts?    
+        # sparseFactor.options.Fact = _SamePattern_SameRowPerm
+        # n = sparseFactor.A.ncol
+        # for i in range(n):
+        #     sparseFactor.AC.Store.colberg[sparseFactor.perm_c[i]] = sparseFactor.A.Store.colptr[i]
+        #     sparseFactor.AC.Store.colend[sparseFactor.per_c[i]] = sparseFactor.colptr[i+1]
+    cdgstrf(&sparseFactor.options,
+            &sparseFactor.AC,
+            relax,
+            panel_size,
+            sparseFactor.etree,
+            work,
+            lwork,
+            sparseFactor.perm_c,
+            sparseFactor.perm_r,
+            &sparseFactor.L,
+            &sparseFactor.U,
+            &sparseFactor.Glu,
+            &sparseFactor.stat,
+            &info)
+
+cdef superluWrappersSparseFactorSolve(SparseFactor sparseFactor,
+                                      x):
+    cdef _trans_t trans = _TRANS
+    cdef int info = 0
+
+    sparseFactor.storeX.nzval = x
+    cdgstrs(trans,
+            &sparseFactor.L,
+            &sparseFactor.U,
+            sparseFactor.perm_c,
+            sparseFactor.perm_r,
+            &sparseFactor.X,
+            &sparseFactor.stat,
+            &info)
+
+def sparseFactorSolve(sparseFactor,
+                      x):
+    superluWrappersSparseFactorSolve(sparseFactor,
+                                     x)
