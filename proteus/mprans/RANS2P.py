@@ -564,6 +564,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebq_global_phi_s        = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1]),'d') * 1e10
         self.ebq_global_grad_phi_s   = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
         self.ebq_particle_velocity_s = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
+        self.p_old_dof = self.model.u[0].dof.copy()
+        self.u_old_dof = self.model.u[1].dof.copy()
+        self.v_old_dof = self.model.u[2].dof.copy()
+        self.w_old_dof = self.model.u[3].dof.copy()
 
     def initializeMesh(self, mesh):
         
@@ -854,7 +858,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
-        if self.nParticles > 0 and self.use_ball_as_particle == 0 and firstStep:
+        if self.nParticles > 0 and self.use_ball_as_particle == 0:
             self.phi_s[:] = 1e10
             self.phisField[:] = 1e10
             self.ebq_global_phi_s[:] = 1e10
