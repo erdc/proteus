@@ -3346,14 +3346,14 @@ namespace proteus
                 ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],u_ext);
                 ck_v.valFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],v_ext);
                 ck.valFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_old);
-                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_old);
-                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_old);
+                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],u_old);
+                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],v_old);
                 ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext);
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_ext);
                 ck.gradFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_old);
-                ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_old);
-                ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_old); 
+                ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_old);
+                ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_old);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_test_element;j++)
                   {
@@ -4339,15 +4339,15 @@ namespace proteus
                 ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],u);
                 ck_v.valFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],v);
                 ck.valFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p_old);
-                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u_old);
-                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v_old);
+                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],u_old);
+                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],v_old);
                 //get the solution gradients
                 ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p);
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v);
-                ck.gradFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p_old);
-                ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u_old);
-                ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v_old);
+                ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p_old);
+                ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u_old);
+                ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v_old);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_test_element;j++)
                   {
@@ -5222,15 +5222,15 @@ namespace proteus
                 ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],u_ext);
                 ck_v.valFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],v_ext);
                 ck.valFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_old);
-                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_old);
-                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_old);
+                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],u_old);
+                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],v_old);
                 ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext);
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_ext);
                 ck.gradFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_old);
-                ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_old);
-                ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_old); 
-                //precalculate test function products with integration weights
+                ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_old);
+                ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_old);
+                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_test_element;j++)
                   {
                     p_test_dS[j] = p_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
@@ -5578,8 +5578,8 @@ namespace proteus
                                                           dmom_u_ham_grad_p_ext[0],//=1/rho
                                                           normal,
                                                           bc_p_ext,
-							  bc_u_ext,
-							  bc_v_ext,
+                                                          bc_u_ext,
+                                                          bc_v_ext,
                                                           bc_mass_adv_ext,
                                                           bc_mom_u_adv_ext,
                                                           bc_mom_v_adv_ext,
@@ -5589,9 +5589,9 @@ namespace proteus
                                                           ebqe_bc_flux_mom_v_adv_ext[ebNE_kb],
                                                           ebqe_bc_flux_mom_w_adv_ext[ebNE_kb],
                                                           p_ext,
-							  u_ext,
-							  v_ext,
-							  dmom_u_acc_u_ext,
+                                                          u_ext,
+                                                          v_ext,
+                                                          dmom_u_acc_u_ext,
                                                           mass_adv_ext,
                                                           mom_u_adv_ext,
                                                           mom_v_adv_ext,
