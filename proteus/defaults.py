@@ -11,7 +11,7 @@ from . import (TransportCoefficients,
                NonlinearSolvers,
                LinearAlgebraTools,
                LinearSolvers,
-               lapackWrappers,
+               clapack,
                StepControl,
                AuxiliaryVariables,
                MeshTools,
@@ -95,7 +95,7 @@ for k in (set(dir(default_n)) -
            set(dir(NonlinearSolvers))|
            set(dir(LinearAlgebraTools))|
            set(dir(LinearSolvers))|
-           set(dir(lapackWrappers))|
+           set(dir(clapack))|
            set(dir(StepControl))|
            set(dir(AuxiliaryVariables))|
            set(dir(MeshTools)))):
@@ -108,7 +108,7 @@ for k in (set(dir(default_n)) -
                                     'NonlinearSolvers',
                                     'LinearAlgebraTools',
                                     'LinearSolvers',
-                                    'lapackWrappers',
+                                    'clapack',
                                     'StepControl',
                                     'AuxiliaryVariables',
                                     'MeshTools']):
