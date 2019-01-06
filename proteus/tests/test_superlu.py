@@ -1,3 +1,4 @@
+import os
 import math
 import pytest
 import numpy as np
@@ -84,3 +85,18 @@ def test_SparseMatrix_matvecmult_2(small_sparse_mat):
     xp = np.ones(A.nc) ; yp = np.zeros(A.nr)
     A.matvec(xp,yp)
     assert abs(linalg.norm(yp)-1460.0312) < 0.00001
+
+def test_fwrite_w(simple_sparse_mat):
+    A = simple_sparse_mat
+    A.fwrite('test.t', base=0)
+    s = '''4 4 4 
+1 0 5.00000000e+00
+1 1 8.00000000e+00
+2 2 3.00000000e+00
+3 1 6.00000000e+00'''
+
+    with open('test.t', 'r') as file:
+        content_as_string = file.read()
+
+    os.remove('test.t')
+    assert s.strip()==content_as_string.strip()

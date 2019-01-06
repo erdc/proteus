@@ -110,7 +110,11 @@ class SparseMatrix(object):
         base : int
             ?!Possibly something to do with parallel?!
         """
-        pass
+        with open(filename, 'w') as output_file:
+            output_file.write('%i %i %i \n' % (self.nr, self.nc, self.rowptr[self.nr]) )
+            for i in range(self.nr):
+                for k in range(self.rowptr[i], self.rowptr[i+1]):
+                    output_file.write('%d %d %13.8e\n' % (i+base, self.colind[k]+base, self.nzvals[k]) )
 
     def getCSRrepresentation(self):
         """ Get the CSR representation of the sparse matrix.
