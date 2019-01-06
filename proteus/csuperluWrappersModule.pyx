@@ -1,4 +1,11 @@
+#cython: boundscheck=False, wraparound=False, nonecheck=False, initializedcheck=False
+
+# ARB - the cython directives above help improve the code speed.  it is worth noting
+# however that these directives can lead to segfaults if the code is not implemented
+# correctly.  perhaps they should only be enabled when not in debug mode?
+
 import numpy as np
+import cython
 cimport numpy as np
 
 # cdef extern from "proteus_superlu.h"  -- ARB: need to use this or some other non-hardcoded approach ...
@@ -65,12 +72,12 @@ cdef extern from "../linux2/include/slu_ddefs.h":
 class SparseMatrix(object):
 
     def __init__(self,
-                 nr,
-                 nc,
-                 nnz,
-                 nzvals,
-                 colind,
-                 rowptr):
+                  nr,
+                  nc,
+                  nnz,
+                  nzvals,
+                  colind,
+                  rowptr):
         self.nr = nr ; self.nc = nc
         self.nzvals = nzvals
         self.colind = colind
@@ -145,40 +152,39 @@ class SparseMatrix(object):
 
 cdef struct _NRformat:
     int nnz
-    double [:] nzval
-    long [:] colind
-    long [:] rowptr
+    np.float64_t [:] nzval
+    np.int32_t [:] colind
+    np.int32_t [:] rowptr
 
 cdef class cSparseMatrix(object):
 
     cdef int dim[2]
     cdef _NRformat A
 
-    def __init__(self,
+    def __cinit__(self,
                  int nr,
                  int nc,
                  int nnz,
-                 np.ndarray nzval,
-                 np.ndarray colind,
-                 np.ndarray rowptr):
+                 np.float64_t [:] nzval,
+                 np.int32_t [:] colind,
+                 np.int32_t [:] rowptr):
         self.dim[0] = nr ; self.dim[1] = nc
         self.A.nnz = nnz
         self.A.nzval = nzval
         self.A.colind = colind
-        self.A.rowptr = rowptr
+        self.A.rowptr = rowptr        
 
 cdef void SparseMatrix_matvec(cSparseMatrix sm,
-                              np.ndarray xp,
-                              np.ndarray yp):
-    cdef double [:] x_val = xp
-    cdef double [:] y_val = yp
-    cdef double tmp = 0.
+                              np.float64_t [:] xp,
+                              np.float64_t [:] yp):
+    cdef np.float64_t tmp = 0.
+    cdef int i, k
 
     for i in range(sm.dim[0]):
         tmp = 0.
         for k in range(sm.A.rowptr[i], sm.A.rowptr[i+1]):
-            tmp += sm.A.nzval[k] * x_val[sm.A.colind[k]]
-        y_val[i] = tmp
+            tmp += sm.A.nzval[k] * xp[sm.A.colind[k]]
+        yp[i] = tmp
 
 # cdef class SparseFactor(object):
 
