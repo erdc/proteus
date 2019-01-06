@@ -1,7 +1,10 @@
 import math
 import pytest
 import numpy as np
-from proteus import superluWrappers
+from numpy import linalg
+import scipy.io as sio
+
+from proteus import csuperluWrappersModule
 
 # def test_SparseFactor_initialization():
 #     test_mat = superluWrappers.SparseFactor(1)
@@ -10,15 +13,30 @@ from proteus import superluWrappers
 @pytest.fixture(scope='module')
 def simple_sparse_mat():
     nr = 4 ; nc = 4; nnz = 4
-    nzval = np.array([5., 8., 3., 6.])
-    rowptr = np.array([0, 0, 2, 3, 4])
-    colind = np.array([0, 1, 2, 1])
-    A = superluWrappers.SparseMatrix(nr,
-                                     nc,
-                                     nnz,
-                                     nzval,
-                                     colind,
-                                     rowptr)
+    nzval = np.array([5., 8., 3., 6.], dtype=np.float64)
+    rowptr = np.array([0, 0, 2, 3, 4], dtype=np.int32)
+    colind = np.array([0, 1, 2, 1], dtype=np.int32)
+    A = csuperluWrappersModule.SparseMatrix(nr,
+                                            nc,
+                                            nnz,
+                                            nzval,
+                                            colind,
+                                            rowptr)
+    yield A
+
+@pytest.fixture(scope='module')
+def small_sparse_mat():
+    mat = sio.mmread('./matrix_data/1138_bus.mtx')
+    mat_csr = mat.tocsr()
+    nr = mat_csr.shape[0] ; nc = mat_csr.shape[1] ; nnz = mat_csr.nnz
+    nzvals = mat_csr.data ; colind = mat_csr.indices
+    rowptr = mat_csr.indptr
+    A = csuperluWrappersModule.SparseMatrix(nr,
+                                            nc,
+                                            nnz,
+                                            nzvals,
+                                            colind,
+                                            rowptr)
     yield A
 
 def test_SparseMatrix_1(simple_sparse_mat):
@@ -26,7 +44,7 @@ def test_SparseMatrix_1(simple_sparse_mat):
     nzval = np.array([5., 8., 3., 6.])
     rowptr = np.array([0, 0, 2, 3, 4])
     colind = np.array([0, 1, 2, 1])    
-    # test full csr_rep
+    # test full csr_rep 
     A_csr_rep = A.getCSRrepresentation()
     assert np.array_equal(A_csr_rep[0], rowptr)
     assert np.array_equal(A_csr_rep[1], colind)
@@ -61,3 +79,8 @@ def test_SparseMatrix_matvecmult_1(simple_sparse_mat):
     A.matvec(xp,yp)
     assert np.array_equal(yp, np.array([0., 16., 3., 12.]))
 
+def test_SparseMatrix_matvecmult_2(small_sparse_mat):
+    A = small_sparse_mat
+    xp = np.ones(A.nc) ; yp = np.zeros(A.nr)
+    A.matvec(xp,yp)
+    assert abs(linalg.norm(yp)-1460.0312) < 0.00001
