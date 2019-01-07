@@ -660,7 +660,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def updateToMovingDomain(self, t, c):
         pass
 
-
     def evaluate(self, t, c):
         pass
 
