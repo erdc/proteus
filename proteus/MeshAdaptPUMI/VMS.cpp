@@ -308,20 +308,6 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     apf::setScalar(vmsErr_nuErr,ent,0,nu_err);
     apf::setScalar(vmsErr_residual,ent,0,tempVal*sqrt(apf::measure(m,ent)));
     double VMSerrH1 = nu_err*tempVal*sqrt(apf::measure(m,ent));
-    if(localNumber(ent) == 5048){
-/*
-      apf::Vector3 pt;
-      std::cout<<"flag 1\n";
-      m->getPoint(ent,0,pt);
-      std::cout<<"flag 2\n";
-      std::cout<<std::setprecision(15)<<std::scientific;
-      std::cout<<"The point is "<<pt[0]<<" "<<pt[1]<<" "<<pt[2]<<std::endl;
-*/
-      std::cout<<"nu_err "<<nu_err<<std::endl;
-      std::cout<<"VMSerrH1 "<<VMSerrH1<<std::endl;
-      std::cout<<"residualLength "<<tempVal<<std::endl;
-      std::cout<<"dt err "<<dt_err<<std::endl;
-    }
     //std::cout<<std::scientific<<std::setprecision(15)<<"H1 error for element "<<count<<" nu_err "<<nu_err<<" error "<<VMSerrH1<<std::endl;
     apf::setScalar(vmsErrH1,ent,0,VMSerrH1);
 
@@ -359,7 +345,7 @@ double get_nu_err(struct Inputs info){
    double C_nu = 3.0;
    stabTerm2 = C_nu*info.visc_val*info.visc_val*sqrt(stabTerm2);
    double nu_err = 1.0/sqrt(info.visc_val*sqrt(stabTerm1) + stabTerm2);
-   std::cout<<"stabTerm1 "<<stabTerm1<<" stabTerm2 "<<stabTerm2<<std::endl;
+   //std::cout<<"stabTerm1 "<<stabTerm1<<" stabTerm2 "<<stabTerm2<<std::endl;
    return nu_err;
 }
 
