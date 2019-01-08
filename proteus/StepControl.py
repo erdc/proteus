@@ -14,7 +14,7 @@ from .Profiling import logEvent
 #mwf add Comm for saving info about time step in separate file
 from . import Comm
 from petsc4py import PETSc
-from .flcbdfWrappers import globalMax
+from .Comm import globalMax
 
 class SC_base(object):
     """
@@ -639,7 +639,6 @@ class Min_dt_cfl_controller(Min_dt_controller):
                 self.cfl[ci] = model.levelModelList[-1].q[('cfl',ci)]
 
     def initialize_dt_model(self,t0,tOut):
-        from .flcbdfWrappers import globalMax
         self.saveSolution()
         m = self.model.levelModelList[-1]
         maxCFL = 1.0e-6
@@ -657,7 +656,6 @@ class Min_dt_cfl_controller(Min_dt_controller):
                                                                    self.dt_model),
             level=1)
     def choose_dt_model(self):
-        from .flcbdfWrappers import globalMax
         self.solverFailures=0
         self.errorFailures=0
         self.saveSolution()
@@ -731,9 +729,11 @@ class FLCBDF_controller(SC_base):
         for l,m in enumerate(model.levelModelList):
             self.flcbdfList.append(m.timeIntegration.flcbdf)
             for ci in m.timeIntegration.massComponents:
-                #mwf debug
-                #print "FLCBDF step control calling setTolerances with m.q[('dV_u',ci)"
-                m.timeIntegration.flcbdf[ci].setTolerances(nOptions.atol_u[ci],nOptions.rtol_u[ci],m.q[('dV_u',ci)])
+                try:
+                    m.timeIntegration.flcbdf[ci].setTolerances(nOptions.atol_u[ci],nOptions.rtol_u[ci],m.q[('dV_u',ci)])
+                except:
+                    logEvent("WARNING: couldn't find integration weights for FLCBDF norm")
+                    m.timeIntegration.flcbdf[ci].setTolerances(nOptions.atol_u[ci],nOptions.rtol_u[ci],numpy.ones_like(m.q[('m',0)]))
             for ci in range(m.coefficients.nc):
                 #mwf this gets messed up because of multiple levels, ci doesn't grab one on right level?
                 ##self.one[ci] /= float(len(m.u[ci].dof.flat)) #make L2 into wrms until we make real L2 for dof
