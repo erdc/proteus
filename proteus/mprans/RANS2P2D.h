@@ -1303,7 +1303,7 @@ namespace proteus
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
-            if(use_pseudo_penalty==0)// not pseudo-penalty method == IBM
+            if(use_pseudo_penalty==-2)// not pseudo-penalty method == IBM
             if (NONCONSERVATIVE_FORM > 0.0)
             {
               mom_u_source += (1.0-H_s)*(ball_density[i]-rho)*acceleration[0];
