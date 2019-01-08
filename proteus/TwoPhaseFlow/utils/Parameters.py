@@ -265,7 +265,7 @@ class ParametersModelRDLS(ParametersModelBase):
         self.applyRedistancing = True
         self.backgroundDiffusionFactor = 0.01
         self.epsFact = 0.33
-        self.shockCapturingFactor = shockCapturingFactor
+        self.shockCapturingFactor = 0.9
         self.lag_shockCapturing = False
         # freeze attributes
         self._freeze()
