@@ -12,7 +12,7 @@ from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
                               C0_AffineLinearOnSimplexWithNodalBasis)
-from proteus.flcbdfWrappers import globalMax
+from proteus.Comm import globalMax, globalSum
 from proteus.Profiling import  memory
 from proteus.Profiling import  logEvent as log
 from proteus.Transport import OneLevelTransport
@@ -936,7 +936,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getResidual(self,u,r):
         import pdb
         import copy
-        from proteus.flcbdfWrappers import globalSum
         """
         Calculate the element residuals and add in to the global residual
         """

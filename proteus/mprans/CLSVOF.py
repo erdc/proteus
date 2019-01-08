@@ -647,7 +647,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.projected_disc_ICs = numpy.zeros(self.u[0].dof.shape,'d')
         self.par_projected_disc_ICs = None
 
-        from proteus.flcbdfWrappers import globalMax
+        from proteus.Comm import globalMax
         self.he_for_disc_ICs = 0.5*(-globalMax(-self.mesh.elementDiametersArray.min()) +
                                     globalMax(self.mesh.elementDiametersArray.max()))
         ###################################
@@ -912,7 +912,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.R_vector,
              self.sR_vector)
 
-        from proteus.flcbdfWrappers import globalSum
+        from proteus.Comm import globalSum
         # metrics about conservation
         self.global_V = globalSum(global_V)
         self.global_V0 = globalSum(global_V0)
@@ -966,7 +966,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              u_exact,
              self.offset[0],self.stride[0])
 
-        from proteus.flcbdfWrappers import globalSum
+        from proteus.Comm import globalSum
         # Interface metrics
         self.global_I_err = globalSum(global_I_err)
         self.global_sI_err = globalSum(global_sI_err)
@@ -1219,7 +1219,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # END OF FREEZING INTERFACE #
         else: # RELATED CLSVOF MODEL #
             # Quantities to compute normalization factor
-            from proteus.flcbdfWrappers import globalSum, globalMax
+            from proteus.Comm import globalSum, globalMax
             self.min_distance = -globalMax(-min_distance[0])
             self.max_distance = globalMax(max_distance[0])
             self.mean_distance = globalSum(mean_distance[0])

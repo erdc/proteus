@@ -12,7 +12,8 @@ from proteus.mprans.cRANS2P import *
 from proteus.mprans.cRANS2P2D import *
 from proteus import Profiling
 from proteus import LinearAlgebraTools as LAT
-
+from proteus.Comm import (globalSum,
+                          globalMax)
 
 class SubgridError(proteus.SubgridError.SGE_base):
     """
@@ -190,7 +191,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  dragBetaTypes=None,  # otherwise can use element constant values
                  porosityTypes=None,
                  killNonlinearDrag=False,
-                 epsFact_source=1.,
                  epsFact_solid=None,
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=10.0,
@@ -298,7 +298,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.dragBetaTypes = dragBetaTypes
         self.porosityTypes = porosityTypes
         self.killNonlinearDrag = int(killNonlinearDrag)
-        self.epsFact_source = epsFact_source
         self.linearDragFactor = 1.0
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
@@ -521,7 +520,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.eps_viscosity = self.epsFact * mesh.h
         self.mesh = mesh
         self.elementMaterialTypes = mesh.elementMaterialTypes
-        self.eps_source = self.epsFact_source * mesh.h
         nBoundariesMax = int(globalMax(max(self.mesh.elementBoundaryMaterialTypes))) + 1
         self.wettedAreas = numpy.zeros((nBoundariesMax,), 'd')
         self.netForces_p = numpy.zeros((nBoundariesMax, 3), 'd')
@@ -661,27 +659,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def updateToMovingDomain(self, t, c):
         pass
-
-    def evaluateForcingTerms(self, t, c, mesh=None, mesh_trial_ref=None, mesh_l2g=None):
-        if 'x' in c and len(c['x'].shape) == 3:
-            if self.nd == 2:
-                c[('r', 0)].fill(0.0)
-                eps_source = self.eps_source
-
-                # mwf debug
-                if numpy.isnan(c[('r', 0)].any()):
-                    import pdb
-                    pdb.set_trace()
-            else:
-                c[('r', 0)].fill(0.0)
-                eps_source = self.eps_source
-
-        else:
-            assert mesh is not None
-            assert mesh_trial_ref is not None
-            assert mesh_l2g is not None
-            # cek hack
-            pass
 
     def evaluate(self, t, c):
         pass
@@ -1294,7 +1271,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter = self.mesh.elementDiametersArray
         if self.nSpace_global == 2:
             import copy
-            self.u[3] = copy.deepcopy(self.u[2])
+            self.u[3] = self.u[2].copy()
+            self.u[3].name="w"
             self.timeIntegration.m_tmp[3] = self.timeIntegration.m_tmp[2].copy()
             self.timeIntegration.beta_bdf[3] = self.timeIntegration.beta_bdf[2].copy()
             self.coefficients.sdInfo[(1, 3)] = (numpy.array([0, 1, 2], dtype='i'),
@@ -1379,10 +1357,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         self.Ct_sge = 4.0
         self.Cd_sge = 36.0
-        # TODO how to request problem specific evaluations from coefficient class
-        if 'evaluateForcingTerms' in dir(self.coefficients):
-            self.coefficients.evaluateForcingTerms(self.timeIntegration.t, self.q, self.mesh,
-                                                   self.u[0].femSpace.elementMaps.psi, self.mesh.elementNodesArray)
         self.coefficients.wettedAreas[:] = 0.0
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
@@ -1590,7 +1564,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant)
-        from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
             for I in range(3):
