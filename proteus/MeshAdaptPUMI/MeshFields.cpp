@@ -1,6 +1,8 @@
 #include "MeshAdaptPUMI.h"
 #include <apfMesh.h>
 #include <apfShape.h>
+#include <stdio.h>
+#include <string.h>
 
 /** 
  * \file MeshFields.cpp
