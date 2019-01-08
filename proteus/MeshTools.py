@@ -1642,7 +1642,8 @@ class Mesh(object):
            self.elementBoundaryNumbering_subdomain2global,
            self.edgeOffsets_subdomain_owned,
            self.edgeNumbering_subdomain2global) = (
-               cpartitioning.convertPUMIPartitionToPython(self.cmesh,
+               cpartitioning.convertPUMIPartitionToPython(comm.comm.tompi4py(),
+                                                          self.cmesh,
                                                           self.subdomainMesh.cmesh))
           self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
           self.subdomainMesh.nElements_owned = (
