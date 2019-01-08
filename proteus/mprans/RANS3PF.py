@@ -16,7 +16,8 @@ from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
                               C0_AffineLinearOnSimplexWithNodalBasis)
-from proteus.flcbdfWrappers import globalMax
+from proteus.Comm import (globalMax,
+                          globalSum)
 from proteus.Profiling import memory
 from proteus.Profiling import logEvent as log
 from proteus.Transport import OneLevelTransport
@@ -178,7 +179,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  dragBetaTypes=None,  # otherwise can use element constant values
                  porosityTypes=None,
                  killNonlinearDrag=False,
-                 epsFact_source=1.,
                  epsFact_solid=None,
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=10.0,
@@ -321,7 +321,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.dragBetaTypes = dragBetaTypes
         self.porosityTypes = porosityTypes
         self.killNonlinearDrag = int(killNonlinearDrag)
-        self.epsFact_source = epsFact_source
         self.linearDragFactor = 1.0
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
@@ -731,7 +730,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.eps_viscosity = self.epsFact * mesh.h
         self.mesh = mesh
         self.elementMaterialTypes = mesh.elementMaterialTypes
-        self.eps_source = self.epsFact_source * mesh.h
         nBoundariesMax = int(
             globalMax(max(self.mesh.elementBoundaryMaterialTypes))) + 1
         self.wettedAreas = numpy.zeros((nBoundariesMax,), 'd')
@@ -921,28 +919,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def updateToMovingDomain(self, t, c):
         pass
-
-    def evaluateForcingTerms(
-            self,
-            t,
-            c,
-            mesh=None,
-            mesh_trial_ref=None,
-            mesh_l2g=None):
-        if 'x' in c and len(c['x'].shape) == 3:
-            if self.nd == 2:
-                c[('r', 0)].fill(0.0)
-                eps_source = self.eps_source
-            else:
-                c[('r', 0)].fill(0.0)
-                eps_source = self.eps_source
-        else:
-            assert mesh is not None
-            assert mesh_trial_ref is not None
-            assert mesh_l2g is not None
-            # cek hack
-            pass
-
+      
     def evaluate(self, t, c):
         pass
 
@@ -2030,7 +2007,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter = self.mesh.elementDiametersArray
         if self.nSpace_global == 2:
             import copy
-            self.u[2] = copy.deepcopy(self.u[1])
+            self.u[2] = self.u[1].copy()
+            self.u[2].name = 'w'
             self.timeIntegration.m_tmp[
                 2] = self.timeIntegration.m_tmp[1].copy()
             self.timeIntegration.beta_bdf[
@@ -2533,7 +2511,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         for dim in range(self.nSpace_global):
             self.q[('u', dim)][:] = self.q[('velocity', 0)][:, :, dim]
 
-        from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
                 self.coefficients.wettedAreas[i])

@@ -1,1332 +1,33 @@
-#define FLCBDF_WRAPPERS_MODULE
-#include "flcbdfWrappersModule.h"
-#include <algorithm>
-#include "meshio.h"
+#include "partitioning.h"
 
-//extern "C"
-//{
-//#include "metis.h"
-//}
-using namespace Daetk::Petsc::cc;
-#define DDATA(p) ((double *) (((PyArrayObject *)p)->data))
-#define SHAPE(p) ((PyArrayObject *)p)->dimensions
-#define ND(p) ((PyArrayObject *)p)->nd
-#define IDATA(p) ((int *) (((PyArrayObject *)p)->data))
-#define PARVEC_PETSCVEC(p) ((ParVec*)p)->v
-#define PARVEC_ARRAY(p) ((ParVec*)p)->array
-#define SMP(p) ((SparseMatrix*)p)
-#define MESH(p) ((CMesh*)p)->mesh
-
-//--memory profiling
-/*
- * Author:  David Robert Nadeau
- * Site:    http://NadeauSoftware.com/
- * License: Creative Commons Attribution 3.0 Unported License
- *          http://creativecommons.org/licenses/by/3.0/deed.en_US
- */
-
-#if defined(_WIN32)
-#include <windows.h>
-#include <psapi.h>
-
-#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-#include <unistd.h>
-#include <sys/resource.h>
-
-#if defined(__APPLE__) && defined(__MACH__)
-#include <mach/mach.h>
-
-#elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
-#include <fcntl.h>
-#include <procfs.h>
-
-#elif defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
-#include <stdio.h>
-
-#endif
-
-#else
-#error "Cannot define getPeakRSS( ) or getCurrentRSS( ) for an unknown OS."
-#endif
-
-
-
-
-
-/**
- * Returns the peak (maximum so far) resident set size (physical
- * memory use) measured in bytes, or zero if the value cannot be
- * determined on this OS.
- */
-size_t getPeakRSS( )
+namespace proteus
 {
-#if defined(_WIN32)
-  /* Windows -------------------------------------------------- */
-  PROCESS_MEMORY_COUNTERS info;
-  GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
-  return (size_t)info.PeakWorkingSetSize;
-
-#elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
-  /* AIX and Solaris ------------------------------------------ */
-  struct psinfo psinfo;
-  int fd = -1;
-  if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
-    return (size_t)0L;/* Can't open? */
-  if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
-    {
-      close( fd );
-      return (size_t)0L;/* Can't read? */
-    }
-  close( fd );
-  return (size_t)(psinfo.pr_rssize * 1024L);
-
-#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-  /* BSD, Linux, and OSX -------------------------------------- */
-  struct rusage rusage;
-  getrusage( RUSAGE_SELF, &rusage );
-#if defined(__APPLE__) && defined(__MACH__)
-  return (size_t)rusage.ru_maxrss;
-#else
-  return (size_t)(rusage.ru_maxrss * 1024L);
-#endif
-
-#else
-  /* Unknown OS ----------------------------------------------- */
-  return (size_t)0L;/* Unsupported. */
-#endif
-}
-
-
-
-
-
-/**
- * Returns the current resident set size (physical memory use) measured
- * in bytes, or zero if the value cannot be determined on this OS.
- */
-size_t getCurrentRSS( )
-{
-#if defined(_WIN32)
-  /* Windows -------------------------------------------------- */
-  PROCESS_MEMORY_COUNTERS info;
-  GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
-  return (size_t)info.WorkingSetSize;
-
-#elif defined(__APPLE__) && defined(__MACH__)
-  /* OSX ------------------------------------------------------ */
-  struct mach_task_basic_info info;
-  mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
-  if ( task_info( mach_task_self( ), MACH_TASK_BASIC_INFO,
-		  (task_info_t)&info, &infoCount ) != KERN_SUCCESS )
-    return (size_t)0L;/* Can't access? */
-  return (size_t)info.resident_size;
-
-#elif defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
-  /* Linux ---------------------------------------------------- */
-  long rss = 0L;
-  FILE* fp = NULL;
-  if ( (fp = fopen( "/proc/self/statm", "r" )) == NULL )
-    return (size_t)0L;/* Can't open? */
-  if ( fscanf( fp, "%*s%ld", &rss ) != 1 )
-    {
-      fclose( fp );
-      return (size_t)0L;/* Can't read? */
-    }
-  fclose( fp );
-  return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
-
-#else
-  /* AIX, BSD, Solaris, and Unknown OS ------------------------ */
-  return (size_t)0L;/* Unsupported. */
-#endif
-}
-//--memory profiling
-typedef struct
-{
-  PyObject_HEAD
-  double* array;
-  Vec v;
-  PyArrayObject* numpy_array;
-} ParVec;
-
-
-extern "C"
-{
-  
-// DAETK global Sys object, needs to be instantiated to instantiate DAETK
-static Daetk::Petsc::Sys* DAETK_SYS;
-
-static int
-ensure_comm()
-{
-  if (PROTEUS_COMM_WORLD == MPI_COMM_NULL) {
-    PyErr_SetString(PyExc_RuntimeError, "flcbdfWrappersModule is not initialized!");
-    return 0;
-  }
-  return 1;
-}
-
-static PyObject*
-ParVec_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-  ParVec *self;
-  self = (ParVec *)type->tp_alloc(type,0);
-  return (PyObject*)self;
-}
-
-static int
-ParVec_init(ParVec *self, PyObject *args, PyObject *kwds)
-{
-  int bs,n,N,nghost,useBlockVec;
-  PyObject *subdomain2global,*array;
-
-  if (!ensure_comm()) {
-    return -1;
-  }
-
-  if(!PyArg_ParseTuple(args,
-                       "iiiiOOi",
-                       &bs,
-                       &n,
-                       &N,
-                       &nghost,
-                       &subdomain2global,
-                       &array,
-                       &useBlockVec))
-    
-    return -1;
-  self->numpy_array = ((PyArrayObject *)array);
-  Py_INCREF(self->numpy_array);
-  self->array = DDATA(array);
-  if (nghost >= 0)
-    {
-      std::valarray<int> ghosts(bs*nghost);
-      for (int i=0;i<nghost;i++)
-        {
-          for (int j=0;j<bs;j++)
-            {
-              ghosts[i*bs+j] = IDATA(subdomain2global)[n+i]*bs+j;
-            }
-        }
-      if (bs==1)
-        {
-          VecCreateGhostWithArray(PROTEUS_COMM_WORLD,n,N,nghost,&ghosts[0],self->array,&self->v);
-        }
-      else
-        {
-          if (useBlockVec)
-            VecCreateGhostBlockWithArray(PROTEUS_COMM_WORLD,bs,bs*n,bs*N,nghost,IDATA(subdomain2global)+n,self->array,&self->v);
-          else
-            VecCreateGhostWithArray(PROTEUS_COMM_WORLD,bs*n,bs*N,bs*nghost,&ghosts[0],self->array,&self->v);
-        }
-    }
-  else
-    {
-      if (bs==1)
-        {
-          VecCreateMPIWithArray(PROTEUS_COMM_WORLD,bs,n,N,self->array,&self->v);
-        }
-      else
-        {
-          if (useBlockVec)
-            VecCreateMPIWithArray(PROTEUS_COMM_WORLD,bs,n,N,self->array,&self->v);
-          else
-            VecCreateMPIWithArray(PROTEUS_COMM_WORLD,1,bs*n,bs*N,self->array,&self->v);
-        }
-      if (useBlockVec)
-        VecSetBlockSize(self->v,bs);
-    }
-  if (bs > 1 && useBlockVec)
-    {
-      int bstmp;
-      VecGetBlockSize(self->v,&bstmp);
-      assert(bstmp==bs);
-    }
-  VecGetArray(self->v,&self->array);
-  assert(self->array==DDATA(array));
-  return 0;
-}
-
-static  void
-ParVec_dealloc(ParVec* self)
-{
-  if (self->numpy_array != NULL)//shouldn't be NULL, here in any case
-    {
-      VecRestoreArray(self->v,&self->array);
-      VecDestroy(&self->v);
-      Py_DECREF(self->numpy_array);
-    }
-}
-
-static PyObject*
-ParVec_scatter_forward_insert(ParVec *self, PyObject* args)
-{
-  VecRestoreArray(self->v,&self->array);
-  VecGhostUpdateBegin(self->v,INSERT_VALUES,SCATTER_FORWARD);
-  VecGhostUpdateEnd(self->v,INSERT_VALUES,SCATTER_FORWARD);
-  VecGetArray(self->v,&self->array);
-  Py_INCREF(Py_None); 
-  return Py_None;
-}
-
-static PyObject*
-ParVec_scatter_reverse_add(ParVec *self, PyObject* args)
-{
-  VecRestoreArray(self->v,&self->array);
-  VecGhostUpdateBegin(self->v,ADD_VALUES,SCATTER_REVERSE);
-  VecGhostUpdateEnd(self->v,ADD_VALUES,SCATTER_REVERSE);
-  VecGetArray(self->v,&self->array);
-  Py_INCREF(Py_None); 
-  return Py_None;
-}
-
-static PyObject*
-ParVec_scatter_forward_insertAll(ParVec *self, PyObject* args)
-{
-  PyObject *subdomain2global,*arrayAll;
-  if(!PyArg_ParseTuple(args,
-                       "OO",
-                       &subdomain2global,
-                       &arrayAll))    
-    return NULL;
-  VecRestoreArray(self->v,&self->array);
-  VecGetValues(self->v,SHAPE(subdomain2global)[0],IDATA(subdomain2global),DDATA(arrayAll));
-  VecGetArray(self->v,&self->array);
-  Py_INCREF(Py_None); 
-  return Py_None;
-}
-
-static PyObject*
-ParVec_scatter_reverse_addAll(ParVec *self, PyObject* args)
-{
-  PyObject *subdomain2global,*arrayAll;
-  if(!PyArg_ParseTuple(args,
-                       "OO",
-                       &subdomain2global,
-                       &arrayAll))    
-    return NULL;
-  VecRestoreArray(self->v,&self->array);
-  VecSetValues(self->v,SHAPE(subdomain2global)[0],IDATA(subdomain2global),DDATA(arrayAll),ADD_VALUES);
-  VecAssemblyBegin(self->v);
-  VecAssemblyEnd(self->v);
-  VecGetArray(self->v,&self->array);
-  Py_INCREF(Py_None); 
-  return Py_None;
-}
-
-static PyObject*
-ParVec_printType(ParVec *self, PyObject* args)
-{
-  VecType type;
-  VecGetType(self->v,const_cast<VecType *> (&type));
-  //VecGetType(self->v,(const VecType *) (&type));
-  Py_INCREF(Py_None); 
-  return Py_None;
-}
-
-static PyMethodDef ParVec_methods[] = {
-  {"scatter_forward_insert", 
-   (PyCFunction)ParVec_scatter_forward_insert, 
-   METH_NOARGS, 
-   "update the ghost values"},
-  {"scatter_reverse_add", 
-   (PyCFunction)ParVec_scatter_reverse_add, 
-   METH_NOARGS, 
-   "sum the local and ghost values"},
-  {"scatter_forward_insertAll", 
-   (PyCFunction)ParVec_scatter_forward_insertAll, 
-   METH_VARARGS, 
-   "update the ghost values"},
-  {"scatter_reverse_addAll", 
-   (PyCFunction)ParVec_scatter_reverse_addAll, 
-   METH_VARARGS, 
-   "sum the local and ghost values"},
-  {"printType", 
-   (PyCFunction)ParVec_printType, 
-   METH_NOARGS, 
-   "print the PETSc Vec type"},
-  {NULL}
-};
-
-static PyTypeObject ParVecType = {    
-  PyObject_HEAD_INIT(NULL)
-  0,                         /*ob_size*/
-  "flcbdfWrappers.ParVec",             /*tp_name*/
-  sizeof(ParVec), /*tp_basicsize*/
-  0,                         /*tp_itemsize*/
-  (destructor)ParVec_dealloc,                         /*tp_dealloc*/
-  0,                         /*tp_print*/
-  0,                         /*tp_getattr*/
-  0,                         /*tp_setattr*/
-  0,                         /*tp_compare*/
-  0,                         /*tp_repr*/
-  0,                         /*tp_as_number*/
-  0,                         /*tp_as_sequence*/
-  0,                         /*tp_as_mapping*/
-  0,                         /*tp_hash */
-  0,                         /*tp_call*/
-  0,                         /*tp_str*/
-  0,                         /*tp_getattro*/
-  0,                         /*tp_setattro*/
-  0,                         /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT,        /*tp_flags*/
-  "ParVec objects",           /* tp_doc */
-  0,		               /* tp_traverse */
-  0,		               /* tp_clear */
-  0,		               /* tp_richcompare */
-  0,		               /* tp_weaklistoffset */
-  0,		               /* tp_iter */
-  0,		               /* tp_iternext */
-  ParVec_methods,                         /* tp_methods */
-  0,                         /* tp_members */
-  0,                         /* tp_getset */
-  0,                         /* tp_base */
-  0,                         /* tp_dict */
-  0,                         /* tp_descr_get */
-  0,                         /* tp_descr_set */
-  0,                         /* tp_dictoffset */
-  (initproc)ParVec_init,      /* tp_init */
-  0,                         /* tp_alloc */
-  ParVec_new,                 /* tp_new */
-};
-
-
-}
-typedef struct
-{
-  PyObject_HEAD
-  Mat m;//,m2;
-  ISLocalToGlobalMapping subdomain2globalIS;
-} ParMat;
-
-
-#define PETSCMAT(p) ((ParMat*)p)->m
-#define PETSCMAT2(p) ((ParMat*)p)->m2
-
-extern "C"
-{
-static PyObject*
-ParMat_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-  ParMat *self;
-  self = (ParMat *)type->tp_alloc(type,0);
-  return (PyObject*)self;
-}
-
-static int
-ParMat_init(ParMat *self, PyObject *args, PyObject *kwds)
-{
-  int bs,n,N,nghost,max_nNeighbors;
-  PyObject *subdomain2global,*L;
-
-  if (!ensure_comm()) {
-    return -1;
-  }
-
-  if(!PyArg_ParseTuple(args,
-                       "iiiiiOO",
-                       &bs,
-                       &n,
-                       &N,
-                       &nghost,
-                       &max_nNeighbors,
-                       &subdomain2global,
-                       &L))
-    
-    return -1;
-  //set up a local 2 global mapping
-  std::vector<int> indices(bs*SHAPE(subdomain2global)[0]);
-  for (int i=0;i<SHAPE(subdomain2global)[0];i++)
-    for (int bI=0;bI<bs;bI++)
-      {
-        indices[i*bs+bI] = IDATA(subdomain2global)[i]*bs+bI;
-      }
-  if (bs==1)
-    {
-      //        MatCreateMPIAIJ(PROTEUS_COMM_WORLD,n,n,N,N,1,PETSC_NULL,max_nNeighbors,PETSC_NULL,&self->m2);
-
-      MatCreate(PROTEUS_COMM_WORLD,&self->m);
-      MatSetSizes(self->m,n,n,N,N);
-      MatSetFromOptions(self->m);
-      //try putting indeces in global numbering
-      std::vector<int> j(SMP(L)->A.rowptr[n]);
-      for (int i=0;i<n;i++)
-        for (int k=SMP(L)->A.rowptr[i];k<SMP(L)->A.rowptr[i+1];k++)
-          {
-            j[k] = indices[SMP(L)->A.colind[k]];
-          }
-      MatSeqAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
-      MatMPIAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
-    }
-  else
-    {
-      //      MatCreateMPIAIJ(PROTEUS_COMM_WORLD,bs*n,bs*n,bs*N,bs*N,1,PETSC_NULL,bs*max_nNeighbors,PETSC_NULL,&self->m2);
-
-      MatCreate(PROTEUS_COMM_WORLD,&self->m);
-      MatSetSizes(self->m,bs*n,bs*n,bs*N,bs*N);
-      MatSetFromOptions(self->m);
-      std::vector<int> j(SMP(L)->A.rowptr[bs*n]);
-      for (int i=0;i<bs*n;i++)
-        for (int k=SMP(L)->A.rowptr[i];k<SMP(L)->A.rowptr[i+1];k++)
-          {
-            j[k] = indices[SMP(L)->A.colind[k]];
-          }
-      MatSeqAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
-      MatMPIAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
-    }
-  //cek hack
-  //PetscOptionsPrint(stdout);
-  ISLocalToGlobalMappingCreate(PROTEUS_COMM_WORLD,1, bs*SHAPE(subdomain2global)[0],&indices[0],PETSC_COPY_VALUES,&self->subdomain2globalIS);
-  MatSetLocalToGlobalMapping(self->m,self->subdomain2globalIS,self->subdomain2globalIS);
-  return 0;
-}
-
-static  void
-ParMat_dealloc(ParMat* self)
-{
-  MatDestroy(&self->m);
-  //  MatDestroy(self->m2);
-  ISLocalToGlobalMappingDestroy(&self->subdomain2globalIS);
-}
-
-static PyTypeObject ParMatType = {    
-  PyObject_HEAD_INIT(NULL)
-  0,                         /*ob_size*/
-  "flcbdfWrappers.ParMat",             /*tp_name*/
-  sizeof(ParMat), /*tp_basicsize*/
-  0,                         /*tp_itemsize*/
-  (destructor)ParMat_dealloc,                         /*tp_dealloc*/
-  0,                         /*tp_print*/
-  0,                         /*tp_getattr*/
-  0,                         /*tp_setattr*/
-  0,                         /*tp_compare*/
-  0,                         /*tp_repr*/
-  0,                         /*tp_as_number*/
-  0,                         /*tp_as_sequence*/
-  0,                         /*tp_as_mapping*/
-  0,                         /*tp_hash */
-  0,                         /*tp_call*/
-  0,                         /*tp_str*/
-  0,                         /*tp_getattro*/
-  0,                         /*tp_setattro*/
-  0,                         /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT,        /*tp_flags*/
-  "ParMat objects",           /* tp_doc */
-  0,		               /* tp_traverse */
-  0,		               /* tp_clear */
-  0,		               /* tp_richcompare */
-  0,		               /* tp_weaklistoffset */
-  0,		               /* tp_iter */
-  0,		               /* tp_iternext */
-  0,                         /* tp_methods */
-  0,                         /* tp_members */
-  0,                         /* tp_getset */
-  0,                         /* tp_base */
-  0,                         /* tp_dict */
-  0,                         /* tp_descr_get */
-  0,                         /* tp_descr_set */
-  0,                         /* tp_dictoffset */
-  (initproc)ParMat_init,      /* tp_init */
-  0,                         /* tp_alloc */
-  ParMat_new,                 /* tp_new */
-};
-}//extern c
-
-//--- make petsc linear solvers converge based on true residual---
-//storage for work vectors
-typedef struct
-{
-  int max_it;
-  double atol;
-  double rtol;
-  double divtol;
-  double ttol;
-  double rnorm0;
-  Vec t;
-  Vec v;
-  Vec residual;
-} TrueResidualTestCtx;
-#define TRUERESCTX(p) ((TrueResidualTestCtx*)p)
-
-static 
-int destroy_TrueResidualTestCtx(void* ctx)
-{
-  int ierr = 0;
-  if (TRUERESCTX(ctx)->t)
-    ierr = VecDestroy(&TRUERESCTX(ctx)->t);
-  if (ierr) return ierr;
-  if (TRUERESCTX(ctx)->v)
-    ierr = VecDestroy(&TRUERESCTX(ctx)->v);
-  if (ierr) return ierr;
-  if (TRUERESCTX(ctx)->residual)
-    ierr = VecDestroy(&TRUERESCTX(ctx)->residual);
-  return ierr;
-}
-
-static 
-int converged_true_residual(KSP ksp, int it, double rnorm, KSPConvergedReason *reason, void* ctx)
-{
-  int max_it = TRUERESCTX(ctx)->max_it;
-  double truenorm=0.0,atol = 1.0e-10,rtol = 0.0,divtol = 1.0e-10;
-
-  atol = TRUERESCTX(ctx)->atol;  rtol = TRUERESCTX(ctx)->rtol;  divtol = TRUERESCTX(ctx)->divtol;
-  //default not converged
-  *reason = KSP_CONVERGED_ITERATING;
-
-  KSPBuildResidual(ksp,TRUERESCTX(ctx)->t,TRUERESCTX(ctx)->v,&TRUERESCTX(ctx)->residual);
-  VecNorm(TRUERESCTX(ctx)->residual,NORM_2,&truenorm);
-  if (it == 0)
-    {
-      TRUERESCTX(ctx)->rnorm0=truenorm;
-      TRUERESCTX(ctx)->ttol = fmax(rtol*truenorm,atol);
-    }
-  if (truenorm <= TRUERESCTX(ctx)->ttol)
-    {
-      if (truenorm <= atol)
-	*reason = KSP_CONVERGED_ATOL;
-      else
-	*reason = KSP_CONVERGED_RTOL;
-    }
-  else if (truenorm >= divtol*TRUERESCTX(ctx)->rnorm0)
-    {
-      *reason = KSP_DIVERGED_DTOL;
-    }
-  else if (it > max_it)
-    {
-      *reason = KSP_DIVERGED_ITS;
-    }
-  return 0;
-}
-
-typedef struct
-{
-  PyObject_HEAD
-  KSP ksp; 
-  TrueResidualTestCtx tres_ctx;
-} CKSP;
-
-#define KSP(p) ((CKSP*)p)->ksp
-
-extern "C"
-{
-static PyObject*
-CKSP_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-  CKSP *self;
-  self = (CKSP *)type->tp_alloc(type,0);
-  return (PyObject*)self;
-}
-
-static int
-CKSP_init(CKSP *self, PyObject *args, PyObject *kwds)
-{
-  PyObject *par_L;
-  char* prefix(0);
-
-  if (!ensure_comm()) {
-    return -1;
-  }
-
-  if(!PyArg_ParseTuple(args,
-                       "O|s",
-                       &par_L,
-                       &prefix))
-    
-    return -1;
-
-  KSPCreate(PROTEUS_COMM_WORLD,&self->ksp);
-  if (prefix)
-    KSPSetOptionsPrefix(self->ksp,prefix);
-  KSPSetFromOptions(self->ksp);
-  PC pc;
-  KSPGetPC(self->ksp,&pc);
-  PCSetFromOptions(pc);
-  /*mwf no array defined in ksp so comment out?
-    assert(self->array==DDATA(array));
-  */
-  /*now include manual true residual test*/
-  self->tres_ctx.t = PETSC_NULL;
-  self->tres_ctx.v = PETSC_NULL;
-  self->tres_ctx.residual = PETSC_NULL;
-  self->tres_ctx.atol = 1.0e-10;
-  self->tres_ctx.rtol = 0.0;
-  self->tres_ctx.divtol= 1.0e50;
-  self->tres_ctx.max_it= 10000;
-
-
-  PetscReal  *res;
-  int its;
-  
-  its = 250; // Ido HACK ...
-  PetscMalloc(its*sizeof(PetscReal),&res); 
-
-  KSPSetResidualHistory(self->ksp, res, its, PETSC_TRUE);
-
-  return 0;
-}
-
-static PyObject*
-CKSP_useTrueResidualConvergence(CKSP *self, PyObject *args, PyObject *kwds)
-{
-  PyObject *par_v;
-  double atol,rtol,divtol;
-  int max_it;
-  PetscBool found;
-  if(!PyArg_ParseTuple(args,
-                       "O",
-                       &par_v))
-    
-    return NULL;
-  //now set residual monitor? try to get sizing info
-  if (!self->tres_ctx.v)
-    VecDuplicate(PARVEC_PETSCVEC(par_v),&self->tres_ctx.v);
-  if (!self->tres_ctx.t)
-    VecDuplicate(PARVEC_PETSCVEC(par_v),&self->tres_ctx.t);
-  if (!self->tres_ctx.residual)
-    VecDuplicate(PARVEC_PETSCVEC(par_v),&self->tres_ctx.residual);
-
-  PetscOptionsGetReal(PETSC_NULL,PETSC_NULL,"-ksp_atol",&atol,&found);
-  if (found) self->tres_ctx.atol  = atol;
-  PetscOptionsGetReal(PETSC_NULL,PETSC_NULL,"-ksp_rtol",&rtol,&found);
-  if (found) self->tres_ctx.rtol  = rtol;
-  PetscOptionsGetReal(PETSC_NULL,PETSC_NULL,"-ksp_divtol",&divtol,&found);
-  if (found) self->tres_ctx.divtol  = divtol;
-  PetscOptionsGetInt(PETSC_NULL,PETSC_NULL,"-ksp_max_it",&max_it,&found);
-  if (found) self->tres_ctx.max_it= max_it;
-
-  KSPSetConvergenceTest(self->ksp,converged_true_residual,(void *)&self->tres_ctx,PETSC_NULL);
-  Py_INCREF(Py_None); 
-  return Py_None;
-
-}
-
-
-static  void
-CKSP_dealloc(CKSP* self)
-{
-  KSPDestroy(&self->ksp);
-  destroy_TrueResidualTestCtx(&(self->tres_ctx));
-}
-
-static PyObject*
-CKSP_prepare(CKSP *self, PyObject* args)
-{
-  PyObject *L,*par_L;
-  int overlap(1);
-  if(!PyArg_ParseTuple(args,
-                       "OO|i",
-                       &L,
-                       &par_L,
-                       &overlap))
-    return NULL;
-  //to do, get rid of copy and load into petsc storage directly
-  //copy L into par_L
-  //assume compressed row for now
-  int *rowptr,*colind;
-  double *a;
-  a = (double*) (SMP(L)->A.nzval);
-  rowptr = SMP(L)->A.rowptr;
-  colind = SMP(L)->A.colind;
-  MatZeroEntries(PETSCMAT(par_L));
-  int irow[1];
-  int offset_rank,offset_rankP1,ldim;
-  MatGetOwnershipRange(PETSCMAT(par_L),&offset_rank,&offset_rankP1);
-  ldim = offset_rankP1-offset_rank;
-  if (overlap <= 0)
-    {
-      for (int i=0;i<SMP(L)->dim[0];i++)
-        {
-          irow[0] = i;
-          MatSetValuesLocal(PETSCMAT(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],ADD_VALUES);
-        }
-    }
-  else
-    {
-      for (int i=0;i<ldim;i++)
-        {
-          irow[0] = i;
-          MatSetValuesLocal(PETSCMAT(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],INSERT_VALUES);
-        }
-    }
-  MatAssemblyBegin(PETSCMAT(par_L),MAT_FINAL_ASSEMBLY);
-  MatAssemblyEnd(PETSCMAT(par_L),MAT_FINAL_ASSEMBLY);
-  KSPSetOperators(self->ksp,PETSCMAT(par_L),PETSCMAT(par_L));
-  KSPSetUp(self->ksp);
-  Py_INCREF(Py_None); 
-  return Py_None;
-}
-
-static PyObject*
-CKSP_solve(CKSP *self, PyObject* args)
-{
-  PyObject *par_u,*par_b;
-  if(!PyArg_ParseTuple(args,
-                       "OO",
-                       &par_u,
-                       &par_b))
-    return NULL;
-  VecRestoreArray(PARVEC_PETSCVEC(par_b),&PARVEC_ARRAY(par_b));
-  VecRestoreArray(PARVEC_PETSCVEC(par_u),&PARVEC_ARRAY(par_u));
-  //VecView(PARVEC_PETSCVEC(par_b),PETSC_VIEWER_STDOUT_WORLD);
-  //VecView(PARVEC_PETSCVEC(par_u),PETSC_VIEWER_STDOUT_WORLD);
-  KSPSolve(self->ksp,PARVEC_PETSCVEC(par_b),PARVEC_PETSCVEC(par_u));
-  VecGetArray(PARVEC_PETSCVEC(par_b),&PARVEC_ARRAY(par_b));
-  VecGetArray(PARVEC_PETSCVEC(par_u),&PARVEC_ARRAY(par_u));
-  Py_INCREF(Py_None); 
-  return Py_None;
-}
-
-static PyObject*
-CKSP_info(CKSP *self, PyObject* args)
-{
-  PetscInt     its;
-  PetscReal*   res;
-  double       first,last,rel_res; 
-
-  if (!ensure_comm()) {
-    return NULL;
-  }
-
-  KSPGetResidualHistory(self->ksp, &res, &its);
-
-  first = *res;
-  for (int i=0; i<its; ++i)
-    {
-      last = *res;
-      res++;
-    } 
-
-  rel_res = 100.0*last/first;
-  PetscPrintf(PROTEUS_COMM_WORLD,"\n       Iterations: %D    Error reduction: %g (%%)\n\n", its,rel_res);
- 
-  
-  Py_INCREF(Py_None); 
-  return Py_None;
-}
-
-
-
- 
-static PyMethodDef CKSP_methods[] = {
-  {"prepare", 
-   (PyCFunction)CKSP_prepare, 
-   METH_VARARGS, 
-   "prepare the linear solver and preconditioner"},
-  {"solve", 
-   (PyCFunction)CKSP_solve, 
-   METH_VARARGS, 
-   "solve the problem"},
-  {"info", 
-   (PyCFunction)CKSP_info, 
-   METH_VARARGS, 
-   "print solver performance info"},
-  {"useTrueResidualConvergence", 
-   (PyCFunction)CKSP_useTrueResidualConvergence, 
-   METH_VARARGS, 
-   "use true residual convergence test"},
-  {NULL,NULL}
-};
-
-static PyTypeObject CKSPType = {    
-  PyObject_HEAD_INIT(NULL)
-  0,                         /*ob_size*/
-  "flcbdfWrappers.CKSP",             /*tp_name*/
-  sizeof(CKSP), /*tp_basicsize*/
-  0,                         /*tp_itemsize*/
-  (destructor)CKSP_dealloc,                         /*tp_dealloc*/
-  0,                         /*tp_print*/
-  0,                         /*tp_getattr*/
-  0,                         /*tp_setattr*/
-  0,                         /*tp_compare*/
-  0,                         /*tp_repr*/
-  0,                         /*tp_as_number*/
-  0,                         /*tp_as_sequence*/
-  0,                         /*tp_as_mapping*/
-  0,                         /*tp_hash */
-  0,                         /*tp_call*/
-  0,                         /*tp_str*/
-  0,                         /*tp_getattro*/
-  0,                         /*tp_setattro*/
-  0,                         /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT,        /*tp_flags*/
-  "CKSP objects",           /* tp_doc */
-  0,		               /* tp_traverse */
-  0,		               /* tp_clear */
-  0,		               /* tp_richcompare */
-  0,		               /* tp_weaklistoffset */
-  0,		               /* tp_iter */
-  0,		               /* tp_iternext */
-  CKSP_methods,                         /* tp_methods */
-  0,                         /* tp_members */
-  0,                         /* tp_getset */
-  0,                         /* tp_base */
-  0,                         /* tp_dict */
-  0,                         /* tp_descr_get */
-  0,                         /* tp_descr_set */
-  0,                         /* tp_dictoffset */
-  (initproc)CKSP_init,      /* tp_init */
-  0,                         /* tp_alloc */
-  CKSP_new,                 /* tp_new */
-};
-
-}//extern C
-
-/** \file flcbdfWrappersModule.cpp
-    \ingroup flcbdfWrappers
-    @{
-*/
-extern "C"
-{
-
-
-static PyObject* 
-FLCBDF_integrator_choose_dt(FLCBDF_integrator *self, 
-                            PyObject *args)
-{
-  double t,tout,DT;
-  if(!PyArg_ParseTuple(args,
-                       "dd",
-                       &t,
-                       &tout))
-    return NULL;
-  DT = self->flcbdf->chooseDT(t,tout);
-  return Py_BuildValue("d",DT);
-}
-
-static PyObject* 
-FLCBDF_integrator_set_dt(FLCBDF_integrator *self, 
-                         PyObject *args)
-{
-  double DT;
-  if(!PyArg_ParseTuple(args,
-                       "d",
-                       &DT))
-    return NULL;
-  self->flcbdf->setDT(DT);
-  return Py_BuildValue("d",DT);
-}
-static PyObject* 
-FLCBDF_integrator_set_order(FLCBDF_integrator *self, 
-                            PyObject *args)
-{
-  int k;
-  if(!PyArg_ParseTuple(args,
-                       "i",
-                       &k))
-    return NULL;
-  self->flcbdf->useFixedOrder(k);
-  return Py_BuildValue("i",k);
-}
-
-static PyObject* 
-FLCBDF_integrator_initialize_dt(FLCBDF_integrator *self, 
-                                PyObject *args)
-{
-  double t0,tOut,DT;
-  PyObject *y,*yPrime;
-  if(!PyArg_ParseTuple(args,
-                       "ddOO",
-                       &t0,
-                       &tOut,
-                       &y,
-                       &yPrime))
-    return NULL;
-  Daetk::Petsc::Vec yVec(Daetk::Vec::REF,DDATA(y),self->flcbdf->yn.ldim_),
-    yPrimeVec(Daetk::Vec::REF,DDATA(yPrime),self->flcbdf->yn.ldim_);
-  DT = self->flcbdf->chooseInitialStepSize(t0,tOut,yVec,yPrimeVec);
-  return Py_BuildValue("d",DT);
-}
-
-static PyObject* 
-FLCBDF_integrator_setInitialGuess(FLCBDF_integrator *self, 
-                                  PyObject *args)
-{
-  PyObject *y;
-  if(!PyArg_ParseTuple(args,
-                       "O",
-                       &y))
-    return NULL;
-  Daetk::Petsc::Vec yVec(Daetk::Vec::REF,DDATA(y),self->flcbdf->yn.ldim_);
-  yVec = self->flcbdf->yn;
-  return Py_None;
-}
-
-static PyObject* 
-FLCBDF_integrator_lastStepErrorOk(FLCBDF_integrator *self, 
-                                  PyObject *args)
-{
-  bool Ok;
-  PyObject *y;
-  if(!PyArg_ParseTuple(args,
-                       "O",
-                       &y))
-    return NULL;
-  Daetk::Petsc::Vec yVec(Daetk::Vec::REF,DDATA(y),self->flcbdf->yn.ldim_);
-  Ok = !self->flcbdf->errorForStepTooLarge(yVec);
-  return Py_BuildValue("i",Ok);
-}
-
-static PyObject* 
-FLCBDF_integrator_calculate_yprime(FLCBDF_integrator *self, 
-                                   PyObject *args)
-{
-  PyObject *y,*Dy,*yprime,*Dyprime;
-  if(!PyArg_ParseTuple(args,
-                       "OOOO",
-                       &y,
-                       &Dy,
-                       &yprime,
-                       &Dyprime))
-    return NULL;
-  if (self->yVec==0)
-    {
-      self->yVec = new Daetk::Petsc::Vec(Daetk::Vec::REF,DDATA(y),self->flcbdf->yn.ldim_);
-      self->DyVec = new Daetk::Petsc::Vec(Daetk::Vec::REF,DDATA(Dy),self->flcbdf->yn.ldim_);
-      self->yprimeVec = new Daetk::Petsc::Vec(Daetk::Vec::REF,DDATA(yprime),self->flcbdf->yn.ldim_);
-      self->DyprimeVec = new Daetk::Petsc::Vec(Daetk::Vec::REF,DDATA(Dyprime),self->flcbdf->yn.ldim_);
-    }
-  self->flcbdf->calculate_yprime(*self->yVec,*self->DyVec,*self->yprimeVec,*self->DyprimeVec);
-  Py_INCREF(Py_None);
-  return Py_None;
-}
-
-static PyObject* 
-FLCBDF_integrator_stepTaken(FLCBDF_integrator *self, 
-                            PyObject *args)
-{
-  PyObject *y;
-  if(!PyArg_ParseTuple(args,
-                       "O",
-                       &y))
-    return NULL;
-  Daetk::Petsc::Vec yVec(Daetk::Vec::REF,DDATA(y),self->flcbdf->yn.ldim_);
-  self->flcbdf->estimateError(yVec);
-  Py_INCREF(Py_None);
-  return Py_None;
-}
-
-static PyObject* 
-FLCBDF_integrator_retryStep_errorFailure(FLCBDF_integrator *self, 
-                                         PyObject *args)
-{
-  double h;
-  h = self->flcbdf->retryStep_errorFailure();
-  Py_INCREF(Py_None);
-  return Py_BuildValue("d",h);
-}
-
-static PyObject* 
-FLCBDF_integrator_retryStep_solverFailure(FLCBDF_integrator *self, 
-                                          PyObject *args)
-{
-  double h;
-  h = self->flcbdf->retryStep_solverFailure();
-  Py_INCREF(Py_None);
-  return Py_BuildValue("d",h);
-}
-
-static PyObject* 
-FLCBDF_integrator_initializeTimeHistory(FLCBDF_integrator *self, 
-                                        PyObject *args)
-{
-  PyObject *y,*yPrime;
-  if(!PyArg_ParseTuple(args,
-                       "OO",
-                       &y,
-                       &yPrime))
-    return NULL;
-  Daetk::Petsc::Vec yVec(Daetk::Vec::REF,DDATA(y),self->flcbdf->yn.ldim_),
-    yPrimeVec(Daetk::Vec::REF,DDATA(yPrime),self->flcbdf->yn.ldim_);
-  self->flcbdf->initializeTimeHistory(yVec,yPrimeVec);
-  Py_INCREF(Py_None);
-  return Py_None;
-}
-
-static PyObject* 
-FLCBDF_integrator_setTolerances(FLCBDF_integrator *self, 
-                                PyObject *args)
-{
-  double atol,rtol;
-  PyObject* dV;
-  if(!PyArg_ParseTuple(args,
-                       "ddO",
-                       &atol,&rtol,&dV))
-    return NULL;
-  Daetk::Petsc::Vec dV_Vec(Daetk::Vec::REF,DDATA(dV),self->flcbdf->yn.ldim_);
-  self->wNorm->setTolerances(atol,rtol,dV_Vec);
-  Py_INCREF(Py_None);
-  return Py_None;
-
-}
-
-static PyObject* 
-FLCBDF_integrator_getCurrentAlpha(FLCBDF_integrator *self, 
-                                  PyObject *args)
-{
-  double alpha;
-  assert(self->flcbdf);
-  alpha = self->flcbdf->getCurrentAlpha();
-  //do I need Py_INCREF(Py_None);
-  return Py_BuildValue("d",alpha);
-
-}
-
-static PyMethodDef FLCBDF_integrator_methods[] = {
-  {"lastStepErrorOk",
-   (PyCFunction)FLCBDF_integrator_lastStepErrorOk,
-   METH_VARARGS,
-   "check the temporal error estimate"},
-  {"choose_dt",
-   (PyCFunction)FLCBDF_integrator_choose_dt,
-   METH_VARARGS,
-   "choose the next time step"},
-  {"set_dt",
-   (PyCFunction)FLCBDF_integrator_set_dt,
-   METH_VARARGS,
-   "set the next time step"},
-  {"set_order",
-   (PyCFunction)FLCBDF_integrator_set_order,
-   METH_VARARGS,
-   "set the order of flcbdf"},
-  {"initialize_dt",
-   (PyCFunction)FLCBDF_integrator_initialize_dt,
-   METH_VARARGS,
-   "choose the initial time step"},
-  {"setInitialGuess",
-   (PyCFunction)FLCBDF_integrator_setInitialGuess,
-   METH_VARARGS,
-   "choose the initial guess for nonlinear solve"},
-  {"calculate_yprime",
-   (PyCFunction)FLCBDF_integrator_calculate_yprime,
-   METH_VARARGS,
-   "calculate the discrete time derivative"},
-  {"stepTaken", 
-   (PyCFunction)FLCBDF_integrator_stepTaken, 
-   METH_VARARGS, 
-   "accept step and calculate error estimates"},
-  {"retryStep_errorFailure", 
-   (PyCFunction)FLCBDF_integrator_retryStep_errorFailure, 
-   METH_VARARGS, 
-   "retry step when temporal error is too large"},
-  {"retryStep_solverFailure", 
-   (PyCFunction)FLCBDF_integrator_retryStep_solverFailure, 
-   METH_VARARGS, 
-   "retry step when nonlinear solver fails"},
-  {"initializeTimeHistory", 
-   (PyCFunction)FLCBDF_integrator_initializeTimeHistory, 
-   METH_VARARGS, 
-   "accept step and calculate error estimates"},
-  {"setTolerances",
-   (PyCFunction)FLCBDF_integrator_setTolerances,
-   METH_VARARGS,
-   "set (scalar) absolute and relative integration tolerances"},
-  {"getCurrentAlpha", 
-   (PyCFunction)FLCBDF_integrator_getCurrentAlpha, 
-   METH_VARARGS, 
-   "get alpha from FLCBDF approximation for jacobians (off-diagonal)"},
-  {NULL,NULL}
-};
-
-static PyObject*
-FLCBDF_integrator_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-  FLCBDF_integrator *self;
-  self = (FLCBDF_integrator *)type->tp_alloc(type,0);
-  return (PyObject*)self;
-}
-
-static int
-FLCBDF_integrator_init(FLCBDF_integrator *self, PyObject *args, PyObject *kwds)
-{
-  int i,ldim=1,dim;
-  const char* yName;
-  char dataFilename[80];
-  PyObject* y;
-  if(!PyArg_ParseTuple(args,
-                       "Os",
-                       &y,
-                       &yName))
-    return -1;
-  for (i=0;i<ND(y);i++)
-    ldim*=SHAPE(y)[i];
-  self->petscSys = new Daetk::Petsc::Sys();
-  self->sizeVec = new Daetk::Vec(Daetk::Vec::REF,DDATA(y),ldim);//this is so we have a parallel vector in the registry
-  dim=self->sizeVec->dim();
-  if (self->petscSys->getSize() > 1)
-    self->sizeVec->setExample();
-  self->wNorm = new Daetk::WeightedL2Norm(dim);
-  sprintf(dataFilename,"data_%i_%s.txt",dim,yName);
-  self->data = new Daetk::FullDataFile(0.0,dataFilename);
-  //mwf if wanted to only write from proc 0 
-  //if (self->petscSys->getRank() == 0)
-  //self->data = new Daetk::FullDataFile(0.0,dataFilename);
-  //else
-  // self->data = new Daetk::DataCollector();
-  self->flcbdf = new Daetk::FLCBDF_lite(dim,*self->wNorm,*self->data);
-  self->yVec=0;
-  self->DyVec=0;
-  self->yprimeVec=0;
-  self->DyprimeVec=0;
-  return 0;
-}
-
-static  void
-FLCBDF_integrator_dealloc(FLCBDF_integrator* self)
-{
-  delete self->flcbdf;
-  delete self->wNorm;
-  delete self->data;
-  delete self->petscSys;
-  delete self->sizeVec;
-  if (self->yVec!=0)
-    {
-      delete self->yVec;
-      delete self->DyVec;
-      delete self->yprimeVec;
-      delete self->DyprimeVec;
-    }
-  self->ob_type->tp_free((PyObject*)self);
-}
-
-static PyTypeObject FLCBDF_integratorType = {    
-  PyObject_HEAD_INIT(NULL)
-  0,                         /*ob_size*/
-  "flcbdfWrappers.FLCBDF_integrator",             /*tp_name*/
-  sizeof(FLCBDF_integrator), /*tp_basicsize*/
-  0,                         /*tp_itemsize*/
-  (destructor)FLCBDF_integrator_dealloc,                         /*tp_dealloc*/
-  0,                         /*tp_print*/
-  0,                         /*tp_getattr*/
-  0,                         /*tp_setattr*/
-  0,                         /*tp_compare*/
-  0,                         /*tp_repr*/
-  0,                         /*tp_as_number*/
-  0,                         /*tp_as_sequence*/
-  0,                         /*tp_as_mapping*/
-  0,                         /*tp_hash */
-  0,                         /*tp_call*/
-  0,                         /*tp_str*/
-  0,                         /*tp_getattro*/
-  0,                         /*tp_setattro*/
-  0,                         /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT,        /*tp_flags*/
-  "FLCBDF integtrator objects",           /* tp_doc */
-  0,		               /* tp_traverse */
-  0,		               /* tp_clear */
-  0,		               /* tp_richcompare */
-  0,		               /* tp_weaklistoffset */
-  0,		               /* tp_iter */
-  0,		               /* tp_iternext */
-  FLCBDF_integrator_methods,                         /* tp_methods */
-  0,                         /* tp_members */
-  0,                         /* tp_getset */
-  0,                         /* tp_base */
-  0,                         /* tp_dict */
-  0,                         /* tp_descr_get */
-  0,                         /* tp_descr_set */
-  0,                         /* tp_dictoffset */
-  (initproc)FLCBDF_integrator_init,      /* tp_init */
-  0,                         /* tp_alloc */
-  FLCBDF_integrator_new,                 /* tp_new */
-};
-
-static PyObject* 
-DaetkPetscSys_barrier(DaetkPetscSys *self, 
-                      PyObject *args)
-{
-  self->petscSys->barrier();
-  Py_INCREF(Py_None);
-  return Py_None;
-}
-
-static PyObject* 
-DaetkPetscSys_isMaster(DaetkPetscSys *self, 
-                       PyObject *args)
-{
-  return Py_BuildValue("b",self->petscSys->master());
-}
-
-static PyObject* 
-DaetkPetscSys_isInitialized(DaetkPetscSys *self, 
-                            PyObject *args)
-{
-  return Py_BuildValue("b",self->petscSys->isInitialized());
-}
-
-static PyObject* 
-DaetkPetscSys_beginSequential(DaetkPetscSys *self, 
-                              PyObject *args)
-{
-  self->petscSys->beginSequential();
-  Py_INCREF(Py_None);
-  return Py_None;
-}
-
-static PyObject* 
-DaetkPetscSys_endSequential(DaetkPetscSys *self, 
-                            PyObject *args)
-{
-  self->petscSys->endSequential();
-  Py_INCREF(Py_None);
-  return Py_None;
-}
-
-static PyObject* 
-DaetkPetscSys_catchError(DaetkPetscSys *self, 
-                         PyObject *args)
-{
-  bool error;
-  if(!PyArg_ParseTuple(args,
-                       "b",
-                       &error))
-    return NULL;
-  return Py_BuildValue("b",self->petscSys->catchError(error));
-}
-
-static PyObject* 
-DaetkPetscSys_rank(DaetkPetscSys *self, 
-                   PyObject *args)
-{
-  return Py_BuildValue("i",self->petscSys->getRank());
-}
-
-static PyObject* 
-DaetkPetscSys_size(DaetkPetscSys *self, 
-                   PyObject *args)
-{
-  return Py_BuildValue("i",self->petscSys->getSize());
-}
-
 //todo add overlap for element based partitions
-int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
+int partitionElementsOriginal(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh, int nElements_overlap)
 {
   using namespace std;
   int ierr,size,rank;
 
-  if (!ensure_comm()) {
-    return NULL;
-  }
-
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
 
-  //Contents 
+  //Contents
   //
   //1. Partition the elements in the "default" partition (contiguous
-  //chunks in given ordering) 
+  //chunks in given ordering)
   //
   //2. Partition the elementNeighbors based on this partition
   //
   //3. Pass to Parmetis to build a better partition of the elements
   //
   //4. Tag a subset of the nodes on the subdomain elements as owned
-  //using a mark and pass approach.** 
+  //using a mark and pass approach.**
   //
   //5. Extract the nodes in the
-  //overlapping elements.** 
+  //overlapping elements.**
   //
   //6. Build the subdomain mesh from the
-  //subdomain elements 
+  //subdomain elements
   //
   //**To be more general we could get all the support (i.e. faces
   //and edges) and partitiong them, but the main reason for
@@ -1345,10 +46,10 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   valarray<int> elementOffsets_old(size+1);
   elementOffsets_old[0] = 0;
   for(int sdN=0;sdN<size;sdN++)
-    elementOffsets_old[sdN+1] = elementOffsets_old[sdN] + 
-      int(mesh.nElements_global)/size + 
+    elementOffsets_old[sdN+1] = elementOffsets_old[sdN] +
+      int(mesh.nElements_global)/size +
       (int(mesh.nElements_global)%size > sdN);
-    
+
   //2. Extract subdomain element adjacency information could read
   //only the required portion from a file
   int nElements_subdomain = (elementOffsets_old[rank+1] - elementOffsets_old[rank]);
@@ -1382,14 +83,14 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   //3. Generate the  new partitiong using PETSc, this is done in parallel using parmetis
   Mat petscAdjacency;
   //     MatCreateMPIAdj(PROTEUS_COMM_WORLD,
-  //                     nElements_subdomain, mesh.nElements_global, 
-  //                     &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0], 
-  //                     &weights_subdomain[0], 
+  //                     nElements_subdomain, mesh.nElements_global,
+  //                     &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0],
+  //                     &weights_subdomain[0],
   //                     &petscAdjacency);
   ierr = MatCreateMPIAdj(PROTEUS_COMM_WORLD,
-                         nElements_subdomain, 
+                         nElements_subdomain,
                          mesh.nElements_global,
-                         elementNeighborsOffsets_subdomain, 
+                         elementNeighborsOffsets_subdomain,
                          elementNeighbors_subdomain,
                          PETSC_NULL,//weights_subdomain,
                          &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
@@ -1397,14 +98,14 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
   MatPartitioningSetFromOptions(petscPartition);
-  
+
   //get a petsc index set that has the new submdomain number for each element
   IS elementPartitioningIS_new;
-  MatPartitioningApply(petscPartition,&elementPartitioningIS_new); 
+  MatPartitioningApply(petscPartition,&elementPartitioningIS_new);
   MatPartitioningDestroy(&petscPartition);
   //MatDestroy(petscAdjacency);
   //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
-    
+
   //experiment with metis
   //mwf set some defaults and not call if size == 1 since metis crashes
   //cek commenting out for now
@@ -1420,16 +121,16 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   //     partout<<mesh.nElements_global<<"\t"<<size<<std::endl;
   //     for (int eN=0;eN<mesh.nElements_global;eN++)
   //       {
-  // 	partout<<(eN+1)<<"\t"<<(1+epart[eN])<<std::endl;
-  // 	eleout<<(eN+1)<<"\t"<<(1+mesh.elementNodesArray[eN*3+0])
-  // 	      <<"\t"<<(1+mesh.elementNodesArray[eN*3+1])
-  // 	      <<"\t"<<(1+mesh.elementNodesArray[eN*3+2])
-  // 	      <<std::endl;
+  //    partout<<(eN+1)<<"\t"<<(1+epart[eN])<<std::endl;
+  //    eleout<<(eN+1)<<"\t"<<(1+mesh.elementNodesArray[eN*3+0])
+  //          <<"\t"<<(1+mesh.elementNodesArray[eN*3+1])
+  //          <<"\t"<<(1+mesh.elementNodesArray[eN*3+2])
+  //          <<std::endl;
   //       }
   //     nodeout<<mesh.nNodes_global<<" 2 0 0"<<std::endl;
   //     for (int nN=0;nN<mesh.nNodes_global;nN++)
   //       {
-  // 	nodeout<<(nN+1)<<"\t"<<mesh.nodeArray[nN*3+0]<<"\t"<<mesh.nodeArray[nN*3+1]<<std::endl;
+  //    nodeout<<(nN+1)<<"\t"<<mesh.nodeArray[nN*3+0]<<"\t"<<mesh.nodeArray[nN*3+1]<<std::endl;
   //       }
   //     eleout.close();
   //     partout.close();
@@ -1474,10 +175,10 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   for (int eN=0;eN<mesh.nElements_global;eN++)
     {
       for (int nN=0;nN<mesh.nNodes_element;nN++)
-        elementNodesArray_new[eN*mesh.nNodes_element + nN] = 
+        elementNodesArray_new[eN*mesh.nNodes_element + nN] =
           mesh.elementNodesArray[elementNumbering_global_new2old[eN]*mesh.nNodes_element+nN];
       for (int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
-        elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN] = 
+        elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN] =
           mesh.elementNeighborsArray[elementNumbering_global_new2old[eN]*mesh.nElementBoundaries_element+ebN];
       elementMaterialTypes_new[eN] = mesh.elementMaterialTypes[elementNumbering_global_new2old[eN]];
     }
@@ -1488,12 +189,12 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
         {
           int eN_ebN = elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN];
           if (eN_ebN >= 0)
-            elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN] = 
+            elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN] =
               elementNumbering_global_old2new[eN_ebN];
         }
     }
   for(int ebN=0;ebN<mesh.nElementBoundaries_global;ebN++)
-    {     
+    {
       int eN_L_old = mesh.elementBoundaryElementsArray[ebN*2+0],
         eN_R_old = mesh.elementBoundaryElementsArray[ebN*2+1];
       elementBoundaryElementsArray_new[ebN*2+0] = elementNumbering_global_old2new[eN_L_old];
@@ -1507,9 +208,9 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   //in the long run it wouldn't be bad to do a global repartition of faces and edges for mixed hybrid
   //and non-conforming finite elements
   MPI_Status status;
-  PetscBT nodeMask; 
+  PetscBT nodeMask;
   PetscBTCreate(mesh.nNodes_global,&nodeMask);
-  if (rank > 0) 
+  if (rank > 0)
     {
       MPI_Recv(nodeMask,PetscBTLength(mesh.nNodes_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status);
     }
@@ -1601,17 +302,17 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   //     partout<<mesh.nElements_global<<"\t"<<size<<std::endl;
   //     for (int eN=0;eN<mesh.nElements_global;eN++)
   //       {
-  // 	partout<<(eN+1)<<"\t"<<(1+epart[elementNumbering_global_new2old[eN]])<<std::endl;
-  // 	//partout<<(eN+1)<<"\t"<<(1+epart[eN])<<std::endl;
-  // 	eleout<<(eN+1)<<"\t"<<(1+elementNodesArray_new[eN*3+0])
-  // 	      <<"\t"<<(1+elementNodesArray_new[eN*3+1])
-  // 	      <<"\t"<<(1+elementNodesArray_new[eN*3+2])
-  // 	      <<std::endl;
+  //    partout<<(eN+1)<<"\t"<<(1+epart[elementNumbering_global_new2old[eN]])<<std::endl;
+  //    //partout<<(eN+1)<<"\t"<<(1+epart[eN])<<std::endl;
+  //    eleout<<(eN+1)<<"\t"<<(1+elementNodesArray_new[eN*3+0])
+  //          <<"\t"<<(1+elementNodesArray_new[eN*3+1])
+  //          <<"\t"<<(1+elementNodesArray_new[eN*3+2])
+  //          <<std::endl;
   //       }
   //     nodeout<<mesh.nNodes_global<<" 2 0 0"<<std::endl;
   //     for (int nN=0;nN<mesh.nNodes_global;nN++)
   //       {
-  // 	nodeout<<(nN+1)<<"\t"<<nodeArray_new[nN*3+0]<<"\t"<<nodeArray_new[nN*3+1]<<std::endl;
+  //    nodeout<<(nN+1)<<"\t"<<nodeArray_new[nN*3+0]<<"\t"<<nodeArray_new[nN*3+1]<<std::endl;
   //       }
   //     eleout.close();
   //     partout.close();
@@ -1625,7 +326,7 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
         if (nN_global < nodeOffsets_new[rank] || nN_global >= nodeOffsets_new[rank+1])
           nodes_overlap.insert(nN_global);
       }
-    
+
 
   if (nElements_overlap > 0)
     {
@@ -1673,7 +374,7 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
         for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
           {
             int eN_ebN = elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN];
-            if (eN_ebN >= 0 && 
+            if (eN_ebN >= 0 &&
                 (eN_ebN < elementOffsets_new[rank] || eN_ebN >= elementOffsets_new[rank+1]))
               {
                 elements_overlap.insert(eN_ebN);
@@ -1706,7 +407,7 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
                     }
                 }
             }
-        }            
+        }
     }
   //6. Now build subdomain mesh
   //
@@ -1755,7 +456,7 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
       elementNumbering_subdomain2global[eN] = eN_global;
       mesh.subdomainp->elementMaterialTypes[eN] = elementMaterialTypes_new[eN_global];
       for (int nN=0;nN<mesh.subdomainp->nNodes_element;nN++)
-        mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] = 
+        mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] =
           nodeNumbering_global2subdomain[elementNodesArray_new[eN_global*mesh.nNodes_element + nN]];
     }
   set<int>::iterator eN_p=elements_overlap.begin();
@@ -1765,7 +466,7 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
       mesh.subdomainp->elementMaterialTypes[eN] = elementMaterialTypes_new[eN_global];
       elementNumbering_subdomain2global[eN] = eN_global;
       for (int nN=0;nN<mesh.subdomainp->nNodes_element;nN++)
-        mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] = 
+        mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] =
           nodeNumbering_global2subdomain[elementNodesArray_new[eN_global*mesh.nNodes_element + nN]];
     }
 
@@ -1835,14 +536,10 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   return 0;
 }
 
-int partitionNodes(Mesh& mesh, int nNodes_overlap)
+int partitionNodes(const MPI_Comm& PROTEUS_COMM_WORLD,  Mesh& mesh, int nNodes_overlap)
 {
   using namespace std;
   int ierr,size,rank;
-
-  if (!ensure_comm()) {
-    return -1;
-  }
 
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
@@ -1863,7 +560,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 
     5. Generate global element numbering for new subdomain ownership
 
-    6. Create overlap (ghost) information for nodes and elements 
+    6. Create overlap (ghost) information for nodes and elements
 
     7. March through additional layers of overlap if requested,
 
@@ -1873,12 +570,12 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //1. Build default nodal partition
   //
   //compute offsets to build processor (local) to global ordering for nodes
-  //in default partitioning 
+  //in default partitioning
   valarray<int> nodeOffsets_old(size+1);
   nodeOffsets_old[0] = 0;
   for (int sdN=0; sdN < size; sdN++)
     {
-      nodeOffsets_old[sdN+1] = nodeOffsets_old[sdN] + 
+      nodeOffsets_old[sdN+1] = nodeOffsets_old[sdN] +
         int(mesh.nNodes_global)/size + (int(mesh.nNodes_global)%size > sdN);
     }
   //
@@ -1893,7 +590,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   for (int nN = 0,offset=0; nN < nNodes_subdomain; nN++)
     {
       int nN_global = nodeOffsets_old[rank] + nN;
-      for (int offset_global = mesh.nodeStarOffsets[nN_global]; 
+      for (int offset_global = mesh.nodeStarOffsets[nN_global];
            offset_global < mesh.nodeStarOffsets[nN_global+1]; offset_global++)
         {
           nodeNeighbors_subdomain[offset++] = mesh.nodeStarArray[offset_global];
@@ -1909,22 +606,22 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //
   Mat petscAdjacency;
   //   MatCreateMPIAdj(PROTEUS_COMM_WORLD,
-  // 		  nNodes_subdomain, mesh.nNodes_global,
-  // 		  &nodeNeighborsOffsets_subdomain[0], &nodeNeighbors_subdomain[0],
-  // 		  &weights_subdomain[0],//PETSC_NULL,//ignore weighting for now
-  // 		  &petscAdjacency);
+  //              nNodes_subdomain, mesh.nNodes_global,
+  //              &nodeNeighborsOffsets_subdomain[0], &nodeNeighbors_subdomain[0],
+  //              &weights_subdomain[0],//PETSC_NULL,//ignore weighting for now
+  //              &petscAdjacency);
   ierr = MatCreateMPIAdj(PROTEUS_COMM_WORLD,
-			 nNodes_subdomain, 
-			 mesh.nNodes_global,
-			 nodeNeighborsOffsets_subdomain, 
-			 nodeNeighbors_subdomain,
-			 PETSC_NULL,//weights_subdomain,
-			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+                         nNodes_subdomain,
+                         mesh.nNodes_global,
+                         nodeNeighborsOffsets_subdomain,
+                         nodeNeighbors_subdomain,
+                         PETSC_NULL,//weights_subdomain,
+                         &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   MatPartitioning petscPartition;
   MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
   MatPartitioningSetFromOptions(petscPartition);
-  
+
   //get petsc index set that has the new subdomain number for each node
   IS nodePartitioningIS_new;
   MatPartitioningApply(petscPartition,&nodePartitioningIS_new);
@@ -1949,7 +646,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 
   IS nodeNumberingIS_global_old2new;
   ISAllGather(nodeNumberingIS_subdomain_old2new,&nodeNumberingIS_global_old2new);
-  //mwf original and correct I believe 
+  //mwf original and correct I believe
   const PetscInt * nodeNumbering_global_old2new;//needs restore call
   ISGetIndices(nodeNumberingIS_global_old2new,&nodeNumbering_global_old2new);
 
@@ -1962,33 +659,33 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //   if (rank == 0)
   //     {
   //       for (int sdN = 0; sdN < size+1; sdN++)
-  // 	std::cout<<"partitionNodes rank= "<<rank<<" nodeOffset["<<sdN<<"]= "<<nodeOffsets_new[sdN]<<std::endl;
+  //    std::cout<<"partitionNodes rank= "<<rank<<" nodeOffset["<<sdN<<"]= "<<nodeOffsets_new[sdN]<<std::endl;
   //       for (int nN = 0; nN < mesh.nNodes_global; nN++)
-  // 	{
-  // 	  std::cout<<"partitionNodes rank= "<<rank<<" nN= "<<nN<<" old2new= "<<nodeNumbering_global_old2new[nN]<<" new2old= "<<nodeNumbering_global_new2old[nN]<<std::endl;
-  // 	}
+  //    {
+  //      std::cout<<"partitionNodes rank= "<<rank<<" nN= "<<nN<<" old2new= "<<nodeNumbering_global_old2new[nN]<<" new2old= "<<nodeNumbering_global_new2old[nN]<<std::endl;
+  //    }
   //       for (int sdN = 0; sdN < size; sdN++)
-  // 	{
-  // 	  std::cout<<"============"<<std::endl;
-  // 	  std::cout<<"partitionNodes rank= "<<sdN<<" nNodes_owned= "<<nodeOffsets_new[sdN+1]-nodeOffsets_new[sdN]<<" = "<<std::endl;
-  // 	  for (int nN = nodeOffsets_new[sdN]; nN < nodeOffsets_new[sdN+1]; nN++)
-  // 	    {
-  // 	      std::cout<<"new number= "<<nN<<" <--> old number "<<nodeNumbering_global_new2old[nN]<<" x,y,z= "
-  // 		       <<mesh.nodeArray[nodeNumbering_global_new2old[nN]*3+0]<<" , "
-  // 		       <<mesh.nodeArray[nodeNumbering_global_new2old[nN]*3+1]<<" , "
-  // 		       <<mesh.nodeArray[nodeNumbering_global_new2old[nN]*3+2]<<std::endl;
-  // 	    }
-  // 	}
-      
+  //    {
+  //      std::cout<<"============"<<std::endl;
+  //      std::cout<<"partitionNodes rank= "<<sdN<<" nNodes_owned= "<<nodeOffsets_new[sdN+1]-nodeOffsets_new[sdN]<<" = "<<std::endl;
+  //      for (int nN = nodeOffsets_new[sdN]; nN < nodeOffsets_new[sdN+1]; nN++)
+  //        {
+  //          std::cout<<"new number= "<<nN<<" <--> old number "<<nodeNumbering_global_new2old[nN]<<" x,y,z= "
+  //                   <<mesh.nodeArray[nodeNumbering_global_new2old[nN]*3+0]<<" , "
+  //                   <<mesh.nodeArray[nodeNumbering_global_new2old[nN]*3+1]<<" , "
+  //                   <<mesh.nodeArray[nodeNumbering_global_new2old[nN]*3+2]<<std::endl;
+  //        }
+  //    }
+
   //     }
   //
   //4. To build subdomain meshes, go through and collect elements containing
-  //   the locally owned nodes. Assign processor ownership of elements 
-  //   
+  //   the locally owned nodes. Assign processor ownership of elements
+  //
   MPI_Status status;
   PetscBT elementMask;
   PetscBTCreate(mesh.nElements_global,&elementMask);
-  //get the owned element information 
+  //get the owned element information
   if (rank > 0)
     {
       MPI_Recv(elementMask,PetscBTLength(mesh.nElements_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status);
@@ -1998,7 +695,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   for (int nN = nodeOffsets_new[rank]; nN < nodeOffsets_new[rank+1]; nN++)
     {
       int nN_global_old = nodeNumbering_global_new2old[nN];
-      for (int eN_star_offset = mesh.nodeElementOffsets[nN_global_old]; 
+      for (int eN_star_offset = mesh.nodeElementOffsets[nN_global_old];
            eN_star_offset < mesh.nodeElementOffsets[nN_global_old+1]; eN_star_offset++)
         {
           int eN_star_old = mesh.nodeElementsArray[eN_star_offset];
@@ -2013,25 +710,25 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //     {
   //       int nN_global_old = nodeNumbering_global_new2old[nN];
   //       int nElements_owned_nN =0;
-  //       for (int eN_star_offset = mesh.nodeElementOffsets[nN_global_old]; 
-  // 	   eN_star_offset < mesh.nodeElementOffsets[nN_global_old+1]; eN_star_offset++)
-  // 	{
-  // 	  int eN_star_old = mesh.nodeElementsArray[eN_star_offset];
-  // 	  if (elements_subdomain_owned.find(eN_star_old) != elements_subdomain_owned.end())
-  // 	    nElements_owned_nN++;
-  // 	}
-    
+  //       for (int eN_star_offset = mesh.nodeElementOffsets[nN_global_old];
+  //       eN_star_offset < mesh.nodeElementOffsets[nN_global_old+1]; eN_star_offset++)
+  //    {
+  //      int eN_star_old = mesh.nodeElementsArray[eN_star_offset];
+  //      if (elements_subdomain_owned.find(eN_star_old) != elements_subdomain_owned.end())
+  //        nElements_owned_nN++;
+  //    }
+
   //       if (nElements_owned_nN <= 0)
-  // 	{
-  // 	  std::cout<<"Problem? proc "<<rank<<" nN_new = "<<nN<<" nN_old= "<<nN_global_old<<" nElements_owned_for_nN = "<<nElements_owned_nN<<std::endl;
-  // 	  //find out processor owners for node neighbors
-  // 	  for (int offset = mesh.nodeStarOffsets[nN_global_old]; offset < mesh.nodeStarOffsets[nN_global_old+1]; offset++)
-  // 	    {
-  // 	      int nN_neig_old = mesh.nodeStarArray[offset];
-  // 	      std::cout<<"\t neig node old "<<nN_neig_old<<" neig node new "<<nodeNumbering_global_old2new[nN_neig_old]<<" this proc offsets= ["
-  // 		       <<nodeOffsets_new[rank]<<","<<nodeOffsets_new[rank+1]<<"];"<<std::endl;
-  // 	    }
-  // 	}
+  //    {
+  //      std::cout<<"Problem? proc "<<rank<<" nN_new = "<<nN<<" nN_old= "<<nN_global_old<<" nElements_owned_for_nN = "<<nElements_owned_nN<<std::endl;
+  //      //find out processor owners for node neighbors
+  //      for (int offset = mesh.nodeStarOffsets[nN_global_old]; offset < mesh.nodeStarOffsets[nN_global_old+1]; offset++)
+  //        {
+  //          int nN_neig_old = mesh.nodeStarArray[offset];
+  //          std::cout<<"\t neig node old "<<nN_neig_old<<" neig node new "<<nodeNumbering_global_old2new[nN_neig_old]<<" this proc offsets= ["
+  //                   <<nodeOffsets_new[rank]<<","<<nodeOffsets_new[rank+1]<<"];"<<std::endl;
+  //        }
+  //    }
   //     }
   //pass off newly marked info
   if (rank < size-1)
@@ -2058,7 +755,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   elementOffsets_new[0] = 0;
   for (int sdN = 0; sdN < size; sdN++)
     elementOffsets_new[sdN+1] = elementOffsets_new[sdN] + nElements_subdomain_new[sdN];
-  
+
   //map to old element numbering
   valarray<int> elementNumbering_subdomain_new2old(elements_subdomain_owned.size());
   set<int>::iterator eN_ownedp = elements_subdomain_owned.begin();
@@ -2072,7 +769,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
                   &elementNumberingIS_subdomain_new2old);
   IS elementNumberingIS_global_new2old;
   ISAllGather(elementNumberingIS_subdomain_new2old,&elementNumberingIS_global_new2old);
-  
+
   const PetscInt *elementNumbering_global_new2old;//needs to be restored
   ISGetIndices(elementNumberingIS_global_new2old,&elementNumbering_global_new2old);
   //reverse mapping
@@ -2090,18 +787,18 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   for (int eN=0; eN < mesh.nElements_global; eN++)
     for (int ebN=0; ebN < mesh.nElementBoundaries_element; ebN++)
       {
-        elementBoundariesArray_new[eN*mesh.nElementBoundaries_element+ebN] = 
+        elementBoundariesArray_new[eN*mesh.nElementBoundaries_element+ebN] =
           mesh.elementBoundariesArray[elementNumbering_global_new2old[eN]*mesh.nElementBoundaries_element+ebN];
       }
   MPI_Status status_elementBoundaries;
-  PetscBT elementBoundaryMask; 
+  PetscBT elementBoundaryMask;
   PetscBTCreate(mesh.nElementBoundaries_global,&elementBoundaryMask);
-  if (rank > 0) 
+  if (rank > 0)
     {
       MPI_Recv(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status_elementBoundaries);
     }
   //mark the unmarked faces on this subdomain and store the global face numbers
-  //going through owned elements can pick up owned elementBoundaries on "outside" of owned nodes nodeStars 
+  //going through owned elements can pick up owned elementBoundaries on "outside" of owned nodes nodeStars
   set<int> elementBoundaries_subdomain_owned;
   if (mesh.nNodes_element == 8)
     {
@@ -2112,13 +809,13 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
                          {2,3,7,6},
                          {3,0,4,7},
                          {4,5,6,7}};
-		       
+
 
       for (int nN = nodeOffsets_new[rank]; nN < nodeOffsets_new[rank+1]; nN++)
         {
           int nN_global_old = nodeNumbering_global_new2old[nN];
           //now get elements in node star
-          for (int offset_old = mesh.nodeElementOffsets[nN_global_old]; 
+          for (int offset_old = mesh.nodeElementOffsets[nN_global_old];
                offset_old < mesh.nodeElementOffsets[nN_global_old+1]; offset_old++)
             {
               int eN_star_old = mesh.nodeElementsArray[offset_old];
@@ -2127,33 +824,33 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
               //loop through element boundaries on each element, want but want to skip
               //the element boundary across from the owned node
               for (int ebN=0; ebN<mesh.nElementBoundaries_element;ebN++)
-                {	      
+                {
                   bool foundNode = false;
                   for (int nNl=0; nNl<mesh.nNodes_elementBoundary ;nNl++)
-                    {		  	 		 		    
+                    {
                       int nN_global_old_across = mesh.elementNodesArray[eN_star_old*mesh.nNodes_element + lface[ebN][nNl]];
-                      if (nN_global_old_across == nN_global_old) foundNode = true;		  
-                    } 
+                      if (nN_global_old_across == nN_global_old) foundNode = true;
+                    }
                   if (foundNode)
-                    { 
+                    {
                       int ebN_global=elementBoundariesArray_new[eN_star_new*mesh.nElementBoundaries_element+ebN];
                       if (!PetscBTLookupSet(elementBoundaryMask,ebN_global))
                         elementBoundaries_subdomain_owned.insert(ebN_global);
                     }
                 }
-	      	
-            } 
+
+            }
         }
-      
-    }  
-  else 
+
+    }
+  else
     {
 
       for (int nN = nodeOffsets_new[rank]; nN < nodeOffsets_new[rank+1]; nN++)
         {
           int nN_global_old = nodeNumbering_global_new2old[nN];
           //now get elements in node star
-          for (int offset_old = mesh.nodeElementOffsets[nN_global_old]; 
+          for (int offset_old = mesh.nodeElementOffsets[nN_global_old];
                offset_old < mesh.nodeElementOffsets[nN_global_old+1]; offset_old++)
             {
               int eN_star_old = mesh.nodeElementsArray[offset_old];
@@ -2224,8 +921,8 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
           elementBoundariesArray_new[eN*mesh.nElementBoundaries_element+ebN] = elementBoundaryNumbering_old2new_global[ebN_old];
         }
     }
-  
-  //4c,5c. Build global edge numbering as well ownership is determined by who owns the left (0) node 
+
+  //4c,5c. Build global edge numbering as well ownership is determined by who owns the left (0) node
   //    of the edge
   map<NodeTuple<2>, int> nodesEdgeMap_global; //new global node numbers --> original edge numbering
   set<int> edges_subdomain_owned;
@@ -2246,7 +943,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 
   valarray<int> nEdges_subdomain_new(size),
     edgeOffsets_new(size+1);
-  
+
   for (int sdN=0; sdN < size; sdN++)
     if (sdN == rank)
       nEdges_subdomain_new[sdN] = edges_subdomain_owned.size();
@@ -2258,13 +955,13 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   edgeOffsets_new[0] = 0;
   for (int sdN=0;sdN<size;sdN++)
     edgeOffsets_new[sdN+1] = edgeOffsets_new[sdN]+nEdges_subdomain_new[sdN];
-  
-  //build new petsc numbering and global maps from old2new and new2old 
+
+  //build new petsc numbering and global maps from old2new and new2old
   valarray<int> edgeNumbering_new2old(edges_subdomain_owned.size());
   set<int>::iterator edges_ownedp = edges_subdomain_owned.begin();
   for (int i=0; i < int(edges_subdomain_owned.size());i++)
     edgeNumbering_new2old[i] = *edges_ownedp++;
-    
+
   IS edgeNumberingIS_subdomain_new2old;
   ISCreateGeneral(PROTEUS_COMM_WORLD,edges_subdomain_owned.size(),&edgeNumbering_new2old[0],PETSC_COPY_VALUES,&edgeNumberingIS_subdomain_new2old);
   IS edgeNumberingIS_global_new2old;
@@ -2276,8 +973,8 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     {
       edgeNumbering_old2new_global[edgeNumbering_global_new2old[ig]] = ig;
     }
-  
-  
+
+
   //create  array with (new edge) --> (new node 0, new node 1)
   //and map from (new node 0, new node 1) --> (new global edge)
   valarray<int> edgeNodesArray_newNodesAndEdges(2*mesh.nEdges_global);
@@ -2288,7 +985,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       const int nN1_global_old = mesh.edgeNodesArray[2*ig+1];
       const int nN0_global     = nodeNumbering_global_old2new[nN0_global_old];
       const int nN1_global     = nodeNumbering_global_old2new[nN1_global_old];
-      
+
       const int edge_new = edgeNumbering_old2new_global[ig];
       edgeNodesArray_newNodesAndEdges[edge_new*2+0] = nN0_global;
       edgeNodesArray_newNodesAndEdges[edge_new*2+1] = nN1_global;
@@ -2298,7 +995,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       NodeTuple<2> et(nodes);
       nodesEdgeMap_global_new[et] = edge_new;
     }
-  
+
 
 
 
@@ -2307,24 +1004,24 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //
   //6. Figure out which elements are in node stars but are not locally owned, create ghost information
   //   for these, do the same for elements
-  
+
   set<int> elements_overlap,nodes_overlap,elementBoundaries_overlap,edges_overlap;
   for (int nN = nodeOffsets_new[rank]; nN < nodeOffsets_new[rank+1]; nN++)
     {
       int nN_global_old = nodeNumbering_global_new2old[nN];
       //nodes in node star
-      for (int offset_old = mesh.nodeStarOffsets[nN_global_old]; 
+      for (int offset_old = mesh.nodeStarOffsets[nN_global_old];
            offset_old < mesh.nodeStarOffsets[nN_global_old+1]; offset_old++)
         {
           int nN_neig_old = mesh.nodeStarArray[offset_old];
           int nN_neig_new = nodeNumbering_global_old2new[nN_neig_old];
-	  
+
           bool offproc = nN_neig_new >=  nodeOffsets_new[rank+1] || nN_neig_new < nodeOffsets_new[rank];
           if (offproc)
             nodes_overlap.insert(nN_neig_new);
         }
       //now get elements, elementBoundaries, and edges in node star
-      for (int offset_old = mesh.nodeElementOffsets[nN_global_old]; 
+      for (int offset_old = mesh.nodeElementOffsets[nN_global_old];
            offset_old < mesh.nodeElementOffsets[nN_global_old+1]; offset_old++)
         {
           int eN_star_old = mesh.nodeElementsArray[offset_old];
@@ -2335,10 +1032,10 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
           for (int ebN=0; ebN<mesh.nElementBoundaries_element;ebN++)
             {
               int ebN_global=elementBoundariesArray_new[eN_star_new*mesh.nElementBoundaries_element+ebN];
-              // 	      //mwf debug
-              // 	      std::cout<<"partitionNode default overlap rank= "<<rank<<" nN_new= "<<nN<<" eN_star_new= "<<eN_star_new<<" ebN= "<<ebN
-              // 		       <<" ebN_global= "<<ebN_global<<" ghost= "<<(ebN_global < elementBoundaryOffsets_new[rank] || ebN_global >= elementBoundaryOffsets_new[rank+1])
-              // 		       <<" offsets= ["<<elementBoundaryOffsets_new[rank]<<","<<elementBoundaryOffsets_new[rank+1]<<"]"<<std::endl;
+              //              //mwf debug
+              //              std::cout<<"partitionNode default overlap rank= "<<rank<<" nN_new= "<<nN<<" eN_star_new= "<<eN_star_new<<" ebN= "<<ebN
+              //                       <<" ebN_global= "<<ebN_global<<" ghost= "<<(ebN_global < elementBoundaryOffsets_new[rank] || ebN_global >= elementBoundaryOffsets_new[rank+1])
+              //                       <<" offsets= ["<<elementBoundaryOffsets_new[rank]<<","<<elementBoundaryOffsets_new[rank+1]<<"]"<<std::endl;
               if (ebN_global < elementBoundaryOffsets_new[rank] || ebN_global >= elementBoundaryOffsets_new[rank+1])
                 {
                   elementBoundaries_overlap.insert(ebN_global);
@@ -2379,7 +1076,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
         {
           int nN_global_new = *nN_p;
           int nN_global_old = nodeNumbering_global_new2old[nN_global_new];//need old numbering for connectivity
-          for (int offset_old = mesh.nodeStarOffsets[nN_global_old]; 
+          for (int offset_old = mesh.nodeStarOffsets[nN_global_old];
                offset_old < mesh.nodeStarOffsets[nN_global_old+1]; offset_old++)
             {
               int nN_neig_old = mesh.nodeStarArray[offset_old];
@@ -2411,10 +1108,10 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
               for (int ebN=0; ebN<mesh.nElementBoundaries_element;ebN++)
                 {
                   int ebN_global=elementBoundariesArray_new[eN_star_new*mesh.nElementBoundaries_element+ebN];
-                  // 		  //mwf debug
-                  // 		  std::cout<<"partitionNode overlap_remaining= "<<overlap_remaining<<" rank= "<<rank<<" nN_global_new= "<<nN_global_new<<" eN_star_new= "<<eN_star_new<<" ebN= "<<ebN
-                  // 			   <<" ebN_global= "<<ebN_global<<" ghost= "<<(ebN_global < elementBoundaryOffsets_new[rank] || ebN_global >= elementBoundaryOffsets_new[rank+1])
-                  // 			   <<" offsets= ["<<elementBoundaryOffsets_new[rank]<<","<<elementBoundaryOffsets_new[rank+1]<<std::endl;
+                  //              //mwf debug
+                  //              std::cout<<"partitionNode overlap_remaining= "<<overlap_remaining<<" rank= "<<rank<<" nN_global_new= "<<nN_global_new<<" eN_star_new= "<<eN_star_new<<" ebN= "<<ebN
+                  //                       <<" ebN_global= "<<ebN_global<<" ghost= "<<(ebN_global < elementBoundaryOffsets_new[rank] || ebN_global >= elementBoundaryOffsets_new[rank+1])
+                  //                       <<" offsets= ["<<elementBoundaryOffsets_new[rank]<<","<<elementBoundaryOffsets_new[rank+1]<<std::endl;
                   if (ebN_global < elementBoundaryOffsets_new[rank] || ebN_global >= elementBoundaryOffsets_new[rank+1])
                     new_elementBoundaries_overlap.insert(ebN_global);
                 }//element boundaries
@@ -2444,7 +1141,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
                      insert_iterator<set<int> >(last_nodes_added2overlap,
                                                 last_nodes_added2overlap.begin()));
 
-      //could do a set_merge 
+      //could do a set_merge
       for (set<int>::iterator nN_addedp = new_nodes_overlap.begin();
            nN_addedp != new_nodes_overlap.end();
            nN_addedp++)
@@ -2476,7 +1173,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 
   //
   //8. Build subdomain meshes in new numbering, assumes memory not allocated in subdomain mesh
-  //   
+  //
   if (mesh.subdomainp == NULL)
     mesh.subdomainp = new Mesh();
   mesh.subdomainp->nElements_global = nElements_subdomain_new[rank] + elements_overlap.size();
@@ -2573,7 +1270,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       elementBoundaryNumbering_global2subdomain[ebN_global] = ebN;
     }
   //need elementBoundariesArray to assign consistent numbering on subdomain
-  mesh.subdomainp->elementBoundariesArray = 
+  mesh.subdomainp->elementBoundariesArray =
     new int[mesh.subdomainp->nElements_global*mesh.subdomainp->nElementBoundaries_element];
   for (int eN=0;eN<nElements_subdomain_new[rank];eN++)
     {
@@ -2591,7 +1288,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
         mesh.subdomainp->elementBoundariesArray[eN*mesh.subdomainp->nElementBoundaries_element+ebN] =
           elementBoundaryNumbering_global2subdomain[elementBoundariesArray_new[eN_global_new*mesh.nElementBoundaries_element + ebN]];
 
-    }      
+    }
 
   //edges
   mesh.subdomainp->edgeNodesArray = new int[mesh.subdomainp->nEdges_global*2];
@@ -2615,13 +1312,13 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       const int ig =*edge_p++;
       const int nN0_global = edgeNodesArray_newNodesAndEdges[ig*2+0];
       const int nN1_global = edgeNodesArray_newNodesAndEdges[ig*2+1];
-      //mwf todo make sure always have nodes for the edge on this processor 
+      //mwf todo make sure always have nodes for the edge on this processor
       const int nN0_subdomain = nodeNumbering_global2subdomain[nN0_global];
       const int nN1_subdomain = nodeNumbering_global2subdomain[nN1_global];
       mesh.subdomainp->edgeNodesArray[2*i+0]=nN0_subdomain;
       mesh.subdomainp->edgeNodesArray[2*i+1]=nN1_subdomain;
       edgeNumbering_subdomain2global[i] = ig;
-	
+
     }
 
   //now build rest of subdomain mesh connectivity information etc
@@ -2697,7 +1394,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
         }
     }
   //transfer information about owned nodes and elements to mesh
-  if (mesh.nodeOffsets_subdomain_owned) 
+  if (mesh.nodeOffsets_subdomain_owned)
     delete [] mesh.nodeOffsets_subdomain_owned;
   if (mesh.elementOffsets_subdomain_owned)
     delete [] mesh.elementOffsets_subdomain_owned;
@@ -2745,53 +1442,30 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   ISDestroy(&nodePartitioningIS_new);
   ISDestroy(&nodeNumberingIS_subdomain_old2new);
   ISDestroy(&nodeNumberingIS_global_old2new);
-  
+
   ISRestoreIndices(elementNumberingIS_global_new2old,&elementNumbering_global_new2old);
-  
+
   ISDestroy(&elementNumberingIS_subdomain_new2old);
   ISDestroy(&elementNumberingIS_global_new2old);
 
   ISRestoreIndices(elementBoundaryNumberingIS_global_new2old,&elementBoundaryNumbering_global_new2old);
-  
+
   ISDestroy(&elementBoundaryNumberingIS_subdomain_new2old);
   ISDestroy(&elementBoundaryNumberingIS_global_new2old);
 
   ISRestoreIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
-  
+
   ISDestroy(&edgeNumberingIS_subdomain_new2old);
   ISDestroy(&edgeNumberingIS_global_new2old);
 
   return 0;
 }
 
-int enforceMemoryLimit(int rank, double max_rss_gb,const char* msg)
-{
-  double current, current_global,gb(1.0e-9);
-  PetscBarrier(NULL);
-  current = double(getCurrentRSS())*gb;
-  PetscBarrier(NULL);
-  current_global=0.0;
-  MPI_Allreduce(&current,&current_global,1,MPI_DOUBLE,MPI_MAX,PROTEUS_COMM_WORLD);
-  if (current > max_rss_gb)
-    {
-      std::cout<<"Raising PETSC_ERR_MEM, Memory usage  on rank "<<rank<<'\t'<<current<<"GB"<<'\t'<<"limit "<<max_rss_gb<<std::endl;
-      SETERRABORT(PROTEUS_COMM_WORLD,PETSC_ERR_MEM,"Exceeded Proteus memory limit");
-    }
-  if (rank ==  0)
-    std::cout<<msg<<std::endl
-	     <<"Max memory usage per core "<<current_global<<"GB"<<std::endl;
-  return 0;
-}
-
-int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& newMesh, int nNodes_overlap)
+int partitionNodesFromTetgenFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const char* filebase, int indexBase, Mesh& newMesh, int nNodes_overlap)
 {
   using namespace std;
   PetscErrorCode ierr;
   PetscMPIInt size,rank;
-
-  if (!ensure_comm()) {
-    return -1;
-  }
 
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
@@ -2815,7 +1489,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 
     5. Generate global element, element boundary, and edge  numbering for new subdomain ownership
 
-    6. Create overlap (ghost) information for nodes and elements 
+    6. Create overlap (ghost) information for nodes and elements
 
     7. March through additional layers of overlap if requested,
 
@@ -2832,7 +1506,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   std::string elementFileName = std::string(filebase) + ".ele" ;
   std::string elementBoundaryFileName  = std::string(filebase) + ".face" ;
   std::string edgeFileName  = std::string(filebase) + ".edge" ;
-  
+
   //
   //1. Build default nodal partition
   //
@@ -2845,7 +1519,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   int read_elements_event;
   PetscLogEventRegister("Read eles",0,&read_elements_event);
   PetscLogEventBegin(read_elements_event,0,0,0,0);
-  std::ifstream vertexFile(vertexFileName.c_str());  
+  std::ifstream vertexFile(vertexFileName.c_str());
   if (!vertexFile.good())
     {
       std::cerr<<"cannot open Tetgen node file "
@@ -2876,11 +1550,11 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   nodeOffsets_old[0] = 0;
   for (int sdN=0; sdN < size; sdN++)
     {
-      nodeOffsets_old[sdN+1] = nodeOffsets_old[sdN] + 
+      nodeOffsets_old[sdN+1] = nodeOffsets_old[sdN] +
         int(nNodes_global)/size + (int(nNodes_global)%size > sdN);
     }
   int nNodes_subdomain_old = nodeOffsets_old[rank+1] - nodeOffsets_old[rank];
-      
+
   //
   //2. Determine nodal connectivity (nodeStarArray) for nodes on subdomain
   //
@@ -2911,7 +1585,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       assert(0 <= ne && ne < nElements_global && elementFile.good());
       for (int iv = 0; iv < simplexDim; iv++)
         {
-          elementFile >> nv; 
+          elementFile >> nv;
           nv -= indexBase;
           assert(0 <= nv && nv < nNodes_global);
           element_nodes_old[iv] = nv;
@@ -2924,7 +1598,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
           bool inSubdomain=false;
           if (nN_star >= nodeOffsets_old[rank] && nN_star < nodeOffsets_old[rank+1])
             {
-              //this node is owned by the subdomain so 
+              //this node is owned by the subdomain so
               inSubdomain = true;
               for (int jv = 0; jv < simplexDim; jv++)
                 {
@@ -2975,8 +1649,8 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //I think we can simplify this now that nodeStarArray is local to the subdomain, could just use nodeStar instead of nodeStarArray
   for (int nN = 0,offset=0; nN < nNodes_subdomain_old; nN++)
     {
-      for (int offset_subdomain = nodeStarOffsets[nN]; 
-           offset_subdomain < nodeStarOffsets[nN+1]; 
+      for (int offset_subdomain = nodeStarOffsets[nN];
+           offset_subdomain < nodeStarOffsets[nN+1];
            offset_subdomain++)
         {
           nodeNeighbors_subdomain[offset++] = nodeStarArray[offset_subdomain];
@@ -2995,23 +1669,23 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   Mat petscAdjacency;
   int nNodes_subdomain_max=0;
   MPI_Allreduce(&nNodes_subdomain_old,
-		&nNodes_subdomain_max,
-		1,
-		MPI_INT,
-		MPI_MAX,
-		PROTEUS_COMM_WORLD);
+                &nNodes_subdomain_max,
+                1,
+                MPI_INT,
+                MPI_MAX,
+                PROTEUS_COMM_WORLD);
   if (rank ==  0)
     std::cout<<"Max nNodes_subdomain "<<nNodes_subdomain_max<<" nNodes_global "<<nNodes_global<<std::endl;
   ierr = MatCreateMPIAdj(PROTEUS_COMM_WORLD,
-			 nNodes_subdomain_old, 
-			 nNodes_global,
-			 nodeNeighborsOffsets_subdomain, 
-			 nodeNeighbors_subdomain,
-			 weights_subdomain,
-			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+                         nNodes_subdomain_old,
+                         nNodes_global,
+                         nodeNeighborsOffsets_subdomain,
+                         nodeNeighbors_subdomain,
+                         weights_subdomain,
+                         &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   //const double max_rss_gb(0.75*3.25);//half max mem per  core  on topaz
   const double max_rss_gb(0.9*3.25);//half max mem per  core  on topaz
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done allocating MPIAdj");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done allocating MPIAdj");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   MatPartitioning petscPartition;
   ierr = MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   ierr = MatPartitioningSetAdjacency(petscPartition,petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
@@ -3022,7 +1696,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   IS nodePartitioningIS_new;
   ierr = MatPartitioningApply(petscPartition,&nodePartitioningIS_new);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   ierr = MatPartitioningDestroy(&petscPartition);CHKERRABORT(PROTEUS_COMM_WORLD, ierr); //gets petscAdjacency too I believe
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done applying partition");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done applying partition");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
 
   //determine the number of nodes per subdomain in new partitioning
   valarray<int> nNodes_subdomain_new(size);
@@ -3042,42 +1716,42 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //
   //try out of core
   //
-  /* 
+  /*
    * Set up file access property list with parallel I/O access
    */
   MPI_Info info  = MPI_INFO_NULL;
   hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
   H5Pset_fapl_mpio(plist_id, PROTEUS_COMM_WORLD, info);
-  
+
   /*
    * Create a new file collectively and release property list identifier.
    */
   const char* H5FILE_NAME("mappings.h5");
   hid_t file_id = H5Fcreate(H5FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
   H5Pclose(plist_id);
-   
-  
+
+
   /*
    * Create the dataspace for the dataset.
    */
   hsize_t     dimsf[1];
   dimsf[0] = nNodes_global;
 #define RANK   1
-  hid_t filespace = H5Screate_simple(RANK, dimsf, NULL); 
-  
+  hid_t filespace = H5Screate_simple(RANK, dimsf, NULL);
+
   /*
    * Create the dataset with default properties and close filespace.
    */
   hid_t dset_id = H5Dcreate(file_id, "nodeNumbering_old2new", H5T_NATIVE_INT, filespace,
-                      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Sclose(filespace);
-  
-  /* 
+
+  /*
    * Each process defines dataset in memory and writes it to the hyperslab
    * in the file.
    */
-  hsize_t	count[1];	          /* hyperslab selection parameters */
-  hsize_t	offset[1];
+  hsize_t       count[1];                 /* hyperslab selection parameters */
+  hsize_t       offset[1];
   count[0] = nNodes_subdomain_old;
   offset[0] = nodeOffsets_old[rank];
   hid_t memspace = H5Screate_simple(RANK, count, NULL);
@@ -3089,7 +1763,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
 
   /*
-   * Initialize data buffer 
+   * Initialize data buffer
    */
   // data = (int *) malloc(sizeof(int)*count[0]*count[1]);
   // for (i=0; i < count[0]*count[1]; i++) {
@@ -3097,15 +1771,15 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   // }
   const PetscInt* data;
   ISGetIndices(nodeNumberingIS_subdomain_old2new, &data);
-  
+
   /*
    * Create property list for collective dataset write.
    */
   plist_id = H5Pcreate(H5P_DATASET_XFER);
   H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
-  
+
   herr_t status = H5Dwrite(dset_id, H5T_NATIVE_INT, memspace, filespace,
-                    plist_id, data);
+                           plist_id, data);
   //free(data);
   ISRestoreIndices(nodeNumberingIS_subdomain_old2new, &data);
   /*
@@ -3117,7 +1791,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //
   //collect new node numbers for whole mesh so that subdomain reordering and renumbering
   //can be done easily
-  
+
   IS nodeNumberingIS_global_old2new;
   ISAllGather(nodeNumberingIS_subdomain_old2new,&nodeNumberingIS_global_old2new);
   const PetscInt * nodeNumbering_global_old2new;//needs restore call
@@ -3130,19 +1804,19 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       hid_t       dataset_id;  /* identifiers */
       herr_t      status;
       int         dset_data[nNodes_global];
-      
+
       /* Open an existing file. */
       //file_id = H5Fopen("mappings.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
-      
+
       /* Open an existing dataset. */
       dataset_id = H5Dopen2(file_id, "/nodeNumbering_old2new", H5P_DEFAULT);
-      
-      status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+
+      status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                        dset_data);
 
       /* Close the dataset. */
       status = H5Dclose(dataset_id);
-      
+
       for (int i=0;i<nNodes_global;i++)
         assert(nodeNumbering_global_old2new[i] == dset_data[i]);
       std::cout<<"==================out of core old2new is correct!===================="<<std::endl;
@@ -3153,8 +1827,8 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //reverse mapping for node numbers too
   //cek hack, not needed
   /*
-  valarray<int> nodeNumbering_global_new2old(nNodes_global);
-  for (int nN = 0; nN < nNodes_global; nN++)
+    valarray<int> nodeNumbering_global_new2old(nNodes_global);
+    for (int nN = 0; nN < nNodes_global; nN++)
     nodeNumbering_global_new2old[nodeNumbering_global_old2new[nN]] = nN;
   */
   PetscLogEventEnd(repartition_nodes_event,0,0,0,0);
@@ -3163,10 +1837,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   PetscLogEventBegin(receive_element_mask_event,0,0,0,0);
   //
   //4. To build subdomain meshes, go through and collect elements containing
-  //   the locally owned nodes. Assign processor ownership of elements 
-  //  
+  //   the locally owned nodes. Assign processor ownership of elements
+  //
   PetscLogEventEnd(receive_element_mask_event,0,0,0,0);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done with masks");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done with masks");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   int build_subdomains_reread_elements_event;
   PetscLogEventRegister("Reread eles",0,&build_subdomains_reread_elements_event);
   PetscLogEventBegin(build_subdomains_reread_elements_event,0,0,0,0);
@@ -3187,7 +1861,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     }
   elementFile2 >> eatcomments >> nElements_global >> nNodesPerSimplex >> hasElementMarkers >> eatline;
   assert(nElements_global > 0);
-  assert(nNodesPerSimplex == simplexDim); 
+  assert(nNodesPerSimplex == simplexDim);
   set<int> elements_subdomain_owned;
   vector<int> element_nodes_new(4);
   int element_nodes_new_array[4];
@@ -3207,14 +1881,14 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       assert(0 <= ne && ne < nElements_global && elementFile.good());
       for (int iv = 0; iv < simplexDim; iv++)
         {
-          elementFile2 >> nv ; 
+          elementFile2 >> nv ;
           nv -= indexBase;
           assert(0 <= nv && nv < nNodes_global);
           element_nodes_old[iv] = nv;
           element_nodes_new[iv] = nodeNumbering_global_old2new[nv];
           element_nodes_new_array[iv] = element_nodes_new[iv];
         }
-      NodeTuple<4> nodeTuple(element_nodes_new_array);      
+      NodeTuple<4> nodeTuple(element_nodes_new_array);
       for (int iv = 0; iv < simplexDim; iv++)
         {
           int nN_star_new = element_nodes_new[iv];
@@ -3225,8 +1899,8 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
               //add all the element boundaries of this element
               for (int ebN=0;ebN < 4 ; ebN++)
                 {
-                  int nodes[3] = { element_nodes_new[(ebN+1) % 4], 
-                                   element_nodes_new[(ebN+2) % 4], 
+                  int nodes[3] = { element_nodes_new[(ebN+1) % 4],
+                                   element_nodes_new[(ebN+2) % 4],
                                    element_nodes_new[(ebN+3) % 4]};
                   NodeTuple<3> nodeTuple(nodes);
                   if(elementBoundaryElementsMap.find(nodeTuple) != elementBoundaryElementsMap.end())
@@ -3246,8 +1920,8 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
               for (int nNL=0,edN=0;nNL < 4 ; nNL++)
                 for(int nNR=nNL+1;nNR < 4;nNR++,edN++)
                   {
-                    int nodes[2] = { element_nodes_new[nNL], 
-                                     element_nodes_new[nNR]}; 
+                    int nodes[2] = { element_nodes_new[nNL],
+                                     element_nodes_new[nNR]};
                     NodeTuple<2> nodeTuple(nodes);
                     edgeElementsMap[nodeTuple].insert(pair<int,int>(ne,edN));
                   }
@@ -3290,7 +1964,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   int build_subdomains_send_marked_elements_event;
   PetscLogEventRegister("Mark/send eles",0,&build_subdomains_send_marked_elements_event);
   PetscLogEventBegin(build_subdomains_send_marked_elements_event,0,0,0,0);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done marking elements");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done marking elements");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   //
   //done with the element file
   //
@@ -3342,7 +2016,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //construct new offsets for elements
   elementOffsets_new[0] = 0;
   for (int sdN = 0; sdN < size; sdN++)
-    elementOffsets_new[sdN+1] = elementOffsets_new[sdN] + nElements_subdomain_new[sdN];  
+    elementOffsets_new[sdN+1] = elementOffsets_new[sdN] + nElements_subdomain_new[sdN];
   //map to old element numbering
   valarray<int> elementNumbering_subdomain_new2old(elements_subdomain_owned.size());
   set<int>::iterator eN_ownedp = elements_subdomain_owned.begin();
@@ -3356,7 +2030,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
                   &elementNumberingIS_subdomain_new2old);
   IS elementNumberingIS_global_new2old;
   ISAllGather(elementNumberingIS_subdomain_new2old,&elementNumberingIS_global_new2old);
-  
+
   const PetscInt *elementNumbering_global_new2old;//needs to be restored
   ISGetIndices(elementNumberingIS_global_new2old,&elementNumbering_global_new2old);
   //construct reverse mapping
@@ -3366,7 +2040,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       elementNumbering_global_old2new[elementNumbering_global_new2old[eN]] = eN;
     }
   PetscLogEventEnd(build_subdomains_global_numbering_elements_event,0,0,0,0);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done allocating element numbering new2old/old2new");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done allocating element numbering new2old/old2new");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   int build_subdomains_faces_event;
   PetscLogEventRegister("Subd faces",0,&build_subdomains_faces_event);
   PetscLogEventBegin(build_subdomains_faces_event,0,0,0,0);
@@ -3378,7 +2052,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //grab element boundaries from the bit array
 
   std::ifstream elementBoundaryFile(elementBoundaryFileName.c_str());
-  
+
   if (!elementBoundaryFile.good())
     {
       std::cerr<<"cannot open Tetgen face file "
@@ -3435,7 +2109,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
           supportedElementBoundaries.insert(neb);
         }
       int nodes[3] = {nn0_new,nn1_new,nn2_new};
-      NodeTuple<3> nodeTuple(nodes);      
+      NodeTuple<3> nodeTuple(nodes);
       elementBoundaryFile >> eatline;
       if (elementBoundaryElementsMap.find(nodeTuple) != elementBoundaryElementsMap.end())//this element boundary is on an element in the subdomain
         {
@@ -3476,7 +2150,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     }
   //done reading element boundaries
   elementBoundaryFile.close();
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done reading element boundaries");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done reading element boundaries");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   int nElementBoundaries_owned_subdomain=elementBoundaries_subdomain_owned.size(),
     nElementBoundaries_owned_new=0;
   MPI_Allreduce(&nElementBoundaries_owned_subdomain,&nElementBoundaries_owned_new,1,MPI_INT,MPI_SUM,PROTEUS_COMM_WORLD);
@@ -3548,7 +2222,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   const PetscInt *elementBoundaryNumbering_global_new2old;
   valarray<int> elementBoundaryNumbering_global_old2new(newMesh.nElementBoundaries_global);
   ISGetIndices(elementBoundaryNumberingIS_global_new2old,&elementBoundaryNumbering_global_new2old);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Allocating elementBoudnary old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Allocating elementBoudnary old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   for (int ebN=0;ebN<newMesh.nElementBoundaries_global;ebN++)
     {
       elementBoundaryNumbering_global_old2new[elementBoundaryNumbering_global_new2old[ebN]] = ebN;
@@ -3557,16 +2231,16 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   ISDestroy(&elementBoundaryNumberingIS_subdomain_new2old);
   ISDestroy(&elementBoundaryNumberingIS_global_new2old);
   PetscLogEventEnd(build_subdomains_faces_event,0,0,0,0);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done allocating elementBoudnary old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done allocating elementBoudnary old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   int build_subdomains_edges_event;
   PetscLogEventRegister("Subd edges",0,&build_subdomains_edges_event);
   PetscLogEventBegin(build_subdomains_edges_event,0,0,0,0);
-  
+
   //
   //4c,5c. Repeate the process for edges
   //
   std::ifstream edgeFile(edgeFileName.c_str());
-  
+
   if (!edgeFile.good())
     {
       std::cerr<<"cannot open Tetgen edge file"
@@ -3614,7 +2288,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
           supportedEdges.insert(ned);
         }
       int nodes[2] = {nn0_new,nn1_new};
-      NodeTuple<2> nodeTuple(nodes);      
+      NodeTuple<2> nodeTuple(nodes);
       edgeFile >> eatline;
       if (edgeElementsMap.find(nodeTuple) != edgeElementsMap.end())//this edge is on an element in the subdomain
         {
@@ -3648,7 +2322,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     nEdges_owned_new=0;
   MPI_Allreduce(&nEdges_owned_subdomain,&nEdges_owned_new,1,MPI_INT,MPI_SUM,PROTEUS_COMM_WORLD);
   assert(nEdges_owned_new == nEdges_global);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done reading edges");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done reading edges");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   //done with edge file
   //
   //just as with faces, we need to add edges along outer boundaries of star
@@ -3681,7 +2355,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   valarray<int> nodeEdgesArray(nodeEdgeOffsets[nNodes_subdomain_new[rank]]);
   for (int nN=0,offset=0; nN < nNodes_subdomain_new[rank]; nN++)
     {
-      for (set<int>::iterator edN_star = nodeEdgesStar.at(nN).begin(); 
+      for (set<int>::iterator edN_star = nodeEdgesStar.at(nN).begin();
            edN_star != nodeEdgesStar.at(nN).end();
            edN_star++,offset++)
         {
@@ -3723,7 +2397,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   const PetscInt *edgeNumbering_global_new2old;
   valarray<int> edgeNumbering_global_old2new(newMesh.nEdges_global);
   ISGetIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Setting edgeNumering old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Setting edgeNumering old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   for (int edN=0;edN<newMesh.nEdges_global;edN++)
     {
       edgeNumbering_global_old2new[edgeNumbering_global_new2old[edN]] = edN;
@@ -3731,11 +2405,11 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   ISRestoreIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
   ISDestroy(&edgeNumberingIS_subdomain_new2old);
   ISDestroy(&edgeNumberingIS_global_new2old);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done allocating edgeNumering old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done allocating edgeNumering old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   //
   //6. Figure out what is in the node stars but not locally owned, create ghost information
   //
-  
+
   set<int> elements_overlap,nodes_overlap,elementBoundaries_overlap,edges_overlap;
   for (int nN = 0; nN < nNodes_subdomain_new[rank]; nN++)
     {
@@ -3748,7 +2422,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
             nodes_overlap.insert(nN_point_global);
         }
       //elements
-      for (int eN_star_offset = nodeElementOffsets[nN]; 
+      for (int eN_star_offset = nodeElementOffsets[nN];
            eN_star_offset < nodeElementOffsets[nN+1]; eN_star_offset++)
         {
           int eN_star_old = nodeElementsArray[eN_star_offset];
@@ -3758,7 +2432,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
             elements_overlap.insert(eN_star_new);
         }
       //element boundaries
-      for (int ebN_star_offset = nodeElementBoundaryOffsets[nN]; 
+      for (int ebN_star_offset = nodeElementBoundaryOffsets[nN];
            ebN_star_offset < nodeElementBoundaryOffsets[nN+1]; ebN_star_offset++)
         {
           int ebN_star_old = nodeElementBoundariesArray[ebN_star_offset];
@@ -3768,7 +2442,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
             elementBoundaries_overlap.insert(ebN_star_new);
         }
       //edges in overlap
-      for (int edN_star_offset = nodeEdgeOffsets[nN]; 
+      for (int edN_star_offset = nodeEdgeOffsets[nN];
            edN_star_offset < nodeEdgeOffsets[nN+1]; edN_star_offset++)
         {
           int edN_star_old = nodeEdgesArray[edN_star_offset];
@@ -3812,10 +2486,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   PetscLogEventBegin(build_subdomains_renumber_event,0,0,0,0);
   //
   //8. Build subdomain meshes in new numbering, assumes memory not allocated in subdomain mesh
-  //   
+  //
   if(rank==0){
     std::cerr<<"USER WARNING: In order to avoid a segmentation fault, you need to have supplied the 'f' flag to the triangleOptions input."<<std::endl;
-    std::cerr<<"USER WARNING: In order to avoid an edge assertion error, you need to have supplied the 'ee' flag to the triangleOptions input."<<std::endl; 
+    std::cerr<<"USER WARNING: In order to avoid an edge assertion error, you need to have supplied the 'ee' flag to the triangleOptions input."<<std::endl;
   }
 
   if (newMesh.subdomainp == NULL)
@@ -3882,7 +2556,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   ISDestroy(&nodeNumberingIS_subdomain_old2new);
   ISDestroy(&nodeNumberingIS_global_old2new);
   //done with vertex file (and all file reads at this point)
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done reading vertices");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done reading vertices");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
 
   newMesh.subdomainp->elementNodesArray = new int[newMesh.subdomainp->nElements_global*newMesh.subdomainp->nNodes_element];
   newMesh.subdomainp->elementMaterialTypes = new int[newMesh.subdomainp->nElements_global];
@@ -3950,7 +2624,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //
   //local
   //
-  newMesh.subdomainp->elementBoundariesArray = 
+  newMesh.subdomainp->elementBoundariesArray =
     new int[newMesh.subdomainp->nElements_global*newMesh.subdomainp->nElementBoundaries_element];
   for (int eN=0;eN<nElements_subdomain_new[rank];eN++)
     {
@@ -3973,7 +2647,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
           newMesh.subdomainp->elementBoundariesArray[eN*newMesh.subdomainp->nElementBoundaries_element+ebN] =
             elementBoundaryNumbering_global2subdomainMap[elementBoundaryNumbering_global_old2new[elementBoundariesMap[eN_global_new][ebN]]];
         }
-    }      
+    }
   //
   //edges
   //
@@ -4092,14 +2766,14 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
           newMesh.subdomainp->elementBoundaryLocalElementBoundariesArray[ebN*2 + 0] = eb->second.left_ebN_element;
           newMesh.subdomainp->elementBoundaryElementsArray[ebN*2 + 1] = eb->second.right;
           newMesh.subdomainp->elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
-          newMesh.subdomainp->elementNeighborsArray[eb->second.left*newMesh.subdomainp->nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
+          newMesh.subdomainp->elementNeighborsArray[eb->second.left*newMesh.subdomainp->nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right;
           if(eb->second.right != -1)
             {
               interiorElementBoundaries.insert(ebN);
-              newMesh.subdomainp->elementNeighborsArray[eb->second.right*newMesh.subdomainp->nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
+              newMesh.subdomainp->elementNeighborsArray[eb->second.right*newMesh.subdomainp->nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left;
             }
           else
-            exteriorElementBoundaries.insert(ebN);          
+            exteriorElementBoundaries.insert(ebN);
           assert(newMesh.subdomainp->elementBoundariesArray[eb->second.left*newMesh.subdomainp->nElementBoundaries_element + eb->second.left_ebN_element] == ebN);
           if (eb->second.right != -1)
             {
@@ -4169,7 +2843,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       //mwf end node-->elements construction
       newMesh.subdomainp->elementBoundaryMaterialTypes = new int[newMesh.subdomainp->nElementBoundaries_global];
       //if nodeMaterial is DEFAULT, go ahead and set to interior or exterior
-      //depending on which boundary node belongs to. 
+      //depending on which boundary node belongs to.
       //If node on at least one exterior boundary then it's exterior
       for (int ebNE = 0; ebNE < newMesh.subdomainp->nExteriorElementBoundaries_global; ebNE++)
         {
@@ -4221,13 +2895,13 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
           }
     }
   elementBoundaryNumbering_global_old2new.resize(0);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done with material types");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done with material types");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   PetscLogEventEnd(build_subdomains_renumber_event,0,0,0,0);
   int build_subdomains_cleanup_event;
   PetscLogEventRegister("Cleanup",0,&build_subdomains_cleanup_event);
   PetscLogEventBegin(build_subdomains_cleanup_event,0,0,0,0);
   //transfer information about owned nodes and elements to mesh
-  if (newMesh.nodeOffsets_subdomain_owned) 
+  if (newMesh.nodeOffsets_subdomain_owned)
     delete [] newMesh.nodeOffsets_subdomain_owned;
   if (newMesh.elementOffsets_subdomain_owned)
     delete [] newMesh.elementOffsets_subdomain_owned;
@@ -4278,40 +2952,36 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   PetscLogEventEnd(build_subdomains_cleanup_event,0,0,0,0);
   PetscLogStagePop();
   PetscLogView(PETSC_VIEWER_STDOUT_WORLD);
-  ierr = enforceMemoryLimit(rank, max_rss_gb,"Done with partitioning!");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done with partitioning!");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   return 0;
 }
 
 //todo add overlap for element based partitions
-int partitionElements(Mesh& mesh, int nElements_overlap)
+int partitionElements(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh, int nElements_overlap)
 {
   using namespace std;
   int ierr,size,rank;
 
-  if (!ensure_comm()) {
-    return -1;
-  }
-
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
 
-  //Contents 
+  //Contents
   //
   //1. Partition the elements in the "default" partition (contiguous
-  //chunks in given ordering) 
+  //chunks in given ordering)
   //
   //2. Partition the elementNeighbors based on this partition
   //
   //3. Pass to Parmetis to build a better partition of the elements
   //
   //4. Tag a subset of the nodes and faces on the subdomain elements as owned
-  //using a mark and pass approach.** 
+  //using a mark and pass approach.**
   //
   //5. Extract the nodes and faces in the
-  //overlapping elements.** 
+  //overlapping elements.**
   //
   //6. Build the subdomain mesh from the
-  //subdomain elements 
+  //subdomain elements
   //
   //**To be more general we could get all the support (i.e. faces
   //and edges) and partitiong them, but the main reason for
@@ -4330,10 +3000,10 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   valarray<int> elementOffsets_old(size+1);
   elementOffsets_old[0] = 0;
   for(int sdN=0;sdN<size;sdN++)
-    elementOffsets_old[sdN+1] = elementOffsets_old[sdN] + 
-      int(mesh.nElements_global)/size + 
+    elementOffsets_old[sdN+1] = elementOffsets_old[sdN] +
+      int(mesh.nElements_global)/size +
       (int(mesh.nElements_global)%size > sdN);
-    
+
   //2. Extract subdomain element adjacency information could read
   //only the required portion from a file
   int nElements_subdomain = (elementOffsets_old[rank+1] - elementOffsets_old[rank]);
@@ -4362,29 +3032,29 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   //3. Generate the  new partitiong using PETSc, this is done in parallel using parmetis
   Mat petscAdjacency;
   //     MatCreateMPIAdj(PROTEUS_COMM_WORLD,
-  //                     nElements_subdomain, mesh.nElements_global, 
-  //                     &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0], 
-  //                     &weights_subdomain[0],//PETSC_NULL, 
+  //                     nElements_subdomain, mesh.nElements_global,
+  //                     &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0],
+  //                     &weights_subdomain[0],//PETSC_NULL,
   //                     &petscAdjacency);
   ierr = MatCreateMPIAdj(PROTEUS_COMM_WORLD,
-			 nElements_subdomain, 
-			 mesh.nElements_global,
-			 elementNeighborsOffsets_subdomain, 
-			 elementNeighbors_subdomain,
-			 PETSC_NULL,//weights_subdomain,
-			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+                         nElements_subdomain,
+                         mesh.nElements_global,
+                         elementNeighborsOffsets_subdomain,
+                         elementNeighbors_subdomain,
+                         PETSC_NULL,//weights_subdomain,
+                         &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   MatPartitioning petscPartition;
   MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
   MatPartitioningSetFromOptions(petscPartition);
-  
+
   //get a petsc index set that has the new submdomain number for each element
   IS elementPartitioningIS_new;
-  MatPartitioningApply(petscPartition,&elementPartitioningIS_new); 
+  MatPartitioningApply(petscPartition,&elementPartitioningIS_new);
   MatPartitioningDestroy(&petscPartition);
   //MatDestroy(&petscAdjacency);
   //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
-    
+
   //experiment with metis
   //mwf set some defaults and not call if size == 1 since metis crashes
   //cek commenting out for now
@@ -4400,16 +3070,16 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   //     partout<<mesh.nElements_global<<"\t"<<size<<std::endl;
   //     for (int eN=0;eN<mesh.nElements_global;eN++)
   //       {
-  // 	partout<<(eN+1)<<"\t"<<(1+epart[eN])<<std::endl;
-  // 	eleout<<(eN+1)<<"\t"<<(1+mesh.elementNodesArray[eN*3+0])
-  // 	      <<"\t"<<(1+mesh.elementNodesArray[eN*3+1])
-  // 	      <<"\t"<<(1+mesh.elementNodesArray[eN*3+2])
-  // 	      <<std::endl;
+  //    partout<<(eN+1)<<"\t"<<(1+epart[eN])<<std::endl;
+  //    eleout<<(eN+1)<<"\t"<<(1+mesh.elementNodesArray[eN*3+0])
+  //          <<"\t"<<(1+mesh.elementNodesArray[eN*3+1])
+  //          <<"\t"<<(1+mesh.elementNodesArray[eN*3+2])
+  //          <<std::endl;
   //       }
   //     nodeout<<mesh.nNodes_global<<" 2 0 0"<<std::endl;
   //     for (int nN=0;nN<mesh.nNodes_global;nN++)
   //       {
-  // 	nodeout<<(nN+1)<<"\t"<<mesh.nodeArray[nN*3+0]<<"\t"<<mesh.nodeArray[nN*3+1]<<std::endl;
+  //    nodeout<<(nN+1)<<"\t"<<mesh.nodeArray[nN*3+0]<<"\t"<<mesh.nodeArray[nN*3+1]<<std::endl;
   //       }
   //     eleout.close();
   //     partout.close();
@@ -4455,18 +3125,18 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   for (int eN=0;eN<mesh.nElements_global;eN++)
     {
       for (int nN=0;nN<mesh.nNodes_element;nN++)
-        elementNodesArray_new[eN*mesh.nNodes_element + nN] = 
+        elementNodesArray_new[eN*mesh.nNodes_element + nN] =
           mesh.elementNodesArray[elementNumbering_global_new2old[eN]*mesh.nNodes_element+nN];
       for (int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-          elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN] = 
+          elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN] =
             mesh.elementNeighborsArray[elementNumbering_global_new2old[eN]*mesh.nElementBoundaries_element+ebN];
           //need new elements --> old element boundary numbers for now
           elementBoundariesArray_new[eN*mesh.nElementBoundaries_element+ebN] =
             mesh.elementBoundariesArray[elementNumbering_global_new2old[eN]*mesh.nElementBoundaries_element+ebN];
         }
       elementMaterialTypes_new[eN] = mesh.elementMaterialTypes[elementNumbering_global_new2old[eN]];
-	
+
     }
   //renumber references to element numbers
   for (int eN=0;eN<mesh.nElements_global;eN++)
@@ -4475,7 +3145,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
         {
           int eN_ebN = elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN];
           if (eN_ebN >= 0)
-            elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN] = 
+            elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN] =
               elementNumbering_global_old2new[eN_ebN];
         }
     }
@@ -4484,9 +3154,9 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   //in the long run it wouldn't be bad to do a global repartition of faces and edges for mixed hybrid
   //and non-conforming finite elements
   MPI_Status status;
-  PetscBT nodeMask; 
+  PetscBT nodeMask;
   PetscBTCreate(mesh.nNodes_global,&nodeMask);
-  if (rank > 0) 
+  if (rank > 0)
     {
       MPI_Recv(nodeMask,PetscBTLength(mesh.nNodes_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status);
     }
@@ -4518,9 +3188,9 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   nodeOffsets_new[0] = 0;
   for (int sdN=0;sdN<size;sdN++)
     nodeOffsets_new[sdN+1] = nodeOffsets_new[sdN]+nNodes_subdomain_new[sdN];
-      
+
   assert(nodeOffsets_new[size]==mesh.nNodes_global);
-      
+
   //Now as with elements build a global node numbering, sort node
   //based information, and renumber references to node numbers
   valarray<int> nodeNumbering_new2old(nodes_subdomain_owned.size());
@@ -4579,9 +3249,9 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
 
   //4b. repeat process to build global face numbering
   MPI_Status status_elementBoundaries;
-  PetscBT elementBoundaryMask; 
+  PetscBT elementBoundaryMask;
   PetscBTCreate(mesh.nElementBoundaries_global,&elementBoundaryMask);
-  if (rank > 0) 
+  if (rank > 0)
     {
       MPI_Recv(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status_elementBoundaries);
     }
@@ -4685,32 +3355,32 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   //     //mwf debug check constistency
   //     for (int ebN=0; ebN<mesh.nElementBoundaries_global;ebN++)
   //       {
-  // 	int eN_left=elementBoundaryElementsArray_new[ebN*2+0];
-  // 	int eN_right=elementBoundaryElementsArray_new[ebN*2+1];
-  // 	assert(eN_left>=0);
-  // 	bool found_ebN_left=false;
-  // 	for (int ebN_element=0; ebN_element<mesh.nElementBoundaries_element; ebN_element++)
-  // 	  {
-  // 	    if (ebN == elementBoundariesArray_new[eN_left*mesh.nElementBoundaries_element+ebN_element])
-  // 	      {
-  // 		assert(ebN_element==elementBoundaryLocalElementBoundariesArray_new[ebN*2+0]);
-  // 		found_ebN_left=true;
-  // 	      }
-  // 	  }
-  // 	assert(found_ebN_left);
-  // 	if (eN_right>=0)
-  // 	  {
-  // 	    bool found_ebN_right=false;
-  // 	    for (int ebN_element=0; ebN_element<mesh.nElementBoundaries_element; ebN_element++)
-  // 	      {
-  // 		if (ebN == elementBoundariesArray_new[eN_right*mesh.nElementBoundaries_element+ebN_element])
-  // 		  {
-  // 		    assert(ebN_element==elementBoundaryLocalElementBoundariesArray_new[ebN*2+1]);
-  // 		    found_ebN_right=true;
-  // 		  }
-  // 	      }
-  // 	    assert(found_ebN_right);
-  // 	  }
+  //    int eN_left=elementBoundaryElementsArray_new[ebN*2+0];
+  //    int eN_right=elementBoundaryElementsArray_new[ebN*2+1];
+  //    assert(eN_left>=0);
+  //    bool found_ebN_left=false;
+  //    for (int ebN_element=0; ebN_element<mesh.nElementBoundaries_element; ebN_element++)
+  //      {
+  //        if (ebN == elementBoundariesArray_new[eN_left*mesh.nElementBoundaries_element+ebN_element])
+  //          {
+  //            assert(ebN_element==elementBoundaryLocalElementBoundariesArray_new[ebN*2+0]);
+  //            found_ebN_left=true;
+  //          }
+  //      }
+  //    assert(found_ebN_left);
+  //    if (eN_right>=0)
+  //      {
+  //        bool found_ebN_right=false;
+  //        for (int ebN_element=0; ebN_element<mesh.nElementBoundaries_element; ebN_element++)
+  //          {
+  //            if (ebN == elementBoundariesArray_new[eN_right*mesh.nElementBoundaries_element+ebN_element])
+  //              {
+  //                assert(ebN_element==elementBoundaryLocalElementBoundariesArray_new[ebN*2+1]);
+  //                found_ebN_right=true;
+  //              }
+  //          }
+  //        assert(found_ebN_right);
+  //      }
   //       }
 
   //do not renumber interior and exterior element boundary arrays yet
@@ -4721,17 +3391,17 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   //     partout<<mesh.nElements_global<<"\t"<<size<<std::endl;
   //     for (int eN=0;eN<mesh.nElements_global;eN++)
   //       {
-  // 	partout<<(eN+1)<<"\t"<<(1+epart[elementNumbering_global_new2old[eN]])<<std::endl;
-  // 	//partout<<(eN+1)<<"\t"<<(1+epart[eN])<<std::endl;
-  // 	eleout<<(eN+1)<<"\t"<<(1+elementNodesArray_new[eN*3+0])
-  // 	      <<"\t"<<(1+elementNodesArray_new[eN*3+1])
-  // 	      <<"\t"<<(1+elementNodesArray_new[eN*3+2])
-  // 	      <<std::endl;
+  //    partout<<(eN+1)<<"\t"<<(1+epart[elementNumbering_global_new2old[eN]])<<std::endl;
+  //    //partout<<(eN+1)<<"\t"<<(1+epart[eN])<<std::endl;
+  //    eleout<<(eN+1)<<"\t"<<(1+elementNodesArray_new[eN*3+0])
+  //          <<"\t"<<(1+elementNodesArray_new[eN*3+1])
+  //          <<"\t"<<(1+elementNodesArray_new[eN*3+2])
+  //          <<std::endl;
   //       }
   //     nodeout<<mesh.nNodes_global<<" 2 0 0"<<std::endl;
   //     for (int nN=0;nN<mesh.nNodes_global;nN++)
   //       {
-  // 	nodeout<<(nN+1)<<"\t"<<nodeArray_new[nN*3+0]<<"\t"<<nodeArray_new[nN*3+1]<<std::endl;
+  //    nodeout<<(nN+1)<<"\t"<<nodeArray_new[nN*3+0]<<"\t"<<nodeArray_new[nN*3+1]<<std::endl;
   //       }
   //     eleout.close();
   //     partout.close();
@@ -4740,9 +3410,9 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   // ownership is determined by the edges on owned elements, then
   // who owns the left (0) node  of the edge
   MPI_Status status_edges;
-  PetscBT edgesMask; 
+  PetscBT edgesMask;
   PetscBTCreate(mesh.nEdges_global,&edgesMask);
-  if (rank > 0) 
+  if (rank > 0)
     {
       MPI_Recv(edgesMask,PetscBTLength(mesh.nEdges_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status_edges);
     }
@@ -4785,7 +3455,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
 
   valarray<int> nEdges_subdomain_new(size),
     edgeOffsets_new(size+1);
-  
+
   for (int sdN=0; sdN < size; sdN++)
     {
       if (sdN == rank)
@@ -4799,27 +3469,27 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   edgeOffsets_new[0] = 0;
   for (int sdN=0;sdN<size;sdN++)
     edgeOffsets_new[sdN+1] = edgeOffsets_new[sdN]+nEdges_subdomain_new[sdN];
-    
-  //build new petsc numbering and global maps from old2new and new2old 
+
+  //build new petsc numbering and global maps from old2new and new2old
   valarray<int> edgeNumbering_new2old(edges_subdomain_owned.size());
   set<int>::iterator edges_ownedp = edges_subdomain_owned.begin();
   for (int i=0; i < int(edges_subdomain_owned.size());i++)
     edgeNumbering_new2old[i] = *edges_ownedp++;
-    
+
   IS edgeNumberingIS_new2old;
   ISCreateGeneral(PROTEUS_COMM_WORLD,edges_subdomain_owned.size(),&edgeNumbering_new2old[0],PETSC_COPY_VALUES,&edgeNumberingIS_new2old);
   IS edgeNumberingIS_global_new2old;
   ISAllGather(edgeNumberingIS_new2old,&edgeNumberingIS_global_new2old);
   const PetscInt *edgeNumbering_global_new2old;
 
-  
+
   valarray<int> edgeNumbering_old2new_global(mesh.nEdges_global);
   ISGetIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
   for (int ig=0;ig<mesh.nEdges_global;ig++)
     {
       edgeNumbering_old2new_global[edgeNumbering_global_new2old[ig]] = ig;
     }
-  
+
   //create  array with (new edge) --> (new node 0, new node 1)
   //and map from (new node 0, new node 1) --> (new global edge)
   valarray<int> edgeNodesArray_newNodesAndEdges(2*mesh.nEdges_global);
@@ -4945,7 +3615,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
         for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
           {
             int eN_ebN = elementNeighborsArray_new[eN*mesh.nElementBoundaries_element+ebN];
-            if (eN_ebN >= 0 && 
+            if (eN_ebN >= 0 &&
                 (eN_ebN < elementOffsets_new[rank] || eN_ebN >= elementOffsets_new[rank+1]))
               {
                 elements_overlap.insert(eN_ebN);
@@ -5023,7 +3693,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
                       }//edges
                 }
             }
-        }            
+        }
     }
   //
   //6. Now build subdomain mesh
@@ -5090,7 +3760,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   mesh.subdomainp->elementNodesArray = new int[mesh.subdomainp->nElements_global*mesh.subdomainp->nNodes_element];
   mesh.subdomainp->elementMaterialTypes = new int[mesh.subdomainp->nElements_global];
   //try to use elementBoundariesArray to set unique element boundary id below
-  mesh.subdomainp->elementBoundariesArray = 
+  mesh.subdomainp->elementBoundariesArray =
     new int[mesh.subdomainp->nElements_global*mesh.subdomainp->nElementBoundaries_element];
   valarray<int> elementNumbering_subdomain2global(mesh.subdomainp->nElements_global);
   for (int eN=0;eN<nElements_subdomain_new[rank];eN++)
@@ -5100,7 +3770,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       mesh.subdomainp->elementMaterialTypes[eN] = elementMaterialTypes_new[eN_global];
       for (int nN=0;nN<mesh.subdomainp->nNodes_element;nN++)
         {
-          mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] = 
+          mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] =
             nodeNumbering_global2subdomain[elementNodesArray_new[eN_global*mesh.nNodes_element + nN]];
         }
       for (int ebN=0;ebN<mesh.subdomainp->nElementBoundaries_element;ebN++)
@@ -5115,7 +3785,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       elementNumbering_subdomain2global[eN] = eN_global;
       for (int nN=0;nN<mesh.subdomainp->nNodes_element;nN++)
         {
-          mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] = 
+          mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] =
             nodeNumbering_global2subdomain[elementNodesArray_new[eN_global*mesh.nNodes_element + nN]];
         }
       for (int ebN=0;ebN<mesh.subdomainp->nElementBoundaries_element;ebN++)
@@ -5147,7 +3817,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       const int ig =*edge_p++;
       const int nN0_global = edgeNodesArray_newNodesAndEdges[ig*2+0];
       const int nN1_global = edgeNodesArray_newNodesAndEdges[ig*2+1];
-      //mwf todo make sure always have nodes for the edge on this processor 
+      //mwf todo make sure always have nodes for the edge on this processor
       const int nN0_subdomain = nodeNumbering_global2subdomain[nN0_global];
       const int nN1_subdomain = nodeNumbering_global2subdomain[nN1_global];
       mesh.subdomainp->edgeNodesArray[2*i+0]=nN0_subdomain;
@@ -5157,16 +3827,16 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   //now fill in rest of boundary information, etc
   mesh.subdomainp->px = mesh.px;
   mesh.subdomainp->py = mesh.py;
-  mesh.subdomainp->pz = mesh.pz; 
+  mesh.subdomainp->pz = mesh.pz;
 
-  if (mesh.px != 0)    
-    {  
+  if (mesh.px != 0)
+    {
       //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
       constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(*mesh.subdomainp);
       allocateGeometricInfo_NURBS(*mesh.subdomainp);
       computeGeometricInfo_NURBS(*mesh.subdomainp);
 
-    }   
+    }
   else if (mesh.subdomainp->nNodes_element == 2)
     {
       //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge(*mesh.subdomainp);
@@ -5209,8 +3879,8 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   if (mesh.elementBoundaryMaterialTypes != NULL)
     {
       assert(mesh.elementBoundariesArray != NULL);
-      //todo need to check that local element boundary numbering for 
-      //element boundaries stays the same 
+      //todo need to check that local element boundary numbering for
+      //element boundaries stays the same
       for (int eN=0;eN<mesh.subdomainp->nElements_global;eN++)
         {
           int eN_global_new = elementNumbering_subdomain2global[eN];
@@ -5296,7 +3966,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       for (int i=0; i < mesh.nElementBoundaries_global; i++)
         mesh.elementBoundaryMaterialTypes[i] = elementBoundaryMaterialTypes_new[i];
     }
-   
+
   ISRestoreIndices(elementNumberingIS_global_old2new,&elementNumbering_global_old2new);
 
   ISDestroy(&elementPartitioningIS_new);
@@ -5321,7 +3991,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   return 0;
 }
 
-int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh, 
+int buildQuadraticSubdomain2GlobalMappings_1d(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh,
                                               const int *elementOffsets_subdomain_owned,
                                               const int *nodeOffsets_subdomain_owned,
                                               const int *elementNumbering_subdomain2global,
@@ -5336,10 +4006,6 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
 {
   using namespace std;
   int ierr,size,rank;
-
-  if (!ensure_comm()) {
-    return -1;
-  }
 
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
@@ -5357,7 +4023,7 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
 
   const int nNodes_owned    = nodeOffsets_subdomain_owned[rank+1]-nodeOffsets_subdomain_owned[rank];
   const int nElements_owned = elementOffsets_subdomain_owned[rank+1]-elementOffsets_subdomain_owned[rank];
-  
+
   //start with a logical global ordering of dofs as
   //[global nodes, global elements]
   //want to create global numbering
@@ -5389,8 +4055,8 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
   //   for (int id = 0; id < mesh.nNodes_global + mesh.nElements_global; id++)
   //     {
   //       std::cout<<" rank= "<<rank<<" build c0p2 mappings new2old["<<id<<"]= "<<quadraticNumbering_global_new2old[id]
-  // 	       <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
-  // 	       <<std::endl;
+  //           <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
+  //           <<std::endl;
   //     }
   assert(offsets_subdomain_owned);
   assert(subdomain2global);
@@ -5403,7 +4069,7 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
   for (int sdN=0; sdN < size+1; sdN++)
     offsets_subdomain_owned[sdN] = nodeOffsets_subdomain_owned[sdN]+elementOffsets_subdomain_owned[sdN];
 
-  //loop through owned and ghost dofs build subdomain mapping by 
+  //loop through owned and ghost dofs build subdomain mapping by
   //going from old --> new
   int localOffset = 0;
   for (int nN = 0; nN < nNodes_owned; nN++)
@@ -5445,7 +4111,7 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
   const int nDOF_element = 3;
   const int ghostNodeOffset = nNodes_owned + nElements_owned;
   const int ghostElementOffset = ghostNodeOffset + mesh.subdomainp->nNodes_global-nNodes_owned;
- 
+
   //for lagrange nodes
   int nN_global_subdomain[2];
   for (int eN=0; eN < mesh.subdomainp->nElements_global; eN++)
@@ -5464,7 +4130,7 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
       if (eN < nElements_owned)
         subdomain_l2g[eN*nDOF_element+2] = nNodes_owned + eN;
       else
-        subdomain_l2g[eN*nDOF_element+2] = eN - nElements_owned + ghostElementOffset; 
+        subdomain_l2g[eN*nDOF_element+2] = eN - nElements_owned + ghostElementOffset;
       //vertex dof
       for (int eI=0; eI < 3; eI++)
         lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+2]*3+eI] = 0.5*(mesh.subdomainp->nodeArray[3*nN_global_subdomain[0]+eI]+mesh.subdomainp->nodeArray[3*nN_global_subdomain[1]+eI]);
@@ -5477,7 +4143,7 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
   return 0;
 }
 
-int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh, 
+int buildQuadraticSubdomain2GlobalMappings_2d(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh,
                                               const int *elementBoundaryOffsets_subdomain_owned,
                                               const int *nodeOffsets_subdomain_owned,
                                               const int *elementBoundaryNumbering_subdomain2global,
@@ -5492,10 +4158,6 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
 {
   using namespace std;
   int ierr,size,rank;
-
-  if (!ensure_comm()) {
-    return -1;
-  }
 
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
@@ -5545,8 +4207,8 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
   //for (int id = 0; id < nDOFs_global; id++)
   //  {
   //    std::cout<<" rank= "<<rank<<" build 2d c0p2 mappings new2old["<<id<<"]= "<<quadraticNumbering_global_new2old[id]
-  //	       <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
-  //	       <<std::endl;
+  //           <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
+  //           <<std::endl;
   //  }
   assert(offsets_subdomain_owned);
   assert(subdomain2global);
@@ -5558,7 +4220,7 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
   nDOF_subdomain = mesh.subdomainp->nNodes_global+mesh.subdomainp->nElementBoundaries_global;
   max_dof_neighbors = 2*mesh.max_nNodeNeighbors_node;
 
-  //loop through owned and ghost dofs build subdomain mapping by 
+  //loop through owned and ghost dofs build subdomain mapping by
   //going from old --> new
   int localOffset = 0;
   for (int nN = 0; nN < nNodes_owned; nN++)
@@ -5577,7 +4239,7 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
       subdomain2global[localOffset + ebN] = dof_global_new;
       //mwf debug
       //std::cout<<" rank= "<<rank<<" ebN= "<<ebN<<" local dof= "<<localOffset+ebN<<" nElementBoundaries_owned= "<<nElementBoundaries_owned
-      //	       <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //               <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
   localOffset += nElementBoundaries_owned;
   for (int nN = nNodes_owned; nN < mesh.subdomainp->nNodes_global; nN++)
@@ -5601,7 +4263,7 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
   const int nDOF_element = 6;
   const int ghostNodeOffset = nNodes_owned + nElementBoundaries_owned;
   const int ghostElementBoundaryOffset = ghostNodeOffset + mesh.subdomainp->nNodes_global-nNodes_owned;
- 
+
   //for lagrange nodes
   int nN_global_subdomain[3];
   for (int eN=0; eN < mesh.subdomainp->nElements_global; eN++)
@@ -5620,12 +4282,12 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
       for (int ebN=0; ebN < mesh.subdomainp->nElementBoundaries_element; ebN++)
         {
           //take into account numbering of edges according to
-          //vertex they are across from 
+          //vertex they are across from
           int ebN_global = mesh.subdomainp->elementBoundariesArray[eN*mesh.subdomainp->nElementBoundaries_element+((ebN+2)%3)];
           if (ebN_global < nElementBoundaries_owned)
             subdomain_l2g[eN*nDOF_element+3+ebN] = nNodes_owned + ebN_global;
           else
-            subdomain_l2g[eN*nDOF_element+3+ebN] = ebN_global - nElementBoundaries_owned + ghostElementBoundaryOffset; 
+            subdomain_l2g[eN*nDOF_element+3+ebN] = ebN_global - nElementBoundaries_owned + ghostElementBoundaryOffset;
           //center of edge dof
           for (int eI=0; eI < 3; eI++)
             lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+3+ebN]*3+eI] = 0.5*(mesh.subdomainp->nodeArray[3*nN_global_subdomain[(ebN+0)%3]+eI]+mesh.subdomainp->nodeArray[3*nN_global_subdomain[(ebN+1)%3]+eI]);
@@ -5640,7 +4302,7 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
 }
 
 
-int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh, 
+int buildQuadraticSubdomain2GlobalMappings_3d(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh,
                                               const int *edgeOffsets_subdomain_owned,
                                               const int *nodeOffsets_subdomain_owned,
                                               const int *edgeNumbering_subdomain2global,
@@ -5655,10 +4317,6 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
 {
   using namespace std;
   int ierr,size,rank;
-
-  if (!ensure_comm()) {
-    return -1;
-  }
 
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
@@ -5708,11 +4366,11 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
   //   if (rank == 0)
   //     {
   //       for (int id = 0; id < nDOFs_global; id++)
-  // 	{
-  // 	  std::cout<<" rank= "<<rank<<" build 2d c0p2 mappings new2old["<<id<<"]= "<<quadraticNumbering_global_new2old[id]
-  // 		   <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
-  // 		   <<std::endl;
-  // 	}
+  //    {
+  //      std::cout<<" rank= "<<rank<<" build 2d c0p2 mappings new2old["<<id<<"]= "<<quadraticNumbering_global_new2old[id]
+  //               <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
+  //               <<std::endl;
+  //    }
   //     }
   assert(offsets_subdomain_owned);
   assert(subdomain2global);
@@ -5724,7 +4382,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
   nDOF_subdomain = mesh.subdomainp->nNodes_global+mesh.subdomainp->nEdges_global;
   max_dof_neighbors = 2*mesh.max_nNodeNeighbors_node;
 
-  //loop through owned and ghost dofs build subdomain mapping by 
+  //loop through owned and ghost dofs build subdomain mapping by
   //going from old --> new
   int localOffset = 0;
   for (int nN = 0; nN < nNodes_owned; nN++)
@@ -5734,7 +4392,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + nN] = dof_global_new;
       //mwf debug
       //      if (rank == 0)
-      // 	std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //        std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
   localOffset += nNodes_owned;
   for (int i = 0; i < nEdges_owned; i++)
@@ -5744,8 +4402,8 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + i] = dof_global_new;
       //mwf debug
       //       if (rank == 0)
-      // 	  std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
-      // 		   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //          std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
+      //                   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
   localOffset += nEdges_owned;
   for (int nN = nNodes_owned; nN < mesh.subdomainp->nNodes_global; nN++)
@@ -5755,7 +4413,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + nN -nNodes_owned] = dof_global_new;
       //mwf debug
       //       if (rank == 0)
-      // 	std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN-nNodes_owned<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //        std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN-nNodes_owned<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
   localOffset += mesh.subdomainp->nNodes_global - nNodes_owned;
   for (int i = nEdges_owned; i < mesh.subdomainp->nEdges_global; i++)
@@ -5765,7 +4423,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + i-nEdges_owned] = dof_global_new;
       //       //mwf debug
       //       if (rank == 0)
-      // 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //        std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
   //setup local to global mapping on the subdomain for finite elements
   const int nDOF_element = 10;
@@ -5790,7 +4448,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
         {
           //node_i --> unique subdomain node  0 <= i <= 3
           const int nN_global_subdomain = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + nN];
-          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges|
           if (nN_global_subdomain < nNodes_owned)
             {
               subdomain_l2g[eN*nDOF_element + local_offset + nN] = nN_global_subdomain;
@@ -5802,11 +4460,11 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
           //unique subdomain id --> unique cross processor id
           //subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = nodeNumbering_subdomain2global[nN_global_subdomain];
           //mwf debug
-          // 	  if (rank == 0)
-          // 	    {
-          // 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" node= "<<nN<<" sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
-          // 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
-          // 	    }
+          //      if (rank == 0)
+          //        {
+          //          std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" node= "<<nN<<" sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+          //                   <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+          //        }
           for (int eI=0; eI < 3; eI++)
             lagrangeNodesArray[subdomain_l2g[eN*nDOF_element + local_offset +nN]*3+eI] = mesh.subdomainp->nodeArray[nN_global_subdomain*3+eI];
         }
@@ -5818,7 +4476,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
           const int nN_global_subdomain     = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + nN];
           const int nN_neig_global_subdomain= mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + nN_neig];
           //unique edge subdomain id and global id
-          int edge_subdomain = -1,edge_global=-1; 
+          int edge_subdomain = -1,edge_global=-1;
           //see if edge is (nN,nN_neig) or vice versa
           int nodes[2];
           nodes[0] = nN_global_subdomain;
@@ -5827,8 +4485,8 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
           edge_subdomain = nodesEdgeMap_subdomain[et];
           edge_global    = edgeNumbering_subdomain2global[edge_subdomain];
           assert(edge_subdomain >= 0 && edge_global >= 0);
-	  
-          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+
+          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges|
           if (edge_subdomain < nEdges_owned)
             subdomain_l2g[eN*nDOF_element + local_offset + nN] = nNodes_owned + edge_subdomain;
           else
@@ -5836,11 +4494,11 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
           //unique subdomain id --> unique cross processor id
           //set above could do here subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global + edge_global;
           //mwf debug
-          // 	  if (rank == 0)
-          // 	    {
-          // 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
-          // 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
-          // 	    }  
+          //      if (rank == 0)
+          //        {
+          //          std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+          //                   <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+          //        }
           for (int eI=0; eI < 3; eI++)
             lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset+nN]*3+eI] = 0.5*(mesh.subdomainp->nodeArray[nN_global_subdomain*3+eI]+
                                                                                            mesh.subdomainp->nodeArray[nN_neig_global_subdomain*3+eI]);
@@ -5862,7 +4520,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
           edge_subdomain = nodesEdgeMap_subdomain[et];
           edge_global =    edgeNumbering_subdomain2global[edge_subdomain];
           assert(edge_subdomain >= 0 && edge_global >= 0);
-          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges|
           if (edge_subdomain < nEdges_owned)
             subdomain_l2g[eN*nDOF_element + local_offset + nN] = nNodes_owned +  edge_subdomain;
           else
@@ -5870,11 +4528,11 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
           //unique subdomain id --> unique cross processor id
           //subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global + edge_global;
           //mwf debug
-          // 	  if (rank == 0)
-          // 	    {
-          // 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
-          // 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
-          // 	    }
+          //      if (rank == 0)
+          //        {
+          //          std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+          //                   <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+          //        }
           for (int eI=0; eI < 3; eI++)
             lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset+nN]*3+eI] = 0.5*(mesh.subdomainp->nodeArray[nN_global_subdomain*3+eI]+
                                                                                            mesh.subdomainp->nodeArray[nN_neig_global_subdomain*3+eI]);
@@ -5896,7 +4554,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
           edge_subdomain = nodesEdgeMap_subdomain[et];
           edge_global    = edgeNumbering_subdomain2global[edge_subdomain];
           assert(edge_subdomain >= 0 && edge_global >= 0);
-          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges|
           if (edge_subdomain < nEdges_owned)
             subdomain_l2g[eN*nDOF_element + local_offset + nN] = nNodes_owned +  edge_subdomain;
           else
@@ -5904,16 +4562,16 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
           //unique subdomain id --> unique cross processor id
           //subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global +  edge_global;
           //mwf debug
-          // 	  if (rank == 0)
-          // 	    {
-          // 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
-          // 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
-          // 	    }
+          //      if (rank == 0)
+          //        {
+          //          std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+          //                   <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+          //        }
           for (int eI=0; eI < 3; eI++)
             lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset+nN]*3+eI] = 0.5*(mesh.subdomainp->nodeArray[nN_global_subdomain*3+eI]+
                                                                                            mesh.subdomainp->nodeArray[nN_neig_global_subdomain*3+eI]);
         }
-      
+
     }//eN
 
   ISRestoreIndices(quadraticNumberingIS_global_new2old,&quadraticNumbering_global_new2old);
@@ -5923,7 +4581,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
   return 0;
 }
 
-int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh, 
+int buildQuadraticCubeSubdomain2GlobalMappings_3d(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh,
                                                   const int *edgeOffsets_subdomain_owned,
                                                   const int *nodeOffsets_subdomain_owned,
                                                   const int *edgeNumbering_subdomain2global,
@@ -5939,10 +4597,6 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
   using namespace std;
   int ierr,size,rank;
 
-  if (!ensure_comm()) {
-    return -1;
-  }
-
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
 
@@ -5956,8 +4610,8 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
   assert(nodeNumbering_subdomain2global);
   assert(mesh.subdomainp);
 
-  const int *elementBoundaryOffsets_subdomain_owned=mesh.elementBoundaryOffsets_subdomain_owned; 
-  const int *elementOffsets_subdomain_owned=mesh.elementOffsets_subdomain_owned; 
+  const int *elementBoundaryOffsets_subdomain_owned=mesh.elementBoundaryOffsets_subdomain_owned;
+  const int *elementOffsets_subdomain_owned=mesh.elementOffsets_subdomain_owned;
   const int *elementBoundaryNumbering_subdomain2global=mesh.elementBoundaryNumbering_subdomain2global;
   const int *elementNumbering_subdomain2global=mesh.elementNumbering_subdomain2global;
 
@@ -5994,7 +4648,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
     {
       int dof_global = mesh.nNodes_global + mesh.nEdges_global + mesh.nElementBoundaries_global  + elementNumbering_subdomain2global[i];
       quadraticNumbering_new2old[nNodes_owned + nEdges_owned + nBoundaries_owned + i] = dof_global;
-    }  
+    }
   //-------------------
 
 
@@ -6013,11 +4667,11 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
   //   if (rank == 0)
   //     {
   //       for (int id = 0; id < nDOFs_global; id++)
-  // 	{
-  // 	  std::cout<<" rank= "<<rank<<" build 2d c0p2 mappings new2old["<<id<<"]= "<<quadraticNumbering_global_new2old[id]
-  // 		   <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
-  // 		   <<std::endl;
-  // 	}
+  //    {
+  //      std::cout<<" rank= "<<rank<<" build 2d c0p2 mappings new2old["<<id<<"]= "<<quadraticNumbering_global_new2old[id]
+  //               <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
+  //               <<std::endl;
+  //    }
   //     }
   assert(offsets_subdomain_owned);
   assert(subdomain2global);
@@ -6029,7 +4683,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
   nDOF_subdomain = mesh.subdomainp->nNodes_global+mesh.subdomainp->nEdges_global+mesh.subdomainp->nElementBoundaries_global+mesh.subdomainp->nElements_global;
   max_dof_neighbors = 2*mesh.max_nNodeNeighbors_node;//8*27?
 
-  //loop through owned and ghost dofs build subdomain mapping by 
+  //loop through owned and ghost dofs build subdomain mapping by
   //going from old --> new
   int localOffset = 0;
   for (int nN = 0; nN < nNodes_owned; nN++)
@@ -6039,9 +4693,9 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + nN] = dof_global_new;
       //mwf debug
       //      if (rank == 0)
-      // 	std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //        std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
-    
+
   localOffset += nNodes_owned;
   for (int i = 0; i < nEdges_owned; i++)
     {
@@ -6050,8 +4704,8 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + i] = dof_global_new;
       //mwf debug
       //       if (rank == 0)
-      // 	  std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
-      // 		   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //          std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
+      //                   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
 
 
@@ -6063,8 +4717,8 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + i] = dof_global_new;
       //mwf debug
       //       if (rank == 0)
-      // 	  std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
-      // 		   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //          std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
+      //                   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
 
   localOffset += nBoundaries_owned;
@@ -6075,8 +4729,8 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + i] = dof_global_new;
       //mwf debug
       //       if (rank == 0)
-      // 	  std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
-      // 		   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //          std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
+      //                   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
 
   localOffset += nElements_owned;
@@ -6087,9 +4741,9 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + nN - nNodes_owned] = dof_global_new;
       //mwf debug
       //       if (rank == 0)
-      // 	std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN-nNodes_owned<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //        std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN-nNodes_owned<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
-    
+
   localOffset += mesh.subdomainp->nNodes_global - nNodes_owned;
   for (int i = nEdges_owned; i < mesh.subdomainp->nEdges_global; i++)
     {
@@ -6098,9 +4752,9 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + i - nEdges_owned] = dof_global_new;
       //       //mwf debug
       //       if (rank == 0)
-      // 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //        std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
-    
+
   localOffset += mesh.subdomainp->nEdges_global - nEdges_owned;
   for (int i = nBoundaries_owned; i < mesh.subdomainp->nElementBoundaries_global; i++)
     {
@@ -6109,9 +4763,9 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + i - nBoundaries_owned] = dof_global_new;
       //       //mwf debug
       //       if (rank == 0)
-      // 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //        std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
-    
+
   localOffset += mesh.subdomainp->nElementBoundaries_global - nBoundaries_owned;
   for (int i = nElements_owned; i < mesh.subdomainp->nElements_global; i++)
     {
@@ -6120,7 +4774,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       subdomain2global[localOffset + i - nElements_owned] = dof_global_new;
       //       //mwf debug
       //       if (rank == 0)
-      // 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+      //        std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
     }
 
   //setup local to global mapping on the subdomain for finite elements
@@ -6142,7 +4796,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
                      {2,3,7,6},
                      {3,0,4,7},
                      {4,5,6,7}};
-   
+
   assert(mesh.subdomainp->nElementBoundaries_element == 6);
   //need mapping from nodes to edge to setup element based relationship
   map<NodeTuple<2>, int> nodesEdgeMap_subdomain;
@@ -6154,11 +4808,11 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       NodeTuple<2> nt(nodes);
       nodesEdgeMap_subdomain[nt] = i;
     }
-   
+
   map<NodeTuple<4>, int> nodesBoundaryMap_subdomain;
   for (int i=0; i < mesh.subdomainp->nElementBoundaries_global; i++)
     {
-       
+
       register int nodes[4];
       nodes[0] = mesh.subdomainp->elementBoundaryNodesArray[i*4+0];
       nodes[1] = mesh.subdomainp->elementBoundaryNodesArray[i*4+1];
@@ -6168,7 +4822,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       assert(nodesBoundaryMap_subdomain.find(ebt) == nodesBoundaryMap_subdomain.end());
       nodesBoundaryMap_subdomain[ebt] = i;
     }
-   
+
   for (int eN=0; eN < mesh.subdomainp->nElements_global; eN++)
     {
       int local_offset = 0;
@@ -6176,7 +4830,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
         {
           //node_i --> unique subdomain node  0 <= i <= 3
           const int nN_global_subdomain = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + nN];
-          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges|
           if (nN_global_subdomain < nNodes_owned)
             {
               subdomain_l2g[eN*nDOF_element + local_offset + nN] = nN_global_subdomain;
@@ -6188,11 +4842,11 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
           //unique subdomain id --> unique cross processor id
           //subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = nodeNumbering_subdomain2global[nN_global_subdomain];
           //mwf debug
-          // 	  if (rank == 0)
-          // 	    {
-          // 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" node= "<<nN<<" sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
-          // 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
-          // 	    }
+          //      if (rank == 0)
+          //        {
+          //          std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" node= "<<nN<<" sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+          //                   <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+          //        }
           for (int eI=0; eI < 3; eI++)
             lagrangeNodesArray[subdomain_l2g[eN*nDOF_element + local_offset +nN]*3+eI] = mesh.subdomainp->nodeArray[nN_global_subdomain*3+eI];
         }
@@ -6206,7 +4860,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
           int edge_subdomain = nodesEdgeMap_subdomain[nt];
           int edge_global    = edgeNumbering_subdomain2global[edge_subdomain];
           assert(edge_subdomain >= 0 && edge_global >= 0);
-          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges|
           if (edge_subdomain < nEdges_owned)
             subdomain_l2g[eN*nDOF_element + local_offset + nN] = nNodes_owned + edge_subdomain;
           else
@@ -6214,34 +4868,34 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
           //unique subdomain id --> unique cross processor id
           //set above could do here subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global + edge_global;
           //mwf debug
-          // 	  if (rank == 0)
-          // 	    {
-          // 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
-          // 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
-          // 	    }  
+          //      if (rank == 0)
+          //        {
+          //          std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+          //                   <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+          //        }
           for (int eI=0; eI < 3; eI++)
             lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset+nN]*3+eI] = 0.5*(mesh.subdomainp->nodeArray[nodes[0]*3+eI]+
                                                                                            mesh.subdomainp->nodeArray[nodes[1]*3+eI]);
         }
-       
+
       local_offset += nEdges_element;
       for (int nN = 0; nN <  mesh.subdomainp->nElementBoundaries_element; nN++)
         {
-           
+
           register int nodes[4];
           nodes[0] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][0]];
           nodes[1] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][1]];
-          nodes[2] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][2]];      
+          nodes[2] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][2]];
           nodes[3] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][3]];
           NodeTuple<4> ebt(nodes);
-           
-           
+
+
           int boundary_subdomain = nodesBoundaryMap_subdomain[ebt];
           int boundary_global    = elementBoundaryNumbering_subdomain2global[boundary_subdomain];
-           
+
           assert(boundary_subdomain >= 0 && boundary_global >= 0);
-           
-          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+
+          //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges|
           if (boundary_subdomain < nBoundaries_owned)
             subdomain_l2g[eN*nDOF_element + local_offset + nN] = nNodes_owned + nEdges_owned + boundary_subdomain;
           else
@@ -6249,22 +4903,22 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
           //unique subdomain id --> unique cross processor id
           //set above could do here subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global + edge_global;
           //mwf debug
-          // 	  if (rank == 0)
-          // 	    {
-          // 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
-          // 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
-          // 	    }  
+          //      if (rank == 0)
+          //        {
+          //          std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+          //                   <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+          //        }
           for (int eI=0; eI < 3; eI++)
             lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset+nN]*3+eI] = 0.25*(mesh.subdomainp->nodeArray[nodes[0]*3+eI]+
                                                                                             mesh.subdomainp->nodeArray[nodes[1]*3+eI]+
                                                                                             mesh.subdomainp->nodeArray[nodes[2]*3+eI]+
                                                                                             mesh.subdomainp->nodeArray[nodes[3]*3+eI]);
         }
-       
+
       local_offset += mesh.subdomainp->nElementBoundaries_element;
-       
+
       // Interior node!!!
-       
+
       if (eN < nElements_owned)
         subdomain_l2g[eN*nDOF_element + local_offset] = nNodes_owned + nEdges_owned + nBoundaries_owned + eN;
       else
@@ -6272,11 +4926,11 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
       //unique subdomain id --> unique cross processor id
       //set above could do here subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global + edge_global;
       //mwf debug
-      // 	  if (rank == 0)
-      // 	    {
-      // 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
-      // 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
-      // 	    }  
+      //          if (rank == 0)
+      //            {
+      //              std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+      //                       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+      //            }
       for (int eI=0; eI < 3; eI++)
         lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset]*3+eI] = 0.125*(mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 0]*3+eI]+
                                                                                       mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 1]*3+eI]+
@@ -6286,14 +4940,14 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
                                                                                       mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 5]*3+eI]+
                                                                                       mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 6]*3+eI]+
                                                                                       mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 7]*3+eI]);
-       
-       
+
+
     }//eN
-   
+
   ISRestoreIndices(quadraticNumberingIS_global_new2old,&quadraticNumbering_global_new2old);
   ISDestroy(&quadraticNumberingIS_new2old);
   ISDestroy(&quadraticNumberingIS_global_new2old);
-   
+
   return 0;
 }
 
@@ -6301,7 +4955,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
 
 
 
-int buildDiscontinuousGalerkinSubdomain2GlobalMappings(Mesh& mesh, 
+int buildDiscontinuousGalerkinSubdomain2GlobalMappings(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh,
                                                        const int *elementOffsets_subdomain_owned,
                                                        const int *elementNumbering_subdomain2global,
                                                        int nDOF_element,
@@ -6318,10 +4972,6 @@ int buildDiscontinuousGalerkinSubdomain2GlobalMappings(Mesh& mesh,
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
 
-  if (!ensure_comm()) {
-    return -1;
-  }
-
   //DG dofs stored element wise
   //[...,eN_0,eN_1,..,eN_ndof_local,...]
   //assume a processor owns a dof if it owns that element
@@ -6330,7 +4980,7 @@ int buildDiscontinuousGalerkinSubdomain2GlobalMappings(Mesh& mesh,
   assert(mesh.subdomainp);
 
   const int nElements_owned = elementOffsets_subdomain_owned[rank+1]-elementOffsets_subdomain_owned[rank];
-  
+
   assert(offsets_subdomain_owned);
   assert(subdomain2global);
   assert(subdomain_l2g);
@@ -6341,7 +4991,7 @@ int buildDiscontinuousGalerkinSubdomain2GlobalMappings(Mesh& mesh,
   for (int sdN=0; sdN < size+1; sdN++)
     offsets_subdomain_owned[sdN] = elementOffsets_subdomain_owned[sdN]*nDOF_element;
 
-  //loop through owned and ghost dofs build subdomain mapping 
+  //loop through owned and ghost dofs build subdomain mapping
   for (int eN = 0; eN < mesh.subdomainp->nElements_global; eN++)
     {
       for (int i = 0; i < nDOF_element; i++)
@@ -6355,933 +5005,4 @@ int buildDiscontinuousGalerkinSubdomain2GlobalMappings(Mesh& mesh,
 
   return 0;
 }
-
-static PyObject* flcbdfWrappersGlobalSum(PyObject* self, PyObject* args)
-{
-  using namespace std;
-  double value,value_new;
-
-  if (!ensure_comm()) {
-    return NULL;
-  }
-
-  if (!PyArg_ParseTuple(args,
-                        "d",
-                        &value))
-    return NULL;
-  MPI_Allreduce(&value,&value_new,1,MPI_DOUBLE,MPI_SUM,PROTEUS_COMM_WORLD);
-  return Py_BuildValue("d",value_new);
 }
-
-static PyObject* flcbdfWrappersGlobalMax(PyObject* self, PyObject* args)
-{
-  using namespace std;
-  double value,value_new;
-
-  if (!ensure_comm()) {
-    return NULL;
-  }
-
-  if (!PyArg_ParseTuple(args,
-                        "d",
-                        &value))
-    return NULL;
-
-  MPI_Allreduce(&value,&value_new,1,MPI_DOUBLE,MPI_MAX,PROTEUS_COMM_WORLD);
-  return Py_BuildValue("d",value_new);
-}
-static PyObject* flcbdfWrappersGlobalMin(PyObject* self, PyObject* args)
-{
-  using namespace std;
-  double value,value_new;
-
-  if (!ensure_comm()) {
-    return NULL;
-  }
-
-  if (!PyArg_ParseTuple(args,
-                        "d",
-                        &value))
-    return NULL;
-  MPI_Allreduce(&value,&value_new,1,MPI_DOUBLE,MPI_MIN,PROTEUS_COMM_WORLD);
-  return Py_BuildValue("d",value_new);
-}
-
-
-static PyObject* flcbdfWrappersPartitionElements(PyObject* self,
-                                                 PyObject* args)
-{
-  using namespace std;
-  int nLayersOfOverlap;
-  PyObject *cmesh,*subdomain_cmesh,
-    *elementOffsets_subdomain_owned,
-    *elementNumbering_subdomain2global,
-    *nodeOffsets_subdomain_owned,
-    *nodeNumbering_subdomain2global,
-    *elementBoundaryOffsets_subdomain_owned,
-    *elementBoundaryNumbering_subdomain2global,
-    *edgeOffsets_subdomain_owned,
-    *edgeNumbering_subdomain2global;
-  if (!PyArg_ParseTuple(args,
-                        "iOO",
-                        &nLayersOfOverlap,
-                        &cmesh,
-                        &subdomain_cmesh))
-    return NULL;
-  MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
-  PETSC_COMM_WORLD = PROTEUS_COMM_WORLD;
-  int ierr,size,rank;
-
-  if (!ensure_comm()) {
-    return NULL;
-  }
-
-
-  ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
-  ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
-  partitionElements(MESH(cmesh),nLayersOfOverlap);
- 
-
-  //   Vec u2;
-  //   int n = MESH(cmesh).nodeOffsets_subdomain_owned[rank+1] - MESH(cmesh).nodeOffsets_subdomain_owned[rank],
-  //     N = MESH(cmesh).nNodes_global,
-  //     nghost = MESH(cmesh).subdomainp->nNodes_global - n;
-  //   valarray<int> ghost(nghost);
-  //   for (int ii=0;ii<nghost;ii++)
-  //     ghost[ii] = MESH(cmesh).nodeNumbering_subdomain2global[n+ii];
-  //   VecCreateGhost(PROTEUS_COMM_WORLD,
-  //                  n,
-  //                  N,
-  //                  nghost,
-  //                  &ghost[0],
-  //                  &u2);
-  //   VecDestroy(&u2);
-
-  int dims[1];
-  //build handles to python arrays
-  dims[0] = size+1;
-  elementOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).elementOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nElements_global;
-  elementNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                              dims,
-                                                              PyArray_INT,
-                                                              (char*)MESH(cmesh).elementNumbering_subdomain2global);
-  dims[0] = size+1;
-  nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                        dims,
-                                                        PyArray_INT,
-                                                        (char*)MESH(cmesh).nodeOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nNodes_global;
-  nodeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).nodeNumbering_subdomain2global);
-  dims[0] = size+1;
-  elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                                   dims,
-                                                                   PyArray_INT,
-                                                                   (char*)MESH(cmesh).elementBoundaryOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nElementBoundaries_global;
-  elementBoundaryNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                                      dims,
-                                                                      PyArray_INT,
-                                                                      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-  dims[0] = size+1;
-  edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                        dims,
-                                                        PyArray_INT,
-                                                        (char*)MESH(cmesh).edgeOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nEdges_global;
-  edgeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-  return Py_BuildValue("OOOOOOOO",
-                       elementOffsets_subdomain_owned,
-                       elementNumbering_subdomain2global,
-                       nodeOffsets_subdomain_owned,
-                       nodeNumbering_subdomain2global,
-                       elementBoundaryOffsets_subdomain_owned,
-                       elementBoundaryNumbering_subdomain2global,
-                       edgeOffsets_subdomain_owned,
-                       edgeNumbering_subdomain2global);
-}
-static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
-                                              PyObject* args)
-{
-  using namespace std;
-  int nLayersOfOverlap;
-  PyObject *cmesh,*subdomain_cmesh,
-    *elementOffsets_subdomain_owned,
-    *elementNumbering_subdomain2global,
-    *nodeOffsets_subdomain_owned,
-    *nodeNumbering_subdomain2global,
-    *elementBoundaryOffsets_subdomain_owned,
-    *elementBoundaryNumbering_subdomain2global,
-    *edgeOffsets_subdomain_owned,
-    *edgeNumbering_subdomain2global;
-  if (!PyArg_ParseTuple(args,
-                        "iOO",
-                        &nLayersOfOverlap,
-                        &cmesh,
-                        &subdomain_cmesh))
-    return NULL;
-
-  if (!ensure_comm()) {
-    return NULL;
-  }
-
-  MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
-  PETSC_COMM_WORLD = PROTEUS_COMM_WORLD;
-  int ierr,size,rank;
-  ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
-  ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
-  partitionNodes(MESH(cmesh),nLayersOfOverlap);
- 
-
-  //   Vec u2;
-  //   int n = MESH(cmesh).nodeOffsets_subdomain_owned[rank+1] - MESH(cmesh).nodeOffsets_subdomain_owned[rank],
-  //     N = MESH(cmesh).nNodes_global,
-  //     nghost = MESH(cmesh).subdomainp->nNodes_global - n;
-  //   valarray<int> ghost(nghost);
-  //   for (int ii=0;ii<nghost;ii++)
-  //     ghost[ii] = MESH(cmesh).nodeNumbering_subdomain2global[n+ii];
-  //   VecCreateGhost(PROTEUS_COMM_WORLD,
-  //                  n,
-  //                  N,
-  //                  nghost,
-  //                  &ghost[0],
-  //                  &u2);
-  //   VecDestroy(&u2);
-
-  int dims[1];
-  //build handles to python arrays
-  dims[0] = size+1;
-  elementOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).elementOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nElements_global;
-  elementNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                              dims,
-                                                              PyArray_INT,
-                                                              (char*)MESH(cmesh).elementNumbering_subdomain2global);
-  dims[0] = size+1;
-  nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                        dims,
-                                                        PyArray_INT,
-                                                        (char*)MESH(cmesh).nodeOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nNodes_global;
-  nodeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).nodeNumbering_subdomain2global);
-  dims[0] = size+1;
-  elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                                   dims,
-                                                                   PyArray_INT,
-                                                                   (char*)MESH(cmesh).elementBoundaryOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nElementBoundaries_global;
-  elementBoundaryNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                                      dims,
-                                                                      PyArray_INT,
-                                                                      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-  dims[0] = size+1;
-  edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                        dims,
-                                                        PyArray_INT,
-                                                        (char*)MESH(cmesh).edgeOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nEdges_global;
-  edgeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-
-  return Py_BuildValue("OOOOOOOO",
-                       elementOffsets_subdomain_owned,
-                       elementNumbering_subdomain2global,
-                       nodeOffsets_subdomain_owned,
-                       nodeNumbering_subdomain2global,
-                       elementBoundaryOffsets_subdomain_owned,
-                       elementBoundaryNumbering_subdomain2global,
-                       edgeOffsets_subdomain_owned,
-                       edgeNumbering_subdomain2global);
-}
-
-static PyObject* flcbdfWrappersConvertPUMIPartitionToPython(PyObject* self,
-							     PyObject* args)
-{
-  using namespace std;
-  PyObject *cmesh,*subdomain_cmesh,
-    *elementOffsets_subdomain_owned,
-    *elementNumbering_subdomain2global,
-    *elementNumbering_global2original,
-    *nodeOffsets_subdomain_owned,
-    *nodeNumbering_subdomain2global,
-    *nodeNumbering_global2original,
-    *elementBoundaryOffsets_subdomain_owned,
-    *elementBoundaryNumbering_subdomain2global,
-    *elementBoundaryNumbering_global2original,
-    *edgeOffsets_subdomain_owned,
-    *edgeNumbering_subdomain2global,
-    *edgeNumbering_global2original;
-  if (!PyArg_ParseTuple(args,
-                        "OO",
-                        &cmesh,
-                        &subdomain_cmesh))
-    return NULL;
-  MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
-  PETSC_COMM_WORLD = PROTEUS_COMM_WORLD;
-  int ierr,size,rank;
-  ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
-  ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
-
-  int dims[1];
-  //build handles to python arrays
-  dims[0] = size+1;
-  elementOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).elementOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nElements_global;
-  elementNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                              dims,
-                                                              PyArray_INT,
-                                                              (char*)MESH(cmesh).elementNumbering_subdomain2global);
-  dims[0] = size+1;
-  nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                        dims,
-                                                        PyArray_INT,
-                                                        (char*)MESH(cmesh).nodeOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nNodes_global;
-  nodeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).nodeNumbering_subdomain2global);
-  dims[0] = size+1;
-  elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-								   dims,
-								   PyArray_INT,
-								   (char*)MESH(cmesh).elementBoundaryOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nElementBoundaries_global;
-  elementBoundaryNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-								      dims,
-								      PyArray_INT,
-								      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-  dims[0] = size+1;
-  edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-							dims,
-							PyArray_INT,
-							(char*)MESH(cmesh).edgeOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nEdges_global;
-  edgeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-							   dims,
-							   PyArray_INT,
-							   (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-  return Py_BuildValue("OOOOOOOO",
-                       elementOffsets_subdomain_owned,
-                       elementNumbering_subdomain2global,
-                       nodeOffsets_subdomain_owned,
-                       nodeNumbering_subdomain2global,
-                       elementBoundaryOffsets_subdomain_owned,
-                       elementBoundaryNumbering_subdomain2global,
-                       edgeOffsets_subdomain_owned,
-                       edgeNumbering_subdomain2global);
-
-}                      
-static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
-                                                             PyObject* args)
-{
-  using namespace std;
-  int nLayersOfOverlap, indexBase;
-  char* filebase;
-  PyObject *cmesh,*subdomain_cmesh,
-    *elementOffsets_subdomain_owned,
-    *elementNumbering_subdomain2global,
-    *nodeOffsets_subdomain_owned,
-    *nodeNumbering_subdomain2global,
-    *elementBoundaryOffsets_subdomain_owned,
-    *elementBoundaryNumbering_subdomain2global,
-    *edgeOffsets_subdomain_owned,
-    *edgeNumbering_subdomain2global;
-  if (!PyArg_ParseTuple(args,
-                        "siiOO",
-                        &filebase,
-                        &indexBase,
-                        &nLayersOfOverlap,
-                        &cmesh,
-                        &subdomain_cmesh))
-    return NULL;
-  MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
-  PETSC_COMM_WORLD = PROTEUS_COMM_WORLD;
-
-  if (!ensure_comm()) {
-    return NULL;
-  }
-
-  int ierr,size,rank;
-  ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
-  ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
-  partitionNodesFromTetgenFiles(filebase,indexBase,MESH(cmesh),nLayersOfOverlap);
-
-  //   Vec u2;
-  //   int n = MESH(cmesh).nodeOffsets_subdomain_owned[rank+1] - MESH(cmesh).nodeOffsets_subdomain_owned[rank],
-  //     N = MESH(cmesh).nNodes_global,
-  //     nghost = MESH(cmesh).subdomainp->nNodes_global - n;
-  //   valarray<int> ghost(nghost);
-  //   for (int ii=0;ii<nghost;ii++)
-  //     ghost[ii] = MESH(cmesh).nodeNumbering_subdomain2global[n+ii];
-  //   VecCreateGhost(PROTEUS_COMM_WORLD,
-  //                  n,
-  //                  N,
-  //                  nghost,
-  //                  &ghost[0],
-  //                  &u2);
-  //   VecDestroy(&u2);
-
-  int dims[1];
-  //build handles to python arrays
-  dims[0] = size+1;
-  elementOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).elementOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nElements_global;
-  elementNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                              dims,
-                                                              PyArray_INT,
-                                                              (char*)MESH(cmesh).elementNumbering_subdomain2global);
-  dims[0] = size+1;
-  nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                        dims,
-                                                        PyArray_INT,
-                                                        (char*)MESH(cmesh).nodeOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nNodes_global;
-  nodeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).nodeNumbering_subdomain2global);
-  dims[0] = size+1;
-  elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                                   dims,
-                                                                   PyArray_INT,
-                                                                   (char*)MESH(cmesh).elementBoundaryOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nElementBoundaries_global;
-  elementBoundaryNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-								      dims,
-								      PyArray_INT,
-								      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-  dims[0] = size+1;
-  edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
-                                                        dims,
-                                                        PyArray_INT,
-                                                        (char*)MESH(cmesh).edgeOffsets_subdomain_owned);
-  
-  dims[0] = MESH(cmesh).subdomainp->nEdges_global;
-  edgeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-							   dims,
-							   PyArray_INT,
-							   (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-  return Py_BuildValue("OOOOOOOO",
-                       elementOffsets_subdomain_owned,
-                       elementNumbering_subdomain2global,
-                       nodeOffsets_subdomain_owned,
-                       nodeNumbering_subdomain2global,
-		       elementBoundaryOffsets_subdomain_owned,
-                       elementBoundaryNumbering_subdomain2global,
-		       edgeOffsets_subdomain_owned,
-                       edgeNumbering_subdomain2global);
-}
-
-
-static PyObject* flcbdfWrappersBuildQuadraticLocal2GlobalMappings(PyObject* self,
-                                                                  PyObject* args)
-{
-  using namespace std;
-  int nSpace;
-  int nDOF_all_processes=0, nDOF_subdomain=0, max_dof_neighbors=0;
-  PyObject *cmesh,*subdomain_cmesh,
-    *elementOffsets_subdomain_owned,
-    *nodeOffsets_subdomain_owned,
-    *elementBoundaryOffsets_subdomain_owned,
-    *edgeOffsets_subdomain_owned,
-    *elementNumbering_subdomain2global,
-    *nodeNumbering_subdomain2global,
-    *elementBoundaryNumbering_subdomain2global,
-    *edgeNumbering_subdomain2global,
-    *quadratic_dof_offsets_subdomain_owned,
-    *quadraticNumbering_subdomain2global,
-    *quadratic_subdomain_l2g,
-    *quadratic_lagrangeNodes;
-  if (!PyArg_ParseTuple(args,
-                        "iOOOOOOOOOOOOOO",
-                        &nSpace,
-                        &cmesh,
-                        &subdomain_cmesh,
-                        &elementOffsets_subdomain_owned,
-                        &nodeOffsets_subdomain_owned,
-                        &elementBoundaryOffsets_subdomain_owned,
-                        &edgeOffsets_subdomain_owned,
-                        &elementNumbering_subdomain2global,
-                        &nodeNumbering_subdomain2global,
-                        &elementBoundaryNumbering_subdomain2global,
-                        &edgeNumbering_subdomain2global,
-                        &quadratic_dof_offsets_subdomain_owned,
-                        &quadratic_subdomain_l2g,
-                        &quadraticNumbering_subdomain2global,
-                        &quadratic_lagrangeNodes))
-    return NULL;
-  //MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
-  if (nSpace == 1)
-    {
-      buildQuadraticSubdomain2GlobalMappings_1d(MESH(cmesh),
-                                                IDATA(elementOffsets_subdomain_owned),
-                                                IDATA(nodeOffsets_subdomain_owned),
-                                                IDATA(elementNumbering_subdomain2global),
-                                                IDATA(nodeNumbering_subdomain2global),
-                                                nDOF_all_processes,
-                                                nDOF_subdomain,
-                                                max_dof_neighbors,
-                                                IDATA(quadratic_dof_offsets_subdomain_owned),
-                                                IDATA(quadratic_subdomain_l2g),
-                                                IDATA(quadraticNumbering_subdomain2global),
-                                                DDATA(quadratic_lagrangeNodes));
-    }
-  else if (nSpace == 2)
-    {
-      buildQuadraticSubdomain2GlobalMappings_2d(MESH(cmesh),
-                                                IDATA(elementBoundaryOffsets_subdomain_owned),
-                                                IDATA(nodeOffsets_subdomain_owned),
-                                                IDATA(elementBoundaryNumbering_subdomain2global),
-                                                IDATA(nodeNumbering_subdomain2global),
-                                                nDOF_all_processes,
-                                                nDOF_subdomain,
-                                                max_dof_neighbors,
-                                                IDATA(quadratic_dof_offsets_subdomain_owned),
-                                                IDATA(quadratic_subdomain_l2g),
-                                                IDATA(quadraticNumbering_subdomain2global),
-                                                DDATA(quadratic_lagrangeNodes));
-
-    }
-  else
-    {
-      buildQuadraticSubdomain2GlobalMappings_3d(MESH(cmesh),
-                                                IDATA(edgeOffsets_subdomain_owned),
-                                                IDATA(nodeOffsets_subdomain_owned),
-                                                IDATA(edgeNumbering_subdomain2global),
-                                                IDATA(nodeNumbering_subdomain2global),
-                                                nDOF_all_processes,
-                                                nDOF_subdomain,
-                                                max_dof_neighbors,
-                                                IDATA(quadratic_dof_offsets_subdomain_owned),
-                                                IDATA(quadratic_subdomain_l2g),
-                                                IDATA(quadraticNumbering_subdomain2global),
-                                                DDATA(quadratic_lagrangeNodes));
-    }
-  
-
-  return Py_BuildValue("iii",
-                       nDOF_all_processes,
-                       nDOF_subdomain,
-                       max_dof_neighbors);
-
-}
-
-
-static PyObject* flcbdfWrappersBuildQuadraticCubeLocal2GlobalMappings(PyObject* self,
-                                                                      PyObject* args)
-{
-  using namespace std;
-  int nSpace;
-  int nDOF_all_processes=0, nDOF_subdomain=0, max_dof_neighbors=0;
-  PyObject *cmesh,*subdomain_cmesh,
-    *elementOffsets_subdomain_owned,
-    *nodeOffsets_subdomain_owned,
-    *elementBoundaryOffsets_subdomain_owned,
-    *edgeOffsets_subdomain_owned,
-    *elementNumbering_subdomain2global,
-    *nodeNumbering_subdomain2global,
-    *elementBoundaryNumbering_subdomain2global,
-    *edgeNumbering_subdomain2global,
-    *quadratic_dof_offsets_subdomain_owned,
-    *quadraticNumbering_subdomain2global,
-    *quadratic_subdomain_l2g,
-    *quadratic_lagrangeNodes;
-  if (!PyArg_ParseTuple(args,
-                        "iOOOOOOOOOOOOOO",
-                        &nSpace,
-                        &cmesh,
-                        &subdomain_cmesh,
-                        &elementOffsets_subdomain_owned,
-                        &nodeOffsets_subdomain_owned,
-                        &elementBoundaryOffsets_subdomain_owned,
-                        &edgeOffsets_subdomain_owned,
-                        &elementNumbering_subdomain2global,
-                        &nodeNumbering_subdomain2global,
-                        &elementBoundaryNumbering_subdomain2global,
-                        &edgeNumbering_subdomain2global,
-                        &quadratic_dof_offsets_subdomain_owned,
-                        &quadratic_subdomain_l2g,
-                        &quadraticNumbering_subdomain2global,
-                        &quadratic_lagrangeNodes))
-    return NULL;
-  //MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
-  if (nSpace == 1)
-    {
-      /*buildQuadraticCubeSubdomain2GlobalMappings_1d(MESH(cmesh),
-        IDATA(elementOffsets_subdomain_owned),
-        IDATA(nodeOffsets_subdomain_owned),
-        IDATA(elementNumbering_subdomain2global),
-        IDATA(nodeNumbering_subdomain2global),
-        nDOF_all_processes,
-        nDOF_subdomain,
-        max_dof_neighbors,
-        IDATA(quadratic_dof_offsets_subdomain_owned),
-        IDATA(quadratic_subdomain_l2g),
-        IDATA(quadraticNumbering_subdomain2global),
-        DDATA(quadratic_lagrangeNodes));*/
-      std::cout<<"buildQuadraticCubeSubdomain2GlobalMappings_1d not implemented!!"<<std::endl;
-    }
-  else if (nSpace == 2)
-    {
-      /* buildQuadraticCubeSubdomain2GlobalMappings_2d(MESH(cmesh),
-         IDATA(elementBoundaryOffsets_subdomain_owned),
-         IDATA(nodeOffsets_subdomain_owned),
-         IDATA(elementBoundaryNumbering_subdomain2global),
-         IDATA(nodeNumbering_subdomain2global),
-         nDOF_all_processes,
-         nDOF_subdomain,
-         max_dof_neighbors,
-         IDATA(quadratic_dof_offsets_subdomain_owned),
-         IDATA(quadratic_subdomain_l2g),
-         IDATA(quadraticNumbering_subdomain2global),
-         DDATA(quadratic_lagrangeNodes));*/
-      std::cout<<"buildQuadraticCubeSubdomain2GlobalMappings_2d not implemented!!"<<std::endl;
-    }
-  else
-    {
-      buildQuadraticCubeSubdomain2GlobalMappings_3d(MESH(cmesh),
-                                                    IDATA(edgeOffsets_subdomain_owned),
-                                                    IDATA(nodeOffsets_subdomain_owned),
-                                                    IDATA(edgeNumbering_subdomain2global),
-                                                    IDATA(nodeNumbering_subdomain2global),
-                                                    nDOF_all_processes,
-                                                    nDOF_subdomain,
-                                                    max_dof_neighbors,
-                                                    IDATA(quadratic_dof_offsets_subdomain_owned),
-                                                    IDATA(quadratic_subdomain_l2g),
-                                                    IDATA(quadraticNumbering_subdomain2global),
-                                                    DDATA(quadratic_lagrangeNodes));
-    }
-  
-
-  return Py_BuildValue("iii",
-                       nDOF_all_processes,
-                       nDOF_subdomain,
-                       max_dof_neighbors);
-
-}
-
-
-
-
-static PyObject* flcbdfWrappersBuildDiscontinuousGalerkinLocal2GlobalMappings(PyObject* self,
-                                                                              PyObject* args)
-{
-  using namespace std;
-  int nDOF_element;
-  int nDOF_all_processes=0, nDOF_subdomain=0, max_dof_neighbors=0;
-  PyObject *cmesh,*subdomain_cmesh,
-    *elementOffsets_subdomain_owned,
-    *elementNumbering_subdomain2global,
-    *dg_dof_offsets_subdomain_owned,
-    *dgNumbering_subdomain2global,
-    *dg_subdomain_l2g;
-  if (!PyArg_ParseTuple(args,
-                        "iOOOOOOO",
-                        &nDOF_element,
-                        &cmesh,
-                        &subdomain_cmesh,
-                        &elementOffsets_subdomain_owned,
-                        &elementNumbering_subdomain2global,
-                        &dg_dof_offsets_subdomain_owned,
-                        &dg_subdomain_l2g,
-                        &dgNumbering_subdomain2global))
-
-    return NULL;
-  buildDiscontinuousGalerkinSubdomain2GlobalMappings(MESH(cmesh),
-                                                     IDATA(elementOffsets_subdomain_owned),
-                                                     IDATA(elementNumbering_subdomain2global),
-                                                     nDOF_element,
-                                                     nDOF_all_processes,
-                                                     nDOF_subdomain,
-                                                     max_dof_neighbors,
-                                                     IDATA(dg_dof_offsets_subdomain_owned),
-                                                     IDATA(dg_subdomain_l2g),
-                                                     IDATA(dgNumbering_subdomain2global));
- 
-
-  return Py_BuildValue("iii",
-                       nDOF_all_processes,
-                       nDOF_subdomain,
-                       max_dof_neighbors);
-
-}
-
-static PyMethodDef DaetkPetscSys_methods[] = {
-  {"barrier",
-   (PyCFunction)DaetkPetscSys_barrier,
-   METH_VARARGS,
-   "set an MPI barrier"},
-  {"isMaster",
-   (PyCFunction)DaetkPetscSys_isMaster,
-   METH_VARARGS,
-   "return whether this is the master process"},
-  {"isInitialized",
-   (PyCFunction)DaetkPetscSys_isInitialized,
-   METH_VARARGS,
-   "return whether the MPI communicator is initialized"},
-  {"beginSequential",
-   (PyCFunction)DaetkPetscSys_beginSequential,
-   METH_VARARGS,
-   "begin a sequential section of code"},
-  {"endSequential",
-   (PyCFunction)DaetkPetscSys_endSequential,
-   METH_VARARGS,
-   "end a sequential section of code"},
-  {"catchError",
-   (PyCFunction)DaetkPetscSys_catchError,
-   METH_VARARGS,
-   "catch an error on any processes"},
-  {"rank",
-   (PyCFunction)DaetkPetscSys_rank,
-   METH_VARARGS,
-   "get the process rank"},
-  {"size",
-   (PyCFunction)DaetkPetscSys_size,
-   METH_VARARGS,
-   "get the MPI communicator size"},
-  {NULL,NULL}
-};
-
-static PyObject*
-DaetkPetscSys_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-  DaetkPetscSys *self;
-  self = (DaetkPetscSys *)type->tp_alloc(type,0);
-  return (PyObject*)self;
-}
-
-static int
-DaetkPetscSys_init(DaetkPetscSys *self, PyObject *args, PyObject *kwds)
-{
-  int argc;
-  char **argv;
-  PyObject *sys_argv;
-  /*mwf add for petsc database?*/
-  int isInitialized;
-  char *petscDatabaseFilename(0);
-  if(!PyArg_ParseTuple(args,
-                       "iO|s",
-                       &isInitialized,&sys_argv,&petscDatabaseFilename))
-    return -1;
-  argc = PyList_Size(sys_argv);
-  argv = new char* [argc+1];//don't  know why needs one past end cek
-  for (int i=0;i<argc;i++)
-    {
-      argv[i] = PyString_AsString(PyList_GetItem(sys_argv,i));
-    }
-  argv[argc] = new char[1];
-  argv[argc][0] = '\0';
-  //cek need to think more about how to handle petsc4py and daetk. 
-  //if (isInitialized)
-  //Daetk::Petsc::Sys::initialized=true;
-  if (petscDatabaseFilename)
-    self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for Proteus, with options database\n"),
-                                           petscDatabaseFilename);
-  else
-    self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for Proteus\n"));
-  PROTEUS_COMM_WORLD = Daetk::Petsc::cc::PETSC_COMM_WORLD;
-  delete [] argv;
-  return 0;
-}
-
-static  void
-DaetkPetscSys_dealloc(DaetkPetscSys* self)
-{
-  delete self->petscSys;
-  self->ob_type->tp_free((PyObject*)self);
-}
-
-static PyTypeObject DaetkPetscSysType = {    
-  PyObject_HEAD_INIT(NULL)
-  0,                         /*ob_size*/
-  "flcbdfWrappers.DaetkPetscSys",             /*tp_name*/
-  sizeof(DaetkPetscSys), /*tp_basicsize*/
-  0,                         /*tp_itemsize*/
-  (destructor)DaetkPetscSys_dealloc,                         /*tp_dealloc*/
-  0,                         /*tp_print*/
-  0,                         /*tp_getattr*/
-  0,                         /*tp_setattr*/
-  0,                         /*tp_compare*/
-  0,                         /*tp_repr*/
-  0,                         /*tp_as_number*/
-  0,                         /*tp_as_sequence*/
-  0,                         /*tp_as_mapping*/
-  0,                         /*tp_hash */
-  0,                         /*tp_call*/
-  0,                         /*tp_str*/
-  0,                         /*tp_getattro*/
-  0,                         /*tp_setattro*/
-  0,                         /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT,        /*tp_flags*/
-  "DaetkPetscSys objects",           /* tp_doc */
-  0,		               /* tp_traverse */
-  0,		               /* tp_clear */
-  0,		               /* tp_richcompare */
-  0,		               /* tp_weaklistoffset */
-  0,		               /* tp_iter */
-  0,		               /* tp_iternext */
-  DaetkPetscSys_methods,                         /* tp_methods */
-  0,                         /* tp_members */
-  0,                         /* tp_getset */
-  0,                         /* tp_base */
-  0,                         /* tp_dict */
-  0,                         /* tp_descr_get */
-  0,                         /* tp_descr_set */
-  0,                         /* tp_dictoffset */
-  (initproc)DaetkPetscSys_init,      /* tp_init */
-  0,                         /* tp_alloc */
-  DaetkPetscSys_new,                 /* tp_new */
-};
-
-static PyObject* 
-DaetkPetscSys_get(PyObject* self, PyObject* args)
-{
-  DaetkPetscSys* daetkPetscSys;
-  daetkPetscSys = PyObject_NEW(DaetkPetscSys, &DaetkPetscSysType);
-  daetkPetscSys->petscSys = new Daetk::Petsc::Sys();
-  return (PyObject*)daetkPetscSys;
-}
-
-
-static PyMethodDef flcbdfWrappersMethods[] = {
-  { "globalSum",
-    flcbdfWrappersGlobalSum,
-    METH_VARARGS, 
-    "sum the value over all subdomains(processes)"},
-  { "globalMax",
-    flcbdfWrappersGlobalMax,
-    METH_VARARGS, 
-    "take the max of the value over all subdomains(processes)"},
-  { "globalMin",
-    flcbdfWrappersGlobalMin,
-    METH_VARARGS, 
-    "take the max of the value over all subdomains(processes)"},
-  { "partitionElements",
-    flcbdfWrappersPartitionElements,
-    METH_VARARGS, 
-    "partition the mesh using an element-based partitioning"},
-  { "partitionNodes",
-    flcbdfWrappersPartitionNodes,
-    METH_VARARGS, 
-    "partition the mesh using a node-based partitioning"},
-  {"convertPUMIPartitionToPython", 
-    flcbdfWrappersConvertPUMIPartitionToPython,
-    METH_VARARGS,
-    "Convert C structures to python for PUMI partitioned mesh"},
-  { "partitionNodesFromTetgenFiles",
-    flcbdfWrappersPartitionNodesFromTetgenFiles,
-    METH_VARARGS, 
-    "partition the mesh using a node-based partitioning"},
-  { "buildQuadraticLocal2GlobalMappings",
-    flcbdfWrappersBuildQuadraticLocal2GlobalMappings,
-    METH_VARARGS, 
-    "create quadratic C0 finite element local to global mapping and subdomain 2 global mapping"},
-  { "buildQuadraticCubeLocal2GlobalMappings",
-    flcbdfWrappersBuildQuadraticCubeLocal2GlobalMappings,
-    METH_VARARGS, 
-    "create quadratic C0 finite element local to global mapping and subdomain 2 global mapping for cubes"},
-  { "buildDiscontinuousGalerkinLocal2GlobalMappings",
-    flcbdfWrappersBuildDiscontinuousGalerkinLocal2GlobalMappings,
-    METH_VARARGS, 
-    "create quadratic C0 finite element local to global mapping and subdomain 2 global mapping"},
-  { "getDaetkPetscSys",
-    DaetkPetscSys_get,
-    METH_VARARGS, 
-    "get the communicator  object"},
-  { NULL,NULL,0,NULL}
-};
-
-#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
-#define PyMODINIT_FUNC void
-#endif
-PyMODINIT_FUNC
-initflcbdfWrappers(void) 
-{
-  PyObject *m,*d,*c_api_object;
-  static void* PyFLCBDFWrappers_API[1];
-  if (PyType_Ready(&FLCBDF_integratorType) < 0)
-    return;
-  if (PyType_Ready(&DaetkPetscSysType) < 0)
-    return;
-  if (PyType_Ready(&ParVecType) < 0)
-    return;
-  if (PyType_Ready(&ParMatType) < 0)
-    return;
-  if (PyType_Ready(&CKSPType) < 0)
-    return;
-  m = Py_InitModule3("flcbdfWrappers", 
-                     flcbdfWrappersMethods,
-                     "flcbdf wrappers module");
-  d = PyModule_GetDict(m);
-  import_array();
-  Py_INCREF(&FLCBDF_integratorType);
-  PyModule_AddObject(m, "FLCBDF_integrator", (PyObject *)&FLCBDF_integratorType);
-  Py_INCREF(&DaetkPetscSysType);
-  PyModule_AddObject(m, "DaetkPetscSys", (PyObject *)&DaetkPetscSysType);
-  Py_INCREF(&CKSPType);
-  PyModule_AddObject(m, "KSP", (PyObject *)&CKSPType);
-  Py_INCREF(&ParVecType);
-  PyModule_AddObject(m, "ParVec", (PyObject *)&ParVecType);
-  Py_INCREF(&ParMatType);
-  PyModule_AddObject(m, "ParMat", (PyObject *)&ParMatType);
-
-  // ensure PETSc, then DAETK, are initialized
-  // PETSc first, via the proteus.Comm module
-  //this wasn't working anyway... 
-  //PyRun_SimpleString("proteus.Comm.init()");
-
-  // DAETK, PETSc is initialized so only initialize subsystem
-  Daetk::Petsc::Sys::initialized=true;
-  int ignore1;
-  char** ignore2;
-  DAETK_SYS = new Daetk::Petsc::Sys(ignore1, ignore2, PETSC_NULL, PETSC_NULL);
-
-  // Set up default Proteus communicator
-  PROTEUS_COMM_WORLD = PETSC_COMM_WORLD;
-
-  PyFLCBDFWrappers_API[0] = (void*)(&PROTEUS_COMM_WORLD);
-  c_api_object = PyCObject_FromVoidPtr((void*)PyFLCBDFWrappers_API,NULL);
-  PyModule_AddObject(m,"_C_API",c_api_object);
-}
-}
-/** @} */
