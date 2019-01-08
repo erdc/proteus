@@ -991,8 +991,13 @@ class NS_base(object):  # (HasTraits):
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
-                lm.u_store = copy.deepcopy(lm.u)
-                lm.dt_store = copy.deepcopy(lm.timeIntegration.dt)
+                #lm.u_store = copy.copy(lm.u)
+                lm.u_store = {}
+                lm.u_store_last = {}
+                for ci in range(0,lm.coefficients.nc):
+                    lm.u_store[ci] = copy.deepcopy(lm.u[ci].dof)
+                    lm.u_store_last[ci] = copy.deepcopy(lm.u[ci].dof_last)
+                lm.dt_store = copy.copy(lm.timeIntegration.dt)
                 for ci in range(0,lm.coefficients.nc):
                     lm.u[ci].dof[:] = lm.u[ci].dof_last
                 lm.setFreeDOF(lu)
@@ -1018,8 +1023,8 @@ class NS_base(object):  # (HasTraits):
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 for ci in range(0,lm.coefficients.nc):
-                    lm.u[ci].dof[:] = lm.u_store[ci].dof
-                    lm.u[ci].dof_last[:] = lm.u_store[ci].dof_last
+                    lm.u[ci].dof[:] = lm.u_store[ci]
+                    lm.u[ci].dof_last[:] = lm.u_store_last[ci]
                 lm.setFreeDOF(lu)
                 lm.getResidual(lu,lr)
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)

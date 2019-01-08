@@ -13,7 +13,8 @@ from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
                               C0_AffineLinearOnSimplexWithNodalBasis)
-from proteus.flcbdfWrappers import globalMax
+from proteus.Comm import (globalMax,
+                          globalSum)
 from proteus.Profiling import memory
 from proteus.Profiling import logEvent as log
 from proteus.Transport import OneLevelTransport
@@ -58,7 +59,7 @@ class Coefficients(TC_base):
                  sedModelIndex = None, 
                  fixNullSpace=False,
                  INTEGRATE_BY_PARTS_DIV_U=True,
-                 nullSpace="ConstantNullSpace"):
+                 nullSpace="NoNullSpace"):
         """Construct a coefficients object
 
         :param modelIndex: This model's index into the model list
@@ -158,17 +159,20 @@ class Coefficients(TC_base):
             q_a = 1.0/(q_vos*self.rho_s_min + (1.0-q_vos)*self.rho_f_min)/alphaBDF
             ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
             if self.sedModelIndex is not None:
-            
                 for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
-                    self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * (1.0 - q_vos) * q_a 
-                    self.fluidModel.ebqe[('velocity',0)][...,i] += (1.0-ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.fluidModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]                
-                    self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * (q_vos) * q_a
-                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] += (ebqe_vos)*(self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)]-self.sedModel.ebqe[('velocity', 0)][..., i])*self.model.ebqe['n'][...,i]   
+                    self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * q_a
+                    self.fluidModel.ebqe[('velocity',0)][...,i] += (self.model.ebqe[('advectiveFlux', 0)] +
+                                                                    self.model.ebqe[('diffusiveFlux', 0, 0)] -
+                                                                    self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
+                    self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * q_a
+                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] += (self.model.ebqe[('advectiveFlux', 0)] +
+                                                                                self.model.ebqe[('diffusiveFlux', 0, 0)] -
+                                                                                self.fluidModel.coefficients.ebqe_velocity_solid[..., i]) * self.model.ebqe['n'][..., i]
 # end of loop
                 self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
                 self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
-                self.sedModel.q[('velocity',0)] = self.fluidModel.coefficients.q_velocity_solid
-                self.sedModel.ebqe[('velocity',0)] = self.fluidModel.coefficients.ebqe_velocity_solid
+                self.sedModel.q[('velocity',0)][:] = self.fluidModel.coefficients.q_velocity_solid
+                self.sedModel.ebqe[('velocity',0)][:] = self.fluidModel.coefficients.ebqe_velocity_solid
                 self.sedModel.stabilization.v_last[:] = self.sedModel.q[('velocity',0)]
                 self.sedModel.coefficients.ebqe_velocity_last[:] = self.sedModel.ebqe[('velocity',0)]
                 assert(self.fluidModel.coefficients.q_velocity_solid is self.sedModel.q[('velocity',0)])
@@ -191,10 +195,9 @@ class Coefficients(TC_base):
             else:
                 for i in range(self.fluidModel.q[('velocity', 0)].shape[-1]):
                     self.fluidModel.q[('velocity', 0)][..., i] -= old_div(self.model.q[('grad(u)', 0)][..., i], (self.rho_f_min * alphaBDF))
-                    # cek hack, need to do scale this right for 3p flow
                     self.fluidModel.ebqe[('velocity', 0)][..., i] += (self.model.ebqe[('advectiveFlux', 0)] +
-                                                                  self.model.ebqe[('diffusiveFlux', 0, 0)] -
-                                                                  self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
+                                                                      self.model.ebqe[('diffusiveFlux', 0, 0)] -
+                                                                      self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
                     self.fluidModel.coefficients.q_velocity_solid[..., i] -= old_div(self.model.q[('grad(u)', 0)][..., i], (self.rho_s_min * alphaBDF))
                     self.fluidModel.coefficients.ebqe_velocity_solid[..., i] -= old_div(self.model.ebqe[('grad(u)', 0)][..., i], (self.rho_s_min * alphaBDF))
                 self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity', 0)]
@@ -287,7 +290,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
                  movingDomain=False):
-        from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
         #
@@ -782,7 +784,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getResidual(self, u, r):
         import pdb
         import copy
-        from proteus.flcbdfWrappers import globalSum
         """
         Calculate the element residuals and add in to the global residual
         """

@@ -123,6 +123,7 @@ namespace proteus
                                    const double* phi_solid_nodes,
                                    const double* phi_solid,
                                    const double* q_velocity_solid,
+                                   const double* q_velocityStar_solid,
                                    const double* q_vos,//sed fraction - gco check
                                    const double* q_dvos_dt,
 				                   const double* q_grad_vos,
@@ -298,7 +299,10 @@ namespace proteus
                                    double order_polynomial,
                                    double* isActiveDOF,
                                    int USE_SBM,
-				   // For edge based dissipation
+                                   double* ncDrag,
+                                   double* betaDrag,
+                                   double* vos_vel_nodes,
+                                   // For edge based dissipation
 				   double * entropyResidualPerNode,
 				   double * laggedEntropyResidualPerNode,
 				   double * dMatrix,
@@ -309,6 +313,7 @@ namespace proteus
 				   // int by parts pressure
 				   int INT_BY_PARTS_PRESSURE
 				   )=0;
+
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -378,6 +383,7 @@ namespace proteus
                                    const double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
+                                   const double *q_velocityStar_solid,
                                    const double *q_vos,//sed fraction - gco check
                                    const double *q_dvos_dt,
                                    const double *q_grad_vos,
@@ -1056,6 +1062,9 @@ namespace proteus
                                                const double u_s,
                                                const double v_s,
                                                const double w_s,
+                                               const double uStar_s,
+                                               const double vStar_s,
+                                               const double wStar_s,
                                                double& mom_u_source,
                                                double& mom_v_source,
                                                double& mom_w_source,
@@ -1077,28 +1086,28 @@ namespace proteus
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
-        double fluid_velocity[3]={u,v,w}, solid_velocity[3]={u_s,v_s,w_s};
+        double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={uStar_s,vStar_s,wStar_s};
         double new_beta =   closure.betaCoeff(1.0-phi_s,
                                           rho,
                                          fluid_velocity,
                                            solid_velocity,
                                             viscosity);
         //new_beta/=rho;
-        mom_u_source +=  (1.0 - phi_s)*new_beta*( (u - u_s) - nu_t*gradC_x/closure.sigmaC_ );
-        mom_v_source +=  (1.0 - phi_s)*new_beta*( (v - v_s)- nu_t*gradC_y/closure.sigmaC_ );
-        mom_w_source +=  (1.0 - phi_s)*new_beta*( (w - w_s)- nu_t*gradC_z/closure.sigmaC_ );;
+        mom_u_source +=  (1.0 - phi_s)*new_beta*( (u - uStar_s) - nu_t*gradC_x/closure.sigmaC_ );
+        mom_v_source +=  (1.0 - phi_s)*new_beta*( (v - vStar_s)- nu_t*gradC_y/closure.sigmaC_ );
+        mom_w_source +=  (1.0 - phi_s)*new_beta*( (w - wStar_s)- nu_t*gradC_z/closure.sigmaC_ );;
 
-        dmom_u_source[0] =  (1.0 - phi_s)*new_beta;
+        dmom_u_source[0] = (1.0 - phi_s)*new_beta;
         dmom_u_source[1] = 0.0;
         dmom_u_source[2] = 0.0;
 
         dmom_v_source[0] = 0.0;
-        dmom_v_source[1] =  (1.0 - phi_s)*new_beta;
+        dmom_v_source[1] = (1.0 - phi_s)*new_beta;
         dmom_v_source[2] = 0.0;
 
         dmom_w_source[0] = 0.0;
         dmom_w_source[1] = 0.0;
-        dmom_w_source[2] =  (1.0 - phi_s)*new_beta;
+        dmom_w_source[2] = (1.0 - phi_s)*new_beta;
       }
 
       inline
@@ -2069,7 +2078,8 @@ namespace proteus
                              const double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
-                             const double* q_vos,//sed fraction - gco check
+                             const double* q_velocityStar_solid,
+                             const double* q_vos,//sed fraction - gco check 
                              const double* q_dvos_dt,
                              const double* q_grad_vos,
                              const double* q_dragAlpha,
@@ -2245,7 +2255,10 @@ namespace proteus
                              double order_polynomial,
                              double* isActiveDOF,
                              int USE_SBM,
-			     // For edge based dissipation
+                             double* ncDrag,
+                             double* betaDrag,
+                             double* vos_vel_nodes,
+                             // For edge based dissipation
 			     double * entropyResidualPerNode,
 			     double * laggedEntropyResidualPerNode,
 			     double * dMatrix,
@@ -2777,6 +2790,9 @@ namespace proteus
                                                   q_velocity_solid[eN_k_nSpace+0],
                                                   q_velocity_solid[eN_k_nSpace+1],
                                                   q_velocity_solid[eN_k_nSpace+2],
+                                                  q_velocityStar_solid[eN_k_nSpace+0],
+                                                  q_velocityStar_solid[eN_k_nSpace+1],
+                                                  q_velocityStar_solid[eN_k_nSpace+2],
                                                   mom_u_source,
                                                   mom_v_source,
                                                   mom_w_source,
@@ -4770,6 +4786,7 @@ namespace proteus
                              const double *phi_solid_nodes,
                              const double *phi_solid,
                              const double *q_velocity_solid,
+                             const double *q_velocityStar_solid,
                              const double *q_vos,
                              const double *q_dvos_dt,
                              const double* q_grad_vos,
@@ -5393,6 +5410,9 @@ namespace proteus
                                                   q_velocity_solid[eN_k_nSpace+0],
                                                   q_velocity_solid[eN_k_nSpace+1],
                                                   q_velocity_solid[eN_k_nSpace+2],
+                                                  q_velocityStar_solid[eN_k_nSpace+0],
+                                                  q_velocityStar_solid[eN_k_nSpace+1],
+                                                  q_velocityStar_solid[eN_k_nSpace+2],
                                                   mom_u_source,
                                                   mom_v_source,
                                                   mom_w_source,
