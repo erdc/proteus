@@ -238,6 +238,7 @@ cdef class SparseFactor(object):
         self.L.nrow = dim ; self.L.ncol = dim
         self.U.nrow = dim ; self.U.ncol = dim
         self.X.nrow = dim ; self.X.ncol = 1
+        self.storeX.lda = dim
         self.use_same_perm_c = 0
         self.use_same_sparsity = 0
         self.perm_c = <int *>malloc(dim*sizeof(np.int32_t))
@@ -339,9 +340,6 @@ cdef void superluWrappersSparseFactorPrepare(cSparseMatrix sm,
             &sparseFactor.Glu,
             &sparseFactor.stat,
             &info)
-    print '**********'
-    print info
-    print '**********'
 
 def sparseFactorSolve(sparseFactor,
                       x):
@@ -363,6 +361,7 @@ cdef void superluWrappersSparseFactorSolve(SparseFactor sparseFactor,
     cdef int info = 0
 
     sparseFactor.storeX.nzval = &x[0]
+
     cdgstrs(trans,
             &sparseFactor.L,
             &sparseFactor.U,

@@ -28,7 +28,7 @@ def simple_singular_sparse_mat():
 @pytest.fixture(scope='module')
 def simple_nonsingular_sparse_mat():
     nr = 3 ; nc = 3; nnz = 7
-    nzval = np.array([1., 2., -1., 2., 4., 1., 1.], dtype=np.float64)
+    nzval = np.array([1., 2., -1., 2., 4., 1., -1.], dtype=np.float64)
     rowptr = np.array([0, 3, 5, 7], dtype=np.int32)
     colind = np.array([0, 1, 2, 0, 1, 1, 2], dtype=np.int32)
     A = csuperluWrappersModule.SparseMatrix(nr,
@@ -129,10 +129,10 @@ def test_fwrite_w(simple_sparse_mat):
     os.remove('test.t')
     assert s.strip()==content_as_string.strip()
 
-@pytest.mark.current
 def test_sparseFactorPrepare_1(simple_nonsingular_sparse_mat):
     A = simple_nonsingular_sparse_mat
     sparseFactor = csuperluWrappersModule.SparseFactor(A.nr)
     csuperluWrappersModule.sparseFactorPrepare(A, sparseFactor)
     x = np.ones(A.nr)
-#    csuperluWrappersModule.sparseFactorSolve(sparseFactor, x)
+    csuperluWrappersModule.sparseFactorSolve(sparseFactor, x)
+    assert np.array_equal(x, np.array([-.5, .5, -.5]))
