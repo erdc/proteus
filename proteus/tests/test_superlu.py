@@ -12,7 +12,7 @@ from proteus import csuperluWrappersModule
 #     assert type(test_mat) == superluWrappers.SparseFactor
 
 @pytest.fixture(scope='module')
-def simple_nonsingular_sparse_mat():
+def simple_singular_sparse_mat():
     nr = 3 ; nc = 3; nnz = 8
     nzval = np.array([1., 2., 3., 6., -1., 1., 2., 1.], dtype=np.float64)
     rowptr = np.array([0, 2, 5, 8], dtype=np.int32)
@@ -25,6 +25,20 @@ def simple_nonsingular_sparse_mat():
                                             rowptr)
     yield A
 
+@pytest.fixture(scope='module')
+def simple_nonsingular_sparse_mat():
+    nr = 3 ; nc = 3; nnz = 7
+    nzval = np.array([1., 2., -1., 2., 4., 1., 1.], dtype=np.float64)
+    rowptr = np.array([0, 3, 5, 7], dtype=np.int32)
+    colind = np.array([0, 1, 2, 0, 1, 1, 2], dtype=np.int32)
+    A = csuperluWrappersModule.SparseMatrix(nr,
+                                            nc,
+                                            nnz,
+                                            nzval,
+                                            colind,
+                                            rowptr)
+    yield A
+    
 @pytest.fixture(scope='module')
 def simple_sparse_mat():
     nr = 4 ; nc = 4; nnz = 4
@@ -115,4 +129,10 @@ def test_fwrite_w(simple_sparse_mat):
     os.remove('test.t')
     assert s.strip()==content_as_string.strip()
 
-def test_sparseFactorPrepare_1(simple_sparse_mat):
+@pytest.mark.current
+def test_sparseFactorPrepare_1(simple_nonsingular_sparse_mat):
+    A = simple_nonsingular_sparse_mat
+    sparseFactor = csuperluWrappersModule.SparseFactor(A.nr)
+    csuperluWrappersModule.sparseFactorPrepare(A, sparseFactor)
+    x = np.ones(A.nr)
+#    csuperluWrappersModule.sparseFactorSolve(sparseFactor, x)
