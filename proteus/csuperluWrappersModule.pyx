@@ -201,7 +201,7 @@ cdef struct _NCPformat:
     np.int32_t nnz
     void * nzval
     np.int32_t * rowind
-    np.int32_t * colberg
+    np.int32_t * colbeg
     np.int32_t * colend
 
 cdef class SparseFactor(object):
@@ -328,8 +328,8 @@ cdef void superluWrappersSparseFactorPrepare(cSparseMatrix sm,
         sparseFactor.options.Fact = _SamePattern_SameRowPerm
         n = sparseFactor.A.ncol
         for i in range(n):
-            (<_NCPformat *>sparseFactor.AC.Store).colberg[sparseFactor.perm_c[i]] = (<_NCformat *> sparseFactor.A.Store).colptr[i]
-            (<_NCPformat *>sparseFactor.AC.Store).colend[sparseFactor.per_c[i]] = (<_NCformat *> sparseFactor.A.Store).colptr[i+1]
+            (<_NCPformat *>sparseFactor.AC.Store).colbeg[sparseFactor.perm_c[i]] = (<_NCformat *> sparseFactor.A.Store).colptr[i]
+            (<_NCPformat *>sparseFactor.AC.Store).colend[sparseFactor.perm_c[i]] = (<_NCformat *> sparseFactor.A.Store).colptr[i+1]
     cdgstrf(&sparseFactor.options,
             &sparseFactor.AC,
             relax,
