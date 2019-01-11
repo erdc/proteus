@@ -197,6 +197,13 @@ cdef struct _DNformat:
     np.int32_t lda
     void *nzval
 
+cdef struct _NCPformat:
+    np.int32_t nnz
+    void * nzval
+    np.int32_t * rowind
+    np.int32_t * colberg
+    np.int32_t * colend
+
 cdef class SparseFactor(object):
 
     cdef _superlu_options_t options
@@ -318,14 +325,11 @@ cdef void superluWrappersSparseFactorPrepare(cSparseMatrix sm,
                      &sparseFactor.AC)
         sparseFactor.use_same_sparsity = 1
     else:
-        pass
-        #     # ARB - need to lookinto this part in more detail,
-        #     # i'm not following all the typecasts?
-        # sparseFactor.options.Fact = _SamePattern_SameRowPerm
-        # n = sparseFactor.A.ncol
-        # for i in range(n):
-        #     sparseFactor.AC.Store.colberg[sparseFactor.perm_c[i]] = sparseFactor.A.Store.colptr[i]
-        #     sparseFactor.AC.Store.colend[sparseFactor.per_c[i]] = sparseFactor.colptr[i+1]
+        sparseFactor.options.Fact = _SamePattern_SameRowPerm
+        n = sparseFactor.A.ncol
+        for i in range(n):
+            (<_NCPformat *>sparseFactor.AC.Store).colberg[sparseFactor.perm_c[i]] = (<_NCformat *> sparseFactor.A.Store).colptr[i]
+            (<_NCPformat *>sparseFactor.AC.Store).colend[sparseFactor.per_c[i]] = (<_NCformat *> sparseFactor.A.Store).colptr[i+1]
     cdgstrf(&sparseFactor.options,
             &sparseFactor.AC,
             relax,
