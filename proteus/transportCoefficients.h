@@ -1,5 +1,12 @@
 #ifndef TRANSPORTCOEFFICIENTS_H
 #define TRANSPORTCOEFFICIENTS_H
+
+#include <math.h>
+#include <assert.h>
+#include <stdio.h>
+#include <memory.h>
+#include <stdlib.h>
+
 /** \file transportCoefficients.h
     \defgroup transportCoefficients transportCoefficients
     \brief A C library for coefficients of PDE's.
