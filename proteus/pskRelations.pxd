@@ -1,5 +1,9 @@
 # A type of -*- python -*- file
 cdef extern from "pskRelations.h":
+    cdef cppclass SimplePSK:
+        pass
+    cdef cppclass PskSpline:
+        pass
     cdef cppclass VGM:
         double psic
         double krw
