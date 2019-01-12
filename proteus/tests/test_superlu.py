@@ -5,7 +5,7 @@ import numpy as np
 from numpy import linalg
 import scipy.io as sio
 
-from proteus import csuperluWrappersModule
+from proteus import superluWrappers
 
 # def test_SparseFactor_initialization():
 #     test_mat = superluWrappers.SparseFactor(1)
@@ -17,12 +17,12 @@ def simple_singular_sparse_mat():
     nzval = np.array([1., 2., 3., 6., -1., 1., 2., 1.], dtype=np.float64)
     rowptr = np.array([0, 2, 5, 8], dtype=np.int32)
     colind = np.array([0, 1, 0, 1, 2, 0, 1, 2], dtype=np.int32)
-    A = csuperluWrappersModule.SparseMatrix(nr,
-                                            nc,
-                                            nnz,
-                                            nzval,
-                                            colind,
-                                            rowptr)
+    A = superluWrappers.SparseMatrix(nr,
+                                     nc,
+                                     nnz,
+                                     nzval,
+                                     colind,
+                                     rowptr)
     yield A
 
 @pytest.fixture(scope='module')
@@ -31,12 +31,12 @@ def simple_nonsingular_sparse_mat():
     nzval = np.array([1., 2., -1., 2., 4., 1., -1.], dtype=np.float64)
     rowptr = np.array([0, 3, 5, 7], dtype=np.int32)
     colind = np.array([0, 1, 2, 0, 1, 1, 2], dtype=np.int32)
-    A = csuperluWrappersModule.SparseMatrix(nr,
-                                            nc,
-                                            nnz,
-                                            nzval,
-                                            colind,
-                                            rowptr)
+    A = superluWrappers.SparseMatrix(nr,
+                                     nc,
+                                     nnz,
+                                     nzval,
+                                     colind,
+                                     rowptr)
     yield A
     
 @pytest.fixture(scope='module')
@@ -45,12 +45,12 @@ def simple_sparse_mat():
     nzval = np.array([5., 8., 3., 6.], dtype=np.float64)
     rowptr = np.array([0, 0, 2, 3, 4], dtype=np.int32)
     colind = np.array([0, 1, 2, 1], dtype=np.int32)
-    A = csuperluWrappersModule.SparseMatrix(nr,
-                                            nc,
-                                            nnz,
-                                            nzval,
-                                            colind,
-                                            rowptr)
+    A = superluWrappers.SparseMatrix(nr,
+                                     nc,
+                                     nnz,
+                                     nzval,
+                                     colind,
+                                     rowptr)
     yield A
 
 @pytest.fixture(scope='module')
@@ -60,12 +60,12 @@ def small_sparse_mat():
     nr = mat_csr.shape[0] ; nc = mat_csr.shape[1] ; nnz = mat_csr.nnz
     nzvals = mat_csr.data ; colind = mat_csr.indices
     rowptr = mat_csr.indptr
-    A = csuperluWrappersModule.SparseMatrix(nr,
-                                            nc,
-                                            nnz,
-                                            nzvals,
-                                            colind,
-                                            rowptr)
+    A = superluWrappers.SparseMatrix(nr,
+                                     nc,
+                                     nnz,
+                                     nzvals,
+                                     colind,
+                                     rowptr)
     yield A
 
 def test_SparseMatrix_1(simple_sparse_mat):
@@ -131,8 +131,8 @@ def test_fwrite_w(simple_sparse_mat):
 
 def test_sparseFactorPrepare_1(simple_nonsingular_sparse_mat):
     A = simple_nonsingular_sparse_mat
-    sparseFactor = csuperluWrappersModule.SparseFactor(A.nr)
-    csuperluWrappersModule.sparseFactorPrepare(A, sparseFactor)
+    sparseFactor = superluWrappers.SparseFactor(A.nr)
+    superluWrappers.sparseFactorPrepare(A, sparseFactor)
     x = np.ones(A.nr)
-    csuperluWrappersModule.sparseFactorSolve(sparseFactor, x)
+    superluWrappers.sparseFactorSolve(sparseFactor, x)
     assert np.array_equal(x, np.array([-.5, .5, -.5]))

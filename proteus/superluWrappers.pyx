@@ -65,6 +65,7 @@ cdef extern from "../linux2/include/slu_ddefs.h":
     void cDestroy_SuperNode_Matrix "Destroy_SuperNode_Matrix"(_SuperMatrix *)
     void cDestroy_CompCol_Matrix "Destroy_CompCol_Matrix"(_SuperMatrix *)
     void csp_preorder "sp_preorder"(_superlu_options_t *, _SuperMatrix *, int *, int *, _SuperMatrix *)
+
 class SparseMatrix(object):
 
     def __init__(self,
@@ -75,9 +76,12 @@ class SparseMatrix(object):
                   colind,
                   rowptr):
         self.nr = nr ; self.nc = nc
+        self.nnz = nnz
+        self.shape = [self.nr, self.nc]
         self.nzvals = nzvals
         self.colind = colind
         self.rowptr = rowptr
+#        self._cSparseMatrx = _SparseMatrix
         self._cSparseMatrix = cSparseMatrix(nr,
                                             nc,
                                             nnz,
@@ -156,9 +160,13 @@ cdef struct _NRformat:
     np.int32_t * colind
     np.int32_t * rowptr
 
-cdef class cSparseMatrix(object):
+# cdef public struct _SparseMatrix:
+#     np.int32_t[2] dim
+#     _NRformat A
+    
+cdef public class cSparseMatrix(object):
 
-    cdef int dim[2]
+    cdef np.int32_t dim[2]
     cdef _NRformat A
 
     def __cinit__(self,
