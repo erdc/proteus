@@ -14,7 +14,9 @@ from libc.stdlib cimport malloc
 cdef extern from "../linux2/include/slu_ddefs.h":
     ctypedef enum _fact_t 'fact_t':
         _DOFACT 'DFACT'
+        _SamePattern "SamePattern"
         _SamePattern_SameRowPerm "SamePattern_SameRowPerm"
+        _FACTORED "FACTORED"
     ctypedef enum _Stype_t 'Stype_t':
         _SLU_NC 'SLU_NC'
         _SLU_NCP 'SLU_NCP'
@@ -48,7 +50,7 @@ cdef extern from "../linux2/include/slu_ddefs.h":
     ctypedef struct _GlobalLU_t "GlobalLU_t":
         pass
     ctypedef struct _superlu_options_t "superlu_options_t":
-        pass
+        _fact_t Fact
     ctypedef struct _SuperMatrix 'SuperMatrix':
         _Stype_t Stype
         _Dtype_t Dtype
@@ -296,8 +298,10 @@ def sparseFactorPrepare(sparse_matrix,
     sparseFactor: superluWrappers.SparseFactor
 
     """
+    print("sparseFactorPrepareStart")
     superluWrappersSparseFactorPrepare(sparse_matrix._cSparseMatrix,
                                        sparseFactor)
+    print("sparseFactorPrepareEnd")
 
 cdef void superluWrappersSparseFactorPrepare(cSparseMatrix sm,
                                              SparseFactor sparseFactor):
