@@ -164,7 +164,7 @@ cdef struct _NRformat:
 #     np.int32_t[2] dim
 #     _NRformat A
     
-cdef public class cSparseMatrix(object):
+cdef class cSparseMatrix(object):
 
     cdef np.int32_t dim[2]
     cdef _NRformat A
