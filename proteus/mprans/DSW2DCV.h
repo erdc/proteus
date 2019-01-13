@@ -2046,8 +2046,8 @@ void calculateResidual(    // last EDGE BASED version
                                 ////////////////////////
                                 // For mGN Flux Terms //
                                 ////////////////////////
-                                std::cout<<" this is etaj " << etaj << std::endl;
-                                std::cout<<" this is hj   " << hj << std::endl;
+                                //std::cout<<" this is etaj " << etaj << std::endl;
+                                //std::cout<<" this is hj   " << hj << std::endl;
                                 double pTildej = -mgnalphaj * (etaj*hj - std::pow(hj,2.0));
                                 if (etaj >= hj)
                                 {
