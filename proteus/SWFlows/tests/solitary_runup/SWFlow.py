@@ -58,7 +58,7 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 #  CONSTANTS NEEDED FOR SETUP #
 ###############################
 
-a = 0.30  # amplitude
+a = 0.28  # amplitude
 slope = 1.0 / 19.850
 k_wavenumber = np.sqrt(3.0 * a / (4.0 * h0**3))  # wavenumber
 z = np.sqrt(3.0 * a * h0) / (2.0 * h0 * np.sqrt(h0 * (1.0 + a)))
