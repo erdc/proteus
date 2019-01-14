@@ -12,6 +12,7 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
+#define lambdaMGN 0.
 #define GLOBAL_FCT 0
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
@@ -1987,9 +1988,9 @@ void calculateResidual(    // last EDGE BASED version
                         // Define things here to make life easier
                         // this is for modified Green Naghdi equations
                         // -EJT
-                        double lambda = 1.0;
+                        //double lambdaMGN = 1.0;
                         double meshi = std::sqrt(mi);
-                        double constanti = lambda * g / meshi;
+                        double constanti = lambdaMGN * g / meshi;
 
                         /////////////////////////
                         // For mGN Force Terms //
@@ -2040,8 +2041,8 @@ void calculateResidual(    // last EDGE BASED version
                                 // For mGN stuff. -EJT
                                 double mj = lumped_mass_matrix[j];
                                 double meshj = std::sqrt(mj); // local mesh size in 2d
-                                double lambda = 1.0;
-                                double mgnalphaj = lambda * g / (3.0 * meshj);
+                                //double lambda = 1.0;
+                                double mgnalphaj = lambdaMGN * g / (3.0 * meshj);
 
                                 ////////////////////////
                                 // For mGN Flux Terms //
