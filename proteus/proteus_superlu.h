@@ -6,10 +6,7 @@ extern "C"
 {
 #endif
 
-extern struct SuperLUStat_t;
-extern struct SuperMatrix;
-extern enum trans_t;
-extern void dgstrs(trans_t, SuperMatrix *, SuperMatrix *, int *, int*, SuperMatrix *, SuperLUStat_t*, int *);
+#include PROTEUS_SUPERLU_H
 
 #ifdef __cplusplus
 }

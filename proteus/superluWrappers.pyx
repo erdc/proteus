@@ -10,8 +10,7 @@ cimport numpy as np
 
 from libc.stdlib cimport malloc
 
-# cdef extern from "proteus_superlu.h"  -- ARB: need to use this or some other non-hardcoded approach ...
-cdef extern from "../linux2/include/slu_ddefs.h":
+cdef extern from "proteus_superlu.h":
     ctypedef enum _fact_t 'fact_t':
         _DOFACT 'DFACT'
         _SamePattern "SamePattern"
