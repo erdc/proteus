@@ -1293,6 +1293,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         # import pdb
         # pdb.set_trace()
+        # print('water height value is %5.3f.' % self.u[0].dof.min())
 
         # Make sure that the water height is positive (before computing the residual)
         if (self.check_positivity_water_height == True):
