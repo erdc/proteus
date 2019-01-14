@@ -67,7 +67,7 @@ apf::Matrix3x3 getKJ(int nsd)
     }
 }
 
-void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error) 
+void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out) 
 {
   if(PCU_Comm_Self()==0)
     std::cout<<"The beginning of the VMS\n";
@@ -86,6 +86,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   apf::Field* pref = m->findField("p");
   assert(pref);
   apf::Field* velf_old;
+  velf_old = velf;
+/*
   if(m->findField("velocity_old")!=NULL)
     velf_old = m->findField("velocity_old");
   else{
@@ -94,6 +96,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
       std::cout<<"WARNING: old velocity field not found. Will proceed as if unsteady term is 0. \n";
     dt_err = 1.0;
   }
+*/
   assert(velf_old);
   //*****               *****//
   if(PCU_Comm_Self()==0)
@@ -103,7 +106,11 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   if(PCU_Comm_Self()==0)
     std::cout<<"Got viscosity fields \n";
   freeField(vmsErrH1);
-
+  vmsErrH1 = m->findField("VMSH1");
+  if(vmsErrH1 !=0)
+  {
+    freeField(vmsErrH1);
+  }
   apf::Field* vmsErr = apf::createField(m,"VMSL2",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   //vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
@@ -339,6 +346,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     apf::destroyElement(vof_elem);
     apf::destroyMeshElement(element);
     count++;
+
   } //end loop over elements
   
     PCU_Add_Doubles(&VMSerrTotalL2,1);
@@ -346,7 +354,10 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     if(PCU_Comm_Self()==0)
       std::cout<<std::scientific<<std::setprecision(15)<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
     total_error = sqrt(VMSerrTotalH1);
+    total_error_out = sqrt(VMSerrTotalH1);
     apf::destroyField(vmsErr);
+    apf::destroyField(vmsErr_nuErr);
+    apf::destroyField(vmsErr_residual);
     //apf::destroyField(visc);
 } //end function
 
@@ -405,7 +416,7 @@ apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
     apf::Vector3 tempDiff;
     tempConv.zero();
     tempDiff.zero();
-/* Residual with density divided
+///*
     for(int i=0;i<info.nsd;i++){
       for(int j=0;j<info.nsd;j++){
         tempConv[i] = tempConv[i] + vel_vect[j]*grad_vel[i][j];
@@ -416,20 +427,30 @@ apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
     //acceleration term
     tempResidual = tempResidual + (vel_vect-vel_vect_old)/dt_err;
     //std::cout<<"What is the acceleration contribution? "<<(vel_vect-vel_vect_old)/dt_err<<std::endl;
-*/
+//*/
+
+/*
     for(int i=0;i<info.nsd;i++){
       for(int j=0;j<info.nsd;j++){
         tempConv[i] = tempConv[i] + info.density*vel_vect[j]*grad_vel[i][j];
       }
       tempConv[i] = tempConv[i] - info.density*info.g[i]; //body force contribution
-      //std::cout<<"body force and pressure grad "<<info.density*info.g[i]<<" "<<grad_pres[i]<<std::endl;
+      std::cout<<"body force and pressure grad "<<info.density*info.g[i]<<" "<<grad_pres[i]<<std::endl;
     }
     
     apf::Vector3 tempResidual = (tempConv + grad_pres);
     //acceleration term
     tempResidual = tempResidual + (vel_vect-vel_vect_old)/dt_err*info.density;
-    //std::cout<<"What is the acceleration contribution? "<<(vel_vect-vel_vect_old)/dt_err<<std::endl;
+*/
+/*
+    std::cout<<"tempConv "<<tempConv<<std::endl;
+    std::cout<<"grad_pres "<<grad_pres<<std::endl;
+    std::cout<<"density "<<info.density<<std::endl;
 
+    std::cout<<"What is the acceleration contribution? "<<(vel_vect-vel_vect_old)/dt_err*info.density<<std::endl;
+
+    std::exit(1);
+*/
 
     info.vel_vect = vel_vect;
     info.grad_vel = grad_vel;

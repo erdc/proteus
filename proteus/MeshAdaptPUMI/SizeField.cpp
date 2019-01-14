@@ -794,6 +794,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   freeField(size_frame);
   freeField(size_scale);
   freeField(size_iso);
+  if(m->findField("proteus_size")) //this suggests that the fields should be freed at a different location to avoid such issues
+  {
+    size_iso = m->findField("proteus_size");
+    freeField(size_iso);
+  }
 
   //Initialize fields and needed types/variables
   apf::Field* errField;

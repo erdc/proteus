@@ -584,6 +584,8 @@ apf::Field* MeshAdaptPUMIDrvr::getViscosityField(apf::Field* voff)
  * \param voff is the VOF field. 
  */
 {
+  apf::Field* dummy = m->findField("viscosity");
+  freeField(dummy);
   apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
   apf::MeshEntity* ent;
   apf::MeshIterator* iter = m->begin(0);
