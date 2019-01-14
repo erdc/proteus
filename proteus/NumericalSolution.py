@@ -20,7 +20,6 @@ from subprocess import check_call
 
 from . import LinearSolvers
 from . import NonlinearSolvers
-from . import TriangleTools
 from . import MeshTools
 from . import Profiling
 from . import Transport
@@ -285,12 +284,14 @@ class NS_base(object):  # (HasTraits):
                                                           parallelPartitioningType=n.parallelPartitioningType)
                 else:
                     if comm.isMaster() and p.genMesh:
-                        logEvent("Calling Triangle to generate 2D mesh for"+p.name)
-                        tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                               nbase=1,
-                                                               verbose=10)
-                        tmesh.readFromPolyFile(p.domain.polyfile)
-                        tmesh.writeToFile(p.domain.polyfile)
+                        logEvent("Calling Triangle to generate 2D mesh for "+p.name)
+                        tricmd = "triangle -{0} {1}.poly".format(n.triangleOptions, p.domain.polyfile)
+                        logEvent("Calling triangle on rank 0 with command %s" % (tricmd,))
+                        check_call(tricmd, shell=True)
+                        logEvent("Done running triangle")
+                        check_call("mv {0:s}.1.ele {0:s}.ele".format(p.domain.polyfile), shell=True)
+                        check_call("mv {0:s}.1.node {0:s}.node".format(p.domain.polyfile), shell=True)
+                        check_call("mv {0:s}.1.edge {0:s}.edge".format(p.domain.polyfile), shell=True)
                     comm.barrier()
 
                     mesh = MeshTools.TriangularMesh()
