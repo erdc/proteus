@@ -5176,11 +5176,12 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         self.errorNormType = errorNormType
 
         logEvent("InterpolatedBathymetryMesh: Calling Triangle to generate 2D coarse mesh for "+self.domain.name)
-        runTriangle(self.triangleOptions)
+        runTriangle(domain.polyfile,
+                    self.triangleOptions)
 
         logEvent("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
-        self.coarseMesh = MeshTools.TriangularMesh()
-        self.coarseMesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+        self.coarseMesh = TriangularMesh()
+        self.coarseMesh.generateFromTriangleFiles(filebase=domain.polyfile,base=1)
         MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True,nLayersOfOverlap=0,
                                           parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.generateFromExistingCoarseMesh(self.coarseMesh,1,
