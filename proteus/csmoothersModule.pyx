@@ -17,3 +17,145 @@ cdef extern from "smoothers.h":
     void cbasm_NR_free "basm_NR_free"(int N, int* subdomain_dim, int** l2g_L, double** subdomain_L, double** subdomain_R, double** subdomain_dX, PROTEUS_LAPACK_INTEGER** subdomain_pivots, PROTEUS_LAPACK_INTEGER** subdomain_col_pivots)
     void cbasm_NR_prepare "basm_NR_prepare"(int rowBlocks, int N, _SuperMatrix *A, int* subdomain_dim, int** l2g_L, double** subdomainL, PROTEUS_LAPACK_INTEGER** subdomainPivots, PROTEUS_LAPACK_INTEGER** subdomainColPivots)
     void cbasm_NR_solve "basm_NR_solve"(int rowBlocks, int N, _SuperMatrix *A, double w, double** subdomainL, int* subdomain_dim, int** l2g_L, double* R, double** subdomainR, int* node_order, double** subdomain_dX, double* dX, PROTEUS_LAPACK_INTEGER** subdomainPivots, PROTEUS_LAPACK_INTEGER** subdomainColPivots)
+
+cdef struct ASMFactor:
+    np.int_t N
+    np.int_t *subdomain_dim
+    np.int_t **l2g_L
+    np.float64_t **subdomain_L, **subdomain_R, **subdomain_dX
+    PROTEUS_LAPACK_INTEGER **subdomain_pivots
+
+cdef struct BASMFactor:
+    np.int_t N
+    np.int_t bs
+    np.int_t *subdomain_dim
+    np.int_t **l2g_L
+    np.float64_t **subdomain_L, **subdomain_R, **subdomain_dX
+    PROTEUS_LAPACK_INTEGER **subdomain_pivots
+    PROTEUS_LAPACK_INTEGER **subdomain_col_pivots
+    
+def jacobi_NR_prepare(A, w, tol, M):
+    """
+
+    Arguments
+    ---------
+    A :
+    w :
+    tol :
+    M :
+    """
+    pass
+
+def jacobi_NR_solve(A, M, R, node_order, dX):
+    """
+    
+    Arguments
+    ---------
+    A :
+    M :
+    R :
+    node_order :
+    dX :
+    """
+    pass
+
+def nl_jacobi_NR_solve(A, R, node_order, w, tol, dX):
+    """
+
+    Arguments
+    ---------
+    A :
+    R :
+    node_order :
+    w :
+    tol :
+    dX :
+    """
+    pass
+
+def gauss_seidel_NR_preare(A, w, tol, M):
+    """
+
+    Arguments
+    ---------
+    A :
+    w :
+    tol :
+    M :
+    """
+    pass
+
+def gauss_seidel_NR_solve(A, M, R, node_order, dX):
+    """
+
+    Arguments
+    ---------
+    A :
+    M :
+    R :
+    node_order :
+    dX :
+    """
+    pass
+
+def nl_gauss_seidel_NR_solve(A, R, node_order, w, tol, dX):
+    """
+    
+    Arguments
+    ---------
+    A :
+    R :
+    node_order :
+    w :
+    tol :
+    dX :
+    """
+    pass
+
+def asm_NR_prepare(A, asmFactor):
+    """
+
+    Arguments
+    ---------
+    A :
+    asmFactor :
+    """
+    pass
+
+def asm_NR_solve(A, w, asmFactor, node_order, R, dX):
+    """
+    
+    Arguments
+    ---------
+    A :
+    w :
+    asmFactor :
+    node_order :
+    R :
+    dX :
+    """
+    pass
+
+def basm_NR_prepare(A, baseFactor):
+    """
+
+    Arguments
+    ---------
+    A :
+    basmFactor :
+    """
+    pass
+
+def basm_NR_solve(A, w, basmFactor, node_order, R, dX):
+    """
+    
+    Arguments
+    ---------
+    A :
+    w :
+    basmFactor :
+    node_order :
+    R :
+    dX :
+    """
+    pass
