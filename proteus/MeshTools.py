@@ -3922,7 +3922,6 @@ def buildReferenceSimplex(nd=2):
         Simplex mesh
     """
     from proteus import Domain
-    from proteus import TriangleTools
 
     assert(nd in [1,2,3])
 
@@ -3934,11 +3933,10 @@ def buildReferenceSimplex(nd=2):
     unit_simplex_domain.writePoly(polyfile)
 
     if nd==2:
-        tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
-                                               nbase=1,
-                                               verbose=False)
-        tmesh.readFromPolyFile(polyfile)
-        mesh = tmesh.convertToProteusMesh(verbose=0)
+        runTriangle(polyfile,
+                    "Yp")
+        mesh = genMeshWithTriangle(polyfile,
+                                   nbase=1)
         mesh.partitionMesh()
         mesh.globalMesh = mesh
         return mesh
@@ -5163,7 +5161,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                  refineType=0,
                  ):
         from scipy import interpolate as scipy_interpolate
-        from . import TriangleTools
         if maxElementDiameter:
             self.maxElementDiameter = maxElementDiameter
         else:
@@ -5179,13 +5176,12 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         self.errorNormType = errorNormType
 
         logEvent("InterpolatedBathymetryMesh: Calling Triangle to generate 2D coarse mesh for "+self.domain.name)
-        tmesh = TriangleTools.TriangleBaseMesh(baseFlags=self.triangleOptions,
-                                               nbase=1,
-                                               verbose=10)
-        tmesh.readFromPolyFile(domain.polyfile)
+        runTriangle(domain.polyfile,
+                    self.triangleOptions)
 
         logEvent("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
-        self.coarseMesh=tmesh.convertToProteusMesh(verbose=1)
+        self.coarseMesh = TriangularMesh()
+        self.coarseMesh.generateFromTriangleFiles(filebase=domain.polyfile,base=1)
         MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True,nLayersOfOverlap=0,
                                           parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.generateFromExistingCoarseMesh(self.coarseMesh,1,
@@ -6421,6 +6417,42 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
 
+def runTriangle(polyfile,
+               baseFlags="Yp",
+               name = ""):
+    """
+    Generate tetgen files from a polyfile.
+
+    Arguments
+    ---------
+    polyfile : str
+        Filename with appropriate data for tengen.
+    baseFlags : str
+        Standard Tetgen options for generation
+    name : str
+    """
+    from subprocess import check_call
+    tricmd = "triangle -%s -e %s.poly" % (baseFlags, polyfile)
+
+    check_call(tricmd,shell=True)
+
+    logEvent("Done running triangle")
+    elefile = "%s.1.ele" % polyfile
+    nodefile = "%s.1.node" % polyfile
+    edgefile = "%s.1.edge" % polyfile
+    assert os.path.exists(elefile), "no 1.ele"
+    tmp = "%s.ele" % polyfile
+    os.rename(elefile,tmp)
+    assert os.path.exists(tmp), "no .ele"
+    assert os.path.exists(nodefile), "no 1.node"
+    tmp = "%s.node" % polyfile
+    os.rename(nodefile,tmp)
+    assert os.path.exists(tmp), "no .node"
+    if os.path.exists(edgefile):
+        tmp = "%s.edge" % polyfile
+        os.rename(edgefile,tmp)
+        assert os.path.exists(tmp), "no .edge"
+
 def runTetgen(polyfile,
               baseFlags="Yp",
               name = ""):
@@ -6463,6 +6495,33 @@ def runTetgen(polyfile,
         tmp = "%s.edge" % polyfile
         os.rename(edgefile,tmp)
         assert os.path.exists(tmp), "no .edge"
+
+def genMeshWithTriangle(polyfile,
+                      nbase=1):
+   """
+   Generate a mesh from a set of triangle files.
+
+   Arguments
+   ---------
+   polyfile : str
+       Filename base for triangle files
+   nbase : int
+
+   Returns
+   --------
+   mesh : :class:`proteus.MeshTools.TriangularMesh`
+       Simplex mesh
+   """
+   elefile = "%s.ele" % polyfile
+   nodefile = "%s.node" % polyfile
+   edgefile = "%s.edge" % polyfile
+   assert os.path.exists(elefile), "no .ele file"
+   assert os.path.exists(nodefile), "no  .node file"
+   assert os.path.exists(edgefile), "no .edge"
+   mesh = TriangularMesh()
+   mesh.generateFromTriangleFiles(polyfile,
+                                  base=nbase)
+   return mesh
 
 def genMeshWithTetgen(polyfile,
                       nbase=1):
