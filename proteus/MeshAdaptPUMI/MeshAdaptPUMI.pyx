@@ -19,6 +19,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
         MeshAdaptPUMIDrvr(double, double, double, int, int, int, char*, char*,char*,double,double,int,double,double)
         int numIter, numAdaptSteps
+        int nAdapt
         string size_field_config, adapt_type_config
         int adaptMesh
         int isReconstructed
@@ -70,6 +71,8 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.adaptMesh
     def numAdaptSteps(self):
         return self.thisptr.numAdaptSteps
+    def nAdapt(self):
+        return self.thisptr.nAdapt
     def isReconstructed(self):
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):

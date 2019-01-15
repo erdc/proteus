@@ -29,7 +29,7 @@ from . import Archiver
 from . import Viewers
 from .Archiver import ArchiveFlags
 from . import Domain
-
+from .MeshAdaptPUMI import Checkpoint
 from .Profiling import logEvent
 
 # Global to control whether the kernel starting is active.
@@ -371,7 +371,8 @@ class NS_base(object):  # (HasTraits):
                   sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
                 if comm.size() > 1 and n.conservativeFlux != None:
                     sys.exit("ERROR: Element based partitions don't have a functioning conservative flux calculation. Set conservativeFlux to None in twp_navier_stokes")
-
+                #attach the checkpointer
+                self.PUMIcheckpointer = Checkpoint.Checkpointer(self) 
                 #ibaned: PUMI conversion #1
                 if p.domain.nd == 3:
                   mesh = MeshTools.TetrahedralMesh()
@@ -381,6 +382,7 @@ class NS_base(object):  # (HasTraits):
                 mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
                     p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
+                #Attach the checkpointer
                 if p.domain.nd == 3:
                   mlMesh = MeshTools.MultilevelTetrahedralMesh(
                       0,0,0,skipInit=True,
@@ -769,7 +771,6 @@ class NS_base(object):  # (HasTraits):
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
-
     def PUMI_recomputeStructures(self,modelListOld):
 
         ##This section is to correct any differences in the quadrature point field from the old model
@@ -893,13 +894,9 @@ class NS_base(object):  # (HasTraits):
               #update the eddy-viscosity history
               lm.calculateAuxiliaryQuantitiesAfterStep()
 
-
-    def PUMI2Proteus(self,mesh):
-        #p0 = self.pList[0] #This can probably be cleaned up somehow
-        #n0 = self.nList[0]
+    def PUMI_reallocate(self,mesh):
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
-
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
@@ -930,9 +927,19 @@ class NS_base(object):  # (HasTraits):
             mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
 
         #may want to trigger garbage collection here
-        modelListOld = self.modelList
+        self.modelListOld = self.modelList
         logEvent("Allocating models on new mesh")
         self.allocateModels()
+        #logEvent("Attach auxiliary variables to new models")
+
+
+    def PUMI2Proteus(self):
+        #p0 = self.pList[0] #This can probably be cleaned up somehow
+        #n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
+
+        modelListOld = self.modelListOld
         logEvent("Attach auxiliary variables to new models")
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
@@ -1412,8 +1419,11 @@ class NS_base(object):  # (HasTraits):
                              p0.domain.regList,
                              parallel = self.comm.size() > 1,
                              dim = p0.domain.nd)
-
-        self.PUMI2Proteus(mesh)
+  
+        self.PUMI_reallocate(mesh)
+        self.PUMI2Proteus()
+        if((p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
+          self.PUMIcheckpointer.doSomething()
       ##chitak end Adapt
 
     ## compute the solution
@@ -1715,6 +1725,7 @@ class NS_base(object):  # (HasTraits):
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
+
 
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
