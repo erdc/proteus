@@ -123,20 +123,7 @@ class SparseMatrix(object):
 
         return rowptr, colind, nzvals
 
-cdef struct _NRformat:
-    np.int32_t nnz
-    np.float64_t * nzval
-    np.int32_t * colind
-    np.int32_t * rowptr
-
-# cdef public struct _SparseMatrix:
-#     np.int32_t[2] dim
-#     _NRformat A
-    
 cdef class cSparseMatrix(object):
-
-    cdef np.int32_t dim[2]
-    cdef _NRformat A
 
     def __cinit__(self,
                  int nr,

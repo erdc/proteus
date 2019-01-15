@@ -1,3 +1,6 @@
+import numpy as np
+cimport numpy as np
+
 cdef extern from "proteus_superlu.h":
     ctypedef enum _Stype_t 'Stype_t':
         _SLU_NC 'SLU_NC'
@@ -30,3 +33,13 @@ cdef extern from "proteus_superlu.h":
         int nrow
         int ncol
         void * Store
+
+cdef struct _NRformat:
+    np.int32_t nnz
+    np.float64_t * nzval
+    np.int32_t * colind
+    np.int32_t * rowptr
+
+cdef class cSparseMatrix(object):
+    cdef np.int32_t dim[2]
+    cdef _NRformat A
