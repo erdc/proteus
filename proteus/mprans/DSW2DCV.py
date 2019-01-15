@@ -1445,6 +1445,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hwBT,
             self.timeIntegration.lstage)
 
+        print ("Max value of residual  r ", max(r))
+        print ("Min value of residual  ", min(r))
+
         self.COMPUTE_NORMALS = 0
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
