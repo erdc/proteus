@@ -291,7 +291,8 @@ class NS_base(object):  # (HasTraits):
                         logEvent("Done running triangle")
                         check_call("mv {0:s}.1.ele {0:s}.ele".format(p.domain.polyfile), shell=True)
                         check_call("mv {0:s}.1.node {0:s}.node".format(p.domain.polyfile), shell=True)
-                        check_call("mv {0:s}.1.edge {0:s}.edge".format(p.domain.polyfile), shell=True)
+                        if os.path.exists('{0:s}.1.edge'.format(p.domain.polyfile)):
+                            check_call("mv {0:s}.1.edge {0:s}.edge".format(p.domain.polyfile), shell=True)
                     comm.barrier()
 
                     mesh = MeshTools.TriangularMesh()
