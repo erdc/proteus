@@ -1,6 +1,10 @@
 import numpy as np
 import cython
 cimport numpy as np
+from superluWrappers cimport _SuperMatrix
+
+ctypedef int PROTEUS_LAPACK_INTEGER
+# ARB - the compiler macro does not seem to be picking this up...
 
 cdef extern from "smoothers.h":
     void cjacobi_NR_prepare "jacobi_NR_prepare"(_SuperMatrix *A, double w, double tol, double* M)
@@ -33,7 +37,7 @@ cdef struct BASMFactor:
     np.float64_t **subdomain_L, **subdomain_R, **subdomain_dX
     PROTEUS_LAPACK_INTEGER **subdomain_pivots
     PROTEUS_LAPACK_INTEGER **subdomain_col_pivots
-    
+
 def jacobi_NR_prepare(A, w, tol, M):
     """
 
