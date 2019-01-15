@@ -3937,6 +3937,8 @@ def buildReferenceSimplex(nd=2):
                     "Yp")
         mesh = genMeshWithTriangle(polyfile,
                                    nbase=1)
+        mesh.partitionMesh()
+        mesh.globalMesh = mesh
         return mesh
     if nd==3:
         runTetgen(polyfile,
@@ -5177,8 +5179,8 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         runTriangle(self.triangleOptions)
 
         logEvent("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
-        tmesh = MeshTools.TriangularMesh()
-        tmesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+        self.coarseMesh = MeshTools.TriangularMesh()
+        self.coarseMesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
         MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True,nLayersOfOverlap=0,
                                           parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.generateFromExistingCoarseMesh(self.coarseMesh,1,
