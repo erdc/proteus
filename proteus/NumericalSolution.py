@@ -20,7 +20,6 @@ from subprocess import check_call
 
 from . import LinearSolvers
 from . import NonlinearSolvers
-from . import TriangleTools
 from . import MeshTools
 from . import Profiling
 from . import Transport
@@ -257,52 +256,47 @@ class NS_base(object):  # (HasTraits):
                                                                      parallelPartitioningType=n.parallelPartitioningType)
 
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
+                fileprefix = None
+                # run mesher
                 if p.domain.use_gmsh is True:
-                    if comm.isMaster() and (p.genMesh or not (os.path.exists(p.domain.geofile+".ele") and
-                                                              os.path.exists(p.domain.geofile+".node") and
-                                                              os.path.exists(p.domain.geofile+".edge"))):
-                        if p.genMesh or not os.path.exists(p.domain.geofile+".msh"):
+                    fileprefix = p.domain.geofile
+                    if comm.isMaster() and (p.genMesh or not (os.path.exists(fileprefix+".ele") and
+                                                              os.path.exists(fileprefix+".node") and
+                                                              os.path.exists(fileprefix+".edge"))):
+                        if p.genMesh or not os.path.exists(fileprefix+".msh"):
                             logEvent("Running gmsh to generate 2D mesh for "+p.name,level=1)
-                            gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(p.domain.geofile+".geo", p.domain.geofile+".msh")
+                            gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(fileprefix+".geo", fileprefix+".msh")
                             logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                             check_call(gmsh_cmd, shell=True)
                             logEvent("Done running gmsh; converting to triangle")
                         else:
-                            logEvent("Using "+p.domain.geofile+".msh to convert to triangle")
-                        MeshTools.msh2simplex(fileprefix=p.domain.geofile, nd=2)
-                    comm.barrier()
-                    mesh = MeshTools.TriangularMesh()
-                    mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
-                                                                nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                parallelPartitioningType=n.parallelPartitioningType)
-                    logEvent("NAHeader GridRefinements %i" % (n.nLevels) )
-                    logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
-                    logEvent("Generating coarse global mesh from Triangle files")
-                    mesh.generateFromTriangleFiles(filebase=p.domain.geofile,base=1)
-                    logEvent("Generating partitioned %i-level mesh from coarse global Triangle mesh" % (n.nLevels,))
-                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                          parallelPartitioningType=n.parallelPartitioningType)
+                            logEvent("Using "+fileprefix+".msh to convert to triangle")
+                        # convert gmsh to triangle format
+                        MeshTools.msh2simplex(fileprefix=fileprefix, nd=2)
                 else:
+                    fileprefix = p.domain.polyfile
                     if comm.isMaster() and p.genMesh:
-                        logEvent("Calling Triangle to generate 2D mesh for"+p.name)
-                        tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                               nbase=1,
-                                                               verbose=10)
-                        tmesh.readFromPolyFile(p.domain.polyfile)
-                        tmesh.writeToFile(p.domain.polyfile)
-                    comm.barrier()
-
-                    mesh = MeshTools.TriangularMesh()
-                    mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
-
-                    mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
-                                                                nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                parallelPartitioningType=n.parallelPartitioningType)
-                    logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
-                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                        parallelPartitioningType=n.parallelPartitioningType)
+                        logEvent("Calling Triangle to generate 2D mesh for "+p.name)
+                        tricmd = "triangle -{0} -e {1}.poly".format(n.triangleOptions, fileprefix)
+                        logEvent("Calling triangle on rank 0 with command %s" % (tricmd,))
+                        check_call(tricmd, shell=True)
+                        logEvent("Done running triangle")
+                        check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+                        check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+                        check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                comm.barrier()
+                assert fileprefix is not None, 'did not find mesh file name'
+                # convert mesh to proteus format
+                mesh = MeshTools.TriangularMesh()
+                mesh.generateFromTriangleFiles(filebase=fileprefix,
+                                               base=1)
+                mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
+                                                            nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                            parallelPartitioningType=n.parallelPartitioningType)
+                logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
+                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
 
             elif isinstance(p.domain,Domain.PiecewiseLinearComplexDomain):
                 from subprocess import call
