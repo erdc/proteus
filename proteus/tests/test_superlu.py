@@ -52,7 +52,7 @@ def simple_sparse_mat():
 @pytest.fixture(scope='module')
 def small_sparse_mat():
     script_dir = os.path.dirname(__file__)
-    mat = sio.mmread(os.path.join(script_dir,'1138_bus.mtx'))
+    mat = sio.mmread(os.path.join(script_dir,'sparse_mat_ex.mtx'))
     mat_csr = mat.tocsr()
     nr = mat_csr.shape[0] ; nc = mat_csr.shape[1] ; nnz = mat_csr.nnz
     nzvals = mat_csr.data ; colind = mat_csr.indices
