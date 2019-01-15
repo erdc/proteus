@@ -6429,7 +6429,7 @@ def runTriangle(polyfile,
     name : str
     """
     from subprocess import check_call
-    tricmd = "triangle - %s %s.poly" % (baseFlags, polyfile)
+    tricmd = "triangle -%s -e %s.poly" % (baseFlags, polyfile)
 
     check_call(tricmd,shell=True)
 
