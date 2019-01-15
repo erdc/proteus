@@ -7,10 +7,6 @@ import scipy.io as sio
 
 from proteus import superluWrappers
 
-# def test_SparseFactor_initialization():
-#     test_mat = superluWrappers.SparseFactor(1)
-#     assert type(test_mat) == superluWrappers.SparseFactor
-
 @pytest.fixture(scope='module')
 def simple_singular_sparse_mat():
     nr = 3 ; nc = 3; nnz = 8
