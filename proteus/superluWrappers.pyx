@@ -297,10 +297,8 @@ def sparseFactorPrepare(sparse_matrix,
     sparseFactor: superluWrappers.SparseFactor
 
     """
-    print("sparseFactorPrepareStart")
     superluWrappersSparseFactorPrepare(sparse_matrix._cSparseMatrix,
                                        sparseFactor)
-    print("sparseFactorPrepareEnd")
 
 cdef void superluWrappersSparseFactorPrepare(cSparseMatrix sm,
                                              SparseFactor sparseFactor):
