@@ -481,6 +481,7 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         self.referenceElement = ReferenceCube(nd)
         LocalFunctionSpace.__init__(self,(order+1)**nd,self.referenceElement)
         self.gradientList=[]
+        self.basisHessians=[]
         self.order = order
 
         # Generate equi distance nodes for generation of lagrange basis
@@ -497,6 +498,7 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         self.dfun=[]
         fun  = []
         dfun = []
+        ddfun = []
         dfun2= []
         fc=-1
         fc2=-1
@@ -515,27 +517,36 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
                             fc2=fc2+1
 
                     dfun.append(lambda xi,fc=fc,fc2=fc2: dfun[fc](xi) + dfun2[fc2](xi))
-
                     fun.append(lambda xi, xb=self.nodes[b],fc=fc:  fun[fc](xi)*(xi - xb))
                     den   = den*(self.nodes[a]-self.nodes[b])
                     fc=fc+1
             self. fun.append(lambda xi,fc=fc, den=den:   old_div(fun[fc](xi),den))
             self.dfun.append(lambda xi,fc=fc, den=den:  old_div(dfun[fc](xi),den))
 
+
+        
+        ddfun = [lambda xi: 1, lambda xi: -2, lambda xi: 1]
+        self.ddfun = [lambda xi: 1, lambda xi: -2, lambda xi: 1]
         # Define multi-dimensional stuff
         basis= []
         basisGradients = []
+        basisHessians = []
         if nd == 1:
             basis = self.fun
             basisGradients = self.dfun
+            basisHessians
             funMap=[0,2,1]
         elif nd == 2:
             for j in range(order+1):
                 for i in range(order+1):
                     basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
                     basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
-                                                                              self. fun[i](xi[0])*self.dfun[j](xi[1])]))
-            funMap=[0,7,3,  4,8,6,   1,5,2]
+                                                                         self.fun[i](xi[0])*self.dfun[j](xi[1])]))
+                    basisHessians.append(lambda xi, i=i, j=j: numpy.array([[self.ddfun[i](xi[0])*self.fun[j](xi[1]),
+                                                                            self.dfun[i](xi[0])*self.dfun[j](xi[1])],
+                                                                           [self.dfun[i](xi[0])*self.dfun[j](xi[1]),
+                                                                            self.fun[i](xi[0])*self.ddfun[j](xi[1])]]))
+            funMap=[0,7,3,  4,8,6,   1,5,2]                      
         elif nd == 3:
             for k in range(order+1):
                 for j in range(order+1):
@@ -566,9 +577,10 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         for i in range(self.dim):
             self.basis.append(basis[invMap[i]])
             self.basisGradients.append(basisGradients[invMap[i]])
+            self.basisHessians.append(basisHessians[invMap[i]])
         # Get boundary data
         self.defineTraceFunctions()
-
+        
 class BernsteinOnCube(LocalFunctionSpace):
     """
     Bernstein polynomials on the unit nd-cube
@@ -900,7 +912,7 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
                 self.basisGradientsTrace[1].append(lambda xBar, i=i:
                                      self.gradientList[i](self.referenceElement.boundaryMapList[1](xBar)))
                 self.basisHessians.append(lambda xi, i=i:
-                                              4.0*numpy.outer(baryGrads['1d'][i],baryGrads['1d'][i]))
+                                          4.0*numpy.outer(baryGrads['1d'][i],baryGrads['1d'][i]))
             #end 0,1
             #2
             self.basis.append(lambda xi: 4.0*baryCoords['1d'][0](xi)*baryCoords['1d'][1](xi))
@@ -917,8 +929,8 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
             self.basisGradientsTrace[1].append(lambda xBar:
                               self.gradientList[2](self.referenceElement.boundaryMapList[1](xBar)))
             self.basisHessians.append(lambda xi:
-                                          (4.0*numpy.outer(baryGrads['1d'][0],baryGrads['1d'][1])+
-                                           4.0*numpy.outer(baryGrads['1d'][1],baryGrads['1d'][0])))
+                                      (4.0*numpy.outer(baryGrads['1d'][0],baryGrads['1d'][1])+
+                                       4.0*numpy.outer(baryGrads['1d'][1],baryGrads['1d'][0])))
         elif nd == 2:
             for i in range(nd+1): #0,1,2
                 self.basis.append(lambda xi, i=i:
@@ -2903,6 +2915,7 @@ class ParametricMaps(ElementMaps):
         for k in range_n_xi:
             for j in self.localFunctionSpace.range_dim:
                 self.grad_psi[k,j,:] = self.localFunctionSpace.basisGradients[j](xiArray[k])
+        
         return self.grad_psi
     def getJacobianValues(self,xiArray,
                           jacobianArray,
