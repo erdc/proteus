@@ -1109,6 +1109,9 @@ class NS_base(object):  # (HasTraits):
         #Don't do anything if this is the initial adapt
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
             self.PUMI_recomputeStructures(modelListOld)
+            #import pdb; pdb.set_trace()
+            if((p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
+              self.PUMIcheckpointer.doSomething()
 
             #something different is needed for initial conditions
             if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
@@ -1422,8 +1425,6 @@ class NS_base(object):  # (HasTraits):
   
         self.PUMI_reallocate(mesh)
         self.PUMI2Proteus()
-        if((p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
-          self.PUMIcheckpointer.doSomething()
       ##chitak end Adapt
 
     ## compute the solution
