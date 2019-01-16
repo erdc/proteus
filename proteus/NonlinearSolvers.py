@@ -1103,6 +1103,22 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
 
 class myLinearSolver(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        # Galerkin step #
+        self.F.GALERKIN_SOLUTION=1
+        self.stage_solve(u,r)
+        self.F.galerkin_solution[:]=u
+
+        # compute smoothness indicator based on Galerkin solution
+        #self.F.getSmoothnessIndicator(self.F.u_dof_old)
+        self.F.getSmoothnessIndicator(u)
+        self.F.quantDOFs2[:] = self.F.gamma_dof
+
+        # Step with limiting
+        self.F.GALERKIN_SOLUTION=0
+        self.stage_solve(u,r)
+        self.F.u[0].dof[:]=u
+        
+    def stage_solve(self,u,r=None,b=None,par_u=None,par_r=None):        
         symmetrize = True
         # Get RHS of system (if BCs are imposed by Proteus)#
         self.F.getResidual(u,r)
@@ -1133,7 +1149,7 @@ class myLinearSolver(Newton):
         self.linearSolver.prepare(b=r)
         self.du[:]=0.0
         self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-        self.F.u[0].dof[:]=self.du
+        u[:]=self.du
 
 class CLSVOFNewton(Newton):
     def spinUpStep(self,u,r=None,b=None,par_u=None,par_r=None):
