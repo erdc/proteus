@@ -13,11 +13,16 @@ if ct.STABILIZATION_TYPE==0: #SUPG
     fullNewtonFlag = True
     updateJacobian = True
     timeIntegration = BackwardEuler_cfl
+elif ct.STABILIZATION_TYPE==1: #TaylorGalerkin
+    levelNonlinearSolver = TwoStageNewton
+    fullNewtonFlag = False
+    updateJacobian = False
+    timeIntegration = BackwardEuler_cfl
 else:
     fullNewtonFlag = False
     updateJacobian = False
-    timeIntegration = VOF.RKEV # SSP33 
-    if ct.LUMPED_MASS_MATRIX==True: 
+    timeIntegration = VOF.RKEV # SSP33
+    if ct.LUMPED_MASS_MATRIX==True:
         levelNonlinearSolver = ExplicitLumpedMassMatrix
     else:
         levelNonlinearSolver = ExplicitConsistentMassMatrixForVOF
@@ -64,11 +69,10 @@ if parallel:
     linear_solver_options_prefix = 'vof_'
     linearSolverConvergenceTest = 'r-true'
 else:
-    multilevelLinearSolver = LU    
+    multilevelLinearSolver = LU
     levelLinearSolver = LU
 
 if checkMass:
     auxiliaryVariables = [MassOverRegion()]
 
 tnList=[0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
-

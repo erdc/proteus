@@ -3,6 +3,7 @@ from builtins import zip
 from builtins import range
 from past.utils import old_div
 import proteus
+from proteus.Comm import globalSum
 from proteus.mprans.cMCorr import *
 
 
@@ -183,6 +184,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # vof
             if self.edgeBasedStabilizationMethods == False:
                 self.massCorrModel.setMassQuadrature()
+                self.vofModel.q[('m_tmp',0)][:] = self.vofModel.coefficients.q_porosity*self.vofModel.q[('u',0)]
+
             # else setMassQuadratureEdgeBasedStabilizationMethods is called within specialized nolinear solver
 
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
@@ -613,7 +616,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getResidual(self, u, r):
         import pdb
         import copy
-        from proteus.flcbdfWrappers import globalSum
         """
         Calculate the element residuals and add in to the global residual
         """
@@ -900,7 +902,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.atol)
 
     def globalConstantRJ(self, u, r, U):
-        from proteus.flcbdfWrappers import globalSum
         import pdb
         import copy
         """
@@ -1024,7 +1025,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
 
     def calculateMass(self, q_phi):
-        from proteus.flcbdfWrappers import globalSum
         return globalSum(self.mcorr.calculateMass(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1429,9 +1429,6 @@ class GlobalConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
         self.F.globalConstantSolve(u, r)
         self.failedFlag = False
         return self.failedFlag
-
-
-from proteus.flcbdfWrappers import globalSum
 
 
 def conservationNorm(x):
