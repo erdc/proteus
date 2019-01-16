@@ -101,7 +101,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         tolerance = 1.0E-10
         MIN=-1.0
         MAX=1.0
-        self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof > MAX+tolerance) - 1.0*(self.model.u[0].dof < MIN-tolerance)
+        #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof > MAX+tolerance) - 1.0*(self.model.u[0].dof < MIN-tolerance)
         #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof < MIN-tolerance)
         #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof >= MAX+tolerance)
 
@@ -459,11 +459,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                            self.nQuadraturePoints_element),'d')
 
         # mql. For edge based stabilization
+        self.is_dof_external = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.is_dof_internal = numpy.zeros(self.u[0].dof.shape, 'd')
+        
+        self.num_hi = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.den_hi = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.GALERKIN_SOLUTION=0
         self.dLow=None
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.quantDOFs2 = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.galerkin_solution = numpy.zeros(self.u[0].dof.shape, 'd')
         self.boundaryValues = None
         self.isBoundary = None
-
+        self.hi = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.gamma_dof = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.element_He = numpy.zeros(self.mesh.nElements_global, 'd')
+        
         # mql. For blending functions
         self.blendingFunctionDOFs = numpy.zeros(self.u[0].dof.shape,'d')
         # get Q2mesh_dof. This has the location of all DOFs in the Q2 mesh
@@ -496,6 +507,42 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                 'global_L2_sH'+","
                                 'global_L2_1msH'+"\n")
 
+    def getSmoothnessIndicator(self,u):
+        self.num_hi[:]=0
+        self.den_hi[:]=0
+        self.is_dof_external[:]=0
+        self.is_dof_internal[:]=0
+        self.blendedSpaces.calculateSmoothnessIndicator(  # element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u', 0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.Hessian_psi,
+            # physics
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
+            u,
+            self.offset[0], self.stride[0],
+            self.is_dof_external,
+            self.is_dof_internal,
+            self.num_hi,
+            self.den_hi,
+            self.hi,            
+            self.element_He,
+            self.gamma_dof,
+            len(self.rowptr)-1, # num of DOFs
+            self.nnz,
+            self.rowptr,  
+            self.colind)
+        
+        #self.quantDOFs2[:] = self.gamma_dof
+                
     def getMetricsAtEOS(self):
         """
         Calculate some metrics at EOS (End Of Simulation)
@@ -593,7 +640,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.offset[0],self.stride[0],
                 self.nFreeDOF_global[0], #numDOFs
                 self.blendingFunctionDOFs)
-            self.quantDOFs[:] = self.blendingFunctionDOFs
+            #self.quantDOFs[:] = self.blendingFunctionDOFs            
         else:
             # DO FINITE ELEMENT INTERPOLATION #
             logEvent("Computing blending function via FE interpolation", level=2)
@@ -613,7 +660,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             t = self.timeIntegration.t
 
             self.blendingFunctionDOFs[:] = self.blendingFunction[0](X,t)
-            self.quantDOFs[:] = self.blendingFunctionDOFs
+            #self.quantDOFs[:] = self.blendingFunctionDOFs
 
     def updateVelocityFieldAsFunction(self):
         X = {0: self.q[('x')][:, :, 0],
@@ -673,21 +720,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             x = self.dofsXCoord[gi]
             y = self.dofsYCoord[gi]
             # OUTTER BOUNDARY #
-            #if x==0.0 or x==1.0 or y==0.0 or y==1.0:
-            #    value=-1.0
-            #    self.boundaryValues[gi] = value
-            #    self.isBoundary[gi] = 1.0
+            if x==0.0 or x==1.0 or y==0.0 or y==1.0:
+                value=-1.0
+                self.boundaryValues[gi] = value
+                self.isBoundary[gi] = 1.0
             # INTERNAL BOUNDARY #
-            #if (x >= 4./9-eps and x <= 5./9+eps and y >= 4./9-eps and y <= 5./9+eps):
-            #    value=1.0
-            #    self.boundaryValues[gi] = value
-            #    self.isBoundary[gi] = 1.0
-            if x==0:
-                self.boundaryValues[gi] = -1.
-                self.isBoundary[gi]=1.0
-            elif x==1:
-                self.boundaryValues[gi] = 1.
-                self.isBoundary[gi]=1.0
+            if (x >= 4./9-eps and x <= 5./9+eps and y >= 4./9-eps and y <= 5./9+eps):
+                value=1.0
+                self.boundaryValues[gi] = value
+                self.isBoundary[gi] = 1.0
+            #if x==0:
+            #    self.boundaryValues[gi] = -1.
+            #    self.isBoundary[gi]=1.0
+            #elif x==1:
+            #    self.boundaryValues[gi] = 1.
+            #    self.isBoundary[gi]=1.0
         #
 
     def getResidual(self, u, r):
@@ -748,6 +795,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.dLow.fill(0.0)
 
+        #import pdb; pdb.set_trace()
+        #print (self.u[0].femSpace.Hessian_psi.min(), self.u[0].femSpace.Hessian_psi.max())
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -811,7 +860,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dLow,
             self.coefficients.epsilon,
             self.coefficients.PROBLEM_TYPE,
-            self.quantDOFs)
+            self.GALERKIN_SOLUTION,
+            self.galerkin_solution,
+            self.gamma_dof,
+            self.quantDOFs,
+            self.quantDOFs2)
 
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
@@ -870,6 +923,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.aux[0].femSpace.grad_psi,
             self.dLow,
             self.coefficients.epsilon,
+            self.GALERKIN_SOLUTION,
             self.coefficients.PROBLEM_TYPE)
 
         # Load the Dirichlet conditions directly into residual
@@ -900,12 +954,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         This function should be called only when the mesh changes.
         """
-        self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
-                                                 self.q['x'])
+        self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints, self.q['x'])
         self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisHessianValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t, self.q)
 
         #mql. compute shape function of aux FE space
