@@ -145,7 +145,7 @@ def updateRT0velocityWithAveragedPotentialP1nc(np.ndarray detJ,
                                                np.ndarray rt0vdofs_element):
     pp.updateRT0velocityWithAveragedPotentialP1nc(a.shape[0],
                                              a.shape[1],
-                                             gradphi.shape[-1],
+                                             gradphi.shape[gradphi.ndim-1],
                                              <double*>(detJ.data),
                                              <double*>(quad_a.data),
                                              <double*>(phi.data),
@@ -163,7 +163,7 @@ def updateRT0velocityWithAveragedPotentialP1nc_sd(np.ndarray rowptr,
                                                   np.ndarray rt0vdofs_element):
     pp.updateRT0velocityWithAveragedPotentialP1nc_sd(a.shape[0],
                                                      a.shape[1],
-                                                     gradphi.shape[-1],
+                                                     gradphi.shape[gradphi.ndim-1],
                                                      <int*>(rowptr.data),
                                                      <int*>(colind.data),
                                                      <double*>(detJ.data),
@@ -177,7 +177,7 @@ def getElementRT0velocityValues(np.ndarray x_element,
                                 np.ndarray rt0vdofs_element,
                                 np.ndarray v_element):
     pp.getElementRT0velocityValues(v_element.shape[0],
-                                   v_element[1],
+                                   v_element.shape[1],
                                    v_element.shape[2],
                                    <double*>(x_element.data),
                                    <double*>(rt0vdofs_element.data),
@@ -599,7 +599,7 @@ def getElementRT0velocityValuesFluxRep(np.ndarray nodeArray,
                                        np.ndarray v_element):
     pp.getElementRT0velocityValuesFluxRep(v_element.shape[0],
                                           elementNodesArray.shape[1],
-                                          v_element[1],
+                                          v_element.shape[1],
                                           v_element.shape[2],
                                           abs_det_J.shape[1],
                                           <double*>(nodeArray.data),
@@ -674,11 +674,11 @@ def getRT0velocityValuesFluxRep_arbitraryElementMembership(np.ndarray nodeArray,
                                                            np.ndarray element_locations,
                                                            np.ndarray rt0vdofs_element,
                                                            np.ndarray v_element):
-    cdef int nPoints = x.size/x.shape[-1]
+    cdef int nPoints = x.size/x.shape[x.ndim-1]
     pp.getRT0velocityValuesFluxRep_arbitraryElementMembership(elementNodesArray.shape[0],
                                                               elementNodesArray.shape[1],
                                                               nPoints,
-                                                              v_element[1],
+                                                              v_element.shape[1],
                                                               abs_det_J.shape[1],
                                                               <double*>(nodeArray.data),
                                                               <int*>(elementNodesArray.data),
@@ -1210,9 +1210,9 @@ def updateSelectedExteriorElementBoundaryFlux(np.ndarray exteriorElementBoundari
 def updateAdvectiveVelocityPointEval(double updateCoef,
                                      np.ndarray advectiveVelocity,
                                      np.ndarray velocity):
-    cdef int nPoints = velocity.size/velocity.shape[-1]
+    cdef int nPoints = velocity.size/velocity.shape[velocity.ndim-1]
     pp.postprocessAdvectiveVelocityPointEval(nPoints,
-                                             velocity.shape[-1],
+                                             velocity.shape[velocity.ndim-1],
                                              updateCoef,
                                              <double*>(advectiveVelocity.data),
                                              <double*>(velocity.data))
@@ -1221,9 +1221,9 @@ def updateDiffusiveVelocityPointEval(double updateCoef,
                                      np.ndarray diffusionTensor,
                                      np.ndarray grad_phi,
                                      np.ndarray velocity):
-    cdef int nPoints = velocity.size/velocity.shape[-1]
+    cdef int nPoints = velocity.size/velocity.shape[velocity.ndim-1]
     pp.postprocessDiffusiveVelocityPointEval(nPoints,
-                                             velocity.shape[-1],
+                                             velocity.shape[velocity.ndim-1],
                                              updateCoef,
                                              <double*>(diffusionTensor.data),
                                              <double*>(grad_phi.data),
@@ -1235,9 +1235,9 @@ def updateDiffusiveVelocityPointEval_sd(double updateCoef,
                                         np.ndarray diffusionTensor,
                                         np.ndarray grad_phi,
                                         np.ndarray velocity):
-    cdef int nPoints = velocity.size/velocity.shape[-1]
+    cdef int nPoints = velocity.size/velocity.shape[velocity.ndim-1]
     pp.postprocessDiffusiveVelocityPointEval_sd(nPoints,
-                                                velocity.shape[-1],
+                                                velocity.shape[velocity.ndim-1],
                                                 updateCoef,
                                                 <int*>(rowptr.data),
                                                 <int*>(colind.data),
@@ -1256,7 +1256,7 @@ def calculateElementResidualPWL(np.ndarray alpha,
                                    <double*>(elementResidualPWL.data))
 
 def copyElementBoundaryVelocityToParVec(np.ndarray ebq_velocity, 
-                                        np.ndarray permutations, 
+                                        np.ndarray[int, ndim=2] permutations, 
                                         np.ndarray ebq_v_par_local):
     cdef int ebN
     cdef int k
@@ -1270,7 +1270,7 @@ def copyElementBoundaryVelocityToParVec(np.ndarray ebq_velocity,
                 ebq_v_par_local[ebN,permutations[ebN,k],I] = ebq_velocity[ebN,k,I]
 
 def addAverageToParVec(np.ndarray ebq_velocityAverage, 
-                       np.ndarray permutations, 
+                       np.ndarray[int, ndim=2] permutations, 
                        np.ndarray ebq_v_par_local):
     cdef int ebN
     cdef int k
@@ -1284,7 +1284,7 @@ def addAverageToParVec(np.ndarray ebq_velocityAverage,
                 ebq_v_par_local[ebN, permutations[ebN,k], I] += ebq_velocityAverage[ebN, k, I]
 
 def copyParVecToElementBoundaryVelocity(np.ndarray ebq_velocity, 
-                                        np.ndarray permutations, 
+                                        np.ndarray[int, ndim=2] permutations, 
                                         np.ndarray ebq_v_par_local):
     cdef int ebN
     cdef int k
