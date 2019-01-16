@@ -296,16 +296,46 @@ def asm_NR_solve(A, w, asmFactor, node_order, R, dX):
     
     Arguments
     ---------
-    A :
-    w :
-    asmFactor :
-    node_order :
-    R :
-    dX :
+    A : superluWrappers.sparseMatrix
+    w : double
+    asmFactor : csmoothers.asmFactor
+    node_order : np.array int
+    R : np.array double
+    dX : np.array double
     """
-    pass
+    smootherWrappers_asm_NR_solve(A._cSparseMatrix,
+                                  w,
+                                  asmFactor._cASMFactor,
+                                  node_order,
+                                  R,
+                                  dX)
 
-def basm_NR_prepare(A, baseFactor):
+cdef void smootherWrappers_asm_NR_solve(superluWrappers.cSparseMatrix sm,
+                                        double w,
+                                        cASMFactor asmFactor,
+                                        IDATA node_order,
+                                        DDATA R,
+                                        DDATA dX):
+    cdef SuperMatrix AS
+    AS.Stype = superluWrappers._SLU_NR
+    AS.Dtype = superluWrappers._SLU_D
+    AS.Mtype = superluWrappers._SLU_GE
+    AS.nrow = sm.nr
+    AS.ncol = sm.nc
+    AS.Store = &sm.A
+    casm_NR_solve(&AS,
+                  w,
+                  asmFactor.subdomain_L,
+                  asmFactor.subdomain_dim,
+                  asmFactor.l2g_L,
+                  &R[0],
+                  asmFactor.subdomain_R,
+                  &node_order[0],
+                  asmFactor.subdomain_dX,
+                  &dX[0],
+                  asmFactor.subdomain_pivots)
+
+def basm_NR_prepare(A, basmFactor):
     """
 
     Arguments
@@ -313,7 +343,26 @@ def basm_NR_prepare(A, baseFactor):
     A :
     basmFactor :
     """
-    pass
+    smootherWrappers_basm_NR_prepare(A._cSparseMatrix,
+                                     basmFactor._cBASMFactor)
+
+cdef void smootherWrappers_basm_NR_prepare(superluWrappers.cSparseMatrix sm,
+                                           cBASMFactor basmFactor):
+    cdef SuperMatrix AS
+    AS.Dtype = superluWrappers._SLU_D
+    AS.Mtype = superluWrappers._SLU_GE
+    AS.nrow = sm.nr
+    AS.ncol = sm.nc
+    AS.Store = &sm.A
+    cbasm_NR_prepare(basmFactor.bs,
+                     basmFactor.N,
+                     &AS,
+                     basmFactor.subdomain_dim,
+                     basmFactor.l2g_L,
+                     basmFactor.subdomain_L,
+                     basmFactor.subdomain_pivots,
+                     basmFactor.subdomain_col_pivots)
+    
 
 def basm_NR_solve(A, w, basmFactor, node_order, R, dX):
     """
@@ -327,4 +376,37 @@ def basm_NR_solve(A, w, basmFactor, node_order, R, dX):
     R :
     dX :
     """
-    pass
+    smootherWrappers_basm_NR_solve(A._cSparseMatrix,
+                                   w,
+                                   basmFactor._cBASMFactor,
+                                   node_order,
+                                   R,
+                                   dX)
+
+cdef void smootherWrappers_basm_NR_solve(superluWrappers.cSparseMatrix sm,
+                                         double w,
+                                         cBASMFactor basmFactor,
+                                         IDATA node_order,
+                                         DDATA R,
+                                         DDATA dX):
+    cdef SuperMatrix AS
+    AS.Stype = superluWrappers._SLU_NR
+    AS.Dtype = superluWrappers._SLU_D
+    AS.Mtype = superluWrappers._SLU_GE
+    AS.nrow = sm.nr
+    AS.ncol = sm.nc
+    AS.Store = &sm.A
+    cbasm_NR_solve(basmFactor.bs,
+                   basmFactor.N,
+                   &AS,
+                   w,
+                   basmFactor.subdomain_L,
+                   basmFactor.subdomain_dim,
+                   basmFactor.l2g_L,
+                   &R[0],
+                   basmFactor.subdomain_R,
+                   &node_order[0],
+                   basmFactor.subdomain_dX,
+                   &dX[0],
+                   basmFactor.subdomain_pivots,
+                   basmFactor.subdomain_col_pivots)
