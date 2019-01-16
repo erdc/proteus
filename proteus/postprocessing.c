@@ -2716,7 +2716,7 @@ void buildLocalBDM2projectionMatrices(int degree,
 				      int nDOFs_trial_boundary_element,
 				      int nDOFs_trial_interior_element,
 				      int nVDOFs_element,
-				      long *edgeFlags,
+				      int *edgeFlags,
 				      double * w_dS_f,
 				      double * ebq_n,
 				      double * ebq_v,
@@ -3061,7 +3061,7 @@ void buildBDM2rhs(int nElements_global,
 		  int nDOFs_trial_interior_element,
 	          double * BDMprojectionMatFact_element,
 	          int* BDMprojectionMatPivots_element,
-		  long *edgeFlags,
+		  int *edgeFlags,
 	          double * w_dS_f,
 	          double * ebq_n,
 		  double * w_interior_grads,
@@ -4025,7 +4025,7 @@ int nodeStar_free(int N,
   return 0;
 }
 
-int nodeStar_setU(NodeStarFactor* nodeStarFactor, double val)
+int nodeStar_setU(NodeStarFactorStruct* nodeStarFactor, double val)
 {
   int I,i;
   assert(nodeStarFactor);
@@ -4164,7 +4164,7 @@ int nodeStar_copy(int other_N,
 
 /***********************************************************************
  try to put in version of Swedish Postprocessing with Neumann boundaries
-  enforced explicitly and NodeStarFactor data type
+  enforced explicitly and NodeStarFactorStruct data type
 
   This version, 
     skips flux boundaries in element integrals: calculateConservationResidualPWL,
@@ -4205,14 +4205,14 @@ void calculateConservationResidualPWL(int nElements_global,
 				      double* dX,
 				      double* w,
 				      double* normal,
-				      NodeStarFactor* nodeStarFactor,
+				      NodeStarFactorStruct* nodeStarFactor,
 				      double* conservationResidual,
 				      double* vConservative,
 				      double* vConservative_element)
 {
   int ebNI,ebNE,ebN,eN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,k,I;
   register double flux,fluxAverage,fluxCorrection,dx=0.0;
-  /*mwf now access node star system using NodeStarFactor*/
+  /*mwf now access node star system using NodeStarFactorStruct*/
   double ** starR, ** starU;
   /*mwf add for debugging
     double * fluxSumDebug;
@@ -4568,7 +4568,7 @@ void calculateConservationJacobianPWL(int nDOF_global,
 				      int* fluxBoundaryNodes,
 				      double* w,
 				      double* normal,
-				      NodeStarFactor* nodeStarFactor)
+				      NodeStarFactorStruct* nodeStarFactor)
 
 {
   int eN,ebNI,ebNE,ebN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,nNI,k;
@@ -4740,7 +4740,7 @@ void calculateConservationFluxPWL(int nNodes_global,
 				  int* nElements_node,
 				  int* internalNodes,
 				  int* fluxBoundaryNodes,
-				  NodeStarFactor* nodeStarFactor)
+				  NodeStarFactorStruct* nodeStarFactor)
 {
   int nN,nNI,eN;
   PROTEUS_LAPACK_INTEGER NRHS=1,INFO=0;
@@ -4800,7 +4800,7 @@ void calculateConservationFluxPWL(int nNodes_global,
 
 void calculateConservationFluxPWL_noNeumannFix(int nNodes_global,
 					       int* nElements_node,
-					       NodeStarFactor* nodeStarFactor)
+					       NodeStarFactorStruct* nodeStarFactor)
 {
   int nN,nNI,eN;
   PROTEUS_LAPACK_INTEGER NRHS=1,INFO=0;
@@ -4853,7 +4853,7 @@ void calculateConservationResidualPWL_opt(int nNodes_owned,
 				      double* dX,
 				      double* w,
 				      double* normal,
-				      NodeStarFactor* nodeStarFactor,
+				      NodeStarFactorStruct* nodeStarFactor,
 				      double* conservationResidual,
 				      double* vConservative,
 				      double* vConservative_element)
@@ -4861,7 +4861,7 @@ void calculateConservationResidualPWL_opt(int nNodes_owned,
   int foundNonzeroR;
   int ebNI,ebNE,ebN,eN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,k,I;
   register double flux,fluxAverage,fluxCorrection,dx=0.0;
-  /*mwf now access node star system using NodeStarFactor*/
+  /*mwf now access node star system using NodeStarFactorStruct*/
   double ** starR, ** starU;
   /*mwf add for debugging
     double * fluxSumDebug;
@@ -5190,7 +5190,7 @@ void calculateConservationJacobianPWL_opt(int nNodes_owned,
 				      int* fluxBoundaryNodes,
 				      double* w,
 				      double* normal,
-				      NodeStarFactor* nodeStarFactor)
+				      NodeStarFactorStruct* nodeStarFactor)
 
 {
   int eN,ebNI,ebNE,ebN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,nNI,k;
@@ -5364,7 +5364,7 @@ void calculateConservationFluxPWL_opt(int nNodes_owned,
 				  int* nElements_node,
 				  int* internalNodes,
 				  int* fluxBoundaryNodes,
-				  NodeStarFactor* nodeStarFactor)
+				  NodeStarFactorStruct* nodeStarFactor)
 {
   int nN,nNI,eN;
   PROTEUS_LAPACK_INTEGER NRHS=1,INFO=0;
@@ -5427,7 +5427,7 @@ void subdomain_U_copy_global2local(int max_nN_owned,
                                    int nNodes_element,
                                    int* elementNodes,
                                    int* nodeStarElements,
-                                   NodeStarFactor* nodeStarFactor,
+                                   NodeStarFactorStruct* nodeStarFactor,
 				   double* subdomain_U)
 {
   int eN,nN,eN_star,nN_global;
@@ -5451,7 +5451,7 @@ void subdomain_U_copy_local2global(int max_nN_owned,
                                    int nNodes_element,
                                    int* elementNodes,
                                    int* nodeStarElements,
-                                   NodeStarFactor* nodeStarFactor,
+                                   NodeStarFactorStruct* nodeStarFactor,
 				   double* subdomain_U)
 {
   int eN,nN,eN_star,nN_global;
@@ -5667,14 +5667,14 @@ void calculateConservationResidualPWL_interiorBoundaries(int nElements_global,
 							 double* dX,
 							 double* w,
 							 double* normal,
-							 NodeStarFactor* nodeStarFactor,
+							 NodeStarFactorStruct* nodeStarFactor,
 							 double* conservationResidual,
 							 double* vConservative,
 							 double* vConservative_element)
 {
   int ebNI,ebNE,ebN,eN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,k,I;
   register double flux,fluxAverage,fluxCorrection,dx=0.0;
-  /*mwf now access node star system using NodeStarFactor*/
+  /*mwf now access node star system using NodeStarFactorStruct*/
   double ** starR, ** starU;
   /*mwf add for debugging
     double * fluxSumDebug;
@@ -6021,7 +6021,7 @@ void calculateConservationJacobianPWL_interiorBoundaries(int nNodes_global,
 							 int* fluxElementBoundaries,
 							 double* w,
 							 double* normal,
-							 NodeStarFactor* nodeStarFactor)
+							 NodeStarFactorStruct* nodeStarFactor)
 
 {
   int eN,ebNI,ebNE,ebN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,nNI,k;
