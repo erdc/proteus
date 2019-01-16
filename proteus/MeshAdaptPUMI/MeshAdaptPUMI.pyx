@@ -4,16 +4,12 @@ from cpython.ref cimport PyObject
 cimport numpy as np
 import numpy as np
 from ..Profiling import logEvent
+from proteus cimport cmeshTools 
 from libcpp.string cimport string
 
 cdef extern from "mesh.h":
     struct Mesh:
        pass
-
-cdef extern from "cmeshToolsModule.h":
-    ctypedef struct CMesh:
-        Mesh mesh
-
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
@@ -73,31 +69,23 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
-    def reconstructFromProteus(self,cmesh,global_cmesh,hasModel=0):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        cdef CMesh* global_cmesh_ptr = <CMesh*>global_cmesh
-        return self.thisptr.reconstructFromProteus(cmesh_ptr.mesh,global_cmesh_ptr.mesh,hasModel)
-    def reconstructFromProteus2(self,cmesh,np.ndarray[int,ndim=1,mode="c"] isModelVert,
+    def reconstructFromProteus(self,cmeshTools.CMesh cmesh,cmeshTools.CMesh global_cmesh,hasModel=0):
+        return self.thisptr.reconstructFromProteus(cmesh.mesh,global_cmesh.mesh,hasModel)
+    def reconstructFromProteus2(self,cmeshTools.CMesh cmesh,np.ndarray[int,ndim=1,mode="c"] isModelVert,
                                 np.ndarray[int,ndim=2,mode="c"] bFaces):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         isModelVert = np.ascontiguousarray(isModelVert)
-        return self.thisptr.reconstructFromProteus2(cmesh_ptr.mesh,&isModelVert[0], <int *> bFaces.data)
-    def constructFromSerialPUMIMesh(self, cmesh):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)
-    def constructFromParallelPUMIMesh(self, cmesh, subdomain_cmesh):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        cdef CMesh* subdomain_cmesh_ptr = <CMesh*>subdomain_cmesh
-        return self.thisptr.constructFromParallelPUMIMesh(cmesh_ptr.mesh, subdomain_cmesh_ptr.mesh)
-    def updateMaterialArrays(self, cmesh, dim=None,bdryId=None, geomTag=None):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        return self.thisptr.reconstructFromProteus2(cmesh.mesh,&isModelVert[0], <int *> bFaces.data)
+    def constructFromSerialPUMIMesh(self, cmeshTools.CMesh cmesh):
+        return self.thisptr.constructFromSerialPUMIMesh(cmesh.mesh)
+    def constructFromParallelPUMIMesh(self, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
+        return self.thisptr.constructFromParallelPUMIMesh(cmesh.mesh, subdomain_cmesh.mesh)
+    def updateMaterialArrays(self, cmeshTools.CMesh cmesh, dim=None,bdryId=None, geomTag=None):
         if(dim is None):
-            return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh)
+            return self.thisptr.updateMaterialArrays(cmesh.mesh)
         else:
-            return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh,dim, bdryId, geomTag)
-    def updateMaterialArrays2(self, cmesh):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.updateMaterialArrays2(cmesh_ptr.mesh)
+            return self.thisptr.updateMaterialArrays(cmesh.mesh,dim, bdryId, geomTag)
+    def updateMaterialArrays2(self, cmeshTools.CMesh cmesh):
+        return self.thisptr.updateMaterialArrays2(cmesh.mesh)
     def transferFieldToPUMI(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
         inArray = np.ascontiguousarray(inArray)
         return self.thisptr.transferFieldToPUMI(name, &inArray[0,0], inArray.shape[1], inArray.shape[0])
@@ -134,9 +122,8 @@ cdef class MeshAdaptPUMI:
     #    return self.thisptr.transferBCsToProteus()
     def adaptPUMIMesh(self):
         return self.thisptr.adaptPUMIMesh()
-    def dumpMesh(self, cmesh):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.dumpMesh(cmesh_ptr.mesh)
+    def dumpMesh(self, cmeshTools.CMesh cmesh):
+        return self.thisptr.dumpMesh(cmesh.mesh)
     def getERMSizeField(self, err_total):
         return self.thisptr.getERMSizeField(err_total);
     def getMPvalue(self,field_val,val_0,val_1):

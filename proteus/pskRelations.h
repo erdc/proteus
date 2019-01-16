@@ -31,7 +31,6 @@ public:
     dpsic,
     //in case need psic--> Se form
     dSe_dpsic;
-  
   PskRelation(const double* rwork, const int* iwork = 0):
   Se(1.0),dSe_dSw(1.0),
     Sw_min(rwork[0]),
@@ -149,6 +148,8 @@ public:
     n,
     Se_eps;
   double Se_eps_const;
+  VGMorig()
+  {}
   VGMorig(const double* rwork, const int* iwork = 0):
     PskRelation(rwork),
     alpha(rwork[2]),
@@ -219,12 +220,35 @@ class VGM : public VGMorig
 {
  public:
   double ns_del,eps_small,sqrt_eps_small;
+  VGM()
+  {}
   VGM(const double* rwork, const int* iwork = 0):
     VGMorig(rwork,iwork),
     ns_del(1.0e-8),
     eps_small(1.0e-16),
     sqrt_eps_small(1.0e-8)
   {}
+  VGM(const VGM& r)
+  {
+    Se=r.Se;
+    dSe_dSw=r.dSe_dSw;
+    Sw_min=r.Sw_min;
+    Sw_max=r.Sw_max;
+    krw=r.krw;
+    dkrw=r.dkrw;
+    krn=r.krn;
+    dkrn=r.dkrn;
+    psic=r.psic;
+    dpsic=r.dpsic;
+    dSe_dpsic=r.dSe_dpsic;
+    alpha=r.alpha;
+    m=r.m;
+    n=r.n;
+    Se_eps_const=r.Se_eps_const;
+    ns_del=r.ns_del;
+    eps_small=r.eps_small;
+    sqrt_eps_small=r.sqrt_eps_small;
+  }
   /*for fudge factors aka tolerances in various models*/
   virtual inline void setTolerances(const double* rwork_tol)
   {
