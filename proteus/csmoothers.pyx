@@ -42,21 +42,32 @@ cdef class cASMFactor(object):
 
     def __cinit__(self,
                   superluWrappers.cSparseMatrix L):
+        cdef int rval = 0
         cdef SuperMatrix AS
         AS.Stype = superluWrappers._SLU_NR
         AS.Dtype = superluWrappers._SLU_D
         AS.Mtype = superluWrappers._SLU_GE
         AS.nrow = L.nr
         AS.ncol = L.nc
-        AS.Store = &L.A
-        if casm_NR_init(&AS,
-                        &self.subdomain_dim,
-                        &self.l2g_L,
-                        &self.subdomain_L,
-                        &self.subdomain_R,
-                        &self.subdomain_dX,
-                        &self.subdomain_pivots):
-            assert 1==0 
+        AS.Store = &L.A        
+        rval = casm_NR_init(&AS,
+                            &self.subdomain_dim,
+                            &self.l2g_L,
+                            &self.subdomain_L,
+                            &self.subdomain_R,
+                            &self.subdomain_dX,
+                            &self.subdomain_pivots)
+        assert rval == 0
+
+    def __dealloc__(self):
+        casm_NR_free(self.N,
+                     self.subdomain_dim,
+                     self.l2g_L,
+                     self.subdomain_L,
+                     self.subdomain_R,
+                     self.subdomain_dX,
+                     self.subdomain_pivots)
+            
 
 class BASMFactor(object):
 
@@ -80,6 +91,7 @@ cdef class cBASMFactor(object):
     def __cinit__(self,
                   superluWrappers.cSparseMatrix L,
                   int bs):
+        cdef int rval = 0
         cdef SuperMatrix AS
         AS.Stype = superluWrappers._SLU_NR
         AS.Dtype = superluWrappers._SLU_D
@@ -87,16 +99,26 @@ cdef class cBASMFactor(object):
         AS.nrow = L.nr
         AS.ncol = L.nc
         AS.Store = &L.A
-        if cbasm_NR_init(bs,
-                         &AS,
-                         &self.subdomain_dim,
-                         &self.l2g_L,
-                         &self.subdomain_L,
-                         &self.subdomain_R,
-                         &self.subdomain_dX,
-                         &self.subdomain_pivots,
-                         &self.subdomain_col_pivots):
-            assert 1==0
+        rval = cbasm_NR_init(bs,
+                             &AS,
+                             &self.subdomain_dim,
+                             &self.l2g_L,
+                             &self.subdomain_L,
+                             &self.subdomain_R,
+                             &self.subdomain_dX,
+                             &self.subdomain_pivots,
+                             &self.subdomain_col_pivots)
+        assert rval == 0
+
+    def __dealloc__(self):
+        cbasm_NR_free(self.N,
+                      self.subdomain_dim,
+                      self.l2g_L,
+                      self.subdomain_L,
+                      self.subdomain_R,
+                      self.subdomain_dX,
+                      self.subdomain_pivots,
+                      self.subdomain_col_pivots)
     
 def jacobi_NR_prepare(A, w, tol, M):
     """
