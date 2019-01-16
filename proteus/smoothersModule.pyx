@@ -236,15 +236,34 @@ def nl_gauss_seidel_NR_solve(A, R, node_order, w, tol, dX):
     
     Arguments
     ---------
-    A :
-    R :
-    node_order :
-    w :
-    tol :
-    dX :
+    A : superluWrappers.SparseMatrix
+    R : np.array double
+    node_order : np.array int
+    w : double
+    tol : double
+    dX : np.array double
     """
-    pass
+    smootherWrappers_nl_gauss_seidel_NR_solve(A._cSparseMatrix,
+                                              R,
+                                              node_order,
+                                              w,
+                                              tol,
+                                              dX)
 
+cdef smootherWrappers_nl_gauss_seidel_NR_solve(slw.cSparseMatrix sm,
+                                               DDATA R,
+                                               IDATA node_order,
+                                               double w,
+                                               double tol,
+                                               DDATA dX):
+    cdef SuperMatrix AS
+    AS.Stype = slw._SLU_NR
+    AS.Dtype = slw._SLU_D
+    AS.Mtype = slw._SLU_GE
+    AS.nrow = sm.nr
+    AS.ncol = sm.nc
+    AS.Store = &sm.A
+    cnl_gauss_seidel_NR_solve(&AS, &R[0], &node_order[0], w, tol, &dX[0])
 
 def asm_NR_prepare(A, asmFactor):
     """
