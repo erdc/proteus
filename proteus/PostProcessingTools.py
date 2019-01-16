@@ -1496,9 +1496,9 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
     def setEdgeFlags(self):
         """This function sets the edge flags for the bdm2 loops """
         if self.vt.nSpace_global == 2:
-            self.edgeFlags = numpy.array([1,2,4,0,2,5,0,1,3])
+            self.edgeFlags = numpy.array([1,2,4,0,2,5,0,1,3],'i')
         elif self.vt.nSpace_global == 3:
-            self.edgeFlags = numpy.array([1,2,3,5,6,8, 0,2,3,6,7,9, 0,1,3,4,8,9, 0,1,2,4,5,7])
+            self.edgeFlags = numpy.array([1,2,3,5,6,8, 0,2,3,6,7,9, 0,1,3,4,8,9, 0,1,2,4,5,7],'i')
             # Note - the numbers above should be correct but have not been tested.
         else:
             pass # This should be an assert.

@@ -3,23 +3,23 @@ import numpy as np
 cimport numpy as np
 cimport postprocessing as pp
     
-def postProcessRT0velocityFromP1nc(&nFreeDOF_element,
-                                   &freeLocal_element,
-                                   &detJ,
-                                   &sqrt_det_g,
-                                   &n,
-                                   &elementBarycenters,
-                                   &quad_a,
-                                   &quad_f,
-                                   &w_dV_r,
-                                   &u,
-                                   &gradu,
-                                   &a,
-                                   &f,
-                                   &r,
-                                   &rt0vdofs,
-                                   &w_dV_m=None,
-                                   &mt=None):
+def postProcessRT0velocityFromP1nc(np.ndarray nFreeDOF_element,
+                                   np.ndarray freeLocal_element,
+                                   np.ndarray detJ,
+                                   np.ndarray sqrt_det_g,
+                                   np.ndarray n,
+                                   np.ndarray elementBarycenters,
+                                   np.ndarray quad_a,
+                                   np.ndarray quad_f,
+                                   np.ndarray w_dV_r,
+                                   np.ndarray u,
+                                   np.ndarray gradu,
+                                   np.ndarray a,
+                                   np.ndarray f,
+                                   np.ndarray r,
+                                   np.ndarray rt0vdofs,
+                                   np.ndarray w_dV_m=None,
+                                   np.ndarray mt=None):
     if mt is not None and w_dV_m is not None:
         pp.postProcessRT0velocityFromP1nc(gradu.shape[0],#/*nElements_global*/
                                           gradu.shape[1],#/*nQuadraturePoints_element*/
@@ -67,26 +67,26 @@ def postProcessRT0velocityFromP1nc(&nFreeDOF_element,
                                                 <double*>(r.data),
                                                 <double*>(rt0vdofs.data))
 
-def postProcessRT0velocityFromP1nc_sd(&rowptr,
-                                      &colind,
-                                      &nFreeDOF_element,
-                                      &freeLocal_element,
-                                      &detJ,
-                                      &sqrt_det_g,
-                                      &n,
-                                      &elementBarycenters,
-                                      &quad_a,
-                                      &quad_f,
-                                      &w_dV_r,
-                                      &u,
-                                      &gradu,
-                                      &a,
-                                      &f,
-                                      &r,
-                                      &rt0vdofs,
-                                      &w_dV_m=None,
-                                      &mt=None):
-    if mt is None None and w_dV_m is not None:
+def postProcessRT0velocityFromP1nc_sd(np.ndarray rowptr,
+                                      np.ndarray colind,
+                                      np.ndarray nFreeDOF_element,
+                                      np.ndarray freeLocal_element,
+                                      np.ndarray detJ,
+                                      np.ndarray sqrt_det_g,
+                                      np.ndarray n,
+                                      np.ndarray elementBarycenters,
+                                      np.ndarray quad_a,
+                                      np.ndarray quad_f,
+                                      np.ndarray w_dV_r,
+                                      np.ndarray u,
+                                      np.ndarray gradu,
+                                      np.ndarray a,
+                                      np.ndarray f,
+                                      np.ndarray r,
+                                      np.ndarray rt0vdofs,
+                                      np.ndarray w_dV_m=None,
+                                      np.ndarray mt=None):
+    if mt is None and w_dV_m is not None:
         pp.postProcessRT0velocityFromP1nc_sd(gradu.shape[0],#/*nElements_global*/
                                              gradu.shape[1],#/*nQuadraturePoints_element*/
                                              w_dV_r.shape[2],#/*nDOF_test_element*/
@@ -137,12 +137,12 @@ def postProcessRT0velocityFromP1nc_sd(&rowptr,
                                                    <double*>(r.data),
                                                    <double*>(rt0vdofs.data))
 
-def updateRT0velocityWithAveragedPotentialP1nc(&detJ,
-                                               &quad_a,
-                                               &phi,
-                                               &gradphi,
-                                               &a,
-                                               &rt0vdofs_element):
+def updateRT0velocityWithAveragedPotentialP1nc(np.ndarray detJ,
+                                               np.ndarray quad_a,
+                                               np.ndarray phi,
+                                               np.ndarray gradphi,
+                                               np.ndarray a,
+                                               np.ndarray rt0vdofs_element):
     pp.updateRT0velocityWithAveragedPotentialP1nc(a.shape[0],
                                              a.shape[1],
                                              gradphi.shape[-1],
@@ -153,14 +153,14 @@ def updateRT0velocityWithAveragedPotentialP1nc(&detJ,
                                              <double*>(a.data), 
                                              <double*>(rt0vdofs_element.data))
 
-def updateRT0velocityWithAveragedPotentialP1nc_sd(&rowptr,
-                                                  &colind,
-                                                  &detJ,
-                                                  &quad_a,
-                                                  &phi,
-                                                  &gradphi,
-                                                  &a,
-                                                  &rt0vdofs_element):
+def updateRT0velocityWithAveragedPotentialP1nc_sd(np.ndarray rowptr,
+                                                  np.ndarray colind,
+                                                  np.ndarray detJ,
+                                                  np.ndarray quad_a,
+                                                  np.ndarray phi,
+                                                  np.ndarray gradphi,
+                                                  np.ndarray a,
+                                                  np.ndarray rt0vdofs_element):
     pp.updateRT0velocityWithAveragedPotentialP1nc_sd(a.shape[0],
                                                      a.shape[1],
                                                      gradphi.shape[-1],
@@ -173,19 +173,19 @@ def updateRT0velocityWithAveragedPotentialP1nc_sd(&rowptr,
                                                      <double*>(a.data), 
                                                      <double*>(rt0vdofs_element.data))
 
-def getElementRT0velocityValues(&x_element,
-                                &rt0vdofs_element,
-                                &v_element):
+def getElementRT0velocityValues(np.ndarray x_element,
+                                np.ndarray rt0vdofs_element,
+                                np.ndarray v_element):
     pp.getElementRT0velocityValues(v_element.shape[0],
                                    v_element[1],
                                    v_element.shape[2],
                                    <double*>(x_element.data),
                                    <double*>(rt0vdofs_element.data),
-                                   <double*><v_element.data))
+                                   <double*>(v_element.data))
 
-def getElementBoundaryRT0velocityValues(&x_elementBoundary,
-                                        &rt0vdofs_element,
-                                        &v_elementBoundary):
+def getElementBoundaryRT0velocityValues(np.ndarray x_elementBoundary,
+                                        np.ndarray rt0vdofs_element,
+                                        np.ndarray v_elementBoundary):
     pp.getElementBoundaryRT0velocityValues(v_elementBoundary.shape[0],
                                            v_elementBoundary.shape[1],
                                            v_elementBoundary.shape[2],
@@ -194,10 +194,10 @@ def getElementBoundaryRT0velocityValues(&x_elementBoundary,
                                            <double*>(rt0vdofs_element.data),
                                            <double*>(v_elementBoundary.data))
 
-def getGlobalElementBoundaryRT0velocityValues(&elementBoundaryElementsArray,
-                                              &x_elementBoundary_global,
-                                              &rt0vdofs_element,
-                                              &v_elementBoundary_global):
+def getGlobalElementBoundaryRT0velocityValues(np.ndarray elementBoundaryElementsArray,
+                                              np.ndarray x_elementBoundary_global,
+                                              np.ndarray rt0vdofs_element,
+                                              np.ndarray v_elementBoundary_global):
     pp.getGlobalElementBoundaryRT0velocityValues(v_elementBoundary_global.shape[0],
                                                  v_elementBoundary_global.shape[1],
                                                  v_elementBoundary_global.shape[2],
@@ -206,11 +206,11 @@ def getGlobalElementBoundaryRT0velocityValues(&elementBoundaryElementsArray,
                                                  <double*>(rt0vdofs_element.data),
                                                  <double*>(v_elementBoundary_global.data))
     
-def getGlobalExteriorElementBoundaryRT0velocityValues(&exteriorElementBoundariesArray,
-                                                      &elementBoundaryElementsArray,
-                                                      &x_elementBoundary_global,
-                                                      &rt0vdofs_element,
-                                                      &v_elementBoundary_global):
+def getGlobalExteriorElementBoundaryRT0velocityValues(np.ndarray exteriorElementBoundariesArray,
+                                                      np.ndarray elementBoundaryElementsArray,
+                                                      np.ndarray x_elementBoundary_global,
+                                                      np.ndarray rt0vdofs_element,
+                                                      np.ndarray v_elementBoundary_global):
     pp.getGlobalExteriorElementBoundaryRT0velocityValues(exteriorElementBoundariesArray.shape[0],
                                                          v_elementBoundary_global.shape[1],
                                                          v_elementBoundary_global.shape[2],
@@ -220,28 +220,28 @@ def getGlobalExteriorElementBoundaryRT0velocityValues(&exteriorElementBoundaries
                                                          <double*>(rt0vdofs_element.data),
                                                          <double*>(v_elementBoundary_global.data))
 
-def postProcessRT0potentialFromP1nc(&uQuadratureWeights_element,
-                                    &elementBarycenters,
-                                    &aElementQuadWeights,
-                                    &detJ,
-                                    &uQuadratureWeights_elementBoundary,
-                                    &x,
-                                    &u,
-                                    &gradu,
-                                    &x_elementBoundary,
-                                    &u_elementBoundary,
-                                    &n,
-                                    &a,
-                                    &f,
-                                    &r,
-                                    &rt0vdofs,
-                                    &rt0potential):
+def postProcessRT0potentialFromP1nc(np.ndarray uQuadratureWeights_element,
+                                    np.ndarray elementBarycenters,
+                                    np.ndarray aElementQuadWeights,
+                                    np.ndarray detJ,
+                                    np.ndarray uQuadratureWeights_elementBoundary,
+                                    np.ndarray x,
+                                    np.ndarray u,
+                                    np.ndarray gradu,
+                                    np.ndarray x_elementBoundary,
+                                    np.ndarray u_elementBoundary,
+                                    np.ndarray n,
+                                    np.ndarray a,
+                                    np.ndarray f,
+                                    np.ndarray r,
+                                    np.ndarray rt0vdofs,
+                                    np.ndarray rt0potential):
     pp.postProcessRT0potentialFromP1nc(u.shape[0],
                                        u.shape[1],
                                        n.shape[1],
                                        n.shape[2],
                                        n.shape[3],
-                                       <double*>(uQuadratureWeights_element),
+                                       <double*>(uQuadratureWeights_element.data),
                                        <double*>(elementBarycenters.data),
                                        <double*>(aElementQuadWeights.data),
                                        <double*>(detJ.data),
@@ -258,24 +258,24 @@ def postProcessRT0potentialFromP1nc(&uQuadratureWeights_element,
                                        <double*>(rt0vdofs.data),
                                        <double*>(rt0potential.data))
 
-def postProcessRT0potentialFromP1nc_sd(&rowptr,
-                                       &colind,
-                                       &uQuadratureWeights_element,
-                                       &elementBarycenters,
-                                       &aElementQuadWeights,
-                                       &detJ,
-                                       &uQuadratureWeights_elementBoundary,
-                                       &x,
-                                       &u,
-                                       &gradu,
-                                       &x_elementBoundary,
-                                       &u_elementBoundary,
-                                       &n,
-                                       &a,
-                                       &f,
-                                       &r,
-                                       &rt0vdofs,
-                                       &rt0potential):
+def postProcessRT0potentialFromP1nc_sd(np.ndarray rowptr,
+                                       np.ndarray colind,
+                                       np.ndarray uQuadratureWeights_element,
+                                       np.ndarray elementBarycenters,
+                                       np.ndarray aElementQuadWeights,
+                                       np.ndarray detJ,
+                                       np.ndarray uQuadratureWeights_elementBoundary,
+                                       np.ndarray x,
+                                       np.ndarray u,
+                                       np.ndarray gradu,
+                                       np.ndarray x_elementBoundary,
+                                       np.ndarray u_elementBoundary,
+                                       np.ndarray n,
+                                       np.ndarray a,
+                                       np.ndarray f,
+                                       np.ndarray r,
+                                       np.ndarray rt0vdofs,
+                                       np.ndarray rt0potential):
     pp.postProcessRT0potentialFromP1nc_sd(u.shape[0],
                                           u.shape[1],
                                           n.shape[1],
@@ -283,7 +283,7 @@ def postProcessRT0potentialFromP1nc_sd(&rowptr,
                                           n.shape[3],
                                           <int*>(rowptr.data),
                                           <int*>(colind.data),
-                                          <double*>(uQuadratureWeights_element),
+                                          <double*>(uQuadratureWeights_element.data),
                                           <double*>(elementBarycenters.data),
                                           <double*>(aElementQuadWeights.data),
                                           <double*>(detJ.data),
@@ -300,10 +300,10 @@ def postProcessRT0potentialFromP1nc_sd(&rowptr,
                                           <double*>(rt0vdofs.data),
                                           <double*>(rt0potential.data))
 
-def buildLocalBDM1projectionMatrices(&w_dS_f,
-                                     &ebq_n,
-                                     &ebq_v,
-                                     &BDMmat_element):
+def buildLocalBDM1projectionMatrices(np.ndarray w_dS_f,
+                                     np.ndarray ebq_n,
+                                     np.ndarray ebq_v,
+                                     np.ndarray BDMmat_element):
     pp.buildLocalBDM1projectionMatrices(ebq_n.shape[0],
                                         ebq_n.shape[1],
                                         ebq_n.shape[2],
@@ -316,17 +316,17 @@ def buildLocalBDM1projectionMatrices(&w_dS_f,
                                         <double*>(ebq_v.data),
                                         <double*>(BDMmat_element.data))
 
-def buildLocalBDM2projectionMatrices(&degree,
-                                     &w_dS_f,
-                                     &ebq_n,
-                                     &ebq_v,
-                                     &q_basis_vals,
-                                     &w_int_test_grads,
-                                     &w_int_div_free,
-                                     &piola_trial_fun,
-                                     &edgeFlags,
-                                     &BDMmat_element):
-    pp.buildLocalBDM2projectionMatrices(<double*>(degree.data),
+def buildLocalBDM2projectionMatrices(int degree,
+                                     np.ndarray w_dS_f,
+                                     np.ndarray ebq_n,
+                                     np.ndarray ebq_v,
+                                     np.ndarray q_basis_vals,
+                                     np.ndarray w_int_test_grads,
+                                     np.ndarray w_int_div_free,
+                                     np.ndarray piola_trial_fun,
+                                     np.ndarray edgeFlags,
+                                     np.ndarray BDMmat_element):
+    pp.buildLocalBDM2projectionMatrices(degree,
                                         ebq_n.shape[0],
                                         ebq_n.shape[1],
                                         ebq_n.shape[2],
@@ -336,7 +336,7 @@ def buildLocalBDM2projectionMatrices(&degree,
                                         ebq_v.shape[3],
                                         w_int_test_grads.shape[2],
                                         BDMmat_element.shape[1],
-                                        <double*>(edgeFlags.data),
+                                        <int*>(edgeFlags.data),
                                         <double*>(w_dS_f.data),
                                         <double*>(ebq_n.data),
                                         <double*>(ebq_v.data),
@@ -346,26 +346,26 @@ def buildLocalBDM2projectionMatrices(&degree,
                                         <double*>(w_int_div_free.data),
                                         <double*>(piola_trial_fun.data))
 
-def factorLocalBDM1projectionMatrices(&BDMmat_element,
-                                      &BDMmatPivots_element):
+def factorLocalBDM1projectionMatrices(np.ndarray BDMmat_element,
+                                      np.ndarray BDMmatPivots_element):
     pp.factorLocalBDM1projectionMatrices(BDMmat_element.shape[0],
                                          BDMmat_element.shape[1],
                                          <double*>(BDMmat_element.data),
                                          <int*>(BDMmatPivots_element.data))
 
-def factorLocalBDM2projectionMatrices(&BDMmat_element,
-                                      &BDMmatPivots_element):
+def factorLocalBDM2projectionMatrices(np.ndarray BDMmat_element,
+                                      np.ndarray BDMmatPivots_element):
     pp.factorLocalBDM2projectionMatrices(BDMmat_element.shape[0],
                                          BDMmat_element.shape[1],
                                          <double*>(BDMmat_element.data),
                                          <int*>(BDMmatPivots_element.data))
 
-def solveLocalBDM1projection(&BDMmat_element,
-                             &BDMmatPivots_element,
-                             &w_dS_f,
-                             &ebq_n,
-                             &ebq_velocity,
-                             &q_vdofs):
+def solveLocalBDM1projection(np.ndarray BDMmat_element,
+                             np.ndarray BDMmatPivots_element,
+                             np.ndarray w_dS_f,
+                             np.ndarray ebq_n,
+                             np.ndarray ebq_velocity,
+                             np.ndarray q_vdofs):
     pp.solveLocalBDM1projection(ebq_n.shape[0],
                                 ebq_n.shape[1],
                                 ebq_n.shape[2],
@@ -379,14 +379,14 @@ def solveLocalBDM1projection(&BDMmat_element,
                                 <double*>(ebq_velocity.data),
                                 <double*>(q_vdofs.data))
 
-def solveLocalBDM2projection(&BDMmat_element,
-                             &BDMmatPivots_element,
-                             &w_dS_f,
-                             &ebq_n,
-                             &w_interior_gradients,
-                             &ebq_velocity,
-                             &q_velocity,
-                             &q_vdofs):
+def solveLocalBDM2projection(np.ndarray BDMmat_element,
+                             np.ndarray BDMmatPivots_element,
+                             np.ndarray w_dS_f,
+                             np.ndarray ebq_n,
+                             np.ndarray w_interior_gradients,
+                             np.ndarray ebq_velocity,
+                             np.ndarray q_velocity,
+                             np.ndarray q_vdofs):
     pp.solveLocalBDM2projection(ebq_n.shape[0],
                                 ebq_n.shape[1],
                                 ebq_n.shape[2],
@@ -402,16 +402,16 @@ def solveLocalBDM2projection(&BDMmat_element,
                                 <double*>(ebq_velocity.data),
                                 <double*>(q_vdofs.data))
 
-def buildBDM2rhs(&BDMmat_element,
-                 &BDMmatPivots_element,
-                 &w_dS_f,
-                 &ebq_n,
-                 &w_interior_gradients,
-                 &w_interior_divfree,
-                 &ebq_velocity,
-                 &q_velocity,
-                 &q_vdofs,
-                 &edgeFlags):
+def buildBDM2rhs(np.ndarray BDMmat_element,
+                 np.ndarray BDMmatPivots_element,
+                 np.ndarray w_dS_f,
+                 np.ndarray ebq_n,
+                 np.ndarray w_interior_gradients,
+                 np.ndarray w_interior_divfree,
+                 np.ndarray ebq_velocity,
+                 np.ndarray q_velocity,
+                 np.ndarray q_vdofs,
+                 np.ndarray edgeFlags):
     pp.buildBDM2rhs(ebq_n.shape[0],
                     ebq_n.shape[1],
                     ebq_n.shape[2],
@@ -422,7 +422,7 @@ def buildBDM2rhs(&BDMmat_element,
                     w_interior_gradients.shape[2],
                     <double*>(BDMmat_element.data),
                     <int*>(BDMmatPivots_element.data),
-                    <double*>(edgeFlags.data),
+                    <int*>(edgeFlags.data),
                     <double*>(w_dS_f.data),
                     <double*>(ebq_n.data),
                     <double*>(w_interior_gradients.data),
@@ -431,13 +431,13 @@ def buildBDM2rhs(&BDMmat_element,
                     <double*>(q_velocity.data),               
                     <double*>(q_vdofs.data))
 
-def solveLocalBDM1projectionFromFlux(&BDMmat_element,
-                                     &BDMmatPivots_element,
-                                     &elementBoundaryElementsArray,
-                                     &elementBoundariesArray,
-                                     &w_dS_f,
-                                     &ebq_global_flux,
-                                     &q_vdofs):
+def solveLocalBDM1projectionFromFlux(np.ndarray BDMmat_element,
+                                     np.ndarray BDMmatPivots_element,
+                                     np.ndarray elementBoundaryElementsArray,
+                                     np.ndarray elementBoundariesArray,
+                                     np.ndarray w_dS_f,
+                                     np.ndarray ebq_global_flux,
+                                     np.ndarray q_vdofs):
     pp.solveLocalBDM1projectionFromFlux(w_dS_f.shape[0],
                                         w_dS_f.shape[1],
                                         w_dS_f.shape[2],
@@ -451,9 +451,9 @@ def solveLocalBDM1projectionFromFlux(&BDMmat_element,
                                         <double*>(ebq_global_flux.data),
                                         <double*>(q_vdofs.data))
 
-def getElementBDM1velocityValuesLagrangeRep(&q_v,
-                                            &p1_vdofs,
-                                            &q_velocity):
+def getElementBDM1velocityValuesLagrangeRep(np.ndarray q_v,
+                                            np.ndarray p1_vdofs,
+                                            np.ndarray q_velocity):
     cdef int nVDOFs_element = q_velocity.shape[2]*(q_velocity.shape[2]+1)
     
     if p1_vdofs.ndim > 1:
@@ -467,9 +467,9 @@ def getElementBDM1velocityValuesLagrangeRep(&q_v,
                                             <double*>(p1_vdofs.data),
                                             <double*>(q_velocity.data))
 
-def getElementBDM2velocityValuesLagrangeRep(&q_v,
-                                            &p1_vdofs,
-                                            &q_velocity):
+def getElementBDM2velocityValuesLagrangeRep(np.ndarray q_v,
+                                            np.ndarray p1_vdofs,
+                                            np.ndarray q_velocity):
     if q_velocity.shape[2] == 2:
         #dimension of bdm2 in 2d
         nVDOFs_element = 12
@@ -489,9 +489,9 @@ def getElementBDM2velocityValuesLagrangeRep(&q_v,
                                           <double*>(p1_vdofs.data),
                                           <double*>(q_velocity.data))
     
-def getElementLDGvelocityValuesLagrangeRep(&q_v,
-                                           &vdofs,
-                                           &q_velocity):
+def getElementLDGvelocityValuesLagrangeRep(np.ndarray q_v,
+                                           np.ndarray vdofs,
+                                           np.ndarray q_velocity):
     cdef int nVDOF_element =vdofs.shape[1]
     cdef int nDOF_trial_element=q_v.shape[2]
     if  vdofs.ndim > 1:
@@ -505,11 +505,11 @@ def getElementLDGvelocityValuesLagrangeRep(&q_v,
                                               <double*>(vdofs.data),
                                               <double*>(q_velocity.data))
 
-def getGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep(&elementBoundaryElementsArray,
-                                                                  &exteriorElementBoundariesArray,
-                                                                  &ebqe_v,
-                                                                  &p1_vdofs,
-                                                                  &ebqe_velocity):
+def getGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep(np.ndarray elementBoundaryElementsArray,
+                                                                  np.ndarray exteriorElementBoundariesArray,
+                                                                  np.ndarray ebqe_v,
+                                                                  np.ndarray p1_vdofs,
+                                                                  np.ndarray ebqe_velocity):
     cdef int nVDOFs_element = ebqe_velocity.shape[2]*(ebqe_velocity.shape[2]+1)
     if p1_vdofs.ndim > 1:
         assert nVDOFs_element == p1_vdofs.shape[1]
@@ -524,11 +524,11 @@ def getGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep(&elementBounda
                                                                      <double*>(p1_vdofs.data),
                                                                      <double*>(ebqe_velocity.data))
 
-def getGlobalElementBoundaryBDM1velocityValuesLagrangeRep(&elementBoundaryElementsArray,
-                                                          &exteriorElementBoundariesArray,
-                                                          &ebqe_v,
-                                                          &p1_vdofs,
-                                                          &ebq_global_velocity):
+def getGlobalElementBoundaryBDM1velocityValuesLagrangeRep(np.ndarray elementBoundaryElementsArray,
+                                                          np.ndarray exteriorElementBoundariesArray,
+                                                          np.ndarray ebqe_v,
+                                                          np.ndarray p1_vdofs,
+                                                          np.ndarray ebq_global_velocity):
     cdef int nVDOFs_element = ebq_global_velocity.shape[2]*(ebq_global_velocity.shape[2]+1)
     if p1_vdofs.ndim > 1:
         assert nVDOFs_element == p1_vdofs.shape[1]
@@ -543,11 +543,11 @@ def getGlobalElementBoundaryBDM1velocityValuesLagrangeRep(&elementBoundaryElemen
                                                                      <double*>(p1_vdofs.data),
                                                                      <double*>(ebq_global_velocity.data))
 
-def getElementBoundaryBDM1velocityValuesLagrangeRep(&elementBoundaryElementsArray,
-                                                    &exteriorElementBoundariesArray,
-                                                    &ebq_v,
-                                                    &p1_vdofs,
-                                                    &ebq_velocity):
+def getElementBoundaryBDM1velocityValuesLagrangeRep(np.ndarray elementBoundaryElementsArray,
+                                                    np.ndarray exteriorElementBoundariesArray,
+                                                    np.ndarray ebq_v,
+                                                    np.ndarray p1_vdofs,
+                                                    np.ndarray ebq_velocity):
     cdef int nVDOFs_element = ebq_velocity.shape[3]*(ebq_velocity.shape[3]+1)
     if p1_vdofs.ndim > 1:
         assert nVDOFs_element == p1_vdofs.shape[1]
@@ -563,10 +563,10 @@ def getElementBoundaryBDM1velocityValuesLagrangeRep(&elementBoundaryElementsArra
                                                            <double*>(p1_vdofs.data),
                                                            <double*>(ebq_velocity.data))
 
-def projectElementBoundaryVelocityToRT0fluxRep(&elementBoundaryQuadratureWeights,
-                                               &n,
-                                               &v_elementBoundary,
-                                               &rt0vdofs_element):
+def projectElementBoundaryVelocityToRT0fluxRep(np.ndarray elementBoundaryQuadratureWeights,
+                                               np.ndarray n,
+                                               np.ndarray v_elementBoundary,
+                                               np.ndarray rt0vdofs_element):
     pp.projectElementBoundaryVelocityToRT0fluxRep(n.shape[0],
                                                   n.shape[1],
                                                   n.shape[2],
@@ -576,11 +576,11 @@ def projectElementBoundaryVelocityToRT0fluxRep(&elementBoundaryQuadratureWeights
                                                   <double*>(v_elementBoundary.data),
                                                   <double*>(rt0vdofs_element.data))
 
-def projectElementBoundaryFluxToRT0fluxRep(&elementBoundaryElementsArray,
-                                           &elementBoundariesArray,
-                                           &elementBoundaryQuadratureWeights,
-                                           &flux_elementBoundary,
-                                           &rt0vdofs_element):
+def projectElementBoundaryFluxToRT0fluxRep(np.ndarray elementBoundaryElementsArray,
+                                           np.ndarray elementBoundariesArray,
+                                           np.ndarray elementBoundaryQuadratureWeights,
+                                           np.ndarray flux_elementBoundary,
+                                           np.ndarray rt0vdofs_element):
     pp.projectElementBoundaryFluxToRT0fluxRep(elementBoundaryQuadratureWeights.shape[0],
                                               elementBoundaryQuadratureWeights.shape[1],
                                               elementBoundaryQuadratureWeights.shape[2],
@@ -591,12 +591,12 @@ def projectElementBoundaryFluxToRT0fluxRep(&elementBoundaryElementsArray,
                                               <double*>(flux_elementBoundary.data),
                                               <double*>(rt0vdofs_element.data))
 
-def getElementRT0velocityValuesFluxRep(&nodeArray,
-                                       &elementNodesArray,
-                                       &abs_det_J,
-                                       &x_element,
-                                       &rt0vdofs_element,
-                                       &v_element):
+def getElementRT0velocityValuesFluxRep(np.ndarray nodeArray,
+                                       np.ndarray elementNodesArray,
+                                       np.ndarray abs_det_J,
+                                       np.ndarray x_element,
+                                       np.ndarray rt0vdofs_element,
+                                       np.ndarray v_element):
     pp.getElementRT0velocityValuesFluxRep(v_element.shape[0],
                                           elementNodesArray.shape[1],
                                           v_element[1],
@@ -607,14 +607,14 @@ def getElementRT0velocityValuesFluxRep(&nodeArray,
                                           <double*>(abs_det_J.data),
                                           <double*>(x_element.data),
                                           <double*>(rt0vdofs_element.data),
-                                          <double*><v_element.data))
+                                          <double*>(v_element.data))
 
-def getElementBoundaryRT0velocityValuesFluxRep(&nodeArray,
-                                               &elementNodesArray,
-                                               &abs_det_J,
-                                               &x_elementBoundary,
-                                               &rt0vdofs_element,
-                                               &v_elementBoundary):
+def getElementBoundaryRT0velocityValuesFluxRep(np.ndarray nodeArray,
+                                               np.ndarray elementNodesArray,
+                                               np.ndarray abs_det_J,
+                                               np.ndarray x_elementBoundary,
+                                               np.ndarray rt0vdofs_element,
+                                               np.ndarray v_elementBoundary):
     pp.getElementBoundaryRT0velocityValuesFluxRep(v_elementBoundary.shape[0],
                                                   v_elementBoundary.shape[1],
                                                   v_elementBoundary.shape[2],
@@ -627,13 +627,13 @@ def getElementBoundaryRT0velocityValuesFluxRep(&nodeArray,
                                                   <double*>(rt0vdofs_element.data),
                                                   <double*>(v_elementBoundary.data))
     
-def getGlobalElementBoundaryRT0velocityValuesFluxRep(&nodeArray,
-                                                     &elementNodesArray,
-                                                     &elementBoundaryElementsArray,
-                                                     &abs_det_J,
-                                                     &x_elementBoundary_global,
-                                                     &rt0vdofs_element,
-                                                     &v_elementBoundary_global):
+def getGlobalElementBoundaryRT0velocityValuesFluxRep(np.ndarray nodeArray,
+                                                     np.ndarray elementNodesArray,
+                                                     np.ndarray elementBoundaryElementsArray,
+                                                     np.ndarray abs_det_J,
+                                                     np.ndarray x_elementBoundary_global,
+                                                     np.ndarray rt0vdofs_element,
+                                                     np.ndarray v_elementBoundary_global):
     pp.getGlobalElementBoundaryRT0velocityValuesFluxRep(v_elementBoundary_global.shape[0],
                                                         v_elementBoundary_global.shape[1],
                                                         v_elementBoundary_global.shape[2],
@@ -646,14 +646,14 @@ def getGlobalElementBoundaryRT0velocityValuesFluxRep(&nodeArray,
                                                         <double*>(rt0vdofs_element.data),
                                                         <double*>(v_elementBoundary_global.data))
 
-def getGlobalExteriorElementBoundaryRT0velocityValuesFluxRep(&nodeArray,
-                                                             &elementNodesArray,
-                                                             &elementBoundaryElementsArray,
-                                                             &exteriorElementBoundariesArray,
-                                                             &abs_det_J,
-                                                             &x_ebqe,
-                                                             &rt0vdofs_element,
-                                                             &v_ebqe):
+def getGlobalExteriorElementBoundaryRT0velocityValuesFluxRep(np.ndarray nodeArray,
+                                                             np.ndarray elementNodesArray,
+                                                             np.ndarray elementBoundaryElementsArray,
+                                                             np.ndarray exteriorElementBoundariesArray,
+                                                             np.ndarray abs_det_J,
+                                                             np.ndarray x_ebqe,
+                                                             np.ndarray rt0vdofs_element,
+                                                             np.ndarray v_ebqe):
     pp.getGlobalExteriorElementBoundaryRT0velocityValuesFluxRep(v_ebqe.shape[0],
                                                                 v_ebqe.shape[1],
                                                                 v_ebqe.shape[2],
@@ -667,13 +667,13 @@ def getGlobalExteriorElementBoundaryRT0velocityValuesFluxRep(&nodeArray,
                                                                 <double*>(rt0vdofs_element.data),
                                                                 <double*>(v_ebqe.data))
 
-def getRT0velocityValuesFluxRep_arbitraryElementMembership(&nodeArray,
-                                                           &elementNodesArray,
-                                                           &abs_det_J,
-                                                           &x,
-                                                           &element_locations,
-                                                           &rt0vdofs_element,
-                                                           &v_element):
+def getRT0velocityValuesFluxRep_arbitraryElementMembership(np.ndarray nodeArray,
+                                                           np.ndarray elementNodesArray,
+                                                           np.ndarray abs_det_J,
+                                                           np.ndarray x,
+                                                           np.ndarray element_locations,
+                                                           np.ndarray rt0vdofs_element,
+                                                           np.ndarray v_element):
     cdef int nPoints = x.size/x.shape[-1]
     pp.getRT0velocityValuesFluxRep_arbitraryElementMembership(elementNodesArray.shape[0],
                                                               elementNodesArray.shape[1],
@@ -686,17 +686,17 @@ def getRT0velocityValuesFluxRep_arbitraryElementMembership(&nodeArray,
                                                               <double*>(x.data),
                                                               <int*>(element_locations.data),
                                                               <double*>(rt0vdofs_element.data),
-                                                              <double*><v_element.data))
+                                                              <double*>(v_element.data))
 
-def fluxCorrectionVelocityUpdate(&interiorElementBoundaries,
-                                 &exteriorElementBoundaries,
-                                 &elementBoundaryElements,
-                                 &elementBoundaryLocalElementBoundaries,
-                                 &dS,
-                                 &n,
-                                 &fluxCorrection,
-                                 &velocity,
-                                 &velocity_element):
+def fluxCorrectionVelocityUpdate(np.ndarray interiorElementBoundaries,
+                                 np.ndarray exteriorElementBoundaries,
+                                 np.ndarray elementBoundaryElements,
+                                 np.ndarray elementBoundaryLocalElementBoundaries,
+                                 np.ndarray dS,
+                                 np.ndarray n,
+                                 np.ndarray fluxCorrection,
+                                 np.ndarray velocity,
+                                 np.ndarray velocity_element):
     pp.fluxCorrectionVelocityUpdate(dS.shape[0],
                                     velocity.shape[0],
                                     interiorElementBoundaries.shape[0],
@@ -714,12 +714,12 @@ def fluxCorrectionVelocityUpdate(&interiorElementBoundaries,
                                     <double*>(velocity.data),
                                     <double*>(velocity_element.data))
 
-def computeFluxCorrectionPWC(&interiorElementBoundaries,
-                             &exteriorElementBoundaries,
-                             &elementBoundaryElements,
-                             &pwcW,
-                             &pwcV,
-                             &fluxCorrection):
+def computeFluxCorrectionPWC(np.ndarray interiorElementBoundaries,
+                             np.ndarray exteriorElementBoundaries,
+                             np.ndarray elementBoundaryElements,
+                             np.ndarray pwcW,
+                             np.ndarray pwcV,
+                             np.ndarray fluxCorrection):
     pp.computeFluxCorrectionPWC(elementBoundaryElements.shape[0],
                                 interiorElementBoundaries.shape[0],
                                 exteriorElementBoundaries.shape[0],
@@ -730,16 +730,16 @@ def computeFluxCorrectionPWC(&interiorElementBoundaries,
                                 <double*>(pwcV.data),
                                 <double*>(fluxCorrection.data))
 
-def sunWheelerGSsweep(&interiorElementBoundaries,
-                      &exteriorElementBoundaries,
-                      &elementBoundaryElements,
-                      &elementBoundaryLocalElementBoundaries,
-                      &dS,
-                      &n,
-                      &sqrt_det_g,
-                      &alphaFactor,
-                      &fluxCorrection,
-                      &conservationResidual):
+def sunWheelerGSsweep(np.ndarray interiorElementBoundaries,
+                      np.ndarray exteriorElementBoundaries,
+                      np.ndarray elementBoundaryElements,
+                      np.ndarray elementBoundaryLocalElementBoundaries,
+                      np.ndarray dS,
+                      np.ndarray n,
+                      np.ndarray sqrt_det_g,
+                      np.ndarray alphaFactor,
+                      np.ndarray fluxCorrection,
+                      np.ndarray conservationResidual):
     pp.sunWheelerGSsweep(conservationResidual.shape[0],
                          elementBoundaryElements.shape[0],
                          interiorElementBoundaries.shape[0],
@@ -760,11 +760,11 @@ def sunWheelerGSsweep(&interiorElementBoundaries,
 
 #  put in data structure for node star solves now
 cdef class NodeStarFactor:
-    cdef pp.NodeStarFactor nsf
+    cdef pp.NodeStarFactorStruct nsf
     def __cinit__(self,
-                  &nElements_node,
-                  &nodeStarElementsArray,
-                  &nodeStarElementsNeighborsArray):
+                  np.ndarray nElements_node,
+                  np.ndarray nodeStarElementsArray,
+                  np.ndarray nodeStarElementsNeighborsArray):
         cdef int rval=0
         rval = pp.nodeStar_init(nodeStarElementsArray.shape[0],
                                 nodeStarElementsArray.shape[1],
@@ -772,13 +772,13 @@ cdef class NodeStarFactor:
                                 <int*>(nElements_node.data),
                                 <int*>(nodeStarElementsArray.data),
                                 <int*>(nodeStarElementsNeighborsArray.data),
-                                self.nsf.N,
-                                self.nsf.subdomain_dim,
-                                self.nsf.subdomain_L,
-                                self.nsf.subdomain_R,
-                                self.nsf.subdomain_U,
-                                self.nsf.subdomain_pivots,
-                                self.nsf.subdomain_column_pivots)
+                                &self.nsf.N,
+                                &self.nsf.subdomain_dim,
+                                &self.nsf.subdomain_L,
+                                &self.nsf.subdomain_R,
+                                &self.nsf.subdomain_U,
+                                &self.nsf.subdomain_pivots,
+                                &self.nsf.subdomain_column_pivots)
         assert rval == 0
 
     def __dealloc__(self):
@@ -787,16 +787,16 @@ cdef class NodeStarFactor:
                          self.nsf.subdomain_L,
                          self.nsf.subdomain_R,
                          self.nsf.subdomain_U,
-                         self.nsf.subdomain_psivots,
+                         self.nsf.subdomain_pivots,
                          self.nsf.subdomain_column_pivots)
     
     def setU(self,
              double val):
         cdef int I
         cdef int i
-        for I in range(nodeStarFactor.nsf.N):
-            for i in range(nodeStarFactor.nsf.subdomain_dim[I]):
-                nodeStarFactor.nsf.subdomain_U[I][i] = val
+        for I in range(self.nsf.N):
+            for i in range(self.nsf.subdomain_dim[I]):
+                self.nsf.subdomain_U[I][i] = val
     
     def copyData(self,
                  NodeStarFactor other):
@@ -807,48 +807,48 @@ cdef class NodeStarFactor:
                          other.nsf.subdomain_U,
                          other.nsf.subdomain_pivots,
                          other.nsf.subdomain_column_pivots,
-                         self.nsf.N, 
-                         self.nsf.subdomain_dim,
-                         self.nsf.subdomain_L,
-                         self.nsf.subdomain_R,
-                         self.nsf.subdomain_U,
-                         self.nsf.subdomain_pivots,
-                         self.nsf.subdomain_column_pivots)
+                         &self.nsf.N, 
+                         &self.nsf.subdomain_dim,
+                         &self.nsf.subdomain_L,
+                         &self.nsf.subdomain_R,
+                         &self.nsf.subdomain_U,
+                         &self.nsf.subdomain_pivots,
+                         &self.nsf.subdomain_column_pivots)
 
-def calculateConservationResidualPWL(&interiorElementBoundaries,
-                                     &exteriorElementBoundaries,
-                                     &elementBoundaryElements,
-                                     &elementBoundaryLocalElementBoundaries,
-                                     &elementNodes,
-                                     &dofMapl2g,
-                                     &nodeStarElements,
-                                     &nodeStarElementNeighbors,
-                                     &nElements_node,
-                                     &fluxElementBoundaries,
-                                     &elementResidual,
-                                     &vAverage,
-                                     &dx,
-                                     &w,
-                                     &n,
+def calculateConservationResidualPWL(np.ndarray interiorElementBoundaries,
+                                     np.ndarray exteriorElementBoundaries,
+                                     np.ndarray elementBoundaryElements,
+                                     np.ndarray elementBoundaryLocalElementBoundaries,
+                                     np.ndarray elementNodes,
+                                     np.ndarray dofMapl2g,
+                                     np.ndarray nodeStarElements,
+                                     np.ndarray nodeStarElementNeighbors,
+                                     np.ndarray nElements_node,
+                                     np.ndarray fluxElementBoundaries,
+                                     np.ndarray elementResidual,
+                                     np.ndarray vAverage,
+                                     np.ndarray dx,
+                                     np.ndarray w,
+                                     np.ndarray n,
                                      NodeStarFactor nodeStarFactor,
-                                     &conservationResidual,
-                                     &vConservative,
-                                     &vConservative_element):
-    pp.calculateConservationResidualPWL(w.shape[0] 
+                                     np.ndarray conservationResidual,
+                                     np.ndarray vConservative,
+                                     np.ndarray vConservative_element):
+    pp.calculateConservationResidualPWL(w.shape[0],
                                         #/* nElements_global*/, 
-                                        interiorElementBoundaries.shape[0] 
+                                        interiorElementBoundaries.shape[0], 
                                         #/*nInteriorElementBoundaries_global*/,
-                                        exteriorElementBoundaries.shape[0]
+                                        exteriorElementBoundaries.shape[0],
                                         #/*nExteriorElementBoundaries_global*/,
-                                        w.shape[1]
+                                        w.shape[1],
                                         #/*nElementBoundaries_element*/,
-                                        w.shape[2]
+                                        w.shape[2],
                                         #/*nQuadraturePoints_elementBoundary*/,
-                                        w.shape[3]
+                                        w.shape[3],
                                         #/*nNodes_element*/,
-                                        dofMapl2g.shape[1]
+                                        dofMapl2g.shape[1],
                                         #/*nDOF_element*/,
-                                        n.shape[2]
+                                        n.shape[2],
                                         #/*nSpace */,
                                         <int*>(interiorElementBoundaries.data),
                                         <int*>(exteriorElementBoundaries.data),
@@ -865,26 +865,26 @@ def calculateConservationResidualPWL(&interiorElementBoundaries,
                                         <double*>(dx.data),
                                         <double*>(w.data),
                                         <double*>(n.data),
-                                        nodeStarFactor.nsf,
+                                        &nodeStarFactor.nsf,
                                         <double*>(conservationResidual.data),
                                         <double*>(vConservative.data),
                                         <double*>(vConservative_element.data))
 
-def calculateConservationJacobianPWL(&interiorElementBoundaries,
-                                     &exteriorElementBoundaries,
-                                     &elementBoundaryElements,
-                                     &elementBoundaryLocalElementBoundaries,
-                                     &elementNodes,
-                                     &dofMapl2g,
-                                     &dofStarElements,
-                                     &dofStarElementNeighbors,
-                                     &nElements_dof,
-                                     &internalNodes,
-                                     &fluxElementBoundaries,
-                                     &fluxBoundaryNodes,
-                                     &w,
-                                     &n,
-                                     &nodeStarFactor):
+def calculateConservationJacobianPWL(np.ndarray interiorElementBoundaries,
+                                     np.ndarray exteriorElementBoundaries,
+                                     np.ndarray elementBoundaryElements,
+                                     np.ndarray elementBoundaryLocalElementBoundaries,
+                                     np.ndarray elementNodes,
+                                     np.ndarray dofMapl2g,
+                                     np.ndarray dofStarElements,
+                                     np.ndarray dofStarElementNeighbors,
+                                     np.ndarray nElements_dof,
+                                     np.ndarray internalNodes,
+                                     np.ndarray fluxElementBoundaries,
+                                     np.ndarray fluxBoundaryNodes,
+                                     np.ndarray w,
+                                     np.ndarray n,
+                                     NodeStarFactor nodeStarFactor):
     pp.calculateConservationJacobianPWL(nElements_dof.shape[0],
                                         internalNodes.shape[0],
                                         w.shape[0],
@@ -909,44 +909,44 @@ def calculateConservationJacobianPWL(&interiorElementBoundaries,
                                         <int*>(fluxBoundaryNodes.data),
                                         <double*>(w.data),
                                         <double*>(n.data),
-                                        nodeStarFactor.nsf)
+                                        &nodeStarFactor.nsf)
 
-def calculateConservationFluxPWL(&nElements_node,
-                                 &internalNodes,
-                                 &fluxBoundaryNodes,
+def calculateConservationFluxPWL(np.ndarray nElements_node,
+                                 np.ndarray internalNodes,
+                                 np.ndarray fluxBoundaryNodes,
                                  NodeStarFactor nodeStarFactor):
     pp.calculateConservationFluxPWL(nElements_node.shape[0],
                                     internalNodes.shape[0],
                                     <int*>(nElements_node.data),
-                                    <int*>(internalNodes),
-                                    <int*>(fluxBoundaryNodes),
-                                    nodeStarFactor.nsf)
+                                    <int*>(internalNodes.data),
+                                    <int*>(fluxBoundaryNodes.data),
+                                    &nodeStarFactor.nsf)
 
-def calculateConservationFluxPWL_noNeumannFix(&nElements_node,
+def calculateConservationFluxPWL_noNeumannFix(np.ndarray nElements_node,
                                               NodeStarFactor nodeStarFactor):
     pp.calculateConservationFluxPWL_noNeumannFix(nElements_node.shape[0],
                                                  <int*>(nElements_node.data),
-                                                 nodeStarFactor.nsf)
+                                                 &nodeStarFactor.nsf)
 
-def calculateConservationResidualPWL_opt(&nNodes_owned,
-                                         &interiorElementBoundaries,
-                                         &exteriorElementBoundaries,
-                                         &elementBoundaryElements,
-                                         &elementBoundaryLocalElementBoundaries,
-                                         &elementNodes,
-                                         &nodeStarElements,
-                                         &nodeStarElementNeighbors,
-                                         &nElements_node,
-                                         &fluxElementBoundaries,
-                                         &elementResidual,
-                                         &vAverage,
-                                         &dx,
-                                         &w,
-                                         &n,
+def calculateConservationResidualPWL_opt(int nNodes_owned,
+                                         np.ndarray interiorElementBoundaries,
+                                         np.ndarray exteriorElementBoundaries,
+                                         np.ndarray elementBoundaryElements,
+                                         np.ndarray elementBoundaryLocalElementBoundaries,
+                                         np.ndarray elementNodes,
+                                         np.ndarray nodeStarElements,
+                                         np.ndarray nodeStarElementNeighbors,
+                                         np.ndarray nElements_node,
+                                         np.ndarray fluxElementBoundaries,
+                                         np.ndarray elementResidual,
+                                         np.ndarray vAverage,
+                                         np.ndarray dx,
+                                         np.ndarray w,
+                                         np.ndarray n,
                                          NodeStarFactor nodeStarFactor,
-                                         &conservationResidual,
-                                         &vConservative,
-                                         &vConservative_element):
+                                         np.ndarray conservationResidual,
+                                         np.ndarray vConservative,
+                                         np.ndarray vConservative_element):
     pp.calculateConservationResidualPWL_opt(nNodes_owned,
                                             w.shape[0],
                                             interiorElementBoundaries.shape[0],
@@ -969,21 +969,21 @@ def calculateConservationResidualPWL_opt(&nNodes_owned,
                                             <double*>(dx.data),
                                             <double*>(w.data),
                                             <double*>(n.data),
-                                            nodeStarFactor.nsf,
+                                            &nodeStarFactor.nsf,
                                             <double*>(conservationResidual.data),
                                             <double*>(vConservative.data),
                                             <double*>(vConservative_element.data))
 
-def calculateConservationResidualPWL_primative(&interiorElementBoundaries,
-                                               &exteriorElementBoundaries,
-                                               &elementBoundaryElements,
-                                               &elementBoundaryLocalElementBoundaries,
-                                               &skipflag_elementBoundaries,
-                                               &elementResidual,
-                                               &dx,
-                                               &n,
-                                               &conservationResidual,
-                                               &vConservative):
+def calculateConservationResidualPWL_primative(np.ndarray interiorElementBoundaries,
+                                               np.ndarray exteriorElementBoundaries,
+                                               np.ndarray elementBoundaryElements,
+                                               np.ndarray elementBoundaryLocalElementBoundaries,
+                                               np.ndarray skipflag_elementBoundaries,
+                                               np.ndarray elementResidual,
+                                               np.ndarray dx,
+                                               np.ndarray n,
+                                               np.ndarray conservationResidual,
+                                               np.ndarray vConservative):
     pp.calculateConservationResidualPWL_primative(dx.shape[0],
                                                   interiorElementBoundaries.shape[0],
                                                   exteriorElementBoundaries.shape[0],
@@ -1003,19 +1003,19 @@ def calculateConservationResidualPWL_primative(&interiorElementBoundaries,
                                                   <double*>(vConservative.data))
 
 def calculateConservationJacobianPWL_opt(int nNodes_owned,
-                                         &interiorElementBoundaries,
-                                         &exteriorElementBoundaries,
-                                         &elementBoundaryElements,
-                                         &elementBoundaryLocalElementBoundaries,
-                                         &elementNodes,
-                                         &nodeStarElements,
-                                         &nodeStarElementNeighbors,
-                                         &nElements_node,
-                                         &internalNodes,
-                                         &fluxElementBoundaries,
-                                         &fluxBoundaryNodes,
-                                         &w,
-                                         &n,
+                                         np.ndarray interiorElementBoundaries,
+                                         np.ndarray exteriorElementBoundaries,
+                                         np.ndarray elementBoundaryElements,
+                                         np.ndarray elementBoundaryLocalElementBoundaries,
+                                         np.ndarray elementNodes,
+                                         np.ndarray nodeStarElements,
+                                         np.ndarray nodeStarElementNeighbors,
+                                         np.ndarray nElements_node,
+                                         np.ndarray internalNodes,
+                                         np.ndarray fluxElementBoundaries,
+                                         np.ndarray fluxBoundaryNodes,
+                                         np.ndarray w,
+                                         np.ndarray n,
                                          NodeStarFactor nodeStarFactor):
     pp.calculateConservationJacobianPWL_opt(nNodes_owned,
                                             nElements_node.shape[0],
@@ -1040,12 +1040,12 @@ def calculateConservationJacobianPWL_opt(int nNodes_owned,
                                             <int*>(fluxBoundaryNodes.data),
                                             <double*>(w.data),
                                             <double*>(n.data),
-                                            nodeStarFactor.nsf)
+                                            &nodeStarFactor.nsf)
 
 def calculateConservationFluxPWL_opt(int nNodes_owned,
-                                     &nElements_node,
-                                     &internalNodes,
-                                     &fluxBoundaryNodes,
+                                     np.ndarray nElements_node,
+                                     np.ndarray internalNodes,
+                                     np.ndarray fluxBoundaryNodes,
                                      NodeStarFactor nodeStarFactor):
     pp.calculateConservationFluxPWL_opt(nNodes_owned,
                                         nElements_node.shape[0],
@@ -1053,26 +1053,26 @@ def calculateConservationFluxPWL_opt(int nNodes_owned,
                                         <int*>(nElements_node.data),
                                         <int*>(internalNodes.data),
                                         <int*>(fluxBoundaryNodes.data),
-                                        nodeStarFactor.nsf)
+                                        &nodeStarFactor.nsf)
 
-def calculateConservationResidualPWL_interiorBoundaries(&interiorElementBoundaries,
-                                                        &exteriorElementBoundaries,
-                                                        &elementBoundaryElements,
-                                                        &elementBoundaryLocalElementBoundaries,
-                                                        &elementNodes,
-                                                        &nodeStarElements,
-                                                        &nodeStarElementNeighbors,
-                                                        &nElements_node,
-                                                        &fluxElementBoundaries,
-                                                        &elementResidual,
-                                                        &vAverage,
-                                                        &dx,
-                                                        &w,
-                                                        &n,
+def calculateConservationResidualPWL_interiorBoundaries(np.ndarray interiorElementBoundaries,
+                                                        np.ndarray exteriorElementBoundaries,
+                                                        np.ndarray elementBoundaryElements,
+                                                        np.ndarray elementBoundaryLocalElementBoundaries,
+                                                        np.ndarray elementNodes,
+                                                        np.ndarray nodeStarElements,
+                                                        np.ndarray nodeStarElementNeighbors,
+                                                        np.ndarray nElements_node,
+                                                        np.ndarray fluxElementBoundaries,
+                                                        np.ndarray elementResidual,
+                                                        np.ndarray vAverage,
+                                                        np.ndarray dx,
+                                                        np.ndarray w,
+                                                        np.ndarray n,
                                                         NodeStarFactor nodeStarFactor,
-                                                        &conservationResidual,
-                                                        &vConservative,
-                                                        &vConservative_element):
+                                                        np.ndarray conservationResidual,
+                                                        np.ndarray vConservative,
+                                                        np.ndarray vConservative_element):
     assert fluxElementBoundaries.shape[0] == elementBoundaryLocalElementBoundaries.shape[0]
     pp.calculateConservationResidualPWL_interiorBoundaries(w.shape[0],
                                                            interiorElementBoundaries.shape[0],
@@ -1095,22 +1095,22 @@ def calculateConservationResidualPWL_interiorBoundaries(&interiorElementBoundari
                                                            <double*>(dx.data),
                                                            <double*>(w.data),
                                                            <double*>(n.data),
-                                                           nodeStarFactor.nsf,
+                                                           &nodeStarFactor.nsf,
                                                            <double*>(conservationResidual.data),
                                                            <double*>(vConservative.data),
                                                            <double*>(vConservative_element.data))
 
-def calculateConservationJacobianPWL_interiorBoundaries(&interiorElementBoundaries,
-                                                        &exteriorElementBoundaries,
-                                                        &elementBoundaryElements,
-                                                        &elementBoundaryLocalElementBoundaries,
-                                                        &elementNodes,
-                                                        &nodeStarElements,
-                                                        &nodeStarElementNeighbors,
-                                                        &nElements_node,
-                                                        &fluxElementBoundaries,
-                                                        &w,
-                                                        &n,
+def calculateConservationJacobianPWL_interiorBoundaries(np.ndarray interiorElementBoundaries,
+                                                        np.ndarray exteriorElementBoundaries,
+                                                        np.ndarray elementBoundaryElements,
+                                                        np.ndarray elementBoundaryLocalElementBoundaries,
+                                                        np.ndarray elementNodes,
+                                                        np.ndarray nodeStarElements,
+                                                        np.ndarray nodeStarElementNeighbors,
+                                                        np.ndarray nElements_node,
+                                                        np.ndarray fluxElementBoundaries,
+                                                        np.ndarray w,
+                                                        np.ndarray n,
                                                         NodeStarFactor nodeStarFactor):
     assert fluxElementBoundaries.shape[0] == elementBoundaryLocalElementBoundaries.shape[0]
     pp.calculateConservationJacobianPWL_interiorBoundaries(nElements_node.shape[0],
@@ -1132,44 +1132,44 @@ def calculateConservationJacobianPWL_interiorBoundaries(&interiorElementBoundari
                                                            <int*>(fluxElementBoundaries.data),
                                                            <double*>(w.data),
                                                            <double*>(n.data),
-                                                           nodeStarFactor.nsf)
+                                                           &nodeStarFactor.nsf)
 
 def _subdomain_U_copy_global2local(int max_nN_owned,
-                                   &elementNodes,
-                                   &nodeStarElements,
+                                   np.ndarray elementNodes,
+                                   np.ndarray nodeStarElements,
                                    NodeStarFactor nodeStarFactor,
-                                   &subdomain_U):
+                                   np.ndarray subdomain_U):
     pp.subdomain_U_copy_global2local(max_nN_owned,
                                      subdomain_U.shape[0],
                                      subdomain_U.shape[1],
                                      <int*>(elementNodes.data),
                                      <int*>(nodeStarElements.data),
-                                     nodeStarFactor.nsf,
+                                     &nodeStarFactor.nsf,
                                      <double*>(subdomain_U.data))
 
 def _subdomain_U_copy_local2global(int max_nN_owned,
-                                   &elementNodes,
-                                   &nodeStarElements,
+                                   np.ndarray elementNodes,
+                                   np.ndarray nodeStarElements,
                                    NodeStarFactor nodeStarFactor,
-                                   &subdomain_U):
+                                   np.ndarray subdomain_U):
     pp.subdomain_U_copy_local2global(max_nN_owned,
                                      subdomain_U.shape[0],
                                      subdomain_U.shape[1],
                                      <int*>(elementNodes.data),
                                      <int*>(nodeStarElements.data),
-                                     nodeStarFactor.nsf,
+                                     &nodeStarFactor.nsf,
                                      <double*>(subdomain_U.data))
 
-def calculateConservationResidualGlobalBoundaries(&interiorElementBoundaries,
-                                                  &exteriorElementBoundaries,
-                                                  &elementBoundaryElements,
-                                                  &elementBoundaryLocalElementBoundaries,
-                                                  &exteriorElementBoundariesToSkip,
-                                                  &dS,
-                                                  &n,
-                                                  &elementResidual,
-                                                  &velocity,
-                                                  &conservationResidual):
+def calculateConservationResidualGlobalBoundaries(np.ndarray interiorElementBoundaries,
+                                                  np.ndarray exteriorElementBoundaries,
+                                                  np.ndarray elementBoundaryElements,
+                                                  np.ndarray elementBoundaryLocalElementBoundaries,
+                                                  np.ndarray exteriorElementBoundariesToSkip,
+                                                  np.ndarray dS,
+                                                  np.ndarray n,
+                                                  np.ndarray elementResidual,
+                                                  np.ndarray velocity,
+                                                  np.ndarray conservationResidual):
     pp.calculateConservationResidualGlobalBoundaries(conservationResidual.shape[0],
                                                      interiorElementBoundaries.shape[0],
                                                      exteriorElementBoundaries.shape[0],
@@ -1188,13 +1188,13 @@ def calculateConservationResidualGlobalBoundaries(&interiorElementBoundaries,
                                                      <double*>(velocity.data),
                                                      <double*>(conservationResidual.data))
 
-def updateSelectedExteriorElementBoundaryFlux(&exteriorElementBoundaries,
-                                              &elementBoundaryElements,
-                                              &elementBoundaryLocalElementBoundaries,
-                                              &skipflag_elementBoundaries,
-                                              &flux,
-                                              &w,
-                                              &residual):
+def updateSelectedExteriorElementBoundaryFlux(np.ndarray exteriorElementBoundaries,
+                                              np.ndarray elementBoundaryElements,
+                                              np.ndarray elementBoundaryLocalElementBoundaries,
+                                              np.ndarray skipflag_elementBoundaries,
+                                              np.ndarray flux,
+                                              np.ndarray w,
+                                              np.ndarray residual):
     pp.updateSelectedExteriorElementBoundaryFlux(exteriorElementBoundaries.shape[0],
                                                  w.shape[1],
                                                  w.shape[2],
@@ -1208,8 +1208,8 @@ def updateSelectedExteriorElementBoundaryFlux(&exteriorElementBoundaries,
                                                  <double*>(residual.data))
 
 def updateAdvectiveVelocityPointEval(double updateCoef,
-                                     &advectiveVelocity,
-                                     &velocity):
+                                     np.ndarray advectiveVelocity,
+                                     np.ndarray velocity):
     cdef int nPoints = velocity.size/velocity.shape[-1]
     pp.postprocessAdvectiveVelocityPointEval(nPoints,
                                              velocity.shape[-1],
@@ -1218,9 +1218,9 @@ def updateAdvectiveVelocityPointEval(double updateCoef,
                                              <double*>(velocity.data))
 
 def updateDiffusiveVelocityPointEval(double updateCoef,
-                                     &diffusionTensor,
-                                     &grad_phi,
-                                     &velocity):
+                                     np.ndarray diffusionTensor,
+                                     np.ndarray grad_phi,
+                                     np.ndarray velocity):
     cdef int nPoints = velocity.size/velocity.shape[-1]
     pp.postprocessDiffusiveVelocityPointEval(nPoints,
                                              velocity.shape[-1],
@@ -1230,11 +1230,11 @@ def updateDiffusiveVelocityPointEval(double updateCoef,
                                              <double*>(velocity.data))
 
 def updateDiffusiveVelocityPointEval_sd(double updateCoef,
-                                        &rowptr,
-                                        &colind,
-                                        &diffusionTensor,
-                                        &grad_phi,
-                                        &velocity):
+                                        np.ndarray rowptr,
+                                        np.ndarray colind,
+                                        np.ndarray diffusionTensor,
+                                        np.ndarray grad_phi,
+                                        np.ndarray velocity):
     cdef int nPoints = velocity.size/velocity.shape[-1]
     pp.postprocessDiffusiveVelocityPointEval_sd(nPoints,
                                                 velocity.shape[-1],
@@ -1245,9 +1245,9 @@ def updateDiffusiveVelocityPointEval_sd(double updateCoef,
                                                 <double*>(grad_phi.data),
                                                 <double*>(velocity.data))
 
-def calculateElementResidualPWL(&alpha,
-                                &elementResidual,
-                                &elementResidualPWL):
+def calculateElementResidualPWL(np.ndarray alpha,
+                                np.ndarray elementResidual,
+                                np.ndarray elementResidualPWL):
     pp.calculateElementResidualPWL(elementResidual.shape[0],
                                    elementResidual.shape[1],
                                    elementResidualPWL.shape[1],
@@ -1255,9 +1255,9 @@ def calculateElementResidualPWL(&alpha,
                                    <double*>(elementResidual.data),
                                    <double*>(elementResidualPWL.data))
 
-def copyElementBoundaryVelocityToParVec(&ebq_velocity, 
-                                        &permutations, 
-                                        &ebq_v_par_local):
+def copyElementBoundaryVelocityToParVec(np.ndarray ebq_velocity, 
+                                        np.ndarray permutations, 
+                                        np.ndarray ebq_v_par_local):
     cdef int ebN
     cdef int k
     cdef int I
@@ -1266,12 +1266,12 @@ def copyElementBoundaryVelocityToParVec(&ebq_velocity,
     cdef int nSpace=ebq_v_par_local.shape[2]
     for ebN in range(nElementBoundaries):
         for k in range(nQuadraturePoints):
-            for I=0 in range(nSpace):
+            for I in range(nSpace):
                 ebq_v_par_local[ebN,permutations[ebN,k],I] = ebq_velocity[ebN,k,I]
 
-def addAverageToParVec(&ebq_velocityAverage, 
-                       &permutations, 
-                       &ebq_v_par_local):
+def addAverageToParVec(np.ndarray ebq_velocityAverage, 
+                       np.ndarray permutations, 
+                       np.ndarray ebq_v_par_local):
     cdef int ebN
     cdef int k
     cdef int I
@@ -1283,9 +1283,9 @@ def addAverageToParVec(&ebq_velocityAverage,
             for I in range(nSpace):
                 ebq_v_par_local[ebN, permutations[ebN,k], I] += ebq_velocityAverage[ebN, k, I]
 
-def copyParVecToElementBoundaryVelocity(&ebq_velocity, 
-                                        &permutations, 
-                                        &ebq_v_par_local):
+def copyParVecToElementBoundaryVelocity(np.ndarray ebq_velocity, 
+                                        np.ndarray permutations, 
+                                        np.ndarray ebq_v_par_local):
     cdef int ebN
     cdef int k
     cdef int I

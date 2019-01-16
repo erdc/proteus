@@ -1,12 +1,13 @@
+# A type of -*- python -*- file
 cdef extern from "postprocessing.h":
-    struct NodeStarFactor:
+    ctypedef struct NodeStarFactorStruct:
         int N
         int *subdomain_dim
         double **subdomain_L
         double **subdomain_R
         double **subdomain_U
-        PROTEUS_LAPACK_INTEGER** subdomain_pivots;
-        PROTEUS_LAPACK_INTEGER** subdomain_column_pivots
+        int** subdomain_pivots
+        int** subdomain_column_pivots
     
     void updateSelectedExteriorElementBoundaryFlux(
         int nExteriorElementBoundaries_global,
@@ -349,18 +350,18 @@ cdef extern from "postprocessing.h":
         double ***subdomain_L_p,
         double ***subdomain_R_p,
         double ***subdomain_U_p,
-        PROTEUS_LAPACK_INTEGER *** subdomain_pivots_p,
-        PROTEUS_LAPACK_INTEGER *** subdomain_column_pivots_p)
+        int *** subdomain_pivots_p,
+        int *** subdomain_column_pivots_p)
     int nodeStar_free(
         int N,
         int *subdomain_dim,
         double **subdomain_L,
         double **subdomain_R,
         double **subdomain_U,
-        PROTEUS_LAPACK_INTEGER ** subdomain_pivots,
-        PROTEUS_LAPACK_INTEGER ** subdomain_column_pivots_p)
+        int ** subdomain_pivots,
+        int ** subdomain_column_pivots_p)
     int nodeStar_setU(
-        NodeStarFactor * nodeStarFactor,
+        NodeStarFactorStruct * nodeStarFactor,
         double val)
     int nodeStar_copy(
         int other_N,
@@ -368,15 +369,15 @@ cdef extern from "postprocessing.h":
         double **other_subdomain_L,
         double **other_subdomain_R,
         double **other_subdomain_U,
-        PROTEUS_LAPACK_INTEGER ** other_subdomain_pivots,
-        PROTEUS_LAPACK_INTEGER ** other_subdomain_column_pivots,
+        int ** other_subdomain_pivots,
+        int ** other_subdomain_column_pivots,
         int *N_p,
         int **subdomain_dim_p,
         double ***subdomain_L_p,
         double ***subdomain_R_p,
         double ***subdomain_U_p,
-        PROTEUS_LAPACK_INTEGER *** subdomain_pivots_p,
-        PROTEUS_LAPACK_INTEGER *** subdomain_column_pivots_p)
+        int *** subdomain_pivots_p,
+        int *** subdomain_column_pivots_p)
     void calculateConservationResidualPWL(
         int nElements_global,
         int nInteriorElementBoundaries_global,
@@ -401,7 +402,7 @@ cdef extern from "postprocessing.h":
         double* dX,
         double* w,
         double* normal,
-        NodeStarFactor* nodeStarFactor,
+        NodeStarFactorStruct* nodeStarFactor,
         double* conservationResidual,
         double* vConservative,
         double* vConservative_element)
@@ -430,14 +431,14 @@ cdef extern from "postprocessing.h":
         int* fluxBoundaryNodes,
         double* w,
         double* normal,
-        NodeStarFactor* nodeStarFactor)
+        NodeStarFactorStruct* nodeStarFactor)
     void calculateConservationFluxPWL(
         int nNodes_global,
         int nNodes_internal,
         int* nElements_node,
         int* internalNodes,
         int* fluxBoundaryNodes,
-        NodeStarFactor* nodeStarFactor)
+        NodeStarFactorStruct* nodeStarFactor)
     void calculateConservationResidualPWL_opt(
         int nNodes_owned,
         int nElements_global,
@@ -461,7 +462,7 @@ cdef extern from "postprocessing.h":
         double* dX,
         double* w,
         double* normal,
-        NodeStarFactor* nodeStarFactor,
+        NodeStarFactorStruct* nodeStarFactor,
         double* conservationResidual,
         double* vConservative,
         double* vConservative_element)
@@ -489,7 +490,7 @@ cdef extern from "postprocessing.h":
         int* fluxBoundaryNodes,
         double* w,
         double* normal,
-        NodeStarFactor* nodeStarFactor)
+        NodeStarFactorStruct* nodeStarFactor)
     void calculateConservationFluxPWL_opt(
         int nNodes_owned,
         int nNodes_global,
@@ -497,7 +498,7 @@ cdef extern from "postprocessing.h":
         int* nElements_node,
         int* internalNodes,
         int* fluxBoundaryNodes,
-        NodeStarFactor* nodeStarFactor)
+        NodeStarFactorStruct* nodeStarFactor)
     void calculateConservationResidualPWLv3(
         int nElements_global,
         int nInteriorElementBoundaries_global,
@@ -520,7 +521,7 @@ cdef extern from "postprocessing.h":
         double *dX,
         double *w,
         double *normal,
-        NodeStarFactor * nodeStarFactor,
+        NodeStarFactorStruct * nodeStarFactor,
         double *conservationResidual,
         double *vConservative,
         double *vConservative_element)
@@ -547,14 +548,14 @@ cdef extern from "postprocessing.h":
         int *fluxBoundaryNodes,
         double *w,
         double *normal,
-        NodeStarFactor * nodeStarFactor)
+        NodeStarFactorStruct * nodeStarFactor)
     void calculateConservationFluxPWLv3(
         int nNodes_global,
         int nNodes_internal,
         int* nElements_node,
         int* internalNodes,
         int* fluxBoundaryNodes,
-        NodeStarFactor* nodeStarFactor)
+        NodeStarFactorStruct* nodeStarFactor)
     void postprocessAdvectiveVelocityPointEval(
         int nPoints,
         int nSpace,
@@ -586,3 +587,285 @@ cdef extern from "postprocessing.h":
         double* normal,
         double* conservationResidual,
         double* vConservative)
+    void postProcessRT0velocityFromP1nc_sd(int nElements_global,
+				           int nQuadraturePoints_element,
+				           int nDOF_test_element,
+				           int nElementBoundaries_element,
+				           int nQuadraturePoints_elementBoundary,
+				           int nSpace,
+				           int* rowptr,
+				           int* colind,
+				           int * nFreeDOF_element,
+				           int * freeLocal_element,
+				           double * detJ,
+				           double * sqrt_det_g,
+				           double * n,
+				           double * elementBarycenters,
+				           double * quad_a,
+				           double * quad_f,
+				           double * w_dV_r,
+				           double * w_dV_m,
+				           double * u,
+				           double * gradu,
+				           double * a, 
+				           double * f, 
+				           double * r, 
+				           double * mt,
+				           double * rt0vdofs)
+    void postProcessRT0velocityFromP1ncNoMass_sd(int nElements_global,
+					         int nQuadraturePoints_element,
+					         int nDOF_test_element,
+					         int nElementBoundaries_element,
+					         int nQuadraturePoints_elementBoundary,
+					         int nSpace,
+					         int* rowptr,
+					         int* colind,
+					         int * nFreeDOF_element,
+					         int * freeLocal_element,
+					         double * detJ,
+					         double * sqrt_det_g,
+					         double * n,
+					         double * elementBarycenters,
+					         double * quad_a,
+					         double * quad_f,
+					         double * w_dV_r,
+					         double * u,
+					         double * gradu,
+					         double * a, 
+					         double * f, 
+					         double * r, 
+					         double * rt0vdofs)
+    void updateRT0velocityWithAveragedPotentialP1nc_sd(int nElements_global,
+						   int nQuadraturePoints_element,
+						   int nSpace,
+						   int* rowptr,
+						   int* colind,
+						   double * detJ,
+						   double * quad_a,
+						   double * phi,
+						   double * gradphi,
+						   double * a, 
+						   double * rt0vdofs)
+    void postProcessRT0potentialFromP1nc_sd(int nElements_global,
+					    int nQuadraturePoints_element,
+					    int nElementBoundaries_element,
+					    int nQuadraturePoints_elementBoundary,
+					    int nSpace,
+					    int* rowptr,
+					    int* colind,
+					    double * uQuadratureWeights_element,
+					    double * elementBarycenters,
+					    double * aElementQuadratureWeights,
+					    double * detJ,
+					    double * uQuadratureWeights_elementBoundary,
+					    double * x,
+					    double * u,
+					    double * gradu,
+					    double * x_elementBoundary,
+					    double * u_elementBoundary,
+					    double * n,
+					    double * a,
+					    double * f,
+					    double * r,
+					    double * rt0vdofs,
+					    double * rt0potential)
+    void postprocessDiffusiveVelocityPointEval_sd(int nPoints,
+					          int nSpace,
+					          double updateCoef,
+					          int* rowptr,
+					          int* colind,
+					          const double* a,
+					          const double* grad_phi,
+					          double * velocity)
+    void getGlobalExteriorElementBoundaryRT0velocityValues(int nExteriorElementBoundaries_global,
+						           int nPoints_elementBoundary,
+						           int nSpace,
+						           int * elementBoundaryElementsArray,
+						           int * exteriorElementBoundariesArray,
+						           double * x_elementBoundary_global,
+						           double * rt0vdofs_element,
+						           double * v_elementBoundary_global)
+    void buildLocalBDM2projectionMatrices(int degree,
+				          int nElements_global,
+				          int nElementBoundaries_element,
+				          int nQuadraturePoints_elementBoundary,
+				          int nQuadraturePoints_elementInterior,
+				          int nSpace,
+				          int nDOFs_test_element,
+				          int nDOFs_trial_boundary_element,
+				          int nDOFs_trial_interior_element,
+				          int nVDOFs_element,
+				          int *edgeFlags,
+				          double * w_dS_f,
+				          double * ebq_n,
+				          double * ebq_v,
+				          double * BDMprojectionMat_element,
+				          double * q_basis_vals,
+				          double * w_int_test_grads,
+				          double * w_int_div_free,
+				          double * piola_trial_fun)
+    void factorLocalBDM2projectionMatrices(int nElements_global,
+				           int nVDOFs_element,
+				           double *BDMprojectionMat_element,
+				           int *BDMprojectionMatPivots_element)
+    void solveLocalBDM2projection(int nElements_global,
+			          int nElementBoundaries_element,
+			          int nQuadraturePoints_elementBoundary,
+			          int nSpace,
+			          int nDOFs_test_element,
+			          int nVDOFs_element,
+			          double * BDMprojectionMatFact_element,
+			          int* BDMprojectionMatPivots_element,
+			          double * w_dS_f,
+			          double * ebq_n,
+			          double * w_interior_gradients,
+			          double * q_velocity,
+			          double * ebq_velocity,
+			          double * p1_velocity_dofs)
+    void buildBDM2rhs(int nElements_global,
+                  int nElementBoundaries_element,
+	              int nQuadraturePoints_elementBoundary,
+		      int nQuadraturePoints_elementInterior,
+	              int nSpace,
+	              int nDOFs_test_element,
+	              int nVDOFs_element,
+		      int nDOFs_trial_interior_element,
+	              double * BDMprojectionMatFact_element,
+	              int* BDMprojectionMatPivots_element,
+		      int *edgeFlags,
+	              double * w_dS_f,
+	              double * ebq_n,
+		      double * w_interior_grads,
+		      double * w_interior_divfree,
+	              double * ebq_velocity,
+		      double * q_velocity,
+	              double * p1_velocity_dofs)
+    void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
+					         int nQuadraturePoints_element,
+					         int nSpace,
+					         int nDOF_trial_element,
+					         int nVDOF_element,
+					         double * q_v, #scalar P^1 shape fncts
+					         double * p1_velocity_dofs,
+					         double * q_velocity)
+    void getElementLDGvelocityValuesLagrangeRep(int nElements_global,
+					        int nQuadraturePoints_element,
+					        int nSpace,
+					        int nDOF_trial_element,
+					        int nVDOF_element,
+					        double * q_v, #scalar shape fncts
+					        double * velocity_dofs,
+					        double * q_velocity)
+    void getGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep(int nExteriorElementBoundaries_global,
+								       int nQuadraturePoints_elementBoundary,
+								       int nSpace,
+								       int nDOF_trial_element,
+								       int nVDOF_element,
+								       int *elementBoundaryElementsArray,
+								       int *exteriorElementBoundariesArray,
+								       double * ebqe_v, #scalar P^1 shape fncts
+								       double * p1_velocity_dofs,
+								       double * ebqe_velocity)
+    void getElementBoundaryBDM1velocityValuesLagrangeRep(int nElements_global,
+							 int nBoundaries_Element,
+							 int nQuadraturePoints_elementBoundary,
+							 int nSpace,
+							 int nDOF_trial_element,
+							 int nVDOF_element,
+						         int *elementBoundaryElementsArray, #not used
+							 int *exteriorElementBoundariesArray, #not used
+							 double * ebq_v, #scalar P^1 shape fncts
+							 double * p1_velocity_dofs,
+							 double * ebq_velocity)
+    void getGlobalExteriorElementBoundaryRT0velocityValuesFluxRep(int nExteriorElementBoundaries_global,
+							          int nPoints_elementBoundary_global,
+							          int nSpace,
+							          int nDetVals_element,
+							          double * nodeArray,
+							          int *elementNodesArray,
+							          int *elementBoundaryElementsArray,
+							          int* exteriorElementBoundariesArray,
+							          double * abs_det_J,
+							          double * x_ebqe,
+							          double * rt0vdofs_element,
+							          double * v_ebqe)
+    void getRT0velocityValuesFluxRep_arbitraryElementMembership(int nElements_global,
+							        int nElementBoundaries_element,
+							        int nPoints,
+							        int nSpace,
+							        int nDetVals_element,
+							        const double * nodeArray,
+							        const int * elementNodesArray,
+							        const double * abs_det_J,
+							        const double * x,
+							        const int * element_locations,
+							        const double * rt0vdofs_element,
+							        double * v_element)
+    void calculateConservationFluxPWL_noNeumannFix(int nNodes_global,
+					           int* nElements_node,
+					           NodeStarFactorStruct* nodeStarFactor)
+    void calculateConservationResidualPWL_interiorBoundaries(int nElements_global,
+							     int nInteriorElementBoundaries_global,
+							     int nExteriorElementBoundaries_global,
+							     int nElementBoundaries_element,
+							     int nQuadraturePoints_elementBoundary,
+							     int nNodes_element,
+							     int nSpace,
+							     int* interiorElementBoundaries,
+							     int* exteriorElementBoundaries,
+							     int* elementBoundaryElements,
+							     int* elementBoundaryLocalElementBoundaries,
+							     int* elementNodes,
+							     int* nodeStarElements,
+							     int* nodeStarElementNeighbors,
+							     int* nElements_node,
+							     int* fluxElementBoundaries,
+							     double* elementResidual,
+							     double* vAverage,
+							     double* dX,
+							     double* w,
+							     double* normal,
+							     NodeStarFactorStruct* nodeStarFactor,
+							     double* conservationResidual,
+							     double* vConservative,
+							     double* vConservative_element)
+    void calculateConservationJacobianPWL_interiorBoundaries(int nNodes_global,
+							     int nElements_global,
+							     int nInteriorElementBoundaries_global,
+							     int nExteriorElementBoundaries_global,
+							     int nElementBoundaries_element,
+							     int nQuadraturePoints_elementBoundary,
+							     int nNodes_element,
+							     int nSpace,
+							     int* interiorElementBoundaries,
+							     int* exteriorElementBoundaries,
+							     int* elementBoundaryElements,
+							     int* elementBoundaryLocalElementBoundaries,
+							     int* elementNodes,
+							     int* nodeStarElements,
+							     int* nodeStarElementNeighbors,
+							     int* nElements_node,
+							     int* fluxElementBoundaries,
+							     double* w,
+							     double* normal,
+							     NodeStarFactorStruct* nodeStarFactor)
+    void subdomain_U_copy_global2local(int max_nN_owned,
+                                       int nElements_global,
+                                       int nNodes_element,
+                                       int* elementNodes,
+                                       int* nodeStarElements,
+                                       NodeStarFactorStruct* nodeStarFactor,
+				       double* subdomain_U)
+    void subdomain_U_copy_local2global(int max_nN_owned,
+                                       int nElements_global,
+                                       int nNodes_element,
+                                       int* elementNodes,
+                                       int* nodeStarElements,
+                                       NodeStarFactorStruct* nodeStarFactor,
+				       double* subdomain_U)
+    void calculateElementResidualPWL(int nElements,
+                                     int nDOF_element_res,
+                                     int nDOF_element_resPWL,
+                                     double* alpha,
+                                     double* elementResidual,
+                                     double* elementResidualPWL)
