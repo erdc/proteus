@@ -418,7 +418,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients = coefficients
         # cek hack? give coefficients a bathymetriy array
         import copy
-        self.coefficients.b = copy.deepcopy(self.u[0])
+        self.coefficients.b = self.u[0].copy()
+        self.coefficients.b.name='b'
         self.coefficients.b.dof.fill(0.0)
         #
         self.coefficients.initializeMesh(self.mesh)

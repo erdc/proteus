@@ -63,7 +63,7 @@ class Comm(object):
     def __init__(self):
         from petsc4py import PETSc
         self.comm = PETSc.COMM_WORLD
-
+        self.mpi4py_comm = PETSc.COMM_WORLD.tompi4py()
     def isInitialized(self):
         return True
 
@@ -104,3 +104,30 @@ class Comm(object):
         for i in range(self.comm.size - self.comm.rank - 1):
             self.comm.Barrier()
         return
+
+    def globalSum(self, value):
+        from mpi4py import MPI
+        rvalue = self.mpi4py_comm.allreduce(sendobj = value,
+                                            op = MPI.SUM)
+        return rvalue
+    
+    def globalMax(self, value):
+        from mpi4py import MPI
+        rvalue = self.mpi4py_comm.allreduce(sendobj = value,
+                                            op = MPI.MAX)
+        return rvalue
+
+    def globalMin(self, value):
+        from mpi4py import MPI
+        rvalue = self.mpi4py_comm.allreduce(sendobj = value,
+                                            op = MPI.MIN)
+        return rvalue
+    
+def globalSum(value):
+    return comm.globalSum(value)
+
+def globalMax(value):
+    return comm.globalMax(value)
+
+def globalMin(value):
+    return comm.globalMin(value)

@@ -15,7 +15,7 @@ from past.utils import old_div
 from .LinearAlgebraTools import *
 from . import LinearAlgebraTools as LAT
 from . import FemTools
-from . import lapackWrappers
+from . import clapack
 from . import superluWrappers
 from . import TransportCoefficients
 from . import cfemIntegrals
@@ -276,7 +276,7 @@ class LU(LinearSolver):
         if type(L).__name__ == 'SparseMatrix':
             self.sparseFactor = superluWrappers.SparseFactor(self.n)
         elif type(L).__name__ == 'ndarray':#mwf was array
-            self.denseFactor = lapackWrappers.DenseFactor(self.n)
+            self.denseFactor = clapack.DenseFactor(self.n)
         self.solverName = "LU"
         self.computeEigenvalues = computeEigenvalues or (computeEigenvectors is not None)
         if computeEigenvectors in ['left','both']:
@@ -301,9 +301,9 @@ class LU(LinearSolver):
             if self.computeEigenvalues:
                 self.Leig[:]=self.L
                 self.calculateEigenvalues()
-            lapackWrappers.denseFactorPrepare(self.n,
-                                              self.L,
-                                              self.denseFactor)
+            clapack.denseFactorPrepare(self.n,
+                                       self.L,
+                                       self.denseFactor)
         #
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
         (r,b) = self.solveInitialize(u,r,b,initialGuessIsZero)
@@ -314,28 +314,28 @@ class LU(LinearSolver):
         if type(self.L).__name__ == 'SparseMatrix':
             superluWrappers.sparseFactorSolve(self.sparseFactor,u)
         elif type(self.L).__name__ == 'ndarray':
-            lapackWrappers.denseFactorSolve(self.n,
-                                            self.L,
-                                            self.denseFactor,
-                                            u)
+            clapack.denseFactorSolve(self.n,
+                                     self.L,
+                                     self.denseFactor,
+                                     u)
         self.computeResidual(u,r,b)
         self.du -= u
         self.converged(r)
     def calculateEigenvalues(self):
         if type(self.L).__name__ == 'ndarray':
-            lapackWrappers.denseCalculateEigenvalues(self.JOBVL,
-                                                     self.JOBVR,
-                                                     self.n,
-                                                     self.Leig,
-                                                     self.n,
-                                                     self.eigenvalues_r,
-                                                     self.eigenvalues_i,
-                                                     self.leftEigenvectors,
-                                                     self.n,
-                                                     self.rightEigenvectors,
-                                                     self.n,
-                                                     self.work,
-                                                     5*self.n)
+            clapack.denseCalculateEigenvalues(self.JOBVL,
+                                              self.JOBVR,
+                                              self.n,
+                                              self.Leig,
+                                              self.n,
+                                              self.eigenvalues_r,
+                                              self.eigenvalues_i,
+                                              self.leftEigenvectors,
+                                              self.n,
+                                              self.rightEigenvectors,
+                                              self.n,
+                                              self.work,
+                                              5*self.n)
             eigen_mags = numpy.sqrt(self.eigenvalues_r**2 + self.eigenvalues_i**2)
             logEvent("Minimum eigenvalue magnitude"+repr(eigen_mags.min()))
             logEvent("Maximum eigenvalue magnitude"+repr(eigen_mags.max()))
@@ -343,34 +343,6 @@ class LU(LinearSolver):
             logEvent("Maximum real part of eigenvalue "+repr(self.eigenvalues_r.max()))
             logEvent("Minimum complex part of eigenvalue "+repr(self.eigenvalues_i.min()))
             logEvent("Maximum complex part of eigenvalue "+repr(self.eigenvalues_i.max()))
-class PETSc(LinearSolver):
-    def __init__(self,L,par_L,prefix=None):
-        from . import flcbdfWrappers
-        LinearSolver.__init__(self,L)
-        assert type(L).__name__ == 'SparseMatrix', "PETSc can only be called with a local sparse matrix"
-        self.solverName  = "PETSc"
-        if prefix is None:
-            self.ksp = flcbdfWrappers.KSP(par_L)
-        else:
-            assert isinstance(prefix,str)
-            prefix.replace(' ','_')
-            self.ksp = flcbdfWrappers.KSP(par_L,prefix)
-        self.par_L = par_L
-        self.par_fullOverlap = True
-    def prepare(self,b=None):
-        overlap = 1
-        if self.par_fullOverlap == False:
-            overlap = 0
-        self.ksp.prepare(self.L,self.par_L,overlap)
-    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
-        self.ksp.solve(par_u.cparVec,par_b.cparVec)
-    def useTrueResidualTest(self,par_u):
-        if par_u is not None:
-            self.ksp.useTrueResidualConvergence(par_u.cparVec)
-    def printPerformance(self):
-        self.ksp.info()
-
-
 
 class KSP_petsc4py(LinearSolver):
     """ A class that interfaces Proteus with PETSc KSP. """
@@ -3033,8 +3005,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                   linearSolverLocalBlockSize=1,
                                   linearSmootherOptions=()):
     logEvent("multilevelLinearSolverChooser type= %s" % multilevelLinearSolverType)
-    if (multilevelLinearSolverType == PETSc or
-        multilevelLinearSolverType == KSP_petsc4py or
+    if (multilevelLinearSolverType == KSP_petsc4py or
         multilevelLinearSolverType == LU or
         multilevelLinearSolverType == Jacobi or
         multilevelLinearSolverType == GaussSeidel or
@@ -3143,13 +3114,6 @@ def multilevelLinearSolverChooser(linearOperatorList,
         for l in range(nLevels):
             levelLinearSolverList.append(LU(linearOperatorList[l],computeEigenvalues))
         levelLinearSolver = levelLinearSolverList
-    elif levelLinearSolverType == PETSc:
-        for l in range(nLevels):
-            levelLinearSolverList.append(PETSc(linearOperatorList[l],par_linearOperatorList[l],
-                                               prefix=solver_options_prefix))
-            if solverConvergenceTest == 'r-true' and par_duList is not None:
-                levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
-        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == KSP_petsc4py:
         for l in range(nLevels):
             levelLinearSolverList.append(KSP_petsc4py(linearOperatorList[l],par_linearOperatorList[l],
@@ -3234,8 +3198,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                     atol    = absoluteTolerance,
                                     printInfo= printSolverInfo,
                                     computeRates = computeSolverRates)
-    elif (multilevelLinearSolverType == PETSc or
-          multilevelLinearSolverType == KSP_petsc4py or
+    elif (multilevelLinearSolverType == KSP_petsc4py or
           multilevelLinearSolverType == LU or
           multilevelLinearSolverType == Jacobi or
           multilevelLinearSolverType == GaussSeidel or
