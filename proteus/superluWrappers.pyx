@@ -10,32 +10,6 @@ cimport numpy as np
 
 from libc.stdlib cimport malloc
 
-cdef extern from "proteus_superlu.h":
-    ctypedef enum _fact_t 'fact_t':
-        _DOFACT 'DFACT'
-        _SamePattern "SamePattern"
-        _SamePattern_SameRowPerm "SamePattern_SameRowPerm"
-        _FACTORED "FACTORED"
-    ctypedef enum _trans_t "trans_t":
-        _NOTRANS 'NOTRANS'
-        _TRANS 'TRANS'
-        _CONJ 'CONJ'
-    ctypedef struct _SuperLUStat_t 'SuperLUStat_t':
-        pass
-    ctypedef struct _GlobalLU_t "GlobalLU_t":
-        pass
-    ctypedef struct _superlu_options_t "superlu_options_t":
-        _fact_t Fact
-    void cdgstrs "dgstrs"(_trans_t, _SuperMatrix *, _SuperMatrix *, int *, int *, _SuperMatrix *, _SuperLUStat_t*, int *)
-    void cdgstrf "dgstrf"(_superlu_options_t *, _SuperMatrix *, int, int, int *, void *, int, int *, int *, _SuperMatrix *, _SuperMatrix *, _GlobalLU_t*, _SuperLUStat_t *, int *)
-    void cStatInit "StatInit"(_SuperLUStat_t *)
-    void cset_default_options "set_default_options"(_superlu_options_t *)
-    void cget_perm_c "get_perm_c"(int, _SuperMatrix *, int *)
-    void cDestroy_CompCol_Permuted "Destroy_CompCol_Permuted"(_SuperMatrix *)
-    void cDestroy_SuperNode_Matrix "Destroy_SuperNode_Matrix"(_SuperMatrix *)
-    void cDestroy_CompCol_Matrix "Destroy_CompCol_Matrix"(_SuperMatrix *)
-    void csp_preorder "sp_preorder"(_superlu_options_t *, _SuperMatrix *, int *, int *, _SuperMatrix *)
-
 class SparseMatrix(object):
 
     def __init__(self,
