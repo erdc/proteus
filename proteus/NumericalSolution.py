@@ -1924,6 +1924,19 @@ class NS_base(object):  # (HasTraits):
         except:
             pass
 
+        try:
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs2 = {}
+                quantDOFs2[0] = model.levelModelList[-1].quantDOFs2
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs2,
+                                                                       res_name_base='quantDOFs2_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(0),level=3)
+        except:
+            pass
+        
         #Write bathymetry for Shallow water equations (MQL)
         try:
             bathymetry = {}
@@ -2051,6 +2064,19 @@ class NS_base(object):  # (HasTraits):
                 logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
+
+        try:
+            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                quantDOFs2 = {}
+                quantDOFs2[0] = model.levelModelList[-1].quantDOFs2
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs2,
+                                                                       res_name_base='quantDOFs2_for_'+model.name)
+                logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass        
 
         #Write bathymetry for Shallow water equations (MQL)
         try:
