@@ -668,10 +668,10 @@ class Mesh(object):
         logEvent(memory("partitionMesh 2","MeshTools"),level=4)
         if parallelPartitioningType == MeshParallelPartitioningTypes.node:
             logEvent("Starting nodal partitioning")#mwf for now always gives 1 layer of overlap
-            logEvent("filebase"+`filebase`)
-            logEvent("base"+`base`)
-            logEvent("nLayersOfOverlap" +`nLayersOfOverlap`)
-            logEvent("parallelPartitioningType " +`parallelPartitioningType`)
+            logEvent("filebase {0:s}".format(filebase))
+            logEvent("base {0:d}".format(base))
+            logEvent("nLayersOfOverlap {0:d}".format(nLayersOfOverlap))
+            logEvent("parallelPartitioningType {0:d}".format(parallelPartitioningType))
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
              self.nodeOffsets_subdomain_owned,

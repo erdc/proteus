@@ -69,9 +69,9 @@ class UnitSquareVortex(NCLS.Coefficients):
         self.epsFact=epsFact
         self.useHJ = useHJ
         self.RD_modelIndex=RD_model
- 	self.sc_uref=sc_uref
-	self.sc_beta=sc_beta
-	self.useMetrics=useMetrics
+        self.sc_uref=sc_uref
+        self.sc_beta=sc_beta
+        self.useMetrics=useMetrics
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
         diffusion={}
@@ -84,11 +84,11 @@ class UnitSquareVortex(NCLS.Coefficients):
         NCLS.Coefficients.__init__(self)
         self.checkMass=checkMass
         self.useMetrics = 0.0
-	self.sc_uref=1.0
-	self.sc_beta=1.0
+        self.sc_uref=1.0
+        self.sc_beta=1.0
     def attachModels(self,modelList):
         self.model = modelList[0]
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.u_old_dof = numpy.copy(self.model.u[0].dof)
         self.q_v = numpy.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
         self.unitSquareVortexLevelSetEvaluate(self.model.timeIntegration.tLast,
@@ -144,7 +144,7 @@ class UnitSquareVortex(NCLS.Coefficients):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-       	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.u_old_dof = numpy.copy(self.model.u[0].dof)
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                       self.model.mesh.elementDiametersArray,

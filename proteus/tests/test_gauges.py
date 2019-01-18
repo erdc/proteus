@@ -18,6 +18,7 @@ from proteus import (Comm,
                      NumericalFlux)
 from proteus import default_p as p
 from proteus import default_n as n
+from importlib import reload
 reload(p)
 reload(n)
 

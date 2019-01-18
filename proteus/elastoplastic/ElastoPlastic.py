@@ -237,33 +237,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
-	    for ci in range(self.nc):
-		if ci in coefficients.mass:
-		    for flag in list(coefficients.mass[ci].values()):
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  ci in coefficients.advection:
-		    for  flag  in list(coefficients.advection[ci].values()):
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  ci in coefficients.diffusion:
-		    for diffusionDict in list(coefficients.diffusion[ci].values()):
-			for  flag  in list(diffusionDict.values()):
-			    if flag != 'constant':
-				self.stabilizationIsNonlinear=True
-		if  ci in coefficients.potential:
- 		    for flag in list(coefficients.potential[ci].values()):
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if ci in coefficients.reaction:
-		    for flag in list(coefficients.reaction[ci].values()):
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if ci in coefficients.hamiltonian:
-		    for flag in list(coefficients.hamiltonian[ci].values()):
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
+        if self.stabilization != None:
+            for ci in range(self.nc):
+                if ci in coefficients.mass:
+                    for flag in list(coefficients.mass[ci].values()):
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  ci in coefficients.advection:
+                    for  flag  in list(coefficients.advection[ci].values()):
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  ci in coefficients.diffusion:
+                    for diffusionDict in list(coefficients.diffusion[ci].values()):
+                        for  flag  in list(diffusionDict.values()):
+                            if flag != 'constant':
+                                self.stabilizationIsNonlinear=True
+                if  ci in coefficients.potential:
+                    for flag in list(coefficients.potential[ci].values()):
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if ci in coefficients.reaction:
+                    for flag in list(coefficients.reaction[ci].values()):
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if ci in coefficients.hamiltonian:
+                    for flag in list(coefficients.hamiltonian[ci].values()):
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
@@ -272,7 +272,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -389,8 +389,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.q['J'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
         #self.q['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-	#self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
-	#			       self.nElementBoundaryQuadraturePoints_elementBoundary,
+        #self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+        #                              self.nElementBoundaryQuadraturePoints_elementBoundary,
         #max(1,self.nSpace_global-1),
         #max(1,self.nSpace_global-1)),
         #'d')
@@ -401,11 +401,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.ebqe[('n')] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         #ebq for post-processing
         #self.ebq['x'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-	#self.ebq['g'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,
-				      #  self.nElementBoundaryQuadraturePoints_elementBoundary,
-				      #  max(1,self.nSpace_global-1),
-				      #  max(1,self.nSpace_global-1)),
-				      # 'd')
+        #self.ebq['g'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,
+                                      #  self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                      #  max(1,self.nSpace_global-1),
+                                      #  max(1,self.nSpace_global-1)),
+                                      # 'd')
         #self.ebq['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,
                                               # self.nSpace_global,self.nSpace_global),'d')
         #self.ebq['hat(x)'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
@@ -414,7 +414,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.ebq[('n')] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         #ebq_global for post-processing
         #self.ebq_global['x'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-	#self.ebq_global['g'] = numpy.zeros((self.mesh.nElementBoundaries_global,
+        #self.ebq_global['g'] = numpy.zeros((self.mesh.nElementBoundaries_global,
         #                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
         #                                    max(1,self.nSpace_global-1),
         #                                    max(1,self.nSpace_global-1)),
@@ -528,15 +528,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElements_global,
              self.nDOF_test_element[ci]),
             'd') for ci in range(self.nc)]
-	self.inflowBoundaryBC = {}
-	self.inflowBoundaryBC_values = {}
-	self.inflowFlux = {}
- 	for cj in range(self.nc):
- 	    self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
- 	    self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
- 	    self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.inflowBoundaryBC = {}
+        self.inflowBoundaryBC_values = {}
+        self.inflowFlux = {}
+        for cj in range(self.nc):
+            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -570,8 +570,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         #lay out components/equations contiguously for now
         self.offset = [0]
-	for ci in range(1,self.nc):
-	    self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
+        for ci in range(1,self.nc):
+            self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
         self.stride = [1 for ci in range(self.nc)]
         #use contiguous layout of components for parallel, requires weak DBC's
         comm = Comm.get()
@@ -732,14 +732,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('stressFlux_bc',1)],
             self.ebqe[('stressFlux_bc',2)])
         logEvent("Global residual",level=9,data=r)
-	if self.forceStrongConditions:#
-	    for cj in range(len(self.dirichletConditionsForceDOF)):#
-		for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian,usePicard=False):
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
         self.elastoPlastic.calculateJacobian(
             usePicard,
             #element
@@ -840,9 +840,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
-	#
+        #
         #get physical locations of quadrature points and jacobian information there
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         #
         # self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
         #                                           self.q['x'])
@@ -904,9 +904,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         #get physical locations of element boundary quadrature points
         #
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         # self.u[0].femSpace.elementMaps.getValuesTrace(self.elementBoundaryQuadraturePoints,
-	# 					      self.ebq['x'])
+        #                                             self.ebq['x'])
         #
         #get metric tensor and unit normals
         #
@@ -956,7 +956,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #first copy the left reference element boundary quadrature points from the reference element boundary
         #
         #get the shape information at the reference element boundary quadrature points 
-	#
+        #
         # self.testSpace[0].getBasisValuesTrace(self.u[0].femSpace.elementMaps.permutations,
         #                                        self.ebq['hat(x)'],
         #                                        self.ebq[('w',0)])
@@ -981,7 +981,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         #get physical locations of element boundary quadrature points
         #
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)

@@ -117,6 +117,7 @@ class Test2DStokesOnQuads(object):
         pass
 
     def setup_method(self,method):
+        from importlib import reload
         reload(stokes_2d_p)
         reload(stokes_2d_n)
         pList = [stokes_2d_p]
