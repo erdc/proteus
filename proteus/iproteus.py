@@ -215,17 +215,17 @@ log = Profiling.logEvent
 logDir = None
 if opts.dataDir != '':
     if not os.path.exists(opts.dataDir):
-    	try:
-    	     os.mkdir(opts.dataDir)
+        try:
+             os.mkdir(opts.dataDir)
         except os.error:
              print("Failed to create: " + opts.dataDir)
              opts.dataDir=''
     logDir = opts.dataDir
 
 log("Initializing Proteus")
-log("HashDist Version: " + version.hashdist)
-log("HashStack Version: " + version.hashstack)
-log("Proteus Version: " + version.proteus)
+log("HashDist Version: {0}".format(version.hashdist))
+log("HashStack Version: {0}".format(version.hashstack))
+log("Proteus Version: {0}".format(version.proteus))
 
 log("Initializing MPI")
 if opts.petscOptions is not None:

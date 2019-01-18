@@ -53,7 +53,7 @@ def test_PlaneCouetteFlow():
     assert ux[0, 0, 0] == 0.0
     assert ux[midpoint_x_index, midpoint_y_index, midpoint_z_index] == 0.05294117647058824
     assert ux[-1, -1, -1] == 0.1
-    slice = nPoints_z/2
+    slice = nPoints_z//2
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, slice, 0],
@@ -376,7 +376,7 @@ def test_NonlinearDAE_f():
     assert f[midpoint_x_index, midpoint_y_index, midpoint_z_index][0] == -1.4013840830449829
     if save_plots:
         fig = plt.figure()
-        slice = nPoints_z/2
+        slice = nPoints_z//2
         plt.contourf(x[:, :, slice, 0],
                      x[:, :, slice, 1],
                      f[:, :, slice, 0])
@@ -395,7 +395,7 @@ def test_poissonsEquationExp1D():
         x[i, 0] = i*(1.0/(nPoints-1.0))
     u = np.zeros(x.shape[0], 'd')
     canalyticalSolutions.poissonsEquationExp1D(iwork, rwork, t, x, u)
-    assert u[(nPoints_x+1)/2] == 0.7623027790507058
+    assert u[(nPoints_x+1)//2] == 0.7623027790507058
     if save_plots:
         fig = plt.figure()
         plt.plot(x[:, 0],
@@ -419,7 +419,7 @@ def test_poissonsEquationsExp2D():
             x[i, j, 1] = j*(1.0/(nPoints_y-1.0))
     u = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.poissonsEquationExp2D(iwork, rwork, t, x, u)
-    assert u[(nPoints_x+1)/2, (nPoints_y+1)/2] == 0.5349653114820003
+    assert u[(nPoints_x+1)//2, (nPoints_y+1)//2] == 0.5349653114820003
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, 0],

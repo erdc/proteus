@@ -221,7 +221,7 @@ class TestAuxFunctions(unittest.TestCase):
         phi =0.
         amplitude = 1.
         g = np.array( [0,0.,-9.81])
-	gAbs = 9.81
+        gAbs = 9.81
         depth = 2.
         mwl =3.
         x=  pi/4./kDir[0]
@@ -455,13 +455,13 @@ class VerifySolitaryWave(unittest.TestCase):
         cosh = np.cosh
         tanh = np.tanh
         phase = sum( xx[:]*waveDir[:]/5.)  - c * t 
-        a1 =  cosh(K*phase*2.)	
+        a1 =  cosh(K*phase*2.)  
         a2 =  cosh(K*phase)
 
         Uhorz =  1.0 /(4.0 * dd**4 ) * np.sqrt(G_ * dd) *  HH *(
             2.0 * d3 + d2 * HH  + 12.0 * dd * HH * Z + 6.0 *  HH * Z**2.0 +
             (2.0 * d3 - d2 * HH - 6.0 * dd * HH * Z - 3.0 * HH * Z**2 ) * a1)/(a2)**4
-	
+        
         Uvert =   1.0 / ( 4.0 * np.sqrt(G_* dd) ) * np.sqrt(3.0) * G_ * (old_div(HH, dd**3.0))** 1.5  * (dd + Z)*(
                 2.0 * dd**3 - 7.0 * dd**2.0 * HH + 10.0 * dd * HH * Z + 5.0 * HH * Z**2.0 +
                 (2.0 * dd**3.0 + dd**2.0 * HH - 2.0 * dd * HH * Z - HH * Z**2.0)*

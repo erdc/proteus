@@ -6,6 +6,7 @@ from proteus import default_n as n
 from proteus import default_s,default_so
 import numpy
 import proteus as pr
+from importlib import reload
 reload(p)
 reload(n)
 

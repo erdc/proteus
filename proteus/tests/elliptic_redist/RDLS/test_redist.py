@@ -123,7 +123,7 @@ class TestEllipticRedistancing(object):
                                                opts)
         ns.calculateSolution('rdls')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_2.h5','r')
-        print np.amax(actual.root.u_t1)
+        print(np.amax(actual.root.u_t1))
         assert np.isclose(np.amax(actual.root.u_t1),0.10626477076036571,atol=1e-10)
         actual.close()
 
