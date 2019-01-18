@@ -10,7 +10,7 @@ import proteus.test_utils.TestTools
 import os
 import sys
 import inspect
-
+from importlib import reload
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 
 from proteus.iproteus import *

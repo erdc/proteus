@@ -14,7 +14,7 @@ int logEvent(char* logString,int logLevel)
   PyObject *pName=NULL, *pModule=NULL, *pFunc=NULL;
   PyObject *pArgs=NULL, *pValue=NULL;
 
-  pName = PyString_FromString("proteus.Profiling");
+  pName = PyUnicode_FromString("proteus.Profiling");
   pModule = PyImport_Import(pName);
   Py_DECREF(pName);
   if (pModule != NULL)
@@ -24,7 +24,7 @@ int logEvent(char* logString,int logLevel)
 
 /*
   //This is how the embedding is done in the official Python example...but this leads to a memory leak for some reason
-    pValue = PyString_FromString(logString);
+    pValue = PyUnicode_FromString(logString);
     // pValue reference stolen here:
     PyTuple_SetItem(pArgs, 0, pValue);
 
@@ -32,7 +32,7 @@ int logEvent(char* logString,int logLevel)
     // pValue reference stolen here:
     PyTuple_SetItem(pArgs, 1, pValue);
 */
-    PyTuple_SetItem(pArgs, 0, PyString_FromString(logString));
+    PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(logString));
     PyTuple_SetItem(pArgs, 1, PyInt_FromLong(logLevel));
 
     PyObject_CallObject(pFunc,pArgs);
