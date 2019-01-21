@@ -186,6 +186,7 @@ cdef extern from "ChRigidBody.h":
         ch.ChVector M
         ch.ChVector M_last
         shared_ptr[ch.ChTriangleMeshConnected] trimesh
+        bool has_trimesh
         vector[ch.ChVector] trimesh_pos
         vector[ch.ChVector] trimesh_pos0
         ch.ChVector pos0_trimesh
@@ -407,6 +408,7 @@ cdef class ProtChBody:
                                          double sphereswept_thickness=0.005):
         """Adds triangle mesh to collision model and for IBM calculations
         """
+        self.thisptr.trimesh = make_shared[ch.ChTriangleMeshConnected]()
         self.trimesh_nodes.clear()
         self.trimesh_triangles.clear()
         for v in vertices:
@@ -435,6 +437,7 @@ cdef class ProtChBody:
                                                                                         pos[2]),
                                                                             rotmat,
                                                                             sphereswept_thickness)
+        self.thisptr.has_trimesh = True
         cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
         self.thisptr.pos0_trimesh = pos0
         cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
@@ -799,7 +802,7 @@ cdef class ProtChBody:
         assert added_mass.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
         assert added_mass.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         cdef double mass = self.ChBody.GetMass()
-        cdef np.ndarray iner = mat332array(self.ChBody.GetInertia())
+        cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
         cdef np.ndarray AM = np.zeros((6,6))  # added mass matrix
         cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
@@ -882,7 +885,7 @@ cdef class ProtChBody:
         M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
-        rx, ry, rz = self.barycenter0-vec2array(self.ChBody.GetPos())
+        rx, ry, rz = self.barycenter0-pyvec2array(self.ChBody.GetPos())
         Mp = np.array([ry*Fz-rz*Fy, -(rx*Fz-rz*Fx), (rx*Fy-ry*Fx)])
         M_t += Mp
         return M_t
@@ -1063,8 +1066,9 @@ cdef class ProtChBody:
                                             self.ProtChSystem.chrono_processor)
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
-            self._recordH5()
-            self._recordXML()
+            if self.thisptr.has_trimesh:
+                self._recordH5()
+                self._recordXML()
         # need to pass position and rotation values to C++ side
         # needed for transformations when calling hx, hy, hz, hxyz
         e0, e1, e2, e3 = self.rotq
@@ -1081,7 +1085,7 @@ cdef class ProtChBody:
         self.thisptr.pos_last = pos_last
         if self.ProtChSystem.model_addedmass is not None:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
-            am.barycenters[self.i_start:self.i_end] = vec2array(self.ChBody.GetPos())
+            am.barycenters[self.i_start:self.i_end] = pyvec2array(self.ChBody.GetPos())
         self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
 
     def prediction(self):
@@ -1147,9 +1151,9 @@ cdef class ProtChBody:
         if self.Shape is not None:
             self.barycenter0 = self.Shape.barycenter.copy()
         else:
-            self.barycenter0 = vec2array(self.ChBody.GetPos())
-        self.position_last[:] = vec2array(self.ChBody.GetPos())
-        self.position[:] = vec2array(self.ChBody.GetPos())
+            self.barycenter0 = pyvec2array(self.ChBody.GetPos())
+        self.position_last[:] = pyvec2array(self.ChBody.GetPos())
+        self.position[:] = pyvec2array(self.ChBody.GetPos())
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
@@ -1329,18 +1333,18 @@ cdef class ProtChBody:
         """Get values (pos, vel, acc, etc.) from C++ to python
         """
         # position
-        self.position = vec2array(self.ChBody.GetPos())
+        self.position = pyvec2array(self.ChBody.GetPos())
         # rotation
-        self.rotq = quat2array(self.ChBody.GetRot())
+        self.rotq = pyquat2array(self.ChBody.GetRot())
         # self.rotm = mat332array(self.ChBody.GetA())
         # acceleration
-        self.acceleration = vec2array(self.ChBody.GetPos_dtdt())
+        self.acceleration = pyvec2array(self.ChBody.GetPos_dtdt())
         #velocity
-        self.velocity = vec2array(self.ChBody.GetPos_dt())
+        self.velocity = pyvec2array(self.ChBody.GetPos_dt())
         # angular acceleration
-        self.ang_acceleration = vec2array(self.ChBody.GetWacc_loc())
+        self.ang_acceleration = pyvec2array(self.ChBody.GetWacc_loc())
         # angular velocity
-        self.ang_velocity = vec2array(self.ChBody.GetWvel_loc())
+        self.ang_velocity = pyvec2array(self.ChBody.GetWvel_loc())
         # norm of angular velocity
         self.ang_vel_norm = np.sqrt(self.ang_velocity[0]**2
                                     +self.ang_velocity[1]**2
@@ -3443,10 +3447,21 @@ cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cab
 def vec2array(vec):
     return np.array([vec.x(), vec.y(), vec.z()])
 
+def pyvec2array(vec):
+    return np.array([vec.x, vec.y, vec.z])
+
 def mat332array(mat):
     return np.array([[mat.Get_A_Xaxis().x(), mat.Get_A_Xaxis().y(), mat.Get_A_Xaxis().z()],
                      [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
                      [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
 
+def pymat332array(mat):
+    return np.array([[mat.Get_A_Xaxis().x, mat.Get_A_Xaxis().y, mat.Get_A_Xaxis().z],
+                     [mat.Get_A_Yaxis().x, mat.Get_A_Yaxis().y, mat.Get_A_Yaxis().z],
+                     [mat.Get_A_Zaxis().x, mat.Get_A_Zaxis().y, mat.Get_A_Zaxis().z]])
+
 def quat2array(quat):
     return np.array([quat.e0(), quat.e1(), quat.e2(), quat.e3()])
+
+def pyquat2array(quat):
+    return np.array([quat.e0, quat.e1, quat.e2, quat.e3])
