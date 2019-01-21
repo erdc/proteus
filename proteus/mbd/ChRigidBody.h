@@ -69,6 +69,7 @@ class cppRigidBody {
   /* ChVector <> inertia; */
   double* inertia;
   shared_ptr<ChTriangleMeshConnected> trimesh;
+  bool has_trimesh;
   std::shared_ptr<ChBody> body;
   cppSystem* system;
   cppRigidBody(cppSystem* system);
@@ -187,9 +188,10 @@ cppRigidBody::cppRigidBody(cppSystem* system):
   pos = body->GetPos();
   pos_last = body->GetPos();
   body->SetMass(mass);
-  free_x = {1., 1., 1.};
-  free_r = {1., 1., 1.};
+  free_x = ChVector<>(1., 1., 1.);
+  free_r = ChVector<>(1., 1., 1.);
   lock_motion_t_max = 0.;
+  has_trimesh = false;
 }
 
 void cppSystem::setDirectory(std::string dir) {
@@ -251,16 +253,18 @@ double cppRigidBody::hz(double* x, double t)
 void cppRigidBody::calculate_init() {
   pos0 = body->GetPos();
   rotq0 = body->GetRot();
-  trimesh_pos.clear();
-  trimesh_pos0.clear();
-  auto trimesh_coords = trimesh->getCoordsVertices();
-  for (int i = 0; i < trimesh_coords.size(); i++) {
-  trimesh_pos0.push_back(ChVector<double>(trimesh_coords[i].x(),
-                                          trimesh_coords[i].y(),
-                                          trimesh_coords[i].z()));
-  trimesh_pos.push_back(ChVector<double>(trimesh_coords[i].x(),
-                                         trimesh_coords[i].y(),
-                                         trimesh_coords[i].z()));
+  if (has_trimesh == true) {
+    trimesh_pos.clear();
+    trimesh_pos0.clear();
+    auto trimesh_coords = trimesh->getCoordsVertices();
+    for (int i = 0; i < trimesh_coords.size(); i++) {
+      trimesh_pos0.push_back(ChVector<double>(trimesh_coords[i].x(),
+                                              trimesh_coords[i].y(),
+                                              trimesh_coords[i].z()));
+      trimesh_pos.push_back(ChVector<double>(trimesh_coords[i].x(),
+                                             trimesh_coords[i].y(),
+                                             trimesh_coords[i].z()));
+    }
   }
 }
 
@@ -269,7 +273,9 @@ void cppRigidBody::prestep(double* force, double* torque)
   /* step to call before running chrono system step */
   pos_last = body->GetPos();
   vel_last = body->GetPos_dt();
-  trimesh_pos_last = trimesh->getCoordsVertices();
+  if (has_trimesh == true) {
+    trimesh_pos_last = trimesh->getCoordsVertices();
+  }
   acc_last = body->GetPos_dtdt();
   rotm_last = body->GetA();
   rotq_last = body->GetRot();
@@ -302,7 +308,7 @@ void cppRigidBody::prestep(double* force, double* torque)
           spring->SetDisabled(false);//Set_SpringRestLength(mooring_restlength);
       }
   }
-}
+  }
 
 
 
