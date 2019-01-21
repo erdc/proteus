@@ -265,7 +265,7 @@ class NS_base(object):  # (HasTraits):
                                                               os.path.exists(fileprefix+".edge"))):
                         if p.genMesh or not os.path.exists(fileprefix+".msh"):
                             logEvent("Running gmsh to generate 2D mesh for "+p.name,level=1)
-                            gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(fileprefix+".geo", fileprefix+".msh")
+                            gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh2".format(fileprefix+".geo", fileprefix+".msh")
                             logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                             check_call(gmsh_cmd, shell=True)
                             logEvent("Done running gmsh; converting to triangle")
@@ -311,7 +311,7 @@ class NS_base(object):  # (HasTraits):
                     if p.domain.use_gmsh is True:
                         if p.genMesh or not os.path.exists(fileprefix+".msh"):
                             logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
-                            gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
+                            gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh2".format(fileprefix+'.geo', p.domain.geofile+'.msh')
                             logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                             check_call(gmsh_cmd, shell=True)
                             logEvent("Done running gmsh; converting to tetgen")
