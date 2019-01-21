@@ -2313,26 +2313,47 @@ void calculateResidual(    // last EDGE BASED version
                                         = hi - dt/mi*(hyp_flux_h[i]
                                                       - ith_dHij_minus_muHij_times_hStarStates
                                                       - ith_muHij_times_hStates);
+                                if (std::isnan(globalResidual[offset_h+stride_h*i])==1)
+                                {
+                                  std::cout << "h is bad guy, ie nan = " << std::endl;
+                                }
                                 globalResidual[offset_hu+stride_hu*i]
                                         = hui - dt/mi*(hyp_flux_hu[i]
                                                        + extendedSourceTerm_hu[i]
                                                        - ith_dHij_minus_muHij_times_huStarStates
                                                        - ith_muHij_times_huStates);
+                                 if (std::isnan(globalResidual[offset_hu+stride_hu*i])==1)
+                                 {
+                                   std::cout << "hu is bad guy, ie nan = " << std::endl;
+                                 }
                                 globalResidual[offset_hv+stride_hv*i]
                                         = (hvi - dt/mi*(hyp_flux_hv[i]
                                                        + extendedSourceTerm_hu[i]
                                                        - ith_dHij_minus_muHij_times_hvStarStates
                                                        - ith_muHij_times_hvStates))*0.0;
+                               if (std::isnan(globalResidual[offset_hv+stride_hv*i])==1)
+                               {
+                                 std::cout << "hv is bad guy, ie nan = " << std::endl;
+                               }
                                  globalResidual[offset_heta+stride_heta*i]
                                          = hetai - dt/mi*(hyp_flux_heta[i]
                                                           + extendedSourceTerm_heta[i]
                                                           - ith_dHij_minus_muHij_times_hetaStarStates
                                                           - ith_muHij_times_hetaStates);
+
+                              if (std::isnan(globalResidual[offset_heta+stride_heta*i])==1)
+                              {
+                                std::cout << "heta is bad guy, ie nan = " << std::endl;
+                              }
                                  globalResidual[offset_hw+stride_hw*i]
                                          = hwi - dt/mi*(hyp_flux_hw[i]
                                                         + extendedSourceTerm_hw[i]
                                                         - ith_dHij_minus_muHij_times_hwStarStates
                                                         - ith_muHij_times_hwStates);
+                              if (std::isnan(globalResidual[offset_hw+stride_hw*i])==1)
+                              {
+                                std::cout << "hw is bad guy, ie nan = " << std::endl;
+                              }
                                 // clean up potential negative water height due to machine precision
                                 if (globalResidual[offset_h+stride_h*i] >= -hEps && globalResidual[offset_h+stride_h*i] < hEps)
                                         globalResidual[offset_h+stride_h*i] = 0;
