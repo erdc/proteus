@@ -1103,22 +1103,43 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
 
 class myLinearSolver(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        # Galerkin step #
-        self.F.GALERKIN_SOLUTION=1
-        self.stage_solve(u,r)
-        self.F.galerkin_solution[:]=u
+        if self.F.coefficients.AUTOMATED_ALPHA:
+            # GALERKIN STEP #
+            self.F.GALERKIN_SOLUTION=1
+            if self.F.coefficients.PROBLEM_TYPE==2:
+                self.stage_linearSolve_viaBCs(u,r)
+            else:
+                self.stage_linearSolve(u,r)
+            self.F.galerkin_solution[:]=u
+            self.F.getResidual(u,r)
 
-        # compute smoothness indicator based on Galerkin solution
-        #self.F.getSmoothnessIndicator(self.F.u_dof_old)
-        self.F.getSmoothnessIndicator(u)
-        self.F.quantDOFs2[:] = self.F.gamma_dof
+            # COMPUTE SMOOTHNESS INDICATOR BASED ON GALERKIN SOLUTION #
+            self.F.getSmoothnessIndicator(u)
 
-        # Step with limiting
-        self.F.GALERKIN_SOLUTION=0
-        self.stage_solve(u,r)
-        self.F.u[0].dof[:]=u
-        
-    def stage_solve(self,u,r=None,b=None,par_u=None,par_r=None):        
+            # STEP WITH DISCRETE UP-WINDING
+            self.F.GALERKIN_SOLUTION=0
+            if self.F.coefficients.PROBLEM_TYPE==2:
+                self.stage_linearSolve_viaBCs(u,r)
+            else:
+                self.stage_linearSolve(u,r)
+            self.F.getResidual(u,r)
+        else:
+            self.F.GALERKIN_SOLUTION=0
+            if self.F.coefficients.PROBLEM_TYPE==2:
+                self.stage_linearSolve_viaBCs(u,r)
+            else:
+                self.stage_linearSolve(u,r)
+            self.F.getResidual(u,r)
+
+    def stage_linearSolve(self,u,r=None,b=None,par_u=None,par_r=None):
+        r=self.solveInitialize(u,r,b)
+        self.F.getJacobian(self.J)
+        self.linearSolver.prepare(b=r)
+        self.du[:]=0.0
+        self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+        u-=self.du
+    #
+    def stage_linearSolve_viaBCs(self,u,r=None,b=None,par_u=None,par_r=None):
         symmetrize = True
         # Get RHS of system (if BCs are imposed by Proteus)#
         self.F.getResidual(u,r)

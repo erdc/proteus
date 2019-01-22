@@ -77,13 +77,20 @@ namespace proteus
 				   double* dLow,
 				   double epsilon,
 				   // Type of problem to solve
+				   int AUTOMATED_ALPHA,
 				   int PROBLEM_TYPE,
+				   int DISCRETE_UPWINDING,
+				   int ALPHA_FOR_GALERKIN_SOLUTION,
 				   int GALERKIN_SOLUTION,
 				   double* galerkin_solution,
 				   double* gamma_dof,
+				   double* beta_dof,
                                    // AUX QUANTITIES OF INTEREST
                                    double* quantDOFs,
-				   double* quantDOFs2
+				   double* quantDOFs2,
+				   double* quantDOFs3,
+				   double* is_boundary,
+				   double* is_cell_boundary
 				   )=0;
     virtual void calculateJacobian(//element
                                    double dt,
@@ -134,6 +141,7 @@ namespace proteus
 				   double* aux_grad_test_ref,
 				   double* dLow,
 				   double epsilon,
+				   int DISCRETE_UPWINDING,
 				   int GALERKIN_SOLUTION,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE)=0;
@@ -194,7 +202,12 @@ namespace proteus
 					      double* global_hi,
 					      double* element_He,
 					      // for loops in DOFs
+					      double he,
+					      double* xCoord_dof,
+					      double* yCoord_dof,
+					      double* zCoord_dof,
 					      double* gamma_dof,
+					      double* beta_dof,
 					      int numDOFs,
 					      int NNZ,
 					      int* rowptr,
@@ -361,102 +374,67 @@ namespace proteus
 			     double* dLow,
 			     double epsilon,
 			     // Type of problem to solve
+			     int AUTOMATED_ALPHA,
 			     int PROBLEM_TYPE,
+			     int DISCRETE_UPWINDING,
+			     int ALPHA_FOR_GALERKIN_SOLUTION,
 			     int GALERKIN_SOLUTION,
 			     double* galerkin_solution,
 			     double* gamma_dof,
+			     double* beta_dof,
 			     // AUX QUANTITIES OF INTEREST
 			     double* quantDOFs,
-			     double* quantDOFs2)
+			     double* quantDOFs2,
+			     double* quantDOFs3,
+			     double* is_boundary,
+			     double* is_cell_boundary)
       {
 	register double sigma[numDOFs];
 	double maxSigma = 0;
-	
+
 	if (GALERKIN_SOLUTION==1)
 	  {
-	    for (int i=0; i<numDOFs; i++)	      
-	      alpha_dof[i] = 1.0;
+	    for (int i=0; i<numDOFs; i++)
+	      if (ALPHA_FOR_GALERKIN_SOLUTION==1)
+		alpha_dof[i] = 1.0;
+	      else
+		alpha_dof[i] = 0.0;
 	  }
 	else
 	  {
-	    register double D2uG[numDOFs];
-	    // first loop on DOFs: compute estimate of second order derivative
-	    for (int i=0; i<numDOFs; i++)
+	    if (AUTOMATED_ALPHA==1)
 	      {
-		double uGi = galerkin_solution[i];
-		D2uG[i] = 0;		
-		// loop over the sparsity pattern of the i-th DOF
-		for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		// loop to compute alpha
+		for (int i=0; i<numDOFs; i++)
 		  {
-		    int j = colind[offset];
-		    double uGj = galerkin_solution[j];
-		    D2uG[i] += uGi-uGj;		    
-		  }		
-	      }
-	    double maxSigma=0;
-	    // second loop
-	    for (int i=0; i<numDOFs; i++)
-	      {
-		int argmin = i;
-		double sign;
-		int same_sign = 1;
-		for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
-		  {
-		    int j = colind[offset];
-		    argmin = fabs(D2uG[j]) < fabs(D2uG[argmin]) ? j : argmin;
-		    if (offset==rowptr[i])
+		    double betai = beta_dof[i];
+		    if (is_boundary[i]==1 && PROBLEM_TYPE==0)
 		      {
-			sign = SIGN(D2uG[j]);
+			betai=1;
+			beta_dof[i] = 1.0;
 		      }
-		    else
+
+		    if (is_boundary[i]==1 && PROBLEM_TYPE==1)
 		      {
-			same_sign = sign == SIGN(D2uG[j]) ? 1 : 0;
-			sign = SIGN(D2uG[j]);
+			gamma_dof[i] = 0.0;
 		      }
+		    // compute alpha
+		    alpha_dof[i]  = fmax(betai,gamma_dof[i]);
+		    quantDOFs[i] = gamma_dof[i];
+		    quantDOFs2[i] = beta_dof[i];
+		    quantDOFs3[i] = alpha_dof[i];
+
+		    alpha_dof[i] = beta_dof[i];
+		    //alpha_dof[i] = galerkin_solution[i] < -1 ? 0.0 : 1.0;
 		  }
-		if (same_sign == 0)
-		  sigma[i] = 0;
-		else
-		  sigma[i]=fabs(D2uG[argmin]);
-		
-		maxSigma = fmax(sigma[i],maxSigma);	       	    
-		//quantDOFs[i] = sigma[i];
-		
 	      }
-	    
-	    // third loop to compute alpha
-	    for (int i=0; i<numDOFs; i++)
+	    else
 	      {
-		double c1=0.2;
-		double c2=0.3;
-
-		//double m = -1./((c2-c1)*maxSigma);
-		//double b = c2/(c2-c1);
-		//if (sigma[i] <= c1*maxSigma)
-		//alpha_dof[i] = 1.;
-		//else if (sigma[i] >= c2*maxSigma)
-		//alpha_dof[i] = 0.;
-		//else
-		//alpha_dof[i] = m*sigma[i]+b;
-
-		
-		//double m = 1./((c2-c1)*maxSigma);
-		//double b = -c1/(c2-c1);
-		//if (sigma[i] <= c1*maxSigma)
-		//alpha_dof[i] = 0.;
-		//else if (sigma[i] >= c2*maxSigma)
-		//alpha_dof[i] = 1.;
-		//else
-		//alpha_dof[i] = m*sigma[i]+b;
-
-		//quantDOFs2[i] = galerkin_solution[i] < -1 ? 1.0 : 0.0;
-		alpha_dof[i] = galerkin_solution[i] < -1 ? 0.0 : 1.0;
-		quantDOFs[i] = alpha_dof[i];
-		
-		alpha_dof[i] = fmax(alpha_dof[i],gamma_dof[i]);
-		//alpha_dof[i] = gamma_dof[i];
-		quantDOFs2[i] = alpha_dof[i];		
-	      }	    
+		for (int i=0; i<numDOFs; i++)
+		  {
+		    quantDOFs3[i] = alpha_dof[i];
+		  }
+	      }
 	  }
 	//
 	//loop over elements to compute volume integrals and load them into element and global res.
@@ -641,6 +619,19 @@ namespace proteus
 			elementResidual_u[i] +=
 			  ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
 			  - force[eN_k]*u_test_dV[i];
+			// j-th LOOP // To construct transport matrices
+			for(int j=0;j<nDOF_trial_element;j++)
+			  {
+			    int j_nSpace = j*nSpace;
+			    elementTransport[i][j] += // int[grad_wj*grad_wi*dx]
+			      ck.NumericalDiffusion(1.0,
+						    &u_grad_trial[j_nSpace],
+						    &u_grad_test_dV[i_nSpace]);
+			    elementTransposeTransport[i][j] += // int[(D*grad_wi).grad_wj*dx]
+			      ck.NumericalDiffusion(1.0,
+						    &u_grad_trial[i_nSpace],
+						    &u_grad_test_dV[j_nSpace]);
+			  }
 		      }
 		    else if (PROBLEM_TYPE==1)
 		      {
@@ -652,7 +643,6 @@ namespace proteus
 			  +epsilon*ck.NumericalDiffusion(1.0,
 							 grad_u,
 							 &u_grad_test_dV[i_nSpace]);
-			// j-th LOOP // To construct transport matrices
 			for(int j=0;j<nDOF_trial_element;j++)
 			  {
 			    int j_nSpace = j*nSpace;
@@ -699,7 +689,7 @@ namespace proteus
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
 		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
-		if (PROBLEM_TYPE==1 || PROBLEM_TYPE==2)
+		//if (PROBLEM_TYPE==1 || PROBLEM_TYPE==2)
 		  {
 		    // distribute transport matrices
 		    for (int j=0;j<nDOF_trial_element;j++)
@@ -716,8 +706,7 @@ namespace proteus
 	      }//i
 	  }//elements
 
-	if (GALERKIN_SOLUTION==0)
-	if (PROBLEM_TYPE==1 or PROBLEM_TYPE==2)
+	if (GALERKIN_SOLUTION==0 && DISCRETE_UPWINDING==1)
 	  {
 	    // LOOP in DOFs //
 	    int ij=0;
@@ -762,7 +751,6 @@ namespace proteus
 		globalResidual[i] += -ith_dissipative_term;
 	      }
 	  }
-
 	// NO LOOP IN BOUNDARIES //
       }
 
@@ -815,6 +803,7 @@ namespace proteus
 			     double* aux_grad_test_ref,
 			     double* dLow,
 			     double epsilon,
+			     int DISCRETE_UPWINDING,
 			     int GALERKIN_SOLUTION,
 			     // Type of problem to solve
 			     int PROBLEM_TYPE)
@@ -1003,8 +992,8 @@ namespace proteus
 	      }//i
 	  }//elements
 
-	if (GALERKIN_SOLUTION==0)
-	if (PROBLEM_TYPE == 1 or PROBLEM_TYPE==2)
+	if (GALERKIN_SOLUTION==0 && DISCRETE_UPWINDING==1)
+	  //if (PROBLEM_TYPE == 1 or PROBLEM_TYPE==2)
 	  {
 	    int ij=0;
 	    for (int i=0; i<numDOFs; i++)
@@ -1192,7 +1181,12 @@ namespace proteus
 					double* global_hi,
 					double* element_He,
 					// for loops in DOFs
+					double he,
+					double* xCoord_dof,
+					double* yCoord_dof,
+					double* zCoord_dof,
 					double* gamma_dof,
+					double* beta_dof,
 					int numDOFs,
 					int NNZ,
 					int* rowptr,
@@ -1215,7 +1209,7 @@ namespace proteus
 	register double lumped_mass_matrix[numDOFs];
 	for (int i=0; i<numDOFs; i++)
 	  lumped_mass_matrix[i]=0;
-	
+
 	int nSpace2 = nSpace*nSpace;
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
@@ -1254,7 +1248,7 @@ namespace proteus
 					    jac,
 					    jacDet,
 					    jacInv,
-					    x,y,z);		
+					    x,y,z);
 		//get the physical integration weight
  		dV = fabs(jacDet)*dV_ref[k];
 		//get the trial function gradients based on the blended functions
@@ -1283,42 +1277,14 @@ namespace proteus
 		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 
 		// compute the determinan of the hessian
-		det_hess_u = fabs(hess_u[0]*hess_u[3] - hess_u[2]*hess_u[1]);
-		
+		//det_hess_u = fabs(hess_u[0]*hess_u[3] - hess_u[2]*hess_u[1]);
+		det_hess_u = hess_u[0]*hess_u[3] - hess_u[2]*hess_u[1];
+
 		hess_u0 += hess_u[0]*dV;
 		hess_u1 += hess_u[1]*dV;
 		hess_u2 += hess_u[2]*dV;
 		hess_u3 += hess_u[3]*dV;
 
-		/*
-		double type=3;
-		hess_u0=0;
-		hess_u1=0;
-		hess_u2=0;
-		hess_u3=0;
-		if (type==1)
-		  {
-		    hess_u0 += 0*dV;
-		    hess_u1 += 0*dV;
-		    hess_u2 += 0*dV;
-		    hess_u3 += 0*dV;
-		  }
-		else if (type==2)
-		  {
-		    hess_u0 += 2*dV;
-		    hess_u1 += 0*dV;
-		    hess_u2 += 0*dV;
-		    hess_u3 += 2*dV;
-		  }
-		else
-		  {
-		    double pi = M_PI;
-		    hess_u0 += -4*pi*pi*sin(2*pi*x)*sin(2*pi*y)*dV;
-		    hess_u1 += 4*pi*pi*cos(2*pi*x)*cos(2*pi*y)*dV;     
-		    hess_u2 += 4*pi*pi*cos(2*pi*x)*cos(2*pi*y)*dV;     
-		    hess_u3 += -4*pi*pi*sin(2*pi*x)*sin(2*pi*y)*dV;
-		  }
-		*/
 		// to compute average of det of hessian in cell Ke
 		det_hess_Ke += det_hess_u*dV;
 		area_Ke += dV;
@@ -1338,21 +1304,22 @@ namespace proteus
 	    hess_u2 /= area_Ke;
 	    hess_u3 /= area_Ke;
 
+	    //uncomment if H_e is to be computed as the determinant of DG0 projected 2nd derivatives
 	    //element_He[eN] = fabs(hess_u0*hess_u3 - hess_u2*hess_u1);
 	    //
 	    //load element into global residual and save element residual
 	    //
 	    for(int i=0;i<nDOF_test_element;i++)
-	      {		
+	      {
 		register int eN_i=eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i];
 		lumped_mass_matrix[offset_u+stride_u*r_l2g[eN_i]] += element_mass_matrix[i];
 		global_hi[offset_u+stride_u*r_l2g[eN_i]] += element_hi[i];
-		
+
 		num_hi[offset_u+stride_u*r_l2g[eN_i]] += element_He[eN];
 		den_hi[offset_u+stride_u*r_l2g[eN_i]] += 1;
 
-		
+
 		if (i<4)
 		  is_dof_external[gi] = 1;
 		else if (i==8)
@@ -1375,11 +1342,11 @@ namespace proteus
 			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+3];
 			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+2];
 		      }
-		    else 
+		    else
 		      {
 			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+2];
 			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+0];
-		      }		    
+		      }
 
 		    first_adjacent_dof_to_middle_dof[gi]  = gj1;
 		    second_adjacent_dof_to_middle_dof[gi] = gj2;
@@ -1389,7 +1356,7 @@ namespace proteus
 	// finish the computation of global_hi
 	for (int i=0; i<numDOFs; i++)
 	  global_hi[i] = num_hi[i]/den_hi[i];
-	
+
 	register double min_hiHe[numDOFs];
 	for (int i=0; i<numDOFs; i++)
 	  {
@@ -1403,11 +1370,41 @@ namespace proteus
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
 		register int gi = offset_u+stride_u*r_l2g[eN_i];
-		double hi = global_hi[gi];			    
+		double hi = global_hi[gi];
 		min_hiHe[gi] = fmin(min_hiHe[gi], hi*He);
 	      }
 	  }
 
+	// compute beta
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double eps = 1E-10;
+	    // Compute beta
+	    double beta_numerator = 0;
+	    double beta_denominator = 0;
+	    double uGi = u_dof[i];
+
+	    double xi=xCoord_dof[i];
+	    double yi=yCoord_dof[i];
+	    double he_diag = 1.1*std::sqrt(2)*he;
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+
+		double xj=xCoord_dof[j];
+		double yj=yCoord_dof[j];
+		double dist_ij = std::sqrt(std::pow(xi-xj,2) + std::pow(yi-yj,2));
+
+		//if (dist_ij <= he_diag)
+		//{
+		double uGj = u_dof[j];
+		beta_numerator += uGj - uGi;
+		beta_denominator += fabs(uGj - uGi);
+		//}
+	      }
+	    beta_dof[i] =  1.0-std::pow(fabs(beta_numerator+eps)/(beta_denominator+eps),2);
+	  }
+	// compute gamma
 	if (USE_MACRO_CELL==1)
 	  {
 	    // compute gamma in DOFs owned by big Q1 mesh
@@ -1430,13 +1427,13 @@ namespace proteus
 	    // make average to "interpolate" gamma from big Q1 mesh to finer mesh
 	    for (int i=0; i<numDOFs; i++)
 	      {
-		if (is_dof_internal[i] == 1) // dof is internal 
+		if (is_dof_internal[i] == 1) // dof is internal
 		  {
 		    double num_external_dofs = 0; // this should be 4
 		    // loop on its support
 		    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
 		      {
-			int j = colind[offset];		  
+			int j = colind[offset];
 			if (is_dof_external[j] == 1) // external j-dof
 			  {
 			    num_external_dofs += 1;
@@ -1451,7 +1448,7 @@ namespace proteus
 		    int gj1 = first_adjacent_dof_to_middle_dof[i];
 		    int gj2 = second_adjacent_dof_to_middle_dof[i];
 		    gamma_dof[i] = 0.5*(gamma_dof[gj1] + gamma_dof[gj2]);
-		  }		
+		  }
 	      }
 	  }
 	else
@@ -1466,10 +1463,10 @@ namespace proteus
 		//gamma_dof[i] = (fmax(0, fmin(hi2, C*min_hiHe[i])) + eps)/(hi2+eps);
 		//gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C*min_hiHe[i]))/hi2;
 	      }
-	  }	
+	  }
       }
 
-      
+
     };//BlendedSpaces
 
   inline BlendedSpaces_base* newBlendedSpaces(int nSpaceIn,
