@@ -508,7 +508,7 @@ EXTENSIONS_TO_BUILD = [Extension("MeshAdaptPUMI.MeshAdaptPUMI",
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.5.1.dev0',
+          version='1.5.1.hpFEM',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
