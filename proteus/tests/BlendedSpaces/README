@@ -1,0 +1,8 @@
+* To run the code type "parun -l5 -v hpFEM_p.py hpFEM_n.py"
+* To choose the different problems in the paper edit hpFEM.py as follows:
+  +PROBLEM_TYPE. Choose 0,1,2 for 2D Poisson, adv-diff and anisotropic diff.
+  +AUTOMATED_ALPHA. Choose 0,1 for alpha_h via ad-hoc or automated function.
+  +ALPHA_FOR_GALERKIN. Choose 0,1 for Galerkin solution based on u^L or u^H.
+* For PROBLEM_TYPE=0 choose the refinement level by running as follows:
+  + parun -l5 -v hpFEM_p.py hpFEM_n.py -C "refinement=X"
+    (where X is the refinement level)

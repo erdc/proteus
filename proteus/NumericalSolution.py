@@ -1919,7 +1919,7 @@ class NS_base(object):  # (HasTraits):
                                                                        self.tnList[0],
                                                                        self.tCount,
                                                                        quantDOFs,
-                                                                       res_name_base='quantDOFs_for_'+model.name)
+                                                                       res_name_base='gamma')
                 logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(0),level=3)
         except:
             pass
@@ -1932,7 +1932,7 @@ class NS_base(object):  # (HasTraits):
                                                                        self.tnList[0],
                                                                        self.tCount,
                                                                        quantDOFs2,
-                                                                       res_name_base='quantDOFs2_for_'+model.name)
+                                                                       res_name_base='beta')
                 logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(0),level=3)
         except:
             pass
@@ -1945,7 +1945,7 @@ class NS_base(object):  # (HasTraits):
                                                                        self.tnList[0],
                                                                        self.tCount,
                                                                        quantDOFs3,
-                                                                       res_name_base='quantDOFs3_for_'+model.name)
+                                                                       res_name_base='alpha')
                 logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(0),level=3)
         except:
             pass
@@ -2073,7 +2073,7 @@ class NS_base(object):  # (HasTraits):
                                                                        self.tnList[0],
                                                                        self.tCount,
                                                                        quantDOFs,
-                                                                       res_name_base='quantDOFs_for_'+model.name)
+                                                                       res_name_base='gamma')
                 logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
@@ -2086,7 +2086,7 @@ class NS_base(object):  # (HasTraits):
                                                                        self.tnList[0],
                                                                        self.tCount,
                                                                        quantDOFs2,
-                                                                       res_name_base='quantDOFs2_for_'+model.name)
+                                                                       res_name_base='beta')
                 logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
@@ -2099,7 +2099,7 @@ class NS_base(object):  # (HasTraits):
                                                                        self.tnList[0],
                                                                        self.tCount,
                                                                        quantDOFs3,
-                                                                       res_name_base='quantDOFs3_for_'+model.name)
+                                                                       res_name_base='alpha')
                 logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass

@@ -107,8 +107,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
-        print "********************... ", self.model.u[0].dof.min(), self.model.u[0].dof.max()
-        print "********************... ", len(self.model.u[0].dof)
+        print "********************... Min, Max: ", self.model.u[0].dof.min(), self.model.u[0].dof.max()
+        print "********************... Ndof: ", len(self.model.u[0].dof)
         tolerance = 1.0E-10
         MIN=-1.0
         MAX=1.0
