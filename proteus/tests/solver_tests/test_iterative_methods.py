@@ -242,10 +242,11 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     b, x = create_petsc_vecs(mat_A)
     petsc_options = initialize_petsc_options
 
-    solver_info = LS.ModelInfo('interlaced',3)
-    schur_approx = LS.Schur_Sp(mat_A,
-                               '',
-                               True,
+    solver_info = LS.ModelInfo('interlaced',
+                               3,
+                               bdy_null_space=True)
+    schur_approx = LS.Schur_Sp(L=mat_A,
+                               prefix='',
                                solver_info=solver_info)
     ksp_obj = initialize_schur_ksp_obj(mat_A,schur_approx)
     ksp_obj.solve(b,x)
@@ -255,7 +256,6 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     assert np.allclose(ksp_obj.norm, 0.0007464632)
     assert ksp_obj.reason == 2
 
-@pytest.mark.current
 @pytest.mark.LinearSolvers
 def test_Schur_Sp_solve(load_nse_step_matrix,
                         initialize_petsc_options):

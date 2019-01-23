@@ -588,6 +588,49 @@ double maxWaveSpeedSharpInitialGuess(double g, double nx, double ny,
                         std::cout << "hL=0" << std::endl;
                         std::cout << lambda1 << "\t" << lambda3 << std::endl;
                 }
+            }
+          else if (0 <= fMax)
+            hStar = std::pow(-sqrt(2*hMin)+sqrt(3*hMin+2*sqrt(2*hMin*hMax)+sqrt(2./g)*(velL-velR)*sqrt(hMin)),2);
+          else // fMax < 0
+            hStar = sqrt(hMin*hMax)*(1+(sqrt(2)*(velL-velR))/(sqrt(g*hMin)+sqrt(g*hMax)));
+          // Compute max wave speed based on hStar0
+          lambda1 = nu1(g,hStar,hL,velL);
+          lambda3 = nu3(g,hStar,hR,velR);
+        }
+      if (debugging)
+	{
+	  std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
+	  if (isinf(lambda1)==1 || isinf(lambda3)==1)
+	    abort();
+	}
+      //return fmax(fmax(0.,-lambda1), fmax(0,lambda3));
+      return fmax(lambda1, lambda3);
+    }
+
+    inline
+      double maxWaveSpeedIterativeProcess(double g, double nx, double ny,
+                                          double hL, double huL, double hvL,
+                                          double hR, double huR, double hvR,
+                                          double hEpsL, double hEpsR,
+                                          bool verbose)
+    {
+      double tol = 1E-15;
+      //1-eigenvalue: uL-sqrt(g*hL)
+      //3-eigenvalue: uR+sqrt(g*hR)
+
+      double hVelL = nx*huL + ny*hvL;
+      double hVelR = nx*huR + ny*hvR;
+      double velL = 2*hL/(hL*hL+std::pow(fmax(hL,hEpsL),2))*hVelL;
+      double velR = 2*hR/(hR*hR+std::pow(fmax(hR,hEpsR),2))*hVelR;
+
+      double lambda1, lambda3;
+
+      // CHECK IF BOTH STATES ARE DRY:
+      if (hL==0 && hR==0)
+        {
+          lambda1=0.;
+          lambda3=0.;
+          return 0.;
         }
         else if (hR==0) // right dry state
         {
