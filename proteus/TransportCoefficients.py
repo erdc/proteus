@@ -189,6 +189,10 @@ class TC_base(object):
                 which means the system defined by the coefficients is singular.""")
         self.vectorComponents=None
         self.vectorName="velocity"
+        try:
+            self.nullSpace
+        except AttributeError:
+            self.nullSpace = 'NoNullSpace'
         #mwf append u integral key by default
         for ci in range(self.nc):
             self.elementIntegralKeys.append(('u',ci))
@@ -2305,13 +2309,6 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
             phi   = self.ebq_phi
             n     = self.ebq_n
             kappa = self.ebq_kappa
-        #mwf debug
-        #waterLevelBase = 0.529
-        #for i in range(len(phi.flat)):
-            #if abs(phi.flat[i]) > 0.0:
-            #    assert abs(phi.flat[i] - (c['x'].flat[3*i+1] - waterLevelBase)) <= 1.0e-5, "Problem with phi t=%s phi.shape=%s i=%s phi=%s y=%s wl=%s " % (t,phi.shape,i,phi.flat[i],c['x'].flat[3*i+1],waterLevelBase)
-            #phi.flat[i] = c['x'].flat[3*i+1] - waterLevelBase#self.waterLevel
-        #self.sd=False
         if self.nd==2:
             if self.sd:
                 self.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.eps_density,
@@ -2985,10 +2982,6 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                 c[('df',3,1)].flat[:] = 0.0
                 c[('df',3,2)].flat[:] = 0.0
                 c[('df',3,3)].flat[:] = 0.0
-        #cek hack to look at signed distance to dem particles
-        #for i in range(len(c[('u',0)].flat)):
-        #    c[('m',1)].flat[i] = self.signedDistance(c['x'].flat[3*i : (3*i+3)])
-        #mwf hack for visuzlization
         c[('phis_viz')] = phi_s
         c[('phi_viz')]  = phi
 ##\brief Two-phase, Incompressible Navier-Stokes equations (level-set formulation)
@@ -4001,8 +3994,6 @@ class VOFCoefficients(TC_base):
         #in a moving domain simulation the velocity coming in is already for the moving domain
         pass
     def evaluate(self,t,c):
-        #mwf debug
-        #print "VOFcoeficients eval t=%s " % t
         if c[('f',0)].shape == self.q_v.shape:
             v = self.q_v
             phi = self.q_phi
@@ -4437,13 +4428,6 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
         self.m = m
     def evaluate(self,t,c):
         if ('dV_u',0) in c:
-            #mwf debug
-            #print """ReL2proj f.shape= %s a.shape= %s da.shape= %s dV_u.shape= %s """ % (c[('f',0)].shape,
-            #                                                                             c[('a',0,0)].shape,
-            #                                                                             c[('da',0,0,0)].shape,
-            #                                                                             c[('dV_u',0)].shape)
-            #raw_input('L2proj eval: hit return to continue')
-            #mwf debug
             volFact = 1.0;
             if c[('f',0)].shape[2] == 2:
                 volFact =0.5
@@ -4474,18 +4458,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
                                                                              c[('a',0,0)],
                                                                              c[('da',0,0,0)])
 
-            #mwf debug
-            #for eN in range(c[('m',0)].shape[0]):
-            #    print """out of L2proj elm m[%d,:]=%s """ % (eN,c[('m',0)][eN,:])
-            #    print """out of L2proj elm dm[%d,:]=%s """ % (eN,c[('dm',0,0)][eN,:])
-            #    print """out of L2proj elm a[%d,:,0,0]=%s """ % (eN,c[('a',0,0)][eN,:])
         elif ('dS_u',0) in c:
-            #mwf debug
-            #print """ReL2proj f.shape= %s a.shape= %s da.shape = %s dS_u.shape= %s """ % (c[('f',0)].shape,
-            #                                                                              c[('a',0,0)].shape,
-            #                                                                              c[('da',0,0,0)].shape,
-            #                                                                              c[('dS_u',0)].shape)
-            #raw_input('L2proj eval: hit return to continue')
             volFact = 1.0;
             if c[('f',0)].shape[-1] == 3:
                 volFact =0.5
@@ -5307,9 +5280,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
 #        for em in materialTypes:
 #            print em
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
                                                                      self.rho,
                                                                      self.beta,
@@ -5326,7 +5296,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
                                                                      c[('df',0,0)],
                                                                      c[('a',0,0)],
                                                                      c[('da',0,0,0)])
-#         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5337,9 +5306,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             import pdb
             pdb.set_trace()
 
-#         #mwf debug
-#         if c[('u',0)].shape == self.q_shape:
-#             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class SeepageBrezis(TC_base):
     """
     version of Re where element material type id's used in evals
@@ -5562,7 +5528,6 @@ class ConservativeHeadRichardsJLeverett(TC_base):
                                                c[('df',0,0)],
                                                c[('a',0,0)],
                                                c[('da',0,0,0)])
-        #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5573,7 +5538,6 @@ class ConservativeHeadRichardsJLeverett(TC_base):
             import pdb
             pdb.set_trace()
 
-        #mwf debug
         if c[('u',0)].shape == self.q_shape:
             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class ConservativeHeadRichardsJLeverettAni(TC_base):
@@ -5686,7 +5650,6 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
                                                c[('df',0,0)],
                                                c[('a',0,0)],
                                                c[('da',0,0,0)])
-        #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5697,7 +5660,6 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
             import pdb
             pdb.set_trace()
 
-        #mwf debug
         if c[('u',0)].shape == self.q_shape:
             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 class ConstantVelocityLevelSet(TC_base):
@@ -5725,7 +5687,6 @@ class ConstantVelocityLevelSet(TC_base):
         if len(modelList) > 1:
             self.lsModel = modelList[self.lsModelId]
     def evaluate(self,t,c):
-        #mwf appears to work when have f,
         self.constantVelocityLevelSetEvaluate(self.b,
                                               c['x'],
                                               c[('u',0)],
@@ -5901,8 +5862,6 @@ class RedistanceLevelSet(TC_base):
                 for i in range(len(cebqe[('u',0)].flat)):
                     self.ebqe_u0.flat[i]=self.u0.uOfXT(cebqe['x'].flat[3*i:3*(i+1)],0.)
     def preStep(self,t,firstStep=False):
-        import pdb
-        #pdb.set_trace()
         if self.nModel is not None:
             logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
@@ -6781,11 +6740,6 @@ class kEpsilon(TC_base):
                     if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
     def initializeMesh(self,mesh):
         pass
@@ -6833,8 +6787,6 @@ class kEpsilon(TC_base):
         elif c['x'].shape[:-1] == self.ebq_gradu.shape[:-1]:
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
         else:
-            #import pdb
-            #pdb.set_trace()
             raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
@@ -6953,9 +6905,6 @@ class kEpsilon(TC_base):
                                              c[('dr',1,1)])
             else:
                 assert False, "k-epsilon 3d non sd not implemented"
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
             if hackSourceTerm:
                 c[('r',0)].flat[:] = 0.0
@@ -7104,11 +7053,6 @@ class kEpsilon_k(TC_base):
                     if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
         if self.epsilonModelID is not None:
             terms = ['epsilon']
@@ -7189,8 +7133,6 @@ class kEpsilon_k(TC_base):
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
             epsilon = self.ebq_epsilon
         else:
-            #import pdb
-            #pdb.set_trace()
             raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
@@ -7240,9 +7182,6 @@ class kEpsilon_k(TC_base):
 
             else:
                 raise NotImplementedError
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
         if hackSourceTerm:
             c[('r',0)].flat[:] = 0.0
@@ -7390,11 +7329,6 @@ class kEpsilon_epsilon(TC_base):
                     if key in d:
                         name = quad+'_'+term
                         setattr(self,name,d[key])
-                        #mwf debug
-                        #print "kEpsilon grabbing %s using %s[%s] " % (name,d,key)
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.flowModel=modelList[self.flowModelID]#debug
         if self.kModelID is not None:
             terms = ['k']
@@ -7475,8 +7409,6 @@ class kEpsilon_epsilon(TC_base):
             gradu = self.ebq_gradu; gradv = self.ebq_gradv; velocity = self.ebq_velocity; gradw = self.ebq_gradw
             k = self.ebq_k
         else:
-            #import pdb
-            #pdb.set_trace()
             raise TypeError("c['x'].shape= not recognized ")
         hackSourceTerm = False#True
         if self.nd == 2:
@@ -7532,9 +7464,6 @@ class kEpsilon_epsilon(TC_base):
 
             else:
                 raise NotImplementedError
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
 
         if hackSourceTerm:
             c[('r',0)].flat[:] = 0.0
@@ -8399,10 +8328,6 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
                                                                      c[('H',2)],
                                                                      c[('dH',2,0)])
 
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-            #
             if self.stokesOnly:
                 c[('f',1)].flat[:]=0.0; c[('f',2)].flat[:]=0.0;
                 c[('df',1,1)].flat[:]=0.0;c[('df',1,2)].flat[:]=0.0;
@@ -8520,7 +8445,6 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
     from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
     from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate
     from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
-    from .ctransportCoefficients import calculateWaveFunction3d_ref
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -8543,13 +8467,6 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                  meanGrainSizeTypes=None, #otherwise can use element constant values
                  porosityTypes=None,
                  killNonlinearDrag=False,
-                 waveFlag=None,
-                 waveHeight=0.01,
-                 waveCelerity=1.0,
-                 waveFrequency=1.0,
-                 waveNumber=2.0,
-                 waterDepth=0.5,
-                 Omega_s=[[0.45,0.55],[0.2,0.4],[0.0,1.0]],
                  epsFact_source=1.):
 
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.__init__(self,
@@ -8590,13 +8507,6 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
             self.elementIntegralKeys.append(('r',ci))
             for cj in cjDict:
                 self.stencil[ci].add(cj)
-        self.waveFlag=waveFlag
-        self.waveHeight=waveHeight
-        self.waveCelerity=waveCelerity
-        self.waveFrequency=waveFrequency
-        self.waveNumber=waveNumber
-        self.waterDepth=waterDepth
-        self.Omega_s=Omega_s
         self.epsFact_source=epsFact_source
         self.linearDragFactor = 1.0; self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
@@ -8688,145 +8598,6 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         #TODO really need to modify turbulence model in porous region, account for mean grain size etc
         if self.turbulenceClosureFlag is not None:
             self.q_nu_t *= self.q_porosity
-    def evaluateForcingTerms(self,t,c,mesh=None,mesh_trial_ref=None,mesh_l2g=None):
-        if 'x' in c and len(c['x'].shape) == 3:
-            if self.nd == 2:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
-                c[('r',0)].fill(0.0)
-                eps_source=self.eps_source
-                if self.waveFlag == 1:#secondOrderStokes:
-                    waveFunctions.secondOrderStokesWave(c[('r',0)].shape[0],
-                                                        c[('r',0)].shape[1],
-                                                        self.waveHeight,
-                                                        self.waveCelerity,
-                                                        self.waveFrequency,
-                                                        self.waveNumber,
-                                                        self.waterDepth,
-                                                        self.Omega_s[0][0],
-                                                        self.Omega_s[0][1],
-                                                        self.Omega_s[1][0],
-                                                        self.Omega_s[1][1],
-                                                        eps_source,
-                                                        c['x'],
-                                                        c[('r',0)],
-                                                        t)
-                elif self.waveFlag == 2:#solitary wave
-                    waveFunctions.solitaryWave(c[('r',0)].shape[0],
-                                               c[('r',0)].shape[1],
-                                               self.waveHeight,
-                                               self.waveCelerity,
-                                               self.waveFrequency,
-                                               self.waterDepth,
-                                               self.Omega_s[0][0],
-                                               self.Omega_s[0][1],
-                                               self.Omega_s[1][0],
-                                               self.Omega_s[1][1],
-                                               eps_source,
-                                               c['x'],
-                                               c[('r',0)],
-                                               t)
-
-                elif self.waveFlag == 0:
-                    waveFunctions.monochromaticWave(c[('r',0)].shape[0],
-                                                    c[('r',0)].shape[1],
-                                                    self.waveHeight,
-                                                    self.waveCelerity,
-                                                    self.waveFrequency,
-                                                    self.Omega_s[0][0],
-                                                    self.Omega_s[0][1],
-                                                    self.Omega_s[1][0],
-                                                    self.Omega_s[1][1],
-                                                    eps_source,
-                                                    c['x'],
-                                                    c[('r',0)],
-                                                    t)
-
-                #mwf debug
-                if numpy.isnan(c[('r',0)].any()):
-                    import pdb
-                    pdb.set_trace()
-            else:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
-                c[('r',0)].fill(0.0)
-                eps_source=self.eps_source
-                if self.waveFlag == 1:#secondOrderStokes:
-                    waveFunctions.secondOrderStokesWave3d(c[('r',0)].shape[0],
-                                                          c[('r',0)].shape[1],
-                                                          self.waveHeight,
-                                                          self.waveCelerity,
-                                                          self.waveFrequency,
-                                                          self.waveNumber,
-                                                          self.waterDepth,
-                                                          self.Omega_s[0][0],
-                                                          self.Omega_s[0][1],
-                                                          self.Omega_s[1][0],
-                                                          self.Omega_s[1][1],
-                                                          self.Omega_s[2][0],
-                                                          self.Omega_s[2][1],
-                                                          eps_source,
-                                                          c['x'],
-                                                          c[('r',0)],
-                                                          t)
-                elif self.waveFlag == 2:#solitary wave
-                    waveFunctions.solitaryWave3d(c[('r',0)].shape[0],
-                                                 c[('r',0)].shape[1],
-                                                 self.waveHeight,
-                                                 self.waveCelerity,
-                                                 self.waveFrequency,
-                                                 self.waterDepth,
-                                                 self.Omega_s[0][0],
-                                                 self.Omega_s[0][1],
-                                                 self.Omega_s[1][0],
-                                                 self.Omega_s[1][1],
-                                                 self.Omega_s[2][0],
-                                                 self.Omega_s[2][1],
-                                                 eps_source,
-                                                 c['x'],
-                                                 c[('r',0)],
-                                                 t)
-
-                elif self.waveFlag == 0:
-                    waveFunctions.monochromaticWave3d(c[('r',0)].shape[0],
-                                                      c[('r',0)].shape[1],
-                                                      self.waveHeight,
-                                                      self.waveCelerity,
-                                                      self.waveFrequency,
-                                                      self.Omega_s[0][0],
-                                                      self.Omega_s[0][1],
-                                                      self.Omega_s[1][0],
-                                                      self.Omega_s[1][1],
-                                                      self.Omega_s[2][0],
-                                                      self.Omega_s[2][1],
-                                                      eps_source,
-                                                      c['x'],
-                                                      c[('r',0)],
-                                                      t)
-
-        else:
-            assert mesh is not None
-            assert mesh_trial_ref is not None
-            assert mesh_l2g is not None
-            self.calculateWaveFunction3d_ref(mesh_trial_ref,
-                                             mesh.nodeArray,
-                                             mesh_l2g,
-                                             mesh.elementDiametersArray,
-                                             numpy.array(self.Omega_s[0]),
-                                             numpy.array(self.Omega_s[1]),
-                                             numpy.array(self.Omega_s[2]),
-                                             t,
-                                             self.waveFlag,
-                                             self.epsFact_source,
-                                             self.waveHeight,
-                                             self.waveCelerity,
-                                             self.waveFrequency,
-                                             self.waveNumber,
-                                             self.waterDepth,
-                                             c[('r',0)])
-
     def evaluate(self,t,c):
         import pdb
         phi = None; n = None; kappa = None; porosity = None; meanGrain = None
@@ -8850,10 +8621,8 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
             porosity = self.ebq_porosity
             meanGrain= self.ebq_meanGrain
         #
-        #mwf debug
         if phi is None or n is None or kappa is None or porosity is None or meanGrain is None:
             pdb.set_trace()
-        #pdb.set_trace()
         if self.nd==2:
             if self.sd:
                 self.VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.killNonlinearDrag,
@@ -9147,131 +8916,15 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                     assert False, "nd != 2,3 not done yet"
         if 'x' in c and len(c['x'].shape) == 3:
             if self.nd == 2:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
-                if self.waveFlag == 1:#secondOrderStokes:
-                    waveFunctions.secondOrderStokesWave(c[('r',0)].shape[0],
-                                                        c[('r',0)].shape[1],
-                                                        self.waveHeight,
-                                                        self.waveCelerity,
-                                                        self.waveFrequency,
-                                                        self.waveNumber,
-                                                        self.waterDepth,
-                                                        self.Omega_s[0][0],
-                                                        self.Omega_s[0][1],
-                                                        self.Omega_s[1][0],
-                                                        self.Omega_s[1][1],
-                                                        eps_source,
-                                                        c['x'],
-                                                        c[('r',0)],
-                                                        t)
-                elif self.waveFlag == 2:#solitary wave
-                    waveFunctions.solitaryWave(c[('r',0)].shape[0],
-                                               c[('r',0)].shape[1],
-                                               self.waveHeight,
-                                               self.waveCelerity,
-                                               self.waveFrequency,
-                                               self.waterDepth,
-                                               self.Omega_s[0][0],
-                                               self.Omega_s[0][1],
-                                               self.Omega_s[1][0],
-                                               self.Omega_s[1][1],
-                                               eps_source,
-                                               c['x'],
-                                               c[('r',0)],
-                                               t)
-
-                elif self.waveFlag == 0:
-                    waveFunctions.monochromaticWave(c[('r',0)].shape[0],
-                                                    c[('r',0)].shape[1],
-                                                    self.waveHeight,
-                                                    self.waveCelerity,
-                                                    self.waveFrequency,
-                                                    self.Omega_s[0][0],
-                                                    self.Omega_s[0][1],
-                                                    self.Omega_s[1][0],
-                                                    self.Omega_s[1][1],
-                                                    eps_source,
-                                                    c['x'],
-                                                    c[('r',0)],
-                                                    t)
-
-                #mwf debug
                 if numpy.isnan(c[('r',0)].any()):
                     import pdb
                     pdb.set_trace()
             else:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
                 c[('r',0)].fill(0.0)
                 eps_source=self.eps_source
-                if self.waveFlag == 1:#secondOrderStokes:
-                    waveFunctions.secondOrderStokesWave3d(c[('r',0)].shape[0],
-                                                          c[('r',0)].shape[1],
-                                                          self.waveHeight,
-                                                          self.waveCelerity,
-                                                          self.waveFrequency,
-                                                          self.waveNumber,
-                                                          self.waterDepth,
-                                                          self.Omega_s[0][0],
-                                                          self.Omega_s[0][1],
-                                                          self.Omega_s[1][0],
-                                                          self.Omega_s[1][1],
-                                                          self.Omega_s[2][0],
-                                                          self.Omega_s[2][1],
-                                                          eps_source,
-                                                          c['x'],
-                                                          c[('r',0)],
-                                                          t)
-                elif self.waveFlag == 2:#solitary wave
-                    waveFunctions.solitaryWave3d(c[('r',0)].shape[0],
-                                                 c[('r',0)].shape[1],
-                                                 self.waveHeight,
-                                                 self.waveCelerity,
-                                                 self.waveFrequency,
-                                                 self.waterDepth,
-                                                 self.Omega_s[0][0],
-                                                 self.Omega_s[0][1],
-                                                 self.Omega_s[1][0],
-                                                 self.Omega_s[1][1],
-                                                 self.Omega_s[2][0],
-                                                 self.Omega_s[2][1],
-                                                 eps_source,
-                                                 c['x'],
-                                                 c[('r',0)],
-                                                 t)
 
-                elif self.waveFlag == 0:
-                    waveFunctions.monochromaticWave3d(c[('r',0)].shape[0],
-                                                      c[('r',0)].shape[1],
-                                                      self.waveHeight,
-                                                      self.waveCelerity,
-                                                      self.waveFrequency,
-                                                      self.Omega_s[0][0],
-                                                      self.Omega_s[0][1],
-                                                      self.Omega_s[1][0],
-                                                      self.Omega_s[1][1],
-                                                      self.Omega_s[2][0],
-                                                      self.Omega_s[2][1],
-                                                      eps_source,
-                                                      c['x'],
-                                                      c[('r',0)],
-                                                      t)
-
-        #mwf debug
-        #if numpy.absolute(c[('r',0)]).max() > 1.0e-4:
-        #    pdb.set_trace()
-        #print "c[('r',0)]= [%s, %s] p=[%s,%s] u= [%s,%s] v=[%s,%s] por=[%s,%s] " % (c[('r',0)].min(),c[('r',0)].max(),
-        #                                                                            c[('u',0)].min(),c[('u',0)].max(),
-        #                                                                            c[('u',1)].min(),c[('u',1)].max(),
-        #                                                                            c[('u',2)].min(),c[('u',2)].max(),
-        #                                                                            porosity.min(),porosity.max())
-
-    #
 ########################################################################
 #VOF coefficients when have variable porosity term
 ########################################################################
@@ -9438,7 +9091,6 @@ class GroundwaterTransportCoefficients(TC_base):
                                                           c[('f',0)],
                                                           c[('df',0,0)],
                                                           c[('a',0,0)])
-            #mwf debug
             if v.shape == self.q_v.shape:
                 for i in range(len(c[('u',0)].flat)):
                     if c['x'].flat[3*i+0] > 100.0-2.5 and c['x'].flat[3*i+1] < 2.5 and c[('u',0)].flat[i] < -1.0e-1:
@@ -9526,13 +9178,7 @@ class GroundwaterBiodegradation01Coefficients(TC_base):
             print(self.ebqe_v.shape)
             print(self.ebq_global_v.shape)
             raise RuntimeError("no v---------------------")
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
         if self.useC:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.groundwaterBiodegradation01EvaluateFC(self.omega,
                                                        self.d_c,
                                                        self.d_e,
@@ -9649,9 +9295,6 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
             print(self.ebq_global_v.shape)
             raise RuntimeError("no v---------------------")
         if self.useC:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.groundwaterBryantDawsonIonExEvaluateFC(self.omega,
                                                         self.d_m,
                                                         self.d_h,
@@ -9744,11 +9387,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
         self.ebq_global_n = None
         self.quadraturePointToElementBoundary = {}
         self.useOrigUpwind = False
-        #mwf debug
-        #import gc
-        #gc.set_debug(gc.DEBUG_LEAK)
-        #import pdb
-        #pdb.set_trace()
     def initializeMesh(self,mesh):
         self.elementMaterialTypes = mesh.elementMaterialTypes
         #want element boundary material types for evaluating heterogeneity
@@ -9849,11 +9487,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
                                                                          c[('a',0,0)],
                                                                          c[('da',0,0,0)])
         elif self.upwindFlag >= 1:
-            #mwf debug
-            #print "REv2 calling collect here 1 u.shape= ", c[('u',0)].shape
-            #import gc
-            #gc.collect()
-
             quad_avg = None; quad2bnd = None; dV = None
             computeAverages = 0;
             useUpwindApprox = 0; #second style upwinding only works for elements quad
@@ -9959,30 +9592,6 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
                                                                                                   c[('df',0,0)],
                                                                                                   c[('a',0,0)],
                                                                                                   c[('da',0,0,0)])
-
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-        #
-        #mwf debug
-        #print "REv2 calling collect here 2 u.shape = ", c[('u',0)].shape
-        #import gc
-        #gc.collect()
-#         #mwf debug
-#         if (numpy.isnan(c[('da',0,0,0)]).any() or
-#             numpy.isnan(c[('a',0,0)]).any() or
-#             numpy.isnan(c[('df',0,0)]).any() or
-#             numpy.isnan(c[('f',0)]).any() or
-#             numpy.isnan(c[('u',0)]).any() or
-#             numpy.isnan(c[('m',0)]).any() or
-#             numpy.isnan(c[('dm',0,0)]).any()):
-#             import pdb
-#             pdb.set_trace()
-
-#         #mwf debug
-#         if c[('u',0)].shape == self.q_shape:
-#             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
-
 
 class DiffusiveWave_1D(TC_base):
     from .ctransportCoefficients import diffusiveWave1DCoefficientsEvaluate
@@ -10196,241 +9805,6 @@ class DiffusiveWave_2D(TC_base):
                                                  c[('dm',0,0)],
                                                  c[('a',0,0)],
                                                  c[('da',0,0,0)])
-from . import waveFunctions
-class TwophaseNavierStokesWithWaveMaker(TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure):
-    def __init__(self,
-                 epsFact=1.5,
-                 sigma=72.8,
-                 rho_0=998.2,nu_0=1.004e-6,
-                 rho_1=1.205,nu_1=1.500e-5,
-                 g=[0.0,-9.8],
-                 nd=2,
-                 LS_model=None,
-                 KN_model=None,
-                 epsFact_density=None,
-                 stokes=False,
-                 sd=True,
-                 turbulenceClosureFlag=None,
-                 smagorinskyConstant_0=0.1,
-                 smagorinskyConstant_1=0.1,
-                 epsFact_smagorinsky=0.33,
-                 movingDomain=False,
-                 waveFlag=0,
-                 waveHeight=0.01,
-                 waveCelerity=1.0,
-                 waveFrequency=1.0,
-                 waveNumber=2.0,
-                 waterDepth=0.5,
-                 Omega_s=[[0.45,0.55],[0.2,0.4],[0.0,1.0]],
-                 epsFact_source=1.):
-        TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.__init__(self,
-                                                                       epsFact=epsFact,
-                                                                       sigma=sigma,
-                                                                       rho_0=rho_0,nu_0=nu_0,
-                                                                       rho_1=rho_1,nu_1=nu_1,
-                                                                       g=g,
-                                                                       nd=nd,
-                                                                       LS_model=LS_model,
-                                                                       KN_model=KN_model,
-                                                                       epsFact_density=epsFact_density,
-                                                                       stokes=stokes,
-                                                                       sd=sd,
-                                                                       movingDomain=movingDomain,
-                                                                       turbulenceClosureFlag=turbulenceClosureFlag,
-                                                                       smagorinskyConstant_0=smagorinskyConstant_0,
-                                                                       smagorinskyConstant_1=smagorinskyConstant_1,
-                                                                       epsFact_smagorinsky=epsFact_smagorinsky)
-        self.waveFlag=waveFlag
-        self.waveHeight=waveHeight
-        self.waveCelerity=waveCelerity
-        self.waveFrequency=waveFrequency
-        self.waveNumber=waveNumber
-        self.waterDepth=waterDepth
-        self.Omega_s=Omega_s
-        self.epsFact_source=epsFact_source
-    def initializeMesh(self,mesh):
-        TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.initializeMesh(self,mesh)
-        self.eps_source=self.epsFact_source*mesh.h
-
-    def evaluate(self,t,c):
-        TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.evaluate(self,t,c)
-        if 'x' in c and len(c['x'].shape) == 3:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-            c[('r',0)].fill(0.0)
-            eps_source=self.eps_source
-            if self.waveFlag == 1:#secondOrderStokes:
-                waveFunctions.secondOrderStokesWave(c[('r',0)].shape[0],
-                                                    c[('r',0)].shape[1],
-                                                    self.waveHeight,
-                                                    self.waveCelerity,
-                                                    self.waveFrequency,
-                                                    self.waveNumber,
-                                                    self.waterDepth,
-                                                    self.Omega_s[0][0],
-                                                    self.Omega_s[0][1],
-                                                    self.Omega_s[1][0],
-                                                    self.Omega_s[1][1],
-                                                    eps_source,
-                                                    c['x'],
-                                                    c[('r',0)],
-                                                    t)
-            elif self.waveFlag == 2:#solitary wave
-                waveFunctions.solitaryWave(c[('r',0)].shape[0],
-                                           c[('r',0)].shape[1],
-                                           self.waveHeight,
-                                           self.waveCelerity,
-                                           self.waveFrequency,
-                                           self.waterDepth,
-                                           self.Omega_s[0][0],
-                                           self.Omega_s[0][1],
-                                           self.Omega_s[1][0],
-                                           self.Omega_s[1][1],
-                                           eps_source,
-                                           c['x'],
-                                           c[('r',0)],
-                                           t)
-
-            elif self.waveFlag == 0:
-                waveFunctions.monochromaticWave(c[('r',0)].shape[0],
-                                                c[('r',0)].shape[1],
-                                                self.waveHeight,
-                                                self.waveCelerity,
-                                                self.waveFrequency,
-                                                self.Omega_s[0][0],
-                                                self.Omega_s[0][1],
-                                                self.Omega_s[1][0],
-                                                self.Omega_s[1][1],
-                                                eps_source,
-                                                c['x'],
-                                                c[('r',0)],
-                                                t)
-            #
-            #mwf debug
-            #print "TwpWaveMaker waveFlag= %s t=%s factor= %s c[('r',0)].max()= %s  c[('r',0)].min()= %s " % (self.waveFlag,t,self.waveHeight*self.waveCelerity*sin(self.waveFrequency*t),
-            #                                                                                                 c[('r',0)].max(),c[('r',0)].min())
-
-class SinglePhaseDarcyCoefficients(TC_base):
-    """
-    - div(a grad p) = f
-
-    supposed to use harm average for a with interface coefficients
-
-    TODO
-     allow a, f to be time varying
-    """
-    def __init__(self,a_types,source_types,nc=1,nd=2,
-                 timeVaryingCoefficients=False):
-        self.a_types = a_types
-        self.source_types = source_types
-        self.nd = nd
-        self.timeVaryingCoefficients=timeVaryingCoefficients
-        mass = {}
-        advection = {}
-        diffusion = {}
-        potential = {}
-        reaction  = {}
-        hamiltonian = {}
-        for i in range(nc):
-            diffusion[i] = {i : {i:'constant'}}
-            reaction[i]  = {i : 'constant'}
-            advection[i] = {i : 'constant'} #now include for gravity type terms
-            potential[i] = {i : 'u'}
-        #end i
-        TC_base.__init__(self,
-                         nc,
-                         mass,
-                         advection,
-                         diffusion,
-                         potential,
-                         reaction,
-                         hamiltonian)
-    def initializeMesh(self,mesh):
-        self.elementMaterialTypes = mesh.elementMaterialTypes
-        self.exteriorElementBoundaryTypes =  numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
-        for ebNE in range(mesh.nExteriorElementBoundaries_global):
-            ebN = mesh.exteriorElementBoundariesArray[ebNE]
-            eN  = mesh.elementBoundaryElementsArray[ebN,0]
-            self.exteriorElementBoundaryTypes[ebNE] = self.elementMaterialTypes[eN]
-        self.elementBoundaryTypes = numpy.zeros((mesh.nElementBoundaries_global,2),'i')
-        self.elementBoundariesArray = mesh.elementBoundariesArray
-        for ebN in range(mesh.nElementBoundaries_global):
-            eN_left = mesh.elementBoundaryElementsArray[ebN,0]
-            eN_right= mesh.elementBoundaryElementsArray[ebN,1]
-            self.elementBoundaryTypes[ebN,0] = self.elementMaterialTypes[eN_left]
-            if eN_right >= 0:
-                self.elementBoundaryTypes[ebN,1] = self.elementMaterialTypes[eN_right]
-            else:
-                self.elementBoundaryTypes[ebN,1] = self.elementMaterialTypes[eN_left]
-
-    def initializeElementQuadrature(self,t,cq):
-        for ci in range(self.nc):
-            cq[('f',ci)].flat[:] = 0.0
-            for eN in range(cq['x'].shape[0]):
-                material=self.elementMaterialTypes[eN]
-                for k in range(cq['x'].shape[1]):
-                    cq[('a',ci,ci)][eN,k,:] = self.a_types[material](cq['x'][eN,k],t).flat
-                    cq[('r',ci)][eN,k]        =-self.source_types[material](cq['x'][eN,k],t)
-        #ci
-    def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        nd = self.nd
-        #use harmonic average for a, arith average for f
-        for ci in range(self.nc):
-            if ('f',ci) in cebq_global: cebq_global[('f',ci)].flat[:] = 0.0
-            if ('f',ci) in cebq: cebq[('f',ci)].flat[:] = 0.0
-            for ebN in range(cebq_global['x'].shape[0]):
-                material_left = self.elementBoundaryTypes[ebN,0]
-                material_right= self.elementBoundaryTypes[ebN,1]
-                for k in range(cebq_global['x'].shape[1]):
-                    if ('r',ci) in cebq_global:
-                        cebq_global[('r',ci)][eN,k] =-0.5*(self.source_types[material_left](cebq_global['x'][ebN,k],t)+
-                                                           self.source_types[material_right](cebq_global['x'][ebN,k],t))
-                    if ('a',ci,ci) in cebq_global:
-                        for i in range(nd):
-                            for j in range(nd):
-                                x = cebq_global['x'][ebN,k];
-                                numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
-                                denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = old_div(numer,denom)
-            for eN in range(cebq['x'].shape[0]):
-                for ebN_local in range(cebq['x'].shape[1]):
-                    ebN = self.elementBoundariesArray[eN,ebN_local]
-                    material_left = self.elementBoundaryTypes[ebN,0]
-                    material_right= self.elementBoundaryTypes[ebN,1]
-                    for k in range(cebq['x'].shape[2]):
-                        x = cebq['x'][eN,ebN_local,k]
-                        if ('r',ci) in cebq:
-                            cebq[('r',ci)][eN,ebN_local,k] =-0.5*(self.source_types[material_left](x,t)+
-                                                                  self.source_types[material_right](x,t))
-                        if ('a',ci,ci) in cebq:
-                            for i in range(nd):
-                                for j in range(nd):
-                                    numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
-                                    denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = old_div(numer,denom)
-                    #
-                #
-            #
-        #
-    def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        nd = self.nd
-        for ci in range(self.nc):
-            if ('f',ci) in cebqe: cebqe[('f',ci)].flat[:] = 0.0
-            for ebNE in range(cebqe['x'].shape[0]):
-                material = self.exteriorElementBoundaryTypes[ebNE]
-                for k in range(cebqe['x'].shape[1]):
-                    x = cebqe['x'][ebNE,k]
-                    if ('r',ci) in cebqe:
-                        cebqe[('r',ci)][ebNE,k] = -self.source_types[material](x,t)
-                    if ('a',ci,ci) in cebqe:
-                        cebqe[('a',ci,ci)][ebNE,k,:] = self.a_types[material](x,t).flat
-                #
-            #
-        #
-    def evaluate(self,t,c):
-        pass #need to put in eval for time varying coefficients
-    #end def
 
 class DiscreteMassMatrix(TC_base):
     r"""Coefficients class for the discrete Mass Operator.
@@ -10562,7 +9936,6 @@ class DiscreteTwoPhaseAdvectionOperator(TC_base):
         self.rho_1 = rho_1
         self.nu_1 = nu_1
         self.LS_model = LS_model
-        import pdb ; pdb.set_trace()
         self.phase_function = phase_function
         mass = {}
         advection = {}

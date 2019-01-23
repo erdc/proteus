@@ -9,7 +9,7 @@ except ImportError:
     import pkgutil
     __path__ = pkgutil.extend_path(__path__, __name__)
 
-__version__ = '1.4.2'
+__version__ = '1.5.1.dev0'
 
 __all__ = ["Archiver",
            "Domain",
@@ -43,7 +43,6 @@ __all__ = ["Archiver",
            "StupidHeap",
            "TimeIntegration",
            "Transport",
-           "TriangleTools",
            "Viewers",
            "AuxiliaryVariables",
            "deim_utils",
@@ -58,9 +57,8 @@ __all__ = ["Archiver",
            "csubgridError",
            "ctimeIntegration",
            "ctransportCoefficients",
-           "lapackWrappers",
+           "clapack",
            "superluWrappers",
-           "triangleWrappers",
            "cmeshTools",
            "cnumericalFlux",
            "cTwophaseDarcyCoefficients",

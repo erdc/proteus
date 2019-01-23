@@ -12,7 +12,8 @@ from proteus.mprans.cRANS2P import *
 from proteus.mprans.cRANS2P2D import *
 from proteus import Profiling
 from proteus import LinearAlgebraTools as LAT
-
+from proteus.Comm import (globalSum,
+                          globalMax)
 
 class SubgridError(proteus.SubgridError.SGE_base):
     """
@@ -160,7 +161,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
-    from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
                  epsFact=1.5,
@@ -191,14 +191,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  dragBetaTypes=None,  # otherwise can use element constant values
                  porosityTypes=None,
                  killNonlinearDrag=False,
-                 waveFlag=None,
-                 waveHeight=0.01,
-                 waveCelerity=1.0,
-                 waveFrequency=1.0,
-                 waveNumber=2.0,
-                 waterDepth=0.5,
-                 Omega_s=[[0.45, 0.55], [0.2, 0.4], [0.0, 1.0]],
-                 epsFact_source=1.,
                  epsFact_solid=None,
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=10.0,
@@ -223,7 +215,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_alpha=1000.0,
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
-                 particle_nitsche=1.0,):
+                 particle_nitsche=1.0,
+                 nullSpace='NoNullSpace'):
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
@@ -305,18 +298,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.dragBetaTypes = dragBetaTypes
         self.porosityTypes = porosityTypes
         self.killNonlinearDrag = int(killNonlinearDrag)
-        self.waveFlag = waveFlag
-        self.waveHeight = waveHeight
-        self.waveCelerity = waveCelerity
-        self.waveFrequency = waveFrequency
-        self.waveNumber = waveNumber
-        self.waterDepth = waterDepth
-        self.Omega_s = Omega_s
-        self.epsFact_source = epsFact_source
         self.linearDragFactor = 1.0
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
+        self.nullSpace = nullSpace
         mass = {}
         advection = {}
         diffusion = {}
@@ -534,7 +520,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.eps_viscosity = self.epsFact * mesh.h
         self.mesh = mesh
         self.elementMaterialTypes = mesh.elementMaterialTypes
-        self.eps_source = self.epsFact_source * mesh.h
         nBoundariesMax = int(globalMax(max(self.mesh.elementBoundaryMaterialTypes))) + 1
         self.wettedAreas = numpy.zeros((nBoundariesMax,), 'd')
         self.netForces_p = numpy.zeros((nBoundariesMax, 3), 'd')
@@ -675,141 +660,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def updateToMovingDomain(self, t, c):
         pass
 
-    def evaluateForcingTerms(self, t, c, mesh=None, mesh_trial_ref=None, mesh_l2g=None):
-        if 'x' in c and len(c['x'].shape) == 3:
-            if self.nd == 2:
-                c[('r', 0)].fill(0.0)
-                eps_source = self.eps_source
-                if self.waveFlag == 1:  # secondOrderStokes:
-                    waveFunctions.secondOrderStokesWave(c[('r', 0)].shape[0],
-                                                        c[('r', 0)].shape[1],
-                                                        self.waveHeight,
-                                                        self.waveCelerity,
-                                                        self.waveFrequency,
-                                                        self.waveNumber,
-                                                        self.waterDepth,
-                                                        self.Omega_s[0][0],
-                                                        self.Omega_s[0][1],
-                                                        self.Omega_s[1][0],
-                                                        self.Omega_s[1][1],
-                                                        eps_source,
-                                                        c['x'],
-                                                        c[('r', 0)],
-                                                        t)
-                elif self.waveFlag == 2:  # solitary wave
-                    waveFunctions.solitaryWave(c[('r', 0)].shape[0],
-                                               c[('r', 0)].shape[1],
-                                               self.waveHeight,
-                                               self.waveCelerity,
-                                               self.waveFrequency,
-                                               self.waterDepth,
-                                               self.Omega_s[0][0],
-                                               self.Omega_s[0][1],
-                                               self.Omega_s[1][0],
-                                               self.Omega_s[1][1],
-                                               eps_source,
-                                               c['x'],
-                                               c[('r', 0)],
-                                               t)
-
-                elif self.waveFlag == 0:
-                    waveFunctions.monochromaticWave(c[('r', 0)].shape[0],
-                                                    c[('r', 0)].shape[1],
-                                                    self.waveHeight,
-                                                    self.waveCelerity,
-                                                    self.waveFrequency,
-                                                    self.Omega_s[0][0],
-                                                    self.Omega_s[0][1],
-                                                    self.Omega_s[1][0],
-                                                    self.Omega_s[1][1],
-                                                    eps_source,
-                                                    c['x'],
-                                                    c[('r', 0)],
-                                                    t)
-
-                # mwf debug
-                if numpy.isnan(c[('r', 0)].any()):
-                    import pdb
-                    pdb.set_trace()
-            else:
-                c[('r', 0)].fill(0.0)
-                eps_source = self.eps_source
-                if self.waveFlag == 1:  # secondOrderStokes:
-                    waveFunctions.secondOrderStokesWave3d(c[('r', 0)].shape[0],
-                                                          c[('r', 0)].shape[1],
-                                                          self.waveHeight,
-                                                          self.waveCelerity,
-                                                          self.waveFrequency,
-                                                          self.waveNumber,
-                                                          self.waterDepth,
-                                                          self.Omega_s[0][0],
-                                                          self.Omega_s[0][1],
-                                                          self.Omega_s[1][0],
-                                                          self.Omega_s[1][1],
-                                                          self.Omega_s[2][0],
-                                                          self.Omega_s[2][1],
-                                                          eps_source,
-                                                          c['x'],
-                                                          c[('r', 0)],
-                                                          t)
-                elif self.waveFlag == 2:  # solitary wave
-                    waveFunctions.solitaryWave3d(c[('r', 0)].shape[0],
-                                                 c[('r', 0)].shape[1],
-                                                 self.waveHeight,
-                                                 self.waveCelerity,
-                                                 self.waveFrequency,
-                                                 self.waterDepth,
-                                                 self.Omega_s[0][0],
-                                                 self.Omega_s[0][1],
-                                                 self.Omega_s[1][0],
-                                                 self.Omega_s[1][1],
-                                                 self.Omega_s[2][0],
-                                                 self.Omega_s[2][1],
-                                                 eps_source,
-                                                 c['x'],
-                                                 c[('r', 0)],
-                                                 t)
-
-                elif self.waveFlag == 0:
-                    waveFunctions.monochromaticWave3d(c[('r', 0)].shape[0],
-                                                      c[('r', 0)].shape[1],
-                                                      self.waveHeight,
-                                                      self.waveCelerity,
-                                                      self.waveFrequency,
-                                                      self.Omega_s[0][0],
-                                                      self.Omega_s[0][1],
-                                                      self.Omega_s[1][0],
-                                                      self.Omega_s[1][1],
-                                                      self.Omega_s[2][0],
-                                                      self.Omega_s[2][1],
-                                                      eps_source,
-                                                      c['x'],
-                                                      c[('r', 0)],
-                                                      t)
-
-        else:
-            assert mesh is not None
-            assert mesh_trial_ref is not None
-            assert mesh_l2g is not None
-            # cek hack
-            pass
-        #            self.calculateWaveFunction3d_ref(mesh_trial_ref,
-        #                                     mesh.nodeArray,
-        #                                     mesh_l2g,
-        #                                     mesh.elementDiametersArray,
-        #                                     numpy.array(self.Omega_s[0]),
-        #                                     numpy.array(self.Omega_s[1]),
-        #                                     numpy.array(self.Omega_s[2]),
-        #                                     t,
-        #                                     self.waveFlag,
-        #                                     self.epsFact_source,
-        #                                     self.waveHeight,
-        #                                     self.waveCelerity,
-        #                                     self.waveFrequency,
-        #                                     self.waveNumber,
-        #                                     self.waterDepth,
-        #                                     c[('r',0)])
-
     def evaluate(self, t, c):
         pass
 
@@ -828,12 +678,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.comm.isMaster():
-            # print "wettedAreas"
-            # print self.wettedAreas[:]
-            # print "Forces_p"
-            # print self.netForces_p[:,:]
-            # print "Forces_v"
-            # print self.netForces_v[:,:]
+            logEvent("wettedAreas\n"+
+                     `self.wettedAreas[:]` +
+                     "\nForces_p\n" +
+                     `self.netForces_p[:,:]` +
+                     "\nForces_v\n" +
+                     `self.netForces_v[:,:]`)
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
@@ -874,10 +724,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reactionLumping=False,
                  options=None,
                  name='RANS2P',
-                 reuse_trial_and_test_quadrature=True,
+                 reuse_trial_and_test_quadrature=False,
                  sd=True,
-                 movingDomain=False,
-                 bdyNullSpace=False):
+                 movingDomain=False):
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         useConstant_he = coefficients.useConstant_he  # this is a hack to test the effect of using a constant smoothing width
         self.postProcessing = True
@@ -904,18 +753,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi = phiDict
         self.dphi = {}
         self.matType = matType
-        # mwf try to reuse test and trial information across components if spaces are the same
-        self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
-        if self.reuse_test_trial_quadrature:
-            for ci in range(1, coefficients.nc):
-                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         # Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh  # assume the same mesh for  all components for now
         self.par_info = LinearAlgebraTools.ParInfo_petsc4py()
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList = None  # explicit Dirichlet  conditions for now, no Dirichlet BC constraints
-        self.bdyNullSpace = bdyNullSpace
         self.coefficients = coefficients
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
@@ -1333,8 +1176,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent(memory("TimeIntegration", "OneLevelTransport"), level=4)
         logEvent("Calculating numerical quadrature formulas", 2)
         self.calculateQuadrature()
-
-        self.setupFieldStrides()
+        if numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions:
+            interleave_DOF=True
+            for nDOF_trial_element_ci in self.nDOF_trial_element:
+                if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
+                    interleave_DOF=False
+        else:
+            interleave_DOF=False
+        self.setupFieldStrides(interleave_DOF)
         comm = Comm.get()
         self.comm = comm
         if comm.size() > 1:
@@ -1422,7 +1271,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter = self.mesh.elementDiametersArray
         if self.nSpace_global == 2:
             import copy
-            self.u[3] = copy.deepcopy(self.u[2])
+            self.u[3] = self.u[2].copy()
+            self.u[3].name="w"
             self.timeIntegration.m_tmp[3] = self.timeIntegration.m_tmp[2].copy()
             self.timeIntegration.beta_bdf[3] = self.timeIntegration.beta_bdf[2].copy()
             self.coefficients.sdInfo[(1, 3)] = (numpy.array([0, 1, 2], dtype='i'),
@@ -1447,6 +1297,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                          self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                          self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                          self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
+                                         self.u[1].femSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                         self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                                          compKernelFlag)
         else:
@@ -1456,6 +1308,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                        self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                        self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
+                                       self.u[1].femSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                       self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
         self.velocityErrorNodal = self.u[0].dof.copy()
@@ -1503,10 +1357,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         self.Ct_sge = 4.0
         self.Cd_sge = 36.0
-        # TODO how to request problem specific evaluations from coefficient class
-        if 'evaluateForcingTerms' in dir(self.coefficients):
-            self.coefficients.evaluateForcingTerms(self.timeIntegration.t, self.q, self.mesh,
-                                                   self.u[0].femSpace.elementMaps.psi, self.mesh.elementNodesArray)
         self.coefficients.wettedAreas[:] = 0.0
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
@@ -1521,7 +1371,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
-                                                 self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                                                 self.timeIntegration.t)
+                        if self.MOVING_DOMAIN == 1.0:
+                            self.u[cj].dof[dofN] += self.mesh.nodeVelocityArray[dofN, cj - 1]
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
@@ -1600,6 +1452,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       # VRANS end
                                       self.u[0].femSpace.dofMap.l2g,
                                       self.u[1].femSpace.dofMap.l2g,
+                                      self.l2g[0]['freeGlobal'],
+                                      self.l2g[1]['freeGlobal'],
                                       self.u[0].dof,
                                       self.u[1].dof,
                                       self.u[2].dof,
@@ -1710,7 +1564,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant)
-        from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
             for I in range(3):
@@ -1754,8 +1607,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
                     else:
                         r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
-                            g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) - \
-                            self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                            g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) 
+                        if self.MOVING_DOMAIN == 1.0:
+                            r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax), level=2)
@@ -2149,6 +2003,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian[cj] = True
         self.q['velocityError'][:] = self.q[('velocity', 0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        # if  self.coefficients.nd ==3:
+        #     self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
+        #                                    self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1] +
+        #                                    self.q[('velocity',0)][...,2]*self.q[('velocity',0)][...,2])/self.elementDiameter[:,np.newaxis]
+        # else:
+        #     self.q[('cfl',0)][:] = np.sqrt(self.q[('velocity',0)][...,0]*self.q[('velocity',0)][...,0] +
+        #                                    self.q[('velocity',0)][...,1]*self.q[('velocity',0)][...,1])/self.elementDiameter[:,np.newaxis]
         self.q['velocityError'] -= self.q[('velocity', 0)]
         self.q['eddy_viscosity_last'][:] = self.q['eddy_viscosity']
         self.ebqe['eddy_viscosity_last'][:] = self.ebqe['eddy_viscosity']
