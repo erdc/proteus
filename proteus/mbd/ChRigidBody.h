@@ -12,20 +12,15 @@ using namespace chrono;
 using namespace chrono::collision;
 using namespace std;
 
-
-
 class cppSystem {
  public:
   std::shared_ptr<ChSystemSMC> systemSMC_sharedptr;
   ChSystemSMC* systemSMC;
   ChSystem* system;
-  double* gravity;
   double chrono_dt;
   std::string directory;
-  cppSystem(double* gravity);
+  cppSystem();
   void step(double proteus_dt, int n_substeps);
-  void setChTimeStep(double dt);
-  void setGravity(double* gravity);
   void setDirectory(std::string dir);
   void setTimestepperType(std::string tstype, bool verbose);
   void setCollisionEnvelopeMargin(double envelope, double margin);
@@ -80,10 +75,7 @@ class cppRigidBody {
   void calculate_init();
   void prestep(double* force, double* torque);
   void poststep();
-  void setRotation(double* quat);
-  void setPosition(double* quat);
   void setConstraints(double* free_x, double* free_y);
-  void setInertiaXX(double* inertia);
   void addSpring(double stiffness,
                  double damping,
                  double* fairlead,
@@ -110,14 +102,12 @@ class cppRigidBody {
   void updateTriangleMeshVisualisationPos();
 };
 
-cppSystem::cppSystem(double* gravity):
-gravity(gravity)
+cppSystem::cppSystem()
 {
   systemSMC_sharedptr = std::make_shared<ChSystemSMC>();
   systemSMC = systemSMC_sharedptr.get();
   system = systemSMC;
   chrono_dt = 0.000001;
-  system->Set_G_acc(ChVector<>(gravity[0], gravity[1], gravity[2]));
   directory = "./";
   // SOLVER OPTIONS
   system->SetSolverType(ChSolver::Type::MINRES);  // SOLVER_MINRES: good convergence, supports FEA, does not support DVI yet
@@ -158,11 +148,6 @@ void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
     }
   }
 
-void cppSystem::setGravity(double* gravity)
-{
-  system->Set_G_acc(ChVector<>(gravity[0], gravity[1], gravity[2]));
-}
-
 void cppSystem::step(double proteus_dt, int n_substeps=1)
 {
     double dt2 = proteus_dt/(double)n_substeps;
@@ -170,10 +155,6 @@ void cppSystem::step(double proteus_dt, int n_substeps=1)
      system->DoStepDynamics(dt2);
    }
 }
-
-void cppSystem::setChTimeStep(double dt) {
-    chrono_dt = dt;
-};
 
 cppRigidBody::cppRigidBody(cppSystem* system):
   system(system)
@@ -428,23 +409,10 @@ void cppRigidBody::setPrescribedMotionSine(double a, double f) {
   lock->SetMotion_X(forced_ptr);
 }
 
-void cppRigidBody::setPosition(double* position){
-  body->SetPos(ChVector<>(position[0], position[1], position[2]));
-}
-
-void cppRigidBody::setRotation(double* quat) {
-  body->SetRot(ChQuaternion<double>(quat[0], quat[1], quat[2], quat[3]));
-}
-
 void cppRigidBody::setConstraints(double* free_x_in, double* free_r_in){
   free_x = ChVector<>(free_x_in[0], free_x_in[1], free_x_in[2]);
   free_r = ChVector<>(free_r_in[0], free_r_in[1], free_r_in[2]);
 }
-
-void cppRigidBody::setInertiaXX(double* inertia){
-  body->SetInertiaXX(ChVector<>(inertia[0], inertia[1], inertia[2]));
-}
-
 
 void cppRigidBody::addSpring(double stiffness,
                              double damping,
@@ -602,9 +570,9 @@ void cppRigidBody::getTriangleMeshVel(double *x,
 }
 
 
-cppSystem * newSystem(double* gravity)
+cppSystem * newSystem()
 {
-  return new cppSystem(gravity);
+  return new cppSystem();
 }
 
 

@@ -12,11 +12,11 @@ Objects starting with 'Ch' (e.g. ChBody) are objects that only have Chrono
 logic associated to them.
 
 Some ProtCh objects give access to the Chrono object:
-my_protchsystem = ProtChSystem(gravity=np.ndarray([0.,-9.81,0.]))
+my_protchsystem = ProtChSystem()
 my_protchbody = ProtChBody(system=my_protchsystem)
-my_chbody = ProtChBody.ChBody
+my_chbody = my_protchbody.ChBody
 my_chbody.SetPos(...)
-my_chbody.SetPos(...)
+my_chbody.SetRot(...)
 
 # pass the index of the boundaries (or particle index) where forces must be integrated
 my_protchbody.setIndexBoundary(i_start=1, i_end=5)
@@ -153,14 +153,13 @@ cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
         ch.ChSystem* system
         ch.ChSystemSMC* systemSMC
+        double chrono_dt
         void DoStepDynamics(dt)
         void step(double proteus_dt, int n_substeps)
-        void setChTimeStep(double dt)
-        void setGravity(double* gravity)
         void setDirectory(string directory)
         void setTimestepperType(string tstype, bool verbose)
         void setCollisionEnvelopeMargin(double envelope, double margin)
-    cppSystem * newSystem(double* gravity)
+    cppSystem * newSystem()
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
         double mass
@@ -210,10 +209,7 @@ cdef extern from "ChRigidBody.h":
                                          double damping,
                                          double rest_length);
         void addPrismaticLinkX(double* pris1);
-        void setRotation(double* quat)
-        void setPosition(double* pos)
         void setConstraints(double* free_x, double* free_r)
-        void setInertiaXX(double* inertia)
         void setName(string name)
         void setPrescribedMotionCustom(vector[double] t, vector[double] x,
                                        vector[double] y, vector[double] z,
@@ -320,7 +316,8 @@ cdef class ProtChBody:
             self.ProtChSystem.addProtChBody(self)
         # initialise values
         self.record_dict = OrderedDict()
-        self.setRotation(np.array([1.,0.,0.,0.]))  # initialise rotation (nan otherwise)
+        new_quat = chrono.ChQuaternionD(1., 0., 0., 0.)
+        self.ChBody.SetRot(new_quat)
         self.F_prot = np.zeros(3)  # initialise empty Proteus force
         self.M_prot = np.zeros(3)  # initialise empty Proteus moment
         self.F_applied = np.zeros(3)  # initialise empty Applied force
@@ -371,7 +368,10 @@ cdef class ProtChBody:
             if take_shape_name is True:
                 self.setName(shape.name)
         self.nd = shape.Domain.nd
-        self.SetPosition(shape.barycenter)
+        new_vec = chrono.ChVectorD(shape.barycenter[0],
+                                   shape.barycenter[1],
+                                   shape.barycenter[2])
+        self.ChBody.SetPos(new_vec)
 
     def addTriangleMeshFromShape(self,
                                  object shape=None,
@@ -534,17 +534,14 @@ cdef class ProtChBody:
     def attachAuxiliaryVariables(self,avDict):
         pass
 
-    def setInertiaXX(self, np.ndarray inertia):
-        self.thisptr.setInertiaXX(<double*> inertia.data)
-
     def setInitialRot(self, rot):
         cdef np.ndarray zeros = np.zeros(3)
         self.rotation_init = rot
         self.thisptr.prestep(<double*> zeros.data,
                              <double*> zeros.data)
         if self.rotation_init is not None:
-            Profiling.logEvent("$$$$$ SETTING ROT")
-            self.thisptr.setRotation(<double*> self.rotation_init.data)
+            new_quat = chrono.ChQuaternionD(rot[0], rot[1], rot[2], rot[3])
+            self.ChBody.SetRot(new_quat)
         self.thisptr.poststep()
 
     def hxyz(self, np.ndarray x, double t, debug=False):
@@ -738,44 +735,6 @@ cdef class ProtChBody:
         self.thisptr.addSpring(stiffness, damping, <double*> fairlead.data,
                                <double*> anchor.data, rest_length)
 
-    def SetPosition2(self, position):
-        cdef SwigPyObject *swig_obj = <SwigPyObject*>position.this
-        cdef ch.ChVector *mycpp_ptr = <ch.ChVector*?>swig_obj.ptr
-        cdef ch.ChVector my_instance = deref(mycpp_ptr)
-        
-        print(my_instance.x())
-
-    def SetPosition(self, np.ndarray position):
-        """Sets position of body manually
-
-        Parameters
-        ----------
-        position: array_like
-            new position of body (must be array of length 3)
-        """
-        self.position = position
-        self.thisptr.setPosition(<double*> position.data)
-
-    def SetPosition(self, np.ndarray position):
-        """Sets position of body manually
-
-        Parameters
-        ----------
-        position: array_like
-            new position of body (must be array of length 3)
-        """
-        self.thisptr.setPosition(<double*> position.data)
-
-    def setRotation(self, np.ndarray quaternion):
-        """Sets rotation of body manually
-
-        Parameters
-        ----------
-        rotation: array_like
-            new rotation of body (quaternion: must be array of length 4)
-        """
-        self.thisptr.setRotation(<double*> quaternion.data)
-
     def setConstraints(self, np.ndarray free_x, np.ndarray free_r):
         """Sets constraints on the body
         (!) Only acts on Proteus and gravity forces
@@ -889,33 +848,6 @@ cdef class ProtChBody:
         Mp = np.array([ry*Fz-rz*Fy, -(rx*Fz-rz*Fx), (rx*Fy-ry*Fx)])
         M_t += Mp
         return M_t
-
-    def SetPos(self, pos):
-        """Sets current position of body
-
-        Parameters
-        ----------
-        pos: array_like
-            position of body (array of length 3)
-        """
-        cdef SwigPyObject *swig_obj = <SwigPyObject*>pos.this
-        cdef ch.ChVector *mycpp_ptr = <ch.ChVector*?>swig_obj.ptr
-        cdef ch.ChVector my_instance = deref(mycpp_ptr)
-
-        deref(self.thisptr.body).SetPos(my_instance)
-
-    def SetRot(self, double[:] rot):
-        """Sets current rotation (quaternion) of body
-
-        Parameters
-        ----------
-        rot: array_like
-           rotation of body (array of length 4)
-        """
-        assert len(rot) == 4, 'Position aray must be of length 4'
-        cdef ch.ChQuaternion rot_vec
-        rot_vec = ch.ChQuaternion[double](rot[0], rot[1], rot[2], rot[3])
-        deref(self.thisptr.body).SetRot(rot_vec)
 
     def getRotationMatrix(self):
         """Gives current rotation (matrix) of body
@@ -1043,7 +975,8 @@ cdef class ProtChBody:
         """
         if self.prescribed_motion_function is not None:
             new_x = self.callPrescribedMotion(self.ProtChSystem.model.stepController.t_model_last)
-            self.thisptr.setPosition(<double*> new_x.data)
+            new_vec = chrono.ChVectorD(new_x[0], new_x[1], new_x[2])
+            self.ChBody.SetPos(new_vec)
         self.thisptr.poststep()
         self.getValues()
         comm = Comm.get().comm.tompi4py()
@@ -1167,7 +1100,6 @@ cdef class ProtChBody:
         self.storeValues()
         # set mass matrix with no added mass
         self.setAddedMass(np.zeros((6,6)))
-        # self.thisptr.setRotation(<double*> self.rotation_init.data)
         self.thisptr.calculate_init()
         #
 
@@ -1668,7 +1600,7 @@ cdef class ProtChSystem:
     cdef vector[shared_ptr[ch.ChPhysicsItem]] myphysicsitem
     cdef vector[shared_ptr[ch.ChBody]] mybodies
     cdef public:
-        object System
+        object ChSystemSMC
         object model
         object model_module
         double dt_init
@@ -1695,14 +1627,13 @@ cdef class ProtChSystem:
         bool initialised
         bool update_substeps
 
-    def __cinit__(self, np.ndarray gravity=None, int nd=3, dt_init=0., sampleRate=0):
-        if gravity is not None:
-            self.thisptr = newSystem(<double*> gravity.data)
+    def __cinit__(self, int nd=3, dt_init=0., sampleRate=0):
+        self.thisptr = newSystem()
         self.subcomponents = []
         # cannot call it self.ChSystem or self.ChSystemSMC (conflict in C++ - unknown reason)
-        self.System = chrono.ChSystemSMC()
-        self.System.this.disown()
-        cdef SwigPyObject *swig_obj = <SwigPyObject*>self.System.this
+        self.ChSystemSMC = chrono.ChSystemSMC()
+        self.ChSystemSMC.this.disown()
+        cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChSystemSMC.this
         swig_obj.ptr = <ch.ChSystemSMC*?> &self.thisptr.systemSMC
         self.dt_init = dt_init
         self.model = None
@@ -1738,54 +1669,22 @@ cdef class ProtChSystem:
         self.initialised = False
         self.update_substeps = False
 
-    # cpdef AddBody(self, obj):
-    # # not working
-    #     cdef SwigPyObject *swig_obj = <SwigPyObject*>obj.this
-    #     cdef ch.ChBody* mycpp_ptr = <ch.ChBody*> swig_obj.ptr
-    #     # cdef ch.ChBody my_instance = deref(mycpp_ptr)
-
-    #     print('heyy', mycpp_ptr.GetPos().x())
-    #     cdef shared_ptr[ch.ChBody] mycpp_sharedptr = make_shared[ch.ChBody]()
-    #     mycpp_sharedptr.reset(mycpp_ptr)
-    #     # # keep a record
-    #     self.mybodies.push_back(mycpp_sharedptr)
-    #     # add the ChBody to the system
-    #     # self.thisptr.system.AddBody(mycpp_sharedptr)
-
-    # def  body0(self):
-    #     cdef double xx = deref(self.mybodies[0]).GetPos().x()
-    #     return xx
-
-    # cpdef Add(self, obj):
-    #     # not working
-    #     physicsitem = obj.GetPhysicsItem()
-    #     cdef SwigPyObject *swig_obj = <SwigPyObject*>physicsitem.this
-    #     cdef ch.ChPhysicsItem* mycpp_ptr = <ch.ChPhysicsItem*> &swig_obj.ptr
-    #     self.thisptr.system.Add(getPhysicsItemSharedPtr2(mycpp_ptr))
-    #     # # cdef ch.ChPhysicsItem my_instance = deref(mycpp_ptr)
-    #     # cdef shared_ptr[ch.ChPhysicsItem] mycpp_sharedptr = shared_ptr[ch.ChPhysicsItem](<ch.ChPhysicsItem*> &swig_obj.ptr)
-    #     # # mycpp_sharedptr.reset(mycpp_ptr)
-    #     # # # keep a record
-    #     # self.myphysicsitem.push_back(mycpp_sharedptr)
-    #     # # add the ChPhysicsItem to the system
-    #     # self.thisptr.system.Add(mycpp_sharedptr)
-
+    def setTimeStep(self, double dt):
+        """Sets time step for Chrono solver.
+        Calculations in Chrono will use this time step within the
+        Proteus time step (if bigger)
+        Parameters
+        ----------
+        dt: float
+            Chrono time step size
+        """
+        self.chrono_dt = dt
+        self.thisptr.chrono_dt = dt
 
     def addProtChBody(self, ProtChBody body):
         self.thisptr.system.AddBody(body.ChBodyAddedMass.sharedptr_chbody)
         body.ProtChSystem = self
         self.addSubcomponent(body)  # add body to system (for pre and post steps)
-
-    def GetChTime(self):
-        """Gives time of Chrono system simulation
-
-        Returns
-        -------
-        time: double
-            time of chrono system
-        """
-        time = self.thisptr.system.GetChTime()
-        return time
 
     def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
         assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
@@ -1945,29 +1844,6 @@ cdef class ProtChSystem:
         tstypes = ["Euler", "HHT", "Trapezoidal"]
         assert str(tstype) in tstypes, str(tstype)+" not a valid choice."
         self.thisptr.setTimestepperType(tstype, verbose)
-
-    def setTimeStep(self, double dt):
-        """Sets time step for Chrono solver.
-        Calculations in Chrono will use this time step within the
-        Proteus time step (if bigger)
-
-        Parameters
-        ----------
-        dt: float
-            Chrono time step size
-        """
-        self.chrono_dt = dt
-        self.thisptr.setChTimeStep(dt)
-
-    def setGravity(self, np.ndarray gravity):
-        """Sets gravity acceleration of the Chrono system
-
-        Parameters
-        ----------
-        gravity: array_like
-            Gravity acceleration (array of length 3)
-        """
-        self.thisptr.setGravity(<double*> gravity.data)
 
     def addSubcomponent(self, subcomponent):
         """Adds subcomponent to system
@@ -2342,6 +2218,7 @@ cdef class ProtChMoorings:
       int[:] owning_rank
       string hdfFileName
       double[:] tCount_value
+      int tCount
     def __cinit__(self,
                   ProtChSystem system,
                   ProtChMesh mesh,
@@ -2394,6 +2271,7 @@ cdef class ProtChMoorings:
         self._record_etas_names = []
         for eta in self._record_etas:
             self._record_etas_names += ['sx'+str(eta), 'sy'+str(eta), 'sz'+str(eta)]
+        self.tCount = 0
 
     def setName(self, string name):
         """Sets name of cable, used for csv file
@@ -2415,7 +2293,7 @@ cdef class ProtChMoorings:
                                         'sz'+str(eta)]
 
     def _recordH5(self):
-        tCount = self.ProtChSystem.tCount
+        tCount = self.tCount
         t = self.ProtChSystem.t
         self.hdfFileName = self.name
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
@@ -2509,7 +2387,7 @@ cdef class ProtChMoorings:
         f.close()
 
     def _recordXML(self):
-        tCount = self.ProtChSystem.tCount
+        tCount = self.tCount
         t = self.ProtChSystem.t
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
         # if tCount == 0:
@@ -2753,6 +2631,7 @@ cdef class ProtChMoorings:
             self._recordValues()
             self._recordH5()
             self._recordXML()
+            self.tCount += 1
 
     def setApplyDrag(self, bool boolval):
         for i in range(self.thisptr.cables.size()):
