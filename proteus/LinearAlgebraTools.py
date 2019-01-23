@@ -1409,6 +1409,9 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
                                                      2.0)
         else:
             pass
+
+#        self.kspAp_rho.setUp()
+        #ARB - I think this setup just wastes time
             # Using ksp objects for the lumped mass matrices is much
             # slower than pointwise division.
             # self.kspQp_visc = self.create_petsc_ksp_obj('innerTPPCDsolver_Qp_visc_',
@@ -1465,7 +1468,14 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
             # self.kspQp_visc.solve(x_tmp,y)
             # self.kspQp_dens.solve(x_tmp,tmp1)
 
+        ########################
+        solve_stage = p4pyPETSc.Log.Stage('Np_mult')
+        solve_stage.push()
+
         self.Np_rho.mult(tmp1,tmp2)
+
+        solve_stage.pop()
+        ##########################
 
         if self.alpha is True:
             tmp2.axpy(old_div(1.,self.delta_t),x_tmp)
@@ -1478,7 +1488,15 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 #        tmp2.setValues(self.known_dof_is.getIndices(),zero_array)
 #        tmp2.assemblyEnd()
 
+        #######################
+        solve_stage = p4pyPETSc.Log.Stage('Ap_solve')
+        solve_stage.push()
+
         self.kspAp_rho.solve(tmp2, tmp1)
+
+        solve_stage.pop()
+        #######################
+
         y.axpy(1.,tmp1)
 #        y.setValues(self.known_dof_is.getIndices(),zero_array)
 #        y.assemblyEnd()
