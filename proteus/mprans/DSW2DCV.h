@@ -18,7 +18,8 @@
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 // quick hack to turn on/off dispersion
 // 0 is for shallow water and 1 is for mGN model - EJT.
-#define LAMBDA_MGN 0.
+// making lambda_mgn 0 decouples the heta and hw eqns from mass and momentum eqns
+#define LAMBDA_MGN 1.
 
 namespace proteus
 {
