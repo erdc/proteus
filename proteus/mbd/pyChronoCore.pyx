@@ -47,12 +47,3 @@ cdef class ChBodyAddedMass:
 
     cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
         self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
-
-    cpdef void SetMass(self, double newmass):
-        self.thisptr.SetMass(newmass)
-
-    cpdef double GetMass(self):
-        return self.thisptr.GetMass()
-
-    cpdef double GetPos(self):
-        return self.thisptr.GetPos().x()
