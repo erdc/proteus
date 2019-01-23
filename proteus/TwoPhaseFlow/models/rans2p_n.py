@@ -99,7 +99,7 @@ linearSolverConvergenceTest             = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-ns_nl_atol_res = max(1.0e-8, 0.001 * he ** 2)
+ns_nl_atol_res = max(1.0e-8, 0.01 * he ** 2)
 nl_atol_res = ns_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.01

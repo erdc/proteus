@@ -104,5 +104,5 @@ linTolFac = 0.0
 l_atol_res = 0.1*ns_nl_atol_res
 
 useEisenstatWalker = False
-maxNonlinearIts = 50
+maxNonlinearIts = 1 # This is a linear problem
 maxLineSearches = 0

@@ -70,4 +70,4 @@ pressure_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 nl_atol_res = pressure_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.0
-l_atol_res = 0.01*pressure_nl_atol_res
+l_atol_res = 0.1*pressure_nl_atol_res

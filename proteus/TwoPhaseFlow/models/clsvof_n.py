@@ -67,14 +67,14 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-clsvof_nl_atol_res = max(1.0e-8, 0.001 * he ** 2)
+clsvof_nl_atol_res = max(1.0e-8, 0.01 * he ** 2)
 eps_tolerance_clsvof = clsvof_parameters['eps_tolerance_clsvof']
 if eps_tolerance_clsvof:
     nl_atol_res = 1E-12
 else:
     nl_atol_res=clsvof_nl_atol_res
 #
-l_atol_res = nl_atol_res
+l_atol_res = 0.1*nl_atol_res
 tolFac=0.
 maxNonlinearIts = 50
 
