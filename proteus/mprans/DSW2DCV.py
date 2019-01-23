@@ -32,6 +32,7 @@ class RKEV(proteus.TimeIntegration.SSP):
     from proteus import TimeIntegration
     """
     Wrapper for SSPRK time integration using EV
+
     ... more to come ...
     """
 
@@ -252,7 +253,6 @@ class RKEV(proteus.TimeIntegration.SSP):
                 if flag == 'timeOrder':
                     self.resetOrder(self.timeOrder)
 
-
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for the shallow water equations
@@ -361,7 +361,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.b.dof = mesh.nodeArray[:, 2].copy()
         else:
             self.b.dof = self.bathymetry[0]([x, y])
-        # self.b.dof[:] = 0. #TMP
+        #self.b.dof[:] = 0. #TMP
 
     def initializeElementQuadrature(self, t, cq):
         pass
@@ -387,7 +387,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def postStep(self, t, firstStep=False):
         pass
-
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
@@ -419,7 +418,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
-
         self.bdyNullSpace = bdyNullSpace
         self.inf_norm_hu = []  # To test 1D well balancing
         self.secondCallCalculateResidual = 0
@@ -463,7 +461,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients = coefficients
         # cek hack? give coefficients a bathymetriy array
         import copy
-        self.coefficients.b = copy.deepcopy(self.u[0])
+        self.coefficients.b = self.u[0].copy()
+        self.coefficients.b.name='b'
         self.coefficients.b.dof.fill(0.0)
         #
         self.coefficients.initializeMesh(self.mesh)
@@ -518,7 +517,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-
         if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
@@ -604,7 +602,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hw_dof_old = None
         self.heta_dof_old = None
         self.hw_dof_old = None
-
 
         # Vector for mass matrix
         self.check_positivity_water_height = True
@@ -1468,7 +1465,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                      str(edge_based_cflMax), level = 2)
 
         logEvent("Global residual", level = 9, data = r)
-        # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
 
     def getJacobian(self, jacobian):
@@ -1617,6 +1613,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
+
         This function should be called only when the mesh changes.
         """
         if self.postProcessing:
@@ -1640,6 +1637,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points on element boundaries.
+
         This function should be called only when the mesh changes.
         """
         if self.postProcessing:
@@ -1650,6 +1648,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points on global element boundaries.
+
         This function should be called only when the mesh changes.
         """
         if self.postProcessing:

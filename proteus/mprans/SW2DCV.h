@@ -558,12 +558,12 @@ namespace proteus
         double lambda1, lambda3;
         //1-eigenvalue: uL-sqrt(g*hL)
         //3-eigenvalue: uR+sqrt(g*hR)
-  
+
         double hVelL = nx*huL + ny*hvL;
         double hVelR = nx*huR + ny*hvR;
         double velL = 2*hL/(hL*hL+std::pow(fmax(hL,hEpsL),2))*hVelL;
         double velR = 2*hR/(hR*hR+std::pow(fmax(hR,hEpsR),2))*hVelR;
-  
+
         if (debugging)
           std::cout << "hL, hR, hVelL, hVelR, velL, velR: "
                     << hL << "\t"
@@ -589,13 +589,54 @@ namespace proteus
                 std::cout << lambda1 << "\t" << lambda3 << std::endl;
               }
           }
-        else if (0 <= fMax)
-          hStar = std::pow(-sqrt(2*hMin)+sqrt(3*hMin+2*sqrt(2*hMin*hMax)+sqrt(2./g)*(velL-velR)*sqrt(hMin)),2);
-        else // fMax < 0
-          hStar = sqrt(hMin*hMax)*(1+(sqrt(2)*(velL-velR))/(sqrt(g*hMin)+sqrt(g*hMax)));
-        // Compute max wave speed based on hStar0
-        lambda1 = nu1(g,hStar,hL,velL);
-        lambda3 = nu3(g,hStar,hR,velR);
+        else if (hR==0) // right dry state
+          {
+            lambda1 = velL-sqrt(g*hL);
+            lambda3 = velL+2*sqrt(g*hL);
+            if (debugging)
+              {
+                std::cout << "hR=0" << std::endl;
+                std::cout << lambda1 << "\t" << lambda3 << std::endl;
+              }
+          }
+        else // both states are wet
+          {
+            double x0 = std::pow(2.*sqrt(2.)-1.,2.);
+            double hMin = fmin(hL,hR);
+            double hMax = fmax(hL,hR);
+
+            double hStar;
+            double fMin = phi(g,x0*hMin,hL,hR,velL,velR);
+            double fMax = phi(g,x0*hMax,hL,hR,velL,velR);
+
+            if (debugging)
+              std::cout << "hMin, hMax, fMin, fMax: "
+                        << hMin << ", " << hMax << ", "
+                        << fMin << ", " << fMax
+                        << std::endl;
+
+            if (0 <= fMin)
+              {
+                hStar = std::pow(fmax(0.,velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR))),2)/16./g;
+                if (debugging)
+                  std::cout << "**********... THIS IS A RAREFACTION"
+                            << std::endl;
+                if (debugging)
+                  {
+                    std::cout << "h* = " << hStar << std::endl;
+                    lambda1 = nu1(g,hStar,hL,velL);
+                    lambda3 = nu3(g,hStar,hR,velR);
+                    std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
+                  }
+              }
+            else if (0 <= fMax)
+              hStar = std::pow(-sqrt(2*hMin)+sqrt(3*hMin+2*sqrt(2*hMin*hMax)+sqrt(2./g)*(velL-velR)*sqrt(hMin)),2);
+            else // fMax < 0
+              hStar = sqrt(hMin*hMax)*(1+(sqrt(2)*(velL-velR))/(sqrt(g*hMin)+sqrt(g*hMax)));
+            // Compute max wave speed based on hStar0
+            lambda1 = nu1(g,hStar,hL,velL);
+            lambda3 = nu3(g,hStar,hR,velR);
+          }
         if (debugging)
           {
             std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
