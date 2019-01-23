@@ -14,8 +14,5 @@ cdef class ChBodyAddedMass:
     cdef ch.ChBody * bodyptr
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
     cdef void SetInvMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
-    cpdef void SetMass(self, double newmass)
-    cpdef double GetMass(self)
-    cpdef double GetPos(self)
     cdef public:
         object ChBodySWIG
