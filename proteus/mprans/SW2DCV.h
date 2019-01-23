@@ -2046,8 +2046,8 @@ void calculateResidual(    // last EDGE BASED version
                                         // }
                                         // else
                                         // {
-                                                dHij  = dLij;
-                                                muHij = muLij;
+                                        //dHij  = dLij;
+                                        //muHij = muLij;
                                         // }
 
                                         // compute dij_minus_muij times star solution terms

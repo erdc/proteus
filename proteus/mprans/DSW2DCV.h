@@ -12,11 +12,13 @@
 //4. Add Riemann solvers for internal flux and DG terms
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
-#define lambdaMGN 0.
 #define GLOBAL_FCT 0
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
+// quick hack to turn on/off dispersion
+// 0 is for shallow water and 1 is for mGN model - EJT.
+#define LAMBDA_MGN 0.
 
 namespace proteus
 {
@@ -172,12 +174,12 @@ virtual double calculateEdgeBasedCFL(double g,
                                      double* edge_based_cfl,
                                      int debug
                                      )=0;
-virtual void calculateResidual(       // last EDGE BASED version
+virtual void calculateResidual(    // last EDGE BASED version
         double* mesh_trial_ref,
         double* mesh_grad_trial_ref,
         double* mesh_dof,
         double* mesh_velocity_dof,
-        double MOVING_DOMAIN,       //0 or 1
+        double MOVING_DOMAIN,                           //0 or 1
         int* mesh_l2g,
         double* dV_ref,
         double* h_trial_ref,
@@ -590,7 +592,7 @@ template<class CompKernelType,
          int nDOF_trial_element,
          int nDOF_test_element,
          int nQuadraturePoints_elementBoundary>
-class DSW2DCV: public DSW2DCV_base
+class DSW2DCV : public DSW2DCV_base
 {
 public:
 const int nDOF_test_X_trial_element;
@@ -1422,6 +1424,10 @@ void convexLimiting(double dt,
                                     +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2);
                 limited_hvnp1[i] = ((hvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
                                     +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3);
+                // limited_hetanp1[i] = ((hetaLow[i] - dt/mi*extendedSourceTerm_heta[i]) // low_order_hetanp1+...
+                //                     +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix4);
+                // limited_hwnp1[i] = ((hwLow[i] - dt/mi*extendedSourceTerm_hw[i]) // low_order_hwnp1+...
+                //                     +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix5);
 
                 if (limited_hnp1[i] < -hEps && dt < 1.0)
                 {
@@ -1988,24 +1994,21 @@ void calculateResidual(    // last EDGE BASED version
                         // Define things here to make life easier
                         // this is for modified Green Naghdi equations
                         // -EJT
-                        //double lambdaMGN = 1.0;
                         double meshi = std::sqrt(mi);
-                        double constanti = lambdaMGN * g / meshi;
+                        double MGN_constanti = LAMBDA_MGN * g / meshi;
 
                         /////////////////////////
                         // For mGN Force Terms //
                         /////////////////////////
-                        double hSqd_GammaPi = 6.0 * (etai*hi - std::pow(hi,2.0));
-                        extendedSourceTerm_heta[i] = -constanti*hSqd_GammaPi*mi;
+                        // This is h^2 Gamma'(eta/h)
+                        double hSqd_GammaPi = 6.0 * (hetai - std::pow(hi,2.0));
                         if (etai >= hi)
                         {
-                                hSqd_GammaPi = 6.0 * (std::pow(etai,2.0)-etai*hi);
-                                extendedSourceTerm_hw[i] = hSqd_GammaPi;
-                        //std::cout<<"we got here"<<std::endl;
+                                hSqd_GammaPi = 6.0 * (std::pow(etai,2.0)-hetai);
                         }
 
-                                    double force_term_hetai = hwi*mi;
-                                    extendedSourceTerm_heta[i] = force_term_hetai;
+                        extendedSourceTerm_heta[i] = hwi*mi;
+                        extendedSourceTerm_hw[i] = -MGN_constanti*hSqd_GammaPi*mi;
 
                         // HYPERBOLIC FLUXES //
                         hyp_flux_h[i]=0;
@@ -2041,24 +2044,21 @@ void calculateResidual(    // last EDGE BASED version
                                 // For mGN stuff. -EJT
                                 double mj = lumped_mass_matrix[j];
                                 double meshj = std::sqrt(mj); // local mesh size in 2d
-                                //double lambda = 1.0;
-                                double mgnalphaj = lambdaMGN * g / (3.0 * meshj);
+                                double MGN_constantj = LAMBDA_MGN * g / meshj;
 
                                 ////////////////////////
                                 // For mGN Flux Terms //
                                 ////////////////////////
-                                //std::cout<<" this is etaj " << etaj << std::endl;
-                                //std::cout<<" this is hj   " << hj << std::endl;
-                                double pTildej = -mgnalphaj * (etaj*hj - std::pow(hj,2.0));
+                                double pTildej = -MGN_constantj/3.0 * 6.0*hj*(hetaj-std::pow(hj,2.0));
                                 if (etaj >= hj)
                                 {
-                                        pTildej = -mgnalphaj * 2.0 * (std::pow(etaj,3.0)-std::pow(hj,3.0));
+                                        pTildej = -MGN_constantj/3.0 * 2.0*(std::pow(etaj,3.0)-std::pow(hj,3.0));
                                 }
 
                                 // auxiliary functions to compute fluxes
                                 double aux_h = huj*Cx[ij] + hvj*Cy[ij]; // f1*C = hj*(uj*Cx[ij] + vj*Cy[ij]);
-                                double aux_hu = uj*huj*Cx[ij] + uj*hvj*Cy[ij] + pTildej * Cx[ij];
-                                double aux_hv = vj*huj*Cx[ij] + vj*hvj*Cy[ij] + pTildej * Cy[ij];
+                                double aux_hu = uj*huj*Cx[ij] + uj*hvj*Cy[ij];
+                                double aux_hv = vj*huj*Cx[ij] + vj*hvj*Cy[ij];
                                 double aux_heta = hetaj*uj*Cx[ij] + hetaj*vj*Cy[ij];
                                 double aux_hw = hwj*uj*Cx[ij] + hwj*vj*Cy[ij];
 
@@ -2070,15 +2070,13 @@ void calculateResidual(    // last EDGE BASED version
                                 hyp_flux_hw[i] += aux_hw;
 
                                 // EXTENDED SOURCE //
-                                extendedSourceTerm_hu[i] += g*hi*(hj+Zj)*Cx[ij];
-                                extendedSourceTerm_hv[i] += g*hi*(hj+Zj)*Cy[ij];
+                                extendedSourceTerm_hu[i] += (g*hi*(hj+Zj)+pTildej)*Cx[ij];
+                                extendedSourceTerm_hv[i] += (g*hi*(hj+Zj)+pTildej)*Cy[ij];
 
                                 // flux for entropy
                                 ith_flux_term1 += aux_h;
-                                ith_flux_term2 += aux_hu + g*hi*(hj+0.)*Cx[ij]; // NOTE: Zj=0
-                                ith_flux_term3 += aux_hv + g*hi*(hj+0.)*Cy[ij]; // NOTE: Zj=0
-                                ith_flux_term4 += aux_heta;
-                                ith_flux_term5 += aux_hw;
+                                ith_flux_term2 += aux_hu + (g*hi*(hj+0.)+pTildej)*Cx[ij]; // NOTE: Zj=0
+                                ith_flux_term3 += aux_hv + (g*hi*(hj+0.)+pTildej)*Cy[ij]; // NOTE: Zj=0
 
                                 // NOTE: WE CONSIDER FLAT BOTTOM
                                 entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0.,one_over_hjReg) +
@@ -2134,7 +2132,6 @@ void calculateResidual(    // last EDGE BASED version
                         double hi = h_dof_old[i];
                         double hui = hu_dof_old[i];
                         double hvi = hv_dof_old[i];
-                        // for mGN model. -EJT
                         double hetai = heta_dof_old[i];
                         double hwi = hw_dof_old[i];
                         double Zi = b_dof[i];
@@ -2173,9 +2170,6 @@ void calculateResidual(    // last EDGE BASED version
                                 double vj = hvj*one_over_hjReg;
                                 double etaj = hetaj*one_over_hjReg;
                                 double wj = hwj*one_over_hjReg;
-                                double eta_over_h_j = etaj * one_over_hjReg;
-
-
 
                                 // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
                                 double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
@@ -2223,7 +2217,7 @@ void calculateResidual(    // last EDGE BASED version
                                         ///////////////////////////////////////
                                         muLowij = fmax(fmax(0.,-(ui*Cx[ij] + vi*Cy[ij])),
                                                        fmax(0,(uj*Cx[ij] + vj*Cy[ij])));
-                                        muLij = muLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+                                        muLij = muLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order.
 
                                         ////////////////////////
                                         // COMPUTE BAR STATES //
@@ -2246,10 +2240,9 @@ void calculateResidual(    // last EDGE BASED version
                                                 hvBar_ij = -1./(2*dLij)*((vj*huj-vi*hui)*Cx[ij] +
                                                                          (vj*hvj-vi*hvi)*Cy[ij]) +0.5*(hvj+hvi);
                                                 hvTilde_ij = (dLij-muLij)/(2*dLij)*((hvStarji-hvj)-(hvStarij-hvi));
-
                                                 // heta component
                                                 hetaBar_ij = -1./(2*dLij)*((etaj*hetaj-etai*hetai)*Cx[ij] +
-                                                                         (etaj*hetaj-etai*hetai)*Cy[ij]) +0.5*(hetaj+hetai);
+                                                                           (etaj*hetaj-etai*hetai)*Cy[ij]) +0.5*(hetaj+hetai);
                                                 huTilde_ij = (dLij-muLij)/(2*dLij)*((hetaStarji-hetaj)-(hetaStarij-hetai));
                                                 // hw component
                                                 hwBar_ij = -1./(2*dLij)*((wj*hwj-wi*hwi)*Cx[ij] +
@@ -2269,18 +2262,10 @@ void calculateResidual(    // last EDGE BASED version
                                         double dEVij = cE*fmax(global_entropy_residual[i],global_entropy_residual[j]);
                                         dHij  = fmin(dLowij,dEVij);
                                         muHij = fmin(muLowij,dEVij);
-
-                                        // if (cE < 1000) // Hack to quickly deactivate EV
-                                        // {
-                                        //         dHij  = fmin(dLowij,dEVij);
-                                        //         muHij = fmin(muLowij,dEVij);
-                                        // }
-                                        // else
-                                        // {
-                                                dHij  = dLij;
-                                                muHij = muLij;
-                                        // }
-
+                                        // Assume no EV for now. -EJT
+                                        //dHij  = dLij;
+                                        //muLij = 1.01 * muLij;// multiply by 1.01 for hack in paper
+                                        //  muHij = muLij;
                                         // compute dij_minus_muij times star solution terms
                                         ith_dHij_minus_muHij_times_hStarStates  += (dHij - muHij)*(hStarji-hStarij);
                                         ith_dHij_minus_muHij_times_huStarStates += (dHij - muHij)*(huStarji-huStarij);
@@ -2313,47 +2298,26 @@ void calculateResidual(    // last EDGE BASED version
                                         = hi - dt/mi*(hyp_flux_h[i]
                                                       - ith_dHij_minus_muHij_times_hStarStates
                                                       - ith_muHij_times_hStates);
-                                if (std::isnan(globalResidual[offset_h+stride_h*i])==1)
-                                {
-                                  std::cout << "h is bad guy, ie nan = " << std::endl;
-                                }
                                 globalResidual[offset_hu+stride_hu*i]
                                         = hui - dt/mi*(hyp_flux_hu[i]
                                                        + extendedSourceTerm_hu[i]
                                                        - ith_dHij_minus_muHij_times_huStarStates
                                                        - ith_muHij_times_huStates);
-                                 if (std::isnan(globalResidual[offset_hu+stride_hu*i])==1)
-                                 {
-                                   std::cout << "hu is bad guy, ie nan = " << std::endl;
-                                 }
                                 globalResidual[offset_hv+stride_hv*i]
                                         = (hvi - dt/mi*(hyp_flux_hv[i]
-                                                       + extendedSourceTerm_hu[i]
-                                                       - ith_dHij_minus_muHij_times_hvStarStates
-                                                       - ith_muHij_times_hvStates))*0.0;
-                               if (std::isnan(globalResidual[offset_hv+stride_hv*i])==1)
-                               {
-                                 std::cout << "hv is bad guy, ie nan = " << std::endl;
-                               }
-                                 globalResidual[offset_heta+stride_heta*i]
-                                         = hetai - dt/mi*(hyp_flux_heta[i]
-                                                          + extendedSourceTerm_heta[i]
-                                                          - ith_dHij_minus_muHij_times_hetaStarStates
-                                                          - ith_muHij_times_hetaStates);
-
-                              if (std::isnan(globalResidual[offset_heta+stride_heta*i])==1)
-                              {
-                                std::cout << "heta is bad guy, ie nan = " << std::endl;
-                              }
-                                 globalResidual[offset_hw+stride_hw*i]
-                                         = hwi - dt/mi*(hyp_flux_hw[i]
-                                                        + extendedSourceTerm_hw[i]
-                                                        - ith_dHij_minus_muHij_times_hwStarStates
-                                                        - ith_muHij_times_hwStates);
-                              if (std::isnan(globalResidual[offset_hw+stride_hw*i])==1)
-                              {
-                                std::cout << "hw is bad guy, ie nan = " << std::endl;
-                              }
+                                                        + extendedSourceTerm_hv[i]
+                                                        - ith_dHij_minus_muHij_times_hvStarStates
+                                                        - ith_muHij_times_hvStates))*0.0; // keep 0 for now for fake 1D
+                                globalResidual[offset_heta+stride_heta*i]
+                                        = hetai - dt/mi*(hyp_flux_heta[i]
+                                                         + extendedSourceTerm_heta[i]
+                                                         - ith_dHij_minus_muHij_times_hetaStarStates
+                                                         - ith_muHij_times_hetaStates);
+                                globalResidual[offset_hw+stride_hw*i]
+                                        = hwi - dt/mi*(hyp_flux_hw[i]
+                                                       + extendedSourceTerm_hw[i]
+                                                       - ith_dHij_minus_muHij_times_hwStarStates
+                                                       - ith_muHij_times_hwStates);
                                 // clean up potential negative water height due to machine precision
                                 if (globalResidual[offset_h+stride_h*i] >= -hEps && globalResidual[offset_h+stride_h*i] < hEps)
                                         globalResidual[offset_h+stride_h*i] = 0;
@@ -2367,51 +2331,31 @@ void calculateResidual(    // last EDGE BASED version
                                                - ith_dHij_minus_muHij_times_hStarStates
                                                - ith_muHij_times_hStates
                                                );
-                                if (std::isnan(globalResidual[offset_h+stride_h*i])==1)
-                                {
-                                  std::cout << "h is bad guy, ie nan = " << std::endl;
-                                }
-
                                 globalResidual[offset_hu+stride_hu*i]
                                         += dt*(hyp_flux_hu[i]
                                                + extendedSourceTerm_hu[i]
                                                - ith_dHij_minus_muHij_times_huStarStates
                                                - ith_muHij_times_huStates
                                                );
-                               if (std::isnan(globalResidual[offset_hu+stride_hu*i])==1)
-                               {
-                                 std::cout << "hu is bad guy, ie nan = " << std::endl;
-                               }
                                 globalResidual[offset_hv+stride_hv*i]
                                         += dt*(hyp_flux_hv[i]
-                                               + extendedSourceTerm_hu[i]
+                                               + extendedSourceTerm_hv[i]
                                                - ith_dHij_minus_muHij_times_hvStarStates
                                                - ith_muHij_times_hvStates
                                                );
-                                 if (std::isnan(globalResidual[offset_hv+stride_hv*i])==1)
-                                 {
-                                   std::cout << "hv is bad guy, ie nan = " << std::endl;
-                                 }
-                                 globalResidual[offset_heta+stride_heta*i]
-                                         +=dt*(hyp_flux_heta[i]
-                                               - ith_dHij_minus_muHij_times_hetaStarStates
-                                               - ith_muHij_times_hetaStates
-                                               + extendedSourceTerm_heta[i]);
-                                 if (std::isnan(globalResidual[offset_heta+stride_heta*i])==1)
-                                 {
-                                   std::cout << "heta is bad guy, ie nan = " << std::endl;
-                                 }
-                                 globalResidual[offset_hw+stride_hw*i]
-                                         +=dt*(hyp_flux_hw[i]
-                                               - ith_dHij_minus_muHij_times_hwStarStates
-                                               - ith_muHij_times_hwStates
-                                               + extendedSourceTerm_hw[i]);
-                                 if (std::isnan(globalResidual[offset_hw+stride_hw*i])==1)
-                                 {
-                                   std::cout << "hw is bad guy, ie nan = " << std::endl;
-                                 }
+                                globalResidual[offset_heta+stride_heta*i]
+                                        +=dt*(hyp_flux_heta[i]
+                                              + extendedSourceTerm_heta[i]
+                                              - ith_dHij_minus_muHij_times_hetaStarStates
+                                              - ith_muHij_times_hetaStates
+                                              );
+                                globalResidual[offset_hw+stride_hw*i]
+                                        +=dt*(hyp_flux_hw[i]
+                                              + extendedSourceTerm_hw[i]
+                                              - ith_dHij_minus_muHij_times_hwStarStates
+                                              - ith_muHij_times_hwStates
+                                              );
                         }
-
                 }
                 // ********** END OF LOOP IN DOFs ********** //
         }
@@ -2534,6 +2478,7 @@ void calculateMassMatrix(    //element
         int* sdInfo_hv_hv_colind,
         int* sdInfo_hv_hu_rowptr,
         int* sdInfo_hv_hu_colind,
+        // h
         int* csrRowIndeces_h_h,
         int* csrColumnOffsets_h_h,
         int* csrRowIndeces_h_hu,
@@ -2544,6 +2489,7 @@ void calculateMassMatrix(    //element
         int* csrColumnOffsets_h_heta,
         int* csrRowIndeces_h_hw,
         int* csrColumnOffsets_h_hw,
+        // hu
         int* csrRowIndeces_hu_h,
         int* csrColumnOffsets_hu_h,
         int* csrRowIndeces_hu_hu,
@@ -2554,6 +2500,7 @@ void calculateMassMatrix(    //element
         int* csrColumnOffsets_hu_heta,
         int* csrRowIndeces_hu_hw,
         int* csrColumnOffsets_hu_hw,
+        // hv
         int* csrRowIndeces_hv_h,
         int* csrColumnOffsets_hv_h,
         int* csrRowIndeces_hv_hu,
@@ -2586,6 +2533,7 @@ void calculateMassMatrix(    //element
         int* csrColumnOffsets_hw_heta,
         int* csrRowIndeces_hw_hw,
         int* csrColumnOffsets_hw_hw,
+        //
         double* globalJacobian,
         int nExteriorElementBoundaries_global,
         int* exteriorElementBoundariesArray,
@@ -2682,6 +2630,8 @@ void calculateMassMatrix(    //element
                                         elementJacobian_h_h[i][j] += h_trial_ref[k*nDOF_trial_element+j]*h_test_dV[i];
                                         elementJacobian_hu_hu[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
                                         elementJacobian_hv_hv[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
+                                        elementJacobian_heta_heta[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
+                                        elementJacobian_hw_hw[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
                                 }//j
                         }//i
                 }//k
@@ -2700,6 +2650,10 @@ void calculateMassMatrix(    //element
                                                csrColumnOffsets_hu_hu[eN_i_j]] += elementJacobian_hu_hu[i][j];
                                 globalJacobian[csrRowIndeces_hv_hv[eN_i] +
                                                csrColumnOffsets_hv_hv[eN_i_j]] += elementJacobian_hv_hv[i][j];
+                                globalJacobian[csrRowIndeces_heta_heta[eN_i] +
+                                               csrColumnOffsets_heta_heta[eN_i_j]] += elementJacobian_heta_heta[i][j];
+                                globalJacobian[csrRowIndeces_hw_hw[eN_i] +
+                                               csrColumnOffsets_hw_hw[eN_i_j]] += elementJacobian_hw_hw[i][j];
                         }//j
                 }//i
         }//elements
@@ -2895,23 +2849,23 @@ void calculateLumpedMassMatrix(    //element
                 }//i
         }//elements
 }
-};//DSW2DCV
+};  //DSW2DCV
 
 inline DSW2DCV_base* newDSW2DCV(int nSpaceIn,
-                              int nQuadraturePoints_elementIn,
-                              int nDOF_mesh_trial_elementIn,
-                              int nDOF_trial_elementIn,
-                              int nDOF_test_elementIn,
-                              int nQuadraturePoints_elementBoundaryIn,
-                              int CompKernelFlag)
+                                int nQuadraturePoints_elementIn,
+                                int nDOF_mesh_trial_elementIn,
+                                int nDOF_trial_elementIn,
+                                int nDOF_test_elementIn,
+                                int nQuadraturePoints_elementBoundaryIn,
+                                int CompKernelFlag)
 {
         return proteus::chooseAndAllocateDiscretization2D<DSW2DCV_base,DSW2DCV,CompKernel>(nSpaceIn,
-                                                                                         nQuadraturePoints_elementIn,
-                                                                                         nDOF_mesh_trial_elementIn,
-                                                                                         nDOF_trial_elementIn,
-                                                                                         nDOF_test_elementIn,
-                                                                                         nQuadraturePoints_elementBoundaryIn,
-                                                                                         CompKernelFlag);
+                                                                                           nQuadraturePoints_elementIn,
+                                                                                           nDOF_mesh_trial_elementIn,
+                                                                                           nDOF_trial_elementIn,
+                                                                                           nDOF_test_elementIn,
+                                                                                           nQuadraturePoints_elementBoundaryIn,
+                                                                                           CompKernelFlag);
 }
 }//proteus
 
