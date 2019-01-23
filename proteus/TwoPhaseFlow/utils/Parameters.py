@@ -267,6 +267,8 @@ class ParametersModelRDLS(ParametersModelBase):
         self.epsFact = 0.33
         self.shockCapturingFactor = 0.9
         self.lag_shockCapturing = False
+        # overwrite minTol
+        self.minTol = 1e-5
         # freeze attributes
         self._freeze()
 
