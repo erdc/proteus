@@ -61,10 +61,9 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 a = 0.28  # amplitude
 slope = 1.0 / 19.850
 k_wavenumber = np.sqrt(3.0 * a / (4.0 * h0**3))  # wavenumber
-z = np.sqrt(3.0 * a * h0) / (2.0 * h0 * np.sqrt(h0 * (1.0 + a)))
-# wavelength of solitary wave
-L_wave = 2.0 / k_wavenumber * np.arccosh(np.sqrt(1.0 / 0.050))
-c = np.sqrt(g * (1.0 + a) * h0)
+z = np.sqrt(3.0 * a * h0) / (2.0 * h0 * np.sqrt(h0 * (1.0 + a)))  # width of solitary wave
+L_wave = 2.0 / k_wavenumber * np.arccosh(np.sqrt(1.0 / 0.050)) # wavelength of solitary wave
+c = np.sqrt(g * (1.0 + a) * h0)  # wave speed
 x0 = - h0 / slope - L_wave / 2.0  # location of the toe of the beach
 
 ###############################
@@ -110,7 +109,7 @@ class y_mom_at_t0(object):
         return 0.
 # heta and hw are needed for the dispersive modified green naghdi equations
 # source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-# THE GREEN NAGHDI EQUATIONS' by Guermond, Popov, Tovar
+# THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
 
 
 class heta_at_t0(object):

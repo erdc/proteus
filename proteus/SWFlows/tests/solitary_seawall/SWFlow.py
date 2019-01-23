@@ -4,6 +4,7 @@ from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2DCV
+from proteus.mprans import DSW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context,
@@ -108,7 +109,7 @@ class y_mom_at_t0(object):
         return 0.
 # heta and hw are needed for the dispersive modified green naghdi equations
 # source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-# THE GREEN NAGHDI EQUATIONS' by Guermond, Popov, Tovar
+# THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
 
 
 class heta_at_t0(object):
@@ -172,7 +173,7 @@ boundaryConditions = {'water_height': water_height_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
-mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
+mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=0.1,
                                               outputStepping=outputStepping,
                                               structured=True,
@@ -184,4 +185,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
                                               boundaryConditions=boundaryConditions,
                                               bathymetry=bathymetry_function)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
-mySWFlowProblem.physical_parameters['mannings'] = 0.010
+mySWFlowProblem.physical_parameters['mannings'] = 0.012
