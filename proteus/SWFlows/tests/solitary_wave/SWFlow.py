@@ -14,10 +14,11 @@ import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 from proteus import WaveTools as wt
 
 
-# Note that this set up for a solitary wave is from the paper
+# Note that this set up for a solitary wave is from  equation 31
+# in the the paper
 # A rapid numerical method for solving Serre Green Naghdi
 # equations describing long free surface gravity waves by
-# Favrie and Gavrilyuk equation 31. It assumes the reference height is h1.
+# Favrie and Gavrilyuk. It assumes the reference height is h1.
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -127,7 +128,7 @@ def water_height_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
     elif X[0] == X_coords[1]:
-        return lambda x,t: water_height_at_t0().uOfXT(X,0.0)
+        return lambda x, t: water_height_at_t0().uOfXT(X,0.0)
 
 
 def x_mom_DBC(X, flag):
