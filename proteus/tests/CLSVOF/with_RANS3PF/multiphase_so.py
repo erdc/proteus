@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 from builtins import range
 from proteus.default_so import *
-from . import multiphase
+try:
+    from . import multiphase
+except:
+    import multiphase
 
 from proteus.SplitOperator import Sequential_FixedStep_Simple, defaultSystem
 

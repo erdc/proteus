@@ -15,7 +15,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  rhow=998.2,  # kg/m^3 water density (used if pore pressures specified)
                  nd=3,
                  meIndex=0,
-                 V_model=0):
+                 V_model=0,
+                 nullSpace='NoNullSpace'):
         self.flowModelIndex = V_model
         self.modelType_block = modelType_block
         self.modelParams_block = modelParams_block
@@ -81,6 +82,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.meIndex = meIndex
         self.dt_last = None
         self.solidsList = []
+        self.nullSpace = nullSpace
 
     def attachModels(self, modelList):
         self.model = modelList[self.meIndex]
@@ -491,7 +493,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         compKernelFlag = 0
         if self.nSpace_global == 2:
             import copy
-            self.u[2] = copy.deepcopy(self.u[1])
+            self.u[2] = self.u[1].copy()
+            self.u[2].name = 'hz'
             self.offset.append(self.offset[1])
             self.stride.append(self.stride[1])
             self.numericalFlux.isDOFBoundary[2] = self.numericalFlux.isDOFBoundary[1].copy()

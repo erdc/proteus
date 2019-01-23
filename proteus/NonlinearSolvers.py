@@ -142,14 +142,14 @@ class NonlinearSolver(object):
         try:
             return self.norm_function(u[self.F.owned_local])
         except AttributeError:
-            logEvent("ERROR: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False") 
+            logEvent("ERROR: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False")
 
 
     def unorm(self,u):
         try:
             return self.unorm_function(u[self.F.owned_local])
         except AttributeError:
-            logEvent("ERROR!: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False") 
+            logEvent("ERROR!: F.owned local is not initialised in Transport.MultilevelTranspot.initialize. Make sure that useSuperlu option is set to False")
 
     def fullNewtonOff(self):
         self.fullNewton=False
@@ -510,7 +510,7 @@ class Newton(NonlinearSolver):
         while (not self.converged(r) and
                not self.failed()):
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)
+                     %(self.its-1, self.norm_r), level=7)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(old_div(self.norm_r,(self.rtol_r*self.norm_r0+self.atol_r))),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
@@ -537,8 +537,9 @@ class Newton(NonlinearSolver):
                     self.setLinearSolverTolerance(r)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed()
+                self.linearSolverFailed = self.linearSolver.failed()                
             u-=self.du
+
             if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
@@ -669,13 +670,13 @@ class Newton(NonlinearSolver):
                     Viewers.newWindow()
                 #raw_input("wait")
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)
+                     %(self.its-1, self.norm_r), level=7)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(old_div(self.norm_r,(self.rtol_r*self.norm_r0+self.atol_r)))),level=1)
             logEvent(memory("Newton","Newton"),level=4)
             return self.failedFlag
         logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-            %(self.its-1, self.norm_r), level=1)
+                 %(self.its-1, self.norm_r), level=7)
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(old_div(self.norm_r,(self.rtol_r*self.norm_r0+self.atol_r)))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
@@ -691,6 +692,19 @@ class AddedMassNewton(Newton):
         for i in accelerations:
             self.F.added_mass_i=i
             Newton.solve(self,u,r,b,par_u,par_r)
+
+class MoveMeshMonitorNewton(Newton):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        if self.F.coefficients.t > 0:
+            for i in range(self.F.coefficients.ntimes_solved):
+                self.F.coefficients.ntimes_i = i
+                if i > 0:
+                    self.F.coefficients.model.tLast_mesh = self.F.coefficients.t_last
+                    self.F.coefficients.model.calculateQuadrature()
+                    self.F.coefficients.preStep(t=None)
+                Newton.solve(self,u,r,b,par_u,par_r)
+                if i < self.F.coefficients.ntimes_solved-1:
+                    self.F.coefficients.postStep(t=None)
 
 class TwoStageNewton(Newton):
     """Solves a 2 Stage problem via Newton's solve"""
@@ -719,7 +733,7 @@ class TwoStageNewton(Newton):
             return self.failedFlag
 
 class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
-    """
+    """ 
     This is a fake solver meant to be used with optimized code
     A simple iterative solver that is Newton's method
     if you give it the right Jacobian
@@ -799,6 +813,23 @@ class ExplicitLumpedMassMatrix(Newton):
     """
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        # compute fluxes
+        self.computeResidual(u,r,b)
+        #u[:]=self.F.uLow
+        
+        ############
+        # FCT STEP #
+        ############
+        self.F.kth_FCT_step()
+        
+        ###########################################
+        # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+        
+    def no_solve(self,u,r=None,b=None,par_u=None,par_r=None):
         self.computeResidual(u,r,b)
         u[:] = r
         ############
@@ -1230,7 +1261,84 @@ class CLSVOFNewton(Newton):
                 else:
                     self.F.projected_qz_tStar[:]=0
 
+    def project_disc_ICs(self,u,r=None,b=None,par_u=None,par_r=None):
+        self.F.getRhsL2Proj()
+        self.F.projected_disc_ICs[:] = old_div(self.F.rhs_l2_proj,self.F.lumped_mass_matrix)
+        self.F.par_projected_disc_ICs.scatter_forward_insert()
+        # output of this function
+        u[:] = self.F.projected_disc_ICs
+        # pass u to self.F.u[0].dof and recompute interface locator
+        self.F.preRedistancingStage = 0
+        self.computeResidual(u,r,b)
+        # save projected solution also in old DOFs
+        self.F.u_dof_old[:] = self.F.projected_disc_ICs
+
+    def redistance_disc_ICs(self,u,r=None,b=None,par_u=None,par_r=None,max_num_iters=100):
+        # save and set some variables
+        self.F.preRedistancingStage = 1
+        maxIts = self.maxIts
+        self.maxIts=1
+        # set tolerances for this spin up stage
+        tol = self.atol_r
+        norm_r0 = self.norm(r)
+        norm_r = 1.0*norm_r0
+        num_iters = 0
+        # Loop
+        while (norm_r > tol or num_iters==0):
+            self.getNormalReconstruction(u,r,b,par_u,par_r)
+            Newton.solve(self,u,r,b,par_u,par_r)
+            self.F.u_dof_old[:] = self.F.u[0].dof
+            # compute norm
+            norm_r = self.norm(r)
+            num_iters += 1
+            # break if num of iterations is large
+            if num_iters > max_num_iters:
+                break
+        # set back variables
+        self.maxIts = maxIts
+        self.F.preRedistancingStage = 0
+        self.failedFlag=False
+
+    def spinup_for_disc_ICs(self,u,r=None,b=None,par_u=None,par_r=None):
+        logEvent("+++++ Spin up to start with disc ICs +++++",level=2)
+        ########################
+        # lumped L2 projection #
+        ########################
+        self.project_disc_ICs(u,r,b,par_u,par_r)
+
+        ################################
+        # redistance initial condition #
+        ################################
+        # save alpha and freeze_interface_...
+        alpha = self.F.coefficients.alpha
+        freeze_interface = self.F.coefficients.freeze_interface_during_preRedistancing
+        # STEP 2: Do redistancing with interface frozen
+        self.F.coefficients.alpha = 0
+        self.F.coefficients.freeze_interface_during_preRedistancing = True
+        self.redistance_disc_ICs(u,r,b,par_u,par_r,max_num_iters=100) # no more than 100 steps
+        # STEP 3: Do 1 step of redistancing with all but the interface frozen
+        self.F.coefficients.alpha = 0
+        self.F.coefficients.freeze_interface_during_preRedistancing = True
+        self.F.interface_locator[:] = np.logical_not(self.F.interface_locator)
+        self.redistance_disc_ICs(u,r,b,par_u,par_r,max_num_iters=1)
+        # STEP 4: Do 1 step of redistancing with nothing frozen
+        self.F.coefficients.alpha = 1E9
+        self.F.coefficients.freeze_interface_during_preRedistancing = False
+        self.redistance_disc_ICs(u,r,b,par_u,par_r,max_num_iters=1)
+        # to recompute interface locator
+        self.F.preRedistancingStage = 0
+        self.computeResidual(u,r,b)
+        # set back alpha and freeze_interface_...
+        self.F.coefficients.alpha = alpha
+        self.F.coefficients.freeze_interface_during_preRedistancing = freeze_interface
+        # save computed solution into old dofs
+        self.F.u_dof_old[:] = self.F.u[0].dof
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        if self.F.coefficients.disc_ICs:
+            self.spinup_for_disc_ICs(u,r,b,par_u,par_r)
+            self.F.coefficients.disc_ICs=False
+
         # ************************************************ #
         # *************** PRE REDISTANCING *************** #
         # ************************************************ #
@@ -2923,7 +3031,7 @@ class MultilevelNonlinearSolver(object):
             else:
                 par_u=None
                 par_r=None
-            logEvent("  NumericalAnalytics Newton iteration for level " + repr(l), level = 0)
+            logEvent("  NumericalAnalytics Newton iteration for level " + repr(l), level = 7)
             self.solverList[l].solve(u = uList[l],
                                      r = rList[l],
                                      b = bList[l],
@@ -3438,6 +3546,28 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                             directSolver=linearDirectSolverFlag,
                                                             EWtol=EWtol,
                                                             maxLSits=maxLSits ))
+    elif levelNonlinearSolverType == MoveMeshMonitorNewton:
+        for l in range(nLevels):
+            if par_duList is not None and len(par_duList) > 0:
+                par_du=par_duList[l]
+            else:
+                par_du=None
+            levelNonlinearSolverList.append(MoveMeshMonitorNewton(linearSolver=linearSolverList[l],
+                                                            F=nonlinearOperatorList[l],
+                                                            J=jacobianList[l],
+                                                            du=duList[l],
+                                                            par_du=par_du,
+                                                            rtol_r=relativeToleranceList[l],
+                                                            atol_r=absoluteTolerance,
+                                                            maxIts=maxSolverIts,
+                                                            norm = nonlinearSolverNorm,
+                                                            convergenceTest = levelSolverConvergenceTest,
+                                                            computeRates = computeLevelSolverRates,
+                                                            printInfo=printLevelSolverInfo,
+                                                            fullNewton=levelSolverFullNewtonFlag,
+                                                            directSolver=linearDirectSolverFlag,
+                                                            EWtol=EWtol,
+                                                            maxLSits=maxLSits))
     else:
         try:
             for l in range(nLevels):
@@ -3476,6 +3606,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
           multilevelNonlinearSolverType == AddedMassNewton or
+          multilevelNonlinearSolverType == MoveMeshMonitorNewton or
           multilevelNonlinearSolverType == POD_Newton or
           multilevelNonlinearSolverType == POD_DEIM_Newton or
           multilevelNonlinearSolverType == NewtonNS or

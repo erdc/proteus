@@ -314,28 +314,38 @@ extern "C"
   int regularRectangularToTriangularElementBoundaryMaterials(const double& Lx, const double& Ly, Mesh& mesh);
   int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
 
+  int regularQuadrilateralMeshElements(const int& nx,const int& ny,Mesh& mesh);
+  int regularQuadrilateralMeshElementBoundaryMaterials(const double& Lx, const double& Ly, Mesh& mesh);
+  int globallyRefineQuadrilateralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
+
 
   int regularMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
+  int regularMeshNodes2D(const int& nx,const int& ny, const double& Lx, const double& Ly, Mesh& mesh);
+  int regularHexahedralMeshElementBoundaryMaterials(const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralToTetrahedralMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralToTetrahedralMeshElements(const int& nx,const int& ny,const int& nz,Mesh& mesh);
   int regularHexahedralToTetrahedralElementBoundaryMaterials(const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz, Mesh& mesh);
   int regularNURBSMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz,Mesh& mesh);
-  
+  int globallyRefineHexahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
+
   int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
 
   int constructElementBoundaryElementsArray_edge(Mesh& mesh);
   int constructElementBoundaryElementsArray_triangle(Mesh& mesh);
+  int constructElementBoundaryElementsArray_quadrilateral(Mesh& mesh);
   int constructElementBoundaryElementsArray_tetrahedron(Mesh& mesh);
   int constructElementBoundaryElementsArray_hexahedron(Mesh& mesh);
   int constructElementBoundaryElementsArray_NURBS(Mesh& mesh);
 
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_triangle(Mesh& mesh);
+  int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_quadrilateral(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(Mesh& mesh);
     
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_edge(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_triangle(Mesh& mesh);
+  int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_quadrilateral(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_tetrahedron(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(Mesh& mesh);
@@ -347,6 +357,7 @@ extern "C"
   int allocateGeometricInfo_tetrahedron(Mesh& mesh);
   int allocateGeometricInfo_triangle(Mesh& mesh);
   int allocateGeometricInfo_edge(Mesh& mesh);
+  int allocateGeometricInfo_quadrilateral(Mesh& mesh);
   int allocateGeometricInfo_hexahedron(Mesh& mesh);
   int allocateGeometricInfo_NURBS(Mesh& mesh);
 
@@ -354,9 +365,8 @@ extern "C"
   int computeGeometricInfo_triangle(Mesh& mesh);
   int computeGeometricInfo_edge(Mesh& mesh);
   int computeGeometricInfo_hexahedron(Mesh& mesh);   
+  int computeGeometricInfo_quadrilateral(Mesh& mesh);
   int computeGeometricInfo_NURBS(Mesh& mesh);
-
-  int partitionElements(Mesh& mesh, int nElements_overlap=0);
 
   int assignElementBoundaryMaterialTypesFromParent(Mesh& parentMesh, Mesh& childMesh, const int* levelElementParentsArray,
 						   const int& nSpace_global);
@@ -500,6 +510,16 @@ inline int newTriangle(int eN,int* nodes,int n0,int n1,int n2)
   return eN;
 }
 inline int newTetrahedron(int eN,int* nodes,int n0,int n1,int n2,int n3)
+{
+  nodes[eN*4+0] = n0;
+  nodes[eN*4+1] = n1;
+  nodes[eN*4+2] = n2;
+  nodes[eN*4+3] = n3;
+  eN++;
+  return eN;
+}
+
+inline int newQuadrilateral(int eN,int* nodes,int n0,int n1,int n2,int n3)
 {
   nodes[eN*4+0] = n0;
   nodes[eN*4+1] = n1;

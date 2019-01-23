@@ -63,6 +63,7 @@ namespace proteus
 				   double* velocity,
 				   double* q_m,
 				   double* q_u,
+				   double* q_dV,
 				   double* q_m_betaBDF,
 				   double* cfl,
 				   double* q_numDiff_u, 
@@ -459,6 +460,7 @@ namespace proteus
 			   double* velocity,
 			   double* q_m,
 			   double* q_u,
+                           double* q_dV,
 			   double* q_m_betaBDF,
 			   double* cfl,
 			   double* q_numDiff_u, 
@@ -546,6 +548,7 @@ namespace proteus
 						  xt,yt,zt);
 	      //get the physical integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
+              q_dV[eN_k] = dV;
 	      ck.calculateG(jacInv,G,G_dd_G,tr_G);
 	      //get the trial function gradients
 	      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
