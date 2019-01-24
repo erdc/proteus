@@ -978,14 +978,9 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
             for i in range(self.vt.mesh.nNodes_element):
                 I = self.vt.mesh.elementNodesArray[eN_global,i]
                 self.dofStarElementsArray[eN_global,i] = self.globalDOFGlobalElement2StarElement[I][eN_global]
-
-#        pdb.set_trace()
-            #i
         #ebNE
         self.nodeStarFactors = {}
         for ci in self.vtComponents:
-            import pdb
-#            pdb.set_trace()
             self.nodeStarFactors[ci] = cpostprocessing.NodeStarFactor(self.nElements_DOF,
                                                                       self.dofStarElementsArray,
                                                                       self.dofStarElementNeighborsArray)
@@ -1089,8 +1084,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                 self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
                                                    self.vt.ebq['hat(x)'],
                                                    self.w[ci])
-                import pdb
-#                pdb.set_trace()
                 cfemIntegrals.calculateWeightedShapeTrace(self.vt.elementBoundaryQuadratureWeights[('u',ci)],
                                                           self.vt.ebq['sqrt(det(g))'],
                                                           self.w[ci],
@@ -1173,8 +1166,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
         
         self.getElementwiseFlux(ci)
- #        import pdb
- #        pdb.set_trace()
 
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -1449,8 +1440,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                                     self.q[('velocity',ci)])
             else:
                 cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
-                                                              self.vt.q[('a',ci,ci)],
-                                                              self.vt.q[('grad(phi)',ci)],
+                                                                 self.vt.q[('a',ci,ci)],
+                                                                 self.vt.q[('grad(phi)',ci)],
                                                                  self.q[('velocity',ci)])
         if ('f',ci) in self.vt.q:
             updateCoef = 1.0
@@ -1496,9 +1487,9 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
     def setEdgeFlags(self):
         """This function sets the edge flags for the bdm2 loops """
         if self.vt.nSpace_global == 2:
-            self.edgeFlags = numpy.array([1,2,4,0,2,5,0,1,3])
+            self.edgeFlags = numpy.array([1,2,4,0,2,5,0,1,3],'i')
         elif self.vt.nSpace_global == 3:
-            self.edgeFlags = numpy.array([1,2,3,5,6,8, 0,2,3,6,7,9, 0,1,3,4,8,9, 0,1,2,4,5,7])
+            self.edgeFlags = numpy.array([1,2,3,5,6,8, 0,2,3,6,7,9, 0,1,3,4,8,9, 0,1,2,4,5,7],'i')
             # Note - the numbers above should be correct but have not been tested.
         else:
             pass # This should be an assert.
@@ -1666,8 +1657,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         '''
         # Initialize the matrix - serial LN requires a system
         # the size of the number of elements in the mesh.
-        import pdb
-#        pdb.set_trace()
         num_elements = self.vt.mesh.nElements_global
         num_element_quadpts = self.vt.q['dV'].shape[1]
         num_bdy_quadpts = self.vt.ebq_global['n'][0].shape[0]
@@ -1692,7 +1681,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                 # Q for ck - is q[('r',0)][k][pt] effectively f 
                 b[k] += (self.vt.q[('r',0)][k][pt] *  
                          self.vt.q['dV'][k][pt])
-#            pdb.set_trace()
             # Need to loop over edges
             # Need to find Neumann edges and Dirichlet edges
             for local_edge_num , global_edge_num in enumerate(self.vt.mesh.elementBoundariesArray[k]):
@@ -1715,7 +1703,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                   self.vt.ebq[('dS_u',0)][k][local_edge_num][pt] )
         print('loop done')
         V = numpy.linalg.solve(A,b)
-        pdb.set_trace()
 #       self.CorrectedFlux = self.flux_average - V
 
     def getAverageFlux(self,ci):
@@ -1840,7 +1827,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
         #have to directly modify the type now to set to optimized
         self.postProcessingType = 'pwl-opt'
 
-        from .LinearAlgebraTools import ParVec
+        from .LinearAlgebraTools import ParVec_petsc4py as ParVec
 
         self.ebq_v_par_local = self.vt.ebq_global[('velocity',self.vtComponents[0])].copy()
         self.ebq_v_par = ParVec(self.ebq_v_par_local,
@@ -1866,7 +1853,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
         Galerkin solution has already been found
         Setup for optimized parallel codes
         """
-        from .flcbdfWrappers import globalSum,globalMax
+        from .Comm import globalSum,globalMax
 
         self.nodeStarFactors[ci].setU(0.0)
         if self.solutionTestSpaceIsNotPWL:
@@ -3391,11 +3378,6 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                     #mwf debug
                     print("vpp-ib-fix-0 setting ebN=%s ebN = 1, max_a_left=%s max_a_right= %s " % (ebN,max_a_left,max_a_right))
 
-
-        #
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
     def setInteriorFluxBoundaryValues(self,ci,ebq_global_velocity):
         """
         set interior flux boundary values
@@ -3417,9 +3399,6 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         """
         #must zero first time for average velocity
         self.nodeStarFactors[ci].setU(0.0)
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         #set interior boundarie values in velocity_average
         self.setInteriorFluxBoundaryValues(ci,self.vt.ebq_global[('velocityAverage',ci)])
         #correct first time through, in case there are Flux boundaries that
@@ -3516,9 +3495,6 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
 
         #end set boundary flux
         #go from boundary flux to local element boundary representation
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         self.evaluateLocalVelocityRepresentation(ci)
     #
     def getConservationJacobianPWL(self,ci):
@@ -3592,8 +3568,6 @@ class AggregateVelocityPostProcessor(object):
                  'dg-bdm':VPP_DG_BDM,        #dg scheme,  Brezzi Douglas Marini linear velocity repres
                  'pwl-ib-fix-0':VPP_LOW_K_IB_PWL_RT0} #hack to enforce zero flux manually around low perm regions
     def __init__(self,postProcessingTypes=None,transport=None):
-     #   import pdb
-     #   pdb.set_trace()
         self.postProcessingTypes = postProcessingTypes
         self.vpp_algorithms = []
         self.vt = transport
@@ -4007,11 +3981,6 @@ class VelocityPostProcessor_Original(object):
                         #these  nodes are "overconstrained" for correction equation like interior nodes
                         self.fluxBoundaryNodes[ci][nN] = 1
                     #
-                    #mwf debug
-                    #import pdb
-                    #pdb.set_trace()
-
-
                 #end pwl
                 elif self.postProcessingTypes[ci] in ['point-eval','dg-point-eval','point-eval-gwvd']: # gwvd addin tjp
                     if ('velocity',ci) not in self.q:
@@ -4219,7 +4188,7 @@ class VelocityPostProcessor_Original(object):
                 #
                 #allocate par vecs to do communication
                 if self.useOpt:
-                    from .LinearAlgebraTools import ParVec
+                    from .LinearAlgebraTools import ParVec_petsc4py as ParVec
                     self.ebq_v_par_local = self.vt.ebq_global[('velocity',ci)].copy()
                     self.ebq_v_par = ParVec(self.ebq_v_par_local,
                                             self.vt.nElementBoundaryQuadraturePoints_elementBoundary*self.vt.nSpace_global,#block size
@@ -4465,9 +4434,6 @@ class VelocityPostProcessor_Original(object):
         VectorTransport object and store them in local dictionaries
         could split this up into postprocess element and postprocess element boundary
         """
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         if self.postProcessingTypes is not None:
             assert self.vt is not None, "postprocess types not None vt is None"
         for ci in self.vtComponents:
@@ -4691,7 +4657,7 @@ class VelocityPostProcessor_Original(object):
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
 
     def postprocessPWL_opt(self,ci,verbose=0):
-        from .flcbdfWrappers import globalSum,globalMax
+        from .Comm import globalSum,globalMax
         """
         New optimized/less general implementation of Larson Niklasson post-processing scheme
         """
@@ -4837,9 +4803,6 @@ class VelocityPostProcessor_Original(object):
                                                                   self.vt.q[('velocity',ci)])
 
     def getConservationResidualPWL(self,ci,correctFlux=False):
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         #cek temp fix for flux  boundary conditions problem, subtract off the boundary flux in the actual element residual
         #could be a problem if it's called more than once, probably will mess up mass conservation calc
         if correctFlux == True:
