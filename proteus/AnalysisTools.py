@@ -166,9 +166,9 @@ def pressureToHeight(data,Z,depth,wavelength,rho,g):
 def ReflStat(H1,H2,H3,dx,wavelength):
     D = 2*math.pi*dx/wavelength
     Amp =np.array([old_div(H1,2.),old_div(H2,2.),old_div(H3,2.)])
-    A1 = Amp[j]*Amp[j]
-    A2 = Amp[j+1]*Amp[j+1]
-    A3 = Amp[j+2]*Amp[j+2]
+    A1 = Amp[0]*Amp[0]
+    A2 = Amp[1]*Amp[1]
+    A3 = Amp[2]*Amp[2]
     Lamda = old_div((A1 + A3 - 2.*A2*cos(2*D)),(4.*sin(D)*sin(D)))
     Gamma = 0.5*sqrt(
         (old_div((2*A2-A1-A3),(2.*sin(D)*sin(D))))**2+(old_div((A1-A3),sin(2*D)))**2)
