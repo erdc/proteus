@@ -36,11 +36,15 @@ cdef class ChBodyAddedMass:
         self.bodyptr = self.sharedptr_chbody.get()
         # create SWIG ChBody
         self.ChBodySWIG = chrono.ChBody()
-        # delete? object pointed to by SWIG
         self.ChBodySWIG.this.disown()
+        # delete? object pointed to by SWIG
         # point to new object (base of ChBodyAddedMass: ChBody)
         cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChBodySWIG.this
-        swig_obj.ptr = <ch.ChBody*?> &self.bodyptr
+        swig_obj.ptr = <shared_ptr[ch.ChBody]*> &self.sharedptr_chbody
+        # cdef shared_ptr[ch.ChSystemSMC]* pt_to_shp = <shared_ptr[ch.ChSystemSMC]*> swig_obj.ptr;
+        # self.thisptr.system = pt_to_shp[0]
+        # cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChBodySWIG.this
+        # swig_obj.ptr = <ch.ChBody*?> &self.bodyptr
 
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
         self.thisptr.SetMfullmass(Mfullmass_in)

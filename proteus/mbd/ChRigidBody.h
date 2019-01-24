@@ -14,9 +14,7 @@ using namespace std;
 
 class cppSystem {
  public:
-  std::shared_ptr<ChSystemSMC> systemSMC_sharedptr;
-  ChSystemSMC* systemSMC;
-  ChSystem* system;
+  std::shared_ptr<ChSystemSMC> system;
   double chrono_dt;
   std::string directory;
   cppSystem();
@@ -24,6 +22,7 @@ class cppSystem {
   void setDirectory(std::string dir);
   void setTimestepperType(std::string tstype, bool verbose);
   void setCollisionEnvelopeMargin(double envelope, double margin);
+  /* void addMesh(std::shared_ptr<ChMesh> mesh); */
 };
 
 
@@ -104,28 +103,28 @@ class cppRigidBody {
 
 cppSystem::cppSystem()
 {
-  systemSMC_sharedptr = std::make_shared<ChSystemSMC>();
-  systemSMC = systemSMC_sharedptr.get();
-  system = systemSMC;
+  /* systemSMC_sharedptr = std::make_shared<ChSystemSMC>(); */
+  /* systemSMC = systemSMC_sharedptr.get(); */
+  /* system = systemSMC; */
   chrono_dt = 0.000001;
   directory = "./";
   // SOLVER OPTIONS
-  system->SetSolverType(ChSolver::Type::MINRES);  // SOLVER_MINRES: good convergence, supports FEA, does not support DVI yet
-  auto msolver = std::static_pointer_cast<ChSolverMINRES>(system->GetSolver());
-  msolver->SetDiagonalPreconditioning(true);
-  system->SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
-  system->SetMaxItersSolverSpeed(100); // max iteration for iterative solvers
-  system->SetMaxItersSolverStab(100); // max iteration for stabilization (iterative solvers)
-  system->SetTolForce(1e-10);
+  /* system->SetSolverType(ChSolver::Type::MINRES);  // SOLVER_MINRES: good convergence, supports FEA, does not support DVI yet */
+  /* auto msolver = std::static_pointer_cast<ChSolverMINRES>(system->GetSolver()); */
+  /* msolver->SetDiagonalPreconditioning(true); */
+  /* system->SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems */
+  /* system->SetMaxItersSolverSpeed(100); // max iteration for iterative solvers */
+  /* system->SetMaxItersSolverStab(100); // max iteration for stabilization (iterative solvers) */
+  /* system->SetTolForce(1e-10); */
   //system->SetMaxItersSolverSpeed(100);  
   //system->SetMaxItersSolverStab(100);  
   //system->SetTolForce(1e-14); // default: 0.001
   //system->SetMaxiter(200); // default: 6. Max constraints to reach tolerance on constraints.
   //system->SetTol(1e-10); // default: 0.0002. Tolerance for keeping constraints together.
-  system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED); // used before: ChSystem::INT_EULER_IMPLICIT_LINEARIZED
-  if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper())) {
-    mystepper->SetAlpha(-0.2);
-  }
+  /* system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED); // used before: ChSystem::INT_EULER_IMPLICIT_LINEARIZED */
+  /* if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper())) { */
+  /*   mystepper->SetAlpha(-0.2); */
+  /* } */
 }
 
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
@@ -155,6 +154,10 @@ void cppSystem::step(double proteus_dt, int n_substeps=1)
      system->DoStepDynamics(dt2);
    }
 }
+
+/* void cppSystem::addMesh(std::shared_ptr<ChMesh> mesh) { */
+/*   systemSMC_sharedptr->Add(mesh); */
+/* } */
 
 cppRigidBody::cppRigidBody(cppSystem* system):
   system(system)
@@ -586,7 +589,7 @@ cppRigidBody * newRigidBody(cppSystem* system)
 
 void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
                       std::shared_ptr<ChBody> body2,
-                      ChSystem* system,
+                      std::shared_ptr<ChSystemSMC> system,
                       ChCoordsys<> coordsys,
                       double limit_X=0.,
                       double limit_Y=0.,
