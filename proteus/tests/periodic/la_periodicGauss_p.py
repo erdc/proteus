@@ -2,7 +2,7 @@ import numpy
 from proteus import *
 from proteus.default_p import *
 from math import *
-from proteus.mprans import VOF, NCLS
+from proteus.mprans import VOF, NCLS, VOS3P
 """
 Linear advection of a guassian with periodic bcs
 """
@@ -14,10 +14,10 @@ velocity = numpy.array([1.0,1.0])
 if nd == 3:
     velocity = numpy.array([1.0,1.0,1.0])
 #where gaussian starts
-center = numpy.array([0.25,0.25])#numpy.array([0.25,0.25])#numpy.array([0.25,0.5])
+center = numpy.array([0.5,0.5])#numpy.array([0.25,0.25])#numpy.array([0.25,0.5])
 if nd == 3:
     velocity = numpy.array([1.0,1.0,1.0])
-    center = numpy.array([0.25,0.25,0.25])#numpy.array([0.25,0.25])#numpy.array([0.25,0.5])
+    center = numpy.array([0.5,0.5,0.5])#numpy.array([0.25,0.25])#numpy.array([0.25,0.5])
 #size
 sigma  = 1./16.
 #quadrature
@@ -29,7 +29,7 @@ nn=11#81#161#41
 #number of meshes in multilevel mesh
 nLevels = 1
 #end time of simulation
-T = 2.0
+T = 1.0
 #number of output time steps, ignored for adaptive/CFL based runs
 nDTout = 100
 #max CFL
@@ -92,9 +92,19 @@ A = {0:numpy.zeros((nd,nd),'d')}
 B = {0:velocity}
 C = {0:0.0}
 
-useVOF=True
-useNCLS=True
-if useNCLS:
+useVOS=True
+useVOF=False
+useNCLS=False
+if useVOS:
+    LevelModelType = VOS3P.LevelModel
+    coefficients = VOS3P.Coefficients(LS_model=None,V_model=None,RD_model=None,ME_model=0,checkMass=False,
+                                      epsFact=0.0,useMetrics=1.0,
+                                      STABILIZATION_TYPE=2,
+                                      LUMPED_MASS_MATRIX=False,
+                                      ENTROPY_TYPE=2,
+                                      FCT=True,
+                                      num_fct_iter=1)
+elif useNCLS:
     LevelModelType = NCLS.LevelModel
     coefficients = NCLS.Coefficients(V_model=None,RD_model=None,ME_model=0,checkMass=False,
                                      epsFact=0.0,useMetrics=1.0)

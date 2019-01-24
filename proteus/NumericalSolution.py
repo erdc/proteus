@@ -20,7 +20,6 @@ from subprocess import check_call
 
 from . import LinearSolvers
 from . import NonlinearSolvers
-from . import TriangleTools
 from . import MeshTools
 from . import Profiling
 from . import Transport
@@ -257,52 +256,47 @@ class NS_base(object):  # (HasTraits):
                                                                      parallelPartitioningType=n.parallelPartitioningType)
 
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
+                fileprefix = None
+                # run mesher
                 if p.domain.use_gmsh is True:
-                    if comm.isMaster() and (p.genMesh or not (os.path.exists(p.domain.geofile+".ele") and
-                                                              os.path.exists(p.domain.geofile+".node") and
-                                                              os.path.exists(p.domain.geofile+".edge"))):
-                        if p.genMesh or not os.path.exists(p.domain.geofile+".msh"):
+                    fileprefix = p.domain.geofile
+                    if comm.isMaster() and (p.genMesh or not (os.path.exists(fileprefix+".ele") and
+                                                              os.path.exists(fileprefix+".node") and
+                                                              os.path.exists(fileprefix+".edge"))):
+                        if p.genMesh or not os.path.exists(fileprefix+".msh"):
                             logEvent("Running gmsh to generate 2D mesh for "+p.name,level=1)
-                            gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(p.domain.geofile+".geo", p.domain.geofile+".msh")
+                            gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(fileprefix+".geo", fileprefix+".msh")
                             logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                             check_call(gmsh_cmd, shell=True)
                             logEvent("Done running gmsh; converting to triangle")
                         else:
-                            logEvent("Using "+p.domain.geofile+".msh to convert to triangle")
-                        MeshTools.msh2simplex(fileprefix=p.domain.geofile, nd=2)
-                    comm.barrier()
-                    mesh = MeshTools.TriangularMesh()
-                    mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
-                                                                nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                parallelPartitioningType=n.parallelPartitioningType)
-                    logEvent("NAHeader GridRefinements %i" % (n.nLevels) )
-                    logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
-                    logEvent("Generating coarse global mesh from Triangle files")
-                    mesh.generateFromTriangleFiles(filebase=p.domain.geofile,base=1)
-                    logEvent("Generating partitioned %i-level mesh from coarse global Triangle mesh" % (n.nLevels,))
-                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                          parallelPartitioningType=n.parallelPartitioningType)
+                            logEvent("Using "+fileprefix+".msh to convert to triangle")
+                        # convert gmsh to triangle format
+                        MeshTools.msh2simplex(fileprefix=fileprefix, nd=2)
                 else:
+                    fileprefix = p.domain.polyfile
                     if comm.isMaster() and p.genMesh:
-                        logEvent("Calling Triangle to generate 2D mesh for"+p.name)
-                        tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                               nbase=1,
-                                                               verbose=10)
-                        tmesh.readFromPolyFile(p.domain.polyfile)
-                        tmesh.writeToFile(p.domain.polyfile)
-                    comm.barrier()
-
-                    mesh = MeshTools.TriangularMesh()
-                    mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
-
-                    mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
-                                                                nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                parallelPartitioningType=n.parallelPartitioningType)
-                    logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
-                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                        parallelPartitioningType=n.parallelPartitioningType)
+                        logEvent("Calling Triangle to generate 2D mesh for "+p.name)
+                        tricmd = "triangle -{0} -e {1}.poly".format(n.triangleOptions, fileprefix)
+                        logEvent("Calling triangle on rank 0 with command %s" % (tricmd,))
+                        check_call(tricmd, shell=True)
+                        logEvent("Done running triangle")
+                        check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+                        check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+                        check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                comm.barrier()
+                assert fileprefix is not None, 'did not find mesh file name'
+                # convert mesh to proteus format
+                mesh = MeshTools.TriangularMesh()
+                mesh.generateFromTriangleFiles(filebase=fileprefix,
+                                               base=1)
+                mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
+                                                            nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                            parallelPartitioningType=n.parallelPartitioningType)
+                logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
+                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
 
             elif isinstance(p.domain,Domain.PiecewiseLinearComplexDomain):
                 from subprocess import call
@@ -991,8 +985,13 @@ class NS_base(object):  # (HasTraits):
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
-                lm.u_store = copy.deepcopy(lm.u)
-                lm.dt_store = copy.deepcopy(lm.timeIntegration.dt)
+                #lm.u_store = copy.copy(lm.u)
+                lm.u_store = {}
+                lm.u_store_last = {}
+                for ci in range(0,lm.coefficients.nc):
+                    lm.u_store[ci] = copy.deepcopy(lm.u[ci].dof)
+                    lm.u_store_last[ci] = copy.deepcopy(lm.u[ci].dof_last)
+                lm.dt_store = copy.copy(lm.timeIntegration.dt)
                 for ci in range(0,lm.coefficients.nc):
                     lm.u[ci].dof[:] = lm.u[ci].dof_last
                 lm.setFreeDOF(lu)
@@ -1018,8 +1017,8 @@ class NS_base(object):  # (HasTraits):
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 for ci in range(0,lm.coefficients.nc):
-                    lm.u[ci].dof[:] = lm.u_store[ci].dof
-                    lm.u[ci].dof_last[:] = lm.u_store[ci].dof_last
+                    lm.u[ci].dof[:] = lm.u_store[ci]
+                    lm.u[ci].dof_last[:] = lm.u_store_last[ci]
                 lm.setFreeDOF(lu)
                 lm.getResidual(lu,lr)
                 lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
@@ -1859,6 +1858,9 @@ class NS_base(object):  # (HasTraits):
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
                                                                    writeVectors=True,meshChanged=True,femSpaceWritten={},
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
+        model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
+                                                            self.tnList[0],
+                                                            self.tCount)
         #could just pull the code and flags out from SimTools rathter than asking it to parse them
         #uses values in simFlags['storeQuantities']
         #q dictionary
@@ -1897,7 +1899,7 @@ class NS_base(object):  # (HasTraits):
         except:
             pass
 
-        if model.name=='clsvof':
+        if 'clsvof' in model.name:
             vofDOFs = {}
             vofDOFs[0] = model.levelModelList[-1].vofDOFs
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
@@ -2026,7 +2028,7 @@ class NS_base(object):  # (HasTraits):
         except:
             pass
 
-        if model.name=='clsvof':
+        if 'clsvof' in model.name:
             vofDOFs = {}
             vofDOFs[0] = model.levelModelList[-1].vofDOFs
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],

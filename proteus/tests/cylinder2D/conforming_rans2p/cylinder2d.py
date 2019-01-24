@@ -67,7 +67,11 @@ elif spaceOrder == 2:
 
 nLevels = 1
 #from cylinder2dDomain import *
-from .symmetricDomain_john import *
+try:
+    from .symmetricDomain_john import *
+except:
+    from symmetricDomain_john import *
+    
 domain = symmetric2D(box=(2.2,0.41),
                      L= 0.2,
                      H = 0.2,
