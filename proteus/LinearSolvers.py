@@ -15,7 +15,7 @@ from past.utils import old_div
 from .LinearAlgebraTools import *
 from . import LinearAlgebraTools as LAT
 from . import FemTools
-from . import lapackWrappers
+from . import clapack
 from . import superluWrappers
 from . import TransportCoefficients
 from . import cfemIntegrals
@@ -276,7 +276,7 @@ class LU(LinearSolver):
         if type(L).__name__ == 'SparseMatrix':
             self.sparseFactor = superluWrappers.SparseFactor(self.n)
         elif type(L).__name__ == 'ndarray':#mwf was array
-            self.denseFactor = lapackWrappers.DenseFactor(self.n)
+            self.denseFactor = clapack.DenseFactor(self.n)
         self.solverName = "LU"
         self.computeEigenvalues = computeEigenvalues or (computeEigenvectors is not None)
         if computeEigenvectors in ['left','both']:
@@ -301,9 +301,9 @@ class LU(LinearSolver):
             if self.computeEigenvalues:
                 self.Leig[:]=self.L
                 self.calculateEigenvalues()
-            lapackWrappers.denseFactorPrepare(self.n,
-                                              self.L,
-                                              self.denseFactor)
+            clapack.denseFactorPrepare(self.n,
+                                       self.L,
+                                       self.denseFactor)
         #
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
         (r,b) = self.solveInitialize(u,r,b,initialGuessIsZero)
@@ -314,28 +314,28 @@ class LU(LinearSolver):
         if type(self.L).__name__ == 'SparseMatrix':
             superluWrappers.sparseFactorSolve(self.sparseFactor,u)
         elif type(self.L).__name__ == 'ndarray':
-            lapackWrappers.denseFactorSolve(self.n,
-                                            self.L,
-                                            self.denseFactor,
-                                            u)
+            clapack.denseFactorSolve(self.n,
+                                     self.L,
+                                     self.denseFactor,
+                                     u)
         self.computeResidual(u,r,b)
         self.du -= u
         self.converged(r)
     def calculateEigenvalues(self):
         if type(self.L).__name__ == 'ndarray':
-            lapackWrappers.denseCalculateEigenvalues(self.JOBVL,
-                                                     self.JOBVR,
-                                                     self.n,
-                                                     self.Leig,
-                                                     self.n,
-                                                     self.eigenvalues_r,
-                                                     self.eigenvalues_i,
-                                                     self.leftEigenvectors,
-                                                     self.n,
-                                                     self.rightEigenvectors,
-                                                     self.n,
-                                                     self.work,
-                                                     5*self.n)
+            clapack.denseCalculateEigenvalues(self.JOBVL,
+                                              self.JOBVR,
+                                              self.n,
+                                              self.Leig,
+                                              self.n,
+                                              self.eigenvalues_r,
+                                              self.eigenvalues_i,
+                                              self.leftEigenvectors,
+                                              self.n,
+                                              self.rightEigenvectors,
+                                              self.n,
+                                              self.work,
+                                              5*self.n)
             eigen_mags = numpy.sqrt(self.eigenvalues_r**2 + self.eigenvalues_i**2)
             logEvent("Minimum eigenvalue magnitude"+repr(eigen_mags.min()))
             logEvent("Maximum eigenvalue magnitude"+repr(eigen_mags.max()))
@@ -343,34 +343,6 @@ class LU(LinearSolver):
             logEvent("Maximum real part of eigenvalue "+repr(self.eigenvalues_r.max()))
             logEvent("Minimum complex part of eigenvalue "+repr(self.eigenvalues_i.min()))
             logEvent("Maximum complex part of eigenvalue "+repr(self.eigenvalues_i.max()))
-class PETSc(LinearSolver):
-    def __init__(self,L,par_L,prefix=None):
-        from . import flcbdfWrappers
-        LinearSolver.__init__(self,L)
-        assert type(L).__name__ == 'SparseMatrix', "PETSc can only be called with a local sparse matrix"
-        self.solverName  = "PETSc"
-        if prefix is None:
-            self.ksp = flcbdfWrappers.KSP(par_L)
-        else:
-            assert isinstance(prefix,str)
-            prefix.replace(' ','_')
-            self.ksp = flcbdfWrappers.KSP(par_L,prefix)
-        self.par_L = par_L
-        self.par_fullOverlap = True
-    def prepare(self,b=None):
-        overlap = 1
-        if self.par_fullOverlap == False:
-            overlap = 0
-        self.ksp.prepare(self.L,self.par_L,overlap)
-    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
-        self.ksp.solve(par_u.cparVec,par_b.cparVec)
-    def useTrueResidualTest(self,par_u):
-        if par_u is not None:
-            self.ksp.useTrueResidualConvergence(par_u.cparVec)
-    def printPerformance(self):
-        self.ksp.info()
-
-
 
 class KSP_petsc4py(LinearSolver):
     """ A class that interfaces Proteus with PETSc KSP. """
@@ -684,8 +656,14 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Sp:
                 logEvent("NAHeader Preconditioner selfp" )
-                self.preconditioner = Schur_Sp(par_L,
-                                               prefix)
+                try:
+                    self.preconditioner = Schur_Sp(par_L,
+                                                   prefix,
+                                                   velocity_block_preconditioner=self.preconditionerOptions[0])
+                except IndexError:
+                    logEvent("Preconditioner options not specified, using defaults")
+                    self.preconditioner = Schur_Sp(par_L,
+                                                   prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Qp:
                 logEvent("NAHeader Preconditioner Qp" )
@@ -750,6 +728,14 @@ class SchurOperatorConstructor(object):
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
+        # ARB TODO : the Schur class should be refactored to avoid
+        # the follow expection statement
+        try:
+            self.L.pde
+            pass
+        except AttributeError:
+            return
+
         if isinstance(self.L.pde, RANS2P.LevelModel):
             self.opBuilder = OperatorConstructor_rans2p(self.L.pde)
         else:
@@ -1264,7 +1250,9 @@ class petsc_ASM(KSP_Preconditioner):
         self.pc.setOptionsPrefix(prefix)
         self.pc.setType('asm')
 
-    def setUp(self,global_ksp=None,newton_its=None):
+    def setUp(self,
+              global_ksp=None,
+              newton_its=None):
         self.pc.setUp()
 
 class petsc_LU(KSP_Preconditioner):
@@ -1303,7 +1291,9 @@ class petsc_LU(KSP_Preconditioner):
         self.pc.setOptionsPrefix(prefix)
         self.pc.setType('lu')
 
-    def setUp(self,global_ksp=None,newton_its=None):
+    def setUp(self,
+              global_ksp=None,
+              newton_its=None):
         pass
 
 class DofOrderInfo(object):
@@ -1627,7 +1617,9 @@ class SchurPrecon(KSP_Preconditioner):
     def get_velocity_var_names(self):
         return self._var_names
 
-    def setUp(self,global_ksp,newton_its=None):
+    def setUp(self,
+              global_ksp,
+              newton_its=None):
         """
         Set up the NavierStokesSchur preconditioner.
 
@@ -1739,7 +1731,144 @@ class SchurPrecon(KSP_Preconditioner):
         else:
             return self.model_info.const_null_space
 
-class Schur_Sp(SchurPrecon):
+class Schur_Qp(SchurPrecon) :
+    """
+    A Navier-Stokes (or Stokes) preconditioner which uses the
+    viscosity scaled pressure mass matrix.
+    """
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
+        """
+        Initializes the pressure mass matrix class.
+
+        Parameters
+        ---------
+        L : petsc4py matrix
+            Defines the problem's operator.
+        """
+        SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
+        self.operator_constructor = SchurOperatorConstructor(self)
+        self.Q = self.operator_constructor.initializeQ()
+
+    def setUp(self,
+              global_ksp,
+              newton_its=None):
+        """ Attaches the pressure mass matrix to PETSc KSP preconditioner.
+
+        Parameters
+        ----------
+        global_ksp : PETSc KSP object
+        """
+        # Create the pressure mass matrix and scaxle by the viscosity.
+        self.operator_constructor.updateQ()
+        self.Qp = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                      self.operator_constructor.linear_smoother.isp)
+        self.Qp.scale(1./self.L.pde.coefficients.nu)
+        L_sizes = self.Qp.size
+
+        # Setup a PETSc shell for the inverse Qp operator
+        self.QpInv_shell = p4pyPETSc.Mat().create()
+        self.QpInv_shell.setSizes(L_sizes)
+        self.QpInv_shell.setType('python')
+        self.matcontext_inv = MatrixInvShell(self.Qp)
+        self.QpInv_shell.setPythonContext(self.matcontext_inv)
+        self.QpInv_shell.setUp()
+        # Set PETSc Schur operator
+        self._setSchurApproximation(global_ksp)
+        self._setSchurlog(global_ksp)
+
+class NavierStokesSchur(SchurPrecon):
+    r""" Schur complement preconditioners for Navier-Stokes problems.
+
+    This class is derived from SchurPrecond and serves as the base
+    class for all NavierStokes preconditioners which use the Schur complement
+    method.
+    """
+    def __init__(self,
+                 L,
+                 prefix=None,
+                 velocity_block_preconditioner=True,
+                 solver_info=None):
+        SchurPrecon.__init__(self,
+                             L,
+                             prefix=prefix,
+                             solver_info=solver_info)
+        self.operator_constructor = SchurOperatorConstructor(self,
+                                                             pde_type='navier_stokes')
+        self.velocity_block_preconditioner = velocity_block_preconditioner
+        if self.velocity_block_preconditioner:
+            self._initialize_velocity_idx()
+
+    def _initialize_velocity_idx(self):
+        """
+        This function creates index sets so that a block
+        preconditioner ca be used for the velocity solve. One index
+        set (e.g. is_vel_*) describes the global dof associated
+        with the * component of the velocity.  The second
+        is (e.g. is*_local) describes the local dof
+        indexes relative to the velocity block.
+        """
+        L_range = self.L.getOwnershipRange()
+        neqns = self.L.getSizes()[0][0]
+
+        vel_is_func = self.model_info.dof_order_class.create_vel_DOF_IS
+
+        velocity_DOF_full, velocity_DOF_local = vel_is_func(L_range,
+                                                            neqns,
+                                                            self.model_info.nc)
+
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_1 = "is_vel_" + var
+            name_2 = "is"+var+"_local"
+            setattr(self,name_1, velocity_DOF_full[i])
+            setattr(self,name_2, velocity_DOF_local[i])
+
+    def _initialize_velocity_block_preconditioner(self,global_ksp):
+        r""" Initialize the velocity block preconditioner.
+
+        """
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setType('fieldsplit')
+        is_lst = []
+        for var in self.get_velocity_var_names():
+            is_local_name = "is" + var + "_local"
+            is_local = getattr(self,is_local_name)
+            is_lst.append((var,is_local))
+        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitIS(*is_lst)
+        # ARB - need to run some tests to see what the best option is here
+#        global_ksp.pc.getFieldSplitSubKSP()[0].pc.setFieldSplitType(1)  # This is for additive (e.g. Jacobi)
+
+    def _setup_velocity_block_preconditioner(self,global_ksp):
+        r"""To improve the effiency of the velocity-block solve in the
+            Schur complement preconditioner, we can apply a block
+            preconditioner.  This function builds an index set to
+            support this.
+
+        Parameters
+        ----------
+        global_ksp : xxx
+           xxx
+
+        Notes
+        -----
+        This is currently only set up for interlaced DOF ordering.
+        """
+        self.velocity_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+
+        for i, var in enumerate(self.get_velocity_var_names()):
+            name_str = "is_vel_" + var
+            name_str_mat = "velocity_" + var + "_sub_matrix"
+            is_set = getattr(self, name_str)
+            setattr(self,name_str_mat, global_ksp.getOperators()[0].getSubMatrix(is_set,
+                                                                                 is_set))
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setOperators(getattr(self,name_str_mat),
+                                                                                            getattr(self,name_str_mat))
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setFromOptions()
+            global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setUp()
+
+
+        global_ksp.pc.getFieldSplitSubKSP()[0].setUp()
+        global_ksp.pc.setUp()
+
+class Schur_Sp(NavierStokesSchur):
     """
     Implements the SIMPLE Schur complement approximation proposed
     in 2009 by Rehman, Vuik and Segal.
@@ -1763,14 +1892,25 @@ class Schur_Sp(SchurPrecon):
     """
     def __init__(self,
                  L,
-                 prefix=None,
-                 solver_info = None):
-        SchurPrecon.__init__(self,
-                             L,
-                             prefix,
-                             solver_info=solver_info)
+                 prefix,
+                 velocity_block_preconditioner=False,
+                 solver_info=None):
+        super(Schur_Sp, self).__init__(L,
+                                       prefix,
+                                       velocity_block_preconditioner,
+                                       solver_info=solver_info)
+        if self.velocity_block_preconditioner:
+            self.velocity_block_preconditioner_set = False
 
-    def setUp(self,global_ksp,newton_its=None):
+    def setUp(self,
+              global_ksp,
+              newton_its=None):
+        try:
+            if self.velocity_block_preconditioner_set is False:
+                self._initialize_velocity_block_preconditioner(global_ksp)
+                self.velocity_block_preconditioner_set = True
+        except AttributeError:
+            pass
         self._setSchurlog(global_ksp)
         self.A00 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
                                                                 self.isv)
@@ -1821,7 +1961,9 @@ class Schur_Qp(SchurPrecon) :
         self.operator_constructor = SchurOperatorConstructor(self)
         self.Q = self.operator_constructor.initializeQ()
 
-    def setUp(self,global_ksp,newton_its=None):
+    def setUp(self,
+              global_ksp,
+              newton_its=None):
         """ Attaches the pressure mass matrix to PETSc KSP preconditioner.
 
         Parameters
@@ -1856,7 +1998,8 @@ class NavierStokesSchur(SchurPrecon):
     def __init__(self,
                  L,
                  prefix=None,
-                 velocity_block_preconditioner=True):
+                 velocity_block_preconditioner=True,
+                 solver_info=None):
         """
         Initializes a base class for Navier-Stokes Schur complement
         preconditioners.
@@ -1873,7 +2016,8 @@ class NavierStokesSchur(SchurPrecon):
         """
         SchurPrecon.__init__(self,
                              L,
-                             prefix)
+                             prefix,
+                             solver_info=solver_info)
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
         self.velocity_block_preconditioner = velocity_block_preconditioner
@@ -2041,7 +2185,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self.velocity_block_preconditioner_set = False
 
-    def setUp(self, global_ksp, newton_its=None):
+    def setUp(self,
+              global_ksp,
+              newton_its=None):
         from . import Comm
         comm = Comm.get()
 
@@ -2148,7 +2294,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         self._get_null_space_cls().apply_to_schur_block(global_ksp)
         self._setSchurlog(global_ksp)
 
-
 class Schur_LSC(SchurPrecon):
     """
     The Least-Squares Communtator preconditioner for saddle
@@ -2173,7 +2318,9 @@ class Schur_LSC(SchurPrecon):
         self.operator_constructor = SchurOperatorConstructor(self)
         self.Q = self.operator_constructor.initializeQ()
 
-    def setUp(self,global_ksp,newton_its=None):
+    def setUp(self,
+              global_ksp,
+              newton_its=None):
         self.operator_constructor.updateQ()
         self.Qv = self.Q.createSubMatrix(self.operator_constructor.linear_smoother.isv,
                                       self.operator_constructor.linear_smoother.isv)
@@ -2218,7 +2365,9 @@ class NavierStokes3D(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self.velocity_block_preconditioner_set = False
 
-    def setUp(self, global_ksp=None, newton_its=None):
+    def setUp(self,
+              global_ksp=None,
+              newton_its=None):
         try:
             if self.velocity_block_preconditioner_set is False:
                 self._initialize_velocity_block_preconditioner(global_ksp)
@@ -2253,7 +2402,9 @@ class SimpleDarcyFC(object):
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
-    def setUp(self, global_ksp=None, newton_its=None):
+    def setUp(self,
+              global_ksp=None,
+              newton_its=None):
         pass
 
 class NavierStokes2D(NavierStokesSchur):
@@ -2282,7 +2433,9 @@ class NavierStokes2D(NavierStokesSchur):
         if self.velocity_block_preconditioner:
             self.velocity_block_preconditioner_set = False
 
-    def setUp(self, global_ksp=None, newton_its=None):
+    def setUp(self,
+              global_ksp=None,
+              newton_its=None):
         try:
             if self.velocity_block_preconditioner_set is False:
                 self._initialize_velocity_block_preconditioner(global_ksp)
@@ -2309,7 +2462,9 @@ class NavierStokesPressureCorrection(object):
                                                 comm=p4pyPETSc.COMM_WORLD)
         self.L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
         self.L.setNullSpace(self.nsp)
-    def setUp(self, global_ksp=None, newton_its=None):
+    def setUp(self,
+              global_ksp=None,
+              newton_its=None):
         pass
 
 class SimpleDarcyFC(object):
@@ -2327,7 +2482,9 @@ class SimpleDarcyFC(object):
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
-    def setUp(self, global_ksp=None, newton_its=None):
+    def setUp(self,
+              global_ksp=None,
+              newton_its=None):
         pass
 
 class Jacobi(LinearSolver):
@@ -2884,8 +3041,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                   linearSolverLocalBlockSize=1,
                                   linearSmootherOptions=()):
     logEvent("multilevelLinearSolverChooser type= %s" % multilevelLinearSolverType)
-    if (multilevelLinearSolverType == PETSc or
-        multilevelLinearSolverType == KSP_petsc4py or
+    if (multilevelLinearSolverType == KSP_petsc4py or
         multilevelLinearSolverType == LU or
         multilevelLinearSolverType == Jacobi or
         multilevelLinearSolverType == GaussSeidel or
@@ -2994,13 +3150,6 @@ def multilevelLinearSolverChooser(linearOperatorList,
         for l in range(nLevels):
             levelLinearSolverList.append(LU(linearOperatorList[l],computeEigenvalues))
         levelLinearSolver = levelLinearSolverList
-    elif levelLinearSolverType == PETSc:
-        for l in range(nLevels):
-            levelLinearSolverList.append(PETSc(linearOperatorList[l],par_linearOperatorList[l],
-                                               prefix=solver_options_prefix))
-            if solverConvergenceTest == 'r-true' and par_duList is not None:
-                levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
-        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == KSP_petsc4py:
         for l in range(nLevels):
             levelLinearSolverList.append(KSP_petsc4py(linearOperatorList[l],par_linearOperatorList[l],
@@ -3085,8 +3234,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                     atol    = absoluteTolerance,
                                     printInfo= printSolverInfo,
                                     computeRates = computeSolverRates)
-    elif (multilevelLinearSolverType == PETSc or
-          multilevelLinearSolverType == KSP_petsc4py or
+    elif (multilevelLinearSolverType == KSP_petsc4py or
           multilevelLinearSolverType == LU or
           multilevelLinearSolverType == Jacobi or
           multilevelLinearSolverType == GaussSeidel or

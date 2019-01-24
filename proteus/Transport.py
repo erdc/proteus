@@ -31,8 +31,7 @@ from .TransportCoefficients import *
 from . import NumericalFlux
 from . import cnumericalFlux
 from . import Comm
-from . import flcbdfWrappers
-from . import cmeshTools
+from . import csparsity
 from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
 from . import superluWrappers
@@ -215,7 +214,6 @@ class OneLevelTransport(NonlinearEquation):
             self.unique_test_trial_range  = list(range(1))
             self.duplicate_test_trial_range = list(range(1,coefficients.nc))
         self.u = uDict
-        self.ua = {}#analytical solutions
         self.phi  = phiDict
         self.dphi={}
         for ck,phi in phiDict.items():
@@ -1652,16 +1650,18 @@ class OneLevelTransport(NonlinearEquation):
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def archiveAnalyticalSolutions(self,archive,analyticalSolutionsDict,T=0.0,tCount=0):
         import copy
-        import pdb
         #
         #set the initial conditions for the DOF based on the generalized interpolation conditions
         #
         if analyticalSolutionsDict is None:
             return
         for cj,sol in analyticalSolutionsDict.items():
-            if cj not in self.ua:
-                self.ua[cj] = copy.deepcopy(self.u[cj])
-                self.ua[cj].name=self.u[cj].name+'_analytical'
+            if not hasattr(self,'u_save'):
+                self.u_save = {}
+            if cj not in self.u_save:
+                self.u_save[cj] = (self.u[cj].dof.copy(), self.u[cj].name)
+            else:
+                self.u_save[cj][0][:] = self.u[cj].dof
             interpolationValues = numpy.zeros((self.mesh.nElements_global,
                                                self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints),
                                               'd')
@@ -1674,8 +1674,11 @@ class OneLevelTransport(NonlinearEquation):
                 for eN in range(self.mesh.nElements_global):
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T)
-            self.ua[cj].projectFromInterpolationConditions(interpolationValues)
-            self.u[cj].femSpace.writeFunctionXdmf(archive,self.ua[cj],tCount)
+            self.u[cj].projectFromInterpolationConditions(interpolationValues)
+            self.u[cj].name += '_analytical'
+            self.u[cj].femSpace.writeFunctionXdmf(archive,self.u[cj],tCount)
+            self.u[cj].dof[:] = self.u_save[cj][0]
+            self.u[cj].name = self.u_save[cj][1]
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def setInitialConditionsFromDofs(self,getInitialConditionDofs,T=0.0):
         self.timeIntegration.t=T
@@ -4273,7 +4276,7 @@ class OneLevelTransport(NonlinearEquation):
 
         columnIndecesDict={}#replace with C++ map (this  collects column indeces for each row)
         logEvent("Building sparse matrix structure",level=2)
-        self.sparsityInfo = cmeshTools.SparsityInfo()
+        self.sparsityInfo = csparsity.PySparsityInfo()
         useC=True
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]: #if we make stencil an array this can pass to C++
@@ -4466,7 +4469,7 @@ class OneLevelTransport(NonlinearEquation):
                     self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((0,),'i')
                 logEvent(memory("csrColumnOffsets_eb_eNebN","OneLevelTransport"),level=4)
                 if useC:
-                    self.sparsityInfo.setOffsets_CSR(self.mesh.nElements_global,
+                    self.sparsityInfo.getOffsets_CSR(self.mesh.nElements_global,
                                                      self.nDOF_test_element[ci],
                                                      self.nDOF_trial_element[cj],
                                                      self.l2g[ci]['nFreeDOF'],
@@ -6399,260 +6402,233 @@ class MultilevelTransport(object):
                 for ts in list(trialSpaceDict.values()):
                     if ts.dofMap.nDOF_all_processes != par_N:
                         mixed=True
-                if (options.multilevelLinearSolver == KSP_petsc4py or
-                    options.levelLinearSolver == KSP_petsc4py):
-                    if mixed:
-                        #
-                        #calculate dimensions mixed multicomponent system
-                        #since it's not nc*dim
-                        #
-                        #first create list of global dof dim for each component
-                        #this is the proteus component global numbering
-                        par_N_list = [ts.dofMap.nDOF_all_processes for ts in list(trialSpaceDict.values())]
-                        #sum to get total global dimension
-                        par_N = sum(par_N_list)
-                        #calculate list of  dimensions of the locally owned
-                        #dof for  each component
-                        par_n_list = [ts.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -
-                                      ts.dofMap.dof_offsets_subdomain_owned[comm.rank()]
-                                      for ts in list(trialSpaceDict.values())]
-                        #sum to get total local dimension
-                        par_n = sum(par_n_list)
-                        #calculate number of  ghosts  fo r each component
-                        par_nghost_list = [ts.dofMap.nDOF_subdomain - nDOF_owned
-                                           for ts,nDOF_owned in zip(list(trialSpaceDict.values()),
-                                                                    par_n_list)]
-                        #sum to  get total ghost dimension
-                        par_nghost = sum(par_nghost_list)
-                        #
-                        #calculate offsets
-                        #
-                        #first for petsc global (natural) numbering offsets
-                        # if p and q are components and ^o and ^g are
-                        # owned and ghost this numbering has
-                        # p^o_0, p^o_1,...p^o_{np}, q^o_0,...q^0_{nq}, p^g_0...
-                        # i.e. all owned, then all ghost
-                        # we'll eventually need the processor and local
-                        # component index  of each ghost too
-                        petsc_global_offsets=[0]
-                        petsc_component_offsets=[[0]]
-                        component_ghost_proc={}
-                        component_ghost_local_index={}
-                        total_dof_proc=0
-                        for proc in range(comm.size()):
-                            for ci,ts in enumerate(trialSpaceDict.values()):
-                                total_dof_proc += (ts.dofMap.dof_offsets_subdomain_owned[proc+1] -
-                                                   ts.dofMap.dof_offsets_subdomain_owned[proc])
-                                petsc_component_offsets[proc].append(total_dof_proc)
-                                for g in ts.dofMap.subdomain2global[par_n_list[ci]:ts.dofMap.nDOF_subdomain]:
-                                    if g >= ts.dofMap.dof_offsets_subdomain_owned[proc] and g < ts.dofMap.dof_offsets_subdomain_owned[proc+1]:
-                                        component_ghost_proc[g] = proc
-                                        component_ghost_local_index[g] = g -  ts.dofMap.dof_offsets_subdomain_owned[proc]
-                            petsc_component_offsets.append([petsc_component_offsets[-1][-1]])
-                            petsc_global_offsets.append(total_dof_proc)
-                        #calculate proteus global (end-to-end) offset for each component
-                        global_component_offset = [0]
-                        for ts in list(trialSpaceDict.values()):
-                            global_component_offset.append(global_component_offset[-1] + ts.dofMap.nDOF_all_processes)
-                        #
-                        #now create subdomain2global for stacked ghosted component DOF by shifting global DOF  numbers  by global offsets
-                        #
-                        subdomain2global = numpy.hstack([offset+ts.dofMap.subdomain2global
-                                                         for offset,ts in
-                                                         zip(global_component_offset, list(trialSpaceDict.values()))])
-                        #
-                        #store ghost proc w.r.t. proteus  global number
-                        #store petsc global w.r.t. proteus global number
-                        ghost_proc={}
-                        ghost_global2petsc={}
-                        for ci,offset, ts in zip(list(range(transport.nc)), global_component_offset, list(trialSpaceDict.values())):
-                            for g,gproc in component_ghost_proc.items():
-                                ghost_proc[offset+g] = gproc
-                                ghost_global2petsc[offset+g] = petsc_component_offsets[gproc][ci] + component_ghost_local_index[g]
-                        #
-                        #build subdomain2global mappings
-                        #
-                        subdomain2global_list = [ts.dofMap.subdomain2global for ts in  list(trialSpaceDict.values())]
-                        #
-                        #form lists of owned and ghosts elements
-                        #
-                        ghosts_list=[]
-                        owned_list=[]
-                        owned = numpy.zeros((par_n),'i')
-                        owned_local = numpy.zeros((par_n),'i')
-                        ghosts = numpy.zeros((par_nghost),'i')
-                        ghosts_start = 0
-                        owned_start = 0
-                        for ci in range(transport.nc):
-                            #owned
-                            owned_ci = subdomain2global[transport.offset[ci]:transport.offset[ci]+par_n_list[ci]]
-                            owned_local[owned_start:owned_start + par_n_list[ci]] = numpy.arange(transport.offset[ci],transport.offset[ci]+par_n_list[ci])
-                            owned[owned_start:owned_start + par_n_list[ci]] = owned_ci
-                            owned_list.append(owned_ci)
-                            owned_start = owned_start + par_n_list[ci]
-                            #ghosts
-                            ghosts_ci = subdomain2global[transport.offset[ci]+par_n_list[ci]:transport.offset[ci]+par_n_list[ci]+par_nghost_list[ci]]
-                            ghosts[ghosts_start:ghosts_start + par_nghost_list[ci]] = ghosts_ci
-                            ghosts_list.append(ghosts_ci)
-                            ghosts_start = ghosts_start + par_nghost_list[ci]
-                        transport.owned_local = owned_local
-                        #stack all owned and all ghost
-                        petsc_subdomain2global = np.hstack(owned_list+ghosts_list)
-                        #
-                        # now find mappings (permutations) between proteus and
-                        # petsc orderings
-                        perm_petsc_subdomain2global = petsc_subdomain2global.argsort()
-                        perm_subdomain2global = subdomain2global.argsort()
-                        proteus2petsc_subdomain = np.array(perm_petsc_subdomain2global[perm_subdomain2global.argsort()],'i')
-                        petsc2proteus_subdomain = np.array(perm_subdomain2global[perm_petsc_subdomain2global.argsort()],'i')
-                        assert((petsc_subdomain2global[perm_petsc_subdomain2global] == subdomain2global[perm_subdomain2global]).all())
-                        assert((petsc_subdomain2global[proteus2petsc_subdomain] == subdomain2global).all())
-                        assert((subdomain2global[petsc2proteus_subdomain] == petsc_subdomain2global).all())
-                        petsc_subdomain2global_petsc = subdomain2global.copy()
-                        petsc_subdomain2global_petsc[:]=-1
-                        for i in range(par_n):
-                            petsc_subdomain2global_petsc[i] = petsc_global_offsets[comm.rank()]+i
-                        petsc_ghosts=ghosts.copy()
-                        for gi,i in enumerate(range(par_n,par_n+par_nghost)):
-                            global_proteus = subdomain2global[petsc2proteus_subdomain[i]]
-                            petsc_subdomain2global_petsc[i] = ghost_global2petsc[global_proteus]
-                            petsc_ghosts[gi] = petsc_subdomain2global_petsc[i]
-                        if comm.size() == 1:
-                            assert((subdomain2global == petsc_subdomain2global).all())
-                            assert((subdomain2global == petsc_subdomain2global_petsc).all())
-                        par_u  = ParVec_petsc4py(u, 1, par_n, par_N, par_nghost,
-                                                 petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
-                                                 proteus2petsc_subdomain=proteus2petsc_subdomain,
-                                                 petsc2proteus_subdomain=petsc2proteus_subdomain)
-                        par_r  = ParVec_petsc4py(r, 1, par_n, par_N, par_nghost,
-                                                 petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
-                                                 proteus2petsc_subdomain=proteus2petsc_subdomain,
-                                                 petsc2proteus_subdomain=petsc2proteus_subdomain)
-                        par_du = ParVec_petsc4py(du, 1, par_n, par_N, par_nghost,
-                                                 petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
-                                                 proteus2petsc_subdomain=proteus2petsc_subdomain,
-                                                 petsc2proteus_subdomain=petsc2proteus_subdomain)
-                        rowptr, colind, nzval = jacobian.getCSRrepresentation()
-                        rowptr_petsc = rowptr.copy()
-                        colind_petsc = colind.copy()
-                        nzval[:] = np.arange(nzval.shape[0])
-                        nzval_petsc = nzval.copy()
-                        nzval_proteus2petsc=colind.copy()
-                        nzval_petsc2proteus=colind.copy()
-                        rowptr_petsc[0] = 0
-                        comm.beginSequential()
-                        for i in range(par_n+par_nghost):
-                            start_proteus = rowptr[petsc2proteus_subdomain[i]]
-                            end_proteus = rowptr[petsc2proteus_subdomain[i]+1]
-                            nzrow =  end_proteus - start_proteus
-                            rowptr_petsc[i+1] = rowptr_petsc[i] + nzrow
-                            start_petsc = rowptr_petsc[i]
-                            end_petsc = rowptr_petsc[i+1]
-                            #print "proteus_colind", colind[start_proteus:end_proteus]
-                            petsc_cols_i = proteus2petsc_subdomain[colind[start_proteus:end_proteus]]
-                            j_sorted = petsc_cols_i.argsort()
-                            colind_petsc[start_petsc:end_petsc] = petsc_cols_i[j_sorted]
-                            nzval_petsc[start_petsc:end_petsc] = nzval[start_proteus:end_proteus][j_sorted]
-                            for j_petsc, j_proteus in zip(np.arange(start_petsc,end_petsc),
-                                                          np.arange(start_proteus,end_proteus)[j_sorted]):
-                                nzval_petsc2proteus[j_petsc] = j_proteus
-                                nzval_proteus2petsc[j_proteus] = j_petsc
-                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
-                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
-                        comm.endSequential()
-                        assert(nzval_petsc.shape[0] == colind_petsc.shape[0] == rowptr_petsc[-1] - rowptr_petsc[0])
-                        petsc_a = {}
-                        proteus_a = {}
-                        for i in range(transport.dim):
-                            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],list(range(rowptr[i],rowptr[i+1]))):
-                                nzval[k] = i*transport.dim+j
-                                proteus_a[i,j] = nzval[k]
-                                petsc_a[proteus2petsc_subdomain[i],proteus2petsc_subdomain[j]] = nzval[k]
-                        for i in range(transport.dim):
-                            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],list(range(rowptr_petsc[i],rowptr_petsc[i+1]))):
-                                nzval_petsc[k] = petsc_a[i,j]
-                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
-                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
-                        assert (all(proteus_a[(petsc2proteus_subdomain[k[0]],petsc2proteus_subdomain[k[1]])] == v for k,v in list(petsc_a.items())))
-                        assert (all(petsc_a[(proteus2petsc_subdomain[k[0]],proteus2petsc_subdomain[k[1]])] == v for k,v in list(proteus_a.items())))
-                        transport.nzval_petsc = nzval_petsc
-                        transport.colind_petsc = colind_petsc
-                        transport.rowptr_petsc = rowptr_petsc
-                        petsc_jacobian = SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
-                        transport.petsc_jacobian = petsc_jacobian#petsc_jacobian = jacobian
-                        if  comm.size() == 1:
-                            assert (nzval_petsc == nzval).all()
-                            assert (colind_petsc == colind).all()
-                            assert (rowptr_petsc == rowptr).all()
-                        assert(colind.max() <= par_n+par_nghost)
-                        assert(colind_petsc.max() <= par_n + par_nghost)
-                        try:
-                            transport.par_info.par_bs = 1
-                            transport.par_info.par_n = par_n
-                            transport.par_info.par_n_lst = par_n_list
-                            transport.par_info.par_N = par_N
-                            transport.par_info.par_nghost = par_nghost
-                            transport.par_info.par_nghost_lst = par_nghost_list
-                            transport.par_info.petsc_subdomain2global_petsc = petsc_subdomain2global_petsc
-                            transport.par_info.proteus2petsc_subdomain = proteus2petsc_subdomain
-                            transport.par_info.petsc2proteus_subdomain = petsc2proteus_subdomain
-                            transport.par_info.subdomain2global = subdomain2global
-                            transport.par_info.dim = transport.dim
-                            transport.par_info.nzval_proteus2petsc = nzval_proteus2petsc
-                            transport.par_info.mixed = mixed
-                        except AttributeError:
-                            logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
-                        par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
-                                                       petsc_subdomain2global_petsc,pde=transport,
-                                                       proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)
-                    else:
-                        transport.owned_local = numpy.arange(par_n*par_bs)
-                        par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
-                        subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
-                        logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                        par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                        par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                        logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                        par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
-                        logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
-                        try:
-                            transport.par_info.par_bs = par_bs
-                            transport.par_info.par_n = par_n
-                            transport.par_info.par_N = par_N
-                            transport.par_info.par_nghost = par_nghost
-                            transport.par_info.subdomain2global = subdomain2global
-                            transport.par_info.dim = transport.dim
-                            transport.par_info.mixed = mixed
-                        except AttributeError:
-                            logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
-                        par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                assert(options.multilevelLinearSolver == KSP_petsc4py or
+                       options.levelLinearSolver == KSP_petsc4py), "Must use KSP_petsc4py in parallel"
+                if mixed:
+                    #
+                    #calculate dimensions mixed multicomponent system
+                    #since it's not nc*dim
+                    #
+                    #first create list of global dof dim for each component
+                    #this is the proteus component global numbering
+                    par_N_list = [ts.dofMap.nDOF_all_processes for ts in list(trialSpaceDict.values())]
+                    #sum to get total global dimension
+                    par_N = sum(par_N_list)
+                    #calculate list of  dimensions of the locally owned
+                    #dof for  each component
+                    par_n_list = [ts.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -
+                                  ts.dofMap.dof_offsets_subdomain_owned[comm.rank()]
+                                  for ts in list(trialSpaceDict.values())]
+                    #sum to get total local dimension
+                    par_n = sum(par_n_list)
+                    #calculate number of  ghosts  fo r each component
+                    par_nghost_list = [ts.dofMap.nDOF_subdomain - nDOF_owned
+                                       for ts,nDOF_owned in zip(list(trialSpaceDict.values()),
+                                                                par_n_list)]
+                    #sum to  get total ghost dimension
+                    par_nghost = sum(par_nghost_list)
+                    #
+                    #calculate offsets
+                    #
+                    #first for petsc global (natural) numbering offsets
+                    # if p and q are components and ^o and ^g are
+                    # owned and ghost this numbering has
+                    # p^o_0, p^o_1,...p^o_{np}, q^o_0,...q^0_{nq}, p^g_0...
+                    # i.e. all owned, then all ghost
+                    # we'll eventually need the processor and local
+                    # component index  of each ghost too
+                    petsc_global_offsets=[0]
+                    petsc_component_offsets=[[0]]
+                    component_ghost_proc={}
+                    component_ghost_local_index={}
+                    total_dof_proc=0
+                    for proc in range(comm.size()):
+                        for ci,ts in enumerate(trialSpaceDict.values()):
+                            total_dof_proc += (ts.dofMap.dof_offsets_subdomain_owned[proc+1] -
+                                               ts.dofMap.dof_offsets_subdomain_owned[proc])
+                            petsc_component_offsets[proc].append(total_dof_proc)
+                            for g in ts.dofMap.subdomain2global[par_n_list[ci]:ts.dofMap.nDOF_subdomain]:
+                                if g >= ts.dofMap.dof_offsets_subdomain_owned[proc] and g < ts.dofMap.dof_offsets_subdomain_owned[proc+1]:
+                                    component_ghost_proc[g] = proc
+                                    component_ghost_local_index[g] = g -  ts.dofMap.dof_offsets_subdomain_owned[proc]
+                        petsc_component_offsets.append([petsc_component_offsets[-1][-1]])
+                        petsc_global_offsets.append(total_dof_proc)
+                    #calculate proteus global (end-to-end) offset for each component
+                    global_component_offset = [0]
+                    for ts in list(trialSpaceDict.values()):
+                        global_component_offset.append(global_component_offset[-1] + ts.dofMap.nDOF_all_processes)
+                    #
+                    #now create subdomain2global for stacked ghosted component DOF by shifting global DOF  numbers  by global offsets
+                    #
+                    subdomain2global = numpy.hstack([offset+ts.dofMap.subdomain2global
+                                                     for offset,ts in
+                                                     zip(global_component_offset, list(trialSpaceDict.values()))])
+                    #
+                    #store ghost proc w.r.t. proteus  global number
+                    #store petsc global w.r.t. proteus global number
+                    ghost_proc={}
+                    ghost_global2petsc={}
+                    for ci,offset, ts in zip(list(range(transport.nc)), global_component_offset, list(trialSpaceDict.values())):
+                        for g,gproc in component_ghost_proc.items():
+                            ghost_proc[offset+g] = gproc
+                            ghost_global2petsc[offset+g] = petsc_component_offsets[gproc][ci] + component_ghost_local_index[g]
+                    #
+                    #build subdomain2global mappings
+                    #
+                    subdomain2global_list = [ts.dofMap.subdomain2global for ts in  list(trialSpaceDict.values())]
+                    #
+                    #form lists of owned and ghosts elements
+                    #
+                    ghosts_list=[]
+                    owned_list=[]
+                    owned = numpy.zeros((par_n),'i')
+                    owned_local = numpy.zeros((par_n),'i')
+                    ghosts = numpy.zeros((par_nghost),'i')
+                    ghosts_start = 0
+                    owned_start = 0
+                    for ci in range(transport.nc):
+                        #owned
+                        owned_ci = subdomain2global[transport.offset[ci]:transport.offset[ci]+par_n_list[ci]]
+                        owned_local[owned_start:owned_start + par_n_list[ci]] = numpy.arange(transport.offset[ci],transport.offset[ci]+par_n_list[ci])
+                        owned[owned_start:owned_start + par_n_list[ci]] = owned_ci
+                        owned_list.append(owned_ci)
+                        owned_start = owned_start + par_n_list[ci]
+                        #ghosts
+                        ghosts_ci = subdomain2global[transport.offset[ci]+par_n_list[ci]:transport.offset[ci]+par_n_list[ci]+par_nghost_list[ci]]
+                        ghosts[ghosts_start:ghosts_start + par_nghost_list[ci]] = ghosts_ci
+                        ghosts_list.append(ghosts_ci)
+                        ghosts_start = ghosts_start + par_nghost_list[ci]
+                    transport.owned_local = owned_local
+                    #stack all owned and all ghost
+                    petsc_subdomain2global = np.hstack(owned_list+ghosts_list)
+                    #
+                    # now find mappings (permutations) between proteus and
+                    # petsc orderings
+                    perm_petsc_subdomain2global = petsc_subdomain2global.argsort()
+                    perm_subdomain2global = subdomain2global.argsort()
+                    proteus2petsc_subdomain = np.array(perm_petsc_subdomain2global[perm_subdomain2global.argsort()],'i')
+                    petsc2proteus_subdomain = np.array(perm_subdomain2global[perm_petsc_subdomain2global.argsort()],'i')
+                    assert((petsc_subdomain2global[perm_petsc_subdomain2global] == subdomain2global[perm_subdomain2global]).all())
+                    assert((petsc_subdomain2global[proteus2petsc_subdomain] == subdomain2global).all())
+                    assert((subdomain2global[petsc2proteus_subdomain] == petsc_subdomain2global).all())
+                    petsc_subdomain2global_petsc = subdomain2global.copy()
+                    petsc_subdomain2global_petsc[:]=-1
+                    for i in range(par_n):
+                        petsc_subdomain2global_petsc[i] = petsc_global_offsets[comm.rank()]+i
+                    petsc_ghosts=ghosts.copy()
+                    for gi,i in enumerate(range(par_n,par_n+par_nghost)):
+                        global_proteus = subdomain2global[petsc2proteus_subdomain[i]]
+                        petsc_subdomain2global_petsc[i] = ghost_global2petsc[global_proteus]
+                        petsc_ghosts[gi] = petsc_subdomain2global_petsc[i]
+                    if comm.size() == 1:
+                        assert((subdomain2global == petsc_subdomain2global).all())
+                        assert((subdomain2global == petsc_subdomain2global_petsc).all())
+                    par_u  = ParVec_petsc4py(u, 1, par_n, par_N, par_nghost,
+                                             petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
+                                             proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                             petsc2proteus_subdomain=petsc2proteus_subdomain)
+                    par_r  = ParVec_petsc4py(r, 1, par_n, par_N, par_nghost,
+                                             petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
+                                             proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                             petsc2proteus_subdomain=petsc2proteus_subdomain)
+                    par_du = ParVec_petsc4py(du, 1, par_n, par_N, par_nghost,
+                                             petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
+                                             proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                             petsc2proteus_subdomain=petsc2proteus_subdomain)
+                    rowptr, colind, nzval = jacobian.getCSRrepresentation()
+                    rowptr_petsc = rowptr.copy()
+                    colind_petsc = colind.copy()
+                    nzval[:] = np.arange(nzval.shape[0])
+                    nzval_petsc = nzval.copy()
+                    nzval_proteus2petsc=colind.copy()
+                    nzval_petsc2proteus=colind.copy()
+                    rowptr_petsc[0] = 0
+                    comm.beginSequential()
+                    for i in range(par_n+par_nghost):
+                        start_proteus = rowptr[petsc2proteus_subdomain[i]]
+                        end_proteus = rowptr[petsc2proteus_subdomain[i]+1]
+                        nzrow =  end_proteus - start_proteus
+                        rowptr_petsc[i+1] = rowptr_petsc[i] + nzrow
+                        start_petsc = rowptr_petsc[i]
+                        end_petsc = rowptr_petsc[i+1]
+                        #print "proteus_colind", colind[start_proteus:end_proteus]
+                        petsc_cols_i = proteus2petsc_subdomain[colind[start_proteus:end_proteus]]
+                        j_sorted = petsc_cols_i.argsort()
+                        colind_petsc[start_petsc:end_petsc] = petsc_cols_i[j_sorted]
+                        nzval_petsc[start_petsc:end_petsc] = nzval[start_proteus:end_proteus][j_sorted]
+                        for j_petsc, j_proteus in zip(np.arange(start_petsc,end_petsc),
+                                                      np.arange(start_proteus,end_proteus)[j_sorted]):
+                            nzval_petsc2proteus[j_petsc] = j_proteus
+                            nzval_proteus2petsc[j_proteus] = j_petsc
+                    assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
+                    assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
+                    comm.endSequential()
+                    assert(nzval_petsc.shape[0] == colind_petsc.shape[0] == rowptr_petsc[-1] - rowptr_petsc[0])
+                    petsc_a = {}
+                    proteus_a = {}
+                    for i in range(transport.dim):
+                        for j,k in zip(colind[rowptr[i]:rowptr[i+1]],list(range(rowptr[i],rowptr[i+1]))):
+                            nzval[k] = i*transport.dim+j
+                            proteus_a[i,j] = nzval[k]
+                            petsc_a[proteus2petsc_subdomain[i],proteus2petsc_subdomain[j]] = nzval[k]
+                    for i in range(transport.dim):
+                        for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],list(range(rowptr_petsc[i],rowptr_petsc[i+1]))):
+                            nzval_petsc[k] = petsc_a[i,j]
+                    assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
+                    assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
+                    assert (all(proteus_a[(petsc2proteus_subdomain[k[0]],petsc2proteus_subdomain[k[1]])] == v for k,v in list(petsc_a.items())))
+                    assert (all(petsc_a[(proteus2petsc_subdomain[k[0]],proteus2petsc_subdomain[k[1]])] == v for k,v in list(proteus_a.items())))
+                    transport.nzval_petsc = nzval_petsc
+                    transport.colind_petsc = colind_petsc
+                    transport.rowptr_petsc = rowptr_petsc
+                    petsc_jacobian = SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
+                    transport.petsc_jacobian = petsc_jacobian#petsc_jacobian = jacobian
+                    if  comm.size() == 1:
+                        assert (nzval_petsc == nzval).all()
+                        assert (colind_petsc == colind).all()
+                        assert (rowptr_petsc == rowptr).all()
+                    assert(colind.max() <= par_n+par_nghost)
+                    assert(colind_petsc.max() <= par_n + par_nghost)
+                    try:
+                        transport.par_info.par_bs = 1
+                        transport.par_info.par_n = par_n
+                        transport.par_info.par_n_lst = par_n_list
+                        transport.par_info.par_N = par_N
+                        transport.par_info.par_nghost = par_nghost
+                        transport.par_info.par_nghost_lst = par_nghost_list
+                        transport.par_info.petsc_subdomain2global_petsc = petsc_subdomain2global_petsc
+                        transport.par_info.proteus2petsc_subdomain = proteus2petsc_subdomain
+                        transport.par_info.petsc2proteus_subdomain = petsc2proteus_subdomain
+                        transport.par_info.subdomain2global = subdomain2global
+                        transport.par_info.dim = transport.dim
+                        transport.par_info.nzval_proteus2petsc = nzval_proteus2petsc
+                        transport.par_info.mixed = mixed
+                    except AttributeError:
+                        logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
+                    par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
+                                                   petsc_subdomain2global_petsc,pde=transport,
+                                                   proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)
                 else:
+                    transport.owned_local = numpy.arange(par_n*par_bs)
                     par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
                     subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
-                    max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
                     logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                    par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                    par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                    par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                    par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
                     logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                    par_du = ParVec(du,par_bs,par_n,par_N)
+                    par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                     logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
-                    par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global,jacobian)
-            elif  (options.multilevelLinearSolver == PETSc or
-                   options.levelLinearSolver == PETSc):
-                assert(False)
-                assert trialSpaceDict[0].dofMap.subdomain2global is not None, "need trivial subdomain2global in dofMap for running PETSc"
-                assert trialSpaceDict[0].dofMap.max_dof_neighbors is not None, "need max_dof_neighbors in dofMap for running PETSc"
-                par_N = par_n =  trialSpaceDict[0].dofMap.nDOF_all_processes
-                par_nghost = 0
-                subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
-                max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
-                logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
-                par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
-                logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                par_du = ParVec(du,par_bs,par_n,par_N)
-                logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
-                par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global[:par_n],jacobian)
+                    try:
+                        transport.par_info.par_bs = par_bs
+                        transport.par_info.par_n = par_n
+                        transport.par_info.par_N = par_N
+                        transport.par_info.par_nghost = par_nghost
+                        transport.par_info.subdomain2global = subdomain2global
+                        transport.par_info.dim = transport.dim
+                        transport.par_info.mixed = mixed
+                    except AttributeError:
+                        logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
+                    par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
             elif  (options.multilevelLinearSolver == KSP_petsc4py or
                    options.levelLinearSolver == KSP_petsc4py):
                 assert trialSpaceDict[0].dofMap.subdomain2global is not None, "need trivial subdomain2global in dofMap for running PETSc"

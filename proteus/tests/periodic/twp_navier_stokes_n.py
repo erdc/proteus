@@ -1,13 +1,18 @@
 from proteus import StepControl, TimeIntegration, NonlinearSolvers, LinearSolvers
 from proteus.default_n import *
 from twp_navier_stokes_p import *
-from proteus import Context
+from proteus import (MeshTools,
+                     Context)
 
 ct = Context.get()
 domain = ct.domain
 nd = ct.domain.nd
-mesh = domain.MeshOptions
-
+nnx = ct.nnx
+nny = ct.nny
+parallelPeriodic=True
+if ct.useHex:
+    quad=True
+triangleFlag=1
 #time stepping
 runCFL = ct.runCFL
 if ct.timeIntegration == "VBDF":
@@ -15,16 +20,13 @@ if ct.timeIntegration == "VBDF":
     timeOrder = 2
 else:
     timeIntegration = TimeIntegration.BackwardEuler_cfl
+    timeOrder = 1
 stepController  = StepControl.Min_dt_controller
 
 # mesh options
 nLevels = ct.nLevels
-parallelPartitioningType = mesh.parallelPartitioningType
-nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
-triangleOptions = mesh.triangleOptions
-
-
+parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+nLayersOfOverlapForParallel = 0
 
 elementQuadrature = ct.elementQuadrature
 elementBoundaryQuadrature = ct.elementBoundaryQuadrature
@@ -61,16 +63,8 @@ elif nd == 3:
 
 matrix = SparseMatrix
 
-if ct.useOldPETSc:
-    multilevelLinearSolver = LinearSolvers.PETSc
-    levelLinearSolver      = LinearSolvers.PETSc
-else:
-    multilevelLinearSolver = LinearSolvers.KSP_petsc4py
-    levelLinearSolver      = LinearSolvers.KSP_petsc4py
-
-if ct.useSuperlu:
-    multilevelLinearSolver = LinearSolvers.LU
-    levelLinearSolver      = LinearSolvers.LU
+multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+levelLinearSolver      = LinearSolvers.KSP_petsc4py
 
 linear_solver_options_prefix = 'rans2p_'
 levelNonlinearSolverConvergenceTest = 'r'
@@ -83,5 +77,4 @@ nl_atol_res = ct.ns_nl_atol_res
 useEisenstatWalker = False#True
 maxNonlinearIts = 50
 maxLineSearches = 0
-conservativeFlux = {0:'pwl-bdm-opt'}
-auxiliaryVariables = ct.domain.auxiliaryVariables['twp']
+#conservativeFlux = {0:'pwl-bdm-opt'}

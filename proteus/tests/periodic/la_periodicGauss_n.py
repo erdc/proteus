@@ -2,10 +2,11 @@ from proteus import *
 from proteus.default_n import *
 from la_periodicGauss_p import *
 
-timeIntegration = VBDF
+timeIntegration = BackwardEuler_cfl
 stepController = Min_dt_controller
-timeOrder=2
+timeOrder=1
 runCFL=0.33
+triangleFlag = 1#if regular triangulatio then alternate diagonals
 
 DT = None
 
@@ -15,10 +16,13 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
-nn=11
+nn=41
 nLevels = 1#4
 
-if useNCLS:
+if useVOS:
+    subgridError = VOS3P.SubgridError(coefficients, nd)
+    numericalFluxType = VOS3P.NumericalFlux
+elif useNCLS:
     subgridError = NCLS.SubgridError(coefficients, nd)
     numericalFluxType = NCLS.NumericalFlux
 elif useVOF:
@@ -31,7 +35,9 @@ else:
     subgridError = AdvectionDiffusionReaction_ASGS(coefficients, nd, lag=False)
     numericalFluxType = DoNothing#None
 
-if useNCLS:
+if useVOS:
+    shockCapturing = VOS3P.ShockCapturing(coefficients, nd, shockCapturingFactor=0.0, lag=True)
+elif useNCLS:
     shockCapturing = NCLS.ShockCapturing(coefficients, nd, shockCapturingFactor=0.0, lag=True)
 elif useVOF:
     shockCapturing = VOF.ShockCapturing(coefficients, nd, shockCapturingFactor=0.0, lag=True)
@@ -44,9 +50,16 @@ multilevelNonlinearSolver  = Newton
 
 levelNonlinearSolver = Newton
 
-nonlinearSmoother = NLGaussSeidel
-
 fullNewtonFlag = True
+
+if useVOS:
+    timeIntegration = VOS3P.RKEV
+    timeOrder=3
+#    levelNonlinearSolver = ExplicitLumpedMassMatrix
+    levelNonlinearSolver = ExplicitConsistentMassMatrixForVOF
+    fullNewtonFlag = True
+    
+nonlinearSmoother = NLGaussSeidel
 
 tolFac = 0.0
 nl_atol_res = 1.0e-8
@@ -54,7 +67,7 @@ nl_atol_res = 1.0e-8
 linTolFac = 0.0
 l_atol_res = 1.0e-8
 
-maxNonlinearIts =3
+maxNonlinearIts =1
 maxLineSearches = 0
 
 matrix = SparseMatrix

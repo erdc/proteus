@@ -1,7 +1,4 @@
-#include <math.h>
-#include <stdio.h> /*mwf for debugging*/
 #include "subgridError.h"
-#include <assert.h>
 
 /**
    \file subgridError.c

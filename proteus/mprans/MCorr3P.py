@@ -14,7 +14,8 @@ from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
                               C0_AffineLinearOnSimplexWithNodalBasis)
-from proteus.flcbdfWrappers import globalMax
+from proteus.Comm import (globalMax,
+                          globalSum)
 from proteus.Profiling import memory
 from proteus.Profiling import logEvent as log
 from proteus.Transport import OneLevelTransport
@@ -217,6 +218,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 ('grad(u)', 0)] += self.massCorrModel.ebqe[('grad(u)', 0)]
             # vof
             self.massCorrModel.setMassQuadrature()
+            self.vofModel.q[('m_tmp',0)][:] = (1.0 - self.vofModel.coefficients.q_vos)*self.vofModel.q[('u',0)]
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
             # print "********************max
             # VOF************************",max(self.vofModel.q[('u',0)].flat[:])
@@ -316,7 +318,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  bdyNullSpace=False):
         self.bdyNullSpace = bdyNullSpace
         self.useConstantH = coefficients.useConstantH
-        from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
         #
@@ -681,7 +682,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getResidual(self, u, r):
         import pdb
         import copy
-        from proteus.flcbdfWrappers import globalSum
         """
         Calculate the element residuals and add in to the global residual
         """
@@ -954,7 +954,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.atol)
 
     def globalConstantRJ(self, u, r, U):
-        from proteus.flcbdfWrappers import globalSum
         import pdb
         import copy
         """
@@ -1089,7 +1088,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
 
     def calculateMass(self, q_phi):
-        from proteus.flcbdfWrappers import globalSum
         return globalSum(self.mcorr3p.calculateMass(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1437,9 +1435,6 @@ class GlobalConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
         self.F.globalConstantSolve(u, r)
         self.failedFlag = False
         return self.failedFlag
-
-
-from proteus.flcbdfWrappers import globalSum
 
 
 def conservationNorm(x):

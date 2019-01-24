@@ -17,7 +17,8 @@ coefficients=PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*rho_1,
                                   nd = nd,
                                   modelIndex=PINC_model,
                                   fluidModelIndex=V_model,
-                                  fixNullSpace=True)
+                                  fixNullSpace=True,
+                                  nullSpace='NoNullSpace')#'ConstantNullSpace')
 
 #pressure increment should be zero on any pressure dirichlet boundaries
 def getDBC_phi(x,flag):

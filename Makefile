@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile proteus update FORCE
+.PHONY: all check clean distclean doc install FORCE
 
 all: develop
 
@@ -19,18 +19,18 @@ PROTEUS_BUILD_CMD = python -c "print('Letting install handle build_ext')"
 PROTEUS_DEVELOP_BUILD_CMD = python -c "print('Letting install handle build_ext')"
 endif
 
-# shell hack for now to automatically detect Garnet front-end nodes
+# automatically detect hpcmp machines
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = copper* ]] && echo "copper" || python -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = excalibur* ]] && echo "excalibur" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = lightning* ]] && echo "lightning" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = spirit* ]] && echo "spirit" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python -c "import sys; print(sys.platform)")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
-HIT_VERSION := $(shell cd stack/hit; ${VER_CMD})
-STACK_VERSION := $(shell cd stack; ${VER_CMD})
 TEST_MARKER="' '"
 
 define show_info
@@ -40,8 +40,6 @@ define show_info
 	@echo "PROTEUS_ARCH   : ${PROTEUS_ARCH}"
 	@echo "PROTEUS_PREFIX : ${PROTEUS_PREFIX}"
 	@echo "PROTEUS_VERSION: ${PROTEUS_VERSION}"
-	@echo "HIT_VERSION    : ${HIT_VERSION}"
-	@echo "STACK_VERSION  : ${STACK_VERSION}"
 	@echo "+======================================================================================================+"
 	@echo ""
 endef
@@ -102,29 +100,39 @@ distclean: clean
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
-src_cache:
-	@echo "Adding source cache"
-	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+stack/hit/bin/hit:
+	@echo "Updating stack submodule"
+	git submodule update --init stack
+	@echo "Updating stack/hit submodule"
+	cd stack && git submodule update --init
+	@echo "Adding source cache if not done already"
+	-./stack/hit/bin/hit init-home
+	-./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
 
-bld_cache:
+stack:
+	@echo "Updating stack submodule"
+	git submodule update --init stack
+
+air-water-vv:
+	@echo "Updating air-water-vv submodule"
+	git submodule update --init air-water-vv
+
+bld_cache: stack/hit/bin/hit
 	@echo "Trying to add build cache for your arch"
 	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
-	./stack/bin/hit remote add http://192.237.213.149/hashdist_${HASHSTACK_BLD} --objects="build"
+	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_${HASHSTACK_BLD} --objects="build"
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
-profile: ${PROTEUS_PREFIX}/artifact.json
-
-stack/default.yaml: ${PWD}/stack/default.yaml
-
-${PWD}/stack/default.yaml:
+stack/default.yaml: stack/hit/bin/hit
+	@echo "Linking stack/default.yaml for this arch"
 	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: src_cache stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"
@@ -137,27 +145,16 @@ ${PROTEUS_PREFIX}/artifact.json: src_cache stack/default.yaml $(shell find stack
 	@echo "Dependency build complete"
 	@echo "************************"
 
-proteus: ${PROTEUS_PREFIX}/bin/proteus
-
-${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
+${PROTEUS_PREFIX}/bin/proteus_env.sh: ${PROTEUS_PREFIX}/artifact.json
 	@echo "************************"
-	@echo "Installing proteus scripts..."
+	@echo "Installing proteus_env.sh"
 	@echo "************************"
-
-	echo "#!/usr/bin/env bash" > ${PROTEUS_PREFIX}/bin/proteus
-	echo '${PROTEUS_ENV} python "$${@:1}"' >> ${PROTEUS_PREFIX}/bin/proteus
-	chmod a+x ${PROTEUS_PREFIX}/bin/proteus
-
 	echo "#!/usr/bin/env sh" > ${PROTEUS_PREFIX}/bin/proteus_env.sh
 	echo '${PROTEUS_ENV}' >> ${PROTEUS_PREFIX}/bin/proteus_env.sh
 	chmod a+x ${PROTEUS_PREFIX}/bin/proteus_env.sh
 
-	@echo "************************"
-	@echo "Proteus script successfully installed"
-	@echo "************************"
-
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
-install: profile $(wildcard *.py) proteus
+install: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFIX}/artifact.json
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
@@ -182,7 +179,7 @@ install: profile $(wildcard *.py) proteus
 	$(call show_info)
 	$(call howto)
 
-develop: proteus profile 
+develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFIX}/artifact.json
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/cmake/* ${PROTEUS}/${PROTEUS_ARCH}/lib/cmake
 	@echo "************************"
@@ -258,12 +255,23 @@ doc:
 	@echo "**********************************"
 	-sensible-browser ../proteus-website/index.html &
 
-test: check
+test: air-water-vv check
+	@echo "**************************************************"
+	@echo "Running git-lfs to get regression test data files."
+	-git lfs fetch
+	-git lfs checkout
+	@echo "If git-lfs failed to download data, then some tests will fail, and"
+	@echo "you should install git-lfs or try 'make lfs', passing all tests is needed"
+	@echo "**************************************************************************"
+	@echo "Running basic test suite"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	@echo "Basic tests complete "
 	@echo "************************************"
-	@echo "Running test suite"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
-	@echo "Tests complete "
+	@echo "Running air-water-vv test set 1"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
 	@echo "************************************"
+	@echo "Running air-water-vv test set 2"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 
 jupyter:
 	@echo "************************************"

@@ -12,19 +12,9 @@ from proteus import Context
 ct = Context.get()
 domain = ct.domain
 nd = ct.domain.nd
-mesh = domain.MeshOptions
 
 # time stepping
 runCFL = ct.runCFL
-
-# mesh options
-nLevels = ct.nLevels
-parallelPartitioningType = mesh.parallelPartitioningType
-nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
-triangleOptions = mesh.triangleOptions
-
-
 
 elementQuadrature = ct.elementQuadrature
 elementBoundaryQuadrature = ct.elementBoundaryQuadrature
