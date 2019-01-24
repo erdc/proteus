@@ -1,5 +1,8 @@
 #ifndef SUBGRIDERROR_H
 #define SUBGRIDERROR_H
+#include <math.h>
+#include <stdio.h> /*mwf for debugging*/
+#include <assert.h>
 /**
  \file subgridError.h
  \brief C implementations of subgrid error calculations

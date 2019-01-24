@@ -824,7 +824,7 @@ def rotatingGaussianElementVelocityEval4(int transient,
    cdef int eN,ebN,k
    cdef double pi
    pi = M_PI
-   if v.shape[-1] == 3:
+   if v.shape[v.ndim-1] == 3:
       if transient == 1:
          for eN in range(x.shape[0]):
             for ebN in range(x.shape[1]):
@@ -841,7 +841,7 @@ def rotatingGaussianElementVelocityEval4(int transient,
                   v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
                   v[eN,ebN,k,2]=zvelocity
    else:
-      assert v.shape[-1] == 2
+      assert v.shape[v.ndim-1] == 2
       if transient == 1:
          for eN in range(x.shape[0]):
             for ebN in range(x.shape[1]):
