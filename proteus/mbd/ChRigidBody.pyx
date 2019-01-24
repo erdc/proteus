@@ -53,6 +53,7 @@ from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 from proteus.Archiver import indentXML
 import ChronoEngine_python_core as chrono
+import ChronoEngine_python_fea as chrono_fea
 
 # needed for sphinx docs
 # __all__ = ['ProtChSystem',
@@ -68,10 +69,6 @@ cdef extern from "swigpyobject.h":
 cdef extern from "ChRigidBody.h":
     shared_ptr[ch.ChPhysicsItem] getPhysicsItemSharedPtr(ch.ChPhysicsItem* item)
     shared_ptr[ch.ChPhysicsItem] getPhysicsItemSharedPtr2(ch.ChPhysicsItem* item)
-    cdef cppclass cppMesh:
-        shared_ptr[ch.ChMesh] mesh
-        void SetAutomaticGravity(bool val)
-    cppMesh * newMesh(ch.ChSystem*, shared_ptr[ch.ChMesh])
     cdef cppclass cppCable:
         ch.ChSystem& system
         ch.ChMesh& mesh
@@ -107,6 +104,7 @@ cdef extern from "ChRigidBody.h":
         shared_ptr[ch.ChLinkPointFrame] constraint_front
         vector[shared_ptr[ch.ChVector]] forces_drag
         vector[shared_ptr[ch.ChVector]] forces_addedmass
+        shared_ptr[ch.ChMaterialSurfaceSMC] contact_material
         void buildNodes()
         void buildCable()
         # void setVelocityAtNodes(double* fluid_velocity)
@@ -121,7 +119,7 @@ cdef extern from "ChRigidBody.h":
         void setFluidDensityAtNodes(vector[double] dens)
         void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceSMC] material)
         ch.ChVector getTensionElement(int i, double eta)
-    cppMultiSegmentedCable * newMoorings(ch.ChSystem* system,
+    cppMultiSegmentedCable * newMoorings(shared_ptr[ch.ChSystemSMC] system,
                                          shared_ptr[ch.ChMesh] mesh,
                                          vector[double] length,
                                          vector[int] nb_elems,
@@ -136,7 +134,7 @@ cdef extern from "ChRigidBody.h":
         ch.ChVector dimensions
         shared_ptr[ch.ChBodyEasyBox] body;
         void setNodesSize(double size)
-    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ch.ChSystem* system,
+    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(shared_ptr[ch.ChSystemSMC] system,
                                                       shared_ptr[ch.ChMesh] mesh,
                                                       ch.ChVector position,
                                                       ch.ChVector dimensions)
@@ -148,17 +146,22 @@ cdef extern from "ChRigidBody.h":
                                       int node1,
                                       cppMultiSegmentedCable* cable2,
                                       int node2)
+    cdef cppclass cppMesh:
+        shared_ptr[ch.ChMesh] mesh
+        void SetAutomaticGravity(bool val)
+    cppMesh * newMesh(shared_ptr[ch.ChSystemSMC], shared_ptr[ch.ChMesh])
+
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
-        ch.ChSystem* system
-        ch.ChSystemSMC* systemSMC
+        shared_ptr[ch.ChSystemSMC] system
         double chrono_dt
         void DoStepDynamics(dt)
         void step(double proteus_dt, int n_substeps)
         void setDirectory(string directory)
         void setTimestepperType(string tstype, bool verbose)
         void setCollisionEnvelopeMargin(double envelope, double margin)
+        # void addMesh(shared_ptr[ch.ChMesh] mesh)
     cppSystem * newSystem()
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
@@ -221,7 +224,7 @@ cdef extern from "ChRigidBody.h":
     cppRigidBody * newRigidBody(cppSystem* system)
     void ChLinkLockBodies(shared_ptr[ch.ChBody] body1,
                           shared_ptr[ch.ChBody] body2,
-                          ch.ChSystem* system,
+                          shared_ptr[ch.ChSystemSMC] system,
                           ch.ChCoordsys coordsys,
                           double limit_X,
                           double limit_Y,
@@ -316,8 +319,6 @@ cdef class ProtChBody:
             self.ProtChSystem.addProtChBody(self)
         # initialise values
         self.record_dict = OrderedDict()
-        new_quat = chrono.ChQuaternionD(1., 0., 0., 0.)
-        self.ChBody.SetRot(new_quat)
         self.F_prot = np.zeros(3)  # initialise empty Proteus force
         self.M_prot = np.zeros(3)  # initialise empty Proteus moment
         self.F_applied = np.zeros(3)  # initialise empty Applied force
@@ -1409,7 +1410,7 @@ cdef class ProtChBody:
         """Records values of body attributes in a csv file.
         """
         record_file = os.path.join(Profiling.logDir, 'record_' + self.name)
-        t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
+        t_chrono = self.ProtChSystem.ChSystemSMC.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
@@ -1632,9 +1633,10 @@ cdef class ProtChSystem:
         self.subcomponents = []
         # cannot call it self.ChSystem or self.ChSystemSMC (conflict in C++ - unknown reason)
         self.ChSystemSMC = chrono.ChSystemSMC()
-        self.ChSystemSMC.this.disown()
+        # self.ChSystemSMC.this.disown()
         cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChSystemSMC.this
-        swig_obj.ptr = <ch.ChSystemSMC*?> &self.thisptr.systemSMC
+        cdef shared_ptr[ch.ChSystemSMC]* pt_to_shp = <shared_ptr[ch.ChSystemSMC]*> swig_obj.ptr;
+        self.thisptr.system = pt_to_shp[0]
         self.dt_init = dt_init
         self.model = None
         self.nd = nd
@@ -1682,7 +1684,8 @@ cdef class ProtChSystem:
         self.thisptr.chrono_dt = dt
 
     def addProtChBody(self, ProtChBody body):
-        self.thisptr.system.AddBody(body.ChBodyAddedMass.sharedptr_chbody)
+        # self.ChSystemSMC.Add(body.ChBody)
+        self.ChSystemSMC.Add(body.ChBody)
         body.ProtChSystem = self
         self.addSubcomponent(body)  # add body to system (for pre and post steps)
 
@@ -1736,7 +1739,7 @@ cdef class ProtChSystem:
         self.step_nb += 1
         # self.thisptr.system.setChTime()
         comm = Comm.get().comm.tompi4py()
-        t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+        t = comm.bcast(self.ChSystemSMC.GetChTime(), self.chrono_processor)
         Profiling.logEvent('Solving Chrono system from t='
                         +str(t)
                         +' with dt='+str(self.dt)
@@ -1753,7 +1756,7 @@ cdef class ProtChSystem:
                         if type(s) is ProtChMoorings:
                             # update forces keeping same fluid vel/acc
                             s.updateForces()
-        t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+        t = comm.bcast(self.ChSystemSMC.GetChTime(), self.chrono_processor)
         Profiling.logEvent('Solved Chrono system to t='+str(t))
         if self.scheme == "ISS":
             Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
@@ -1781,7 +1784,7 @@ cdef class ProtChSystem:
         elif proteus_dt is not None:
             self.proteus_dt = proteus_dt
             self.proteus_dt_next = proteus_dt  # BAD PREDICTION IF TIME STEP NOT REGULAR
-            self.t = t = self.thisptr.system.GetChTime()
+            self.t = t = self.ChSystemSMC.GetChTime()
         else:
             sys.exit('ProtChSystem: no time step set in calculate()')
         if self.model is not None:
@@ -1825,7 +1828,7 @@ cdef class ProtChSystem:
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
-            self.thisptr.system.SetupInitial()
+            self.ChSystemSMC.SetupInitial()
             Profiling.logEvent("Finished init"+str(self.next_sample))
             for s in self.subcomponents:
                 s.poststep()
@@ -2114,15 +2117,23 @@ cdef class ProtChSystem:
 #    cdef ChVector& gg = bod.GetPos_dt()
 #    print(gg.x, gg.y, gg.z)
 
-
 cdef class ProtChMesh:
+    cdef shared_ptr[ch.ChMesh] mesh
     cdef cppMesh * thisptr
+
+    cdef public:
+        object ChMeshh
     def __cinit__(self, ProtChSystem system):
         cdef shared_ptr[ch.ChMesh] mesh = make_shared[ch.ChMesh]()
         self.thisptr = newMesh(system.thisptr.system, mesh)
+        self.mesh = self.thisptr.mesh
     def setAutomaticGravity(self, bool val):
         self.thisptr.SetAutomaticGravity(val)
 
+        # self.ChMeshh = chrono_fea.ChMesh()
+        # cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChMeshh.this
+        # cdef shared_ptr[ch.ChMesh]* pt_to_shp = <shared_ptr[ch.ChMesh]*> swig_obj.ptr;
+        # self.mesh = pt_to_shp[0]
 
 cdef class SurfaceBoxNodesCloud:
     cdef cppSurfaceBoxNodesCloud * thisptr
@@ -2130,7 +2141,7 @@ cdef class SurfaceBoxNodesCloud:
         cdef ch.ChVector[double] pos = ch.ChVector[double](position[0], position[1], position[2])
         cdef ch.ChVector[double] dim = ch.ChVector[double](dimensions[0], dimensions[1], dimensions[2])
         self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system,
-                                               mesh.thisptr.mesh,
+                                               mesh.mesh,
                                                pos,
                                                dim)
         # self.System.addBody(self)
@@ -2248,7 +2259,7 @@ cdef class ProtChMoorings:
             vec_rho.push_back(rho[i])
             vec_E.push_back(E[i])
         self.thisptr = newMoorings(system.thisptr.system,
-                                   mesh.thisptr.mesh,
+                                   mesh.mesh,
                                    vec_length,
                                    vec_nb_elems,
                                    vec_d,
@@ -2481,7 +2492,7 @@ cdef class ProtChMoorings:
             with open(record_file, mode) as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(row)
-        t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
+        t_chrono = self.ProtChSystem.ChSystemSMC.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
@@ -2835,7 +2846,7 @@ cdef class ProtChMoorings:
                     x, y, z = tangents[i][j]
                     vec = ch.ChVector[double](x, y, z)
                     deref(self.thisptr.cables[i]).mvecs_tangents.push_back(vec)
-        self.buildNodes()
+        # self.buildNodes()
 
     def buildNodes(self):
         self.thisptr.buildNodes()
@@ -2953,8 +2964,10 @@ cdef class ProtChMoorings:
         mat: ChMaterialSurfaceSMC
             Material of cable.
         """
-        pass
-        # self.thisptr.setContactMaterial(mat.sharedptr)
+        cdef SwigPyObject *swig_obj = <SwigPyObject*> mat.this
+        cdef shared_ptr[ch.ChMaterialSurfaceSMC]* pt_to_shp = <shared_ptr[ch.ChMaterialSurfaceSMC]*> swig_obj.ptr;
+        cdef shared_ptr[ch.ChMaterialSurfaceSMC] matp = pt_to_shp[0]
+        self.thisptr.setContactMaterial(matp)
 
     def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None,
                           fluid_acceleration_array=None):
