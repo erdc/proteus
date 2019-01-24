@@ -114,7 +114,7 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
 def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e300,costapCut=True):
     if(filt):
         data = signalFilter(time,data,minfreq,maxfreq,costapCut)    
-    trend = mean(data)
+    trend = np.mean(data)
     data = data - trend
 
     data_temp=np.zeros(data.shape,)
@@ -144,13 +144,13 @@ def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e30
     height = None
 
     if mode == "mean":
-        height = mean(zCH)
-        period = mean(period)
+        height = np.mean(zCH)
+        period = np.mean(period)
     elif type(mode) == "int":
         height = np.sort(zCH)
         ii = len(height) - old_div(float(len(height)),float(mode))
-        height = mean(height[ii:])
-        period = mean(period)
+        height = np.mean(height[ii:])
+        period = np.mean(period)
     else:
         print("mode must be either 'period', 'mean' or an integer ")
 
