@@ -434,7 +434,7 @@ namespace proteus
                               double& r,
                               double& dr)
     {
-      r = porosity*smoothedHeaviside(epsHeaviside,phi+u) - H;
+      r = porosity*(smoothedHeaviside(epsHeaviside,phi+u) - H);
       dr = porosity*smoothedDirac(epsDirac,phi+u);
     }
 
