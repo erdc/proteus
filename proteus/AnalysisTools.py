@@ -12,7 +12,9 @@ from proteus import WaveTools as WT
 import numpy as np
 import WaveTools as WT
 import math
-       
+cos = np.cos
+sin = np.sin
+sqrt = np.sqrt
 
 def readProbeFile(filename):
     with open (filename, 'rb') as csvfile:
