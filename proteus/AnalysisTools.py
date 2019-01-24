@@ -164,7 +164,7 @@ def pressureToHeight(data,Z,depth,wavelength,rho,g):
 
 
 def ReflStat(H1,H2,H3,dx,wavelength):
-    D = 2*math.pi*dx/wavelegth
+    D = 2*math.pi*dx/wavelength
     Amp =np.array([old_div(H1,2.),old_div(H2,2.),old_div(H3,2.)])
     A1 = Amp[j]*Amp[j]
     A2 = Amp[j+1]*Amp[j+1]
