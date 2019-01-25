@@ -14,7 +14,8 @@ using namespace std;
 
 class cppSystem {
  public:
-  std::shared_ptr<ChSystemSMC> system;
+  std::shared_ptr<ChSystemSMC> systemSMC;
+  std::shared_ptr<ChSystem> system;
   double chrono_dt;
   std::string directory;
   cppSystem();
@@ -22,7 +23,7 @@ class cppSystem {
   void setDirectory(std::string dir);
   void setTimestepperType(std::string tstype, bool verbose);
   void setCollisionEnvelopeMargin(double envelope, double margin);
-  /* void addMesh(std::shared_ptr<ChMesh> mesh); */
+  void addMesh(std::shared_ptr<ChMesh> mesh);
 };
 
 
@@ -155,9 +156,9 @@ void cppSystem::step(double proteus_dt, int n_substeps=1)
    }
 }
 
-/* void cppSystem::addMesh(std::shared_ptr<ChMesh> mesh) { */
-/*   systemSMC_sharedptr->Add(mesh); */
-/* } */
+void cppSystem::addMesh(std::shared_ptr<ChMesh> mesh) {
+  system->Add(mesh);
+}
 
 cppRigidBody::cppRigidBody(cppSystem* system):
   system(system)
@@ -589,7 +590,7 @@ cppRigidBody * newRigidBody(cppSystem* system)
 
 void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
                       std::shared_ptr<ChBody> body2,
-                      std::shared_ptr<ChSystemSMC> system,
+                      std::shared_ptr<ChSystem> system,
                       ChCoordsys<> coordsys,
                       double limit_X=0.,
                       double limit_Y=0.,

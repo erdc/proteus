@@ -10,7 +10,7 @@ from libcpp cimport bool
 from libcpp.memory cimport (shared_ptr,
                             make_shared)
 
-cdef extern from "ChMoorings.h":
+cdef extern from "ProtChMoorings.h":
 
     # ------- CORE ------- #
 
