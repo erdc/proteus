@@ -49,269 +49,27 @@ import h5py
 # chrono C++ headers
 cimport ChronoHeaders as ch
 # chrono Python headers
-from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 from proteus.Archiver import indentXML
 import ChronoEngine_python_core as chrono
 import ChronoEngine_python_fea as chrono_fea
 
 # needed for sphinx docs
-# __all__ = ['ProtChSystem',
-#            'ProtChBody',
-#            'ProtChMesh',
-#            'ProtChMoorings',
-#            'ProtChAddedMass']
+__all__ = ['ProtChSystem',
+           'ProtChBody',
+           'ProtChMesh',
+           'ProtChMoorings',
+           'ProtChAddedMass']
 
-cdef extern from "swigpyobject.h":
-    ctypedef struct SwigPyObject:
-        void *ptr
-
-cdef extern from "ChRigidBody.h":
-    shared_ptr[ch.ChPhysicsItem] getPhysicsItemSharedPtr(ch.ChPhysicsItem* item)
-    shared_ptr[ch.ChPhysicsItem] getPhysicsItemSharedPtr2(ch.ChPhysicsItem* item)
-    cdef cppclass cppCable:
-        ch.ChSystem& system
-        ch.ChMesh& mesh
-        vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
-        vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        vector[shared_ptr[ch.ChVector]] forces_drag
-        vector[shared_ptr[ch.ChVector]] forces_addedmass
-        double L0
-        double length
-        int nb_elems
-        bool applyDrag
-        bool applyAddedMass
-        bool applyBuoyancy
-        vector[ch.ChVector] mvecs
-        vector[ch.ChVector] mvecs_tangents
-        void buildNodes()
-        void buildMaterials()
-        void buildElements()
-        void buildMesh()
-        void updateDragForces()
-        void updateBuoyancyForces()
-        void setDragCoefficients(double Cd_axial, double Cd_normal)
-        void setAddedMassCoefficients(double Cd_axial, double Cd_normal)
-        void setRestLengthPerElement(vector[double] length_array);
-        void setIyy(double Iyy_in)
-    cdef cppclass cppMultiSegmentedCable:
-        ch.ChSystem& system
-        ch.ChMesh& mesh
-        vector[shared_ptr[cppCable]] cables
-        vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
-        vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        shared_ptr[ch.ChLinkPointFrame] constraint_back
-        shared_ptr[ch.ChLinkPointFrame] constraint_front
-        vector[shared_ptr[ch.ChVector]] forces_drag
-        vector[shared_ptr[ch.ChVector]] forces_addedmass
-        shared_ptr[ch.ChMaterialSurfaceSMC] contact_material
-        void buildNodes()
-        void buildCable()
-        # void setVelocityAtNodes(double* fluid_velocity)
-        void attachFrontNodeToBody(shared_ptr[ch.ChBody])
-        void attachBackNodeToBody(shared_ptr[ch.ChBody])
-        void updateDragForces()
-        void updateAddedMassForces()
-        void applyForces()
-        void updateBuoyancyForces()
-        void setFluidVelocityAtNodes(vector[ch.ChVector] fluid_velocity)
-        void setFluidAccelerationAtNodes(vector[ch.ChVector] fluid_acceleration)
-        void setFluidDensityAtNodes(vector[double] dens)
-        void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceSMC] material)
-        ch.ChVector getTensionElement(int i, double eta)
-    cppMultiSegmentedCable * newMoorings(shared_ptr[ch.ChSystemSMC] system,
-                                         shared_ptr[ch.ChMesh] mesh,
-                                         vector[double] length,
-                                         vector[int] nb_elems,
-                                         vector[double] d,
-                                         vector[double] rho,
-                                         vector[double] E,
-                                         string beam_type
-        )
-    cdef cppclass cppSurfaceBoxNodesCloud:
-        ch.ChSystem& system
-        ch.ChVector position
-        ch.ChVector dimensions
-        shared_ptr[ch.ChBodyEasyBox] body;
-        void setNodesSize(double size)
-    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(shared_ptr[ch.ChSystemSMC] system,
-                                                      shared_ptr[ch.ChMesh] mesh,
-                                                      ch.ChVector position,
-                                                      ch.ChVector dimensions)
-    void cppAttachNodeToNodeFEAxyzD(cppMultiSegmentedCable* cable1,
-                                    int node1,
-                                    cppMultiSegmentedCable* cable2,
-                                    int node2)
-    void cppAttachNodeToNodeFEAxyzrot(cppMultiSegmentedCable* cable1,
-                                      int node1,
-                                      cppMultiSegmentedCable* cable2,
-                                      int node2)
-    cdef cppclass cppMesh:
-        shared_ptr[ch.ChMesh] mesh
-        void SetAutomaticGravity(bool val)
-    cppMesh * newMesh(shared_ptr[ch.ChSystemSMC], shared_ptr[ch.ChMesh])
-
-
-cdef extern from "ChRigidBody.h":
-    cdef cppclass cppSystem:
-        shared_ptr[ch.ChSystemSMC] system
-        double chrono_dt
-        void DoStepDynamics(dt)
-        void step(double proteus_dt, int n_substeps)
-        void setDirectory(string directory)
-        void setTimestepperType(string tstype, bool verbose)
-        void setCollisionEnvelopeMargin(double envelope, double margin)
-        # void addMesh(shared_ptr[ch.ChMesh] mesh)
-    cppSystem * newSystem()
-    cdef cppclass cppRigidBody:
-        shared_ptr[ch.ChBody] body
-        double mass
-        ch.ChVector pos
-        ch.ChVector pos_last
-        ch.ChVector vel
-        ch.ChVector vel_last
-        ch.ChVector acc
-        ch.ChVector acc_last
-        ch.ChVector angvel
-        ch.ChVector angvel_last
-        ch.ChVector angacc
-        ch.ChVector angacc_last
-        # ChVector inertia
-        ch.ChMatrix33 rotm
-        ch.ChMatrix33 rotm_last
-        ch.ChQuaternion rotq
-        ch.ChQuaternion rotq_last
-        ch.ChVector free_x
-        ch.ChVector free_r
-        ch.ChVector F
-        ch.ChVector F_last
-        ch.ChVector M
-        ch.ChVector M_last
-        shared_ptr[ch.ChTriangleMeshConnected] trimesh
-        bool has_trimesh
-        vector[ch.ChVector] trimesh_pos
-        vector[ch.ChVector] trimesh_pos0
-        ch.ChVector pos0_trimesh
-        ch.ChQuaternion rotq0_trimesh
-        cppRigidBody(cppSystem* system)
-        void calculate_init()
-        void prestep(double* force, double* torque)
-        void poststep()
-        ch.ChVector hxyz(double* x, double dt)
-        double hx(double* x, double dt)
-        double hy(double* x, double dt)
-        double hz(double* x, double dt)
-        void addSpring(double stiffness,
-                       double damping,
-                       double* fairlead,
-                       double* anchor,
-                       double rest_length)
-        void addPrismaticLinksWithSpring(double* pris1,
-                                         double* pris2,
-                                         double stiffness,
-                                         double damping,
-                                         double rest_length);
-        void addPrismaticLinkX(double* pris1);
-        void setConstraints(double* free_x, double* free_r)
-        void setName(string name)
-        void setPrescribedMotionCustom(vector[double] t, vector[double] x,
-                                       vector[double] y, vector[double] z,
-                                       vector[double] ang, vector[double] ang2,
-                                       vector[double] ang3, double t_max)
-        void setPrescribedMotionPoly(double coeff1)
-        void setPrescribedMotionSine(double a, double f)
-        void updateTriangleMeshVisualisationPos()
-    cppRigidBody * newRigidBody(cppSystem* system)
-    void ChLinkLockBodies(shared_ptr[ch.ChBody] body1,
-                          shared_ptr[ch.ChBody] body2,
-                          shared_ptr[ch.ChSystemSMC] system,
-                          ch.ChCoordsys coordsys,
-                          double limit_X,
-                          double limit_Y,
-                          double limit_Z,
-                          double limit_Rx,
-                          double limit_Ry,
-                          double limit_Rz)
-
-cdef extern from "swigpyobject.h":
-    ctypedef struct SwigPyObject:
-        void *ptr
 
 cdef class ProtChBody:
-    cdef cppRigidBody * thisptr
-    cdef ch.ChQuaternion rotation
-    cdef ch.ChQuaternion rotation_last
-    cdef vector[ch.ChVector] trimesh_nodes
-    cdef vector[ch.ChTriangle] trimesh_triangles
-    cdef public:
-      str record_file
-      object model
-      ProtChSystem ProtChSystem
-      object Shape
-      int nd
-      int i_start
-      int i_end
-      double dt
-      double width_2D
-      object record_dict
-      object prescribed_motion_function
-      object ChBody
-      pych.ChBodyAddedMass ChBodyAddedMass
-      np.ndarray position
-      np.ndarray position_last
-      np.ndarray F  # force as retrieved from Chrono
-      np.ndarray M  # moment as retreived from Chrono
-      np.ndarray F_last
-      np.ndarray M_last
-      np.ndarray F_prot  # force retrieved from Proteus (fluid)
-      np.ndarray M_prot  # moment retrieved from Proteus (fluid)
-      np.ndarray F_prot_last
-      np.ndarray M_prot_last
-      np.ndarray F_applied  # force applied and passed to Chrono
-      np.ndarray M_applied  # moment applied and passed to Chrono
-      np.ndarray F_applied_last
-      np.ndarray M_applied_last
-      np.ndarray F_Aij
-      np.ndarray M_Aij
-      np.ndarray F_Aij_last
-      np.ndarray M_Aij_last
-      np.ndarray acceleration
-      np.ndarray acceleration_last
-      np.ndarray velocity
-      np.ndarray velocity_fluid
-      np.ndarray velocity_last
-      np.ndarray ang_acceleration_last
-      np.ndarray ang_acceleration
-      np.ndarray ang_velocity_last
-      np.ndarray ang_velocity
-      double ang_vel_norm
-      double ang_vel_norm_last
-      np.ndarray barycenter0
-      np.ndarray rotation_init
-      np.ndarray rotm
-      np.ndarray rotm_last
-      np.ndarray rotq
-      np.ndarray rotq_last
-      np.ndarray adams_vel
-      string name
-      bool predicted
-      double dt_predict
-      np.ndarray h_predict  # predicted displacement
-      double h_ang_predict  # predicted angular displacement (angle)
-      np.ndarray h_ang_vel_predict  # predicted angular velocity
-      np.ndarray h_predict_last  # predicted displacement
-      double h_ang_predict_last  # predicted angular displacement (angle)
-      np.ndarray h_ang_vel_predict_last  # predicted angular velocity
-      np.ndarray Aij  # added mass array
-      bool applyAddedMass  # will apply added mass if True (default)
-      string hdfFileName
 
     def __cinit__(self,
                   ProtChSystem system=None):
         self.ProtChSystem = system
         # create new cppRigidBody
         self.thisptr = newRigidBody(system.thisptr)
-        self.ChBodyAddedMass = pych.ChBodyAddedMass()
+        self.ChBodyAddedMass = ChBodyAddedMass()
         self.ChBody = self.ChBodyAddedMass.ChBodySWIG
         self.thisptr.body = self.ChBodyAddedMass.sharedptr_chbody  # give pointer to cpp class
         # # add body to system
@@ -1410,7 +1168,7 @@ cdef class ProtChBody:
         """Records values of body attributes in a csv file.
         """
         record_file = os.path.join(Profiling.logDir, 'record_' + self.name)
-        t_chrono = self.ProtChSystem.ChSystemSMC.GetChTime()
+        t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
@@ -1583,60 +1341,18 @@ cdef class ProtChBody:
 
 
 cdef class ProtChSystem:
-    cdef cppSystem * thisptr
-    cdef double proteus_dt
-    cdef double proteus_dt_last
-    cdef double proteus_dt_next
-    cdef string directory
-    cdef object u
-    cdef int nd
-    cdef object femSpace_velocity
-    cdef object femSpace_pressure
-    cdef object nodes_kdtree
-    cdef int min_nb_steps
-    cdef double dt_fluid_next
-    cdef double dt
-    cdef double dt_last
-    cdef double t
-    cdef vector[shared_ptr[ch.ChPhysicsItem]] myphysicsitem
-    cdef vector[shared_ptr[ch.ChBody]] mybodies
-    cdef public:
-        object ChSystemSMC
-        object model
-        object model_module
-        double dt_init
-        double dt_fluid
-        double dt_fluid_last
-        cdef object subcomponents
-        double chrono_dt
-        bool build_kdtree
-        bool dist_search
-        bool parallel_mode
-        int chrono_processor
-        bool first_step
-        string scheme  # coupling scheme
-        string prediction  # force for prediction
-        int step_nb  # number of steps
-        int step_start  # starting step
-        double sampleRate
-        double next_sample
-        bool record_values
-        object model_mesh
-        object model_addedmass
-        ProtChAddedMass ProtChAddedMass
-        int tCount
-        bool initialised
-        bool update_substeps
 
     def __cinit__(self, int nd=3, dt_init=0., sampleRate=0):
         self.thisptr = newSystem()
         self.subcomponents = []
         # cannot call it self.ChSystem or self.ChSystemSMC (conflict in C++ - unknown reason)
         self.ChSystemSMC = chrono.ChSystemSMC()
+        self.ChSystem = self.ChSystemSMC
         # self.ChSystemSMC.this.disown()
         cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChSystemSMC.this
         cdef shared_ptr[ch.ChSystemSMC]* pt_to_shp = <shared_ptr[ch.ChSystemSMC]*> swig_obj.ptr;
-        self.thisptr.system = pt_to_shp[0]
+        self.thisptr.systemSMC = pt_to_shp[0]
+        self.thisptr.system = <shared_ptr[ch.ChSystem]> pt_to_shp[0]
         self.dt_init = dt_init
         self.model = None
         self.nd = nd
@@ -1685,9 +1401,13 @@ cdef class ProtChSystem:
 
     def addProtChBody(self, ProtChBody body):
         # self.ChSystemSMC.Add(body.ChBody)
-        self.ChSystemSMC.Add(body.ChBody)
+        self.ChSystem.Add(body.ChBody)
         body.ProtChSystem = self
         self.addSubcomponent(body)  # add body to system (for pre and post steps)
+
+    def addProtChMesh(self, ProtChMesh mesh):
+        self.thisptr.addMesh(mesh.mesh)
+        mesh.ProtChSystem = self
 
     def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
         assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
@@ -1739,7 +1459,7 @@ cdef class ProtChSystem:
         self.step_nb += 1
         # self.thisptr.system.setChTime()
         comm = Comm.get().comm.tompi4py()
-        t = comm.bcast(self.ChSystemSMC.GetChTime(), self.chrono_processor)
+        t = comm.bcast(self.ChSystem.GetChTime(), self.chrono_processor)
         Profiling.logEvent('Solving Chrono system from t='
                         +str(t)
                         +' with dt='+str(self.dt)
@@ -1756,7 +1476,7 @@ cdef class ProtChSystem:
                         if type(s) is ProtChMoorings:
                             # update forces keeping same fluid vel/acc
                             s.updateForces()
-        t = comm.bcast(self.ChSystemSMC.GetChTime(), self.chrono_processor)
+        t = comm.bcast(self.ChSystem.GetChTime(), self.chrono_processor)
         Profiling.logEvent('Solved Chrono system to t='+str(t))
         if self.scheme == "ISS":
             Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
@@ -1784,7 +1504,7 @@ cdef class ProtChSystem:
         elif proteus_dt is not None:
             self.proteus_dt = proteus_dt
             self.proteus_dt_next = proteus_dt  # BAD PREDICTION IF TIME STEP NOT REGULAR
-            self.t = t = self.ChSystemSMC.GetChTime()
+            self.t = t = self.ChSystem.GetChTime()
         else:
             sys.exit('ProtChSystem: no time step set in calculate()')
         if self.model is not None:
@@ -1828,7 +1548,7 @@ cdef class ProtChSystem:
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
-            self.ChSystemSMC.SetupInitial()
+            self.ChSystem.SetupInitial()
             Profiling.logEvent("Finished init"+str(self.next_sample))
             for s in self.subcomponents:
                 s.poststep()
@@ -2117,26 +1837,19 @@ cdef class ProtChSystem:
 #    cdef ChVector& gg = bod.GetPos_dt()
 #    print(gg.x, gg.y, gg.z)
 
+
 cdef class ProtChMesh:
-    cdef shared_ptr[ch.ChMesh] mesh
-    cdef cppMesh * thisptr
 
-    cdef public:
-        object ChMeshh
     def __cinit__(self, ProtChSystem system):
-        cdef shared_ptr[ch.ChMesh] mesh = make_shared[ch.ChMesh]()
-        self.thisptr = newMesh(system.thisptr.system, mesh)
-        self.mesh = self.thisptr.mesh
-    def setAutomaticGravity(self, bool val):
-        self.thisptr.SetAutomaticGravity(val)
+        self.ChMeshh = chrono_fea.ChMesh()
+        cdef SwigPyObject *swig_obj = <SwigPyObject*> self.ChMeshh.this
+        cdef shared_ptr[ch.ChMesh]* pt_to_shp = <shared_ptr[ch.ChMesh]*> swig_obj.ptr;
+        self.mesh = pt_to_shp[0]
+        system.addProtChMesh(self)
 
-        # self.ChMeshh = chrono_fea.ChMesh()
-        # cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChMeshh.this
-        # cdef shared_ptr[ch.ChMesh]* pt_to_shp = <shared_ptr[ch.ChMesh]*> swig_obj.ptr;
-        # self.mesh = pt_to_shp[0]
 
 cdef class SurfaceBoxNodesCloud:
-    cdef cppSurfaceBoxNodesCloud * thisptr
+
     def __cinit__(self, ProtChSystem system, ProtChMesh mesh, np.ndarray position, np.ndarray dimensions):
         cdef ch.ChVector[double] pos = ch.ChVector[double](position[0], position[1], position[2])
         cdef ch.ChVector[double] dim = ch.ChVector[double](dimensions[0], dimensions[1], dimensions[2])
@@ -2192,44 +1905,7 @@ cdef class ProtChMoorings:
     beam_type: str
         Type of elements (default: "CableANCF").
     """
-    cdef cppMultiSegmentedCable * thisptr
-    cdef public:
-      # vector[pyfea.ChNodeFEAxyzD] nodes
-      # vector[pyfea.ChElementCableANCF] elems
-      # vector[ProtChCable] cables
-      str record_file
-      object model
-      ProtChSystem ProtChSystem
-      object Mesh
-      int nd
-      object nodes_function
-      object nodes_function_tangent
-      object fluid_velocity_function
-      ProtChBody body_front
-      ProtChBody body_back
-      bool front_body
-      bool back_body
-      bool nodes_built
-      bool external_forces_from_ns
-      bool external_forces_manual
-      np.ndarray fluid_density_array
-      np.ndarray fluid_velocity_array
-      np.ndarray fluid_velocity_array_previous
-      np.ndarray fluid_acceleration_array
-      string name
-      string beam_type
-      int nodes_nb # number of nodes
-      np.ndarray nb_elems
-      double[:] _record_etas
-      object _record_names
-      object _record_etas_names
-      bool initialized
-      int[:] nearest_node_array
-      int[:] containing_element_array
-      int[:] owning_rank
-      string hdfFileName
-      double[:] tCount_value
-      int tCount
+
     def __cinit__(self,
                   ProtChSystem system,
                   ProtChMesh mesh,
@@ -2492,7 +2168,7 @@ cdef class ProtChMoorings:
             with open(record_file, mode) as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(row)
-        t_chrono = self.ProtChSystem.ChSystemSMC.GetChTime()
+        t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
@@ -3256,9 +2932,6 @@ cdef class ProtChAddedMass:
     This auxiliary variable is ONLY used to attach the AddedMass
     model to a ProtChSystem
     """
-    cdef public:
-        object model
-        ProtChSystem ProtChSystem
 
     def __cinit__(self,
                   system):
@@ -3335,6 +3008,40 @@ cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cab
 #                      limit_Rx,
 #                      limit_Ry,
 #                      limit_Rz)
+
+cdef class ChBodyAddedMass:
+    """Cython class for ChBodyAddedMass
+    (!) Uses shared_ptr
+    """
+
+    def __cinit__(self):
+        # make shared_ptr object (C++ syntax for Chrono)
+        self.sharedptr = make_shared[ch.ChBodyAddedMass]()
+        self.sharedptr_chbody = <shared_ptr[ch.ChBody]> self.sharedptr
+        # get a raw ptr for SWIG
+        self.thisptr = self.sharedptr.get()
+        self.bodyptr = self.sharedptr_chbody.get()
+        # create SWIG ChBody
+        self.ChBodySWIG = chrono.ChBody()
+        self.ChBodySWIG.this.disown()
+        # delete? object pointed to by SWIG
+        # point to new object (base of ChBodyAddedMass: ChBody)
+        cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChBodySWIG.this
+        swig_obj.ptr = <shared_ptr[ch.ChBody]*> &self.sharedptr_chbody
+        # cdef shared_ptr[ch.ChSystemSMC]* pt_to_shp = <shared_ptr[ch.ChSystemSMC]*> swig_obj.ptr;
+        # self.thisptr.system = pt_to_shp[0]
+        # cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChBodySWIG.this
+        # swig_obj.ptr = <ch.ChBody*?> &self.bodyptr
+
+    cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
+        self.thisptr.SetMfullmass(Mfullmass_in)
+
+    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
+        self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
+
+
+
+
 
 def vec2array(vec):
     return np.array([vec.x(), vec.y(), vec.z()])
