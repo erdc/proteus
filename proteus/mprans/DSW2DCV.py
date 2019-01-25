@@ -886,15 +886,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.h_dof_old,
             self.hu_dof_old,
             self.hv_dof_old,
+            self.heta_dof_old,
+            self.hw_dof_old,
             self.coefficients.b.dof,
             self.timeIntegration.u[hIndex],  # high order solution
             self.timeIntegration.u[huIndex],
             self.timeIntegration.u[hvIndex],
+            self.timeIntegration.u[hetaIndex],
+            self.timeIntegration.u[hwIndex],
             self.extendedSourceTerm_hu,
             self.extendedSourceTerm_hv,
+            self.extendedSourceTerm_heta,
+            self.extendedSourceTerm_hw,
             limited_hnp1,
             limited_hunp1,
             limited_hvnp1,
+            limited_hetanp1,
+            limited_hwnp1,
             rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
             colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
             MassMatrix,
@@ -906,7 +914,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dLow,
             self.hBT,
             self.huBT,
-            self.hvBT)
+            self.hvBT,
+            self.hetaBT,
+            self.hwBT)
 
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex] = limited_hnp1
