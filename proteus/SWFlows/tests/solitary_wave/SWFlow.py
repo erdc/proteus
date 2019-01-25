@@ -14,11 +14,13 @@ import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 from proteus import WaveTools as wt
 
 
-# Note that this set up for a solitary wave is from  equation 31
-# in the the paper
-# A rapid numerical method for solving Serre Green Naghdi
-# equations describing long free surface gravity waves by
-# Favrie and Gavrilyuk. It assumes the reference height is h1.
+"""
+Note that this set up for a solitary wave is from  equation 31
+in the the paper
+A rapid numerical method for solving Serre Green Naghdi
+equations describing long free surface gravity waves by
+Favrie and Gavrilyuk. It assumes the reference height is h1.
+"""
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -94,12 +96,11 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
         return 0.*h
-
-# heta and hw are needed for the dispersive modified green naghdi equations
-# source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-# THE GREEN NAGHDI EQUATIONS' by Guermond, Popov, Tovar
-
-
+"""
+heta and hw are needed for the dispersive modified green naghdi equations
+source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
+THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
+"""
 class heta_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
