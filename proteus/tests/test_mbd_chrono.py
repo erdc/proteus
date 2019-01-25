@@ -3,14 +3,20 @@ import numpy.testing as npt
 import unittest
 from proteus.mbd import ChRigidBody as crb
 import pytest
+import ChronoEngine_python_core as chrono
 
 class TestCable(unittest.TestCase):
-    @pytest.mark.skip(reason="returning nans from getTensionBack")
     def testHangingCableANCF(self):
         g = np.array([0.,0.,-9.81])
-        system = crb.ProtChSystem(gravity=g)
+        system = crb.ProtChSystem()
+        system.ChSystem.Set_G_acc(chrono.ChVectorD(g[0], g[1], g[2]))
         system.setTimeStep(1e-1)
-        mesh = crb.Mesh(system)
+        system.ChSystem.SetSolverType(chrono.ChSolver.Type_MINRES)
+        system.ChSystem.SetSolverWarmStarting(True)
+        system.ChSystem.SetMaxItersSolverSpeed(100)
+        system.ChSystem.SetMaxItersSolverStab(100)
+        system.ChSystem.SetTolForce(1e-10)
+        mesh = crb.ProtChMesh(system)
         L = np.array([5.])
         nb_elems = np.array([3])
         d = np.array([1e-3])
