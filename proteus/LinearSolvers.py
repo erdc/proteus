@@ -294,7 +294,9 @@ class LU(LinearSolver):
             self.work=numpy.zeros((self.n*5,),'d')
             self.eigenvalues_r = numpy.zeros((self.n,),'d')
             self.eigenvalues_i = numpy.zeros((self.n,),'d')
-    def prepare(self,b=None):
+    def prepare(self,
+                b=None,
+                newton_its=None):
         if type(self.L).__name__ == 'SparseMatrix':
             superluWrappers.sparseFactorPrepare(self.L,self.sparseFactor)
         elif type(self.L).__name__ == 'ndarray':
@@ -2193,9 +2195,13 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         from . import Comm
         comm = Comm.get()
 
+        isp = self.operator_constructor.linear_smoother.isp
+        isv = self.operator_constructor.linear_smoother.isv
+
         self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
         self.Np_rho = self.N_rho.getSubMatrix(isp,
                                               isp)
+
 
         if newton_its == 0:
             self.operator_constructor.updateInvScaledAp()
@@ -2209,9 +2215,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                   isp)
             self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
                                                                     isp)
-
-        isp = self.operator_constructor.linear_smoother.isp
-        isv = self.operator_constructor.linear_smoother.isv
 
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
