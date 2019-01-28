@@ -1450,7 +1450,8 @@ class PaddleBody(RigidBody):
 
     def inputMotion(self, InputMotion=False, pivot=None,
                     At=[0., 0., 0], Tt=[0., 0., 0],
-                    Ar=[0., 0., 0], Tr=[0., 0., 0]):
+                    Ar=[0., 0., 0], Tr=[0., 0., 0],
+                    rampStart=0, rampEnd =0, Tend = 1e6):
         """
         Sets motion as an input. It's imposed rather than calculated.
 
@@ -1468,6 +1469,13 @@ class PaddleBody(RigidBody):
             Amplitude of rotational motion
         Tr: list
             Period of rotational motion
+        rampStart: float
+            Time for ramping waves at the beginning
+        rampStart: float
+            Time for ramping waves at end
+        Tend: float 
+            End time of simulations (needed for rampEnd)
+            
             """
         self.InputMotion = InputMotion
         if pivot is None:
@@ -1481,13 +1489,25 @@ class PaddleBody(RigidBody):
         self.Tt = np.array(Tt)
         self.Ar = np.array(Ar)
         self.Tr = np.array(Tr)
-
+        self.rampS = rampStart
+        self.rampE = rampEnd
+        self.Tend = Tend
     def imposeSinusoidalMotion(self):
         """
         Motion is imposed rather than calculated.
             """
 
         t = self.model.stepController.t_model_last
+        rS = 1.
+        rE = 1.
+        if rampS > 0:
+            rS = min(t/self.rampS , 1.)
+        if rampE > 0:
+            rE = min((self.Tend - t)/(self.rampE) , 1.)
+        if rE < 0. or rS < 0:
+            logEvent("WARNING: Negative values in ramping factors, please correct")
+        rr = rE*rS
+        
         Tra = np.array([0., 0., 0.])
         Rot = np.array([0., 0., 0.])
         for ii in [0, 1, 2]:
@@ -1496,14 +1516,14 @@ class PaddleBody(RigidBody):
             if Tt == 0.0:
                 Wt = 0.0
             else:
-                Wt = 2. * 3.14 / Tt
+                Wt = 2. * math.pi / Tt
 
             if Tr == 0.0:
                 Wr = 0.0
             else:
-                Wr = 2. * 3.14 / Tr
-            Dt = At * sin(Wt * t)
-            Dr = Ar * sin(Wr * t)
+                Wr = 2. * math.pi / Tr
+            Dt = rr*At * sin(Wt * t)
+            Dr = rr*Ar * sin(Wr * t)
         # motion update
             Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
             Rot[ii] = Dr - (self.last_rotation_euler[ii])
