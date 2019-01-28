@@ -1,7 +1,7 @@
 from __future__ import division
 from builtins import range
 from past.utils import old_div
-from math import cos, sin, sqrt, atan2, acos, asin
+from math import cos, sin, sqrt, atan2, acos, asin, pi
 import csv
 import os
 import numpy as np
@@ -1500,14 +1500,13 @@ class PaddleBody(RigidBody):
         t = self.model.stepController.t_model_last
         rS = 1.
         rE = 1.
-        if rampS > 0:
+        if self.rampS > 0:
             rS = min(t/self.rampS , 1.)
-        if rampE > 0:
+        if self.rampE > 0:
             rE = min((self.Tend - t)/(self.rampE) , 1.)
             rE = max(0.,rE)
-t")
+
         rr = rE*rS
-        
         Tra = np.array([0., 0., 0.])
         Rot = np.array([0., 0., 0.])
         for ii in [0, 1, 2]:
@@ -1516,12 +1515,12 @@ t")
             if Tt == 0.0:
                 Wt = 0.0
             else:
-                Wt = 2. * math.pi / Tt
+                Wt = 2. * pi / Tt
 
             if Tr == 0.0:
                 Wr = 0.0
             else:
-                Wr = 2. * math.pi / Tr
+                Wr = 2. * pi / Tr
             Dt = rr*At * sin(Wt * t)
             Dr = rr*Ar * sin(Wr * t)
         # motion update
