@@ -1474,7 +1474,7 @@ class PaddleBody(RigidBody):
         rampStart: float
             Time for ramping waves at end
         Tend: float 
-            End time of simulations (needed for rampEnd)
+            End time of paddle operation (needed for rampEnd)
             
             """
         self.InputMotion = InputMotion
