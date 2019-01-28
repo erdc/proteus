@@ -1504,8 +1504,8 @@ class PaddleBody(RigidBody):
             rS = min(t/self.rampS , 1.)
         if rampE > 0:
             rE = min((self.Tend - t)/(self.rampE) , 1.)
-        if rE < 0. or rS < 0:
-            logEvent("WARNING: Negative values in ramping factors, please correct")
+            rE = max(0.,rE)
+t")
         rr = rE*rS
         
         Tra = np.array([0., 0., 0.])
