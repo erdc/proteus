@@ -428,9 +428,8 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
     def imposeSinusoidalMotion(self):
         """
         Motion is imposed rather than calculated.
-            """
-
-        t = self.model.stepController.t_model_last
+         Parameters
+        """
         Tra = np.array([0., 0., 0.])
         Rot = np.array([0., 0., 0.])
         for ii in [0, 1, 2]:
@@ -1492,12 +1491,21 @@ class PaddleBody(RigidBody):
         self.rampS = rampStart
         self.rampE = rampEnd
         self.Tend = Tend
-    def imposeSinusoidalMotion(self):
+    def imposeSinusoidalMotion(self, tt = None):
         """
         Motion is imposed rather than calculated.
+         ----------
+        tt: None or float
+            tt should be None for other than testing purposes. If not None, 
+            time is externally set.
+       
             """
+        if tt is not None:
+            t= tt
+        else:
+            t = self.model.stepController.t_model_last
 
-        t = self.model.stepController.t_model_last
+
         rS = 1.
         rE = 1.
         if self.rampS > 0:
