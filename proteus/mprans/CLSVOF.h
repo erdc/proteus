@@ -5,13 +5,20 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-// True characteristic functions
-#define heaviside(z) (z>0 ? 1. : (z<0 ? 0. : 0.5))
-#define Sign(z) (z>0 ? 1. : (z<0 ? -1. : 0.))
-
 #define USE_SIGN_FUNCTION 1
 #define IMPLICIT_BCs 0
 #define LAMBDA_SCALING 0
+
+namespace proteus
+{
+// True characteristic functions
+  inline double heaviside(const double& z){
+    return (z>0 ? 1. : (z<0 ? 0. : 0.5));
+  }
+  inline double Sign(const double& z){
+    return (z>0 ? 1. : (z<0 ? -1. : 0.));
+  }
+}
 
 namespace proteus
 {
@@ -48,8 +55,7 @@ namespace proteus
                                    int nElements_owned,
                                    double useMetrics,
                                    //VRANS
-                                   const double* q_porosity,
-                                   const double* porosity_dof, /////
+                                   const double* q_vos,
                                    //
                                    int* u_l2g,
                                    double* elementDiameter,
@@ -63,6 +69,7 @@ namespace proteus
                                    double* q_u,
 				   double* q_n,
 				   double* q_H,
+				   double* q_mH,
                                    double* q_dV,
                                    double* q_dV_last,
                                    double* cfl,
@@ -74,7 +81,7 @@ namespace proteus
                                    int* elementBoundaryLocalElementBoundariesArray,
                                    double* ebqe_velocity_ext,
                                    //VRANS
-                                   const double* ebqe_porosity_ext,
+                                   const double* ebqe_vos_ext,
                                    //
                                    int* isDOFBoundary_u,
                                    double* ebqe_bc_u_ext,
@@ -140,7 +147,7 @@ namespace proteus
                                    int nElements_global,
                                    double useMetrics,
                                    //VRANS
-                                   const double* q_porosity,
+                                   const double* q_vos,
                                    //
                                    int* u_l2g,
                                    double* elementDiameter,
@@ -158,7 +165,7 @@ namespace proteus
                                    int* elementBoundaryLocalElementBoundariesArray,
                                    double* ebqe_velocity_ext,
                                    //VRANS
-                                   const double* ebqe_porosity_ext,
+                                   const double* ebqe_vos_ext,
                                    //
                                    int* isDOFBoundary_u,
                                    double* ebqe_bc_u_ext,
@@ -223,6 +230,7 @@ namespace proteus
                                        int nElements_global,
                                        int nElements_owned,
                                        int useMetrics,
+				       double* q_vos,
                                        int* u_l2g,
                                        double* elementDiameter,
                                        double* nodeDiametersArray,
@@ -262,6 +270,22 @@ namespace proteus
 				      double* rhs_qz,
 				      int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
 				      double* weighted_mass_matrix)=0;
+    virtual void calculateRhsL2Proj(double* mesh_trial_ref,
+				    double* mesh_grad_trial_ref,
+				    double* mesh_dof,
+				    int* mesh_l2g,
+				    double* dV_ref,
+				    double* u_trial_ref,
+				    double* u_grad_trial_ref,
+				    double* u_test_ref,
+				    int nElements_global,
+				    int* u_l2g,
+				    double* elementDiameter,
+				    double he_for_disc_ICs,
+				    double* u_dof,
+				    int offset_u, int stride_u,
+				    int numDOFs,
+				    double* rhs_qx)=0;
     virtual void calculateLumpedMassMatrix(double* mesh_trial_ref,
 					   double* mesh_grad_trial_ref,
 					   double* mesh_dof,
@@ -530,8 +554,7 @@ namespace proteus
                              int nElements_owned,
                              double useMetrics,
                              //VRANS
-                             const double* q_porosity,
-                             const double* porosity_dof,
+                             const double* q_vos,
                              //
                              int* u_l2g,
                              double* elementDiameter,
@@ -545,6 +568,7 @@ namespace proteus
                              double* q_u,
 			     double* q_n,
 			     double* q_H,
+			     double* q_mH,
                              double* q_dV,
                              double* q_dV_last,
                              double* cfl,
@@ -556,7 +580,7 @@ namespace proteus
                              int* elementBoundaryLocalElementBoundariesArray,
                              double* ebqe_velocity_ext,
                              //VRANS
-                             const double* ebqe_porosity_ext,
+                             const double* ebqe_vos_ext,
                              //
                              int* isDOFBoundary_u,
                              double* ebqe_bc_u_ext,
@@ -627,7 +651,8 @@ namespace proteus
                   u_grad_test_dV[nDOF_test_element*nSpace],
                   //for general use
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-                  dV,x,y,z,xt,yt,zt,h_phi;
+                  dV,x,y,z,xt,yt,zt,h_phi,
+		  porosity;
                 //get the physical integration weight
                 ck.calculateMapping_element(eN,
                                             k,
@@ -707,7 +732,8 @@ namespace proteus
                       u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
                   }
 		double hK=(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
-
+		//VRANS
+		porosity=1.0-q_vos[eN_k];
 
 		///////////////////////////
                 // NORMAL RECONSTRUCTION //
@@ -771,7 +797,7 @@ namespace proteus
 		      }
 		    normUn = sqrt(normUn)+1E-10;
 		    // compute coefficient for stabilization
-		    tau = 0.5*hK/normUn;
+		    tau = 0.5*hK;///normUn;
 		  }
 		else //clsvof model
 		  {
@@ -807,7 +833,7 @@ namespace proteus
 		    /////////////////////
 		    // TIME DERIVATIVE //
 		    /////////////////////
-		    time_derivative_residual = (Snp1-Sn)/dt;
+		    time_derivative_residual = porosity*(Snp1-Sn)/dt;
 
 		    ////////////////////
 		    // ADVECTIVE TERM //
@@ -824,7 +850,7 @@ namespace proteus
 			//fnp1[I] = relative_velocity[I]*Snp1; //implicit advection via BDF1
 			//fnHalf[I] = 0.5*(relative_velocity[I]*Snp1
 			//		 +relative_velocity_old[I]*Sn); //implicit advection via CN
-			fnHalf[I] = 0.5*relative_velocity[I]*(Snp1+Sn);
+			fnHalf[I] = 0.5*relative_velocity[I]*porosity*(Snp1+Sn);
 		      }
 
 		    //////////////////////////////
@@ -855,8 +881,9 @@ namespace proteus
 		    // SAVE SOLUTION // for other models
 		    ///////////////////
 		    q_u[eN_k] = u;
-		    q_m[eN_k] = u; //porosity*u;
+		    q_m[eN_k] = porosity*Hnp1;
 		    q_H[eN_k] = Hnp1;
+		    q_mH[eN_k] = porosity*Hnp1; //porosity*H(\phi)=(1-q_vos)*H(\phi)
 		    // gradient //
 		    for (int I=0;I<nSpace;I++)
 		      q_n[eN_k_nSpace+I]  = grad_u[I];
@@ -1085,7 +1112,8 @@ namespace proteus
 		  bc_u_ext = (isDOFBoundary_u[ebNE_kb]*SuBC
 			      +(1-isDOFBoundary_u[ebNE_kb])*Sun_ext);
                 //VRANS
-                porosity_ext = ebqe_porosity_ext[ebNE_kb];
+                porosity_ext = 1.-ebqe_vos_ext[ebNE_kb];
+
                 //
                 //moving mesh
                 //
@@ -1167,7 +1195,7 @@ namespace proteus
                              int nElements_global,
                              double useMetrics,
                              //VRANS
-                             const double* q_porosity,
+                             const double* q_vos,
                              //
                              int* u_l2g,
                              double* elementDiameter,
@@ -1185,7 +1213,7 @@ namespace proteus
                              int* elementBoundaryLocalElementBoundariesArray,
                              double* ebqe_velocity_ext,
                              //VRANS
-                             const double* ebqe_porosity_ext,
+                             const double* ebqe_vos_ext,
                              //
                              int* isDOFBoundary_u,
                              double* ebqe_bc_u_ext,
@@ -1221,7 +1249,8 @@ namespace proteus
 		  grad_u[nSpace], grad_un[nSpace],
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
                   u_test_dV[nDOF_test_element], u_grad_test_dV[nDOF_test_element*nSpace],
-                  dV, x,y,z,xt,yt,zt,h_phi;
+                  dV, x,y,z,xt,yt,zt,h_phi,
+		  porosity;
                 //get jacobian, etc for mapping reference element
                 ck.calculateMapping_element(eN,
                                             k,
@@ -1277,6 +1306,8 @@ namespace proteus
                       u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;
                   }
 		double hK=(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
+		//VRANS
+		porosity=1.0-q_vos[eN_k];
 
 		double delta, dH[nSpace], tau, backgroundDissipation=0.1*hK;
 		double lambda, time_derivative_jacobian, df[nSpace];
@@ -1310,7 +1341,7 @@ namespace proteus
 		      }
 		    normUn = sqrt(normUn)+1E-10;
 		    // compute tau coefficient
-		    tau = 0.5*hK/normUn;
+		    tau = 0.5*hK;///normUn;
 		  }
 		else
 		  {
@@ -1344,7 +1375,8 @@ namespace proteus
 		    /////////////////////
 		    // TIME DERIVATIVE //
 		    /////////////////////
-		    time_derivative_jacobian = dSnp1/dt;
+		    time_derivative_jacobian = porosity*dSnp1/dt;
+
 		    ////////////////////
 		    // ADVECTIVE TERM //
 		    ////////////////////
@@ -1353,7 +1385,7 @@ namespace proteus
 		      {
 			relative_velocity[I] = (velocity[eN_k_nSpace+I]
 						-MOVING_DOMAIN*mesh_velocity[I]);
-			df[I] = relative_velocity[I]*dSnp1;
+			df[I] = relative_velocity[I]*porosity*dSnp1;
 		      }
 		  }
 
@@ -1511,7 +1543,7 @@ namespace proteus
 		double epsHeaviside = epsFactHeaviside*hK;
 		double dSu_ext = smoothedDerivativeSign(epsHeaviside,u_ext);
 		//VRANS
-		porosity_ext = ebqe_porosity_ext[ebNE_kb];
+		porosity_ext = 1.-ebqe_vos_ext[ebNE_kb];
 		//
 		//moving domain
 		//
@@ -1727,6 +1759,7 @@ namespace proteus
                                  int nElements_global,
                                  int nElements_owned,
                                  int useMetrics,
+				 double* q_vos,
                                  int* u_l2g,
                                  double* elementDiameter,
                                  double* nodeDiametersArray,
@@ -1781,7 +1814,8 @@ namespace proteus
                   u_test_dV[nDOF_trial_element],
                   //for general use
                   jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-                  dV,x,y,z,h_phi;
+                  dV,x,y,z,h_phi,
+		  porosity;
                 //get the physical integration weight
                 ck.calculateMapping_element(eN,
                                             k,
@@ -1815,6 +1849,8 @@ namespace proteus
                       u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
                   }
 
+		porosity = 1.0-q_vos[eN_k];
+
                 double epsHeaviside = epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN])/degree_polynomial;
                 // compute (smoothed) heaviside functions //
                 double Hu0 = heaviside(u0);
@@ -1823,10 +1859,10 @@ namespace proteus
                 double sHunp1 = smoothedHeaviside(epsHeaviside,unp1);
 
                 // compute cell metrics //
-                cell_V   += Hunp1*dV;
-                cell_V0  += Hu0*dV;
-                cell_sV  += sHunp1*dV;
-                cell_sV0 += sHu0*dV;
+                cell_V   += porosity*Hunp1*dV;
+                cell_V0  += porosity*Hu0*dV;
+                cell_sV  += porosity*sHunp1*dV;
+                cell_sV0 += porosity*sHu0*dV;
 
                 double norm2_grad_unp1 = 0.;
                 for (int I=0; I<nSpace; I++)
@@ -1994,6 +2030,81 @@ namespace proteus
 		    weighted_mass_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]]
 		      += element_weighted_mass_matrix[i][j];
 		  }
+              }//i
+          }//elements
+      }
+
+      void calculateRhsL2Proj(//element
+			      double* mesh_trial_ref,
+			      double* mesh_grad_trial_ref,
+			      double* mesh_dof,
+			      int* mesh_l2g,
+			      double* dV_ref,
+			      double* u_trial_ref,
+			      double* u_grad_trial_ref,
+			      double* u_test_ref,
+			      //physics
+			      int nElements_global,
+			      int* u_l2g,
+			      double* elementDiameter,
+			      double he_for_disc_ICs,
+			      double* u_dof,
+			      int offset_u, int stride_u,
+			      // PARAMETERS FOR EDGE VISCOSITY
+			      int numDOFs,
+			      double* rhs_l2_proj)
+      {
+        for (int i=0; i<numDOFs; i++)
+	  rhs_l2_proj[i]=0.;
+        for(int eN=0;eN<nElements_global;eN++)
+          {
+            //declare local storage for local contributions and initialize
+            register double element_rhs_l2_proj[nDOF_test_element];
+            for (int i=0;i<nDOF_test_element;i++)
+	      element_rhs_l2_proj[i]=0.0;
+
+            //loop over quadrature points and compute integrands
+            for(int k=0;k<nQuadraturePoints_element;k++)
+              {
+                //compute indeces and declare local storage
+                register int eN_k = eN*nQuadraturePoints_element+k,
+                  eN_k_nSpace = eN_k*nSpace,
+                  eN_nDOF_trial_element = eN*nDOF_trial_element;
+                register double
+		  u,u_test_dV[nDOF_trial_element],
+                  //for general use
+                  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+                  dV,x,y,z;
+                //get the physical integration weight
+                ck.calculateMapping_element(eN,
+                                            k,
+                                            mesh_dof,
+                                            mesh_l2g,
+                                            mesh_trial_ref,
+                                            mesh_grad_trial_ref,
+                                            jac,
+                                            jacDet,
+                                            jacInv,
+                                            x,y,z);
+                dV = fabs(jacDet)*dV_ref[k];
+                ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      u);
+                //precalculate test function products with integration weights for mass matrix terms
+                for (int j=0;j<nDOF_trial_element;j++)
+                  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+                for(int i=0;i<nDOF_test_element;i++)
+		  element_rhs_l2_proj[i] += he_for_disc_ICs*u*u_test_dV[i];
+		//element_rhs_l2_proj[i] += u*u_test_dV[i];
+              } //k
+            // DISTRIBUTE //
+            for(int i=0;i<nDOF_test_element;i++)
+              {
+                int eN_i=eN*nDOF_test_element+i;
+                int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		rhs_l2_proj[gi] += element_rhs_l2_proj[i];
               }//i
           }//elements
       }

@@ -6,7 +6,6 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cSW2DCV import *
 
-
 class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
     hasInterior = False
 
@@ -243,7 +242,6 @@ class RKEV(proteus.TimeIntegration.SSP):
                 if flag == 'timeOrder':
                     self.resetOrder(self.timeOrder)
 
-
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for the shallow water equations
@@ -334,7 +332,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.b.dof = mesh.nodeArray[:, 2].copy()
         else:
             self.b.dof = self.bathymetry[0]([x, y])
-        # self.b.dof[:] = 0. #TMP
+        #self.b.dof[:] = 0. #TMP
 
     def initializeElementQuadrature(self, t, cq):
         pass
@@ -358,7 +356,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def postStep(self, t, firstStep=False):
         pass
-
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
@@ -433,7 +430,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients = coefficients
         # cek hack? give coefficients a bathymetriy array
         import copy
-        self.coefficients.b = copy.deepcopy(self.u[0])
+        self.coefficients.b = self.u[0].copy()
+        self.coefficients.b.name='b'
         self.coefficients.b.dof.fill(0.0)
         #
         self.coefficients.initializeMesh(self.mesh)
@@ -1372,7 +1370,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                      str(edge_based_cflMax), level = 2)
 
         logEvent("Global residual", level = 9, data = r)
-        # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
 
     def getJacobian(self, jacobian):

@@ -19,6 +19,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
+                 VOS_model=None,
                  checkMass=False,
                  epsFact=0.0,
                  useMetrics=0.0,
@@ -29,7 +30,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  outputQuantDOFs = True, # mql. I use it to visualize H(u) at the DOFs
                  computeMetrics = 0, #0, 1, 2 or 3
                  # SPIN UP STEP #
-                 doSpinUpStep=False, #To achieve high order with Bernstein polynomials
+                 doSpinUpStep=False, # To achieve high order with Bernstein polynomials
+                 disc_ICs=False, # Is the init condition a characteristic function?
                  # NONLINEAR CLSVOF
                  timeOrder=1,
                  epsFactHeaviside=1.5,
@@ -46,6 +48,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # 3: compute metrics at EOS (end of simulations). Needs an exact solution
         self.useMetrics=useMetrics
         self.doSpinUpStep=doSpinUpStep
+        self.disc_ICs=disc_ICs
         self.timeOrder=timeOrder
         self.computeMetrics=computeMetrics
         self.epsFactHeaviside=epsFactHeaviside
@@ -74,10 +77,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.flowModelIndex=V_model
         self.modelIndex=ME_model
         self.RD_modelIndex=RD_model
+        self.VOS_model=VOS_model
         self.checkMass = checkMass
         #VRANS
-        self.q_porosity = None; self.ebq_porosity = None; self.ebqe_porosity = None
-        self.porosity_dof = None
         self.setParamsFunc   = setParamsFunc
         self.flowCoefficients=None
         self.movingDomain=movingDomain
@@ -88,6 +90,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.alpha=='inf':
             self.alpha = 0
             self.freeze_interface_during_preRedistancing = True
+        # VRANS
+        self.q_vos = None
+        self.ebqe_vos = None
 
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -96,6 +101,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model = modelList[self.modelIndex]
         #flow model
         if self.flowModelIndex is not None:
+            self.flowCoefficients = modelList[self.flowModelIndex].coefficients
             if ('velocity',0) in modelList[self.flowModelIndex].q:
                 self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity',0)]
@@ -110,53 +116,45 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.q_v_old = numpy.copy(self.q_v)
         self.q_v_tStar = numpy.copy(self.q_v)
         #VRANS
-        self.flowCoefficients = modelList[self.flowModelIndex].coefficients
-        if hasattr(self.flowCoefficients,'q_porosity'):
-            self.q_porosity = self.flowCoefficients.q_porosity
-            self.porosity_dof = numpy.ones(modelList[self.modelIndex].u[0].dof.shape,'d')
+        if self.VOS_model is not None:
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+            self.q_vos = self.model.q_vos
+            self.ebqe_vos = self.model.ebqe_vos
         else:
-            # If the flow model doesn't have porosity then set q_porosity=1 and porosity_dof=1
-            self.q_porosity = numpy.ones(modelList[self.modelIndex].q[('u',0)].shape,'d')
-            self.porosity_dof = numpy.ones(modelList[self.modelIndex].u[0].dof.shape,'d')
-
-            if self.setParamsFunc != None:
-                self.setParamsFunc(modelList[self.modelIndex].q['x'],self.q_porosity)
+            q_porosity = numpy.ones(modelList[self.modelIndex].q[('u',0)].shape,'d')
+            ebqe_porosity = numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
+            # set porosity from setParamsFunc
+            if self.setParamsFunc is not None:
+                self.setParamsFunc(modelList[self.modelIndex].q['x'],q_porosity)
+                self.setParamsFunc(modelList[self.modelIndex].ebqe['x'],ebqe_porosity)
+            # set porosity from flowCoefficients
+            elif self.flowCoefficients is not None:
+                if hasattr(self.flowCoefficients,'q_porosity'):
+                    q_porosity[:] = self.flowCoefficients.q_porosity
+                if hasattr(self.flowCoefficients,'ebqe_porosity'):
+                    ebqe_porosity[:] = self.flowCoefficients.ebqe_porosity
             #
-        #
-        if hasattr(self.flowCoefficients,'ebq_porosity'):
-            self.ebq_porosity = self.flowCoefficients.ebq_porosity
-        elif ('u',0) in modelList[self.modelIndex].ebq:
-            self.ebq_porosity = numpy.ones(modelList[self.modelIndex].ebq[('u',0)].shape,'d')
-            if self.setParamsFunc != None:
-                self.setParamsFunc(modelList[self.modelIndex].ebq['x'],self.ebq_porosity)
-            #
-        #
-        if hasattr(self.flowCoefficients,'ebqe_porosity'):
-            self.ebqe_porosity = self.flowCoefficients.ebqe_porosity
-        else:
-            self.ebqe_porosity = numpy.ones(modelList[self.flowModelIndex].ebqe[('u',0)].shape,
-                                            'd')
-            if self.setParamsFunc != None:
-                self.setParamsFunc(modelList[self.flowModelIndex].ebqe['x'],self.ebqe_porosity)
-            #
-        #
+            self.q_vos[:] = 1. - q_porosity[:]
+            self.ebqe_vos[:] = 1. - ebqe_porosity[:]
 
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex == None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
         #VRANS
-        self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
+        self.q_vos = numpy.zeros(cq[('u',0)].shape,'d')
 
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         if self.flowModelIndex == None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
         #VRANS
-        self.ebq_porosity = numpy.ones(cebq[('u',0)].shape,'d')
+        self.ebq_vos = numpy.zeros(cebq[('u',0)].shape,'d')
+
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         if self.flowModelIndex == None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
         #VRANS
-        self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
+        self.ebqe_vos = numpy.zeros(cebqe[('u',0)].shape,'d')
 
     def preStep(self,t,firstStep=False):
         self.model.getResidualBeforeFirstStep = False
@@ -428,6 +426,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
         self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('H(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('mH(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('dV_u',0)] = (old_div(1.0,self.mesh.nElements_global))*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('grad(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('m',0)] = self.q[('u',0)]
@@ -435,7 +434,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('mt',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['dV'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['dV_last'] = -1000*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('m_tmp',0)] = self.q[('u',0)]
+        self.q[('m_tmp',0)] = self.q[('u',0)].copy()
         self.q[('cfl',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('numDiff',0,0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.ebqe[('u',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
@@ -608,6 +607,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.displayCFL=False
         self.timeStage=1 # stage of time integration
 
+        ########################
+        # POROSITY AS FUNCTION #
+        ########################
+        if ('porosityFieldAsFunction') in dir (options):
+            X = {0:self.q[('x')][:,:,0],
+                 1:self.q[('x')][:,:,1],
+                 2:self.q[('x')][:,:,2]}
+            self.coefficients.q_vos[:] = 1.-options.porosityFieldAsFunction(X)
+
+            # BOUNDARY
+            ebqe_X = {0:self.ebqe['x'][:,:,0],
+                      1:self.ebqe['x'][:,:,1],
+                      2:self.ebqe['x'][:,:,2]}
+            self.coefficients.ebqe_vos[:] = 1.-options.porosityFieldAsFunction(ebqe_X)
+
         ################################
         # VELOCITY FIELD AS A FUNCTION #
         ################################
@@ -626,6 +640,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Aux quantity at DOFs
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
+        #############################
+        # L2 PROJECTION OF SOLUTION #
+        #############################
+        self.rhs_l2_proj = numpy.zeros(self.u[0].dof.shape,'d')
+        self.projected_disc_ICs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.par_projected_disc_ICs = None
+
+        from proteus.Comm import globalMax
+        self.he_for_disc_ICs = 0.5*(-globalMax(-self.mesh.elementDiametersArray.min()) +
+                                    globalMax(self.mesh.elementDiametersArray.max()))
         ###################################
         # PROJECTED NORMAL RECONSTRUCTION #
         ###################################
@@ -706,6 +730,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       bs=1,
                                                                       n=n,N=N,nghosts=nghosts,
                                                                       subdomain2global=subdomain2global)
+        self.par_projected_disc_ICs = proteus.LinearAlgebraTools.ParVec_petsc4py(self.projected_disc_ICs,
+                                                                                 bs=1,
+                                                                                 n=n,N=N,nghosts=nghosts,
+                                                                                 subdomain2global=subdomain2global)
+
         ################
         # SPIN UP STEP #
         ################
@@ -868,6 +897,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.mesh.nElements_global,
              self.mesh.nElements_owned,
              self.coefficients.useMetrics,
+             self.coefficients.q_vos,
              self.u[0].femSpace.dofMap.l2g,
              self.mesh.elementDiametersArray,
              self.mesh.nodeDiametersArray,
@@ -882,7 +912,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.R_vector,
              self.sR_vector)
 
-        from proteus.flcbdfWrappers import globalSum
+        from proteus.Comm import globalSum
         # metrics about conservation
         self.global_V = globalSum(global_V)
         self.global_V0 = globalSum(global_V0)
@@ -936,7 +966,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              u_exact,
              self.offset[0],self.stride[0])
 
-        from proteus.flcbdfWrappers import globalSum
+        from proteus.Comm import globalSum
         # Interface metrics
         self.global_I_err = globalSum(global_I_err)
         self.global_sI_err = globalSum(global_sI_err)
@@ -1001,6 +1031,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
             weighted_mass_matrix)
 
+    def getRhsL2Proj(self):
+        self.clsvof.calculateRhsL2Proj(
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.mesh.elementDiametersArray,
+            self.he_for_disc_ICs,
+            self.u[0].dof,
+            self.offset[0],self.stride[0],
+            self.nFreeDOF_global[0], #numDOFs
+            self.rhs_l2_proj)
+
     def getLumpedMassMatrix(self):
         self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
         self.clsvof.calculateLumpedMassMatrix(#element
@@ -1029,8 +1078,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.getLumpedMassMatrix()
         if self.getResidualBeforeFirstStep and self.hasVelocityFieldAsFunction:
             self.updateVelocityFieldAsFunction()
-        if self.coefficients.porosity_dof is None:
-            self.coefficients.porosity_dof = numpy.ones(self.u[0].dof.shape,'d')
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old. Overwritten if spin up step is taken
             self.u_dof_old = numpy.copy(self.u[0].dof)
@@ -1060,11 +1107,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         volume_domain = numpy.zeros(1)
 
         # FREEZE INTERFACE #
-        if (self.preRedistancingStage==1
-            and self.coefficients.freeze_interface_during_preRedistancing==True):
-            for gi in range(len(self.u[0].dof)):
-                if self.interface_locator[gi] == 1.0:
-                    self.u[0].dof[gi] = self.u_dof_old[gi]
+        if self.preRedistancingStage==1:
+            if self.coefficients.freeze_interface_during_preRedistancing==True:
+                for gi in range(len(self.u[0].dof)):
+                    if self.interface_locator[gi] == 1.0:
+                        self.u[0].dof[gi] = self.u_dof_old[gi]
         # END OF FREEZING INTERFACE #
         else:
             self.interface_locator[:]=0
@@ -1097,8 +1144,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nElements_owned,
             self.coefficients.useMetrics,
             #VRANS start
-            self.coefficients.q_porosity,
-            self.coefficients.porosity_dof, #I need this for edge based methods
+            self.coefficients.q_vos,
             #VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
@@ -1112,6 +1158,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('u',0)], #level set
             self.q[('grad(u)',0)], #normal
             self.q[('H(u)',0)], #VOF. Heaviside of level set
+            self.q[('mH(u)',0)], #porosity*VOF = (1-vos)*VOF
             self.q['dV'],
             self.q['dV_last'],
             self.q[('cfl',0)],
@@ -1123,7 +1170,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             #VRANS start
-            self.coefficients.ebqe_porosity,
+            self.coefficients.ebqe_vos,
             #VRANS end
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u',0)],
@@ -1163,7 +1210,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.alpha/self.mesh.elementDiametersArray.min())
 
         # RELATED TO EIKONAL EQUATION #
-        if (self.preRedistancingStage == 1):
+        if self.preRedistancingStage == 1:
             # FREEZE INTERFACE #
             if (self.coefficients.freeze_interface_during_preRedistancing==True):
                 for gi in range(len(self.u[0].dof)):
@@ -1172,7 +1219,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # END OF FREEZING INTERFACE #
         else: # RELATED CLSVOF MODEL #
             # Quantities to compute normalization factor
-            from proteus.flcbdfWrappers import globalSum, globalMax
+            from proteus.Comm import globalSum, globalMax
             self.min_distance = -globalMax(-min_distance[0])
             self.max_distance = globalMax(max_distance[0])
             self.mean_distance = globalSum(mean_distance[0])
@@ -1225,7 +1272,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nElements_global,
             self.coefficients.useMetrics,
             #VRANS start
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             #VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
@@ -1243,7 +1290,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             #VRANS start
-            self.coefficients.ebqe_porosity,
+            self.coefficients.ebqe_vos,
             #VRANS end
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u',0)],
@@ -1261,9 +1308,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.alpha/self.mesh.elementDiametersArray.min())
 
         # RELATED TO EIKONAL EQUATION #
-        if (self.preRedistancingStage == 1):
+        if self.preRedistancingStage == 1:
             # FREEZING INTERFACE #
-            if (self.coefficients.freeze_interface_during_preRedistancing==True):
+            if self.coefficients.freeze_interface_during_preRedistancing==True:
                 for gi in range(len(self.u[0].dof)):
                     if self.interface_locator[gi] == 1.0:
                         for i in range(self.rowptr[gi], self.rowptr[gi + 1]):

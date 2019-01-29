@@ -20,6 +20,7 @@ class MyCoefficients(NCLS.Coefficients):
         self.q_v = np.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = np.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
         self.rdModel = self.model
+        self.ebqe_rd_u = self.rdModel.ebqe[('u',0)]
         # Define a 'velocity' field to be read by VOF
         self.model.q[('velocity',0)]=self.q_v
         self.model.ebqe[('velocity',0)]=self.ebqe_v
