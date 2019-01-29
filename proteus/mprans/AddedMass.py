@@ -14,7 +14,7 @@ from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
                               C0_AffineLinearOnSimplexWithNodalBasis)
-from proteus.flcbdfWrappers import globalMax
+from proteus.Comm import globalMax, globalSum
 from proteus.Profiling import memory
 from proteus.Profiling import logEvent
 from proteus.Transport import OneLevelTransport
@@ -55,10 +55,12 @@ class Coefficients(TC_base):
                  nd=2,
                  V_model=None,
                  barycenters=None,
-                 flags_rigidbody=None):
+                 flags_rigidbody=None,
+                 nullSpace="ConstantNullSpace"):
         """
         TODO
         """
+        self.nullSpace = nullSpace
         assert(nd in [2, 3])
         self.nd = nd
         if self.nd == 2:
@@ -171,9 +173,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False,
-                 bdyNullSpace=True):
-        self.bdyNullSpace = bdyNullSpace
+                 movingDomain=False):
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
@@ -651,7 +651,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getResidual(self, u, r):
         import pdb
         import copy
-        from proteus.flcbdfWrappers import globalSum
         """
         Calculate the element residuals and add in to the global residual
         """
