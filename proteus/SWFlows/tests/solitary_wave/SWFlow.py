@@ -30,15 +30,15 @@ opts = Context.Options([
     ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 4.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.33, "Desired CFL restriction"),
+    ("cfl", 0.1, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (15.0, 1.0)
-X_coords = (0.0, 15.0)  # this is domain, used in BCs
+L = (10.0, 0.5)
+X_coords = (0.0, 10.0)  # this is domain, used in BCs
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[0, 0, 0])
 

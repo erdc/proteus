@@ -13,21 +13,22 @@ from proteus.Profiling import logEvent
 import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 from proteus import WaveTools as wt
 
-
-# This is the problem of a solitary wave going up
-# a plane beach. Experiments were conducted by
-# Synolakas is 1980 (?) and set up of the problem
-# can be found at http://mail178.taseptrev.com/src/test/beach.c
-# Note that this is a fake 1D problem, ie
-# we are doing simulation in 2d but only consider x direction velocity
+"""
+This is the problem of a solitary wave going up
+a plane beach. Experiments were conducted by
+Synolakas is 1980 (?) and set up of the problem
+can be found at http://mail178.taseptrev.com/src/test/beach.c
+Note that this is a fake 1D problem, ie
+we are doing simulation in 2d but only consider x direction velocity
+"""
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
-T = 10.0
+T = 20.0
 g = 9.81
 h0 = 1.0
-# Tstar corresponds to experimental data time.
+# Tstar corresponds to experimental data time at Tstar = {10,15,20,...,65}
 Tstar = T * np.sqrt(h0 / g)
 
 opts = Context.Options([
@@ -107,11 +108,12 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
         return 0.
-# heta and hw are needed for the dispersive modified green naghdi equations
-# source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-# THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
 
-
+"""
+heta and hw are needed for the dispersive modified green naghdi equations
+source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
+THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
+"""
 class heta_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
@@ -174,7 +176,7 @@ boundaryConditions = {'water_height': water_height_DBC,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
-                                              cfl=0.1,
+                                              cfl=opts.cfl,
                                               outputStepping=outputStepping,
                                               structured=True,
                                               he=he,
