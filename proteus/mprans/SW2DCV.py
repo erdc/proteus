@@ -882,42 +882,42 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
         # Do some type of limitation
 
-        self.sw2d.convexLimiting(self.timeIntegration.dt,
-                                 # self.sw2d.FCTStep(self.timeIntegration.dt,
-                                 self.nnz,  # number of non zero entries
-                                 len(rowptr) - 1,  # number of DOFs
-            self.ML,  # Lumped mass matrix
-            self.h_dof_old,
-            self.hu_dof_old,
-            self.hv_dof_old,
-            self.coefficients.b.dof,
-            self.timeIntegration.u[hIndex],  # high order solution
-            self.timeIntegration.u[huIndex],
-            self.timeIntegration.u[hvIndex],
-            self.extendedSourceTerm_hu,
-            self.extendedSourceTerm_hv,
-            limited_hnp1,
-            limited_hunp1,
-            limited_hvnp1,
-            # Row indices for Sparsity Pattern (convenient for DOF loops)
-            rowptr,
-            # Column indices for Sparsity Pattern (convenient for DOF loops)
-            colind,
-            MassMatrix,
-            self.dH_minus_dL,
-            self.muH_minus_muL,
-            self.hEps,
-            self.hReg,
-            self.coefficients.LUMPED_MASS_MATRIX,
-            self.dLow,
-            self.hBT,
-            self.huBT,
-            self.hvBT)
-
-        # Pass the post processed hnp1 solution to global solution u
-        self.timeIntegration.u[hIndex] = limited_hnp1
-        self.timeIntegration.u[huIndex] = limited_hunp1
-        self.timeIntegration.u[hvIndex] = limited_hvnp1
+        # self.sw2d.convexLimiting(self.timeIntegration.dt,
+        #                          # self.sw2d.FCTStep(self.timeIntegration.dt,
+        #                          self.nnz,  # number of non zero entries
+        #                          len(rowptr) - 1,  # number of DOFs
+        #     self.ML,  # Lumped mass matrix
+        #     self.h_dof_old,
+        #     self.hu_dof_old,
+        #     self.hv_dof_old,
+        #     self.coefficients.b.dof,
+        #     self.timeIntegration.u[hIndex],  # high order solution
+        #     self.timeIntegration.u[huIndex],
+        #     self.timeIntegration.u[hvIndex],
+        #     self.extendedSourceTerm_hu,
+        #     self.extendedSourceTerm_hv,
+        #     limited_hnp1,
+        #     limited_hunp1,
+        #     limited_hvnp1,
+        #     # Row indices for Sparsity Pattern (convenient for DOF loops)
+        #     rowptr,
+        #     # Column indices for Sparsity Pattern (convenient for DOF loops)
+        #     colind,
+        #     MassMatrix,
+        #     self.dH_minus_dL,
+        #     self.muH_minus_muL,
+        #     self.hEps,
+        #     self.hReg,
+        #     self.coefficients.LUMPED_MASS_MATRIX,
+        #     self.dLow,
+        #     self.hBT,
+        #     self.huBT,
+        #     self.hvBT)
+        #
+        # # Pass the post processed hnp1 solution to global solution u
+        # self.timeIntegration.u[hIndex] = limited_hnp1
+        # self.timeIntegration.u[huIndex] = limited_hunp1
+        # self.timeIntegration.u[hvIndex] = limited_hvnp1
 
     def getResidual(self, u, r):
         """
