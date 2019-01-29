@@ -6,6 +6,8 @@ from .SplitOperator import *
 
 name = None
 
+pnList = []
+
 systemStepControllerType = Sequential_MinModelStep
 
 systemStepExact = True
