@@ -2,6 +2,7 @@ from proteus.default_p import *
 from proteus.mprans import RANS2P
 import numpy as np
 from proteus import Context
+from proteus.ctransportCoefficients import smoothedHeaviside
 
 ct = Context.get()
 domain = ct.domain
@@ -97,19 +98,27 @@ class P_IC:
     def uOfXT(self, x, t):
         return ct.twpflowPressure_init(x, t)
 
+def weight(x,t):
+    return 1.0-smoothedHeaviside(ct.epsFact_consrv_heaviside*ct.opts.he,
+                                 #-ct.epsFact_consrv_heaviside*ct.opts.he+
+                                 (x[nd-1] - (max(ct.wave.eta(x, t%(ct.tank_dim[0]/ct.wave.c)),
+                                                 ct.wave.eta(x+ct.tank_dim[0], t%(ct.tank_dim[0]/ct.wave.c)))
+                                             +
+                                             ct.opts.water_level)))
+
 class U_IC:
     def uOfXT(self, x, t):
-        if x[1] <= ct.wave.eta(x,t) + ct.opts.water_level:
-            return ct.wave.u(x,t)[0]
-        else:
-            return 0.0
+#        if x[1] <= ct.wave.eta(x,t) + ct.opts.water_level:
+        return weight(x,t)*ct.wave.u(x,t)[0]
+#        else:
+#            return 0.0
 
 class V_IC:
     def uOfXT(self, x, t):
-        if x[1] <= ct.wave.eta(x,t) + ct.opts.water_level:
-            return ct.wave.u(x,t)[1]
-        else:
-            return 0.0
+#        if x[1] <= ct.wave.eta(x,t) + ct.opts.water_level:
+        return weight(x,t)*ct.wave.u(x,t)[1]
+#        else:
+#            return 0.0
 
 class W_IC:
     def uOfXT(self, x, t):

@@ -244,9 +244,9 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
 
     solver_info = LS.ModelInfo('interlaced',
                                3,
-                               bdy_null_space = True)
-    schur_approx = LS.Schur_Sp(mat_A,
-                               '',
+                               bdy_null_space=True)
+    schur_approx = LS.Schur_Sp(L=mat_A,
+                               prefix='',
                                solver_info=solver_info)
     ksp_obj = initialize_schur_ksp_obj(mat_A,schur_approx)
     ksp_obj.solve(b,x)

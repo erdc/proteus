@@ -197,7 +197,7 @@ class AR_base(object):
                 self.dataItemFormat="HDF"
                 self.comm.barrier()
             elif self.hasTables and not useTextArchive:
-                self.hdfFilename=filename+str(self.rank).decode()+".h5"
+                self.hdfFilename=filename+repr(self.rank).decode()+".h5"
                 self.hdfFile=tables.open_file(os.path.join(self.dataDir,
                                                           self.hdfFilename),
                                              mode = "w",
