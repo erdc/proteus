@@ -51,8 +51,8 @@ cimport ChronoHeaders as ch
 # chrono Python headers
 from proteus.mprans import BodyDynamics as bd
 from proteus.Archiver import indentXML
-import ChronoEngine_python_core as chrono
-import ChronoEngine_python_fea as chrono_fea
+import pychrono as chrono
+from pychrono import fea as chrono_fea
 
 # needed for sphinx docs
 __all__ = ['ProtChSystem',
@@ -1235,7 +1235,7 @@ cdef class ProtChBody:
 
     def _recordXML(self):
         tCount = self.ProtChSystem.tCount
-        t = self.ProtChSystem.t
+        t = self.ProtChSystem.ChSystem.GetChTime()
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
         # if tCount == 0:
         root = ET.Element("Xdmf",
@@ -1276,7 +1276,7 @@ cdef class ProtChBody:
                                   "DataType": "Int",
                                   "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
                                                            Xdmf_NodesPerElement)})
-        elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
+        elements.text = self.hdfFileName+".h5:/elementsSpatial_Domain"+str(tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
         nodes = ET.SubElement(geometry,
                               "DataItem",
@@ -1285,7 +1285,7 @@ cdef class ProtChBody:
                                "Precision": "8",
                                "Dimensions": "%i %i" % (pos.shape[0],
                                                         pos.shape[1])})
-        nodes.text = self.hdfFileName+".h5:/nodes_t"+str(tCount)
+        nodes.text = self.hdfFileName+".h5:/nodesSpatial_Domain"+str(tCount)
 
         tree = ET.ElementTree(root)
 
@@ -1408,6 +1408,9 @@ cdef class ProtChSystem:
     def addProtChMesh(self, ProtChMesh mesh):
         self.thisptr.addMesh(mesh.mesh)
         mesh.ProtChSystem = self
+
+    def setSolverDiagonalPreconditioning(self, bool boolval):
+        self.thisptr.setSolverDiagonalPreconditioning(boolval)
 
     def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
         assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
@@ -1842,24 +1845,13 @@ cdef class ProtChMesh:
 
     def __cinit__(self, ProtChSystem system):
         self.ChMeshh = chrono_fea.ChMesh()
+        self.ChMeshh.SetAutomaticGravity(True)
         cdef SwigPyObject *swig_obj = <SwigPyObject*> self.ChMeshh.this
         cdef shared_ptr[ch.ChMesh]* pt_to_shp = <shared_ptr[ch.ChMesh]*> swig_obj.ptr;
         self.mesh = pt_to_shp[0]
         system.addProtChMesh(self)
 
 
-cdef class SurfaceBoxNodesCloud:
-
-    def __cinit__(self, ProtChSystem system, ProtChMesh mesh, np.ndarray position, np.ndarray dimensions):
-        cdef ch.ChVector[double] pos = ch.ChVector[double](position[0], position[1], position[2])
-        cdef ch.ChVector[double] dim = ch.ChVector[double](dimensions[0], dimensions[1], dimensions[2])
-        self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system,
-                                               mesh.mesh,
-                                               pos,
-                                               dim)
-        # self.System.addBody(self)
-    def setNodesSize(self, double size):
-        self.thisptr.setNodesSize(size)
 
 # def linkMoorings(System system, Moorings mooringA, int nodeA_ind, Moorings mooringB, int nodeB_ind):
 #     """
@@ -1947,7 +1939,7 @@ cdef class ProtChMoorings:
         self.nodes_built = False
         self.setName('mooring')
         self.external_forces_from_ns = True
-        self.external_forces_manual = False
+        self.external_forces_manual = True
         self._record_etas = np.array([0.])
         self._record_names = ['ux', 'uy', 'uz',
                               'ax', 'ay', 'az',
@@ -1981,7 +1973,7 @@ cdef class ProtChMoorings:
 
     def _recordH5(self):
         tCount = self.tCount
-        t = self.ProtChSystem.t
+        t = self.ProtChSystem.ChSystem.GetChTime()
         self.hdfFileName = self.name
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
         if tCount == 0:
@@ -1990,9 +1982,9 @@ cdef class ProtChMoorings:
             f = h5py.File(hdfFileName, 'a')
         pos = self.getNodesPosition()
         element_connection = np.array([[i, i+1] for i in range(len(pos)-1)])
-        dset = f.create_dataset('nodes_t'+str(tCount), pos.shape)
+        dset = f.create_dataset('nodesSpatial_Domain'+str(tCount), pos.shape)
         dset[...] = pos
-        dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')
+        dset = f.create_dataset('elementsSpatial_Domain'+str(tCount), element_connection.shape, dtype='i8')
         dset[...] = element_connection
         # time
         datav = t
@@ -2075,18 +2067,18 @@ cdef class ProtChMoorings:
 
     def _recordXML(self):
         tCount = self.tCount
-        t = self.ProtChSystem.t
+        t = self.ProtChSystem.ChSystem.GetChTime()
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
         # if tCount == 0:
         root = ET.Element("Xdmf",
-                            {"Version": "2.0",
-                             "xmlns:xi": "http://www.w3.org/2001/XInclude"})
+                          {"Version": "2.0",
+                           "xmlns:xi": "http://www.w3.org/2001/XInclude"})
         domain = ET.SubElement(root, "Domain")
         arGridCollection = ET.SubElement(domain,
-                                        "Grid",
-                                        {"Name": "Mesh"+" Spatial_Domain",
-                                         "GridType": "Collection",
-                                         "CollectionType": "Temporal"})
+                                         "Grid",
+                                         {"Name": "Mesh"+" Spatial_Domain",
+                                          "GridType": "Collection",
+                                          "CollectionType": "Temporal"})
         # else:
         #     tree = ET.parse(xmlFile)
         #     root = tree.getroot()
@@ -2116,7 +2108,7 @@ cdef class ProtChMoorings:
                                   "DataType": "Int",
                                   "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
                                                          Xdmf_NodesPerElement)})
-        elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
+        elements.text = self.hdfFileName+".h5:/elementsSpatial_Domain"+str(tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
         nodes = ET.SubElement(geometry,
                               "DataItem",
@@ -2125,7 +2117,7 @@ cdef class ProtChMoorings:
                                "Precision": "8",
                                "Dimensions": "%i %i" % (pos.shape[0],
                                                         pos.shape[1])})
-        nodes.text = self.hdfFileName+".h5:/nodes_t"+str(tCount)
+        nodes.text = self.hdfFileName+".h5:/nodesSpatial_Domain"+str(tCount)
         all_names = self._record_names+self._record_etas_names
         for name in all_names:
             attr = ET.SubElement(arGrid,
@@ -2322,15 +2314,15 @@ cdef class ProtChMoorings:
 
     def setApplyDrag(self, bool boolval):
         for i in range(self.thisptr.cables.size()):
-            deref(self.thisptr.cables[i]).applyDrag = True
+            deref(self.thisptr.cables[i]).applyDrag = boolval
 
     def setApplyAddedMass(self, bool boolval):
         for i in range(self.thisptr.cables.size()):
-            deref(self.thisptr.cables[i]).applyAddedMass = True
+            deref(self.thisptr.cables[i]).applyAddedMass = boolval
 
     def setApplyBuoyancy(self, bool boolval):
         for i in range(self.thisptr.cables.size()):
-            deref(self.thisptr.cables[i]).applyBuoyancy = True
+            deref(self.thisptr.cables[i]).applyBuoyancy = boolval
 
     def setNodesPositionFunction(self, function_position, function_tangent=None):
         """Function to build nodes
@@ -2473,6 +2465,8 @@ cdef class ProtChMoorings:
 
         (!) Must be called after setNodesPositionFunction()
         """
+        # self.nodes_positions0 = positions
+        # self.nodes_tangents0 = tangents
         cdef ch.ChVector[double] vec
         if positions is None:
             for i in range(self.thisptr.cables.size()):
@@ -2525,8 +2519,42 @@ cdef class ProtChMoorings:
         # self.buildNodes()
 
     def buildNodes(self):
+        # build nodes
         self.thisptr.buildNodes()
+        # get pointers to access nodes in python
+        cdef SwigPyObject *swig_obj
+        cdef int nodeN
+        self.nodes = []
+        for nodeN in range(self.thisptr.nb_nodes_tot):
+            if self.beam_type == "BeamEuler":
+                node = chrono_fea.ChNodeFEAxyzrot()
+            elif self.beam_type == "CableANCF":
+                node = chrono_fea.ChNodeFEAxyzD()
+            node.this.disown()
+            swig_obj = <SwigPyObject*> node.this
+            if self.beam_type == "BeamEuler":
+                swig_obj.ptr = <shared_ptr[ch.ChNodeFEAxyzrot]*> &self.thisptr.nodesRot.at(nodeN)
+            elif self.beam_type == "CableANCF":
+                swig_obj.ptr = <shared_ptr[ch.ChNodeFEAxyzD]*> &self.thisptr.nodes.at(nodeN)
+            self.nodes += [node]
         self.nodes_built = True
+        # build elements
+        self.thisptr.buildElements()
+        # get pointers to access elements in python
+        cdef int elemN
+        self.elements = []
+        for elemN in range(self.thisptr.nb_elems_tot-1):
+            if self.beam_type == "BeamEuler":
+                elem = chrono_fea.ChElementBeamEuler()
+            elif self.beam_type == "CableANCF":
+                elem = chrono_fea.ChElementCableANCF()
+            elem.this.disown()
+            swig_obj = <SwigPyObject*> elem.this
+            if self.beam_type == "BeamEuler":
+                swig_obj.ptr = <shared_ptr[ch.ChElementBeamEuler]*> &self.thisptr.elemsCableANCF.at(elemN)
+            elif self.beam_type == "CableANCF":
+                swig_obj.ptr = <shared_ptr[ch.ChElementCableANCF]*> &self.thisptr.elemsCableANCF.at(elemN)
+            self.elements += [elem]
         if self.beam_type == "BeamEuler":
             self.nodes_nb = self.thisptr.nodesRot.size()
         elif self.beam_type == "CableANCF":

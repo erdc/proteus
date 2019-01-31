@@ -24,6 +24,7 @@ class cppSystem {
   void setTimestepperType(std::string tstype, bool verbose);
   void setCollisionEnvelopeMargin(double envelope, double margin);
   void addMesh(std::shared_ptr<ChMesh> mesh);
+  void setSolverDiagonalPreconditioning(bool boolval);
 };
 
 
@@ -126,6 +127,11 @@ cppSystem::cppSystem()
   /* if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper())) { */
   /*   mystepper->SetAlpha(-0.2); */
   /* } */
+}
+
+void cppSystem::setSolverDiagonalPreconditioning(bool boolval) {
+  auto msolver = std::static_pointer_cast<ChSolverMINRES>(system->GetSolver());
+  msolver->SetDiagonalPreconditioning(true);
 }
 
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
