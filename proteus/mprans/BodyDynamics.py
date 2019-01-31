@@ -430,6 +430,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         Motion is imposed rather than calculated.
          Parameters
         """
+        t = self.model.stepController.t_model_last
         Tra = np.array([0., 0., 0.])
         Rot = np.array([0., 0., 0.])
         for ii in [0, 1, 2]:
