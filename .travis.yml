@@ -22,9 +22,10 @@ addons:
 
 before_install:
 - pip install pyliblzma
-- wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
-- tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
-- cd git-lfs-1.5.5
+- mkdir git-lfs-install
+- cd git-lfs-install
+- wget https://github.com/git-lfs/git-lfs/releases/download/v2.6.1/git-lfs-linux-amd64-v2.6.1.tar.gz
+- tar xzvf git-lfs-linux-amd64-v2.6.1.tar.gz
 - PREFIX=${HOME} ./install.sh
 - export PATH=${HOME}/bin:${PATH}
 - cd ..
@@ -33,8 +34,8 @@ install:
 - git lfs fetch
 - git lfs checkout
 - ./stack/hit/bin/hit init-home
-- ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
-- ./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_ubuntu_14_04 --objects="build"
+- ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
+- ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_14_04 --objects="build"
 - make stack/default.yaml
 - pushd $HOME
 - mkdir -p hashdist_src
