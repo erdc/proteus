@@ -1,7 +1,7 @@
 from __future__ import division
 from builtins import range
 from past.utils import old_div
-from math import cos, sin, sqrt, atan2, acos, asin
+from math import cos, sin, sqrt, atan2, acos, asin, pi
 import csv
 import os
 import numpy as np
@@ -428,8 +428,8 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
     def imposeSinusoidalMotion(self):
         """
         Motion is imposed rather than calculated.
-            """
-
+         Parameters
+        """
         t = self.model.stepController.t_model_last
         Tra = np.array([0., 0., 0.])
         Rot = np.array([0., 0., 0.])
@@ -1450,7 +1450,8 @@ class PaddleBody(RigidBody):
 
     def inputMotion(self, InputMotion=False, pivot=None,
                     At=[0., 0., 0], Tt=[0., 0., 0],
-                    Ar=[0., 0., 0], Tr=[0., 0., 0]):
+                    Ar=[0., 0., 0], Tr=[0., 0., 0],
+                    rampStart=0, rampEnd =0, Tend = 1e6):
         """
         Sets motion as an input. It's imposed rather than calculated.
 
@@ -1468,6 +1469,13 @@ class PaddleBody(RigidBody):
             Amplitude of rotational motion
         Tr: list
             Period of rotational motion
+        rampStart: float
+            Time for ramping waves at the beginning
+        rampStart: float
+            Time for ramping waves at end
+        Tend: float 
+            End time of paddle operation (needed for rampEnd)
+            
             """
         self.InputMotion = InputMotion
         if pivot is None:
@@ -1481,13 +1489,33 @@ class PaddleBody(RigidBody):
         self.Tt = np.array(Tt)
         self.Ar = np.array(Ar)
         self.Tr = np.array(Tr)
-
-    def imposeSinusoidalMotion(self):
+        self.rampS = rampStart
+        self.rampE = rampEnd
+        self.Tend = Tend
+    def imposeSinusoidalMotion(self, tt = None):
         """
         Motion is imposed rather than calculated.
+         ----------
+        tt: None or float
+            tt should be None for other than testing purposes. If not None, 
+            time is externally set.
+       
             """
+        if tt is not None:
+            t= tt
+        else:
+            t = self.model.stepController.t_model_last
 
-        t = self.model.stepController.t_model_last
+
+        rS = 1.
+        rE = 1.
+        if self.rampS > 0:
+            rS = min(t/self.rampS , 1.)
+        if self.rampE > 0:
+            rE = min((self.Tend - t)/(self.rampE) , 1.)
+            rE = max(0.,rE)
+
+        rr = rE*rS
         Tra = np.array([0., 0., 0.])
         Rot = np.array([0., 0., 0.])
         for ii in [0, 1, 2]:
@@ -1496,14 +1524,14 @@ class PaddleBody(RigidBody):
             if Tt == 0.0:
                 Wt = 0.0
             else:
-                Wt = 2. * 3.14 / Tt
+                Wt = 2. * pi / Tt
 
             if Tr == 0.0:
                 Wr = 0.0
             else:
-                Wr = 2. * 3.14 / Tr
-            Dt = At * sin(Wt * t)
-            Dr = Ar * sin(Wr * t)
+                Wr = 2. * pi / Tr
+            Dt = rr*At * sin(Wt * t)
+            Dr = rr*Ar * sin(Wr * t)
         # motion update
             Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
             Rot[ii] = Dr - (self.last_rotation_euler[ii])
