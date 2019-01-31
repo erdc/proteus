@@ -262,6 +262,9 @@ cdef extern from "ProtChMoorings.h":
         double GetLengthX() const
         double GetMass()
 
+    cdef cppclass ChElementBeamEuler:
+        ChElementBeamEuler()
+
     # ------- SECTIONS ------- #
     cdef cppclass ChBeamSection:
         bool IsCircular()

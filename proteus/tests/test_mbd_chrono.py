@@ -3,7 +3,7 @@ import numpy.testing as npt
 import unittest
 from proteus.mbd import ChRigidBody as crb
 import pytest
-import ChronoEngine_python_core as chrono
+import pychrono as chrono
 
 class TestCable(unittest.TestCase):
     def testHangingCableANCF(self):

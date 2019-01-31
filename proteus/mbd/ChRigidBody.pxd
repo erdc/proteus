@@ -43,15 +43,20 @@ cdef extern from "ProtChMoorings.h":
     cdef cppclass cppMultiSegmentedCable:
         ch.ChSystem& system
         ch.ChMesh& mesh
+        int nb_nodes_tot
+        int nb_elems_tot
         vector[shared_ptr[cppCable]] cables
         vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
+        vector[shared_ptr[ch.ChElementCableANCF]] elemsCableANCF
+        vector[shared_ptr[ch.ChElementBeamEuler]] elemsBeamEuler
         shared_ptr[ch.ChLinkPointFrame] constraint_back
         shared_ptr[ch.ChLinkPointFrame] constraint_front
         vector[shared_ptr[ch.ChVector]] forces_drag
         vector[shared_ptr[ch.ChVector]] forces_addedmass
         shared_ptr[ch.ChMaterialSurfaceSMC] contact_material
         void buildNodes()
+        void buildElements()
         void buildCable()
         # void setVelocityAtNodes(double* fluid_velocity)
         void attachFrontNodeToBody(shared_ptr[ch.ChBody])
@@ -74,16 +79,6 @@ cdef extern from "ProtChMoorings.h":
                                          vector[double] E,
                                          string beam_type
         )
-    cdef cppclass cppSurfaceBoxNodesCloud:
-        ch.ChSystem& system
-        ch.ChVector position
-        ch.ChVector dimensions
-        shared_ptr[ch.ChBodyEasyBox] body;
-        void setNodesSize(double size)
-    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(shared_ptr[ch.ChSystem] system,
-                                                      shared_ptr[ch.ChMesh] mesh,
-                                                      ch.ChVector position,
-                                                      ch.ChVector dimensions)
     void cppAttachNodeToNodeFEAxyzD(cppMultiSegmentedCable* cable1,
                                     int node1,
                                     cppMultiSegmentedCable* cable2,
@@ -105,6 +100,7 @@ cdef extern from "ProtChBody.h":
         void setTimestepperType(string tstype, bool verbose)
         void setCollisionEnvelopeMargin(double envelope, double margin)
         void addMesh(shared_ptr[ch.ChMesh] mesh)
+        void setSolverDiagonalPreconditioning(bool boolval)
     cppSystem * newSystem()
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
@@ -307,10 +303,6 @@ cdef class ProtChMesh:
         ProtChSystem ProtChSystem
 
 
-cdef class SurfaceBoxNodesCloud:
-    cdef cppSurfaceBoxNodesCloud * thisptr
-
-
 cdef class ProtChMoorings:
     cdef cppMultiSegmentedCable * thisptr
     cdef public:
@@ -350,6 +342,8 @@ cdef class ProtChMoorings:
       string hdfFileName
       double[:] tCount_value
       int tCount
+      object nodes
+      object elements
 
 
 cdef class ProtChAddedMass:
