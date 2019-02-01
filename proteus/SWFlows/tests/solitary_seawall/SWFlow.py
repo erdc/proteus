@@ -35,7 +35,7 @@ opts = Context.Options([
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (15.0, 1.0)  # this is length in x direction and y direction
+L = (15.0, 0.5)  # this is length in x direction and y direction
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[0, 0, 0])  # x is bottom left corner
 X_coords = (0.0, 15.0)  # this is domain in x direction, used for BCs

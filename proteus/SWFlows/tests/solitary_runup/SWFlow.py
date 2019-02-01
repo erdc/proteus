@@ -42,7 +42,7 @@ opts = Context.Options([
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (50.0, 1.0)
+L = (50.0, 0.5)
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[-35.0, 0, 0])
 X_coords = (-35.0, 15.0)  # this is domain, used in BCs
