@@ -37,8 +37,8 @@ opts = Context.Options([
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (10.0, 0.5)
-X_coords = (0.0, 10.0)  # this is domain, used in BCs
+L = (8.0, 0.25)
+X_coords = (0.0, 8.0)  # this is domain, used in BCs
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[0, 0, 0])
 
@@ -46,6 +46,9 @@ domain = RectangularDomain(L=L, x=[0, 0, 0])
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 10) + 1
+
+nnx = 401
+nny = 5
 
 he = old_div(L[0], float(nnx - 1))
 triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
@@ -129,7 +132,7 @@ def water_height_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
     elif X[0] == X_coords[1]:
-        return lambda x, t: water_height_at_t0().uOfXT(X,0.0)
+        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
 
 
 def x_mom_DBC(X, flag):
