@@ -601,7 +601,7 @@ cppCable::cppCable(std::shared_ptr<ChSystem> system, // system in which the cabl
     msection_advanced->SetAsCircularSection(d);
     /* msection_advanced->SetIyy(Iyy); */
     /* msection_advanced->SetIzz(Iyy); */
-    Iyy = msection_cable->GetIyy();
+    Iyy = msection_advanced->GetIyy();
   }
 }
 
