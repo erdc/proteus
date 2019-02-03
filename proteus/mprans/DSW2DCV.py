@@ -938,7 +938,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # COMPUTE hEps
         if self.hEps is None:
-            eps = 1E-14
+            eps = 1E-7
             self.hEps = eps * self.u[0].dof.max()
         # COMPUTE C MATRIX
         if self.cterm_global is None:
