@@ -13,7 +13,7 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define GLOBAL_FCT 0
-#define POWER_SMOOTHNESS_INDICATOR 2
+#define POWER_SMOOTHNESS_INDICATOR 3
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 // quick hack to turn on/off dispersion
@@ -1617,7 +1617,7 @@ namespace proteus
                                       if (fabs(alpha_numerator) <= hEps)               //hEps. Force alphai=0 in constant states. This for well balancing wrt friction
                                       alphai = 0.;
                                       else
-                                      alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
+                                      alphai = 2*fabs(alpha_numerator)/(alpha_denominator+1E-15);
                                     }
                                     if (POWER_SMOOTHNESS_INDICATOR==0)
                                     psi[i] = 1.0;
@@ -2192,7 +2192,7 @@ namespace proteus
                                                                             if (fabs(alpha_numerator) <= hEps)                                             //hEps. Force alphai=0 in constant states
                                                                             alphai = 0.;
                                                                             else
-                                                                            alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
+                                                                            alphai = 2*fabs(alpha_numerator)/(alpha_denominator+1E-15);
                                                                           }
                                                                           if (POWER_SMOOTHNESS_INDICATOR==0)
                                                                           psi[i] = 1.0;
