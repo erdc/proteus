@@ -37,7 +37,7 @@ opts = Context.Options([
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (8.0, 0.25)
+L = (10.0, 0.50)
 X_coords = (0.0, 8.0)  # this is domain, used in BCs
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[0, 0, 0])
@@ -46,9 +46,6 @@ domain = RectangularDomain(L=L, x=[0, 0, 0])
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 10) + 1
-
-nnx = 401
-nny = 5
 
 he = old_div(L[0], float(nnx - 1))
 triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
