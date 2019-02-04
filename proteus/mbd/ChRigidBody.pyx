@@ -319,7 +319,7 @@ cdef class ProtChBody:
             # self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.scheme == "CSS":
             h_body_vec = self.thisptr.hxyz(<double*> x.data, t)
-            h_body = np.array(h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
+            h_body = np.array([h_body_vec.x(), h_body_vec.y(), h_body_vec.z()])
             h += h_body
         elif self.ProtChSystem.scheme == "ISS":
             # remove previous prediction
