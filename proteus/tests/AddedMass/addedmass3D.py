@@ -5,6 +5,7 @@ import numpy as np
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
 from proteus.mbd import ChRigidBody as crb
+import pychrono as chrono
 
 rho_0 = 1000.
 nu_0 = 1.004e-6
@@ -46,7 +47,8 @@ rect.BC['z-'].setNoSlip()
 
 # CHRONO
 
-system = crb.ProtChSystem(gravity=np.array([0.,0.,-9.81]))
+system = crb.ProtChSystem()
+system.ChSystem.Set_G_acc(chrono.ChVectorD(g[0], g[1], 0.))
 body = crb.ProtChBody(system=system)
 body.attachShape(rect)
 body.ChBody.SetMass(500.)
