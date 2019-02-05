@@ -161,19 +161,18 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
     petsc_options = initialize_velocity_block_petsc_options()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
-
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
-                                                      index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
-                                                index_sets[0]))
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                         index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                   index_sets[0]))
 #    F_ksp.solve(b,x)
 #    assert F_ksp.its == 58
 
     p4pyPETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
-                                                      index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
-                                                index_sets[0]))
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                         index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                   index_sets[0]))
 
 #    F_ksp.solve(b,x)
 #    assert F_ksp.its == 61
@@ -182,10 +181,10 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
     initialize_velocity_block_petsc_options()
 
     p4pyPETSc.Options().setValue('pc_hypre_boomeramg_coarsen_type','PMIS')
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
-                                                      index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
-                                                index_sets[0]))
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                         index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                   index_sets[0]))
 
 #    F_ksp.solve(b,x)
 #    assert F_ksp.its = 105
@@ -195,10 +194,10 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
 
     p4pyPETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
     p4pyPETSc.Options().setValue('pc_hypre_boomeramg_coarsen_type','PMIS')
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
-                                                      index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
-                                                index_sets[0]))
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                         index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                   index_sets[0]))
 
 #    F_ksp.solve(b,x)
 #    assert F_ksp.its == 231
@@ -209,8 +208,8 @@ def test_amg_iteration_matrix_2(load_saddle_point_matrix_1):
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
-                                                      index_sets[0]))
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                         index_sets[0]))
 
     F_ksp.pc.setType('fieldsplit')
     F_ksp.pc.setFieldSplitIS(('v1',index_sets[1]),('v2',index_sets[2]))
@@ -222,10 +221,10 @@ def test_amg_iteration_matrix_2(load_saddle_point_matrix_1):
     F_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('hypre')
     F_ksp.pc.getFieldSplitSubKSP()[1].pc.setHYPREType('boomeramg')
 
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
-                                                index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                   index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 7
+    assert F_ksp.its == 5
 
 if __name__ == '__main__':
     pass
