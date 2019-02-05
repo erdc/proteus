@@ -1111,7 +1111,7 @@ class NS_base(object):  # (HasTraits):
           (abs(self.systemStepController.t_system_last - self.tnList[0]) < 1e-12 and self.opts.hotStart)):
             self.PUMI_recomputeStructures(modelListOld)
             if((p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
-              self.PUMIcheckpointer.doSomething()
+              self.PUMIcheckpointer.checkpoint()
 
             #something different is needed for initial conditions
             if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
