@@ -656,7 +656,81 @@ double MeshAdaptPUMIDrvr::getTotalMass()
 
 //Save mesh with solution
 
-void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile){
+void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile)
+{
   m->writeNative(meshFile);
-  apf::writeVtkFiles(meshFile,m);
+  //apf::writeVtkFiles(meshFile,m);
 }
+
+//Clean mesh of all fields and tags
+
+void MeshAdaptPUMIDrvr::cleanMesh()
+{
+  //destroy all fields...
+    
+  for(int i =0;i<m->countFields();i++)
+  {
+    apf::Field* sample = m->getField(i);
+    freeField(sample);
+  }
+  //std::cout<<"find field " <<m->getField(m->countFields())<<" how many fields? "<<m->countFields()<<std::endl;
+  //std::cout<<"is velocity_old here? "<<m->findField("velocity_old")<<std::endl;
+  apf::Field* sample = m->findField("velocity_old");
+  freeField(sample);
+
+  sample = m->findField("vof_old");
+  freeField(sample);
+  sample = m->findField("ls_old");
+  freeField(sample);
+  sample = m->findField("phi");
+  freeField(sample);
+  sample = m->findField("phi_old");
+  freeField(sample);
+  sample = m->findField("phi_old_old");
+  freeField(sample);
+  sample = m->findField("phid_old");
+  freeField(sample);
+  sample = m->findField("phiCorr");
+  freeField(sample);
+  sample = m->findField("phiCorr_old");
+  freeField(sample);
+  sample = m->findField("phiCorr_old_old");
+  freeField(sample);
+  sample = m->findField("p_old");
+  freeField(sample);
+  sample = m->findField("p");
+  freeField(sample);
+  sample = m->findField("p_old_old");
+  freeField(sample);
+
+  //destroy all tags
+  apf::DynamicArray<apf::MeshTag*> listTags;
+  m->getTags(listTags);
+  int nTags = listTags.getSize();
+  int numDim = m->getDimension();
+  for(int i=0; i < nTags; i++)
+  {
+    std::string ignoreString ("proteus_number");
+    std::string tagName (m->getTagName(listTags[i]));
+    if(tagName.find(ignoreString) != std::string::npos)
+    {
+      //do nothing
+    }
+    else{
+      for(int j=0;j<(numDim+1);j++)
+      {
+        apf::MeshIterator* it = m->begin(j);
+        apf::MeshEntity* ent;
+        while( (ent = m->iterate(it)) )
+        {
+          if(m->hasTag(ent,listTags[i]))
+            m->removeTag(ent,listTags[i]);
+        }
+        m->end(it);
+      }
+      m->destroyTag(listTags[i]);
+    }
+  }
+}
+
+

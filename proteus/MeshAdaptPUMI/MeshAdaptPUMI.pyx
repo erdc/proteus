@@ -49,6 +49,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         void get_local_error(double) 
         void get_VMS_error(double) 
         void writeMesh(char* )
+        void cleanMesh()
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -161,3 +162,5 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.getMinimumQuality()
     def writeMesh(self,meshName):
         return self.thisptr.writeMesh(meshName)
+    def cleanMesh(self):
+        return self.thisptr.cleanMesh()
