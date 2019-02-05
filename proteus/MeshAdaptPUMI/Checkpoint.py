@@ -9,7 +9,8 @@ from proteus import Profiling
 #it should probably be associated with the PUMI domain somehow
 #The current implementation assumes we're using NS, VOF, LS, RD, MCorr setup with lagging and Backwards Euler.
 #Future work on this module should include creating an abstract class from which variations based on the models and numerical accuracy can be created
-#Also, output items as dictionaries instead of lists, which would be easier to encode and decode
+#Have the dictionary submodels be labeled by physical model names like "twp_navier_stokes"
+
 class Checkpointer:
     "This class is meant to handle the checkpointing process for adapted meshes. Information that's needed to be loaded into hotstart needs to be output and then read in to be handled for data reconstruction"
     def __init__(self,NSobject,frequency=10):
@@ -36,6 +37,52 @@ class Checkpointer:
     def saveMesh(self):
       fileName="checkpoint"+str(self.counter)+"_.smb"
       self.NSobject.pList[0].domain.PUMIMesh.writeMesh(fileName)
+
+    def EncodeModel(self,hotStartTime):
+      "Grab only necessary components from modelListOld so far consistent only with first-order time integrator" 
+      #def __init__(self,modelListOld,hotStartTime):
+      modelListOld = self.NSobject.modelListOld
+      saveModel = {}
+      saveModel["counter"] = self.counter
+      saveModel["numModels"] = len(modelListOld)
+      saveModel["hotStartTime"] = hotStartTime
+      saveModel["stepController"]=[]
+      saveModel["timeIntegration"]=[]
+      saveModel["shockCapturing"]=[]
+      saveModel["stabilization"]=[]
+      for i in range(0,len(modelListOld)):
+        #step controller
+        subModel={}
+        subModel["dt_model"]= modelListOld[i].stepController.dt_model
+        subModel["t_model"] = modelListOld[i].stepController.t_model
+        subModel["t_model_last"] = modelListOld[i].stepController.t_model_last
+        subModel["substeps"]=modelListOld[i].stepController.substeps
+        saveModel["stepController"].append(subModel)
+        
+        #time integration
+        subModel={}
+        subModel["dt"] = modelListOld[i].levelModelList[0].timeIntegration.dt
+        subModel["t"] = modelListOld[i].levelModelList[0].timeIntegration.t
+        if(hasattr(modelListOld[i].levelModelList[0].timeIntegration,'dtLast')):
+          subModel["dtLast"] = modelListOld[i].levelModelList[0].timeIntegration.dtLast
+        else:
+          subModel["dtLast"] = None
+        saveModel["timeIntegration"].append(subModel)
+
+        #shock capturing
+        subModel={}
+        if(modelListOld[i].levelModelList[0].shockCapturing is not None):
+          subModel["nSteps"]=modelListOld[i].levelModelList[0].shockCapturing.nSteps
+          subModel["nStepsToDelay"]= modelListOld[i].levelModelList[0].shockCapturing.nStepsToDelay
+        saveModel["shockCapturing"].append(subModel)
+
+      #Assuming the 0th model is RANS2P
+      #stabilization
+      subModel={}
+      subModel["nSteps"]= modelListOld[0].levelModelList[0].stabilization.nSteps
+      saveModel["stabilization"].append(subModel)
+      return saveModel
+
     def DecodeModel(self,filename):
       "create a modelListOld that can interact with the post-adapt restart capabilities" 
       f = open(filename, 'r')
@@ -51,46 +98,18 @@ class Checkpointer:
       self.counter = previousInfo["counter"]+1
       
       for i in range(0,numModels):
-        self.NSobject.modelList[i].stepController.dt_model = stepController[0][0]
-        self.NSobject.modelList[i].stepController.t_model = stepController[0][1]
-        self.NSobject.modelList[i].stepController.t_model_last = stepController[0][2]
-        self.NSobject.modelList[i].stepController.substeps = stepController[0][3]
+        self.NSobject.modelList[i].stepController.dt_model = stepController[i]["dt_model"]
+        self.NSobject.modelList[i].stepController.t_model = stepController[i]["t_model"]
+        self.NSobject.modelList[i].stepController.t_model_last = stepController[i]["t_model_last"]
+        self.NSobject.modelList[i].stepController.substeps = stepController[i]["substeps"]
 
-        self.NSobject.modelList[i].levelModelList[0].timeIntegration.dt = timeIntegration[0][0]
-        self.NSobject.modelList[i].levelModelList[0].timeIntegration.t = timeIntegration[0][1]
-        self.NSobject.modelList[i].levelModelList[0].timeIntegration.dt = timeIntegration[0][2]
-        self.NSobject.modelList[i].levelModelList[0].timeIntegration.dtLast = timeIntegration[0][3]
+        self.NSobject.modelList[i].levelModelList[0].timeIntegration.dt = timeIntegration[i]["dt"]
+        self.NSobject.modelList[i].levelModelList[0].timeIntegration.t = timeIntegration[i]["t"]
+        self.NSobject.modelList[i].levelModelList[0].timeIntegration.dtLast = timeIntegration[i]["dtLast"]
 
         if(self.NSobject.modelList[i].levelModelList[0].shockCapturing is not None):
-          self.NSobject.modelList[i].levelModelList[0].shockCapturing.nSteps = shockCapturing[0][0]
-          self.NSobject.modelList[i].levelModelList[0].shockCapturing.nStepsToDelay = shockCapturing[0][1]
+          self.NSobject.modelList[i].levelModelList[0].shockCapturing.nSteps = shockCapturing[i]["nSteps"]
+          self.NSobject.modelList[i].levelModelList[0].shockCapturing.nStepsToDelay = shockCapturing[i]["nStepsToDelay"]
 
-      self.NSobject.modelList[0].levelModelList[0].stabilization.nSteps = stabilization[0]
+      self.NSobject.modelList[0].levelModelList[0].stabilization.nSteps = stabilization[0]["nSteps"]
 
-#Maybe I can form an abstract class for encoding decoding?
-    def EncodeModel(self,hotStartTime):
-      "Grab only necessary components from modelListOld so far consistent only with first-order time integrator" 
-      #def __init__(self,modelListOld,hotStartTime):
-      modelListOld = self.NSobject.modelListOld
-      saveModel = {}
-      saveModel["counter"] = self.counter
-      saveModel["numModels"] = len(modelListOld)
-      saveModel["hotStartTime"] = hotStartTime
-      saveModel["stepController"]=[]
-      saveModel["timeIntegration"]=[]
-      saveModel["shockCapturing"]=[]
-      saveModel["stabilization"]=[]
-      for i in range(0,len(modelListOld)):
-        saveModel["stepController"].append([modelListOld[i].stepController.dt_model,modelListOld[i].stepController.t_model,modelListOld[i].stepController.t_model_last, modelListOld[i].stepController.substeps])
-        if(hasattr(modelListOld[i].levelModelList[0].timeIntegration,'dtLast')):
-          saveModel["timeIntegration"].append([modelListOld[i].levelModelList[0].timeIntegration.dt,modelListOld[i].levelModelList[0].timeIntegration.t,modelListOld[i].levelModelList[0].timeIntegration.dt,modelListOld[i].levelModelList[0].timeIntegration.dtLast])
-        else:
-          saveModel["timeIntegration"].append([modelListOld[i].levelModelList[0].timeIntegration.dt,modelListOld[i].levelModelList[0].timeIntegration.t,modelListOld[i].levelModelList[0].timeIntegration.dt])
-        if(modelListOld[i].levelModelList[0].shockCapturing is not None):
-          saveModel["shockCapturing"].append([modelListOld[i].levelModelList[0].shockCapturing.nSteps, modelListOld[i].levelModelList[0].shockCapturing.nStepsToDelay])
-        else:
-          saveModel["shockCapturing"].append([]) #need to make numbering consistent
-
-      #Assuming the 0th model is RANS2P
-      saveModel["stabilization"].append(modelListOld[0].levelModelList[0].stabilization.nSteps)
-      return saveModel
