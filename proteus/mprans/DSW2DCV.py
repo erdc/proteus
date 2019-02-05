@@ -74,6 +74,7 @@ class RKEV(proteus.TimeIntegration.SSP):
             self.transport.u[0].dof,
             self.transport.u[1].dof,
             self.transport.u[2].dof,
+            self.transport.u[3].dof,
             self.transport.coefficients.b.dof,
             rowptr_cMatrix,
             colind_cMatrix,

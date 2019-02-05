@@ -13,7 +13,7 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define GLOBAL_FCT 0
-#define POWER_SMOOTHNESS_INDICATOR 3
+#define POWER_SMOOTHNESS_INDICATOR 3 // this is for modified green-naghdi paper
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 // quick hack to turn on/off dispersion
@@ -55,22 +55,22 @@ namespace proteus
   inline double phip(const double& g, const double& h, const double& hL, const double& hR){
     return ( fp(g,h,hL) + fp(g,h,hR) );
   }
-  inline double nu1(const double& g, const double& hStar, const double& hL, const double& uL, const double& etaL, const double& lumpedL){
+  inline double nu1(const double& g, const double& hStar, const double& hL, const double& uL, const double& etaL, const double& meshSizeL){
     double speed = uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0.0)) * (1+fmax((hStar-hL)/hL,0.)) );
-    if (LAMBDA_MGN > 1){
-    double augL = LAMBDA_MGN/(3*lumpedL)*(6*hL+12*(hL-etaL));
-    if (etaL>=hL) {augL = LAMBDA_MGN/(3*lumpedL)*6*hL;}
-    augL = augL*std::pow(lumpedL/fmax(lumpedL,hL),2.0);
+    if (LAMBDA_MGN==1){
+    double augL = LAMBDA_MGN/(3*meshSizeL)*(6*hL+12*(hL-etaL));
+    if (etaL>=hL) {augL = LAMBDA_MGN/(3*meshSizeL)*6*hL;}
+    augL = augL*std::pow(meshSizeL/fmax(meshSizeL,hL),2.0);
     speed = uL - sqrt(g*hL)*sqrt(1+augL);
     }
     return ( speed );
   }
-  inline double nu3(const double& g, const double& hStar, const double& hR, const double& uR, const double& etaR, const double& lumpedR){
+  inline double nu3(const double& g, const double& hStar, const double& hR, const double& uR, const double& etaR, const double& meshSizeR){
     double speed = uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0.0)) * (1+fmax((hStar-hR)/hR,0.)) );
-    if (LAMBDA_MGN > 1){
-    double augR = LAMBDA_MGN/(3*lumpedR)*(6*hR+12*(hR-etaR));
-    if (etaR>=hR) {augR = LAMBDA_MGN/(3*lumpedR)*6*hR;}
-    augR = augR*std::pow(lumpedR/fmax(lumpedR,hR),2.0);
+    if (LAMBDA_MGN==1){
+    double augR = LAMBDA_MGN/(3*meshSizeR)*(6*hR+12*(hR-etaR));
+    if (etaR>=hR) {augR = LAMBDA_MGN/(3*meshSizeR)*6*hR;}
+    augR = augR*std::pow(meshSizeR/fmax(meshSizeR,hR),2.0);
     speed = uR + sqrt(g*hR)*sqrt(1+augR);
     }
     return ( speed );
@@ -185,6 +185,7 @@ namespace proteus
       double* h_old, //DOFs of solution at last stage
       double* hu_old,
       double* hv_old,
+      double* heta_old,
       double* b_dof,
       int* csrRowIndeces_DofLoops, //csr row indeces
       int* csrColumnOffsets_DofLoops, //csr column offsets
@@ -638,8 +639,8 @@ namespace proteus
 
         inline
         double maxWaveSpeedSharpInitialGuess(double g, double nx, double ny,
-          double hL, double huL, double hvL, double hetaL, double lumpedL,
-          double hR, double huR, double hvR, double hetaR, double lumpedR,
+          double hL, double huL, double hvL, double hetaL, double meshSizeL,
+          double hR, double huR, double hvR, double hetaR, double meshSizeR,
           double hEpsL, double hEpsR,
           bool debugging)
           {
@@ -653,6 +654,15 @@ namespace proteus
             double velR = 2*hR/(hR*hR+std::pow(fmax(hR,hEpsR),2))*hVelR;
             double etaL = 2*hL/(hL*hL+std::pow(fmax(hL,hEpsL),2))*hetaL;
             double etaR = 2*hR/(hR*hR+std::pow(fmax(hR,hEpsR),2))*hetaR;
+
+            if (meshSizeL < 1E-9)
+            {
+              std::cout<< "meshSizeL is 0 " << meshSizeL;
+            }
+            if (meshSizeR < 1E-9)
+            {
+              std::cout<< "meshSizeR is 0 " << meshSizeR;
+            }
 
             if (debugging)
             std::cout << "hL, hR, hVelL, hVelR, velL, velR: "
@@ -714,8 +724,8 @@ namespace proteus
                 if (debugging)
                 {
                   std::cout << "h* = " << hStar << std::endl;
-                  lambda1 = nu1(g,hStar,hL,velL,etaL,lumpedL);
-                  lambda3 = nu3(g,hStar,hR,velR,etaR,lumpedR);
+                  lambda1 = nu1(g,hStar,hL,velL,etaL,meshSizeL);
+                  lambda3 = nu3(g,hStar,hR,velR,etaR,meshSizeR);
                   std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
                 }
               }
@@ -724,8 +734,8 @@ namespace proteus
               else // fMax < 0
               hStar = sqrt(hMin*hMax)*(1+(sqrt(2)*(velL-velR))/(sqrt(g*hMin)+sqrt(g*hMax)));
               // Compute max wave speed based on hStar0
-              lambda1 = nu1(g,hStar,hL,velL,etaL,lumpedL);
-              lambda3 = nu3(g,hStar,hR,velR,etaR,lumpedR);
+              lambda1 = nu1(g,hStar,hL,velL,etaL,meshSizeL);
+              lambda3 = nu3(g,hStar,hR,velR,etaR,meshSizeR);
             }
             if (debugging)
             {
@@ -739,8 +749,8 @@ namespace proteus
 
           inline
           double maxWaveSpeedIterativeProcess(double g, double nx, double ny,
-            double hL, double huL, double hvL, double hetaL, double lumpedL,
-            double hR, double huR, double hvR, double hetaR, double lumpedR,
+            double hL, double huL, double hvL, double hetaL, double meshSizeL,
+            double hR, double huR, double hvR, double hetaR, double meshSizeR,
             double hEpsL, double hEpsR,
             bool verbose)
             {
@@ -811,8 +821,8 @@ namespace proteus
                 if (phiMax == 0) // if hMax "hits" hStar (very unlikely)
                 {
                   hStar = hMax;
-                  lambda1 = nu1(g,hStar,hL,velL,etaL,lumpedL);
-                  lambda3 = nu3(g,hStar,hR,velR,etaR,lumpedR);
+                  lambda1 = nu1(g,hStar,hL,velL,etaL,meshSizeL);
+                  lambda3 = nu3(g,hStar,hR,velR,etaR,meshSizeR);
                   return fmax(fabs(lambda1),fabs(lambda3));
                 }
                 double hStarTwoRarefactions = std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/16/g;
@@ -830,10 +840,10 @@ namespace proteus
                 // improve estimate from below via one newton step (not required)
                 hStarL = fmax(hStarL,hStarR-phi(g,hStarR,hL,hR,velL,velR)/phip(g,hStarR,hL,hR));
                 // COMPUTE lambdaMin0 and lambdaMax0
-                double nu11 = nu1(g,hStarR,hL,velL,etaL,lumpedL);
-                double nu12 = nu1(g,hStarL,hL,velL,etaR,lumpedR);
-                double nu31 = nu3(g,hStarL,hR,velR,etaL,lumpedL);
-                double nu32 = nu3(g,hStarR,hR,velR,etaR,lumpedR);
+                double nu11 = nu1(g,hStarR,hL,velL,etaL,meshSizeL);
+                double nu12 = nu1(g,hStarL,hL,velL,etaR,meshSizeR);
+                double nu31 = nu3(g,hStarL,hR,velR,etaL,meshSizeL);
+                double nu32 = nu3(g,hStarR,hR,velR,etaR,meshSizeR);
 
                 double lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
                 double lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
@@ -880,10 +890,10 @@ namespace proteus
                     hStarR = hStarRFromQuadPhiFromBelow(g,hStarL_old,hStarR_old,hL,hR,velL,velR);
 
                     // Compute lambdaMax and lambdaMin
-                    nu11 = nu1(g,hStarR,hL,velL,etaL,lumpedL);
-                    nu12 = nu1(g,hStarL,hL,velL,etaL,lumpedL);
-                    nu31 = nu3(g,hStarL,hR,velR,etaR,lumpedR);
-                    nu32 = nu3(g,hStarR,hR,velR,etaR,lumpedR);
+                    nu11 = nu1(g,hStarR,hL,velL,etaL,meshSizeL);
+                    nu12 = nu1(g,hStarL,hL,velL,etaL,meshSizeL);
+                    nu31 = nu3(g,hStarL,hR,velR,etaR,meshSizeR);
+                    nu32 = nu3(g,hStarR,hR,velR,etaR,meshSizeR);
 
                     lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
                     lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
@@ -894,8 +904,8 @@ namespace proteus
                       std::cout << "**** Initial guess hStar: " << hStar0 << std::endl;
 
                       hStar = hStar0;
-                      lambda1 = nu1(g,hStar,hL,velL,etaL,lumpedL);
-                      lambda3 = nu3(g,hStar,hR,velR,etaR,lumpedR);
+                      lambda1 = nu1(g,hStar,hL,velL,etaL,meshSizeL);
+                      lambda3 = nu3(g,hStar,hR,velR,etaR,meshSizeR);
                       std::cout << "**** Initial estimate of max wave speed: "
                       << fmax(fabs(lambda1),fabs(lambda3)) << std::endl;
 
@@ -1536,6 +1546,7 @@ namespace proteus
                             double* h_dof_old,    //DOFs of solution at last stage
                             double* hu_dof_old,
                             double* hv_dof_old,
+                            double* heta_dof_old,
                             double* b_dof,
                             int* csrRowIndeces_DofLoops,    //csr row indeces
                             int* csrColumnOffsets_DofLoops,    //csr column offsets
@@ -1558,7 +1569,9 @@ namespace proteus
                                 double hi = h_dof_old[i];                 // solution at time tn for the ith DOF
                                 double hui = hu_dof_old[i];
                                 double hvi = hv_dof_old[i];
+                                double hetai = hv_dof_old[i];
                                 double mi = lumped_mass_matrix[i];
+                                double meshi = std::sqrt(mi);
                                 double dLowii = 0.;
 
                                 double alphai;
@@ -1570,7 +1583,9 @@ namespace proteus
                                   double hj = h_dof_old[j];           // solution at time tn for the jth DOF
                                   double huj = hu_dof_old[j];
                                   double hvj = hv_dof_old[j];
+                                  double hetaj = heta_dof_old[j];
                                   double mj = lumped_mass_matrix[j];
+                                  double meshj = std::sqrt(mj);
 
                                   if (i != j)
                                   {
@@ -1582,12 +1597,12 @@ namespace proteus
                                     double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
                                     double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
                                     dLow[ij] = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
-                                      hi,hui,hvi,hi*hi,mi,
-                                      hj,huj,hvj,hj*hj,mj,
+                                      hi,hui,hvi,hetai,meshi,
+                                      hj,huj,hvj,hetaj,meshj,
                                       hEps,hEps,debug)*cij_norm, //hEps
                                       maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
-                                        hj,huj,hvj,hj*hj,mj,
-                                        hi,hui,hvi,hi*hi,mi,
+                                        hj,huj,hvj,hetaj,meshj,
+                                        hi,hui,hvi,hetai,meshi,
                                         hEps,hEps,debug)*cji_norm); //hEps
                                         dLowii -= dLow[ij];
 
@@ -1635,10 +1650,12 @@ namespace proteus
                                       double hi = h_dof_old[i];               // solution at time tn for the ith DOF
                                       double hui = hu_dof_old[i];
                                       double hvi = hv_dof_old[i];
+                                      double hetai = heta_dof_old[i];
                                       double Zi = b_dof[i];
                                       double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2));               // hEps
                                       double ui = hui*one_over_hiReg;
                                       double vi = hvi*one_over_hiReg;
+                                      double etai = hetai*one_over_hiReg;
                                       // flux and stabilization variables to compute low order solution
                                       double ith_flux_term1 = 0.;
                                       double ith_dLij_minus_muLij_times_hStarStates = 0.;
@@ -1650,6 +1667,7 @@ namespace proteus
                                         double hj = h_dof_old[j];         // solution at time tn for the jth DOF
                                         double huj = hu_dof_old[j];
                                         double hvj = hv_dof_old[j];
+                                        double hetaj = heta_dof_old[j];
                                         double Zj = b_dof[j];
                                         double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2));         //hEps
                                         double uj = huj*one_over_hjReg;
@@ -2219,6 +2237,7 @@ namespace proteus
                                                                           double vi = hvi*one_over_hiReg;
                                                                           double etai = hetai*one_over_hiReg;
                                                                           double wi = hwi*one_over_hiReg;
+                                                                          double meshi = std::sqrt(mi);
 
                                                                           // HIGH ORDER DISSIPATIVE TERMS
                                                                           double
@@ -2249,6 +2268,7 @@ namespace proteus
                                                                             double etaj = hetaj*one_over_hjReg;
                                                                             double wj = hwj*one_over_hjReg;
                                                                             double mj = lumped_mass_matrix[j];
+                                                                            double meshj = std::sqrt(mj);
 
                                                                             // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
                                                                             double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
@@ -2280,12 +2300,12 @@ namespace proteus
                                                                                 double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
                                                                                 double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
                                                                                 dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
-                                                                                  hi,hui,hvi,hetai,mi,
-                                                                                  hj,huj,hvj,hetaj,mj,
+                                                                                  hi,hui,hvi,hetai,meshi,
+                                                                                  hj,huj,hvj,hetaj,meshj,
                                                                                   hEps,hEps,false)*cij_norm,
                                                                                   maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
-                                                                                    hj,huj,hvj,hetaj,mj,
-                                                                                    hi,hui,hvi,hetai,hi,
+                                                                                    hj,huj,hvj,hetaj,meshj,
+                                                                                    hi,hui,hvi,hetai,meshi,
                                                                                     hEps,hEps,false)*cji_norm);
                                                                                   }
                                                                                   dLij = dLowij*fmax(psi[i],psi[j]);                                           // enhance the order to 2nd order. No EV
