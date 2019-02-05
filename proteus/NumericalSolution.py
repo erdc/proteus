@@ -382,7 +382,6 @@ class NS_base(object):  # (HasTraits):
                 mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
                     p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
-                #Attach the checkpointer
                 if p.domain.nd == 3:
                   mlMesh = MeshTools.MultilevelTetrahedralMesh(
                       0,0,0,skipInit=True,
@@ -779,7 +778,6 @@ class NS_base(object):  # (HasTraits):
 
         import copy
         #This sections gets beta bdf right
-        #import pdb; pdb.set_trace()
         #self.modelList[1].levelModelList[0].u_store = copy.deepcopy(self.modelList[1].levelModelList[0].u)
         #self.modelList[1].levelModelList[0].u[0].dof[:] = self.modelList[1].levelModelList[0].u[0].dof_last
         #self.modelList[1].levelModelList[0].calculateElementResidual()
@@ -828,10 +826,12 @@ class NS_base(object):  # (HasTraits):
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
 
+
         #shock capturing depends on m_tmp or m_last (if lagged). m_tmp is modified by mass-correction and is pushed into m_last during updateTimeHistory().
         #This leads to a situation where m_last comes from the mass-corrected solutions so post-step is needed to get this behavior.
         #If adapt is called after the first time-step, then skip the post-step for the old solution
-        if(abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  ):
+        if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ) 
+          or self.opts.hotStart):
 
             for idx in [3,4]:
                 model = self.modelList[idx]
@@ -868,7 +868,7 @@ class NS_base(object):  # (HasTraits):
         ###
 
         ###need to re-distance and mass correct
-        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  ):
+        if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12) or self.opts.hotStart  ):
             for idx in [3,4]:
                 model = self.modelList[idx]
                 self.preStep(model)
@@ -1064,8 +1064,8 @@ class NS_base(object):  # (HasTraits):
             m.stepController.t_model_last = mOld.stepController.t_model_last
             m.stepController.substeps = mOld.stepController.substeps
 
-        #if first time-step / initial adapt
-        if(abs(self.systemStepController.t_system_last - self.tnList[0])< 1e-12 ):
+        #if first time-step / initial adapt & not hotstarted
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])< 1e-12 and not self.opts.hotStart):
             for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
                 if p.initialConditions is not None:
                     logEvent("Setting initial conditions for "+p.name)
@@ -1094,7 +1094,7 @@ class NS_base(object):  # (HasTraits):
             assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
             logEvent("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
-        p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+        #p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
         self.systemStepController.modelList = self.modelList
         self.systemStepController.exitModelStep = {}
         self.systemStepController.controllerList = []
@@ -1107,9 +1107,9 @@ class NS_base(object):  # (HasTraits):
 
 
         #Don't do anything if this is the initial adapt
-        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ):
+        if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  or
+          (abs(self.systemStepController.t_system_last - self.tnList[0]) < 1e-12 and self.opts.hotStart)):
             self.PUMI_recomputeStructures(modelListOld)
-            #import pdb; pdb.set_trace()
             if((p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
               self.PUMIcheckpointer.doSomething()
 
@@ -1666,6 +1666,7 @@ class NS_base(object):  # (HasTraits):
         systemStepFailed=False
         stepFailed=False
 
+
         #### Perform an initial adapt after applying initial conditions ####
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
@@ -1673,7 +1674,7 @@ class NS_base(object):  # (HasTraits):
         if (hasattr(self.pList[0].domain, 'PUMIMesh') and
             self.pList[0].domain.PUMIMesh.adaptMesh() and
             (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
-            self.so.useOneMesh):
+            self.so.useOneMesh and not self.opts.hotStart):
 
             self.PUMI_transferFields()
             logEvent("Initial Adapt before Solve")
@@ -1720,13 +1721,42 @@ class NS_base(object):  # (HasTraits):
                         lm.u[ci].dof_last[:] = lm.u[ci].dof
                         lm.u[ci].dof[:] = lm.u_store[ci].dof
 
+        #### If PUMI and hotstarting then decode info and proceed with restart #### 
+        #### This has to be done after the dof histories are saved because DOF histories are already present on the mesh ####
+
+        if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
+          #Call restart functions
+          logEvent("Converting PUMI mesh to Proteus")
+          if self.pList[0].domain.nd == 3:
+            mesh = MeshTools.TetrahedralMesh()
+          else:
+            mesh = MeshTools.TriangularMesh()
+
+          mesh.convertFromPUMI(self.pList[0].domain.PUMIMesh,
+                             self.pList[0].domain.faceList,
+                             self.pList[0].domain.regList,
+                             parallel = self.comm.size() > 1,
+                             dim = self.pList[0].domain.nd)
+
+          #remember to remove hardcoded filename
+          if(self.pList[0].domain.checkpointInfo==None):
+            sys.exit("Need to specify checkpointInfo file in inputs")
+          else:
+            self.PUMIcheckpointer.DecodeModel(self.pList[0].domain.checkpointInfo)
+          self.PUMI_reallocate(mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
+          self.PUMI2Proteus()
+          self.opts.hotStart = False 
+
+          #Need to clean mesh for output again      
+          self.pList[0].domain.PUMIMesh.cleanMesh()
+        ####
+
 
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
-
 
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
@@ -1738,7 +1768,10 @@ class NS_base(object):  # (HasTraits):
                        not systemStepFailed):
 
                     #This should be the only place dofs are saved otherwise there might be a double-shift for last_last
-                    self.opts.save_dof = True
+                    if(abs(self.systemStepController.t_system_last - self.tnList[0]) < 1e-12 and self.opts.hotStart):
+                      self.opts.save_dof = False
+                    else:
+                      self.opts.save_dof = True
                     if self.opts.save_dof:
                         import copy
                         for m in self.modelList:
