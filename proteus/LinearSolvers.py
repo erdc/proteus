@@ -294,7 +294,9 @@ class LU(LinearSolver):
             self.work=numpy.zeros((self.n*5,),'d')
             self.eigenvalues_r = numpy.zeros((self.n,),'d')
             self.eigenvalues_i = numpy.zeros((self.n,),'d')
-    def prepare(self,b=None):
+    def prepare(self,
+                b=None,
+                newton_its=None):
         if type(self.L).__name__ == 'SparseMatrix':
             superluWrappers.sparseFactorPrepare(self.L,self.sparseFactor)
         elif type(self.L).__name__ == 'ndarray':
@@ -1620,7 +1622,6 @@ class SchurPrecon(KSP_Preconditioner):
     def setUp(self,
               global_ksp,
               newton_its=None):
-
         """
         Set up the NavierStokesSchur preconditioner.
 
@@ -2214,6 +2215,19 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
             self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(isp,
                                                                        isp)
 
+        if newton_its == 0:
+            self.operator_constructor.updateInvScaledAp()
+            self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
+                                                           lumped = self.lumped)
+            self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
+                                                                     lumped = self.lumped)
+            self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(isp,
+                                                                    isp)
+            self.Qp_rho = self.Q_rho.getSubMatrix(isp,
+                                                  isp)
+            self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
+                                                                    isp)
+
         # ****** Sp for Ap *******
         # TODO - This is included for a possible extension which exchanges Ap with Sp for short
         #        time steps.
@@ -2242,6 +2256,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                 self.velocity_block_preconditioner_set = True
         except AttributeError:
             pass
+
         if self.velocity_block_preconditioner:
             self._setup_velocity_block_preconditioner(global_ksp)
 
