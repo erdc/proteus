@@ -1917,13 +1917,13 @@ class Schur_Sp(NavierStokesSchur):
         self._setSchurlog(global_ksp)
 
         self.A00 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
-                                                             self.isv)
+                                                                self.isv)
         self.A01 = global_ksp.getOperators()[0].createSubMatrix(self.isv,
-                                                             self.isp)
+                                                                self.isp)
         self.A10 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
-                                                             self.isv)
+                                                                self.isv)
         self.A11 = global_ksp.getOperators()[0].createSubMatrix(self.isp,
-                                                             self.isp)
+                                                                self.isp)
         L_sizes = self.isp.sizes
         self.SpInv_shell = p4pyPETSc.Mat().create()
         self.SpInv_shell.setSizes(L_sizes)
@@ -1977,7 +1977,7 @@ class Schur_Qp(SchurPrecon) :
         # Create the pressure mass matrix and scaxle by the viscosity.
         self.operator_constructor.updateQ()
         self.Qp = self.Q.createSubMatrix(self.operator_constructor.linear_smoother.isp,
-                                      self.operator_constructor.linear_smoother.isp)
+                                         self.operator_constructor.linear_smoother.isp)
         self.Qp.scale(old_div(1.,self.L.pde.coefficients.nu))
         L_sizes = self.Qp.size
 
@@ -2200,8 +2200,20 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
 
         self.operator_constructor.updateNp_rho(density_scaling = self.density_scaling)
         self.Np_rho = self.N_rho.createSubMatrix(isp,
-                                              isp)
+                                                 isp)
 
+        if newton_its == 0:
+            self.operator_constructor.updateInvScaledAp()
+            self.operator_constructor.updateTwoPhaseQp_rho(density_scaling = self.density_scaling,
+                                                           lumped = self.lumped)
+            self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
+                                                                     lumped = self.lumped)
+            self.Ap_invScaledRho = self.A_invScaledRho.createSubMatrix(isp,
+                                                                       isp)
+            self.Qp_rho = self.Q_rho.createSubMatrix(isp,
+                                                     isp)
+            self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(isp,
+                                                                       isp)
 
         if newton_its == 0:
             self.operator_constructor.updateInvScaledAp()
@@ -2389,6 +2401,7 @@ class SimpleDarcyFC(object):
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
+
     def setUp(self,
               global_ksp=None,
               newton_its=None):
