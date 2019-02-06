@@ -3013,3 +3013,65 @@ class RandomNLWavesFast(object):
         uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
         return uR
     
+class combineWaves(object):
+    """
+    This class is used for combining multiple waveTools classes, thus allowing for the generation of complex wave conditions
+
+    Parameters
+    ----------
+    waveList : list
+             List of wave classes
+    """
+    def __init__(self,waveList):
+        try:
+            for condition in waveList:
+                etaCheck = condition.eta
+        except:
+            logEvent("ERROR!: Each input list entry should be a waveTools function with an eta function") 
+        try:
+            for condition in waveList:
+                uCheck = condition.u
+        except:
+            logEvent("ERROR!: Each input list entry should be a waveTools function with a u function") 
+        self.waveList = waveList
+
+    def eta(self,x,t):
+        """Calculates free surface elevation (combineWaves class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
+        eta = 0.
+        for cond in self.waveList:
+            eta += cond.eta(x,t)
+        return eta
+
+     def eta(self,x,t):
+        """Calculates wave particle velocity (combineWaves class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy array
+            Velocity as 1D numpy array
+
+        """
+        u = np.zeros(3,)
+        for cond in self.waveList:
+            u += cond.u(x,t)
+        return u
+   
