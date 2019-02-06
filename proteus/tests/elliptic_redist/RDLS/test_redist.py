@@ -7,12 +7,13 @@ from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
-Profiling.logLevel=1
+Profiling.logLevel=7
 Profiling.verbose=True
 import os
 import numpy as np
 import tables
 import pytest
+from petsc4py import PETSc
 from . import (vortex2D, vortex2D_so,
                ncls_p, ncls_n,
                rdls_p, rdls_n)
@@ -53,7 +54,13 @@ class TestEllipticRedistancing(object):
         for i in range(len(pnList)):
             sList.append(default_s)
         self.so.name += "_ELLIPTIC_REDIST_0"
-        # NUMERICAL SOLUTION #
+        petsc_options = PETSc.Options()
+        petsc_options.setValue('ncls_pc_type','lu')
+        petsc_options.setValue('ncls_ksp_type','preonly')
+        petsc_options.setValue('ncls_pc_factor_mat_solver_package','superlu')
+        petsc_options.setValue('rdls_pc_type','lu')
+        petsc_options.setValue('rdls_ksp_type','preonly')
+        petsc_options.setValue('rdls_pc_factor_mat_solver_package','superlu')
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
@@ -84,6 +91,13 @@ class TestEllipticRedistancing(object):
             sList.append(default_s)
         self.so.name += "_ELLIPTIC_REDIST_1"
         # NUMERICAL SOLUTION #
+        petsc_options = PETSc.Options()
+        petsc_options.setValue('ncls_pc_type','lu')
+        petsc_options.setValue('ncls_ksp_type','preonly')
+        petsc_options.setValue('ncls_pc_factor_mat_solver_package','superlu')
+        petsc_options.setValue('rdls_pc_type','lu')
+        petsc_options.setValue('rdls_ksp_type','preonly')
+        petsc_options.setValue('rdls_pc_factor_mat_solver_package','superlu')
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
@@ -116,6 +130,13 @@ class TestEllipticRedistancing(object):
             sList.append(default_s)
         self.so.name += "_ELLIPTIC_REDIST_2"
         # NUMERICAL SOLUTION #
+        petsc_options = PETSc.Options()
+        petsc_options.setValue('ncls_pc_type','lu')
+        petsc_options.setValue('ncls_ksp_type','preonly')
+        petsc_options.setValue('ncls_pc_factor_mat_solver_package','superlu')
+        petsc_options.setValue('rdls_pc_type','lu')
+        petsc_options.setValue('rdls_ksp_type','preonly')
+        petsc_options.setValue('rdls_pc_factor_mat_solver_package','superlu')
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
@@ -147,6 +168,13 @@ class TestEllipticRedistancing(object):
             sList.append(default_s)
         self.so.name += "_ELLIPTIC_REDIST_3"
         # NUMERICAL SOLUTION #
+        petsc_options = PETSc.Options()
+        petsc_options.setValue('ncls_pc_type','lu')
+        petsc_options.setValue('ncls_ksp_type','preonly')
+        petsc_options.setValue('ncls_pc_factor_mat_solver_package','superlu')
+        petsc_options.setValue('rdls_pc_type','lu')
+        petsc_options.setValue('rdls_ksp_type','preonly')
+        petsc_options.setValue('rdls_pc_factor_mat_solver_package','superlu')
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
