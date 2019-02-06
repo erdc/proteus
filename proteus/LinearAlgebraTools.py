@@ -1183,7 +1183,7 @@ class MatrixInvShell(InvOperatorShell):
         self.ksp.setOperators(self.A,self.A)
         self.ksp.setType('preonly')
         self.ksp.pc.setType('lu')
-        self.ksp.pc.setFactorSolverPackage('superlu_dist')
+        self.ksp.pc.setFactorSolverType('superlu_dist')
         self.ksp.setUp()
 
     def apply(self,A,x,y):
