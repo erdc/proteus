@@ -1,4 +1,5 @@
-dist: trusty
+os: linux
+dist: xenial
 sudo: required
 
 language: python
@@ -13,28 +14,31 @@ python:
 
 addons:
   apt:
+    sources:
+    - github-git-lfs-xenial
     packages:
     - gfortran
     - libffi-dev
     - libssl-dev
     - python-lzma
+    - git-lfs
 
 before_install:
 - pip install pyliblzma
-- mkdir git-lfs-install
-- cd git-lfs-install
-- wget https://github.com/git-lfs/git-lfs/releases/download/v2.6.1/git-lfs-linux-amd64-v2.6.1.tar.gz
-- tar xzvf git-lfs-linux-amd64-v2.6.1.tar.gz
-- PREFIX=${HOME} ./install.sh
-- export PATH=${HOME}/bin:${PATH}
-- cd ..
+#- mkdir git-lfs-install
+#- cd git-lfs-install
+#- wget https://github.com/git-lfs/git-lfs/releases/download/v2.6.1/git-lfs-linux-amd64-v2.6.1.tar.gz
+#- tar xzvf git-lfs-linux-amd64-v2.6.1.tar.gz
+#- PREFIX=${HOME} ./install.sh
+#- export PATH=${HOME}/bin:${PATH}
+#- cd ..
 
 install:
 - git lfs fetch
 - git lfs checkout
 - ./stack/hit/bin/hit init-home
 - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
-- ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_14_04 --objects="build"
+- ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_16_04 --objects="build"
 - make stack/default.yaml
 - pushd $HOME
 - mkdir -p hashdist_src
