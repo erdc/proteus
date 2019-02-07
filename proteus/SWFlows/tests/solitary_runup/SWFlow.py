@@ -25,7 +25,7 @@ we are doing simulation in 2d but only consider x direction velocity
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
-T = 20.0
+T = 30.0
 g = 9.81
 h0 = 1.0
 # Tstar corresponds to experimental data time at Tstar = {10,15,20,...,65}
