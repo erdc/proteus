@@ -17,10 +17,10 @@
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 // quick hack to turn on/off dispersion
-// 0 is for shallow water and 1 is for mGN model - EJT.
-// making lambda_mgn 0 decouples the heta and hw eqns from mass and momentum
-// eqns
-#define LAMBDA_MGN 1.
+// 0 is for shallow water and 1 is for mGN model
+// making lambda 0 decouples the heta and hw eqns from mass and momentum
+#define LAMBDA_MGN 1
+#define WITH_SW_SPEEDS 0
 
 namespace proteus {
 // FOR CELL BASED ENTROPY VISCOSITY
@@ -84,14 +84,16 @@ inline double nu1(const double &g, const double &hStar, const double &hL,
   double speed =
       uL - sqrt(g * hL) * sqrt((1 + fmax((hStar - hL) / 2 / hL, 0.0)) *
                                (1 + fmax((hStar - hL) / hL, 0.)));
-  if (LAMBDA_MGN == 1) {
-    double augL = LAMBDA_MGN / (3 * meshSizeL) * (6 * hL + 12 * (hL - etaL));
+
+  double augL = 0.0;
+  if (WITH_SW_SPEEDS == 0) {
+    augL = LAMBDA_MGN / (3 * meshSizeL) * (6 * hL + 12 * (hL - etaL));
     if (etaL >= hL) {
       augL = LAMBDA_MGN / (3 * meshSizeL) * 6 * hL;
     }
     augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2.0);
-    speed = uL - sqrt(g * hL) * sqrt(1 + augL);
   }
+  speed = uL - sqrt(g * hL) * sqrt(1 + augL);
   return (speed);
 }
 inline double nu3(const double &g, const double &hStar, const double &hR,
@@ -100,14 +102,15 @@ inline double nu3(const double &g, const double &hStar, const double &hR,
   double speed =
       uR + sqrt(g * hR) * sqrt((1 + fmax((hStar - hR) / 2 / hR, 0.0)) *
                                (1 + fmax((hStar - hR) / hR, 0.)));
-  if (LAMBDA_MGN == 1) {
-    double augR = LAMBDA_MGN / (3 * meshSizeR) * (6 * hR + 12 * (hR - etaR));
+  double augR = 0.0;
+  if (WITH_SW_SPEEDS == 0) {
+    augR = LAMBDA_MGN / (3 * meshSizeR) * (6 * hR + 12 * (hR - etaR));
     if (etaR >= hR) {
       augR = LAMBDA_MGN / (3 * meshSizeR) * 6 * hR;
     }
     augR = augR * std::pow(meshSizeR / fmax(meshSizeR, hR), 2.0);
-    speed = uR + sqrt(g * hR) * sqrt(1 + augR);
   }
+  speed = uR + sqrt(g * hR) * sqrt(1 + augR);
   return (speed);
 }
 inline double phiDiff(const double &g, const double &h1k, const double &h2k,
@@ -440,79 +443,79 @@ public:
     double etaL = 2 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hetaL;
     double etaR = 2 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hetaR;
 
-    // if (debugging)
-    //   std::cout << "hL, hR, hVelL, hVelR, velL, velR: " << hL << "\t" << hR
-    //             << "\t" << hVelL << "\t" << hVelR << "\t" << velL << "\t"
-    //             << velR << "\t" << std::endl;
-    // // CHECK IF BOTH STATES ARE DRY:
-    // if (hL == 0 && hR == 0) {
-    //   lambda1 = 0.;
-    //   lambda3 = 0.;
-    // } else if (hL == 0) // left dry state
-    // {
-    //   lambda1 = velR - 2 * sqrt(g * hR);
-    //   lambda3 = velR + sqrt(g * hR);
-    //   if (debugging) {
-    //     std::cout << "hL=0" << std::endl;
-    //     std::cout << lambda1 << "\t" << lambda3 << std::endl;
-    //   }
-    // } else if (hR == 0) // right dry state
-    // {
-    //   lambda1 = velL - sqrt(g * hL);
-    //   lambda3 = velL + 2 * sqrt(g * hL);
-    //   if (debugging) {
-    //     std::cout << "hR=0" << std::endl;
-    //     std::cout << lambda1 << "\t" << lambda3 << std::endl;
-    //   }
-    // } else // both states are wet
-    // {
-    //   double x0 = std::pow(2. * sqrt(2.) - 1., 2.);
-    //   double hMin = fmin(hL, hR);
-    //   double hMax = fmax(hL, hR);
-    //
-    //   double hStar;
-    //   double fMin = phi(g, x0 * hMin, hL, hR, velL, velR);
-    //   double fMax = phi(g, x0 * hMax, hL, hR, velL, velR);
-    //
-    //   if (debugging)
-    //     std::cout << "hMin, hMax, fMin, fMax: " << hMin << ", " << hMax << ",
-    //     "
-    //               << fMin << ", " << fMax << std::endl;
-    //
-    //   if (0 <= fMin) {
-    //     hStar = std::pow(
-    //                 fmax(0., velL - velR + 2 * sqrt(g) * (sqrt(hL) +
-    //                 sqrt(hR))), 2) /
-    //             16. / g;
-    //     if (debugging)
-    //       std::cout << "**********... THIS IS A RAREFACTION" << std::endl;
-    //     if (debugging) {
-    //       std::cout << "h* = " << hStar << std::endl;
-    //       lambda1 = nu1(g, hStar, hL, velL, etaL, meshSizeL);
-    //       lambda3 = nu3(g, hStar, hR, velR, etaR, meshSizeR);
-    //       std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3
-    //                 << std::endl;
-    //     }
-    //   } else if (0 <= fMax)
-    //     hStar = std::pow(-sqrt(2 * hMin) +
-    //                          sqrt(3 * hMin + 2 * sqrt(2 * hMin * hMax) +
-    //                               sqrt(2. / g) * (velL - velR) * sqrt(hMin)),
-    //                      2);
-    //   else // fMax < 0
-    //     hStar = sqrt(hMin * hMax) * (1 + (sqrt(2) * (velL - velR)) /
-    //                                          (sqrt(g * hMin) + sqrt(g *
-    //                                          hMax)));
-    // Compute max wave speed based on hStar0
-    // lambda1 = nu1(g, hStar, hL, velL, etaL, meshSizeL);
-    // lambda3 = nu3(g, hStar, hR, velR, etaR, meshSizeR);
-    // }
-    // if (debugging) {
-    //   std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3
-    //             << std::endl;
-    //   if (isinf(lambda1) == 1 || isinf(lambda3) == 1)
-    //     abort();
-    // }
+    if (WITH_SW_SPEEDS == 1) {
+      if (debugging)
+        std::cout << "hL, hR, hVelL, hVelR, velL, velR: " << hL << "\t" << hR
+                  << "\t" << hVelL << "\t" << hVelR << "\t" << velL << "\t"
+                  << velR << "\t" << std::endl;
+      // CHECK IF BOTH STATES ARE DRY:
+      if (hL == 0 && hR == 0) {
+        lambda1 = 0.;
+        lambda3 = 0.;
+      } else if (hL == 0) // left dry state
+      {
+        lambda1 = velR - 2 * sqrt(g * hR);
+        lambda3 = velR + sqrt(g * hR);
+        if (debugging) {
+          std::cout << "hL=0" << std::endl;
+          std::cout << lambda1 << "\t" << lambda3 << std::endl;
+        }
+      } else if (hR == 0) // right dry state
+      {
+        lambda1 = velL - sqrt(g * hL);
+        lambda3 = velL + 2 * sqrt(g * hL);
+        if (debugging) {
+          std::cout << "hR=0" << std::endl;
+          std::cout << lambda1 << "\t" << lambda3 << std::endl;
+        }
+      } else // both states are wet
+      {
+        double x0 = std::pow(2. * sqrt(2.) - 1., 2.);
+        double hMin = fmin(hL, hR);
+        double hMax = fmax(hL, hR);
 
+        double hStar;
+        double fMin = phi(g, x0 * hMin, hL, hR, velL, velR);
+        double fMax = phi(g, x0 * hMax, hL, hR, velL, velR);
+
+        if (debugging)
+          std::cout << "hMin, hMax, fMin, fMax: " << hMin << ", " << hMax << ","
+                    << fMin << ", " << fMax << std::endl;
+
+        if (0 <= fMin) {
+          hStar = std::pow(fmax(0., velL - velR +
+                                        2 * sqrt(g) * (sqrt(hL) + sqrt(hR))),
+                           2) /
+                  16. / g;
+          if (debugging)
+            std::cout << "**********... THIS IS A RAREFACTION" << std::endl;
+          if (debugging) {
+            std::cout << "h* = " << hStar << std::endl;
+            lambda1 = nu1(g, hStar, hL, velL, etaL, meshSizeL);
+            lambda3 = nu3(g, hStar, hR, velR, etaR, meshSizeR);
+            std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3
+                      << std::endl;
+          }
+        } else if (0 <= fMax)
+          hStar = std::pow(-sqrt(2 * hMin) +
+                               sqrt(3 * hMin + 2 * sqrt(2 * hMin * hMax) +
+                                    sqrt(2. / g) * (velL - velR) * sqrt(hMin)),
+                           2);
+        else // fMax < 0
+          hStar =
+              sqrt(hMin * hMax) * (1 + (sqrt(2) * (velL - velR)) /
+                                           (sqrt(g * hMin) + sqrt(g * hMax)));
+        // Compute max wave speed based on hStar0
+        lambda1 = nu1(g, hStar, hL, velL, etaL, meshSizeL);
+        lambda3 = nu3(g, hStar, hR, velR, etaR, meshSizeR);
+      }
+      if (debugging) {
+        std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3
+                  << std::endl;
+        if (isinf(lambda1) == 1 || isinf(lambda3) == 1)
+          abort();
+      }
+    }
     // see equation (4.12) of mGN paper
     if (LAMBDA_MGN == 1) {
       lambda1 = nu1(g, 0.0, hL, velL, etaL, meshSizeL);
@@ -652,7 +655,8 @@ public:
           double hStarL_old = hStarL;
           double hStarR_old = hStarR;
           // Compute new estimates on hStarL and hStarR
-          // NOTE (MQL): hStarL and hStarR must be computed using the old values
+          // NOTE (MQL): hStarL and hStarR must be computed using the old
+          // values
           hStarL = hStarLFromQuadPhiFromAbove(g, hStarL_old, hStarR_old, hL, hR,
                                               velL, velR);
           hStarR = hStarRFromQuadPhiFromBelow(g, hStarL_old, hStarR_old, hL, hR,
@@ -682,7 +686,8 @@ public:
           }
           // else
           //{
-          //  std::cout << "*****... AUX COUNTER: " << aux_counter << std::endl;
+          //  std::cout << "*****... AUX COUNTER: " << aux_counter <<
+          //  std::endl;
           //  //TMP
           //}
         }
@@ -701,7 +706,8 @@ public:
       aug = LAMBDA_MGN / (3.0 * elementDiameter) * 6.0 * h;
     }
     aug = aug * std::pow(elementDiameter / fmax(elementDiameter, h), 2.0);
-    if (LAMBDA_MGN == 0) {
+
+    if (WITH_SW_SPEEDS == 0) {
       aug = 0.0;
     }
 
@@ -1883,7 +1889,8 @@ public:
           psi[i] = 1.0;
         else
           psi[i] = std::pow(
-              alphai, POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^2 in the paper
+              alphai,
+              POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^2 in the paper
       }
       // ********** END OF 2nd LOOP ON DOFS ********** //
 
@@ -1953,8 +1960,8 @@ public:
           // Dissipative well balancing term
           double muLowij = 0., muLij = 0., muHij = 0.;
           double dLowij = 0., dLij = 0., dHij = 0.;
-          if (i !=
-              j) // This is not necessary. See formula for ith_dissipative_terms
+          if (i != j) // This is not necessary. See formula for
+                      // ith_dissipative_terms
           {
             ////////////////////////
             // DISSIPATIVE MATRIX //
@@ -2146,10 +2153,10 @@ public:
             eN = elementBoundaryElementsArray[ebN * 2 + 0],
             ebN_local = elementBoundaryLocalElementBoundariesArray[ebN * 2 + 0];
         register double normal[3];
-        { // "Loop" in quad points
-          int kb =
-              0; // NOTE: I need to consider just one quad point since the
-                 // element is not curved so the normal is constant per element
+        {             // "Loop" in quad points
+          int kb = 0; // NOTE: I need to consider just one quad point since
+                      // the element is not curved so the normal is constant
+                      // per element
           register int ebN_local_kb =
               ebN_local * nQuadraturePoints_elementBoundary + kb;
           register double jac_ext[nSpace * nSpace], jacDet_ext,
