@@ -1,6 +1,6 @@
 os: linux
 dist: xenial
-sudo: required
+#sudo: required
 
 language: python
 
@@ -10,18 +10,18 @@ env:
   - TEST_PROFILE="2nd_set"  
 
 python:
-- 2.7
+  - 2.7
 
 addons:
   apt:
-    sources:
-    - github-git-lfs-xenial
+#    sources:
+#    - github-git-lfs-xenial
     packages:
     - gfortran
     - libffi-dev
     - libssl-dev
     - python-lzma
-    - git-lfs
+#    - git-lfs
 
 before_install:
 - pip install pyliblzma
@@ -34,8 +34,7 @@ before_install:
 #- cd ..
 
 install:
-- git lfs fetch
-- git lfs checkout
+- git lfs pull
 - ./stack/hit/bin/hit init-home
 - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
 - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_16_04 --objects="build"
@@ -43,15 +42,13 @@ install:
 - pushd $HOME
 - mkdir -p hashdist_src
 - mkdir -p hashdist_bld
-- cd .hashdist
-- rm -rf src bld
-- ln -s ../hashdist_src src 
-- ln -s ../hashdist_bld bld
+- rm -rf ./hashdist/src .hashdist/bld
+- ln -s $HOME/hashdist_src .hashdist/src 
+- ln -s $HOME/hashdist_bld .hashdist/bld
 - popd
-- cd stack
+- pushd stack
 - ../stack/hit/bin/hit build -j 2 -v default.yaml
-- cd ..
-- make distclean
+- popd
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=1
@@ -65,12 +62,12 @@ cache:
     - $HOME/hashdist_bld    
 
 script:
-  - which python
-  - python -c "import sys; print sys.path"
-  - python -c "import backports"
-  - python -c "import backports.functools_lru_cache"
+#  - which python
+#  - python -c "import sys; print sys.path"
+#  - python -c "import backports"
+#  - python -c "import backports.functools_lru_cache"
   - export MPLBACKEND="AGG"
-  - python -c "import matplotlib"
+#  - python -c "import matplotlib"
   - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
   
   - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then py.test --forked -v air-water-vv/Tests/1st_set/; fi
