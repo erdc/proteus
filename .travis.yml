@@ -14,24 +14,14 @@ python:
 
 addons:
   apt:
-#    sources:
-#    - github-git-lfs-xenial
     packages:
     - gfortran
     - libffi-dev
     - libssl-dev
     - python-lzma
-#    - git-lfs
 
 before_install:
 - pip install pyliblzma
-#- mkdir git-lfs-install
-#- cd git-lfs-install
-#- wget https://github.com/git-lfs/git-lfs/releases/download/v2.6.1/git-lfs-linux-amd64-v2.6.1.tar.gz
-#- tar xzvf git-lfs-linux-amd64-v2.6.1.tar.gz
-#- PREFIX=${HOME} ./install.sh
-#- export PATH=${HOME}/bin:${PATH}
-#- cd ..
 
 install:
 - git lfs pull
@@ -49,10 +39,10 @@ install:
 - pushd stack
 - ../stack/hit/bin/hit build -j 2 -v default.yaml
 - popd
+- PROTEUS_OPT="-O0 -g -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=1
+- export SSL_CERT_DIR=/etc/ssl/certs
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/linux2/lib
-- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=1
-- export SSL_CERT_DIR=/etc/ssl/certs
 - pip install matplotlib
 
 cache:
@@ -62,12 +52,7 @@ cache:
     - $HOME/hashdist_bld    
 
 script:
-#  - which python
-#  - python -c "import sys; print sys.path"
-#  - python -c "import backports"
-#  - python -c "import backports.functools_lru_cache"
   - export MPLBACKEND="AGG"
-#  - python -c "import matplotlib"
   - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
   
   - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then py.test --forked -v air-water-vv/Tests/1st_set/; fi
