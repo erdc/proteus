@@ -7,7 +7,6 @@ env:
   - TEST_PROFILE="proteus"
   - TEST_PROFILE="1st_set"
   - TEST_PROFILE="2nd_set"  
-    #- TEST_PROFILE="air-water-vv"
 
 python:
 - 2.7
@@ -44,8 +43,6 @@ install:
 - rm -rf src bld
 - ln -s ../hashdist_src src 
 - ln -s ../hashdist_bld bld
-- pwd
-- ls bld src
 - popd
 - cd stack
 - ../stack/hit/bin/hit build -j 2 -v default.yaml
@@ -53,7 +50,7 @@ install:
 - make distclean
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
-- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=2
+- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=1
 - export SSL_CERT_DIR=/etc/ssl/certs
 - pip install matplotlib
 
