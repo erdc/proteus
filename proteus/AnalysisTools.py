@@ -12,7 +12,9 @@ from proteus import WaveTools as WT
 import numpy as np
 import WaveTools as WT
 import math
-       
+cos = np.cos
+sin = np.sin
+sqrt = np.sqrt
 
 def readProbeFile(filename):
     with open (filename, 'rb') as csvfile:
@@ -114,7 +116,7 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
 def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e300,costapCut=True):
     if(filt):
         data = signalFilter(time,data,minfreq,maxfreq,costapCut)    
-    trend = mean(data)
+    trend = np.mean(data)
     data = data - trend
 
     data_temp=np.zeros(data.shape,)
@@ -144,13 +146,13 @@ def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e30
     height = None
 
     if mode == "mean":
-        height = mean(zCH)
-        period = mean(period)
+        height = np.mean(zCH)
+        period = np.mean(period)
     elif type(mode) == "int":
         height = np.sort(zCH)
         ii = len(height) - old_div(float(len(height)),float(mode))
-        height = mean(height[ii:])
-        period = mean(period)
+        height = np.mean(height[ii:])
+        period = np.mean(period)
     else:
         print("mode must be either 'period', 'mean' or an integer ")
 
@@ -163,12 +165,12 @@ def pressureToHeight(data,Z,depth,wavelength,rho,g):
     return old_div(data,Kp)
 
 
-def ReflStat(H1,H2,H3,dx,wavelenght):
-    D = 2*math.pi*dx/wavelegth
+def ReflStat(H1,H2,H3,dx,wavelength):
+    D = 2*math.pi*dx/wavelength
     Amp =np.array([old_div(H1,2.),old_div(H2,2.),old_div(H3,2.)])
-    A1 = Amp[j]*Amp[j]
-    A2 = Amp[j+1]*Amp[j+1]
-    A3 = Amp[j+2]*Amp[j+2]
+    A1 = Amp[0]*Amp[0]
+    A2 = Amp[1]*Amp[1]
+    A3 = Amp[2]*Amp[2]
     Lamda = old_div((A1 + A3 - 2.*A2*cos(2*D)),(4.*sin(D)*sin(D)))
     Gamma = 0.5*sqrt(
         (old_div((2*A2-A1-A3),(2.*sin(D)*sin(D))))**2+(old_div((A1-A3),sin(2*D)))**2)
