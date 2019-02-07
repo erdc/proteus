@@ -50,7 +50,7 @@ install:
 - ../stack/hit/bin/hit build -j 2 -v default.yaml
 - popd
 - export PATH=$PWD/linux2/bin:$PATH
-- export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
+- export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/linux2/lib
 - PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=1
 - export SSL_CERT_DIR=/etc/ssl/certs
 - pip install matplotlib
