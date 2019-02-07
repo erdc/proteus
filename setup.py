@@ -595,11 +595,11 @@ EXTENSIONS_TO_BUILD = [Extension("MeshAdaptPUMI.MeshAdaptPUMI",
                         language="c++",
                         extra_compile_args=PROTEUS_OPT,
                         include_dirs=[numpy.get_include(), 'proteus']),
-              Extension("mprans.cRANS2P_IB",["proteus/mprans/cRANS2P_IB.pyx"],
-                        depends=["proteus/mprans/RANS2P_IB.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
-                        language="c++",
-                        extra_compile_args=PROTEUS_OPT,
-                        include_dirs=[numpy.get_include(), 'proteus'])
+              # Extension("mprans.cRANS2P_IB",["proteus/mprans/cRANS2P_IB.pyx"],
+              #           depends=["proteus/mprans/RANS2P_IB.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+              #           language="c++",
+              #           extra_compile_args=PROTEUS_OPT,
+              #           include_dirs=[numpy.get_include(), 'proteus'])
 ]
 
 def setup_given_extensions(extensions):
