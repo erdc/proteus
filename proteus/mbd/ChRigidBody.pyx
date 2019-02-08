@@ -672,7 +672,7 @@ cdef class ProtChBody:
                 self.setAddedMass(Aij)
             self.setExternalForces()
 
-    def setExternalForces(self, np.ndarray forces, np.ndarray moments):
+    def setExternalForces(self, np.ndarray forces=None, np.ndarray moments=None):
         """Sets external forces to body.
         Called during prestep or can be called manually. If called manually,
         must be a Chrono only simulation.

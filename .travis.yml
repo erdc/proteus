@@ -39,6 +39,7 @@ install:
 - pushd stack
 - ../stack/hit/bin/hit build -j 2 -v default.yaml
 - popd
+- export PATHSAVE=$PATH
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - PROTEUS_OPT="-O0 -g -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
@@ -58,7 +59,8 @@ script:
   - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
   
   - if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set; fi
-  - unset LD_LIBRARY_PATH
+  - unset LD_LIBRARY_PATH #reset things so we don't break cache?
+  - export PATH=$PATHSAVE
 
 notifications:
   email:
