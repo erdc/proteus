@@ -22,7 +22,6 @@ platform_extra_link_args = []
 platform_blas_h = None
 platform_lapack_h = None
 platform_lapack_integer = None
-
 if sys.platform == 'darwin':
     platform_extra_link_args = ['-framework', 'Accelerate']
     platform_lapack_integer = '__CLPK_integer'

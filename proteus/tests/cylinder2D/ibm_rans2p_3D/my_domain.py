@@ -243,12 +243,12 @@ def get_pseudo_3D_cylinder_domain(
     theta=thetaOffset
     pb  = cross_section(center,radius,theta)
     vertices.append([pb[0],pb[1]])
-    vertexKeys.append('obstacle_'+`0`)
+    vertexKeys.append('obstacle_{0}'.format(0))
     vertexFlags.append(boundaryTags['back'])
     for gb in range(1,n_points_on_obstacle):
         theta = float(gb)/float(n_points_on_obstacle)*2.0*math.pi+thetaOffset
         pb  = cross_section(center,radius,theta)
-        vertexKeys.append('obstacle_'+`gb`)
+        vertexKeys.append('obstacle_{0}'.format(gb))
         vertices.append([pb[0],pb[1]])
         vertexFlags.append(boundaryTags['back'])
     #convert to 3D
@@ -403,12 +403,12 @@ def get_pseudo_3D_cylinder_box_domain(
     theta=thetaOffset
     pb  = cross_section(center,radius,theta)
     vertices.append([pb[0],pb[1]])
-    vertexKeys.append('obstacle_'+`0`)
+    vertexKeys.append('obstacle_{0}'.format(0))
     vertexFlags.append(boundaryTags['back'])
     for gb in range(1,n_points_on_obstacle):
         theta = float(gb)/float(n_points_on_obstacle)*2.0*math.pi+thetaOffset
         pb  = cross_section(center,radius,theta)
-        vertexKeys.append('obstacle_'+`gb`)
+        vertexKeys.append('obstacle_{0}'.format(gb))
         vertices.append([pb[0],pb[1]])
         vertexFlags.append(boundaryTags['back'])
     #box

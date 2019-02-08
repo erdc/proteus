@@ -6269,7 +6269,7 @@ class MultilevelTransport(object):
             if options.periodicDirichletConditions and options.parallelPeriodic:
                 logEvent("Generating Trial Space--Parallel Periodic",level=2)
                 #the global mesh has been renumbered so all this is in the new (partitioned) numberings
-                trialSpace_global = TrialSpaceType(mesh,nd)
+                trialSpace_global = TrialSpaceTypeDict[0](mesh,nd)
                 logEvent("Setting Boundary Conditions--Parallel Periodic")
                 #get new global numbering of DOF that maps periodic DOF to a single master DOF
                 periodicConditions_global=DOFBoundaryConditions(trialSpace_global,
@@ -6305,7 +6305,7 @@ class MultilevelTransport(object):
                 trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()] = ownedDOF[0]
                 trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()+1] = ownedDOF[-1]+1
                 trialSpaceDict[0].dofMap.nDOF = trialSpaceDict[0].dofMap.nDOF_subdomain
-                trialSpaceDict[0].dofMap.range_nDOF = xrange(trialSpaceDict[0].dofMap.nDOF)
+                trialSpaceDict[0].dofMap.range_nDOF = range(trialSpaceDict[0].dofMap.nDOF)
                 #build a mapping of the subdomain DOF to the free subdomain DOF
                 subdomain_global2freeGlobal={}
                 for nN_subdomain,nN_global in enumerate(trialSpaceDict[0].dofMap.subdomain2global):
@@ -6335,7 +6335,7 @@ class MultilevelTransport(object):
                     trialSpaceDict[ci].dofMap.nDOF_all_processes = trialSpaceDict[0].dofMap.nDOF_all_processes
                     trialSpaceDict[ci].dofMap.nDOF_subdomain_owned = trialSpaceDict[0].dofMap.nDOF_subdomain_owned
                     trialSpaceDict[ci].dofMap.nDOF = trialSpaceDict[ci].dofMap.nDOF_subdomain
-                    trialSpaceDict[ci].dofMap.range_nDOF = xrange(trialSpaceDict[ci].dofMap.nDOF)
+                    trialSpaceDict[ci].dofMap.range_nDOF = range(trialSpaceDict[ci].dofMap.nDOF)
                 for ci in range(len(testSpaceDict)):
                     testSpaceDict[ci].dofMap.nDOF_subdomain = trialSpaceDict[0].dofMap.nDOF_subdomain
                     testSpaceDict[ci].dofMap.subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
@@ -6343,7 +6343,7 @@ class MultilevelTransport(object):
                     testSpaceDict[ci].dofMap.nDOF_all_processes = trialSpaceDict[0].dofMap.nDOF_all_processes
                     testSpaceDict[ci].dofMap.nDOF_subdomain_owned = trialSpaceDict[0].dofMap.nDOF_subdomain_owned
                     testSpaceDict[ci].dofMap.nDOF = testSpaceDict[ci].dofMap.nDOF_subdomain
-                    testSpaceDict[ci].dofMap.range_nDOF = xrange(testSpaceDict[ci].dofMap.nDOF)
+                    testSpaceDict[ci].dofMap.range_nDOF = range(testSpaceDict[ci].dofMap.nDOF)
             #
             #
             logEvent(memory("boundary conditions","MultilevelTransport"),level=4)

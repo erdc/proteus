@@ -78,15 +78,15 @@ openTop=True
 fl_H = 0.41
 # Input checks
 if spaceOrder not in [1, 2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    print("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    print("INVALID: useMetrics")
     sys.exit()
 
 
