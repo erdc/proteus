@@ -1,5 +1,15 @@
 import sys
 import setuptools
+from distutils import sysconfig
+cfg_vars = sysconfig.get_config_vars()
+for key, value in cfg_vars.items():
+    if type(value) == str:
+        cfg_vars[key] = cfg_vars[key].replace("-Wstrict-prototypes", "")
+        cfg_vars[key] = cfg_vars[key].replace("-Wall", "")
+        cfg_vars[key] = cfg_vars[key].replace("-O3", "")
+        cfg_vars[key] = cfg_vars[key].replace("-O2", "")
+        cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "")
+        cfg_vars[key] = cfg_vars[key].replace("-g", "")
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
 
@@ -17,13 +27,6 @@ from proteus import config
 from proteus.config import *
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
-from distutils import sysconfig
-cv = sysconfig.get_config_vars()
-cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-Wall","-w")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-Wstrict-prototypes","")
-
 
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
@@ -40,28 +43,28 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
-EXTENSIONS_TO_BUILD = [Extension("MeshAdaptPUMI.MeshAdaptPUMI",
-                                 sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
-                                            'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
-                                            'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
-                                            'proteus/MeshAdaptPUMI/DumpMesh.cpp',
-                                            'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp','proteus/MeshAdaptPUMI/VMS.cpp'],
-                                 depends=["proteus/partitioning.h",
-                                          "proteus/partitioning.cpp",
-                                          "proteus/cpartitioning.pyx",
-                                          "proteus/cmeshTools.pxd",
-                                          "proteus/mesh.h",
-                                          'proteus/mesh.cpp',
-                                          'proteus/meshio.cpp'],
-                                 define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
-                                 language='c++',
-                                 include_dirs=[numpy.get_include(),'include',
-                                               'proteus']+
-                                 PROTEUS_SCOREC_INCLUDE_DIRS,
-                                 library_dirs=PROTEUS_SCOREC_LIB_DIRS,
-                                 libraries=PROTEUS_SCOREC_LIBS,
-                                 extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
-                                 extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
+EXTENSIONS_TO_BUILD = [# Extension("MeshAdaptPUMI.MeshAdaptPUMI",
+                       #           sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
+                       #                      'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
+                       #                      'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
+                       #                      'proteus/MeshAdaptPUMI/DumpMesh.cpp',
+                       #                      'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp','proteus/MeshAdaptPUMI/VMS.cpp'],
+                       #           depends=["proteus/partitioning.h",
+                       #                    "proteus/partitioning.cpp",
+                       #                    "proteus/cpartitioning.pyx",
+                       #                    "proteus/cmeshTools.pxd",
+                       #                    "proteus/mesh.h",
+                       #                    'proteus/mesh.cpp',
+                       #                    'proteus/meshio.cpp'],
+                       #           define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
+                       #           language='c++',
+                       #           include_dirs=[numpy.get_include(),'include',
+                       #                         'proteus']+
+                       #           PROTEUS_SCOREC_INCLUDE_DIRS,
+                       #           library_dirs=PROTEUS_SCOREC_LIB_DIRS,
+                       #           libraries=PROTEUS_SCOREC_LIBS,
+                       #           extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
+                       #           extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
               Extension("mprans.cPres",['proteus/mprans/cPres.pyx'],
                         depends=['proteus/mprans/Pres.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
                         language='c++',
