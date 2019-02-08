@@ -36,6 +36,7 @@ class TestBDM2Reference1(object):
 
     def setup_method(self,method):
         """Initialize the test problem. """
+        from importlib import reload
         reload(bt_temp)
         self.transport_obj = bt_temp.ns.modelList[0].levelModelList[0]
         self.bdm2_obj = self.transport_obj.velocityPostProcessor.vpp_algorithms[0]

@@ -15,7 +15,6 @@ from Cython.Distutils import build_ext
 
 from proteus import config
 from proteus.config import *
-
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
 from distutils import sysconfig
