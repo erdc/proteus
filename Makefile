@@ -14,10 +14,10 @@ PROTEUS_INSTALL_CMD = python3 setup.py install
 PROTEUS_DEVELOP_BUILD_CMD = python3 setup.py build_ext -i
 PROTEUS_DEVELOP_CMD = pip3 --disable-pip-version-check install -v -e .
 #
-#ifeq (${N}, 1)
+ifeq (${N}, 1)
 PROTEUS_BUILD_CMD = python3 -c "print('Letting install handle build_ext')"
 PROTEUS_DEVELOP_BUILD_CMD = python3 -c "print('Letting install handle build_ext')"
-#endif
+endif
 
 # automatically detect hpcmp machines
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python3 -c "import sys; print(sys.platform)")
