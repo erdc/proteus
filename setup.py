@@ -1,15 +1,15 @@
 import sys
 import setuptools
 from distutils import sysconfig
-cfg_vars = sysconfig.get_config_vars()
-for key, value in cfg_vars.items():
-    if type(value) == str:
-        cfg_vars[key] = cfg_vars[key].replace("-Wstrict-prototypes", "")
-        cfg_vars[key] = cfg_vars[key].replace("-Wall", "")
-        cfg_vars[key] = cfg_vars[key].replace("-O3", "")
-        cfg_vars[key] = cfg_vars[key].replace("-O2", "")
-        cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "")
-        cfg_vars[key] = cfg_vars[key].replace("-g", "")
+#cfg_vars = sysconfig.get_config_vars()
+#for key, value in cfg_vars.items():
+#    if type(value) == str:
+#        cfg_vars[key] = cfg_vars[key].replace("-Wstrict-prototypes", "")
+#        cfg_vars[key] = cfg_vars[key].replace("-Wall", "")
+#        cfg_vars[key] = cfg_vars[key].replace("-O3", "")
+#        cfg_vars[key] = cfg_vars[key].replace("-O2", "")
+#        cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "")
+#        cfg_vars[key] = cfg_vars[key].replace("-g", "")
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
 
@@ -615,8 +615,8 @@ def setup_given_extensions(extensions):
               'Intended Audience :: Developers',
               'Intended Audience :: Science/Research',
               'License :: OSI Approved :: MIT License',
-              'Programming Language :: Python :: 2.7'
-              'Programming Language :: Python :: 2 :: Only',
+              'Programming Language :: Python :: 3.7'
+              'Programming Language :: Python :: 3 :: Only',
               'Programming Language :: Python :: Implementation :: CPython',
               'Topic :: Scientific/Engineering :: Mathematics',
               'Topic :: Scientific/Engineering :: Physics',
