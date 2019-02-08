@@ -590,7 +590,6 @@ cppCable::cppCable(std::shared_ptr<ChSystem> system, // system in which the cabl
     msection_cable->SetYoungModulus(E);
     msection_cable->SetDensity(rho);
     /* msection_cable->SetI(Iyy); */
-    GetLog() << msection_cable->GetI();
     Iyy = msection_cable->GetI();
   }
   else if (beam_type == "BeamEuler") {
