@@ -186,8 +186,8 @@ develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} CFLAGS="-w -g -DDEBUG -Og" ${PROTEUS_DEVELOP_BUILD_CMD}
-	${PROTEUS_ENV} CFLAGS="-w -g -DDEBUG -Og" ${PROTEUS_DEVELOP_CMD}
+	${PROTEUS_ENV} ${PROTEUS_DEVELOP_BUILD_CMD}
+	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
 	@echo "installing scripts"
 	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make

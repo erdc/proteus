@@ -1,5 +1,15 @@
 import sys
 import setuptools
+from distutils import sysconfig
+cfg_vars = sysconfig.get_config_vars()
+for key, value in cfg_vars.items():
+    if type(value) == str:
+        cfg_vars[key] = cfg_vars[key].replace("-Wstrict-prototypes", "")
+        cfg_vars[key] = cfg_vars[key].replace("-Wall", "")
+        cfg_vars[key] = cfg_vars[key].replace("-O3", "")
+        cfg_vars[key] = cfg_vars[key].replace("-O2", "")
+        cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "")
+        cfg_vars[key] = cfg_vars[key].replace("-g", "")
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
 
@@ -18,13 +28,6 @@ from proteus.config import *
 
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
-from distutils import sysconfig
-cv = sysconfig.get_config_vars()
-cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-Wall","-w")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-Wstrict-prototypes","")
-
 
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
