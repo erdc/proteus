@@ -6,11 +6,12 @@ language: python
 
 env:
   - TEST_PROFILE="proteus"
-  - TEST_PROFILE="1st_set"
-  - TEST_PROFILE="2nd_set"  
+# air-waer-vv isn't updated to python3 yet
+#  - TEST_PROFILE="1st_set"
+#  - TEST_PROFILE="2nd_set"  
 
 python:
-  - 2.7
+  - 3.7
 
 addons:
   apt:
@@ -42,7 +43,7 @@ install:
 - export PATHSAVE=$PATH
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
-- PROTEUS_OPT="-O0 -g -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
+- PROTEUS_OPT="-O0 -g -UNDEBUG -w" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
 - export SSL_CERT_DIR=/etc/ssl/certs
 - pip install matplotlib
 
