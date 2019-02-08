@@ -1,4 +1,4 @@
 graft proteus
 graft doc
 graft scripts
-global-exclude .gitignore .gitmodules .travis.yml Dockerfile MANIFEST.in shippable.yml setupmatlab.py doc/build *.log *.xmf *.h5 *.pyc *.o *.so
+global-exclude .gitignore .gitmodules .travis.yml Dockerfile MANIFEST.in setupmatlab.py doc/* *.log *.xmf *.h5
