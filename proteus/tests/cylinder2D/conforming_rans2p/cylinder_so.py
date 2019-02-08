@@ -1,5 +1,6 @@
 from proteus import *
 import proteus.default_so
+from importlib import reload
 reload(proteus.default_so)
 from proteus.default_so import *
 try:

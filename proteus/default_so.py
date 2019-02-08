@@ -2,6 +2,11 @@
 The default values for so-files describing split operator formulations
 """
 from __future__ import absolute_import
+try:
+    from importlib import reload
+except:
+    pass
+
 from .SplitOperator import *
 
 name = None

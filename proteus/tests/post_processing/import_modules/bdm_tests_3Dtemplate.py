@@ -7,6 +7,7 @@ from proteus import default_s,default_so
 from proteus import Context
 import numpy, os, inspect
 import proteus as pr
+from importlib import reload
 reload(p)
 reload(n)
 
