@@ -507,7 +507,7 @@ cdef class ProtChBody:
         """
         self.thisptr.setConstraints(<double*> free_x.data, <double*> free_r.data)
 
-    def setAddedMass(self, double[:,:] added_mass):
+    def setAddedMass(self, np.ndarray Aij):
         """
         Sets the added mass matrix of the body
 
@@ -517,8 +517,18 @@ cdef class ProtChBody:
             Added mass matrix (must be 6x6 array!)
         """
 
-        assert added_mass.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
-        assert added_mass.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
+        Aij[0, 1:] *= self.thisptr.free_x.x()
+        Aij[1, 0] *= self.thisptr.free_x.y()
+        Aij[1, 2:] *= self.thisptr.free_x.y()
+        Aij[2, :2] *= self.thisptr.free_x.z()
+        Aij[2, 3:] *= self.thisptr.free_x.z()
+        Aij[3, :3] *= self.thisptr.free_r.x()
+        Aij[3, 4:] *= self.thisptr.free_r.x()
+        Aij[4, :4] *= self.thisptr.free_r.y()
+        Aij[4, 5] *= self.thisptr.free_r.y()
+        Aij[5, :5] *= self.thisptr.free_r.z()
+        assert Aij.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
+        assert Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         cdef double mass = self.ChBody.GetMass()
         cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
@@ -527,7 +537,7 @@ cdef class ProtChBody:
         cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
         cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
         # added mass matrix
-        AM += added_mass
+        AM += Aij
         self.Aij[:] = AM
         # mass matrix
         MM[0,0] = mass
@@ -551,6 +561,14 @@ cdef class ProtChBody:
                 inv_chFM.SetElement(i, j, inv_FM[i, j])
         self.ChBodyAddedMass.SetMfullmass(chFM)
         self.ChBodyAddedMass.SetInvMfullmass(inv_chFM)
+
+        aa = np.zeros(6)
+
+        aa[:3] = pyvec2array(self.ChBody.GetPos_dtdt())
+        aa[3:] = pyvec2array(self.ChBody.GetWacc_loc())
+        Aija = np.dot(Aij, aa)
+        self.F_Aij = Aija[:3]
+        self.M_Aij = Aija[3:]
 
     def getPressureForces(self):
         """Gives pressure forces from fluid (Proteus) acting on body.
@@ -647,70 +665,14 @@ cdef class ProtChBody:
                     self.Aij += am.Aij[i]
                 if self.width_2D:
                     self.Aij *= self.width_2D
-        # setting added mass
-        if self.applyAddedMass is True:
-            Aij = np.zeros((6,6))
-            Aij[:] = self.Aij[:]
-            Aij[0, 1:] *= self.thisptr.free_x.x()
-            Aij[1, 0] *= self.thisptr.free_x.y()
-            Aij[1, 2:] *= self.thisptr.free_x.y()
-            Aij[2, :2] *= self.thisptr.free_x.z()
-            Aij[2, 3:] *= self.thisptr.free_x.z()
-            Aij[3, :3] *= self.thisptr.free_r.x()
-            Aij[3, 4:] *= self.thisptr.free_r.x()
-            Aij[4, :4] *= self.thisptr.free_r.y()
-            Aij[4, 5] *= self.thisptr.free_r.y()
-            Aij[5, :5] *= self.thisptr.free_r.z()
-            self.setAddedMass(Aij)
-            aa = np.zeros(6)
-            aa[:3] = self.acceleration
-            aa[3:] = self.ang_acceleration
-            Aija = np.dot(Aij, aa)
-        if self.ProtChSystem.model is not None:
-            self.F_prot = self.getPressureForces()+self.getShearForces()
-            self.M_prot = self.getMoments()
-            if self.width_2D:
-                self.F_prot *= self.width_2D
-                self.M_prot *= self.width_2D
+            # setting added mass
             if self.applyAddedMass is True:
-                self.F_Aij = Aija[:3]
-                self.M_Aij = Aija[3:]
-                self.F_prot += self.F_Aij
-                self.M_prot += self.M_Aij
-            if self.ProtChSystem.first_step is True:
-                # just apply initial conditions for 1st time step
-                F_bar = self.F_prot
-                M_bar = self.M_prot
-            else:
-                # actual force applied to body
-                if self.ProtChSystem.prediction == "backwardEuler":
-                    F_bar = self.F_prot
-                    M_bar = self.M_prot
-                if self.ProtChSystem.prediction == "forwardEuler":
-                    F_bar = self.F_prot_last
-                    M_bar = self.M_prot_last
-                if self.ProtChSystem.prediction == "implicitOrder2":
-                    F_bar = (self.F_prot+self.F_prot_last)/2.
-                    M_bar = (self.M_prot+self.M_prot_last)/2.
-                    # self.F_applied = self.F_prot
-                    # self.M_applied = self.M_prot
-                    # self.F_applied = 2*F_bar - self.F_applied_last
-                    # self.M_applied = 2*M_bar - self.M_applied_last
-            F_solid_type = 1
-            if F_solid_type == 1:
-                F_body = F_bar
-                M_body = M_bar
-            elif F_solid_type == 2:
-                if np.linalg.norm(self.F_prot_last) == 0:  # first time step
-                    F_body = F_bar
-                    M_body = M_bar
-                else:
-                    F_body = 2*F_bar-self.F_applied_last
-                    M_body = 2*M_bar-self.M_applied_last
-            self.setExternalForces(F_body, M_body)
-        self.predicted = False
+                Aij = np.zeros((6,6))
+                Aij[:] = self.Aij[:]
+                self.setAddedMass(Aij)
+            self.setExternalForces()
 
-    def setExternalForces(self, np.ndarray forces, np.ndarray moments):
+    def setExternalForces(self, np.ndarray forces=None, np.ndarray moments=None):
         """Sets external forces to body.
         Called during prestep or can be called manually. If called manually,
         must be a Chrono only simulation.
@@ -722,10 +684,54 @@ cdef class ProtChBody:
         moments: array_like
             moments array (length 3)
         """
-        self.F_applied = forces
-        self.M_applied = moments
+        if forces is not None:
+            self.F_prot = forces
+        if moments is not None:
+            self.M_prot = moments
+        if self.ProtChSystem.model is not None:
+            self.F_prot = self.getPressureForces()+self.getShearForces()
+            self.M_prot = self.getMoments()
+        if self.width_2D:
+            self.F_prot *= self.width_2D
+            self.M_prot *= self.width_2D
+        cdef np.ndarray F_bar = np.zeros(3)
+        cdef np.ndarray M_bar = np.zeros(3)
+        F_bar[:] = self.F_prot[:]
+        M_bar[:] = self.M_prot[:]
+        if self.applyAddedMass is True:
+            F_bar += self.F_Aij
+            M_bar += self.M_Aij
+        if self.ProtChSystem.first_step is False:
+            # actual force applied to body
+            if self.ProtChSystem.prediction == "backwardEuler":
+                F_bar = F_bar
+                M_bar = M_bar
+            if self.ProtChSystem.prediction == "forwardEuler":
+                F_bar = self.F_prot_last+self.Aij_last
+                M_bar = self.M_prot_last+self.Aij_last
+            if self.ProtChSystem.prediction == "implicitOrder2":
+                F_bar = (F_bar+self.F_prot_last+self.F_Aij_last)/2.
+                M_bar = (M_bar+self.M_prot_last+self.M_Aij_last)/2.
+                # self.F_applied = self.F_prot
+                # self.M_applied = self.M_prot
+                # self.F_applied = 2*F_bar - self.F_applied_last
+                # self.M_applied = 2*M_bar - self.M_applied_last
+        F_solid_type = 1
+        if F_solid_type == 1:
+            F_body = F_bar
+            M_body = M_bar
+        elif F_solid_type == 2:
+            if np.linalg.norm(self.F_prot_last) == 0:  # first time step
+                F_body = F_bar
+                M_body = M_bar
+            else:
+                F_body = 2*F_bar-self.F_applied_last
+                M_body = 2*M_bar-self.M_applied_last
+        self.F_applied = F_body
+        self.M_applied = M_body
         self.thisptr.prestep(<double*> self.F_applied.data,
                              <double*> self.M_applied.data)
+        self.predicted = False
 
     def poststep(self):
         """Called after Chrono system step.
@@ -1060,7 +1066,7 @@ cdef class ProtChBody:
             self.ang_vel_norm = comm.bcast(self.ang_vel_norm, self.ProtChSystem.chrono_processor)
 
 
-    def setRecordValues(self, filename=None, all_values=False, pos=False,
+    def setRecordValues(self, all_values=False, pos=False,
                         rot=False, ang_disp=False, F=False, M=False,
                         inertia=False, vel=False, acc=False, ang_vel=False,
                         ang_acc=False, h_predict=False):
@@ -1070,9 +1076,6 @@ cdef class ProtChBody:
 
         Parameters
         ----------
-        filename: Optional[string]
-            Name of file, if not set, the file will be named as follows:
-            'record_[shape.name].csv'
         all_values: bool
             Set to True to record all values listed below.
         time: bool
@@ -1167,7 +1170,7 @@ cdef class ProtChBody:
     def _recordValues(self):
         """Records values of body attributes in a csv file.
         """
-        record_file = os.path.join(Profiling.logDir, 'record_' + self.name)
+        record_file = os.path.join(Profiling.logDir, self.name)
         t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
