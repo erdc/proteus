@@ -341,7 +341,7 @@ class AR_base(object):
                     for Grid in Grids:
                         del Grid[0]#Time
                         SpatialCollection.append(Grid) #append Grid without Time
-                        element_string = tostring(Grid)
+                        element_string = tostring(Grid, encoding="utf-8")
                         max_grid_string_len = max(len(element_string),
                                                   max_grid_string_len)
                 max_grid_string_len_array = numpy.array(max_grid_string_len,'i')
@@ -357,7 +357,7 @@ class AR_base(object):
                     xml_data.attrs['Time'] = TimeAttrib
                     if self.comm.isMaster():
                         for j, Grid in enumerate(Grids):
-                            xml_data[j] = tostring(Grid)
+                            xml_data[j] = tostring(Grid, encoding="utf-8")
         else:
             comm_world = self.comm.comm.tompi4py()
             for i, TemporalGridCollection in enumerate(Domain):
@@ -366,7 +366,7 @@ class AR_base(object):
                 if self.comm.isMaster():
                     TemporalGridCollectionGlobal = DomainGlobal[i]
                     TemporalGridCollectionGlobal.append(GridLocal) #append Grid without Time
-                    element_string = tostring(GridLocal)
+                    element_string = tostring(GridLocal, encoding="utf-8")
                     max_grid_string_len = len(element_string)
                 max_grid_string_len_array = numpy.array(max_grid_string_len,'i')
                 comm_world.Bcast([max_grid_string_len_array,MPI.INT], root=0)
@@ -382,7 +382,7 @@ class AR_base(object):
                     except:
                         xml_data = self.hdfFile[dataset_name]
                     if self.comm.isMaster():
-                        xml_data[0] = tostring(GridLocal)
+                        xml_data[0] = tostring(GridLocal, encoding="utf-8")
         self.n_datasets += 1
         logEvent("Done Gathering Archive Time Step")
     def sync(self):
