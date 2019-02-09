@@ -22,9 +22,9 @@ domain = myTpFlowProblem.domain
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
 rho_0 = physical_parameters['densityA']
-nu_0 = physical_parameters['viscosityA']
+nu_0 = physical_parameters['kinematicViscosityA']
 rho_1 = physical_parameters['densityB']
-nu_1 = physical_parameters['viscosityB']
+nu_1 = physical_parameters['kinematicViscosityB']
 sigma_01 = physical_parameters['surf_tension_coeff']
 g = physical_parameters['gravity']
 
