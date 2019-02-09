@@ -91,7 +91,6 @@ class NS_base(object):  # (HasTraits):
         if not so.useOneMesh:
             so.useOneArchive=False
         logEvent("Setting Archiver(s)")
-
         if so.useOneArchive:
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
@@ -372,7 +371,7 @@ class NS_base(object):  # (HasTraits):
                 if comm.size() > 1 and n.conservativeFlux != None:
                     sys.exit("ERROR: Element based partitions don't have a functioning conservative flux calculation. Set conservativeFlux to None in twp_navier_stokes")
                 #attach the checkpointer
-                self.PUMIcheckpointer = Checkpoint.Checkpointer(self) 
+                self.PUMIcheckpointer = Checkpoint.Checkpointer(self,p.domain.checkpointFrequency) 
                 #ibaned: PUMI conversion #1
                 if p.domain.nd == 3:
                   mesh = MeshTools.TetrahedralMesh()
@@ -1006,7 +1005,6 @@ class NS_base(object):  # (HasTraits):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
 
-        
         logEvent("Transfering fields from PUMI to Proteus")
         for m in self.modelList:
           for lm in m.levelModelList:
@@ -1042,6 +1040,13 @@ class NS_base(object):  # (HasTraits):
                 lm.u[ci].dof_last_last[:] = scalar[:,0]
 
                 del scalar
+
+        #DEBUG: are solution fields identical?
+        #if((self.PUMIcheckpointer.frequency>0) and (p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
+        ##      #self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
+        #      import pdb; pdb.set_trace()
+
+
         logEvent("Attaching models on new mesh to each other")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
@@ -1093,8 +1098,11 @@ class NS_base(object):  # (HasTraits):
             assert(m.stepController.t_model == mOld.stepController.t_model)
             assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
             logEvent("Initializing time history for model step controller")
-            m.stepController.initializeTimeHistory()
+            #import pdb; pdb.set_trace()
+            #m.stepController.initializeTimeHistory()
         #p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+
+
         self.systemStepController.modelList = self.modelList
         self.systemStepController.exitModelStep = {}
         self.systemStepController.controllerList = []
@@ -1103,25 +1111,46 @@ class NS_base(object):  # (HasTraits):
             if model.levelModelList[-1].timeIntegration.isAdaptive:
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
-        self.systemStepController.choose_dt_system()
+        #import pdb; pdb.set_trace()
+        #this sets the timeIntegration time, which might be unnecessary for restart 
+        #self.systemStepController.choose_dt_system()
+        self.systemStepController.stepSequence=[(self.systemStepController.t_system,m) for m in self.systemStepController.modelList]
 
 
         #Don't do anything if this is the initial adapt
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  or
           (abs(self.systemStepController.t_system_last - self.tnList[0]) < 1e-12 and self.opts.hotStart)):
             self.PUMI_recomputeStructures(modelListOld)
-            if((p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
-              self.PUMIcheckpointer.checkpoint()
 
             #something different is needed for initial conditions
-            if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
-                #hack for archiving initial solution on adapted mesh
-                self.tCount+=1
-                for index,model in enumerate(self.modelList):
-                    self.archiveSolution(
-                        model,
-                        index,
-                        self.systemStepController.t_system_last+1.0e-6)
+            #do nothing if archive sequence step because there will be an archive
+            #if self.archiveFlag != ArchiveFlags.EVERY_SEQUENCE_STEP:
+            #  self.tCount+=1
+            #  for index,model in enumerate(self.modelList):
+            #    #import pdb; pdb.set_trace()
+            #    self.archiveSolution(
+            #      model,
+            #      index,
+            #      #self.systemStepController.t_system_last+1.0e-6)
+            #      self.systemStepController.t_system)
+  
+            if((self.PUMIcheckpointer.frequency>0) and (p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
+
+              ### This bit here is necessary to get the system step controller aligned correctly, because stepExact behavior can cause a shift in dt and t_system, etc.
+              #if not (self.systemStepController.t_system_last < self.tn):
+              #  tnIndex = self.tnList.index(self.tn)
+              #  if (self.systemStepController.stepExact):
+              #    #import pdb; pdb.set_trace()
+              #    if((tnIndex != len(self.tnList)-1)):
+              #      if(self.systemStepController.t_system_last != self.tnList[tnIndex+1]):
+              #        self.systemStepController.stepExact_system(self.tnList[tnIndex+1])
+              #    else: #if the last stpe
+              #      self.systemStepController.stepExact_system(self.tn)
+
+              ###
+
+              self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
+              #import pdb; pdb.set_trace()
 
         #del modelListOld to free up memory
         del modelListOld
@@ -1429,6 +1458,29 @@ class NS_base(object):  # (HasTraits):
 
     ## compute the solution
 
+    def hotstartWithPUMI(self):
+      #Call restart functions
+      logEvent("Converting PUMI mesh to Proteus")
+      if self.pList[0].domain.nd == 3:
+        mesh = MeshTools.TetrahedralMesh()
+      else:
+        mesh = MeshTools.TriangularMesh()
+
+      mesh.convertFromPUMI(self.pList[0].domain.PUMIMesh,
+                             self.pList[0].domain.faceList,
+                             self.pList[0].domain.regList,
+                             parallel = self.comm.size() > 1,
+                             dim = self.pList[0].domain.nd)
+
+      if(self.pList[0].domain.checkpointInfo==None):
+        sys.exit("Need to specify checkpointInfo file in inputs")
+      else:
+        self.PUMIcheckpointer.DecodeModel(self.pList[0].domain.checkpointInfo)
+      
+      #import pdb; pdb.set_trace()
+      self.PUMI_reallocate(mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
+      self.PUMI2Proteus()
+
     def calculateSolution(self,runName):
         """ Cacluate the PDEs numerical solution.
 
@@ -1502,9 +1554,14 @@ class NS_base(object):  # (HasTraits):
                     logEvent("Not enough steps in hot start file set set dt, setting dt to 1.0")
                     dt = 1.0
                 logEvent("Hot starting from time step t = "+repr(time))
+                #the number of nodes in an adapted mesh is not necessarily going to be the same as that of the solution field when archived...but it's not important because things should be bookkept correctly later on
+                #if not isinstance(p.domain,Domain.PUMIDomain):
+
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
-                    for cj in range(lm.coefficients.nc):
-                        lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
+                    for cj in range(lm.coefficients.nc): 
+
+                        if not isinstance(p.domain,Domain.PUMIDomain):
+                          lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
                         lm.setFreeDOF(lu)
                         lm.timeIntegration.tLast = time
                         lm.timeIntegration.t = time
@@ -1525,7 +1582,7 @@ class NS_base(object):  # (HasTraits):
                 ndtout = len(self.tnList)
                 self.tnList = [time + i for i in self.tnList]
                 self.tnList.insert(1, 0.9*self.tnList[0]+0.1*self.tnList[1])
-                logEvent("New tnList"+repr(self.tnList))
+
             else:
                 tnListNew=[time]
                 for n,t in enumerate(self.tnList):
@@ -1617,6 +1674,7 @@ class NS_base(object):  # (HasTraits):
                 self.archiveInitialSolution(m,index)
             else:
                 self.ar[index].domain = self.ar[index].tree.find("Domain")
+            #if(not hasattr(self.pList[0].domain,'PUMIMesh') and not self.opts.hotStart):
             self.initializeViewSolution(m)
             logEvent("Estimating initial time derivative and initializing time history for model "+p.name)
             #now the models are attached so we can calculate the coefficients
@@ -1725,30 +1783,15 @@ class NS_base(object):  # (HasTraits):
         #### This has to be done after the dof histories are saved because DOF histories are already present on the mesh ####
 
         if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
-          #Call restart functions
-          logEvent("Converting PUMI mesh to Proteus")
-          if self.pList[0].domain.nd == 3:
-            mesh = MeshTools.TetrahedralMesh()
-          else:
-            mesh = MeshTools.TriangularMesh()
-
-          mesh.convertFromPUMI(self.pList[0].domain.PUMIMesh,
-                             self.pList[0].domain.faceList,
-                             self.pList[0].domain.regList,
-                             parallel = self.comm.size() > 1,
-                             dim = self.pList[0].domain.nd)
-
-          #remember to remove hardcoded filename
-          if(self.pList[0].domain.checkpointInfo==None):
-            sys.exit("Need to specify checkpointInfo file in inputs")
-          else:
-            self.PUMIcheckpointer.DecodeModel(self.pList[0].domain.checkpointInfo)
-          self.PUMI_reallocate(mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
-          self.PUMI2Proteus()
-          self.opts.hotStart = False 
-
-          #Need to clean mesh for output again      
-          self.pList[0].domain.PUMIMesh.cleanMesh()
+          f = open(self.pList[0].domain.checkpointInfo, 'r')
+          import json
+          previousInfo = json.load(f)
+          f.close()
+          if(previousInfo["checkpoint_status"]=="endsystem"):
+            self.hotstartWithPUMI()
+            self.opts.hotStart = False 
+            #Need to clean mesh for output again      
+            self.pList[0].domain.PUMIMesh.cleanMesh()
         ####
 
 
@@ -1767,11 +1810,20 @@ class NS_base(object):  # (HasTraits):
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
 
+                    if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
+                      self.hotstartWithPUMI()
+                      #import pdb; pdb.set_trace()
+                      self.opts.hotStart = False 
+                      #Need to clean mesh for output again      
+                      self.pList[0].domain.PUMIMesh.cleanMesh()
+
+
                     #This should be the only place dofs are saved otherwise there might be a double-shift for last_last
                     if(abs(self.systemStepController.t_system_last - self.tnList[0]) < 1e-12 and self.opts.hotStart):
                       self.opts.save_dof = False
                     else:
                       self.opts.save_dof = True
+
                     if self.opts.save_dof:
                         import copy
                         for m in self.modelList:
@@ -1913,6 +1965,7 @@ class NS_base(object):  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
+                  
                 #can only handle PUMIDomain's for now
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
@@ -1926,6 +1979,7 @@ class NS_base(object):  # (HasTraits):
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
+
             if systemStepFailed:
                 break
             #

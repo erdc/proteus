@@ -977,6 +977,7 @@ class PUMIDomain(D_base):
       self.regList=[]
       self.PUMIMesh=None
       self.checkpointInfo=None
+      self.checkpointFrequency=0 #default never checkpoint
       #
       #it would be useful to define a dictionary mapping strings to faces
       #boundariesTags={'bottom':3,'top':5,'front':1,'back':6,'left':2,'right':4}

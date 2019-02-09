@@ -14,15 +14,13 @@ from proteus import Profiling
 class Checkpointer:
     "This class is meant to handle the checkpointing process for adapted meshes. Information that's needed to be loaded into hotstart needs to be output and then read in to be handled for data reconstruction"
     def __init__(self,NSobject,frequency=10):
-      self.A = "Hello"
-      self.B = "World"
       self.NSobject = NSobject
       self.counter = 0
       self.frequency = frequency
-    def checkpoint(self):
+    def checkpoint(self,hotStartTime):
       self.transferInfo()
       self.saveMesh()
-      modelListOld=self.EncodeModel(self.NSobject.systemStepController.t_system_last)
+      modelListOld=self.EncodeModel(hotStartTime)
 
       #pickling is apparently unsafe so we use json to try storing modelListOld
       filename = "checkpointInfo"+str(self.counter)
@@ -31,7 +29,6 @@ class Checkpointer:
       #json.dump(modelListOld.__dict__,f)
       json.dump(modelListOld,f)
       f.close()
-      self.counter+=1
     def transferInfo(self):
       self.NSobject.PUMI_transferFields()
     def saveMesh(self):
@@ -43,9 +40,27 @@ class Checkpointer:
       #def __init__(self,modelListOld,hotStartTime):
       modelListOld = self.NSobject.modelListOld
       saveModel = {}
+      saveModel["tCount"] = self.NSobject.tCount+1 #+1 just because of how indexing works in h5 file
       saveModel["counter"] = self.counter
       saveModel["numModels"] = len(modelListOld)
       saveModel["hotStartTime"] = hotStartTime
+      #saveModel["nAdapt"] = self.NSobject.pList[0].domain.PUMIMesh.nAdapt()
+      saveModel["checkpoint_status"] = ""
+
+      if(hasattr(self.NSobject,"tn") and (self.NSobject.systemStepController.t_system_last < self.NSobject.tn)):
+        saveModel["checkpoint_status"] = "midsystem"
+        saveModel["tCount"] = self.NSobject.tCount+2 #don't know how to justify this yet but it's what is needed
+      else:
+        saveModel["checkpoint_status"] = "endsystem"
+
+      saveModel["systemStepController"]=[]
+      controllerAttribute={}
+      controllerAttribute["dt_system"]=self.NSobject.systemStepController.dt_system
+      controllerAttribute["dt_system_fixed"]=self.NSobject.systemStepController.dt_system_fixed
+      controllerAttribute["t_system_last"]=self.NSobject.systemStepController.t_system_last
+      controllerAttribute["t_system"]=self.NSobject.systemStepController.t_system
+      saveModel["systemStepController"].append(controllerAttribute)
+
       saveModel["stepController"]=[]
       saveModel["timeIntegration"]=[]
       saveModel["shockCapturing"]=[]
@@ -90,6 +105,18 @@ class Checkpointer:
       previousInfo = json.load(f)
       f.close()
 
+      systemStepController = previousInfo["systemStepController"][0]
+      #if(previousInfo["checkpoint_status"]=="midway"):
+      #  self.NSobject.systemStepController.dt_system = systemStepController["dt_system"]  
+      #  self.NSobject.systemStepController.dt_system_fixed = systemStepController["dt_system_fixed"]  
+      #  self.NSobject.systemStepController.t_system_last = systemStepController["t_system_last"]  
+      #  self.NSobject.systemStepController.t_system = systemStepController["t_system"]  
+
+      self.NSobject.systemStepController.dt_system = systemStepController["dt_system"]  
+      self.NSobject.systemStepController.dt_system_fixed = systemStepController["dt_system_fixed"]  
+      self.NSobject.systemStepController.t_system_last = systemStepController["t_system_last"]  
+      self.NSobject.systemStepController.t_system = systemStepController["t_system"]  
+
       numModels = previousInfo["numModels"]
       stepController=previousInfo["stepController"]
       timeIntegration=previousInfo["timeIntegration"]
@@ -98,6 +125,17 @@ class Checkpointer:
       self.counter = previousInfo["counter"]+1
       
       for i in range(0,numModels):
+
+        #if(previousInfo["checkpoint_status"]=="midway"):
+        #  self.NSobject.modelList[i].stepController.dt_model = stepController[i]["dt_model"]
+        #  self.NSobject.modelList[i].stepController.t_model = stepController[i]["t_model"]
+        #  self.NSobject.modelList[i].stepController.t_model_last = stepController[i]["t_model_last"]
+        #  self.NSobject.modelList[i].stepController.substeps = stepController[i]["substeps"]
+
+        #  self.NSobject.modelList[i].levelModelList[0].timeIntegration.dt = timeIntegration[i]["dt"]
+        #  self.NSobject.modelList[i].levelModelList[0].timeIntegration.t = timeIntegration[i]["t"]
+        #  self.NSobject.modelList[i].levelModelList[0].timeIntegration.dtLast = timeIntegration[i]["dtLast"]
+
         self.NSobject.modelList[i].stepController.dt_model = stepController[i]["dt_model"]
         self.NSobject.modelList[i].stepController.t_model = stepController[i]["t_model"]
         self.NSobject.modelList[i].stepController.t_model_last = stepController[i]["t_model_last"]
@@ -106,6 +144,7 @@ class Checkpointer:
         self.NSobject.modelList[i].levelModelList[0].timeIntegration.dt = timeIntegration[i]["dt"]
         self.NSobject.modelList[i].levelModelList[0].timeIntegration.t = timeIntegration[i]["t"]
         self.NSobject.modelList[i].levelModelList[0].timeIntegration.dtLast = timeIntegration[i]["dtLast"]
+
 
         if(self.NSobject.modelList[i].levelModelList[0].shockCapturing is not None):
           self.NSobject.modelList[i].levelModelList[0].shockCapturing.nSteps = shockCapturing[i]["nSteps"]

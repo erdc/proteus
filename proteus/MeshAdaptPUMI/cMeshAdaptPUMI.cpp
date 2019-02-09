@@ -596,6 +596,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   if(adapt_type_config=="anisotropic")
     apf::destroyField(adaptFrame);
   nAdapt++; //counter for number of adapt steps
+
+  if(logging_config=="debugRestart")
+    m->writeNative("DEBUG_restart.smb");
+
   return 0;
 }
 
@@ -701,6 +705,11 @@ void MeshAdaptPUMIDrvr::cleanMesh()
   sample = m->findField("p");
   freeField(sample);
   sample = m->findField("p_old_old");
+  freeField(sample);
+
+  sample = m->findField("VMSH1");
+  freeField(sample);
+  sample = m->findField("VMSL2");
   freeField(sample);
 
   //destroy all tags
