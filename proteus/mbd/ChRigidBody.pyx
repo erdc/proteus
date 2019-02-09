@@ -319,7 +319,7 @@ cdef class ProtChBody:
             # self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.scheme == "CSS":
             h_body_vec = self.thisptr.hxyz(<double*> x.data, t)
-            h_body = np.array(h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
+            h_body = np.array([h_body_vec.x(), h_body_vec.y(), h_body_vec.z()])
             h += h_body
         elif self.ProtChSystem.scheme == "ISS":
             # remove previous prediction
@@ -672,7 +672,7 @@ cdef class ProtChBody:
                 self.setAddedMass(Aij)
             self.setExternalForces()
 
-    def setExternalForces(self, np.ndarray forces, np.ndarray moments):
+    def setExternalForces(self, np.ndarray forces=None, np.ndarray moments=None):
         """Sets external forces to body.
         Called during prestep or can be called manually. If called manually,
         must be a Chrono only simulation.
