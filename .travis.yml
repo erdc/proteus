@@ -42,7 +42,7 @@ install:
 - export PATHSAVE=$PATH
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
-- PROTEUS_OPT="-O0 -g -UNDEBUG -w" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
+- PROTEUS_OPT="-O2 -UNDEBUG -w" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
 - export SSL_CERT_DIR=/etc/ssl/certs
 - pip install matplotlib
 
@@ -54,7 +54,7 @@ cache:
 
 script:
   - export MPLBACKEND="AGG"
-  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
+  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 2 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
   
   - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
   
