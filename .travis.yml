@@ -22,7 +22,7 @@ addons:
     - python-lzma
 
 before_install:
-- pip install pyliblzma
+- pip3 install pyliblzma
 
 install:
 - git lfs pull
@@ -45,7 +45,7 @@ install:
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - PROTEUS_OPT="-O0 -g -UNDEBUG -w" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
 - export SSL_CERT_DIR=/etc/ssl/certs
-- pip install matplotlib
+- pip3 install matplotlib
 
 cache:
   - timeout: 1000
@@ -69,5 +69,5 @@ notifications:
     on_failure: always
 
 after_success:
-  - pip install codecov
+  - pip3 install codecov
   - codecov
