@@ -21,8 +21,8 @@ addons:
     - libssl-dev
     - python-lzma
 
-before_install:
-- pip3 install pyliblzma
+#before_install:
+#- pip3 install pyliblzma
 
 install:
 - git lfs pull
