@@ -215,9 +215,9 @@ class FESpace:
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
 default_physical_parameters ={'densityA': 998.2,
-                              'viscosityA': 1.004e-6,
+                              'kinematicViscosityA': 1.004e-6,
                               'densityB': 1.205,
-                              'viscosityB': 1.500e-5,
+                              'kinematicViscosityB': 1.500e-5,
                               'surf_tension_coeff': 72.8E-3,
                               'gravity': [0.0, -9.8, 0.0]}
 
