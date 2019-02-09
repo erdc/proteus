@@ -54,7 +54,7 @@ cache:
 
 script:
   - export MPLBACKEND="AGG"
-  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 2 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
+  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
   
   - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
   
