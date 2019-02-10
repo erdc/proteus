@@ -742,4 +742,8 @@ void MeshAdaptPUMIDrvr::cleanMesh()
   }
 }
 
-
+void MeshAdaptPUMIDrvr::set_nAdapt(int numberAdapt)
+{
+  nAdapt = numberAdapt;
+  return;
+}
