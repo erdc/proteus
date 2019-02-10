@@ -106,11 +106,6 @@ class Checkpointer:
       f.close()
 
       systemStepController = previousInfo["systemStepController"][0]
-      #if(previousInfo["checkpoint_status"]=="midway"):
-      #  self.NSobject.systemStepController.dt_system = systemStepController["dt_system"]  
-      #  self.NSobject.systemStepController.dt_system_fixed = systemStepController["dt_system_fixed"]  
-      #  self.NSobject.systemStepController.t_system_last = systemStepController["t_system_last"]  
-      #  self.NSobject.systemStepController.t_system = systemStepController["t_system"]  
 
       self.NSobject.systemStepController.dt_system = systemStepController["dt_system"]  
       self.NSobject.systemStepController.dt_system_fixed = systemStepController["dt_system_fixed"]  
@@ -125,16 +120,6 @@ class Checkpointer:
       self.counter = previousInfo["counter"]+1
       
       for i in range(0,numModels):
-
-        #if(previousInfo["checkpoint_status"]=="midway"):
-        #  self.NSobject.modelList[i].stepController.dt_model = stepController[i]["dt_model"]
-        #  self.NSobject.modelList[i].stepController.t_model = stepController[i]["t_model"]
-        #  self.NSobject.modelList[i].stepController.t_model_last = stepController[i]["t_model_last"]
-        #  self.NSobject.modelList[i].stepController.substeps = stepController[i]["substeps"]
-
-        #  self.NSobject.modelList[i].levelModelList[0].timeIntegration.dt = timeIntegration[i]["dt"]
-        #  self.NSobject.modelList[i].levelModelList[0].timeIntegration.t = timeIntegration[i]["t"]
-        #  self.NSobject.modelList[i].levelModelList[0].timeIntegration.dtLast = timeIntegration[i]["dtLast"]
 
         self.NSobject.modelList[i].stepController.dt_model = stepController[i]["dt_model"]
         self.NSobject.modelList[i].stepController.t_model = stepController[i]["t_model"]
