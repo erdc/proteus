@@ -6633,7 +6633,7 @@ class MeshOptions(object):
             elif self.nd == 3:
                 self.triangleOptions = self.triangle_string + '%21.16e' \
                                        % (old_div(self.he**3,6.),)
-
+        print (str(self.triangleOptions))#JHC        
     def setMeshGenerator(self, generator):
         """
         Indicates mesh generator to use

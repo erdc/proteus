@@ -93,6 +93,7 @@ class Shape(object):
         self.volumes = None
         self.regionFlags = None
         self.regionFlags_global = None
+        self.regionConstraints = None #JHC
         self.holes = None
         self.holes_ind = None
         self.barycenter = np.zeros(3)
@@ -1011,7 +1012,7 @@ class CustomShape(Shape):
                  vertexFlags=None, segments=None, segmentFlags=None,
                  facets=None, facetFlags=None, holes=None, holes_ind=None,
                  regions=None, regionFlags=None, volumes=None,
-                 boundaryTags=None, boundaryOrientations=None):
+                 boundaryTags=None, boundaryOrientations=None,regionConstraints=None):#JHC
         super(CustomShape, self).__init__(domain, nd=len(vertices[0]))
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
@@ -1035,6 +1036,7 @@ class CustomShape(Shape):
             self._checkFlags(regionFlags)
             self.regions = np.array(regions)
             self.regionFlags = np.array(regionFlags)
+            self.regionConstraints = np.array(regionConstraints)#JHC
         self.BC = {}
         self.BC_list = [None]*len(boundaryTags)
         b_or = [None]*len(boundaryTags)
@@ -1310,6 +1312,7 @@ def _assembleGeometry(domain, BC_class):
     domain.holes = []
     domain.regions = []
     domain.regionFlags = []
+    domain.regionConstraints = [] #JHC
     domain.volumes = []
     domain.boundaryTags = {}
     domain.reversed_boundaryTags = {}
@@ -1321,6 +1324,7 @@ def _assembleGeometry(domain, BC_class):
     start_flag = 0
     start_vertex = 0
     for shape in domain.shape_list:
+        print (str(shape))
         # --------------------------- #
         # ----- DOMAIN GEOMETRY ----- #
         # --------------------------- #
@@ -1388,6 +1392,16 @@ def _assembleGeometry(domain, BC_class):
             domain.regions += (shape.regions).tolist()
             domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
             shape.regionFlags_global = shape.regionFlags+start_flag
+            if shape.regionConstraints is not None:
+                domain.regionConstraints += (shape.regionConstraints).tolist()#JHC
+            else:
+                domain.regionConstraints += ([0.])#JHC 
+            #print (str(shape.regionContraints))#JHC
+            #print (str(domain.regionContraints))#JHC 
+            #domain.regionConstraints += (shape.regionConstraints).tolist()#JHC
+#        if shape.regionConstraints is not None:
+#            domain.regionConstraints += (shape.regionConstraints+start_flag).tolist()#JHC 
+            #print (str(shape.regionContraints))#JHC  
         if shape.facets is not None:
             if type(facets) is np.ndarray:
                 facets = facets.tolist()
@@ -1407,7 +1421,8 @@ def _assembleGeometry(domain, BC_class):
                 shape.facetFlags_global = shape.facetFlags+start_flag
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
-    
+    print (str(domain.regions))
+    print (str(domain.regionConstraints))
     # 2D holes (only for gmsh)
     domain.holes_ind = []
     if domain.nd == 2 and shape.facets is not None:
