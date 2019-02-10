@@ -44,7 +44,7 @@ class Checkpointer:
       saveModel["counter"] = self.counter
       saveModel["numModels"] = len(modelListOld)
       saveModel["hotStartTime"] = hotStartTime
-      #saveModel["nAdapt"] = self.NSobject.pList[0].domain.PUMIMesh.nAdapt()
+      saveModel["nAdapt"] = self.NSobject.pList[0].domain.PUMIMesh.nAdapt()
       saveModel["checkpoint_status"] = ""
 
       if(hasattr(self.NSobject,"tn") and (self.NSobject.systemStepController.t_system_last < self.NSobject.tn)):
@@ -137,3 +137,4 @@ class Checkpointer:
 
       self.NSobject.modelList[0].levelModelList[0].stabilization.nSteps = stabilization[0]["nSteps"]
 
+      self.NSobject.pList[0].domain.PUMIMesh.set_nAdapt(previousInfo["nAdapt"])

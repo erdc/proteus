@@ -50,6 +50,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         void get_VMS_error(double) 
         void writeMesh(char* )
         void cleanMesh()
+        void set_nAdapt(int)
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -74,6 +75,8 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.numAdaptSteps
     def nAdapt(self):
         return self.thisptr.nAdapt
+    def set_nAdapt(self,numberAdapt):
+        return self.thisptr.set_nAdapt(numberAdapt)
     def isReconstructed(self):
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):
