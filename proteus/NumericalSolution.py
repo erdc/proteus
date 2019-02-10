@@ -1041,12 +1041,6 @@ class NS_base(object):  # (HasTraits):
 
                 del scalar
 
-        #DEBUG: are solution fields identical?
-        #if((self.PUMIcheckpointer.frequency>0) and (p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
-        ##      #self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
-        #      import pdb; pdb.set_trace()
-
-
         logEvent("Attaching models on new mesh to each other")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
@@ -1098,7 +1092,6 @@ class NS_base(object):  # (HasTraits):
             assert(m.stepController.t_model == mOld.stepController.t_model)
             assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
             logEvent("Initializing time history for model step controller")
-            #import pdb; pdb.set_trace()
             #m.stepController.initializeTimeHistory()
         #p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
 
@@ -1111,7 +1104,6 @@ class NS_base(object):  # (HasTraits):
             if model.levelModelList[-1].timeIntegration.isAdaptive:
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
-        #import pdb; pdb.set_trace()
         #this sets the timeIntegration time, which might be unnecessary for restart 
         #self.systemStepController.choose_dt_system()
         self.systemStepController.stepSequence=[(self.systemStepController.t_system,m) for m in self.systemStepController.modelList]
@@ -1134,23 +1126,10 @@ class NS_base(object):  # (HasTraits):
             #      #self.systemStepController.t_system_last+1.0e-6)
             #      self.systemStepController.t_system)
   
-            if((self.PUMIcheckpointer.frequency>0) and (p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency)==0):
-
-              ### This bit here is necessary to get the system step controller aligned correctly, because stepExact behavior can cause a shift in dt and t_system, etc.
-              #if not (self.systemStepController.t_system_last < self.tn):
-              #  tnIndex = self.tnList.index(self.tn)
-              #  if (self.systemStepController.stepExact):
-              #    #import pdb; pdb.set_trace()
-              #    if((tnIndex != len(self.tnList)-1)):
-              #      if(self.systemStepController.t_system_last != self.tnList[tnIndex+1]):
-              #        self.systemStepController.stepExact_system(self.tnList[tnIndex+1])
-              #    else: #if the last stpe
-              #      self.systemStepController.stepExact_system(self.tn)
-
-              ###
+            #This logic won't account for if final step doesn't match frequency or if adapt isn't being called
+            if((self.PUMIcheckpointer.frequency>0) and ( (p0.domain.PUMIMesh.nAdapt()!=0) and (p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency==0 ) or self.systemStepController.t_system_last==self.tnList[-1])):
 
               self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
-              #import pdb; pdb.set_trace()
 
         #del modelListOld to free up memory
         del modelListOld
@@ -1477,7 +1456,6 @@ class NS_base(object):  # (HasTraits):
       else:
         self.PUMIcheckpointer.DecodeModel(self.pList[0].domain.checkpointInfo)
       
-      #import pdb; pdb.set_trace()
       self.PUMI_reallocate(mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
       self.PUMI2Proteus()
 
@@ -1809,20 +1787,12 @@ class NS_base(object):  # (HasTraits):
 
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
-
+      
                     if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
                       self.hotstartWithPUMI()
-                      #import pdb; pdb.set_trace()
                       self.opts.hotStart = False 
                       #Need to clean mesh for output again      
                       self.pList[0].domain.PUMIMesh.cleanMesh()
-
-
-                    #This should be the only place dofs are saved otherwise there might be a double-shift for last_last
-                    if(abs(self.systemStepController.t_system_last - self.tnList[0]) < 1e-12 and self.opts.hotStart):
-                      self.opts.save_dof = False
-                    else:
-                      self.opts.save_dof = True
 
                     if self.opts.save_dof:
                         import copy
@@ -1999,6 +1969,9 @@ class NS_base(object):  # (HasTraits):
 
         if(hasattr(self.pList[0].domain,"PUMIMesh")):
         #Transfer solution to PUMI mesh for output
+          self.pList[0].domain.PUMIMesh.transferFieldToPUMI("coordinates",
+            self.modelList[0].levelModelList[0].mesh.nodeArray)
+
           for m in self.modelList:
             for lm in m.levelModelList:
               coef = lm.coefficients
@@ -2008,7 +1981,18 @@ class NS_base(object):  # (HasTraits):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                 self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
                    coef.vectorName, vector)
+                #Transfer dof_last
+                for vci in range(len(coef.vectorComponents)):
+                  vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
+                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                     coef.vectorName+"_old", vector)
+                #Transfer dof_last_last
+                for vci in range(len(coef.vectorComponents)):
+                  vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
+                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                     coef.vectorName+"_old_old", vector)
                 del vector
+
               for ci in range(coef.nc):
                 if coef.vectorComponents is None or \
                   ci not in coef.vectorComponents:
@@ -2016,8 +2000,20 @@ class NS_base(object):  # (HasTraits):
                   scalar[:,0] = lm.u[ci].dof[:]
                   self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
                       coef.variableNames[ci], scalar)
+                  #Transfer dof_last
+                  scalar[:,0] = lm.u[ci].dof_last[:]
+                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                     coef.variableNames[ci]+"_old", scalar)
+                  #Transfer dof_last_last
+                  scalar[:,0] = lm.u[ci].dof_last_last[:]
+                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                     coef.variableNames[ci]+"_old_old", scalar)
                   del scalar
+
           self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
+          if((self.PUMIcheckpointer.frequency>0) ):
+            self.modelListOld = self.modelList
+            self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
