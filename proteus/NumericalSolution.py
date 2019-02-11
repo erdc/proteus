@@ -1798,6 +1798,8 @@ class NS_base(object):  # (HasTraits):
                       #Need to clean mesh for output again      
                       self.pList[0].domain.PUMIMesh.cleanMesh()
 
+                    #This should be the only place dofs are saved otherwise there might be a double-shift for last_last
+                    self.opts.save_dof = True
                     if self.opts.save_dof:
                         import copy
                         for m in self.modelList:
