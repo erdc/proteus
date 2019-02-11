@@ -1541,7 +1541,7 @@ class NS_base(object):  # (HasTraits):
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc): 
 
-                        if not isinstance(p.domain,Domain.PUMIDomain):
+                        if not isinstance(self.pList[0].domain,Domain.PUMIDomain):
                           lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
                         lm.setFreeDOF(lu)
                         lm.timeIntegration.tLast = time
