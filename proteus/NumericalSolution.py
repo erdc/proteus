@@ -1092,7 +1092,8 @@ class NS_base(object):  # (HasTraits):
             assert(m.stepController.t_model == mOld.stepController.t_model)
             assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
             logEvent("Initializing time history for model step controller")
-            #m.stepController.initializeTimeHistory()
+            if(not self.opts.hotStart):
+              m.stepController.initializeTimeHistory()
         #p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
 
 
@@ -1105,8 +1106,10 @@ class NS_base(object):  # (HasTraits):
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
         #this sets the timeIntegration time, which might be unnecessary for restart 
-        #self.systemStepController.choose_dt_system()
-        self.systemStepController.stepSequence=[(self.systemStepController.t_system,m) for m in self.systemStepController.modelList]
+        if(self.opts.hotStart):
+          self.systemStepController.stepSequence=[(self.systemStepController.t_system,m) for m in self.systemStepController.modelList]
+        else:
+          self.systemStepController.choose_dt_system()
 
 
         #Don't do anything if this is the initial adapt
@@ -1788,6 +1791,7 @@ class NS_base(object):  # (HasTraits):
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
       
+
                     if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
                       self.hotstartWithPUMI()
                       self.opts.hotStart = False 
