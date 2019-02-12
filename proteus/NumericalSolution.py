@@ -1404,7 +1404,8 @@ class NS_base(object):  # (HasTraits):
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
         sfConfig = p0.domain.PUMIMesh.size_field_config()
-        logEvent("h-adapt mesh by calling AdaptPUMIMesh at step %s" % self.nSolveSteps)
+        if(hasattr(self,"nSolveSteps")):
+          logEvent("h-adapt mesh by calling AdaptPUMIMesh at step %s" % self.nSolveSteps)
         if(sfConfig=="pseudo"):
             logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
         else:
