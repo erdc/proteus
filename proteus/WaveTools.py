@@ -3037,7 +3037,7 @@ class CombineWaves(object):
             logEvent("ERROR!: Each input list entry should be a waveTools function with a u function")
             sys.exit(1)
         self.waveList = waveList
-
+        self.mwl = waveList[0].mwl
     def eta(self,x,t):
         """
         Calculates free surface elevation (combineWaves class)
