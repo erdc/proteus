@@ -35,6 +35,7 @@ ct = Context.get()
 assert hasattr(ct,'myTpFlowProblem'), "Create myTpFlowProblem from TwoPhaseFlowProblem"
 ns_model = ct.myTpFlowProblem.ns_model
 outputStepping = ct.myTpFlowProblem.outputStepping
+fastArchive = ct.myTpFlowProblem.fastArchive
 
 # **************************** #
 # ********** pnList ********** #

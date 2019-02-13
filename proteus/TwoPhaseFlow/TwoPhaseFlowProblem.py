@@ -29,7 +29,8 @@ class TwoPhaseFlowProblem:
                  # AUXILIARY VARIABLES #
                  auxVariables=None,
                  # OTHERS #
-                 useSuperlu=False):
+                 useSuperlu=False,
+                 fastArchive=False):
         # ***** SET OF ASSERTS ***** #
         assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
         assert nd in [2,3], "nd={2,3}"
@@ -70,6 +71,7 @@ class TwoPhaseFlowProblem:
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
         self.useSuperlu = useSuperlu
+        self.fastArchive = fastArchive
 
         # ***** CHOOSE SOME DEFAULT OPTIONS FOR PARALLEL RUNS ***** #
         self.parallelPartitioningType = mt.MeshParallelPartitioningTypes.node
