@@ -1762,7 +1762,7 @@ class Schur_Qp(SchurPrecon) :
         """
         # Create the pressure mass matrix and scaxle by the viscosity.
         self.operator_constructor.updateQ()
-        self.Qp = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+        self.Qp = self.Q.createSubMatrix(self.operator_constructor.linear_smoother.isp,
                                       self.operator_constructor.linear_smoother.isp)
         self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
@@ -1853,13 +1853,13 @@ class NavierStokesSchur(SchurPrecon):
         -----
         This is currently only set up for interlaced DOF ordering.
         """
-        self.velocity_sub_matrix = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+        self.velocity_sub_matrix = global_ksp.getOperators()[0].createSubMatrix(self.isv,self.isv)
 
         for i, var in enumerate(self.get_velocity_var_names()):
             name_str = "is_vel_" + var
             name_str_mat = "velocity_" + var + "_sub_matrix"
             is_set = getattr(self, name_str)
-            setattr(self,name_str_mat, global_ksp.getOperators()[0].getSubMatrix(is_set,
+            setattr(self,name_str_mat, global_ksp.getOperators()[0].createSubMatrix(is_set,
                                                                                  is_set))
             global_ksp.pc.getFieldSplitSubKSP()[0].pc.getFieldSplitSubKSP()[i].setOperators(getattr(self,name_str_mat),
                                                                                             getattr(self,name_str_mat))
@@ -2221,11 +2221,11 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
                                                            lumped = self.lumped)
             self.operator_constructor.updateTwoPhaseInvScaledQp_visc(numerical_viscosity = self.numerical_viscosity,
                                                                      lumped = self.lumped)
-            self.Ap_invScaledRho = self.A_invScaledRho.getSubMatrix(isp,
+            self.Ap_invScaledRho = self.A_invScaledRho.createSubMatrix(isp,
                                                                     isp)
-            self.Qp_rho = self.Q_rho.getSubMatrix(isp,
+            self.Qp_rho = self.Q_rho.createSubMatrix(isp,
                                                   isp)
-            self.Qp_invScaledVis = self.Q_invScaledVis.getSubMatrix(isp,
+            self.Qp_invScaledVis = self.Q_invScaledVis.createSubMatrix(isp,
                                                                     isp)
 
         # ****** Sp for Ap *******

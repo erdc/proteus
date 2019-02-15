@@ -4,7 +4,8 @@ from past.utils import old_div
 import numpy as np
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
-from proteus.mbd import ChRigidBody as crb
+from proteus.mbd import CouplingFSI as fsi
+import pychrono as chrono
 
 rho_0 = 1000.
 nu_0 = 1.004e-6
@@ -46,8 +47,9 @@ rect.BC['z-'].setNoSlip()
 
 # CHRONO
 
-system = crb.ProtChSystem(gravity=np.array([0.,0.,-9.81]))
-body = crb.ProtChBody(system=system)
+system = fsi.ProtChSystem()
+system.ChSystem.Set_G_acc(chrono.ChVectorD(g[0], g[1], 0.))
+body = fsi.ProtChBody(system=system)
 body.attachShape(rect)
 body.ChBody.SetMass(500.)
 body.ChBody.SetBodyFixed(True)  # fixing body
