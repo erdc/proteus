@@ -42,7 +42,7 @@ class MockMat(object):
         from petsc4py import PETSc
         ids = list(range(start, end))
         isg = PETSc.IS().createGeneral(ids)
-        B = self.A.getSubMatrix(isg)
+        B = self.A.createSubMatrix(isg)
         return B.getValuesCSR()
 
 @pytest.mark.LinearAlgebraTools

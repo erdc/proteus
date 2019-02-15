@@ -174,7 +174,7 @@ elif p.nd == 3:
 
 initialConditions = p.analyticalSolution
 
-nsave=100
+nsave=25
 dt_init = 1.0e-3
 DT = (p.T-dt_init)/float(nsave-1)
 p.tnList = [0.0,dt_init]+[dt_init+i*DT for i in range(nsave)]
@@ -450,7 +450,7 @@ elif opts.timeOrder == 0:
     n.timeIntegration = TimeIntegration.NoIntegration
 
 n.stepController  = StepControl.Min_dt_cfl_controller
-n.systemStepExact = False
+n.systemStepExact = True
 
 if opts.spaceOrder == 1:
     if opts.triangles:
@@ -580,8 +580,8 @@ elif opts.pc_type == 'two_phase_PCD':
 
 n.linear_solver_options_prefix = 'rans2p_'
 
-n.linTolFac = 0.1
-n.l_atol_res = 0.1*n.nl_atol_res
+n.linTolFac = 0.0
+n.l_atol_res = 0.01*n.nl_atol_res
 
 n.conservativeFlux = None
 
