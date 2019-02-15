@@ -403,18 +403,17 @@ class Tank3D(ShapeRANS):
         Dimensions of the cuboid.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
-        If True (default), the tank extends from the origin to postive x, y, z
     """
     count = 0
 
-    def __init__(self, domain, dim=(0., 0., 0.), coords=None, from_0=True):
+    def __init__(self, domain, dim=(0., 0., 0.), coords=None):
         super(Tank3D, self).__init__(domain, nd=3)
         self.__class__.count += 1
         self.name = "tank3d" + repr(self.__class__.count)
         self.from_0 = from_0
         if coords is None:
             self.coords = old_div(np.array(dim), 2.)
+            self.from_0 = True
         else:
             self.coords = coords
             self.from_0 = False
@@ -1331,8 +1330,6 @@ class TankWithObstacles2D(Tank2D):
         the first obstacle starts on.  Default is False.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
-        If True (default), the tank extends from the origin to positive x, y, z
     hole: Optional[bool]
         If True (default), the obstacle of the tank is just an open hole at the
         bottom of the tank. If False, a segment at the bottom of the obstacle is
@@ -1347,7 +1344,7 @@ class TankWithObstacles2D(Tank2D):
     def __init__(self, domain, dim=(0., 0.),
                  obstacles=None, special_boundaries=None,
                  full_circle=False,
-                 coords=None, from_0=True, hole=True, obstacle_regions=None):
+                 coords=None, hole=True, obstacle_regions=None):
         if obstacles:
             self.obstacles = obstacles
         else:
@@ -1370,7 +1367,7 @@ class TankWithObstacles2D(Tank2D):
 
         self.hole = hole
         self.obstacle_regions = obstacle_regions
-        super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
+        super(TankWithObstacles2D, self).__init__(domain, dim, coords)
 
     def _setupBCs(self):
         super(TankWithObstacles2D, self)._setupBCs()
