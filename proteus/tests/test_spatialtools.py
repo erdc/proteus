@@ -91,8 +91,8 @@ def create_custom3D(domain, folder=None):
 def create_tank2D(domain, dim=(0., 0.), coords=None):
     return Tank2D(domain, dim, coords)
 
-def create_tank3D(domain, dim=(0., 0., 0.), coords=None, from_0=True):
-    return Tank3D(domain, dim, coords, from_0)
+def create_tank3D(domain, dim=(0., 0., 0.), coords=None):
+    return Tank3D(domain, dim, coords)
 
 class TestShapeDomainBuilding(unittest.TestCase):
 

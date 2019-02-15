@@ -410,7 +410,6 @@ class Tank3D(ShapeRANS):
         super(Tank3D, self).__init__(domain, nd=3)
         self.__class__.count += 1
         self.name = "tank3d" + repr(self.__class__.count)
-        self.from_0 = from_0
         if coords is None:
             self.coords = old_div(np.array(dim), 2.)
             self.from_0 = True
