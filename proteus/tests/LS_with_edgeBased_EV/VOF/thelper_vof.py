@@ -18,7 +18,7 @@ ct=Context.Options([
     # Choice of numerical method #
     ("STABILIZATION_TYPE",1,"0: SUPG, 1: EV, 2: smoothness based indicator"),
     ("LUMPED_MASS_MATRIX",False,"Flag to lumped the mass matrix"),
-    ("ENTROPY_TYPE",2,"1: quadratic, 2: logarithmic"),
+    ("ENTROPY_TYPE",1,"1: quadratic, 2: logarithmic"),
     ("FCT",True,"Use Flux Corrected Transport"),
     # Numerical parameters #
     ("cE",0.1,"Entropy viscosity constant"),
