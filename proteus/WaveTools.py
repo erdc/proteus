@@ -33,6 +33,7 @@ __all__ = ['SteadyCurrent',
            'RandomWavesFast',
            'RandomNLWaves',
            'RandomNLWavesFast',
+           'CombineWaves',
            'fastcos_test',
            'fastcosh_test',
            'fastsinh_test',
@@ -3013,3 +3014,69 @@ class RandomNLWavesFast(object):
         uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
         return uR
     
+class CombineWaves(object):
+    """
+    This class is used for combining multiple waveTools classes, thus allowing for the generation of complex wave conditions
+
+    Parameters
+    ----------
+    waveList : list
+             List of wave classes
+    """
+    def __init__(self,waveList):
+        try:
+            for condition in waveList:
+                etaCheck = condition.eta
+        except:
+            logEvent("ERROR!: Each input list entry should be a waveTools function with an eta function")
+            sys.exit(1)
+        try:
+            for condition in waveList:
+                uCheck = condition.u
+        except:
+            logEvent("ERROR!: Each input list entry should be a waveTools function with a u function")
+            sys.exit(1)
+        self.waveList = waveList
+        self.mwl = waveList[0].mwl
+    def eta(self,x,t):
+        """
+        Calculates free surface elevation (combineWaves class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
+        eta = 0.
+        for cond in self.waveList:
+            eta += cond.eta(x,t)
+        return eta
+
+    def u(self,x,t):
+        """
+        Calculates wave particle velocity (combineWaves class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy array
+            Velocity as 1D numpy array
+
+        """
+        u = np.zeros(3,)
+        for cond in self.waveList:
+            u += cond.u(x,t)
+        return u
+   
