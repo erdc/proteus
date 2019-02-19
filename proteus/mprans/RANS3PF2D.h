@@ -9,7 +9,9 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
-
+#define DRAG_FAC 1.0
+#define TURB_FORCE_FAC 0.0
+#define CUT_CELL_INTEGRATION 0.0
 //////////////////////
 // ***** TODO ***** //
 //////////////////////
@@ -25,6 +27,19 @@
 // ***** END OF TODO *****
 
 #define CELL_BASED_EV_COEFF 1
+#define POWER_SMOOTHNESS_INDICATOR 2
+
+inline void baryCoords(const double r0[2],
+                       const double r1[2],
+                       const double r2[2],
+                       const double r[2],
+                       double* lambda)
+{
+  double detT = (r1[1] - r2[1])*(r0[0] - r2[0]) + (r2[0] - r1[0])*(r0[1] - r2[1]);
+  lambda[0] = ((r1[1] - r2[1])*(r[0] - r2[0]) + (r2[0] - r1[0])*(r[1] - r2[1]))/detT;
+  lambda[1] = ((r2[1] - r0[1])*(r[0] - r2[0]) + (r0[0] - r2[0])*(r[1] - r2[1]))/detT;
+  lambda[2] = 1.0 - lambda[0] - lambda[1];
+}
 
 namespace proteus
 {
@@ -115,6 +130,7 @@ namespace proteus
                                          double* phi_solid_nodes,
                                          double* phi_solid,
                                    const double* q_velocity_solid,
+                                   const double* q_velocityStar_solid,
                                    const double* q_vos,
                                    const double* q_dvos_dt,
 				   const double* q_grad_vos,
@@ -137,6 +153,9 @@ namespace proteus
                                    double* u_dof_old_old,
                                    double* v_dof_old_old,
                                    double* w_dof_old_old,
+				   double* uStar_dof,
+				   double* vStar_dof,
+				   double* wStar_dof,
                                    double* g,
                                    const double useVF,
                                    double *vf,
@@ -286,7 +305,20 @@ namespace proteus
                                    double* ebqe_dynamic_viscosity_as_function,
                                    double order_polynomial,
                                    double* isActiveDOF,
-                                   int USE_SBM
+                                   int USE_SBM,
+                                   double* ncDrag,
+                                   double* betaDrag,
+                                   double* vos_vel_nodes,
+                                   // For edge based dissipation
+				   double * entropyResidualPerNode,
+				   double * laggedEntropyResidualPerNode,
+				   double * dMatrix,
+				   int numDOFs_1D,
+				   int NNZ_1D,
+				   int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
+				   int *rowptr_1D, int *colind_1D,
+				   // int by parts pressure
+				   int INT_BY_PARTS_PRESSURE
                                    )=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
@@ -357,6 +389,7 @@ namespace proteus
                                          double *phi_solid_nodes,
                                    const double *phi_solid,
                                    const double *q_velocity_solid,
+                                   const double *q_velocityStar_solid,
                                    const double *q_vos,
                                    const double *q_dvos_dt,
                                    const double *q_grad_vos,
@@ -487,7 +520,16 @@ namespace proteus
                                    double* dynamic_viscosity_as_function,
                                    double* ebqe_density_as_function,
                                    double* ebqe_dynamic_viscosity_as_function,
-                                   int USE_SBM)=0;
+                                   int USE_SBM,
+				   // For edge based dissipation
+				   int ARTIFICIAL_VISCOSITY,
+				   double * dMatrix,
+				   int numDOFs_1D,
+				   int offset_u, int offset_v, int offset_w,
+				   int stride_u, int stride_v, int stride_w,
+				   int *rowptr_1D, int *colind_1D,
+				   int *rowptr, int *colind,
+				   int INT_BY_PARTS_PRESSURE)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int *exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -755,7 +797,9 @@ namespace proteus
                                   double* ball_center,
                                   double* ball_radius,
                                   double* ball_velocity,
-                                  double* ball_angular_velocity)
+                                  double* ball_angular_velocity,
+				  // int by parts pressure
+				  int INT_BY_PARTS_PRESSURE)
       {
         double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -775,10 +819,10 @@ namespace proteus
               nu_t0 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
               nu_t1 = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
             }
-          case 2: 
+          case 2:
             {
               double re_0,cs_0=0.0,re_1,cs_1=0.0;
-              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +//grad_w[2]*grad_w[2] + 
+              norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +//grad_w[2]*grad_w[2] +
                                  0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
               re_0 = h_e*h_e*norm_S/nu_0;
               if (re_0 > 1.0)
@@ -951,15 +995,16 @@ namespace proteus
         /* mom_w_source -= forcez; */
 
         //u momentum Hamiltonian (pressure)
-        mom_u_ham = phi_s_effect * porosity*grad_p[0]*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
-        dmom_u_ham_grad_p[0]=phi_s_effect * porosity*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
+	double aux_pressure = (KILL_PRESSURE_TERM==1 ? 0. : 1.)*(INT_BY_PARTS_PRESSURE==1 ? 0. : 1.);
+        mom_u_ham = phi_s_effect * porosity*grad_p[0]*aux_pressure;
+        dmom_u_ham_grad_p[0]=phi_s_effect * porosity*aux_pressure;
         dmom_u_ham_grad_p[1]=0.0;
         /* dmom_u_ham_grad_p[2]=0.0; */
 
         //v momentum Hamiltonian (pressure)
-        mom_v_ham = phi_s_effect * porosity*grad_p[1]*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
+        mom_v_ham = phi_s_effect * porosity*grad_p[1]*aux_pressure;
         dmom_v_ham_grad_p[0]=0.0;
-        dmom_v_ham_grad_p[1]=phi_s_effect * porosity*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
+        dmom_v_ham_grad_p[1]=phi_s_effect * porosity*aux_pressure;
         /* dmom_v_ham_grad_p[2]=0.0; */
 
         /* //w momentum Hamiltonian (pressure) */
@@ -1016,6 +1061,9 @@ namespace proteus
                                                const double u_s,
                                                const double v_s,
                                                const double w_s,
+                                               const double uStar_s,
+                                               const double vStar_s,
+                                               const double wStar_s,
                                                double& mom_u_source,
                                                double& mom_v_source,
                                                double& mom_w_source,
@@ -1032,27 +1080,32 @@ namespace proteus
         rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
         mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
         viscosity = nu;
-        uc = sqrt(u*u+v*v*+w*w); 
+        uc = sqrt(u*u+v*v*+w*w);
         duc_du = u/(uc+1.0e-12);
         duc_dv = v/(uc+1.0e-12);
         duc_dw = w/(uc+1.0e-12);
-        double fluid_velocity[2]={u,v}, solid_velocity[2]={u_s,v_s};
+        double fluid_velocity[2]={uStar,vStar}, solid_velocity[2]={uStar_s,vStar_s};
         double new_beta = closure.betaCoeff(1.0-phi_s,
 					    rho,
 					    fluid_velocity,
 					    solid_velocity,
-					    viscosity);
+					    viscosity)*DRAG_FAC;
+        //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
+        double beta2 = 156976.4;//hack, fall velocity of 0.1 with hydrostatic water
+        
+        mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s) - TURB_FORCE_FAC*new_beta*nu_t*gradC_x/closure.sigmaC_  +
+          (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(u-u_s);
+	mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s) - TURB_FORCE_FAC*new_beta*nu_t*gradC_y/closure.sigmaC_ +
+          (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(v-v_s);
 
-	mom_u_source += (1.0 - phi_s) * new_beta *( (u - u_s) - nu_t*gradC_x/closure.sigmaC_ );
-	mom_v_source += (1.0 - phi_s) * new_beta * ( (v - v_s)- nu_t*gradC_y/closure.sigmaC_);
         /* mom_w_source += phi_s*new_beta*(w-w_s); */
 
-        dmom_u_source[0] = (1.0 - phi_s) * new_beta;
+        dmom_u_source[0] = (1.0 - phi_s) * new_beta + (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2;
         dmom_u_source[1] = 0.0;
         /* dmom_u_source[2] = 0.0; */
 
         dmom_v_source[0] = 0.0;
-        dmom_v_source[1] = (1.0 - phi_s) * new_beta;
+        dmom_v_source[1] = (1.0 - phi_s) * new_beta + (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2;
         /*dmom_v_source[2] = 0.0; */
 
         dmom_w_source[0] = 0.0;
@@ -2012,6 +2065,7 @@ namespace proteus
           vx = ball_velocity[3*I + 0] - ball_angular_velocity[3*I + 2]*(y-ball_center[3*I + 1]);
           vy = ball_velocity[3*I + 1] + ball_angular_velocity[3*I + 2]*(x-ball_center[3*I + 0]);
       }
+
       void calculateResidual(//element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
@@ -2082,6 +2136,7 @@ namespace proteus
                                    double* phi_solid_nodes,
                                    double* phi_solid,
                              const double* q_velocity_solid,
+                             const double* q_velocityStar_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
                              const double* q_grad_vos,
@@ -2105,6 +2160,9 @@ namespace proteus
                              double* u_dof_old_old,
                              double* v_dof_old_old,
                              double* w_dof_old_old,
+			     double* uStar_dof,
+			     double* vStar_dof,
+			     double* wStar_dof,
                              double* g,
                              const double useVF,
                              double* vf,
@@ -2235,8 +2293,38 @@ namespace proteus
                              double* ebqe_dynamic_viscosity_as_function,
                              double order_polynomial,
                              double* isActiveDOF,
-                             int USE_SBM)
+                             int USE_SBM,
+                             double* ncDrag,
+                             double* betaDrag,
+                             double* vos_vel_nodes,
+                             // For edge based discretization
+                             double * entropyResidualPerNode,
+                             double * laggedEntropyResidualPerNode,
+			     double * dMatrix,
+			     int numDOFs_1D,
+			     int NNZ_1D,
+			     int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
+			     int *rowptr_1D, int *colind_1D,
+			     // int by parts pressure
+			     int INT_BY_PARTS_PRESSURE)
       {
+	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
+	register double psi[numDOFs_1D];
+	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+	  {
+	    for (int i=0; i<NNZ_1D; i++)
+	      {
+		dMatrix[i]=0.;
+		TransportMatrix[i] = 0.;
+		TransposeTransportMatrix[i] = 0.;
+	      }
+	    for (int i=0; i<numDOFs_1D; i++)
+	      {
+		psi[i]=1.;
+		entropyResidualPerNode[i]=0.;
+	      }
+	  }
+
         //
         //Loop over elements to compute volume integrals and load them into element and global residual
         //
@@ -2254,12 +2342,19 @@ namespace proteus
         //std::set<int> active_velocity_dof;
         for(int eN=0;eN<nElements_global;eN++)
           {
+	    register double  elementTransport[nDOF_test_element][nDOF_trial_element];
+	    register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
             //declare local storage for element residual and initialize
             register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
+              mom_u_source_i[nDOF_test_element],
+              mom_v_source_i[nDOF_test_element],
+              betaDrag_i[nDOF_test_element],
+              vos_i[nDOF_test_element],
               phisErrorElement[nDOF_test_element],
               //elementResidual_w[nDOF_test_element],
+	      elementEntropyResidual[nDOF_test_element],
               eps_rho,eps_mu;
             //const double* elementResidual_w(NULL);
             double element_active=1.0;//use 1 since by default it is ibm
@@ -2275,8 +2370,21 @@ namespace proteus
                 elementResidual_p[i]=0.0;
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
+                mom_u_source_i[i]=0.0;
+                mom_v_source_i[i]=0.0;
+                betaDrag_i[i]=0.0;
+                vos_i[i]=0.0;
                 phisErrorElement[i]=0.0;
                 /* elementResidual_w[i]=0.0; */
+		elementEntropyResidual[i]=0.0;
+		if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		  {
+		    for (int j=0;j<nDOF_trial_element;j++)
+		      {
+			elementTransport[i][j]=0.0;
+			elementTransposeTransport[i][j]=0.0;
+		      }
+		  }
               }//i
             //Use for plotting result
             if(use_ball_as_particle==1)
@@ -2288,6 +2396,164 @@ namespace proteus
                                                 mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
                                                 phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
             }
+            if(CUT_CELL_INTEGRATION > 0)
+              {
+                //
+                //detect cut cells, for unfitted fem we want all cells cut by phi=0 or with phi=0 lying on any boundary
+                //
+                double _distance[nDOF_mesh_trial_element]={0.0};
+                int pos_counter=0;
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                  {
+                    if(use_ball_as_particle==1)
+                      {
+                        get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                             _distance[I]);
+                      }
+                    else
+                      {
+                        _distance[I] = phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]];
+                      }
+                    if ( _distance[I] > 0)//fully in fluid
+                      pos_counter++;
+                  }
+                if (pos_counter == 3)
+                  {
+                    element_active = 1.0;
+                  }
+                else if (pos_counter == 0)
+                  {
+                    element_active = 1.0;
+                  }
+                else
+                  {
+                    std::cout<<"submesh "<<eN<<std::endl;
+                    element_active = 1.0;//for now leave all elements active
+                    //P1 interpolation operator; only 2D for now
+                    double GI[6*3];//3 DOF to 6DOF for linear interpolation onto 4T refinement
+                    double sub_mesh_dof[6*3], sub_u_dof[15], sub_v_dof[15], sub_phi_dof[6];//6 3D points
+                    int boundaryNodes[6] = {0,0,0,0,0,0};
+                    for (int I=0;I<nDOF_mesh_trial_element;I++)
+                      {
+                        for (int K=0;K<nDOF_mesh_trial_element;K++)
+                          {
+                            GI[I*3+K] = 0.0;
+                            if (I==K)
+                              {
+                                GI[I*3+K] = 1.0;
+                              }
+                          }
+                        const double eps = 1.0e-4;
+                        double delta_phi=0.0,theta;
+                        delta_phi = _distance[(I+1)%3] - _distance[I];
+                        if (fabs(delta_phi) > eps)//level set does NOT lie on edge (intersects line SOMEWHERE)
+                          //need tolerance selection guidance
+                          {
+                            theta = -_distance[I]/delta_phi;//zero level set is at theta*xIp1+(1-theta)*xI
+                            if (theta > 1.0-eps || theta < eps)//zero level does NOT intersect between nodes
+                              {
+                                theta = 0.5;//just put the subelement node at midpoint
+                              }
+                            else
+                              boundaryNodes[3+I]=1;
+                          }
+                        else //level set lies on edge
+                          {
+                            theta = 0.5;
+                            if (fabs(_distance[I]) <= eps) //edge IS the zero level set
+                              {
+                                boundaryNodes[I]=1;
+                                boundaryNodes[3+I]=1;
+                                boundaryNodes[(I+1)%3]=1;
+                              }
+                          }
+                        assert(theta <= 1.0);
+                        GI[3*3 + I*3 + I] = 1.0-theta;
+                        GI[3*3 + I*3 + (I+1)%3] = theta;
+                        GI[3*3 + I*3 + (I+2)%3] = 0.0;
+                      }
+                    int sub_mesh_l2g[12] = {0,3,5,
+                                            1,4,3,
+                                            2,5,4,
+                                            3,4,5};
+                    for (int I=0; I<6; I++)
+                      {
+                        sub_phi_dof[I] = 0.0;
+                        for (int K=0; K<3; K++)
+                          sub_mesh_dof[I*3+K] = 0.0; 
+                        for (int J=0; J<3; J++)
+                          {
+                            for (int K=0; K<3; K++)
+                              {
+                                sub_mesh_dof[I*3+K] += GI[I*3+J]*mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+J]+K];
+                              }
+                            sub_phi_dof[I] += GI[I*3+J]*phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+J]];
+                          }
+                      }
+                    //TODO for P2
+                    //1. Now define the Lagrange nodes for P2 on the submesh X
+                    //2. Define and evaluate the P2 trial functions for the parent element at the new submesh P2 nodes. X
+                    //3. Form the G2I interpolation operator X
+                    //4. Interpolate the P2 DOF from the parent element to the submesh DOF X
+                    double G2I[15*6];//6 DOF to 15 DOF for quadratic interpolation onto 4T refinement
+                    double lagrangeNodes[9*3];//9 new quadratic nodes in addition to the 6 we have 
+                    for (int K=0;K<3;K++)
+                      {
+                        lagrangeNodes[0*3+K] = 0.5*(sub_mesh_dof[0*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                        lagrangeNodes[1*3+K] = 0.5*(sub_mesh_dof[1*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                        lagrangeNodes[2*3+K] = 0.5*(sub_mesh_dof[1*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[3*3+K] = 0.5*(sub_mesh_dof[2*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[4*3+K] = 0.5*(sub_mesh_dof[2*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[5*3+K] = 0.5*(sub_mesh_dof[0*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[6*3+K] = 0.5*(sub_mesh_dof[3*3+0*3+K] + sub_mesh_dof[3*3+1*3+K]);
+                        lagrangeNodes[7*3+K] = 0.5*(sub_mesh_dof[3*3+1*3+K] + sub_mesh_dof[3*3+2*3+K]);
+                        lagrangeNodes[8*3+K] = 0.5*(sub_mesh_dof[3*3+2*3+K] + sub_mesh_dof[3*3+0*3+K]);
+                      }
+                    double lambda[3];
+                    for (int I=0;I<6;I++)
+                      {
+                        baryCoords(&sub_mesh_dof[0],&sub_mesh_dof[1*3],&sub_mesh_dof[2*3],&sub_mesh_dof[I*3],lambda);
+                        //std::cout<<"lambda"<<'\t'<<lambda[0]<<'\t'<<lambda[1]<<'\t'<<lambda[2]<<std::endl;
+                        G2I[I*6+0] = lambda[0]*(2.0*lambda[0] - 1.0);
+                        G2I[I*6+1] = lambda[1]*(2.0*lambda[1] - 1.0);
+                        G2I[I*6+2] = lambda[2]*(2.0*lambda[2] - 1.0);
+                        G2I[I*6+3] = 4.0*lambda[0]*lambda[1];
+                        G2I[I*6+4] = 4.0*lambda[1]*lambda[2];
+                        G2I[I*6+5] = 4.0*lambda[2]*lambda[0];
+                      }
+                    for (int I=0;I<9;I++)
+                      {
+                        baryCoords(&sub_mesh_dof[0],&sub_mesh_dof[1*3],&sub_mesh_dof[2*3],&lagrangeNodes[I*3],lambda);
+                        G2I[6*6 + I*6 + 0] = lambda[0]*(2.0*lambda[0] - 1.0);
+                        G2I[6*6 + I*6 + 1] = lambda[1]*(2.0*lambda[1] - 1.0);
+                        G2I[6*6 + I*6 + 2] = lambda[2]*(2.0*lambda[2] - 1.0);
+                        G2I[6*6 + I*6 + 3] = 4.0*lambda[0]*lambda[1];
+                        G2I[6*6 + I*6 + 4] = 4.0*lambda[1]*lambda[2];
+                        G2I[6*6 + I*6 + 5] = 4.0*lambda[2]*lambda[0];
+                      }
+                    for (int I=0; I<15; I++)
+                      {
+                        sub_u_dof[I] = 0.0;
+                        sub_v_dof[I] = 0.0;
+                        for (int J=0; J<6; J++)
+                          {
+                            sub_u_dof[I] += G2I[I*6+J]*u_dof[vel_l2g[eN*nDOF_trial_element+J]];
+                            sub_v_dof[I] += G2I[I*6+J]*v_dof[vel_l2g[eN*nDOF_trial_element+J]];
+                          }
+                      }
+                    for (int esN=0;esN<4;esN++)
+                      {
+                        std::cout<<sub_mesh_l2g[esN*3]<<'\t'<<sub_mesh_l2g[esN*3+1]<<'\t'<<sub_mesh_l2g[esN*3+2]<<std::endl;
+                      }
+                    for (int I=0; I<6; I++)
+                      {
+                        std::cout<<sub_mesh_dof[I*3+0]<<'\t'<<sub_mesh_dof[I*3+1]<<'\t'<<sub_mesh_dof[I*3+2]<<'\t'<<boundaryNodes[I]<<'\t'<<sub_phi_dof[I]<<'\t'<<sub_u_dof[I]<<'\t'<<sub_v_dof[I]<<'\t'<<G2I[I*6+0]<<'\t'<<G2I[I*6+1]<<'\t'<<G2I[I*6+2]<<'\t'<<G2I[I*6+3]<<'\t'<<G2I[I*6+4]<<'\t'<<G2I[I*6+5]<<std::endl;
+                      }
+                  }
+              }
             if(USE_SBM>0)
             {
                 //
@@ -2491,6 +2757,8 @@ namespace proteus
                   vel_hess_trial[nDOF_trial_element*nSpace2],
                   p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
                   p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
+		  u_times_vel_grad_test_dV[nDOF_test_element*nSpace], // For entropy residual
+                  v_times_vel_grad_test_dV[nDOF_test_element*nSpace], // For entropy residual
                   dV,x,y,z,xt,yt,zt,
                   //
                   porosity,
@@ -2500,6 +2768,8 @@ namespace proteus
                   dmom_v_source[nSpace],
                   dmom_w_source[nSpace],
                   //
+		  velStar[nSpace],
+		  //
                   G[nSpace*nSpace],G_dd_G,tr_G,norm_Rv,h_phi, dmom_adv_star[nSpace],dmom_adv_sge[nSpace];
                 //get jacobian, etc for mapping reference element
                 ck.calculateMapping_element(eN,
@@ -2568,6 +2838,16 @@ namespace proteus
                       {
                         /* p_grad_test_dV[j*nSpace+I]   = p_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin */
                         vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+			if (ARTIFICIAL_VISCOSITY==4)
+			  {
+			    // mql: for entropy residual. grad(u*phi) and grad(v*phi)
+			    u_times_vel_grad_test_dV[j*nSpace+I] =
+			      u*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_u[I];
+			    v_times_vel_grad_test_dV[j*nSpace+I] =
+			      v*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_v[I];
+			    /*w_times_vel_grad_test_dV[j*nSpace+I] =
+			      w*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_w[I];*/
+			  }
                       }
                   }
                 //cek hack
@@ -2692,11 +2972,17 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
 
                 //VRANS
                 mass_source = q_mass_source[eN_k];
-                //todo: decide if these should be lagged or not?
+                for (int I=0;I<nSpace;I++)
+                  {
+                    dmom_u_source[I] = 0.0;
+                    dmom_v_source[I] = 0.0;
+                    dmom_w_source[I] = 0.0;
+                  }
                 updateDarcyForchheimerTerms_Ergun(
                                                   q_dragAlpha[eN_k],
                                                   q_dragBeta[eN_k],
@@ -2721,6 +3007,9 @@ namespace proteus
                                                   q_velocity_solid[eN_k_nSpace+0],
                                                   q_velocity_solid[eN_k_nSpace+1],
                                                   q_velocity_solid[eN_k_nSpace+1],//cek hack, should not be used
+                                                  q_velocityStar_solid[eN_k_nSpace+0],
+                                                  q_velocityStar_solid[eN_k_nSpace+1],
+                                                  q_velocityStar_solid[eN_k_nSpace+1],//cek hack, should not be used
                                                   mom_u_source,
                                                   mom_v_source,
                                                   mom_w_source,
@@ -2945,31 +3234,31 @@ namespace proteus
 		  //VRANS
        		  ck.Reaction_strong(mass_source);
        		//
-       		
+
        		dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
        		dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
        		/* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
-       		
+
        		pdeResidual_u =
        		  ck.Mass_strong(mom_u_acc_t) + // mql. CHECK.
        		  ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
        		  ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
        		  ck.Reaction_strong(mom_u_source) -
        		  ck.Reaction_strong(u*div_mesh_velocity);
-       		
+
        		pdeResidual_v =
        		  ck.Mass_strong(mom_v_acc_t) +
        		  ck.Advection_strong(dmom_adv_sge,grad_v) +
        		  ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) +
        		  ck.Reaction_strong(mom_v_source) -
        		  ck.Reaction_strong(v*div_mesh_velocity);
-       		
+
        		/* pdeResidual_w = ck.Mass_strong(dmom_w_acc_w*mom_w_acc_t) + */
        		/*      ck.Advection_strong(dmom_adv_sge,grad_w) + */
        		/*      ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) + */
        		/*      ck.Reaction_strong(mom_w_source) - */
        		/*   ck.Reaction_strong(w*div_mesh_velocity); */
-       		
+
        		//calculate tau and tau*Res
        		//cek debug
        		double tmpR=dmom_u_acc_u_t + dmom_u_source[0];
@@ -2983,7 +3272,7 @@ namespace proteus
        					  tau_v0,
        					  tau_p0,
        					  q_cfl[eN_k]);
-       		
+
        		calculateSubgridError_tau(Ct_sge,Cd_sge,
        					  G,G_dd_G,tr_G,
        					  tmpR,//dmom_u_acc_u_t,
@@ -2993,10 +3282,10 @@ namespace proteus
        					  tau_v1,
        					  tau_p1,
        					  q_cfl[eN_k]);
-       		
+
        		tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
        		tau_p = KILL_PRESSURE_TERM == 1 ? 0. : PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
-       		
+
        		calculateSubgridError_tauRes(tau_p,
        					     tau_v,
        					     pdeResidual_p,
@@ -3011,11 +3300,11 @@ namespace proteus
        		dmom_adv_star[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
        		dmom_adv_star[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
        		/* dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w); */
-       		
+
        		mom_u_adv[0] += dmom_u_acc_u*(useRBLES*subgridError_u*q_velocity_sge[eN_k_nSpace+0]);
        		mom_u_adv[1] += dmom_u_acc_u*(useRBLES*subgridError_v*q_velocity_sge[eN_k_nSpace+0]);
        		/* mom_u_adv[2] += dmom_u_acc_u*(useRBLES*subgridError_w*q_velocity_sge[eN_k_nSpace+0]);  */
-       		
+
        		// adjoint times the test functions
        		for (int i=0;i<nDOF_test_element;i++)
        		  {
@@ -3030,7 +3319,7 @@ namespace proteus
 		    Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
 		    Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
 		    /* Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]); */
-		    
+
 		    //VRANS account for drag terms, diagonal only here ... decide if need off diagonal terms too
 		    Lstar_u_u[i]+=ck.Reaction_adjoint(dmom_u_source[0],vel_test_dV[i]);
 		    Lstar_v_v[i]+=ck.Reaction_adjoint(dmom_v_source[1],vel_test_dV[i]);
@@ -3038,7 +3327,7 @@ namespace proteus
 		    //
 		  }
 
-		if (ARTIFICIAL_VISCOSITY==0)
+		if (ARTIFICIAL_VISCOSITY==0 || ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 		  {
 		    q_numDiff_u[eN_k] = 0;
 		    q_numDiff_v[eN_k] = 0;
@@ -3052,13 +3341,13 @@ namespace proteus
 		    q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 		    q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
 		  }
-		else // ENTROPY VISCOSITY
+		else // ARTIFICIAL_VISCOSITY==2; i.e, ENTROPY VISCOSITY
 		  {
 		    double rho = q_rho[eN_k];
 		    double mu = q_rho[eN_k]*q_nu[eN_k];
 
 		    double vel2 = u*u + v*v;
-		    
+
 		    // entropy residual
 		    double Res_in_x =
 		      porosity*rho*((u-un)/dt + (u*grad_u[0]+v*grad_u[1]) - g[0])
@@ -3069,11 +3358,11 @@ namespace proteus
 
 		    double Res_in_y =
 		      porosity*rho*((v-vn)/dt + (u*grad_v[0]+v*grad_v[1]) - g[1])
-		      + (KILL_PRESSURE_TERM == 1 ? 0. : 1.)*grad_p[1] 
+		      + (KILL_PRESSURE_TERM == 1 ? 0. : 1.)*grad_p[1]
 		      - (MULTIPLY_EXTERNAL_FORCE_BY_DENSITY == 1 ? porosity*rho : 1.0)*forcey[eN_k]
 		      - mu*(hess_v[0] + hess_v[3])  // v_xx + v_yy
 		      - mu*(hess_u[1] + hess_v[3]); // u_xy + v_yy
-		    
+
 		    // compute entropy residual
 		    double entRes_times_u = Res_in_x*u + Res_in_y*v;
 
@@ -3090,7 +3379,7 @@ namespace proteus
 			nlinVisc_eN_den = fmax(vel2,nlinVisc_eN_den);
 		      }
 		  }
-		   
+
 		//
 		//update element residual
 		//
@@ -3109,7 +3398,7 @@ namespace proteus
 		  }
 		// save divergence of velocity
 		q_divU[eN_k] = q_grad_u[eN_k_nSpace+0] + q_grad_v[eN_k_nSpace+1];
-		
+
 		// SURFACE TENSION //
                 double unit_normal[nSpace];
                 double norm_grad_phi = 0.;
@@ -3137,6 +3426,12 @@ namespace proteus
                                             tgrad_v);
                 // END OF SURFACE TENSION //
 
+		if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		  {
+		    velStar[0] = q_velocity_sge[eN_k_nSpace+0];
+		    velStar[1] = q_velocity_sge[eN_k_nSpace+1];
+		    /*velStar[2] = q_velocity_sge[eN_k_nSpace+2];*/
+		  }
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     register int i_nSpace=i*nSpace;
@@ -3170,12 +3465,18 @@ namespace proteus
                       /* ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                       ck.Reaction_weak(mom_u_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) +
+		      (INT_BY_PARTS_PRESSURE==1 ? -1.0*p*vel_grad_test_dV[i_nSpace+0] : 0.) +
                       //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
                       USE_SUPG*ck.SubgridError(subgridError_u,Lstar_u_u[i]) +
                       ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]) +
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v1,vel_tgrad_test_i) +  //exp.
                       ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_u,vel_tgrad_test_i); //imp.
+                    mom_u_source_i[i] += ck.Reaction_weak(mom_u_source,vel_test_dV[i]);
+                    betaDrag_i[i] += ck.Reaction_weak(dmom_u_source[0],
+                                                      vel_test_dV[i]);
+                    vos_i[i] += ck.Reaction_weak(1.0-porosity,
+                                                 vel_test_dV[i]);
 
                     elementResidual_v[i] +=
                       ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) +
@@ -3185,12 +3486,14 @@ namespace proteus
                       /* ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                       ck.Reaction_weak(mom_v_source,vel_test_dV[i]) +
                       ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) +
+		      (INT_BY_PARTS_PRESSURE==1 ? -1.0*p*vel_grad_test_dV[i_nSpace+1] : 0.) +
                       //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
                       USE_SUPG*ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
                       ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]) +
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v2,vel_tgrad_test_i) +  //exp.
                       ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_v,vel_tgrad_test_i); //imp.
+                    mom_v_source_i[i] += ck.Reaction_weak(mom_v_source,vel_test_dV[i]);
 
                     /* elementResidual_w[i] +=
                        ck.Mass_weak(mom_w_acc_t,vel_test_dV[i]) + */
@@ -3200,10 +3503,65 @@ namespace proteus
                     /*   ck.Diffusion_weak(sdInfo_w_w_rowptr,sdInfo_w_w_colind,mom_ww_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
                     /*   ck.Reaction_weak(mom_w_source,vel_test_dV[i]) +  */
                     /*   ck.Hamiltonian_weak(mom_w_ham,vel_test_dV[i]) +  */
+		    /*   (INT_BY_PARTS_PRESSURE==1 ? -1.0*p*vel_grad_test_dV[i_nSpace+2] : 0.) + */
                     /*   ck.SubgridError(subgridError_p,Lstar_p_w[i]) +  */
                     /*   ck.SubgridError(subgridError_w,Lstar_w_w[i]) +  */
                     /*   ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]);  */
-                  }//i
+		    if (ARTIFICIAL_VISCOSITY==4)
+		      {
+			// ***** COMPUTE ENTROPY RESIDUAL ***** //
+			// mql. NOTE that the test functions are weighted by the velocity
+			elementEntropyResidual[i] +=
+			  // x-component
+			  ck.Mass_weak(mom_u_acc_t,u*vel_test_dV[i]) + // time derivative
+			  ck.Advection_weak(mom_u_adv,&u_times_vel_grad_test_dV[i_nSpace])+//m.mesh
+			  ck.Diffusion_weak(sdInfo_u_u_rowptr,
+					    sdInfo_u_u_colind,
+					    mom_uu_diff_ten,
+					    grad_u,
+					    &u_times_vel_grad_test_dV[i_nSpace]) +
+			  ck.Diffusion_weak(sdInfo_u_v_rowptr,
+					    sdInfo_u_v_colind,
+					    mom_uv_diff_ten,
+					    grad_v,
+					    &u_times_vel_grad_test_dV[i_nSpace]) +
+			  ck.Reaction_weak(mom_u_source,u*vel_test_dV[i]) + // Force term
+			  ck.Hamiltonian_weak(mom_u_ham,u*vel_test_dV[i])  // Pres + Non-linearity
+			  + // y-component
+			  ck.Mass_weak(mom_v_acc_t,v*vel_test_dV[i]) + // time derivative
+			  ck.Advection_weak(mom_v_adv,&v_times_vel_grad_test_dV[i_nSpace])+//m.mesh
+			  ck.Diffusion_weak(sdInfo_v_u_rowptr,
+					    sdInfo_v_u_colind,
+					    mom_vu_diff_ten,
+					    grad_u,
+					    &v_times_vel_grad_test_dV[i_nSpace])+
+			  ck.Diffusion_weak(sdInfo_v_v_rowptr,
+					    sdInfo_v_v_colind,
+					    mom_vv_diff_ten,
+					    grad_v,
+					    &v_times_vel_grad_test_dV[i_nSpace])+
+			  ck.Reaction_weak(mom_v_source,v*vel_test_dV[i]) + // force term
+			  ck.Hamiltonian_weak(mom_v_ham,v*vel_test_dV[i]); // Pres + Non-linearity
+		      }
+		    if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		      {
+			for(int j=0;j<nDOF_trial_element;j++)
+			  {
+			    int j_nSpace = j*nSpace;
+			    int i_nSpace = i*nSpace;
+			    elementTransport[i][j] += // int[rho*(velStar.grad_wj)*wi*dx]
+			      q_rho[eN_k]*porosity*
+			      ck.AdvectionJacobian_strong(velStar,
+							  &vel_grad_test_dV[j_nSpace])
+			      *vel_trial_ref[k*nDOF_trial_element+i];
+			    elementTransposeTransport[i][j] += // int[rho*(velStar.grad_wi)*wj*dx]
+			      q_rho[eN_k]*porosity*
+			      ck.AdvectionJacobian_strong(velStar,
+							  &vel_grad_test_dV[i_nSpace])
+			      *vel_trial_ref[k*nDOF_trial_element+j];
+			  }
+		      }//j
+		  }//i
               }
 	    // End computation of cell based EV coeff //
 	    if (CELL_BASED_EV_COEFF && ARTIFICIAL_VISCOSITY==2)
@@ -3231,13 +3589,145 @@ namespace proteus
                 /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
                 globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
+                ncDrag[offset_u+stride_u*vel_l2g[eN_i]]+=mom_u_source_i[i]; 
+                ncDrag[offset_v+stride_v*vel_l2g[eN_i]]+=mom_v_source_i[i];
+                betaDrag[vel_l2g[eN_i]] += betaDrag_i[i];
+                vos_vel_nodes[vel_l2g[eN_i]] += vos_i[i];
                 /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
+
+		if (ARTIFICIAL_VISCOSITY==4)
+		  {
+		    // DISTRIBUTE ENTROPY RESIDUAL //
+		    entropyResidualPerNode[vel_l2g[eN_i]] += elementEntropyResidual[i];
+		  }
+		if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+		  {
+		    for (int j=0;j<nDOF_trial_element;j++)
+		      {
+			int eN_i_j = eN_i*nDOF_trial_element+j;
+			TransportMatrix[csrRowIndeces_1D[eN_i]
+					+ csrColumnOffsets_1D[eN_i_j]]
+			  += elementTransport[i][j];
+			// transpose
+			TransposeTransportMatrix[csrRowIndeces_1D[eN_i]
+						 + csrColumnOffsets_1D[eN_i_j]]
+			  += elementTransposeTransport[i][j];
+		      }//j
+		  }
             }//i
             /* mesh_volume_conservation += mesh_volume_conservation_element; */
             /* mesh_volume_conservation_weak += mesh_volume_conservation_element_weak; */
             /* mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element)); */
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
+
+	  if(CUT_CELL_INTEGRATION > 0)
+	    std::cout<<std::flush;
+	// loop in DOFs for discrete upwinding
+	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+	  {
+	    // FIRST LOOP ON DOFs //
+	    for (int i=0; i<numDOFs_1D; i++)
+	      {
+		if (ARTIFICIAL_VISCOSITY==4) // via entropy viscosity
+		  {
+		    // normalize entropy residual per node
+		    double max_u2i = (std::pow(u_dof[i],2.) +
+				      std::pow(v_dof[i],2.));
+		    double min_u2i = max_u2i;
+		    for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
+		      {
+			int j = colind_1D[offset];
+			double u2j = (std::pow(u_dof[j],2.) +
+				      std::pow(v_dof[j],2.));
+			max_u2i = fmax(max_u2i,u2j);
+			min_u2i = fmin(min_u2i,u2j);
+		      }
+		    double normi = 0.5*(max_u2i + min_u2i) + 1E-10;
+		    entropyResidualPerNode[i] = fabs(entropyResidualPerNode[i])/normi;
+		  }
+		else // via smoothness indicator
+		  {
+		    double uStari = uStar_dof[i];
+		    double vStari = vStar_dof[i];
+
+		    double u_alpha_numerator = 0., u_alpha_denominator = 0.;
+		    double v_alpha_numerator = 0., v_alpha_denominator = 0.;
+
+		    // loop on sparsity pattern
+		    for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
+		      {
+			int j = colind_1D[offset];
+			double uStarj = uStar_dof[j];
+			double vStarj = vStar_dof[j];
+
+			// for u component
+			u_alpha_numerator += (uStarj - uStari);
+			u_alpha_denominator += fabs(uStarj - uStari);
+			// for v component
+			v_alpha_numerator += (vStarj - vStari);
+			v_alpha_denominator += fabs(vStarj - vStari);
+		      }
+		    double u_alpha = fabs(u_alpha_numerator)/(u_alpha_denominator+1E-10);
+		    double v_alpha = fabs(v_alpha_numerator)/(v_alpha_denominator+1E-10);
+		    // compute psi=alpha^power
+		    psi[i] = (POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 :
+			      std::pow(fmax(u_alpha,v_alpha),
+				       POWER_SMOOTHNESS_INDICATOR));
+		  }
+	      }
+
+	    // SECOND LOOP ON DOFs //
+	    int ij=0;
+	    for (int i=0; i<numDOFs_1D; i++)
+	      {
+		int ii;
+		double dii = 0;
+		double ui = u_dof[i];
+		double vi = v_dof[i];
+
+		double ith_u_dissipative_term = 0;
+		double ith_v_dissipative_term = 0;
+
+		for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
+		  {
+		    int j = colind_1D[offset];
+		    if (i!=j)
+		      {
+			double uj = u_dof[j];
+			double vj = v_dof[j];
+
+			if (ARTIFICIAL_VISCOSITY==4) // via entropy viscosity
+			  {
+			    double dEVij = fmax(laggedEntropyResidualPerNode[i],
+						laggedEntropyResidualPerNode[j]);
+			    double dLij = fmax(0.,fmax(TransportMatrix[ij],
+						       TransposeTransportMatrix[ij]));
+			    dMatrix[ij] = fmin(dLij,cE*dEVij);
+			  }
+			else // via smoothness indicator
+			  {
+			    dMatrix[ij] = fmax(0.,fmax(psi[i]*TransportMatrix[ij], // by S. Badia
+						       psi[j]*TransposeTransportMatrix[ij]));
+			  }
+			dii -= dMatrix[ij];
+			//dissipative terms
+			ith_u_dissipative_term += dMatrix[ij]*(uj-ui);
+			ith_v_dissipative_term += dMatrix[ij]*(vj-vi);
+		      }
+		    else
+		      {
+			ii = ij;
+		      }
+		    // update ij
+		    ij++;
+		  }
+		dMatrix[ii] = dii;
+		globalResidual[offset_u+stride_u*i] += -ith_u_dissipative_term;
+		globalResidual[offset_v+stride_v*i] += -ith_v_dissipative_term;
+	      }
+	  }
+
         //
         //loop over the surrogate boundaries in SB method and assembly into residual
         //
@@ -3848,7 +4338,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -3943,7 +4434,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
 
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
@@ -4040,16 +4532,16 @@ namespace proteus
                 bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*yt_ext;
                 /* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*bc_mom_u_acc_ext*zt_ext; */
 
-                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext; 
+                bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*xt_ext;
                 bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
                 /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
 
                 /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
                 /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
                 /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
-                // 
-                //calculate the numerical fluxes 
-                // 
+                //
+                //calculate the numerical fluxes
+                //
                 ck.calculateGScale(G,normal,h_penalty);
                 penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
@@ -4297,6 +4789,7 @@ namespace proteus
                     /* elementResidual_p[i] -= DM*ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]),p_test_dS[i]); */
                     /* globalConservationError += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]); */
                     elementResidual_u[i] +=
+		      (INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[0] : 0.) +
                       ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
@@ -4330,7 +4823,9 @@ namespace proteus
                     /*                                         sdInfo_u_w_colind, */
                     /*                                         mom_uw_diff_ten_ext, */
                     /*                                         &vel_grad_test_dS[i*nSpace]); */
-                    elementResidual_v[i] += ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
+                    elementResidual_v[i] +=
+		      (INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[1] : 0.) +
+		      ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
                       ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+
                       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
@@ -4364,7 +4859,9 @@ namespace proteus
                     /*                                         mom_vw_diff_ten_ext, */
                     /*                                         &vel_grad_test_dS[i*nSpace]);  */
 
-                    /* elementResidual_w[i] += ck.ExteriorElementBoundaryFlux(flux_mom_w_adv_ext,vel_test_dS[i]) + */
+                    /* elementResidual_w[i] += */
+		    /*   (INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[2] : 0.) +*/
+		    /*   ck.ExteriorElementBoundaryFlux(flux_mom_w_adv_ext,vel_test_dS[i]) + */
                     /*   ck.ExteriorElementBoundaryFlux(flux_mom_wu_diff_ext,vel_test_dS[i])+ */
                     /*   ck.ExteriorElementBoundaryFlux(flux_mom_wv_diff_ext,vel_test_dS[i])+ */
                     /*   ck.ExteriorElementBoundaryFlux(flux_mom_ww_diff_ext,vel_test_dS[i])+ */
@@ -4490,6 +4987,7 @@ namespace proteus
                                    double* phi_solid_nodes,
                              const double* phi_solid,
                              const double* q_velocity_solid,
+                             const double* q_velocityStar_solid,
                              const double* q_vos,
                              const double* q_dvos_dt,
                              const double* q_grad_vos,
@@ -4621,7 +5119,16 @@ namespace proteus
                              double* dynamic_viscosity_as_function,
                              double* ebqe_density_as_function,
                              double* ebqe_dynamic_viscosity_as_function,
-                             int USE_SBM)
+                             int USE_SBM,
+			     // For edge based dissipation
+			     int ARTIFICIAL_VISCOSITY,
+			     double * dMatrix,
+			     int numDOFs_1D,
+			     int offset_u, int offset_v, int offset_w,
+			     int stride_u, int stride_v, int stride_w,
+			     int *rowptr_1D, int *colind_1D,
+			     int *rowptr, int *colind,
+			     int INT_BY_PARTS_PRESSURE)
       {
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -5076,10 +5583,16 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
-                //todo: decide if these should be lagged or not
+                for (int I=0;I<nSpace;I++)
+                  {
+                    dmom_u_source[I] = 0.0;
+                    dmom_v_source[I] = 0.0;
+                    dmom_w_source[I] = 0.0;
+                  }
                 updateDarcyForchheimerTerms_Ergun(/* linearDragFactor, */
                                                   /* nonlinearDragFactor, */
                                                   /* porosity, */
@@ -5107,6 +5620,9 @@ namespace proteus
                                                   q_velocity_solid[eN_k_nSpace+0],
                                                   q_velocity_solid[eN_k_nSpace+1],
                                                   q_velocity_solid[eN_k_nSpace+1],//cek hack, should not be used
+                                                  q_velocityStar_solid[eN_k_nSpace+0],
+                                                  q_velocityStar_solid[eN_k_nSpace+1],
+                                                  q_velocityStar_solid[eN_k_nSpace+1],//cek hack, should not be used
                                                   mom_u_source,
                                                   mom_v_source,
                                                   mom_w_source,
@@ -5264,7 +5780,7 @@ namespace proteus
                 //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
 
                 mom_u_acc_t *= dmom_u_acc_u; //multiply by porosity*rho. mql. CHECK.
-                mom_v_acc_t *= dmom_v_acc_v; 
+                mom_v_acc_t *= dmom_v_acc_v;
 
                 //
                 dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
@@ -5587,6 +6103,42 @@ namespace proteus
                   }//j
               }//i
           }//elements
+
+	// loop in DOFs for discrete upwinding
+	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
+	  {
+	    int ij=0;
+	    for (int i=0; i<numDOFs_1D; i++)
+	      {
+		// global index for each component
+		int u_gi = offset_u+stride_u*i;
+		int v_gi = offset_v+stride_v*i;
+
+		// pointer to first entry in the ith row for each component
+		int u_ith_row_ptr = rowptr[u_gi];
+		int v_ith_row_ptr = rowptr[v_gi];
+
+		// number of DOFs in the ith row (of the small matrix dMatrix)
+		int numDOFs_ith_row = rowptr_1D[i+1]-rowptr_1D[i];
+		for (int counter = 0; counter < numDOFs_ith_row; counter++)
+		  {
+		    // ij pointer for each component
+		    int uu_ij = u_ith_row_ptr + (offset_u + counter*stride_u);
+		    int vv_ij = v_ith_row_ptr + (offset_v + counter*stride_v);
+
+		    // read ij component of dissipative matrix
+		    double dij = dMatrix[ij];
+
+		    // update global Jacobian
+		    globalJacobian[uu_ij] -= dij;
+		    globalJacobian[vv_ij] -= dij;
+
+		    // update ij
+		    ij++;
+		  }
+	      }
+	  }
+
         if(USE_SBM>0)
           {
             //loop over the surrogate boundaries in SB method and assembly into jacobian
@@ -6162,7 +6714,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -6257,7 +6810,8 @@ namespace proteus
                                      ball_center,
                                      ball_radius,
                                      ball_velocity,
-                                     ball_angular_velocity);
+                                     ball_angular_velocity,
+				     INT_BY_PARTS_PRESSURE);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -6355,7 +6909,7 @@ namespace proteus
                 bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*yt_ext;
                 /* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*dmom_v_acc_v_ext*bc_mom_v_acc_ext*zt_ext; */
 
-                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */ 
+                /* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*xt_ext; */
                 /* bc_mom_w_adv_ext[1] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*yt_ext; */
                 /* bc_mom_w_adv_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*bc_mom_w_acc_ext*zt_ext; */
                 //

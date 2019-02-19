@@ -20,6 +20,7 @@
 - Copyright 2018 John Fenton johndfenton@gmail.com
 - Copyright 2018 Manuel Quezada de Luna manuel.quezada.dl@gmail.com
 - Copyright 2018 Yong Yang wacyyang@gmail.com
+- Copyright 2019 Greg Burgreen greg.burgreen@msstate.edu
 
 **Note for U.S. Federal Employees**
 

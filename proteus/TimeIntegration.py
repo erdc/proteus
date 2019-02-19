@@ -16,7 +16,7 @@ from .LinearAlgebraTools import *
 import sys,math
 from . import Profiling
 from .Profiling import logEvent
-from .flcbdfWrappers import globalMax
+from .Comm import globalMax
 
 class TI_base(object):
     """
@@ -392,13 +392,12 @@ class SSP(BackwardEuler_cfl):
         self.isSSP=True
 
 class FLCBDF(TI_base):
-    from . import flcbdfWrappers
     def __init__(self,transport):
         from . import flcbdfWrappers
         TI_base.__init__(self,transport)
         self.initCalls=0
         #masses
-        self.flcbdf = dict([(ci,flcbdfWrappers.FLCBDF_integrator(transport.q[('m',ci)],transport.name + 'm' + str(ci))) for ci in self.massComponents])
+        self.flcbdf = dict([(ci,flcbdfWrappers.FLCBDF_integrator(transport.q[('m',ci)],"{0:s}m{1:d}".format(transport.name,ci))) for ci in self.massComponents])
         #dof cek could turn this off to save storage and/or look at robustness of predictor
         for ci in range(self.nc):
             self.flcbdf[('u',ci)] = flcbdfWrappers.FLCBDF_integrator(transport.u[ci].dof,transport.u[ci].name)
@@ -412,7 +411,6 @@ class FLCBDF(TI_base):
         self.m_tmp={}
         self.beta_bdf={}
         self.alpha_bdf=0.0
-        print("mass components=====================",self.massComponents)
         for ci in self.massComponents:
             self.m_tmp[ci] = transport.q[('m',ci)]
             self.m[ci]=transport.q[('m',ci)]
