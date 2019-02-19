@@ -14,8 +14,8 @@ class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions,
                  getPeriodicBoundaryConditions=None,
-                 h_eps=1.0e-8,
-                 tol_u=1.0e-8):
+                 h_eps=1.0e-7,
+                 tol_u=1.0e-7):
         proteus.NumericalFlux.ShallowWater_2D.__init__(self, vt, getPointwiseBoundaryConditions,
                                                        getAdvectiveFluxBoundaryConditions,
                                                        getDiffusiveFluxBoundaryConditions,
