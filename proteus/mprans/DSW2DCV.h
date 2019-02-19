@@ -13,7 +13,7 @@
 // 5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define GLOBAL_FCT 0
-#define POWER_SMOOTHNESS_INDICATOR 3 // this is for modified green-naghdi paper
+#define POWER_SMOOTHNESS_INDICATOR 3
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 1
 // quick hack to turn on/off dispersion
@@ -515,9 +515,7 @@ public:
         if (isinf(lambda1) == 1 || isinf(lambda3) == 1)
           abort();
       }
-    }
-    // see equation (4.12) of mGN paper
-    if (LAMBDA_MGN == 1) {
+    } else { // see equations (4.12) of our paper
       lambda1 = nu1(g, 0.0, hL, velL, etaL, meshSizeL);
       lambda3 = nu3(g, 0.0, hR, velR, etaR, meshSizeR);
     }
@@ -699,17 +697,18 @@ public:
                            const double &h, const double &hu, const double &hv,
                            const double &heta, const double hEps, double &cfl) {
 
-    double eta = 2 * h / (h * h + std::pow(fmax(h, hEps), 2)) * heta;
-    double aug =
-        LAMBDA_MGN / (3.0 * elementDiameter) * (6.0 * h + 12.0 * (h - eta));
-    if (eta >= h) {
-      aug = LAMBDA_MGN / (3.0 * elementDiameter) * 6.0 * h;
-    }
-    aug = aug * std::pow(elementDiameter / fmax(elementDiameter, h), 2.0);
-
-    if (WITH_SW_SPEEDS == 0) {
-      aug = 0.0;
-    }
+    // double mesh_size = sqrt(lumped_mass_matrix);
+    // double eta = 2 * h / (h * h + std::pow(fmax(h, hEps), 2)) * heta;
+    // double aug = LAMBDA_MGN / (3.0 * mesh_size) * (6.0 * h + 12.0 * (h -
+    // eta)); if (eta >= h) {
+    //   aug = LAMBDA_MGN / (3.0 * mesh_size) * 6.0 * h;
+    // }
+    // aug = aug * std::pow(mesh_size / fmax(mesh_size, h), 2.0);
+    //
+    // if (WITH_SW_SPEEDS == 1) {
+    //   aug = 0.0;
+    // }
+    double aug = 0.0;
 
     double cflx, cfly,
         c = sqrt(fmax(g * hEps * (1.0 + aug), g * h * (1.0 + aug)));
@@ -1838,12 +1837,13 @@ public:
           extendedSourceTerm_hu[i] += (g * hi * (hj + Zj) + pTildej) * Cx[ij];
           extendedSourceTerm_hv[i] += (g * hi * (hj + Zj) + pTildej) * Cy[ij];
 
-          // flux for entropy
+          // flux for entropy, EJT: took of pTilde because I don't think we need
+          // it, it might not even matter
           ith_flux_term1 += aux_h;
           ith_flux_term2 +=
-              aux_hu + (g * hi * (hj + 0.) + pTildej) * Cx[ij]; // NOTE: Zj=0
+              aux_hu + (g * hi * (hj + 0.)) * Cx[ij]; // NOTE: Zj=0
           ith_flux_term3 +=
-              aux_hv + (g * hi * (hj + 0.) + pTildej) * Cy[ij]; // NOTE: Zj=0
+              aux_hv + (g * hi * (hj + 0.)) * Cy[ij]; // NOTE: Zj=0
 
           // NOTE: WE CONSIDER FLAT BOTTOM
           entropy_flux +=
