@@ -1414,13 +1414,16 @@ public:
                   // balancing wrt friction
           alphai = 0.;
         else
-          alphai = 2 * fabs(alpha_numerator) / (alpha_denominator + 1E-15);
+          alphai = fabs(alpha_numerator) / (alpha_denominator + 1E-15);
       }
+      alphai = fmax(alphai - 0.5, 0.0) * 1.0 / (1.0 - 0.5); // fixed this
       if (POWER_SMOOTHNESS_INDICATOR == 0)
         psi[i] = 1.0;
       else
         psi[i] = std::pow(
-            alphai, POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^2 in the paper
+            alphai,
+            POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^2 in the friction paper,
+                                         // alpha^3 in mGN paper
     }
 
     if (REESTIMATE_MAX_EDGE_BASED_CFL == 1) {
@@ -1885,12 +1888,14 @@ public:
           else
             alphai = 2 * fabs(alpha_numerator) / (alpha_denominator + 1E-15);
         }
+        alphai = fmax(alphai - 0.5, 0.0) * 1.0 / (1.0 - 0.5); // fixed this
         if (POWER_SMOOTHNESS_INDICATOR == 0)
           psi[i] = 1.0;
         else
           psi[i] = std::pow(
               alphai,
-              POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^2 in the paper
+              POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^2 in friction paper,
+                                           // alpha^3 in mGN paper
       }
       // ********** END OF 2nd LOOP ON DOFS ********** //
 
