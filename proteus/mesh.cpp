@@ -3864,6 +3864,8 @@ extern "C"
     mesh.elementBoundaryDiametersArray = new double[mesh.nElementBoundaries_global];
     mesh.elementBarycentersArray  = new double[mesh.nElements_global*3];
     mesh.elementBoundaryBarycentersArray = new double[mesh.nElementBoundaries_global*3];
+    mesh.nodeDiametersArray = new double[mesh.nNodes_global];
+    mesh.nodeSupportArray = new double[mesh.nNodes_global];
     return 0;
   }
 
@@ -3874,6 +3876,8 @@ extern "C"
     memset(mesh.elementBoundaryDiametersArray,0,mesh.nElementBoundaries_global*sizeof(double));
     memset(mesh.elementBarycentersArray,0,mesh.nElements_global*3*sizeof(double));
     memset(mesh.elementBoundaryBarycentersArray,0,mesh.nElementBoundaries_global*3*sizeof(double));
+    memset(mesh.nodeDiametersArray,0,mesh.nNodes_global*sizeof(double));
+    memset(mesh.nodeSupportArray,0,mesh.nNodes_global*sizeof(double));
     mesh.hMin = edgeLength(mesh.elementNodesArray[0],
                            mesh.elementNodesArray[1],
                            mesh.nodeArray);
@@ -3900,6 +3904,8 @@ extern "C"
 	      nNperElemInv*mesh.nodeArray[mesh.elementNodesArray[eN*mesh.nNodes_element + nN]*3 + 1];
 	    mesh.elementBarycentersArray[eN*3 + 2] += 
 	      nNperElemInv*mesh.nodeArray[mesh.elementNodesArray[eN*mesh.nNodes_element + nN]*3 + 2];
+	    mesh.nodeDiametersArray[mesh.elementNodesArray[eN*mesh.nNodes_element + nN]] += mesh.elementDiametersArray[eN]*mesh.elementDiametersArray[eN];
+	    mesh.nodeSupportArray[mesh.elementNodesArray[eN*mesh.nNodes_element + nN]] += mesh.elementDiametersArray[eN];
 	  }
       }
     for (int ebN=0;ebN<mesh.nElementBoundaries_global;ebN++)
@@ -3919,8 +3925,11 @@ extern "C"
 	    mesh.elementBoundaryBarycentersArray[ebN*3 + 2] += 
 	      nNperElemBInv*mesh.nodeArray[mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN]*3 + 2];
 	  }
+      }    
+    for (int nN=0;nN<mesh.nNodes_global;nN++)
+      {
+	mesh.nodeDiametersArray[nN] /= mesh.nodeSupportArray[nN];
       }
-    
     mesh.sigmaMax = 1.0;
     //printf("volume = %12.5e \n",mesh.volume);
     //printf("h = %12.5e \n",mesh.h);
@@ -4526,7 +4535,6 @@ extern "C"
 	    childMesh.elementBoundaryMaterialTypes[ebN] = parentMesh.elementBoundaryMaterialTypes[ebN_parent];
 	  }
       }//interior element boundaries
-    
     for (int ebNE = 0; ebNE < childMesh.nExteriorElementBoundaries_global; ebNE++)
       {
 	int ebN = childMesh.exteriorElementBoundariesArray[ebNE];
