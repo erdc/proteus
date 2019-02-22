@@ -2486,7 +2486,7 @@ namespace proteus
                              double C_b,
                              //VRANS
                              const double* eps_solid,
-                                   double* phi_solid,
+                             double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_porosity,
                              const double* q_dragAlpha,

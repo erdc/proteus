@@ -20,10 +20,10 @@ import math
 import sys
 from . import superluWrappers
 from . import Comm
+from .Comm import globalSum, globalMax
 from .superluWrappers import *
 from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
-from . import flcbdfWrappers
 
 # PETSc Matrix Functions
 
@@ -416,40 +416,6 @@ def split_PETSc_Mat(mat):
     S.aypx(-1.0,mat.transpose())
     S.scale(0.5)
     return H, S
-
-class ParVec(object):
-    """
-    A parallel vector built on top of daetk's wrappers for petsc
-    """
-    def __init__(self,
-                 array,
-                 blockSize,
-                 n,
-                 N,
-                 nghosts=None,
-                 subdomain2global=None,
-                 blockVecType="simple"):#"block"
-        from . import flcbdfWrappers
-        self.dim_proc=n*blockSize
-        if nghosts is None:
-            if blockVecType=="simple":
-                self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,-1,None,array,0)
-            else:
-                self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,-1,None,array,1)
-        else:
-            assert nghosts >= 0, "The number of ghostnodes must be non-negative"
-            assert subdomain2global.shape[0] == (n+nghosts), ("The subdomain2global map is the wrong length n=%i,nghosts=%i,shape=%i \n" % (n,n+nghosts,subdomain2global.shape[0]))
-            assert len(array.flat) == (n+nghosts)*blockSize, ("%i  != (%i+%i)*%i \n"%(len(array.flat),  n,nghosts,blockSize))
-            if blockVecType=="simple":
-                self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,nghosts,subdomain2global,array,0)
-            else:
-                self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,nghosts,subdomain2global,array,1)
-        self.nghosts = nghosts
-    def scatter_forward_insert(self):
-       self.cparVec.scatter_forward_insert()
-    def scatter_reverse_add(self):
-       self.cparVec.scatter_reverse_add()
-
 
 class ParVec_petsc4py(p4pyPETSc.Vec):
     """
@@ -1217,7 +1183,7 @@ class MatrixInvShell(InvOperatorShell):
         self.ksp.setOperators(self.A,self.A)
         self.ksp.setType('preonly')
         self.ksp.pc.setType('lu')
-        self.ksp.pc.setFactorSolverPackage('superlu_dist')
+        self.ksp.pc.setFactorSolverType('superlu_dist')
         self.ksp.setUp()
 
     def apply(self,A,x,y):
@@ -1488,7 +1454,7 @@ def l2Norm(x):
     """
     Compute the parallel :math:`l_2` norm
     """
-    return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    return math.sqrt(globalSum(numpy.dot(x,x)))
 
 
 def l1Norm(x):
@@ -1512,7 +1478,7 @@ def l1Norm(x):
     :param x: numpy array of length n
     :return: float
     """
-    return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(x)))
+    return globalSum(numpy.sum(numpy.abs(x)))
 
 
 def lInfNorm(x):
@@ -1532,7 +1498,7 @@ def lInfNorm(x):
     :param x: numpy array of length n
     :return: float
     """
-    return flcbdfWrappers.globalMax(numpy.linalg.norm(x,numpy.inf))
+    return globalMax(numpy.linalg.norm(x,numpy.inf))
 
 
 def wDot(x,y,h):
@@ -1552,27 +1518,27 @@ def wDot(x,y,h):
     :param x,y,h: numpy arrays for vectors and weight
     :return: the weighted dot product
     """
-    return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
+    return globalSum(numpy.sum(x*y*h))
 
 def wl2Norm(x,h):
     """
     Compute the parallel weighted l_2 norm with weight h
     """
-    return math.sqrt(flcbdfWrappers.globalSum(wDot(x,x,h)))
+    return math.sqrt(globalSum(wDot(x,x,h)))
 
 
 def wl1Norm(x,h):
     """
     Compute the parallel weighted l_1 norm with weight h
     """
-    return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(h*x)))
+    return globalSum(numpy.sum(numpy.abs(h*x)))
 
 
 def wlInfNorm(x,h):
     """
     Compute the parallel weighted l_{\infty} norm with weight h
     """
-    return flcbdfWrappers.globalMax(numpy.linalg.norm(h*x,numpy.inf))
+    return globalMax(numpy.linalg.norm(h*x,numpy.inf))
 
 def energyDot(x,y,A):
     """
@@ -1590,8 +1556,8 @@ def l2NormAvg(x):
     """
     Compute the arithmetic averaged l_2 norm (root mean squared norm)
     """
-    scale = old_div(1.0,flcbdfWrappers.globalSum(len(x.flat)))
-    return math.sqrt(scale*flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    scale = old_div(1.0,globalSum(len(x.flat)))
+    return math.sqrt(scale*globalSum(numpy.dot(x,x)))
 
 
 rmsNorm = l2NormAvg

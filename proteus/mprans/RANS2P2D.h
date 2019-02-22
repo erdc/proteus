@@ -1072,7 +1072,6 @@ namespace proteus
           {
               d_ball_i = std::sqrt((ball_center[i*3+0]-x)*(ball_center[i*3+0]-x)
                                   +(ball_center[i*3+1]-y)*(ball_center[i*3+1]-y)
-//                                  +(ball_center[i*3+2]-z)*(ball_center[i*3+2]-z)
                                   ) - ball_radius[i];
               if(d_ball_i<distance)
               {
@@ -1089,7 +1088,6 @@ namespace proteus
       {
           distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
                                     + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
-//                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
                             ) - ball_radius[I];
       }
       void get_normal_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
@@ -1099,7 +1097,6 @@ namespace proteus
       {
           double distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
                                     + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
-//                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
                             );
           nx = (x - ball_center[I*3+0])/(distance+1e-10);
           ny = (y - ball_center[I*3+1])/(distance+1e-10);
@@ -1900,7 +1897,7 @@ namespace proteus
         dflux_wmom_du = 0.0;
         dflux_wmom_dv = 0.0;
 
-        flowSpeedNormal = n[0] * df_vmom_dv[0] + n[1] * df_umom_du[1];                         //tricky, works for moving and fixed  domains
+        flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for moving and fixed  domains
         flowSpeedNormal+=NONCONSERVATIVE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]);
         if (isDOFBoundary_u != 1)
         {
@@ -3091,7 +3088,7 @@ namespace proteus
 
                 elementResidual_p_save[eN_i] +=  elementResidual_p[i];
                 mesh_volume_conservation_element_weak += elementResidual_mesh[i];
-                 globalResidual[offset_p+stride_p*rp_l2g[eN_i]]+=elementResidual_p[i];
+                globalResidual[offset_p+stride_p*rp_l2g[eN_i]]+=elementResidual_p[i];
               }
             for(int i=0;i<nDOF_v_test_element;i++)
               {
