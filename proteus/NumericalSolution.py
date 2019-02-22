@@ -766,8 +766,8 @@ class NS_base(object):  # (HasTraits):
     def PUMI2Proteus(self,mesh):
         #p0 = self.pList[0] #This can probably be cleaned up somehow
         #n0 = self.nList[0]
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
 
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
@@ -1091,11 +1091,11 @@ class NS_base(object):  # (HasTraits):
         del scalar
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
-        rho = numpy.array([self.pList[0].rho_0,
-                           self.pList[0].rho_1])
-        nu = numpy.array([self.pList[0].nu_0,
-                          self.pList[0].nu_1])
-        g = numpy.asarray(self.pList[0].g)
+        rho = numpy.array([self.pList[0].ct.rho_0,
+                           self.pList[0].ct.rho_1])
+        nu = numpy.array([self.pList[0].ct.nu_0,
+                          self.pList[0].ct.nu_1])
+        g = numpy.asarray(self.pList[0].ct.g)
         if(hasattr(self,"tn")):
             deltaT = self.tn-self.tn_last
         else:
@@ -1111,11 +1111,8 @@ class NS_base(object):  # (HasTraits):
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        p0 = self.pList[0]
-        n0 = self.nList[0]
-        #p0 = self.pList[0].ct
-        #n0 = self.nList[0].ct
-
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
         #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
