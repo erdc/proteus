@@ -248,35 +248,30 @@ class BC_RANS(BoundaryConditions.BC_Base):
         vof_air: Optional[float]
             VOF value of air (default is 1.)
         """
-        self.BC_type = 'OpenAir'
+        self.BC_type = 'Atmosphere'
         if orientation is None and self._b_or is not None:
             orientation = self._b_or
+        assert orientation is not None, 'oritentation must be set for BC'
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
         self.pInc_dirichlet.setConstantBC(0.)
         self.pInit_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
-        self.vos_dirichlet.setConstantBC(0.)  
+        self.vos_dirichlet.setConstantBC(0.)
         self.k_dirichlet.setConstantBC(1e-30)
-        if self._b_or[0] == 1. or self._b_or[0] == -1.:
-            self.v_dirichlet.setConstantBC(0.)
-            self.w_dirichlet.setConstantBC(0.)
-            self.vs_dirichlet.setConstantBC(0.)
-            self.ws_dirichlet.setConstantBC(0.)
+        self.u_dirichlet.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
+        self.us_dirichlet.setConstantBC(0.)
+        self.vs_dirichlet.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)
+        if orientation[0] == 1. or orientation[0] == -1.:
             self.u_diffusive.setConstantBC(0.)
             self.us_diffusive.setConstantBC(0.)
-        if self._b_or[1] == 1. or self._b_or[1] == -1.:
-            self.u_dirichlet.setConstantBC(0.)
-            self.w_dirichlet.setConstantBC(0.)
-            self.us_dirichlet.setConstantBC(0.)
-            self.ws_dirichlet.setConstantBC(0.)
+        if orientation[1] == 1. or orientation[1] == -1.:
             self.v_diffusive.setConstantBC(0.)
             self.vs_diffusive.setConstantBC(0.)
-        if self._b_or[2] == 1. or self._b_or[2] == -1.:
-            self.u_dirichlet.setConstantBC(0.)
-            self.v_dirichlet.setConstantBC(0.)
-            self.us_dirichlet.setConstantBC(0.)
-            self.vs_dirichlet.setConstantBC(0.)
+        if orientation[2] == 1. or orientation[2] == -1.:
             self.w_diffusive.setConstantBC(0.)
             self.ws_diffusive.setConstantBC(0.)
         self.k_dirichlet.setConstantBC(1e-30)
@@ -485,7 +480,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
         self.vof_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
         self.p_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
-        self.pInc_advective.setConstantBC(0.0)
+        self.pInc_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+        self.pInc_diffusive.setConstantBC(0.0)
         self.pInit_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)#setConstantBC(0.0)
         self.vos_dirichlet.setConstantBC(0.0)
         self.us_dirichlet.setConstantBC(0.0)

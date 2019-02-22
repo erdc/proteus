@@ -98,7 +98,7 @@ class AR_base(object):
                                   "a")
             if self.has_h5py and not useTextArchive:
                 self.hdfFilename=filename+".h5"
-                self.hdfFile=h5py.File(self.hdfFilename,
+                self.hdfFile=h5py.File(os.path.join(self.dataDir,self.hdfFilename),
                                        "a",
                                        driver="mpio",
                                        comm = comm_world)
@@ -197,7 +197,7 @@ class AR_base(object):
                 self.dataItemFormat="HDF"
                 self.comm.barrier()
             elif self.hasTables and not useTextArchive:
-                self.hdfFilename=filename+str(self.rank).decode()+".h5"
+                self.hdfFilename=filename+repr(self.rank).decode()+".h5"
                 self.hdfFile=tables.open_file(os.path.join(self.dataDir,
                                                           self.hdfFilename),
                                              mode = "w",

@@ -32,8 +32,8 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    forceStrongDirichlet=ns_forceStrongDirichlet,
                                    NONCONSERVATIVE_FORM=1.0,
                                    MOMENTUM_SGE=0.0,
-                                   PRESSURE_PROJECTION_STABILIZATION=1.0)
-
+                                   PRESSURE_PROJECTION_STABILIZATION=1.0,
+                                   nullSpace='NavierStokesConstantPressure')
 
 class uTrue(object):
     def __init__(self):
