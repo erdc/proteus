@@ -400,7 +400,7 @@ class RectangularDomain(D_base):
         elif self.nd==3:
             fileString="""
 # vertices
-8 3 0 0
+8 3 0 1
 1 %(x0)f %(x1)f %(x2)f 1
 2 %(x0)f %(x1pL1)f %(x2)f 2
 3 %(x0pL0)f %(x1pL1)f %(x2)f 3

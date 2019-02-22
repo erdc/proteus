@@ -14,6 +14,7 @@ import os
 import numpy as np
 import tables
 import pytest
+from petsc4py import PETSc
 from . import (vortex2D, vortex2D_so,
                ncls_p, ncls_n,
                rdls_p, rdls_n)
@@ -55,6 +56,13 @@ class TestEllipticRedistancing(object):
             sList.append(default_s)
         self.so.name += "_ELLIPTIC_REDIST_0"
         # NUMERICAL SOLUTION #
+        petsc_options = PETSc.Options()
+        petsc_options.setValue('ncls_pc_type','lu')
+        petsc_options.setValue('ncls_ksp_type','preonly')
+        petsc_options.setValue('ncls_pc_factor_mat_solver_package','superlu')
+        petsc_options.setValue('rdls_pc_type','lu')
+        petsc_options.setValue('rdls_ksp_type','preonly')
+        petsc_options.setValue('rdls_pc_factor_mat_solver_package','superlu')
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
@@ -62,7 +70,7 @@ class TestEllipticRedistancing(object):
                                                opts)
         ns.calculateSolution('rdls')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_0.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t1),0.1338208537581557,atol=1e-10)
+        assert np.isclose(np.amax(actual.root.u_t1),0.13600213609175285,atol=1e-10)
         actual.close()
 
     def test_ELLIPTIC_REDISTANCING_1(self):
@@ -85,6 +93,13 @@ class TestEllipticRedistancing(object):
             sList.append(default_s)
         self.so.name += "_ELLIPTIC_REDIST_1"
         # NUMERICAL SOLUTION #
+        petsc_options = PETSc.Options()
+        petsc_options.setValue('ncls_pc_type','lu')
+        petsc_options.setValue('ncls_ksp_type','preonly')
+        petsc_options.setValue('ncls_pc_factor_mat_solver_package','superlu')
+        petsc_options.setValue('rdls_pc_type','lu')
+        petsc_options.setValue('rdls_ksp_type','preonly')
+        petsc_options.setValue('rdls_pc_factor_mat_solver_package','superlu')
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
@@ -92,7 +107,7 @@ class TestEllipticRedistancing(object):
                                                opts)
         ns.calculateSolution('rdls')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_1.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t1),0.1304760274072587,atol=1e-10)
+        assert np.isclose(np.amax(actual.root.u_t1),0.13084321505201912,atol=1e-10)
         actual.close()
 
     def test_ELLIPTIC_REDISTANCING_2(self):
@@ -117,6 +132,13 @@ class TestEllipticRedistancing(object):
             sList.append(default_s)
         self.so.name += "_ELLIPTIC_REDIST_2"
         # NUMERICAL SOLUTION #
+        petsc_options = PETSc.Options()
+        petsc_options.setValue('ncls_pc_type','lu')
+        petsc_options.setValue('ncls_ksp_type','preonly')
+        petsc_options.setValue('ncls_pc_factor_mat_solver_package','superlu')
+        petsc_options.setValue('rdls_pc_type','lu')
+        petsc_options.setValue('rdls_ksp_type','preonly')
+        petsc_options.setValue('rdls_pc_factor_mat_solver_package','superlu')
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
@@ -125,7 +147,7 @@ class TestEllipticRedistancing(object):
         ns.calculateSolution('rdls')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_2.h5','r')
         Profiling.logEvent("max u"+repr(np.amax(actual.root.u_t1)))
-        assert np.isclose(np.amax(actual.root.u_t1),0.10626477076036571,atol=1e-10)
+        assert np.isclose(np.amax(actual.root.u_t1),0.1060107277952287,atol=1e-10)
         actual.close()
 
     def test_ELLIPTIC_REDISTANCING_3(self):
@@ -148,6 +170,13 @@ class TestEllipticRedistancing(object):
             sList.append(default_s)
         self.so.name += "_ELLIPTIC_REDIST_3"
         # NUMERICAL SOLUTION #
+        petsc_options = PETSc.Options()
+        petsc_options.setValue('ncls_pc_type','lu')
+        petsc_options.setValue('ncls_ksp_type','preonly')
+        petsc_options.setValue('ncls_pc_factor_mat_solver_package','superlu')
+        petsc_options.setValue('rdls_pc_type','lu')
+        petsc_options.setValue('rdls_ksp_type','preonly')
+        petsc_options.setValue('rdls_pc_factor_mat_solver_package','superlu')
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
@@ -155,5 +184,5 @@ class TestEllipticRedistancing(object):
                                                opts)
         ns.calculateSolution('rdls')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_3.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t1),0.10598184134747586,atol=1e-10)
+        assert np.isclose(np.amax(actual.root.u_t1),0.10593090830115062,atol=1e-10)
         actual.close()

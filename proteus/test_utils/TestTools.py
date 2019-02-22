@@ -31,6 +31,30 @@ def silent_rm(filename):
     except OSError:
         pass
 
+def fixture_set_petsc_options_from_file(path):
+    """ Setup a petsc options file in a pytest fixture
+
+    Attributes
+    ----------
+    path: str
+        petsc options file path
+
+    Returns
+    -------
+    petsc_argv: lst
+        list of input arguments including petsc options
+    """
+    petsc_argv = [sys.argv[0]]
+    with open(path) as petsc_file:
+        data = petsc_file.readlines()
+    def strip_comments(line):
+        if '#' in line:
+            line = line[:line.index('#')]
+        return line
+    stripped_data = [strip_comments(line) for line in data]
+    petsc_argv += '\n'.join(stripped_data).split()
+    return petsc_argv
+
 def removeFiles(filelist=[],
                 prefix_ext_tuple=None):
     """ Remove a list of files.

@@ -5,21 +5,29 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define Sign(z) (z >= 0.0 ? 1.0 : -1.0)
-
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define IS_BETAij_ONE 0
 
-/////////////////////
-//ENTROPY FUNCTION //
-/////////////////////
-// Power entropy //
-#define entropy_power 2. // phiL and phiR are dummy variables
-#define ENTROPY(phi,dummyL,dummyR) 1./entropy_power*std::pow(fabs(phi),entropy_power)
-#define DENTROPY(phi,dummyL,dummyR) entropy_power == 1. ? 0. : std::pow(fabs(phi),entropy_power-1.)*(phi >= 0. ? 1. : -1.)
-
-#define ENTROPY_LOG(phi,phiL,phiR) std::log(fabs((phi-phiL)*(phiR-phi))+1E-14)
-#define DENTROPY_LOG(phi,phiL,phiR) (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14)
+namespace proteus
+{
+  inline double Sign(const double& z){
+    return (z >= 0.0 ? 1.0 : -1.0);
+  }
+  // Power entropy //
+  inline double ENTROPY(const double& phi, const double& dummyL, const double& dummyR){
+    return 1./2.*std::pow(fabs(phi),2.);
+  }
+  inline double DENTROPY(const double& phi, const double& dummyL, const double& dummyR){
+    return fabs(phi)*(phi >= 0. ? 1. : -1.);
+  }
+  // Log entropy //
+  inline double ENTROPY_LOG(const double& phi, const double& phiL, const double& phiR){
+    return std::log(fabs((phi-phiL)*(phiR-phi))+1E-14);
+  }
+  inline double DENTROPY_LOG(const double& phi, const double& phiL, const double& phiR){
+    return (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(fabs((phi-phiL)*(phiR-phi))+1E-14);
+  }
+}
 
 namespace proteus
 {
@@ -59,6 +67,7 @@ namespace proteus
                                    double shockCapturingDiffusion,
                                    double sc_uref, double sc_alpha,
                                    int* u_l2g,
+                                   int* r_l2g,
                                    double* elementDiameter,
                                    double* nodeDiametersArray,
                                    int degree_polynomial,
@@ -149,6 +158,7 @@ namespace proteus
                                    int lag_shockCapturing,/*mwf not used yet*/
                                    double shockCapturingDiffusion,
                                    int* u_l2g,
+                                   int* r_l2g,
                                    double* elementDiameter,
                                    int degree_polynomial,
                                    double* u_dof,
@@ -202,6 +212,7 @@ namespace proteus
 				    double shockCapturingDiffusion,
 				    double sc_uref, double sc_alpha,
 				    int* u_l2g,
+				    int* r_l2g,
 				    double* elementDiameter,
 				    double* u_dof,double* u_dof_old,
 				    double* velocity,
@@ -236,6 +247,7 @@ namespace proteus
                                                  //physics
                                                  int nElements_global,
                                                  int* u_l2g,
+                                                 int* r_l2g,
                                                  double* elementDiameter,
                                                  double* nodeDiametersArray,
                                                  double* u_dof,
@@ -274,6 +286,7 @@ namespace proteus
                                          //physics
                                          int nElements_global,
                                          int* u_l2g,
+                                         int* r_l2g,
                                          double* elementDiameter,
                                          double* nodeDiametersArray,
                                          double* u_dof_old,
@@ -311,6 +324,7 @@ namespace proteus
                                                      double shockCapturingDiffusion,
                                                      double sc_uref, double sc_alpha,
                                                      int* u_l2g,
+                                                     int* r_l2g,
                                                      double* elementDiameter,
                                                      double* nodeDiametersArray,
                                                      int degree_polynomial,
@@ -401,6 +415,7 @@ namespace proteus
                                      int lag_shockCapturing,/*mwf not used yet*/
                                      double shockCapturingDiffusion,
                                      int* u_l2g,
+                                     int* r_l2g,
                                      double* elementDiameter,
                                      int degree_polynomial,
                                      double* u_dof,
@@ -452,6 +467,7 @@ namespace proteus
                                           int lag_shockCapturing,/*mwf not used yet*/
                                           double shockCapturingDiffusion,
                                           int* u_l2g,
+                                          int* r_l2g,
                                           double* elementDiameter,
                                           int degree_polynomial,
                                           double* u_dof,
@@ -655,6 +671,7 @@ namespace proteus
 			     double shockCapturingDiffusion,
 			     double sc_uref, double sc_alpha,
 			     int* u_l2g,
+			     int* r_l2g,
 			     double* elementDiameter,
 			     double* nodeDiametersArray,
 			     int degree_polynomial,
@@ -935,7 +952,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
-		globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
 	      }//i
 	  }//elements
 	//
@@ -1104,7 +1121,7 @@ namespace proteus
 	      {
 		int eN_i = eN*nDOF_test_element+i;
 		//globalResidual[offset_u+stride_u*u_l2g[eN_i]] += MOVING_DOMAIN*elementResidual_u[i];
-		globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
 
 	      }//i
 	  }//ebNE
@@ -1140,6 +1157,7 @@ namespace proteus
 			     int lag_shockCapturing,/*mwf not used yet*/
 			     double shockCapturingDiffusion,
 			     int* u_l2g,
+			     int* r_l2g,
 			     double* elementDiameter,
 			     int degree_polynomial,
 			     double* u_dof,
@@ -1562,6 +1580,7 @@ namespace proteus
 			      double shockCapturingDiffusion,
 			      double sc_uref, double sc_alpha,
 			      int* u_l2g,
+			      int* r_l2g,
 			      double* elementDiameter,
 			      double* u_dof,double* u_dof_old,
 			      double* velocity,
@@ -1670,6 +1689,7 @@ namespace proteus
 					   //physics
 					   int nElements_global,
 					   int* u_l2g,
+					   int* r_l2g,
 					   double* elementDiameter,
 					   double* nodeDiametersArray,
 					   double* u_dof,
@@ -1807,7 +1827,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 
 		// distribute global residual for (lumped) mass matrix
 		globalResidual[gi] += elementResidual_u[i];
@@ -1908,6 +1928,7 @@ namespace proteus
 				   //physics
 				   int nElements_global,
 				   int* u_l2g,
+				   int* r_l2g,
 				   double* elementDiameter,
 				   double* nodeDiametersArray,
 				   double* u_dof_old,
@@ -1959,7 +1980,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 
 		// distribute global residual
 		globalResidual[gi] += elementResidual_u[i];
@@ -1998,6 +2019,7 @@ namespace proteus
 					       double shockCapturingDiffusion,
 					       double sc_uref, double sc_alpha,
 					       int* u_l2g,
+					       int* r_l2g,
 					       double* elementDiameter,
 					       double* nodeDiametersArray,
 					       int degree_polynomial,
@@ -2272,7 +2294,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 
 		// distribute global residual for (lumped) mass matrix
 		globalResidual[gi] += elementResidual_u[i];
@@ -2641,9 +2663,9 @@ namespace proteus
 		int eN_i = eN*nDOF_test_element+i;
 		double mi = ML[offset_u+stride_u*u_l2g[eN_i]];
 		if (LUMPED_MASS_MATRIX==1)
-		  globalResidual[offset_u+stride_u*u_l2g[eN_i]] -= dt/mi*elementResidual_u[i];
+		  globalResidual[offset_u+stride_u*r_l2g[eN_i]] -= dt/mi*elementResidual_u[i];
 		else
-		  globalResidual[offset_u+stride_u*u_l2g[eN_i]] += dt*elementResidual_u[i];
+		  globalResidual[offset_u+stride_u*r_l2g[eN_i]] += dt*elementResidual_u[i];
 	      }//i
 	  }//ebNE
 	/////////////////////////
@@ -2679,6 +2701,7 @@ namespace proteus
 			       int lag_shockCapturing,/*mwf not used yet*/
 			       double shockCapturingDiffusion,
 			       int* u_l2g,
+			       int* r_l2g,
 			       double* elementDiameter,
 			       int degree_polynomial,
 			       double* u_dof,
@@ -2921,6 +2944,7 @@ namespace proteus
 				    int lag_shockCapturing,/*mwf not used yet*/
 				    double shockCapturingDiffusion,
 				    int* u_l2g,
+				    int* r_l2g,
 				    double* elementDiameter,
 				    int degree_polynomial,
 				    double* u_dof,
