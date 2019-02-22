@@ -3230,29 +3230,27 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      parallelUsesFullOverlap = True,
                                      nonlinearSolverNorm = l2Norm):
 
-    # import pdb
-    # pdb.set_trace()
-    # if (levelNonlinearSolverType == TwoStageNewton):
-    #     levelNonlinearSolverType = TwoStageNewton
-    # elif (levelNonlinearSolverType == ExplicitLumpedMassMatrixShallowWaterEquationsSolver):
-    #     levelNonlinearSolverType = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
-    # elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixShallowWaterEquationsSolver):
-    #     levelNonlinearSolverType = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
-    # elif (levelNonlinearSolverType == ExplicitLumpedMassMatrix):
-    #     levelNonlinearSolverType = ExplicitLumpedMassMatrix
-    # elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixWithRedistancing):
-    #     levelNonlinearSolverType = ExplicitConsistentMassMatrixWithRedistancing
-    # elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixForVOF):
-    #     levelNonlinearSolverType = ExplicitConsistentMassMatrixForVOF
-    # elif (levelNonlinearSolverType == NewtonWithL2ProjectionForMassCorrection):
-    #     levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
-    # elif (levelNonlinearSolverType == CLSVOFNewton):
-    #     levelNonlinearSolverType = CLSVOFNewton
-    # elif (multilevelNonlinearSolverType == Newton or
-    #     multilevelNonlinearSolverType == NLJacobi or
-    #     multilevelNonlinearSolverType == NLGaussSeidel or
-    #     multilevelNonlinearSolverType == NLStarILU):
-    #     levelNonlinearSolverType = multilevelNonlinearSolverType
+    if (levelNonlinearSolverType == TwoStageNewton):
+        levelNonlinearSolverType = TwoStageNewton
+    elif (levelNonlinearSolverType == ExplicitLumpedMassMatrixShallowWaterEquationsSolver):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixShallowWaterEquationsSolver):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
+    elif (levelNonlinearSolverType == ExplicitLumpedMassMatrix):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrix
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixWithRedistancing):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixWithRedistancing
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixForVOF):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixForVOF
+    elif (levelNonlinearSolverType == NewtonWithL2ProjectionForMassCorrection):
+        levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
+    elif (levelNonlinearSolverType == CLSVOFNewton):
+        levelNonlinearSolverType = CLSVOFNewton
+    elif (multilevelNonlinearSolverType == Newton or
+        multilevelNonlinearSolverType == NLJacobi or
+        multilevelNonlinearSolverType == NLGaussSeidel or
+        multilevelNonlinearSolverType == NLStarILU):
+        levelNonlinearSolverType = multilevelNonlinearSolverType
     nLevels = len(nonlinearOperatorList)
     multilevelNonlinearSolver=None
     levelNonlinearSolverList=[]
