@@ -21,7 +21,8 @@ coefficients = VOF3P.Coefficients(LS_model=LS_model,
                                   sc_uref=vof_sc_uref,
                                   sc_beta=vof_sc_beta,
                                   movingDomain=movingDomain,
-                                  EXPLICIT_METHOD=EXPLICIT_VOF)
+                                  STABILIZATION_TYPE=1 if EXPLICIT_VOF is True else 0)
+                                  #EXPLICIT_METHOD=EXPLICIT_VOF)
 
 def getDBC_vof(x,flag):
     if flag == boundaryTags['top'] and openTop:

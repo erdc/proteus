@@ -1,3 +1,4 @@
+# A type of -*- python -*- file
 import numpy as np
 cimport numpy as np
 cdef extern from "analyticalSolutions.h":
