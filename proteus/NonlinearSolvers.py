@@ -3229,7 +3229,6 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      maxLSits=100,
                                      parallelUsesFullOverlap = True,
                                      nonlinearSolverNorm = l2Norm):
-
     if (levelNonlinearSolverType == TwoStageNewton):
         levelNonlinearSolverType = TwoStageNewton
     elif (levelNonlinearSolverType == ExplicitLumpedMassMatrixShallowWaterEquationsSolver):
