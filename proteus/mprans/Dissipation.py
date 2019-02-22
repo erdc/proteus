@@ -168,7 +168,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sc_uref=1.0,
                  sc_beta=1.0,
                  default_kappa=1.0e-3,
-                 closure=None):
+                 closure=None,
+                 nullSpace='NoNullSpace'):
 
         self.useMetrics = useMetrics
         self.dissipation_model_flag = dissipation_model_flag  # default K-Epsilon, 2 ==> K-Omega 1998, 3 --> K-Omega 1988
@@ -221,6 +222,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.kappa_modelIndex = kappa_model
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
+        self.nullSpace = nullSpace
         # for debugging model
         self.default_kappa = default_kappa
         try:

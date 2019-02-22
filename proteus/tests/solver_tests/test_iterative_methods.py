@@ -242,10 +242,11 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     b, x = create_petsc_vecs(mat_A)
     petsc_options = initialize_petsc_options
 
-    solver_info = LS.ModelInfo('interlaced',3)
-    schur_approx = LS.Schur_Sp(mat_A,
-                               '',
-                               True,
+    solver_info = LS.ModelInfo('interlaced',
+                               3,
+                               bdy_null_space=True)
+    schur_approx = LS.Schur_Sp(L=mat_A,
+                               prefix='',
                                solver_info=solver_info)
     ksp_obj = initialize_schur_ksp_obj(mat_A,schur_approx)
     ksp_obj.solve(b,x)
@@ -255,7 +256,6 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     assert np.allclose(ksp_obj.norm, 0.0007464632)
     assert ksp_obj.reason == 2
 
-@pytest.mark.current
 @pytest.mark.LinearSolvers
 def test_Schur_Sp_solve(load_nse_step_matrix,
                         initialize_petsc_options):
@@ -286,9 +286,9 @@ def test_amg_basic(load_small_step_matrix,
     index_sets = build_amg_index_sets(L_sizes)
 
     #Initialize ksp object
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
                                                       index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))   
     F_ksp.solve(b,x)
     assert F_ksp.its == 9
@@ -301,9 +301,9 @@ def test_amg_iteration_performance(load_medium_step_matrix,
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
                                                       index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
 
     F_ksp.solve(b,x)
@@ -316,9 +316,9 @@ def test_amg_step_problem_01(load_rans2p_step_newton_1,
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
                                                       index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
     assert F_ksp.its == 59
@@ -330,9 +330,9 @@ def test_amg_step_problem_02(load_rans2p_step_newton_5,
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
                                                       index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
     assert F_ksp.its == 60

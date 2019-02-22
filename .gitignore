@@ -33,7 +33,5 @@ Cygwin
 proteus.egg-info/
 proteus/ADR.cpp
 proteus/subsurfaceTransportFunctions.c
-hashdist/
-stack/
 cygwin_bootstrap.done
 matlab_setup.done

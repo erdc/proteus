@@ -10,7 +10,7 @@ from libcpp cimport bool
 from libcpp.memory cimport (shared_ptr,
                             make_shared)
 
-cdef extern from "ChMoorings.h":
+cdef extern from "ProtChMoorings.h":
 
     # ------- CORE ------- #
 
@@ -92,7 +92,7 @@ cdef extern from "ChMoorings.h":
                                bool load_uv=False)
 
     cdef cppclass ChCollisionModel:
-        bool AddTriangleMesh(const ChTriangleMesh &trimesh,
+        bool AddTriangleMesh(shared_ptr[ChTriangleMesh] trimesh,
                              bool is_static,
                              bool is_convex,
                              const ChVector &pos,
@@ -262,6 +262,9 @@ cdef extern from "ChMoorings.h":
         double GetLengthX() const
         double GetMass()
 
+    cdef cppclass ChElementBeamEuler:
+        ChElementBeamEuler()
+
     # ------- SECTIONS ------- #
     cdef cppclass ChBeamSection:
         bool IsCircular()
@@ -362,5 +365,4 @@ cdef extern from "ChBodyAddedMass.h":
         ChVector GetInertiaXY()
         void SetMfullmass(ChMatrixDynamic Mfullmass_in)
         void SetInvMfullmass(ChMatrixDynamic inv_Mfullmass_in)
-
-
+    ChBodyAddedMass * newChBodyAddedMass()

@@ -30,14 +30,12 @@ class TestIsosurface(object):
 
     def test_povgen(self):
         import difflib
-        import urllib.request, urllib.parse, urllib.error
         import subprocess
         import os
-        urllib.request.urlretrieve(
-            'https://dl.dropbox.com/s/tjkj3ella3ntv75/floating_bar.h5',
-            'floating_bar.h5')
         subprocess.check_call(['povgen.py',
-                               'floating_bar',
+                               os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                            'comparison_files',
+                                            'floating_bar'),
                                '-s',
                                '3'])
         povfiles = []
@@ -45,10 +43,9 @@ class TestIsosurface(object):
             filename = 'phi_t_0.000000_{0:04d}.pov'.format(i)
             with open(filename, 'r') as f:
                 povfiles.append(f.readlines())
-        urllib.request.urlretrieve(
-            'https://dl.dropbox.com/s/um635cllwdjxajc/phi_t_0.000000_000.tgz',
-            'phi_t_0.000000_000.tgz')
-        subprocess.check_call(['tar', 'xzf', 'phi_t_0.000000_000.tgz'])
+        subprocess.check_call(['tar', 'xzf', os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                          'comparison_files',
+                                                          'phi_t_0.000000_000.tgz')])
         saved_povfiles = []
         for i in range(3):
             filename = 'phi_t_0.000000_{0:04d}.pov'.format(i)
@@ -59,5 +56,3 @@ class TestIsosurface(object):
                                                   povfiles[i],
                                                   "archived",
                                                   "test")))
-        os.remove('phi_t_0.000000_000.tgz')
-        os.remove('floating_bar.h5')

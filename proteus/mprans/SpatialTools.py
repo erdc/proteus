@@ -403,18 +403,16 @@ class Tank3D(ShapeRANS):
         Dimensions of the cuboid.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
-        If True (default), the tank extends from the origin to postive x, y, z
     """
     count = 0
 
-    def __init__(self, domain, dim=(0., 0., 0.), coords=None, from_0=True):
+    def __init__(self, domain, dim=(0., 0., 0.), coords=None):
         super(Tank3D, self).__init__(domain, nd=3)
         self.__class__.count += 1
         self.name = "tank3d" + repr(self.__class__.count)
-        self.from_0 = from_0
         if coords is None:
             self.coords = old_div(np.array(dim), 2.)
+            self.from_0 = True
         else:
             self.coords = coords
             self.from_0 = False
@@ -952,18 +950,22 @@ class Tank2D(ShapeRANS):
         Dimensions of the tank (excluding sponge layers).
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
-        If True (default), the tank extends from the origin to positive x, y, z
     """
     count = 0
 
-    def __init__(self, domain, dim, coords=None, from_0=True):
+    def __init__(self, domain, dim, coords=None):
         super(Tank2D, self).__init__(domain, nd=2)
+        if coords is None:
+            self.coords = old_div(np.array(dim), 2.)
+            self.from_0 = True
+        else:
+            self.coords = coords
+            self.from_0 = False
+        self.dim = dim
         self._nameSelf()
         self._setupBCs()
         self.spongeLayers = {'x-': None,
                              'x+': None}
-        self._findEdges(dim, coords, from_0)
         self.constructShape()
 
     def _nameSelf(self):
@@ -1010,6 +1012,7 @@ class Tank2D(ShapeRANS):
             in the frame.  This can be generated with tank2DFrame or subclass
             specific methods.
         """
+        self._findEdges(self.dim)
         vertices, vertexFlags = self._constructVertices()
         segments, segmentFlags = self._constructSegments(vertices, vertexFlags)
         regions, regionFlags = self._constructRegions(vertices, vertexFlags,
@@ -1025,19 +1028,12 @@ class Tank2D(ShapeRANS):
         self.facets = np.array(facets)
         self.facetFlags = np.array(facetFlags)
 
-    def _findEdges(self, dim, coords, from_0):
+    def _findEdges(self, dim):
 
-        if from_0 and (coords == [x * 0.5 for x in dim]):
-            coords = None
+        coords = self.coords
+        from_0 = self.from_0
 
-        if not from_0 and (coords is None):
-            raise ValueError("Cannot locate tank center. Either set from_0 = "
-                             "True, or pass in center coordinates in [coords]")
-        elif from_0 and (coords is not None):
-            raise ValueError("The center of the tank cannot be at coords = "
-                             + str(coords) + " while also starting from_0  "
-                             "(True) with dimensions: " + str(dim))
-        elif from_0 and (coords is None):
+        if from_0:
             self.x0 = 0
             self.x1 = dim[0]
             self.y0 = 0
@@ -1172,8 +1168,9 @@ class Tank2D(ShapeRANS):
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = np.array([self.x0 - 0.5 * self.spongeLayers['x-'],
-                               0.5 * (self.y0 + self.y1), 0.])
+            center = np.array([self.coords[0]-0.5*self.dim[0]-0.5*self.spongeLayers['x-'],
+                               self.coords[1],
+                               0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
@@ -1189,8 +1186,9 @@ class Tank2D(ShapeRANS):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
         if x_p is True:
-            center = np.array([self.x1 + 0.5 * self.spongeLayers['x+'],
-                               0.5 * (self.y0 + self.y1), 0.])
+            center = np.array([self.coords[0]+0.5*self.dim[0]+0.5*self.spongeLayers['x+'],
+                               self.coords[1],
+                               0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
@@ -1239,8 +1237,9 @@ class Tank2D(ShapeRANS):
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = np.array([self.x0 - 0.5 * self.spongeLayers['x-'],
-                               0.5 * (self.y0 + self.y1), 0.])
+            center = np.array([self.coords[0]-0.5*self.dim[0]-0.5*self.spongeLayers['x-'],
+                               self.coords[1],
+                               0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
@@ -1260,8 +1259,9 @@ class Tank2D(ShapeRANS):
                                                            wind_speed=wind_speed,
                                                            smoothing=smoothing)
         if x_p is True:
-            center = np.array([self.x1 + 0.5 * self.spongeLayers['x+'],
-                               0.5 * (self.y0 + self.y1), 0.])
+            center = np.array([self.coords[0]+0.5*self.dim[0]+0.5*self.spongeLayers['x+'],
+                               self.coords[1],
+                               0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
@@ -1329,8 +1329,6 @@ class TankWithObstacles2D(Tank2D):
         the first obstacle starts on.  Default is False.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
-        If True (default), the tank extends from the origin to positive x, y, z
     hole: Optional[bool]
         If True (default), the obstacle of the tank is just an open hole at the
         bottom of the tank. If False, a segment at the bottom of the obstacle is
@@ -1345,7 +1343,7 @@ class TankWithObstacles2D(Tank2D):
     def __init__(self, domain, dim=(0., 0.),
                  obstacles=None, special_boundaries=None,
                  full_circle=False,
-                 coords=None, from_0=True, hole=True, obstacle_regions=None):
+                 coords=None, hole=True, obstacle_regions=None):
         if obstacles:
             self.obstacles = obstacles
         else:
@@ -1368,7 +1366,7 @@ class TankWithObstacles2D(Tank2D):
 
         self.hole = hole
         self.obstacle_regions = obstacle_regions
-        super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
+        super(TankWithObstacles2D, self).__init__(domain, dim, coords)
 
     def _setupBCs(self):
         super(TankWithObstacles2D, self)._setupBCs()
