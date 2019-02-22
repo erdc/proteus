@@ -1111,8 +1111,10 @@ class NS_base(object):  # (HasTraits):
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
+        #p0 = self.pList[0].ct
+        #n0 = self.nList[0].ct
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
         #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
