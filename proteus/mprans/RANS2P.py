@@ -1682,20 +1682,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         
         comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
         comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
-        # comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),aceArea)
+        comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),self.coefficients.particle_surfaceArea)
         
         for i in range(self.coefficients.nParticles):
-            # for I in range(3):
-            #     self.coefficients.particle_netForces[i, I] = globalSum(
-            #         self.coefficients.particle_netForces[i, I])
-            #     self.coefficients.particle_netForces[i+self.coefficients.nParticles, I] = globalSum(
-            #         self.coefficients.particle_netForces[i+self.coefficients.nParticles, I])
-            #     self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I] = globalSum(
-            #         self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I])
-            #     self.coefficients.particle_netMoments[i, I] = globalSum(
-            #         self.coefficients.particle_netMoments[i, I])
-            # self.coefficients.particle_surfaceArea[i] = globalSum(
-                # self.coefficients.particle_surfaceArea[i])
             logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
             logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
             logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
