@@ -405,14 +405,16 @@ elif len(args) == 1:#arg should be an sso file or an so module
         if so.name == None:
             so.name = args[0][:-3]
         for (pModule,nModule) in so.pnList:
-            log("Loading p module = "+pModule)
-            #pList.append(__import__(pModule))
-            pList.append(proteus.defaults.load_physics(pModule))
-            if pList[-1].name == None:
-                pList[-1].name = pModule
-            log("Loading n module = "+nModule)
-            #nList.append(__import__(nModule))
-            nList.append(proteus.defaults.load_numerics(nModule))
+            if not isinstance(pModule, proteus.defaults.Physics_base):
+                log("Loading p module = "+pModule)
+                pList.append(proteus.defaults.load_physics(pModule))
+                if pList[-1].name == None:
+                    pList[-1].name = pModule
+                log("Loading n module = "+nModule)
+                nList.append(proteus.defaults.load_numerics(nModule))
+            else:
+                pList.append(pModule)
+                nList.append(nModule)
         #
         if so.sList == []:
             for i in range(len(so.pnList)):
