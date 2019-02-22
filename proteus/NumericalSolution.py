@@ -1048,8 +1048,8 @@ class NS_base(object):  # (HasTraits):
                     self.systemStepController.t_system_last+1.0e-6)
 
     def PUMI_transferFields(self):
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
 
         logEvent("Copying coordinates to PUMI")
         p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
@@ -1266,8 +1266,8 @@ class NS_base(object):  # (HasTraits):
         #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
         #    #    diff_flux)
 
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
         sfConfig = p0.domain.PUMIMesh.size_field_config()
         logEvent("h-adapt mesh by calling AdaptPUMIMesh")
         if(sfConfig=="pseudo"):
