@@ -1280,7 +1280,7 @@ namespace proteus
             r_y = y - center[1];
 
             if (element_owned)
-              {
+            {
                 particle_surfaceArea[i] += dV * D_s;
                 particle_netForces[i * 3 + 0] += force_x;
                 particle_netForces[i * 3 + 1] += force_y;
@@ -1289,7 +1289,7 @@ namespace proteus
                 particle_netForces[(i+  nParticles)*3+1]+= force_stress_y;
                 particle_netForces[(i+2*nParticles)*3+1]+= force_p_y;
                 particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
-              }
+            }
 
             // These should be done inside to make sure the correct velocity of different particles are used
             //(1)
