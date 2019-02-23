@@ -19,6 +19,8 @@ coefficients=PresInit.Coefficients(nd=nd,
                                    fluidModelIndex=V_model,
                                    pressureModelIndex=PRESSURE_model)
 
+#LevelModelType = PresInit.LevelModel
+
 #pressure increment should be zero on any pressure dirichlet boundaries
 def getDBC_pInit(x,flag):
     if flag == boundaryTags['right']:

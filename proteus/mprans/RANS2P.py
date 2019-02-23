@@ -571,6 +571,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         comm = Comm.get()
         import os
         if comm.isMaster():
+            self.timeHistory = open(os.path.join(proteus.Profiling.logDir, "timeHistory.txt"), "w")
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir, "wettedAreaHistory.txt"), "w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir, "forceHistory_v.txt"), "w")
@@ -752,6 +753,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                      `self.netForces_p[:,:]` +
                      "\nForces_v\n" +
                      `self.netForces_v[:,:]`)
+            self.timeHistory.write("%21.16e\n" % (t,))
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()

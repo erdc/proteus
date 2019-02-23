@@ -469,14 +469,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
         self.particle_centroids = np.zeros((self.nParticles, 3), 'd')
-        self.particle_signed_distances = np.zeros((self.nParticles,) + self.model.q[('u', 0)].shape, 'd')
-        self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
-        self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
-
-        self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
-        self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
-        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
-        self.ebq_particle_velocity_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
+        self.particle_signed_distances        = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1]),'d')
+        self.particle_signed_distance_normals = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
+        self.particle_velocities              = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
+        self.phisField                        = 1e10*numpy.ones((self.model.q['x'].shape[0],self.model.q['x'].shape[1]), 'd')
+        self.ebq_global_phi_s        = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1]),'d') * 1e10
+        self.ebq_global_grad_phi_s   = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
+        self.ebq_particle_velocity_s = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
 
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
@@ -740,6 +739,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.barycenters = numpy.zeros((nBoundariesMax, 3), 'd')
         comm = Comm.get()
         if comm.isMaster():
+            self.timeHistory = open(os.path.join(proteus.Profiling.logDir, "timeHistory.txt"), "w")
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir, "wettedAreaHistory.txt"), "w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir, "forceHistory_v.txt"), "w")
@@ -1070,6 +1070,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         if self.model.isActiveDOF[dof] < 0.5:
                             self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
         if self.model.comm.isMaster():
+            self.timeHistory.write("%21.16e\n" % (t,))
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
@@ -2138,8 +2139,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # fill vector rowptr_scalar
         for i in range(1, self.rowptr_1D.size):
             self.rowptr_1D[i]=(self.rowptr_1D[i - 1] +
-                               old_div((self.rowptr[nSpace * (i - 1) + 1] -
-                                        self.rowptr[nSpace * (i - 1)]), nSpace))
+                               (self.rowptr[nSpace * (i - 1) + 1] -
+                                self.rowptr[nSpace * (i - 1)])//nSpace)
         # fill vector colind_cMatrix
         ith_row = 0
         for i in range(len(self.rowptr)-1):  # 0 to total num of DOFs (i.e. num of rows of jacobian)
@@ -2148,7 +2149,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     offset_1D = list(range(self.rowptr_1D[ith_row],
                                            self.rowptr_1D[ith_row + 1]))
                     if (j % nSpace == 0):
-                        self.colind_1D[offset_1D[old_div(j, nSpace)]] = old_div(self.colind[offset], nSpace)
+                        self.colind_1D[offset_1D[j//nSpace]] = self.colind[offset]//nSpace
                 ith_row += 1
 
     def getResidual(self, u, r):
@@ -2501,7 +2502,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numDOFs_1D,
             self.nnz_1D,
             self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
-            old_div(self.csrColumnOffsets[(0, 0)], self.nSpace_global),
+            self.csrColumnOffsets[(0, 0)]//self.nSpace_global,
             self.rowptr_1D,
             self.colind_1D,
             self.coefficients.INT_BY_PARTS_PRESSURE)

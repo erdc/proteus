@@ -31,5 +31,4 @@ systemStepExact=False;
 # 
 # tnList = [0.0,cylinder.dt_init]+[i*cylinder.dt_fixed for i in range(1,cylinder.nDTout+1)]
 tnList = cylinder.tnList
-info = open("TimeList.txt","w")
 #archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP

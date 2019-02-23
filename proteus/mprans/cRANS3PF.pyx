@@ -2518,7 +2518,8 @@ cdef class RANS3PF2D:
                                        <double * > dMatrix.data,
                                        numDOFs_1D,
                                        NNZ_1D,
-				       <int*> csrRowIndeces_1D.data,<int*>csrColumnOffsets_1D.data,
+				       <int*> csrRowIndeces_1D.data,
+                                       <int*>csrColumnOffsets_1D.data,
                                        <int*> rowptr_1D.data,
                                        <int*> colind_1D.data,
                                        INT_BY_PARTS_PRESSURE)
