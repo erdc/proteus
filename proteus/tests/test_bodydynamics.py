@@ -350,41 +350,6 @@ class TestRigidBody(unittest.TestCase):
         c2d.h = c2d.getDisplacement(dt)
         npt.assert_equal(c2d.h, h)
 
-#    def testImposeSinusoidalMotion(self):
-#        from proteus import Domain  
-#        from proteus import SpatialTools as st    
-#        from proteus.mprans import SpatialTools as mst
-#        from proteus.mprans import BodyDynamics as bd   
-#
-#        # parameters
-#        domain2D = Domain.PlanarStraightLineGraphDomain()
-#        pos = np.array([1.0, 1.0, 0.0])
-#        dim = (0.3, 0.385)
-#        caisson = mst.Rectangle(domain=domain2D, dim=dim, coords=[pos[0], pos[1]])
-#        caisson2D = bd.RigidBody(shape=caisson)
-#        mst.assembleDomain(domain2D)      
-#        c2d = caisson2D
-#        c2d.nd = 2
-#        c2d.attachModel(model='twp', ar='auxiliaryVariables')
-#        t = c2d.model.stepController.t_model_last = 5.25
-#        # transl and rot amplitudes, transl and rot periods
-#        At, Tt, Ar, Tr = c2d.At, c2d.Tt, c2d.Ar, c2d.Tr = np.array([2.0, 2.0, 0.0]), np.array([4.0, 4.0, 0.0]), np.array([0.0, 0.0, 1.0]), np.array([0.0, 0.0, 3.0])
-#        Wt, Wr = 2.*3.14/Tt, 2.*3.14/Tr 
-#        for ii in range(len(Tt)):
-#            if Tt[ii] == 0.0:
-#                Wt[ii]=0.0
-#            if Tr[ii] == 0.0:
-#                Wr[ii]=0.0
-#        displ = dx, dy, dz = At[0]*sin(Wt[0]*t), At[1]*sin(Wt[1]*t), At[2]*sin(Wt[2]*t)
-#        rot   = rx, ry, rz = Ar[0]*sin(Wr[0]*t), Ar[1]*sin(Wr[1]*t), Ar[2]*sin(Wr[2]*t)
-#        init_barycenter, last_position, rot0 = pos, pos*2.0, np.array([0.0, 0.0, 2.0])
-#        c2d.init_barycenter, c2d.last_position, c2d.last_rotation_euler = init_barycenter, last_position, rot0
-#        displTot = displ - (last_position - init_barycenter)
-#        rotTot   = rot  - rot0
-#        # from bodydynamics
-#        displTot2, rotTot2 = c2d.imposeSinusoidalMotion()
-#        npt.assert_equal(displTot, displTot2)
-#        npt.assert_equal(rotTot, rotTot2)
 
     def testStep(self):
         from proteus import Domain  
@@ -717,8 +682,70 @@ class CaissonBody(unittest.TestCase):
         npt.assert_equal(c2d.ang_acc[2], arz)
 
 
+class Paddle(unittest.TestCase):
+    def testCalculate_init(self):
+        from proteus import Domain
+        from proteus.mprans import SpatialTools as mst
+        from proteus.mprans.BodyDynamics import PaddleBody
+        domain2D = Domain.PlanarStraightLineGraphDomain()        
+        pos = np.array([2.0, 0.1 , 0.0])
+        dim = (0.3, 1.)
+        paddle = mst.Rectangle(domain=domain2D, dim=dim, coords=[pos[0], pos[1]])
+        
+        PB=PaddleBody(paddle,substeps=20)
+        PB.calculate_init()
+        npt.assert_equal(PB.position,[pos[0],0.,0.])
+        npt.assert_equal(PB.last_position,[pos[0],0.,0.])
+        npt.assert_equal(PB.rotation,np.eye(3))
+        npt.assert_equal(PB.last_rotation,np.eye(3))
+        from proteus.mprans.BodyDynamics import getEulerAngles
+        npt.assert_equal(PB.rotation_euler,getEulerAngles(PB.rotation))
+        npt.assert_equal(PB.last_rotation_euler,getEulerAngles(PB.last_rotation))
+        npt.assert_equal(PB.cV_init,np.array([(1.85,-0.4),
+                                              (2.15,-0.4),
+                                              (2.15,0.6),
+                                              (1.85,0.6)]))
+        npt.assert_equal(PB.cV,np.array([(1.85,-0.4),
+                                              (2.15,-0.4),
+                                              (2.15,0.6),
+                                              (1.85,0.6)]))
+        npt.assert_equal(PB.cV_last,np.array([(1.85,-0.4),
+                                              (2.15,-0.4),
+                                              (2.15,0.6),
+                                              (1.85,0.6)]))
 
-
+    def testPaddleMotion(self):
+        from proteus import Domain
+        from proteus.mprans import SpatialTools as mst
+        from proteus.mprans.BodyDynamics import PaddleBody
+        domain2D = Domain.PlanarStraightLineGraphDomain()        
+        pos = np.array([2.0, 0.1 , 0.0])
+        dim = (0.3, 1.)
+        paddle = mst.Rectangle(domain=domain2D, dim=dim, coords=[pos[0], pos[1]])
+        
+        PB=PaddleBody(paddle,substeps=20)
+        PB.calculate_init()
+        At  = [1.,0.,0.]
+        Ar =  [0.1,0.,0.]
+        Tt = Tr = [0.5,0.,0.]
+        rampS = 0.1
+        rampE = 0.1
+        Tend = 2.
+        PB.inputMotion(InputMotion=True, pivot=None,
+                       At=At, Tt=Tt,
+                       Ar=Ar, Tr=Tr,
+                       rampStart=rampS, rampEnd =rampE, Tend = Tend)
+        # tersting initial ramp
+        times= [0.04, 0.95 ,1.93]
+        for tt in times:
+            ramp = min(1.,tt/rampS,(Tend-tt)/rampE)
+            getVars = PB.imposeSinusoidalMotion(tt=tt)
+            disp = ramp*np.array(At)*np.sin(2*np.pi/Tt[0]*tt)
+            rot =  ramp*np.array(Ar)*np.sin(2*np.pi/Tt[0]*tt)
+            disp = disp - (PB.last_position - PB.init_barycenter)
+            npt.assert_equal(disp,getVars[0])
+            npt.assert_equal(rot,getVars[1])
+            
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

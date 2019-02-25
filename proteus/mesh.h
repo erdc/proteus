@@ -368,8 +368,6 @@ extern "C"
   int computeGeometricInfo_quadrilateral(Mesh& mesh);
   int computeGeometricInfo_NURBS(Mesh& mesh);
 
-  int partitionElements(Mesh& mesh, int nElements_overlap=0);
-
   int assignElementBoundaryMaterialTypesFromParent(Mesh& parentMesh, Mesh& childMesh, const int* levelElementParentsArray,
 						   const int& nSpace_global);
   int allocateNodeAndElementNodeDataStructures(Mesh& mesh, int nElements_global, int nNodes_global, int nNodes_element);

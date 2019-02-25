@@ -5,7 +5,7 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cSW2D import *
-
+from proteus.Comm import globalMax
 
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd, lag=False, nStepsToDelay=0, hFactor=1.0):
@@ -245,7 +245,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients = coefficients
         # cek hack? give coefficients a bathymetriy array
         import copy
-        self.coefficients.b = copy.deepcopy(self.u[0])
+        self.coefficients.b = self.u[0].copy()
+        self.coefficients.b.name = 'b'
         self.coefficients.b.dof.fill(0.0)
         #
         self.coefficients.initializeMesh(self.mesh)
@@ -1206,7 +1207,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # #force  [:] = tmp1
         # #moment [:] = tmp2
 
-        # from proteus.flcbdfWrappers import globalSum
         # for i in range(3):
         #       force[i]  = globalSum(force[i])
         #       moment[i] = globalSum(moment[i])

@@ -10,14 +10,14 @@ except:
 timeIntegration = FLCBDF
 stepController  = FLCBDF_controller
 systemStepControllerType = SplitOperator.Sequential_MinFLCBDFModelStep
-rtol_u[0] = 1.0e-4
-atol_u[0] = 1.0e-4
+rtol_u[0] = 0.001*he
+atol_u[0] = 0.001*he
 tnList = [0.0,1.0e-5,1.0e5]
-timeIntegration = BackwardEuler
-stepController = HeuristicNL_dt_controller
+#timeIntegration = BackwardEuler
+#stepController = HeuristicNL_dt_controller
 nonlinearIterationsFloor =5
 nonlinearIterationsCeil=10
-systemStepControllerType = SplitOperator.Sequential_MinModelStep
+#systemStepControllerType = SplitOperator.Sequential_MinModelStep
 maxNonlinearIts=25
 maxLineSearches=25
 # maxNonlinearIts=100
@@ -63,7 +63,7 @@ fullNewtonFlag = True
 
 tolFac = 0.0
 
-atol = 0.01*he#0.001*vFine
+atol = 0.0001*he#0.001*vFine
 
 nl_rtol_res = 0.0
 nl_atol_res = atol#0.001*vFine#1.0e-4
