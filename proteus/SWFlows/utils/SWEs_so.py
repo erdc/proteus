@@ -36,7 +36,6 @@ if sw_model==0: #SWEs
     pnList = [("sw_p", "sw_n")]
 else:
     pnList = [("dsw_p", "dsw_n")]
-    #raise("Not implemented!")
 
 # **************************** #
 # ********** tnList ********** #
