@@ -53,7 +53,7 @@ femSpaces = {0: FESpace['basis'],
 # ************************************** #
 multilevelNonlinearSolver  = Newton
 fullNewtonFlag = False #NOTE: False just if the method is explicit
-if (LUMPED_MASS_MATRIX==1):
+if (LUMPED_MASS_MATRIX == 1):
     levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 else:
     levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
@@ -80,4 +80,4 @@ nl_rtol_res = 0.0
 l_atol_res = 1.0e-7
 l_rtol_res = 0.0
 tolFac = 0.0
-maxLineSearches=0
+maxLineSearches = 0

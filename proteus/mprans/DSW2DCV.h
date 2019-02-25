@@ -13,9 +13,9 @@
 // 5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define GLOBAL_FCT 0
-#define POWER_SMOOTHNESS_INDICATOR 3
+#define POWER_SMOOTHNESS_INDICATOR 3.
 #define VEL_FIX_POWER 2.
-#define REESTIMATE_MAX_EDGE_BASED_CFL 1
+#define REESTIMATE_MAX_EDGE_BASED_CFL 0
 // quick hack to turn on/off dispersion
 // 0 is for shallow water and 1 is for mGN model
 // making lambda 0 decouples the heta and hw eqns from mass and momentum
@@ -1648,6 +1648,7 @@ public:
         ck.valFromDOF(hw_dof_old, &vel_l2g[eN_nDOF_trial_element],
                       &vel_trial_ref[k * nDOF_trial_element], hw_old);
         // calculate cell based CFL to keep a reference
+        // EJT
         calculateCFL(elementDiameter[eN], g, h_old, hu_old, hv_old, heta_old,
                      hEps, q_cfl[eN_k]);
         // precalculate test function products with integration weights

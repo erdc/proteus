@@ -45,7 +45,7 @@ opts = Context.Options([
 L = (45.0, 1.0)
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[-35.0, 0, 0])
-X_coords = (-35.0, 10.0)  # this is domain, used in BCs
+X_coords = (-35.0, 10.0)  # this is domain in x direction, used in BCs
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -80,7 +80,7 @@ def solitary_wave(x, t):
 
 def bathymetry_function(X):
     x = X[0]
-    return numpy.maximum(slope * x, -h0)
+    return np.maximum(slope * x, -h0)
 
 ##############################
 ##### INITIAL CONDITIONS #####
@@ -135,10 +135,7 @@ class hw_at_t0(object):
 
 
 def water_height_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
-    # elif X[0]==X_coords[1]:
-    #     return lambda x,t: water_height_at_t0().uOfXT(X,0.0)
+    return None
 
 
 def x_mom_DBC(X, flag):
@@ -151,13 +148,11 @@ def y_mom_DBC(X, flag):
 
 
 def heta_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
+    return None
 
 
 def hw_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
+    return None
 
 
 # ********************************** #
