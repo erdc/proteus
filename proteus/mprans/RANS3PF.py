@@ -2097,7 +2097,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Added by mql for discrete upwinding stab
         self.entropyResidualPerNode = numpy.zeros(self.u[0].dof.shape, 'd')
         self.laggedEntropyResidualPerNode = numpy.zeros(self.u[0].dof.shape, 'd')
-        self.dMatrix = None
+        self.uStar_dMatrix = None
+        self.vStar_dMatrix = None
+        self.wStar_dMatrix = None
         self.numDOFs = None
 
     def updateMaterialParameters(self):
@@ -2242,9 +2244,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.betaDrag[:]=0.0
         self.vos_vel_nodes[:]=0.0
 
-        if self.dMatrix is None:
+        if self.uStar_dMatrix is None:
             self.getSparsityPatternForComponents()
-            self.dMatrix = numpy.zeros(self.nnz_1D)
+            self.uStar_dMatrix = numpy.zeros(self.nnz_1D)
+            self.vStar_dMatrix = numpy.zeros(self.nnz_1D)
+            self.wStar_dMatrix = numpy.zeros(self.nnz_1D)
+        #
         if self.isBoundary_1D is None:
             self.isBoundary_1D = numpy.zeros(self.numDOFs_1D)
             self.rans3pf.getBoundaryDOFs(
@@ -2517,7 +2522,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # For edge based stabilization #
             self.entropyResidualPerNode,
             self.laggedEntropyResidualPerNode,
-            self.dMatrix,
+            [self.uStar_dMatrix, self.vStar_dMatrix, self.wStar_dMatrix],
             self.numDOFs_1D,
             self.nnz_1D,
             self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
@@ -2834,7 +2839,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.use_sbm,
             # for edge based dissipation
             self.coefficients.ARTIFICIAL_VISCOSITY,
-            self.dMatrix,
+            [self.uStar_dMatrix, self.vStar_dMatrix, self.wStar_dMatrix],
             self.numDOFs_1D,
             self.offset[0],
             self.offset[1],

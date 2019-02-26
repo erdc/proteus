@@ -31,6 +31,7 @@
 #define EPS_FOR_GAMMA_INDICATOR 1E-10
 #define C_FOR_GAMMA_INDICATOR 3.0
 #define USE_GAMMA_INDICATOR 1
+#define ANISOTROPIC_DIFFUSION 1
 
 inline void baryCoords(const double r0[2],
                        const double r1[2],
@@ -315,7 +316,9 @@ namespace proteus
                                    // For edge based dissipation
 				   double * entropyResidualPerNode,
 				   double * laggedEntropyResidualPerNode,
-				   double * dMatrix,
+				   double * uStar_dMatrix,
+				   double * vStar_dMatrix,
+				   double * wStar_dMatrix,
 				   int numDOFs_1D,
 				   int NNZ_1D,
 				   int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
@@ -527,7 +530,9 @@ namespace proteus
                                    int USE_SBM,
 				   // For edge based dissipation
 				   int ARTIFICIAL_VISCOSITY,
-				   double * dMatrix,
+				   double * uStar_dMatrix,
+				   double * vStar_dMatrix,
+				   double * wStar_dMatrix,
 				   int numDOFs_1D,
 				   int offset_u, int offset_v, int offset_w,
 				   int stride_u, int stride_v, int stride_w,
@@ -2318,7 +2323,9 @@ namespace proteus
                              // For edge based discretization
                              double * entropyResidualPerNode,
                              double * laggedEntropyResidualPerNode,
-			     double * dMatrix,
+			     double * uStar_dMatrix,
+			     double * vStar_dMatrix,
+			     double * wStar_dMatrix,
 			     int numDOFs_1D,
 			     int NNZ_1D,
 			     int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
@@ -2330,14 +2337,15 @@ namespace proteus
 	register double element_uStar_He[nElements_global], element_vStar_He[nElements_global];
 	register double uStar_hi[numDOFs_1D], vStar_hi[numDOFs_1D], den_hi[numDOFs_1D];
 	register double uStar_min_hiHe[numDOFs_1D], vStar_min_hiHe[numDOFs_1D];
-	register double gamma[numDOFs_1D];
+	register double uStar_gamma[numDOFs_1D], vStar_gamma[numDOFs_1D];
 	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
-	register double psi[numDOFs_1D];
+	register double uStar_psi[numDOFs_1D], vStar_psi[numDOFs_1D];
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {
 	    for (int i=0; i<NNZ_1D; i++)
 	      {
-		dMatrix[i]=0.;
+		uStar_dMatrix[i]=0.;
+		vStar_dMatrix[i]=0.;
 		TransportMatrix[i] = 0.;
 		TransposeTransportMatrix[i] = 0.;
 	      }
@@ -3720,10 +3728,17 @@ namespace proteus
 		    double u_beta = fabs(u_beta_numerator)/(u_beta_denominator+1E-10);
 		    double v_beta = fabs(v_beta_numerator)/(v_beta_denominator+1E-10);
 		    // compute psi=beta^power
-		    psi[i] = (POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 :
-			      std::pow(fmax(u_beta,v_beta),
-				       POWER_SMOOTHNESS_INDICATOR));
-
+		    if (ANISOTROPIC_DIFFUSION==1)
+		      {
+			uStar_psi[i] = (POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 : std::pow(u_beta, POWER_SMOOTHNESS_INDICATOR));
+			vStar_psi[i] = (POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 : std::pow(v_beta, POWER_SMOOTHNESS_INDICATOR));
+		      }
+		    else // ISOTROPIC ARTIFICIAL DIFFUSION
+		      {
+			double psi = (POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 : std::pow(fmax(u_beta,v_beta), POWER_SMOOTHNESS_INDICATOR));
+			uStar_psi[i] = psi;
+			vStar_psi[i] = psi;
+		      }
 		    // for computation of gamma
 		    uStar_hi[i] /= den_hi[i];
 		    vStar_hi[i] /= den_hi[i];
@@ -3755,11 +3770,25 @@ namespace proteus
 		    double uStar_hi2 = uStar_hi[i]*uStar_hi[i];
 		    double vStar_hi2 = vStar_hi[i]*vStar_hi[i];
 		    if (isBoundary_1D[i] == 1)
-		      gamma[i] = 1;
+		      {
+			uStar_gamma[i] = 1; //  set gamma=1 since at boundary we don't have enough information
+			vStar_gamma[i] = 1;
+		      }
 		    else
-		      gamma[i] = fmax(1.-fmax(0, fmin(uStar_hi2, C_FOR_GAMMA_INDICATOR*uStar_min_hiHe[i]))/(uStar_hi2+EPS_FOR_GAMMA_INDICATOR),
-				      1.-fmax(0, fmin(vStar_hi2, C_FOR_GAMMA_INDICATOR*vStar_min_hiHe[i]))/(vStar_hi2+EPS_FOR_GAMMA_INDICATOR));
-		    quantDOFs[i] = gamma[i];
+		      {
+			if (ANISOTROPIC_DIFFUSION==1)
+			  {
+			    uStar_gamma[i] = 1.-fmax(0, fmin(uStar_hi2, C_FOR_GAMMA_INDICATOR*uStar_min_hiHe[i]))/(uStar_hi2+EPS_FOR_GAMMA_INDICATOR);
+			    vStar_gamma[i] = 1.-fmax(0, fmin(vStar_hi2, C_FOR_GAMMA_INDICATOR*vStar_min_hiHe[i]))/(vStar_hi2+EPS_FOR_GAMMA_INDICATOR);
+			  }
+			else // ISOTROPIC ARTIFICIAL DIFFUSION
+			  {
+			    double gamma = fmax(1.-fmax(0, fmin(uStar_hi2, C_FOR_GAMMA_INDICATOR*uStar_min_hiHe[i]))/(uStar_hi2+EPS_FOR_GAMMA_INDICATOR),
+						1.-fmax(0, fmin(vStar_hi2, C_FOR_GAMMA_INDICATOR*vStar_min_hiHe[i]))/(vStar_hi2+EPS_FOR_GAMMA_INDICATOR));
+			    uStar_gamma[i] = gamma;
+			    vStar_gamma[i] = gamma;
+			  }
+		      }
 		  }
 	      }
 	    // SECOND LOOP ON DOFs //
@@ -3767,14 +3796,16 @@ namespace proteus
 	    for (int i=0; i<numDOFs_1D; i++)
 	      {
 		int ii;
-		double dii = 0;
+		double uStar_dii = 0;
+		double vStar_dii = 0;
 		double ui = u_dof[i];
 		double vi = v_dof[i];
 
 		double ith_u_dissipative_term = 0;
 		double ith_v_dissipative_term = 0;
 
-		double alphai = USE_GAMMA_INDICATOR==1 ? fmin(psi[i],gamma[i]) : psi[i];
+		double uStar_alphai = USE_GAMMA_INDICATOR==1 ? fmin(uStar_psi[i], uStar_gamma[i]) : uStar_psi[i];
+		double vStar_alphai = USE_GAMMA_INDICATOR==1 ? fmin(vStar_psi[i], vStar_gamma[i]) : vStar_psi[i];
 
 		for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
 		  {
@@ -3784,7 +3815,8 @@ namespace proteus
 			double uj = u_dof[j];
 			double vj = v_dof[j];
 
-			double alphaj = USE_GAMMA_INDICATOR==1 ? fmin(psi[j],gamma[j]) : psi[j];
+			double uStar_alphaj = USE_GAMMA_INDICATOR==1 ? fmin(uStar_psi[j], uStar_gamma[j]) : uStar_psi[j];
+			double vStar_alphaj = USE_GAMMA_INDICATOR==1 ? fmin(vStar_psi[j], vStar_gamma[j]) : vStar_psi[j];
 
 			if (ARTIFICIAL_VISCOSITY==4) // via entropy viscosity
 			  {
@@ -3792,17 +3824,21 @@ namespace proteus
 						laggedEntropyResidualPerNode[j]);
 			    double dLij = fmax(0.,fmax(TransportMatrix[ij],
 						       TransposeTransportMatrix[ij]));
-			    dMatrix[ij] = fmin(dLij,cE*dEVij);
+			    uStar_dMatrix[ij] = fmin(dLij,cE*dEVij);
+			    vStar_dMatrix[i] = uStar_dMatrix[ij];
 			  }
 			else // via smoothness indicator
 			  {
-			    dMatrix[ij] = fmax(0.,fmax(alphai*TransportMatrix[ij], // by S. Badia
-						       alphaj*TransposeTransportMatrix[ij]));
+			    uStar_dMatrix[ij] = fmax(0.,fmax(uStar_alphai*TransportMatrix[ij], // by S. Badia
+							     uStar_alphaj*TransposeTransportMatrix[ij]));
+			    vStar_dMatrix[ij] = fmax(0.,fmax(vStar_alphai*TransportMatrix[ij], // by S. Badia
+							     vStar_alphaj*TransposeTransportMatrix[ij]));
 			  }
-			dii -= dMatrix[ij];
+			uStar_dii -= uStar_dMatrix[ij];
+			vStar_dii -= vStar_dMatrix[ij];
 			//dissipative terms
-			ith_u_dissipative_term += dMatrix[ij]*(uj-ui);
-			ith_v_dissipative_term += dMatrix[ij]*(vj-vi);
+			ith_u_dissipative_term += uStar_dMatrix[ij]*(uj-ui);
+			ith_v_dissipative_term += vStar_dMatrix[ij]*(vj-vi);
 		      }
 		    else
 		      {
@@ -3811,7 +3847,8 @@ namespace proteus
 		    // update ij
 		    ij++;
 		  }
-		dMatrix[ii] = dii;
+		uStar_dMatrix[ii] = uStar_dii;
+		vStar_dMatrix[ii] = vStar_dii;
 		globalResidual[offset_u+stride_u*i] += -ith_u_dissipative_term;
 		globalResidual[offset_v+stride_v*i] += -ith_v_dissipative_term;
 	      }
@@ -5211,7 +5248,9 @@ namespace proteus
                              int USE_SBM,
 			     // For edge based dissipation
 			     int ARTIFICIAL_VISCOSITY,
-			     double * dMatrix,
+			     double * uStar_dMatrix,
+			     double * vStar_dMatrix,
+			     double * wStar_dMatrix,
 			     int numDOFs_1D,
 			     int offset_u, int offset_v, int offset_w,
 			     int stride_u, int stride_v, int stride_w,
@@ -6216,11 +6255,12 @@ namespace proteus
 		    int vv_ij = v_ith_row_ptr + (offset_v + counter*stride_v);
 
 		    // read ij component of dissipative matrix
-		    double dij = dMatrix[ij];
+		    double uStar_dij = uStar_dMatrix[ij];
+		    double vStar_dij = vStar_dMatrix[ij];
 
 		    // update global Jacobian
-		    globalJacobian[uu_ij] -= dij;
-		    globalJacobian[vv_ij] -= dij;
+		    globalJacobian[uu_ij] -= uStar_dij;
+		    globalJacobian[vv_ij] -= vStar_dij;
 
 		    // update ij
 		    ij++;

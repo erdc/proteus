@@ -236,7 +236,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double* vos_vel_nodes,
 			       double * entropyResidualPerNode,
 			       double * laggedEntropyResidualPerNode,
-                               double * dMatrix,
+                               double * uStar_dMatrix,
+                               double * vStar_dMatrix,
+                               double * wStar_dMatrix,
                                int numDOFs_1D,
                                int NNZ_1D,
 			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
@@ -445,7 +447,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_dynamic_viscosity_as_function,
                                int USE_SBM,
                                int ARTIFICIAL_VISCOSITY,
-                               double * dMatrix,
+                               double * uStar_dMatrix,
+                               double * vStar_dMatrix,
+                               double * wStar_dMatrix,
                                int numDOFs_1D,
 			       int offset_u, int offset_v, int offset_w,
 			       int stride_u, int stride_v, int stride_w,
@@ -802,7 +806,7 @@ cdef class RANS3PF:
                           numpy.ndarray vos_vel_nodes,
 			  numpy.ndarray entropyResidualPerNode,
 			  numpy.ndarray laggedEntropyResidualPerNode,
-                          numpy.ndarray dMatrix,
+                          dMatrix,
                           int numDOFs_1D,
                           int NNZ_1D,
 			  numpy.ndarray csrRowIndeces_1D, numpy.ndarray csrColumnOffsets_1D,
@@ -813,6 +817,9 @@ cdef class RANS3PF:
         cdef numpy.ndarray uStar_dof = uStar[0]
         cdef numpy.ndarray vStar_dof = uStar[1]
         cdef numpy.ndarray wStar_dof = uStar[2]
+        cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
+        cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
+        cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1039,7 +1046,9 @@ cdef class RANS3PF:
                                        < double *> vos_vel_nodes.data,
 			               <double * > entropyResidualPerNode.data,
 			               <double * > laggedEntropyResidualPerNode.data,
-                                       <double * > dMatrix.data,
+                                       <double * > uStar_dMatrix.data,
+                                       <double * > vStar_dMatrix.data,
+                                       <double * > wStar_dMatrix.data,
                                        numDOFs_1D,
                                        NNZ_1D,
 				       <int*> csrRowIndeces_1D.data,<int*>csrColumnOffsets_1D.data,
@@ -1248,13 +1257,16 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_dynamic_viscosity_as_function,
                           int USE_SBM,
                           int ARTIFICIAL_VISCOSITY,
-                          numpy.ndarray dMatrix,
+                          dMatrix,
                           int numDOFs_1D,
                           int offset_u, int offset_v, int offset_w,
 			  int stride_u, int stride_v, int stride_w,
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
                           int INT_BY_PARTS_PRESSURE):
+        cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
+        cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
+        cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -1453,7 +1465,9 @@ cdef class RANS3PF:
                                         < double * > ebqe_dynamic_viscosity_as_function.data,
                                         USE_SBM,
                                        ARTIFICIAL_VISCOSITY,
-                                       <double *> dMatrix.data,
+                                       <double *> uStar_dMatrix.data,
+                                       <double *> vStar_dMatrix.data,
+                                       <double *> wStar_dMatrix.data,
                                        numDOFs_1D,
                                        offset_u, offset_v, offset_w,
 			               stride_u, stride_v, stride_w,
@@ -1772,7 +1786,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double* vos_vel_nodes,
 			       double * entropyResidualPerNode,
 			       double * laggedEntropyResidualPerNode,
-                               double * dMatrix,
+                               double * uStar_dMatrix,
+                               double * vStar_dMatrix,
+                               double * wStar_dMatrix,
                                int numDOFs_1D,
                                int NNZ_1D,
 			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
@@ -1981,7 +1997,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * ebqe_dynamic_viscosity_as_function,
                                int USE_SBM,
                                int ARTIFICIAL_VISCOSITY,
-                               double * dMatrix,
+                               double * uStar_dMatrix,
+                               double * vStar_dMatrix,
+                               double * wStar_dMatrix,
                                int numDOFs_1D,
 			       int offset_u, int offset_v, int offset_w,
 			       int stride_u, int stride_v, int stride_w,
@@ -2337,7 +2355,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray vos_vel_nodes,
 			  numpy.ndarray entropyResidualPerNode,
 			  numpy.ndarray laggedEntropyResidualPerNode,
-                          numpy.ndarray dMatrix,
+                          dMatrix,
                           int numDOFs_1D,
                           int NNZ_1D,
 			  numpy.ndarray csrRowIndeces_1D, numpy.ndarray csrColumnOffsets_1D,
@@ -2348,6 +2366,9 @@ cdef class RANS3PF2D:
         cdef numpy.ndarray uStar_dof = uStar[0]
         cdef numpy.ndarray vStar_dof = uStar[1]
         cdef numpy.ndarray wStar_dof = uStar[2]
+        cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
+        cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
+        cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -2574,7 +2595,9 @@ cdef class RANS3PF2D:
                                        < double *> vos_vel_nodes.data,
 			               <double * > entropyResidualPerNode.data,
 			               <double * > laggedEntropyResidualPerNode.data,
-                                       <double * > dMatrix.data,
+                                       <double * > uStar_dMatrix.data,
+                                       <double * > vStar_dMatrix.data,
+                                       <double * > wStar_dMatrix.data,
                                        numDOFs_1D,
                                        NNZ_1D,
 				       <int*> csrRowIndeces_1D.data,<int*>csrColumnOffsets_1D.data,
@@ -2783,13 +2806,16 @@ cdef class RANS3PF2D:
                           numpy.ndarray ebqe_dynamic_viscosity_as_function,
                           int USE_SBM,
                           int ARTIFICIAL_VISCOSITY,
-                          numpy.ndarray dMatrix,
+                          dMatrix,
                           int numDOFs_1D,
                           int offset_u, int offset_v, int offset_w,
 			  int stride_u, int stride_v, int stride_w,
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
                           int INT_BY_PARTS_PRESSURE):
+        cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
+        cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
+        cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -2988,7 +3014,9 @@ cdef class RANS3PF2D:
                                         < double * > ebqe_dynamic_viscosity_as_function.data,
                                         USE_SBM,
                                        ARTIFICIAL_VISCOSITY,
-                                       <double *> dMatrix.data,
+                                       <double *> uStar_dMatrix.data,
+                                       <double *> vStar_dMatrix.data,
+                                       <double *> wStar_dMatrix.data,
                                        numDOFs_1D,
                                        offset_u, offset_v, offset_w,
 			               stride_u, stride_v, stride_w,
