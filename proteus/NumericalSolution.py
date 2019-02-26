@@ -1370,7 +1370,7 @@ class NS_base(object):  # (HasTraits):
             scalar=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nNodes_global,1),'d')
             self.pList[0].domain.PUMIMesh.transferFieldToProteus(
                 "errorSize", scalar)
-            self.modelList[0].levelModelList[0].u[3].dof[:] = scalar[:,0]
+            self.modelList[0].levelModelList[0].u[self.pList[0].domain.nd+1].dof[:] = scalar[:,0]
 
             #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
             if(adaptMeshNow == False):

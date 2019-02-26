@@ -370,7 +370,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              movingDomain=movingDomain)
             self.vectorComponents = [1, 2]
         elif nd == 3:
-            variableNames = ['p', 'u', 'v', 'w']
+            #variableNames = ['p', 'u', 'v', 'w']
+            variableNames = ['p', 'u', 'v', 'w','size'] #hack for size field gauges
             mass = {1: {1: 'linear'},
                     2: {2: 'linear'},
                     3: {3: 'linear'}}
