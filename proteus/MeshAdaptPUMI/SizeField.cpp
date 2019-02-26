@@ -1194,6 +1194,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::MeshElement *element;
   apf::MeshEntity *reg;
   //size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  apf::destroyField(m->findField("errorSize"));
   apf::Field *errorSize = apf::createLagrangeField(m, "errorSize", apf::SCALAR, 1);
 
   if (adapt_type_config == "anisotropic"){

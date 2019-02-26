@@ -1366,6 +1366,12 @@ class NS_base(object):  # (HasTraits):
             else:
               adaptMeshNow=True
               logEvent("Need to Adapt")
+
+            scalar=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nNodes_global,1),'d')
+            self.pList[0].domain.PUMIMesh.transferFieldToProteus(
+                "errorSize", scalar)
+            self.modelList[0].levelModelList[0].u[3].dof[:] = scalar[:,0]
+
             #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
             if(adaptMeshNow == False):
                 for m in self.modelList:
@@ -1935,21 +1941,27 @@ class NS_base(object):  # (HasTraits):
                                                                                                self.systemStepController.dt_system))
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
-                for model in self.modelList:
-                    for av in self.auxiliaryVariables[model.name]:
-                        av.calculate()
+
                 if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                  
+
                 #can only handle PUMIDomain's for now
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 import gc; gc.collect()
                 if(self.PUMI_estimateError()):
+                    for model in self.modelList:
+                        for av in self.auxiliaryVariables[model.name]:
+                            av.calculate()
                     self.PUMI_adaptMesh()
+                else:
+                    for model in self.modelList:
+                        for av in self.auxiliaryVariables[model.name]:
+                            av.calculate()
+                  
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps

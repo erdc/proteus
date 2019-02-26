@@ -282,6 +282,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   return 0;
 } 
 
+#include "PyEmbeddedFunctions.h"
 int MeshAdaptPUMIDrvr::willErrorAdapt() 
 /**
  * @brief Looks at the estimated error and determines if mesh adaptation is necessary.
@@ -298,6 +299,7 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
   //get current size field
   apf::Field* currentField;
 
+/*
   if(!size_iso) //if no previous size field
   {
     currentField = samSz::isoSize(m);
@@ -307,6 +309,11 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
     currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
     apf::copyData(currentField,size_iso);
   }
+*/
+
+  //currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
+  //apf::copyData(currentField,size_iso);
+  currentField = samSz::isoSize(m);
 
   //get error-based size field
   getERMSizeField(total_error);
@@ -321,7 +328,7 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
   {
     double h_current = apf::getScalar(currentField,ent,0);
     double h_needed = apf::getScalar(errorField,ent,0);
-    if(h_current>h_needed){
+    if(h_current>h_needed*1.5){
       adaptFlag=1;        
       //apf::writeVtkFiles("willErrorAdapt", m);
       //std::cout<<"What is the ent? "<<localNumber(ent)<<std::endl;
@@ -335,10 +342,13 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
   PCU_Add_Ints(&assertFlag,1);
   assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
 
+  if(adaptFlag>0)
+    logEvent("Need to error adapt",3);
   apf::destroyField(currentField);
-  apf::destroyField(errorField);
+  //apf::destroyField(errorField);
 
-  return adaptFlag;
+  //return assertFlag;
+  return 0;
 }
 
 
@@ -348,8 +358,8 @@ int MeshAdaptPUMIDrvr::willAdapt()
   int adaptFlag = 0;
   if(size_field_config == "combined" or size_field_config == "isotropic")
     adaptFlag += willInterfaceAdapt(); 
-  //if(size_field_config == "combined" or size_field_config == "VMS")
-  //  adaptFlag += willErrorAdapt();
+  if(size_field_config == "combined" or size_field_config == "VMS")
+    adaptFlag += willErrorAdapt();
 
   if(adaptFlag > 0)
     adaptFlag = 1;
@@ -401,6 +411,13 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
       adaptFlag=1;        
       break;
     }  
+/*
+    else if(h_current > edgeRatio*2.0*h_needed) //if the mesh is too fine
+    {
+      adaptFlag=1;
+      break;
+    }
+*/
   }//end while
 
   assertFlag = adaptFlag;

@@ -326,7 +326,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         reaction = {}
         hamiltonian = {}
         if nd == 2:
-            variableNames = ['p', 'u', 'v']
+            #variableNames = ['p', 'u', 'v']
+            variableNames = ['p', 'u', 'v','size'] #hack to look at error gauge
             mass = {1: {1: 'linear'},
                     2: {2: 'linear'}}
             advection = {0: {0: 'linear',
