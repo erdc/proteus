@@ -81,6 +81,7 @@ class MeshAdaptPUMIDrvr{
   double hmax, hmin, hPhi; //bounds on mesh size
   int numIter; //number of iterations for MeshAdapt
   int nAdapt; //counter for number of adapt steps
+  int nTriggers; //counter for number of triggers
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
   int maxAspect; //maximum aspect ratio

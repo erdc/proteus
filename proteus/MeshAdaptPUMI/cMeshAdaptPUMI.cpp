@@ -51,6 +51,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   numIter=NumIter;
   adaptMesh = AdaptMesh;
   nAdapt=0;
+  nTriggers=0;
   numAdaptSteps = NumAdaptSteps;
   nEstimate=0;
   if(PCU_Comm_Self()==0)
@@ -282,6 +283,13 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   return 0;
 } 
 
+static int countTotal(apf::Mesh* m, int dim)
+{
+  int total = apf::countOwned(m, dim);
+  PCU_Add_Ints(&total, 1);
+  return total;
+}
+
 #include "PyEmbeddedFunctions.h"
 int MeshAdaptPUMIDrvr::willErrorAdapt() 
 /**
@@ -320,7 +328,7 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
   apf::Field* errorField = sizeFieldList.front();
   sizeFieldList.pop(); //remove this size field from the queue
 
-
+  apf::Field *errorTriggered = apf::createLagrangeField(m, "errorTriggered", apf::SCALAR, 1);
   //determine if desired mesh is contained in current mesh
   apf::MeshEntity* ent;
   apf::MeshIterator* it = m->begin(0);
@@ -329,23 +337,39 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
     double h_current = apf::getScalar(currentField,ent,0);
     double h_needed = apf::getScalar(errorField,ent,0);
     if(h_current>h_needed*1.5){
-      adaptFlag=1;        
-      //apf::writeVtkFiles("willErrorAdapt", m);
+      adaptFlag+=1;        
+      apf::setScalar(errorTriggered,ent,0,h_current/h_needed*1.0);
       //std::cout<<"What is the ent? "<<localNumber(ent)<<std::endl;
       //std::exit(1);
-      break;
-      
+      //break;
     }  
+    else
+      apf::setScalar(errorTriggered,ent,0,-1);
   }//end while
 
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
   assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
 
-  if(adaptFlag>0)
-    logEvent("Need to error adapt",3);
+  if(assertFlag>0)
+  {
+    double totalNodes = countTotal(m,0);
+    double triggeredPercentage = assertFlag*100.0/totalNodes;
+    char buffer[50];
+    sprintf(buffer,"Need to error adapt %f%%",triggeredPercentage);
+    logEvent(buffer,3);
+
+    if(nTriggers%10==0)
+    {
+        char namebuffer[50];
+        sprintf(namebuffer,"needErrorAdapt_%i",nTriggers);
+        apf::writeVtkFiles(namebuffer, m);
+    }
+    nTriggers++;
+  }
   apf::destroyField(currentField);
   //apf::destroyField(errorField);
+  apf::destroyField(errorTriggered);
 
   //return assertFlag;
   return 0;
