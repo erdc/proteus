@@ -26,6 +26,9 @@
 
 #define CELL_BASED_EV_COEFF 1
 #define POWER_SMOOTHNESS_INDICATOR 2
+#define EPS_FOR_GAMMA_INDICATOR 1E-10
+#define C_FOR_GAMMA_INDICATOR 3.0
+#define USE_GAMMA_INDICATOR 1
 
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
@@ -310,6 +313,7 @@ namespace proteus
 				   int NNZ_1D,
 				   int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
 				   int *rowptr_1D, int *colind_1D,
+				   double *isBoundary_1D,
 				   // int by parts pressure
 				   int INT_BY_PARTS_PRESSURE
 				   )=0;
@@ -547,7 +551,20 @@ namespace proteus
                                           double *vel_trial_trace_ref,
                                           double *ebqe_velocity,
                                           double *velocityAverage) = 0;
-
+    virtual void getBoundaryDOFs(double* mesh_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_trace_ref,
+				 double* mesh_grad_trial_trace_ref,
+				 double* dS_ref,
+				 double* vel_test_trace_ref,
+				 double* normal_ref,
+				 double* boundaryJac_ref,
+				 int* vel_l2g,
+				 int nExteriorElementBoundaries_global,
+				 int* exteriorElementBoundariesArray,
+				 int* elementBoundaryElementsArray,
+				 int* elementBoundaryLocalElementBoundariesArray,
+				 double *isBoundary_1D)=0;
   };
 
   template<class CompKernelType,
@@ -2266,9 +2283,14 @@ namespace proteus
 			     int NNZ_1D,
 			     int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
 			     int *rowptr_1D, int *colind_1D,
+			     double *isBoundary_1D,
 			     // int by parts pressure
 			     int INT_BY_PARTS_PRESSURE)
       {
+	register double element_uStar_He[nElements_global], element_vStar_He[nElements_global], element_wStar_He[nElements_global];
+	register double uStar_hi[numDOFs_1D], vStar_hi[numDOFs_1D], wStar_hi[numDOFs_1D], den_hi[numDOFs_1D];
+	register double uStar_min_hiHe[numDOFs_1D], vStar_min_hiHe[numDOFs_1D], wStar_min_hiHe[numDOFs_1D];
+	register double gamma[numDOFs_1D];
 	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
 	register double psi[numDOFs_1D];
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
@@ -2281,8 +2303,14 @@ namespace proteus
 	      }
 	    for (int i=0; i<numDOFs_1D; i++)
 	      {
-		psi[i]=1.;
+		uStar_min_hiHe[i] = 1E100;
+		vStar_min_hiHe[i] = 1E100;
+		wStar_min_hiHe[i] = 1E100;
 		entropyResidualPerNode[i]=0.;
+		uStar_hi[i] = 0.;
+		vStar_hi[i] = 0;
+		wStar_hi[i] = 0.;
+		den_hi[i] = 0.;
 	      }
 	  }
 
@@ -2313,6 +2341,8 @@ namespace proteus
               mesh_volume_conservation_element_weak=0.0;
 	    // for entropy viscosity
 	    double linVisc_eN = 0, nlinVisc_eN_num = 0, nlinVisc_eN_den = 0;
+	    // for hessians of uStar
+	    double det_hess_uStar_Ke=0.0, det_hess_vStar_Ke=0.0, det_hess_wStar_Ke=0.0, area_Ke=0.0;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
@@ -2556,7 +2586,7 @@ namespace proteus
                   dmom_v_source[nSpace],
                   dmom_w_source[nSpace],
 		  //
-		  velStar[nSpace],
+		  velStar[nSpace], hess_uStar[nSpace2], hess_vStar[nSpace2], hess_wStar[nSpace2],
                   //
                   G[nSpace*nSpace],G_dd_G,tr_G,norm_Rv,h_phi, dmom_adv_star[nSpace],dmom_adv_sge[nSpace];
                 //get jacobian, etc for mapping reference element
@@ -2619,6 +2649,9 @@ namespace proteus
                 ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_u);
                 ck.hessFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_v);
                 ck.hessFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_w);
+                ck.hessFromDOF(uStar_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_uStar);
+                ck.hessFromDOF(vStar_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_vStar);
+                ck.hessFromDOF(wStar_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_wStar);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -2640,6 +2673,23 @@ namespace proteus
 			  }
                       }
                   }
+		// compute determinant of Hessians
+		if (ARTIFICIAL_VISCOSITY==3)
+		  {
+		    det_hess_uStar_Ke +=
+		      (hess_uStar[0]*(hess_uStar[4]*hess_uStar[8] - hess_uStar[7]*hess_uStar[5])
+		       -hess_uStar[1]*(hess_uStar[3]*hess_uStar[8] - hess_uStar[6]*hess_uStar[5])
+		       +hess_uStar[2]*(hess_uStar[3]*hess_uStar[7] - hess_uStar[6]*hess_uStar[4]))*dV;
+		    det_hess_vStar_Ke +=
+		      (hess_vStar[0]*(hess_vStar[4]*hess_vStar[8] - hess_vStar[7]*hess_vStar[5])
+		       -hess_vStar[1]*(hess_vStar[3]*hess_vStar[8] - hess_vStar[6]*hess_vStar[5])
+		       +hess_vStar[2]*(hess_vStar[3]*hess_vStar[7] - hess_vStar[6]*hess_vStar[4]))*dV;
+		    det_hess_wStar_Ke +=
+		      (hess_wStar[0]*(hess_wStar[4]*hess_wStar[8] - hess_wStar[7]*hess_wStar[5])
+		       -hess_wStar[1]*(hess_wStar[3]*hess_wStar[8] - hess_wStar[6]*hess_wStar[5])
+		       +hess_wStar[2]*(hess_wStar[3]*hess_wStar[7] - hess_wStar[6]*hess_wStar[4]))*dV;
+		    area_Ke += dV;
+		  }
                 //cek hack
                 double div_mesh_velocity=0.0;
                 int NDOF_MESH_TRIAL_ELEMENT=4;
@@ -3350,6 +3400,10 @@ namespace proteus
 		      }//j
                   }//i
               }
+	    element_uStar_He[eN] = det_hess_uStar_Ke/area_Ke;
+	    element_vStar_He[eN] = det_hess_vStar_Ke/area_Ke;
+	    element_wStar_He[eN] = det_hess_wStar_Ke/area_Ke;
+
 	    // End computation of cell based EV coeff //
 	    if (CELL_BASED_EV_COEFF && ARTIFICIAL_VISCOSITY==2)
 	      {
@@ -3377,6 +3431,15 @@ namespace proteus
                 globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
                 globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=element_active*elementResidual_w[i];
+
+		// compute numerator and denominator of uStar_hi and vStar_hi
+		if (ARTIFICIAL_VISCOSITY==3)
+		  {
+		    uStar_hi[vel_l2g[eN_i]] += element_uStar_He[eN]; // offset=0, stride=1 since this is per component of the equation
+		    vStar_hi[vel_l2g[eN_i]] += element_vStar_He[eN];
+		    wStar_hi[vel_l2g[eN_i]] += element_wStar_He[eN];
+		    den_hi[vel_l2g[eN_i]] += 1;
+		  }
 
 		if (ARTIFICIAL_VISCOSITY==4)
 		  {
@@ -3431,13 +3494,14 @@ namespace proteus
 		  }
 		else // via smoothness indicator
 		  {
+		    // computation of beta
 		    double uStari = uStar_dof[i];
 		    double vStari = vStar_dof[i];
 		    double wStari = wStar_dof[i];
 
-		    double u_alpha_numerator = 0., u_alpha_denominator = 0.;
-		    double v_alpha_numerator = 0., v_alpha_denominator = 0.;
-		    double w_alpha_numerator = 0., w_alpha_denominator = 0.;
+		    double u_beta_numerator = 0., u_beta_denominator = 0.;
+		    double v_beta_numerator = 0., v_beta_denominator = 0.;
+		    double w_beta_numerator = 0., w_beta_denominator = 0.;
 
 		    // loop on sparsity pattern
 		    for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
@@ -3448,22 +3512,64 @@ namespace proteus
 			double wStarj = wStar_dof[j];
 
 			// for u component
-			u_alpha_numerator += (uStarj - uStari);
-			u_alpha_denominator += fabs(uStarj - uStari);
+			u_beta_numerator += (uStarj - uStari);
+			u_beta_denominator += fabs(uStarj - uStari);
 			// for v component
-			v_alpha_numerator += (vStarj - vStari);
-			v_alpha_denominator += fabs(vStarj - vStari);
+			v_beta_numerator += (vStarj - vStari);
+			v_beta_denominator += fabs(vStarj - vStari);
 			// for w component
-			w_alpha_numerator += (wStarj - wStari);
-			w_alpha_denominator += fabs(wStarj - wStari);
+			w_beta_numerator += (wStarj - wStari);
+			w_beta_denominator += fabs(wStarj - wStari);
 		      }
-		    double u_alpha = fabs(u_alpha_numerator)/(u_alpha_denominator+1E-10);
-		    double v_alpha = fabs(v_alpha_numerator)/(v_alpha_denominator+1E-10);
-		    double w_alpha = fabs(w_alpha_numerator)/(w_alpha_denominator+1E-10);
-		    // compute psi=alpha^power
+		    double u_beta = fabs(u_beta_numerator)/(u_beta_denominator+1E-10);
+		    double v_beta = fabs(v_beta_numerator)/(v_beta_denominator+1E-10);
+		    double w_beta = fabs(w_beta_numerator)/(w_beta_denominator+1E-10);
+		    // compute psi=beta^power
 		    psi[i] = (POWER_SMOOTHNESS_INDICATOR==0 ? 1.0 :
-			      std::pow(fmax(fmax(u_alpha,v_alpha),w_alpha),
+			      std::pow(fmax(fmax(u_beta,v_beta),w_beta),
 				       POWER_SMOOTHNESS_INDICATOR));
+
+		    // for computation of gamma
+		    uStar_hi[i] /= den_hi[i];
+		    vStar_hi[i] /= den_hi[i];
+		    wStar_hi[i] /= den_hi[i];
+		  }
+	      }
+
+	    if (ARTIFICIAL_VISCOSITY==3)
+	      {
+		for(int eN=0;eN<nElements_global;eN++)
+		  {
+		    double uStar_He = element_uStar_He[eN];
+		    double vStar_He = element_vStar_He[eN];
+		    double wStar_He = element_wStar_He[eN];
+		    for(int i=0;i<nDOF_test_element;i++)
+		      {
+			register int eN_i=eN*nDOF_test_element+i;
+			register int gi = vel_l2g[eN_i]; // offset=0, stride=1
+			uStar_min_hiHe[gi] = fmin(uStar_min_hiHe[gi], uStar_hi[gi]*uStar_He);
+			vStar_min_hiHe[gi] = fmin(vStar_min_hiHe[gi], vStar_hi[gi]*vStar_He);
+			wStar_min_hiHe[gi] = fmin(wStar_min_hiHe[gi], wStar_hi[gi]*wStar_He);
+		      }
+		  }
+	      }
+
+	    // EXTRA LOOP ON DOFs to COMPUTE GAMMA INDICATOR//
+	    if (ARTIFICIAL_VISCOSITY==3)
+	      {
+		for (int i=0; i<numDOFs_1D; i++)
+		  {
+		    // for gamma indicator
+		    double uStar_hi2 = uStar_hi[i]*uStar_hi[i];
+		    double vStar_hi2 = vStar_hi[i]*vStar_hi[i];
+		    double wStar_hi2 = wStar_hi[i]*wStar_hi[i];
+		    if (isBoundary_1D[i] == 1)
+		      gamma[i] = 1;
+		    else
+		      gamma[i] = fmax(fmax(1.-fmax(0, fmin(uStar_hi2, C_FOR_GAMMA_INDICATOR*uStar_min_hiHe[i]))/(uStar_hi2+EPS_FOR_GAMMA_INDICATOR),
+					   1.-fmax(0, fmin(vStar_hi2, C_FOR_GAMMA_INDICATOR*vStar_min_hiHe[i]))/(vStar_hi2+EPS_FOR_GAMMA_INDICATOR)),
+				      1.-fmax(0, fmin(wStar_hi2, C_FOR_GAMMA_INDICATOR*wStar_min_hiHe[i]))/(wStar_hi2+EPS_FOR_GAMMA_INDICATOR));
+		    quantDOFs[i] = gamma[i];
 		  }
 	      }
 
@@ -3481,6 +3587,8 @@ namespace proteus
 		double ith_v_dissipative_term = 0;
 		double ith_w_dissipative_term = 0;
 
+		double alphai = USE_GAMMA_INDICATOR==1 ? fmin(psi[i],gamma[i]) : psi[i];
+
 		for (int offset=rowptr_1D[i]; offset<rowptr_1D[i+1]; offset++)
 		  {
 		    int j = colind_1D[offset];
@@ -3489,6 +3597,8 @@ namespace proteus
 			double uj = u_dof[j];
 			double vj = v_dof[j];
 			double wj = w_dof[j];
+
+			double alphaj = USE_GAMMA_INDICATOR==1 ? fmin(psi[j],gamma[j]) : psi[j];
 
 			if (ARTIFICIAL_VISCOSITY==4) // via entropy viscosity
 			  {
@@ -3500,8 +3610,8 @@ namespace proteus
 			  }
 			else // via smoothness indicator
 			  {
-			    dMatrix[ij] = fmax(0.,fmax(psi[i]*TransportMatrix[ij], // by S. Badia
-						       psi[j]*TransposeTransportMatrix[ij]));
+			    dMatrix[ij] = fmax(0.,fmax(alphai*TransportMatrix[ij], // by S. Badia
+						       alphaj*TransposeTransportMatrix[ij]));
 			  }
 			dii -= dMatrix[ij];
 			//dissipative terms
@@ -7256,6 +7366,93 @@ namespace proteus
           }
       }
 
+      void getBoundaryDOFs(//element
+			   double* mesh_dof,
+			   int* mesh_l2g,
+			   double* mesh_trial_trace_ref,
+			   double* mesh_grad_trial_trace_ref,
+			   double* dS_ref,
+			   double *vel_test_trace_ref,
+			   double* normal_ref,
+			   double* boundaryJac_ref,
+			   int* vel_l2g,
+			   int nExteriorElementBoundaries_global,
+			   int* exteriorElementBoundariesArray,
+			   int* elementBoundaryElementsArray,
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   double *isBoundary_1D)
+      {
+	//
+        //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
+        //
+        //ebNE is the Exterior element boundary INdex
+        //ebN is the element boundary INdex
+        //eN is the element index
+        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+          {
+            register int ebN = exteriorElementBoundariesArray[ebNE],
+              eN  = elementBoundaryElementsArray[ebN*2+0],
+              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+              eN_nDOF_trial_element = eN*nDOF_trial_element;
+            register double
+	      elementIsBoundary[nDOF_test_element];
+            const double* elementResidual_w(NULL);
+            for (int i=0;i<nDOF_test_element;i++)
+	      elementIsBoundary[i]=0.0;
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                  ebNE_kb_nSpace = ebNE_kb*nSpace,
+                  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                register double
+                  jac_ext[nSpace*nSpace],
+                  jacDet_ext,
+                  jacInv_ext[nSpace*nSpace],
+                  boundaryJac[nSpace*(nSpace-1)],
+                  metricTensor[(nSpace-1)*(nSpace-1)],
+                  metricTensorDetSqrt,
+                  dS, vel_test_dS[nDOF_test_element],
+                  normal[2],x_ext,y_ext,z_ext;
+                //compute information about mapping from reference element to physical element
+                ck.calculateMapping_elementBoundary(eN,
+                                                    ebN_local,
+                                                    kb,
+                                                    ebN_local_kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac_ext,
+                                                    jacDet_ext,
+                                                    jacInv_ext,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x_ext,y_ext,z_ext);
+                dS = metricTensorDetSqrt*dS_ref[kb];
+                //precalculate test function products with integration weights
+                for (int j=0;j<nDOF_trial_element;j++)
+		  vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                //
+                //update residuals
+                //
+                for (int i=0;i<nDOF_test_element;i++)
+		  elementIsBoundary[i] += vel_test_dS[i];
+              }//kb
+            //
+            //update the element and global residual storage
+            //
+            for (int i=0;i<nDOF_test_element;i++)
+              {
+                int eN_i = eN*nDOF_test_element+i;
+                isBoundary_1D[vel_l2g[eN_i]] += elementIsBoundary[i];
+              }//i
+          }//ebNE
+      }
     };//RANS3PF
 
   inline cppRANS3PF_base* newRANS3PF(int nSpaceIn,
