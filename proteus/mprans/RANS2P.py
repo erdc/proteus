@@ -1493,6 +1493,32 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                                          compKernelFlag)
         else:
+            import copy
+            self.u[4] = copy.deepcopy(self.u[3])
+            self.timeIntegration.m_tmp[4] = self.timeIntegration.m_tmp[3].copy()
+            self.timeIntegration.beta_bdf[4] = self.timeIntegration.beta_bdf[3].copy()
+            self.coefficients.sdInfo[(1, 4)] = (numpy.array([0, 1, 2, 3], dtype='i'),
+                                                numpy.array([0, 1, 2], dtype='i'))
+            self.coefficients.sdInfo[(2, 4)] = (numpy.array([0, 1, 2,3 ], dtype='i'),
+                                                numpy.array([0, 1], dtype='i'))
+            self.coefficients.sdInfo[(3, 4)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 0)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 1)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 2)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 3)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 4)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+
+            self.offset.append(self.offset[3])
+            self.stride.append(self.stride[3])
+            self.numericalFlux.isDOFBoundary[4] = self.numericalFlux.isDOFBoundary[3].copy()
+            self.numericalFlux.ebqe[('u', 4)] = self.numericalFlux.ebqe[('u', 3)].copy()
+
             logEvent("calling  cRANS2P_base ctor")
             self.rans2p = cRANS2P_base(self.nSpace_global,
                                        self.nQuadraturePoints_element,
