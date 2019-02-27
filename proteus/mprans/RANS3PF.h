@@ -7451,7 +7451,6 @@ namespace proteus
               eN_nDOF_trial_element = eN*nDOF_trial_element;
             register double
 	      elementIsBoundary[nDOF_test_element];
-            const double* elementResidual_w(NULL);
             for (int i=0;i<nDOF_test_element;i++)
 	      elementIsBoundary[i]=0.0;
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
@@ -7468,7 +7467,7 @@ namespace proteus
                   metricTensor[(nSpace-1)*(nSpace-1)],
                   metricTensorDetSqrt,
                   dS, vel_test_dS[nDOF_test_element],
-                  normal[2],x_ext,y_ext,z_ext;
+                  normal[3],x_ext,y_ext,z_ext;
                 //compute information about mapping from reference element to physical element
                 ck.calculateMapping_elementBoundary(eN,
                                                     ebN_local,
@@ -7491,7 +7490,7 @@ namespace proteus
                 dS = metricTensorDetSqrt*dS_ref[kb];
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
-		  vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		  vel_test_dS[j] = fabs(vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j])*dS;
                 //
                 //update residuals
                 //
