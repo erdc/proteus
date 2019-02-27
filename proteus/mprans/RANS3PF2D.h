@@ -7598,7 +7598,7 @@ namespace proteus
                 dS = metricTensorDetSqrt*dS_ref[kb];
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
-		  vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		  vel_test_dS[j] = fabs(vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j])*dS;
                 //
                 //update residuals
                 //
