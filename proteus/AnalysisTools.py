@@ -192,5 +192,37 @@ def ReflStat(H1,H2,H3,dx,wavelength):
 
 
 #    return [time_lin,data1]
-        
 
+#Pulls Timestep data into an array for further manipulation.
+import csv
+import numpy as np
+from builtins import range
+
+def gatherParaviewOutput(filename,timesteps,variable):
+    """
+    Collect Data from the numbered .csv files representing each time step produced by Paraview's save data. Takes each .csv file of the format NAME.#.csv, and extracts an array of a selected variable.
+    ----------
+    Inputs
+    filename : single
+               Filename of .csv files
+    timestep : int
+               Number of Timesteps (.csv files) to collect
+    variable : str
+               Name of the .csv header variable to extract
+    ----------
+    Outputs
+    Array : array
+            1D Array of the values in the .csv
+    """
+    
+    Array = np.zeros(timesteps)
+    for i in range(timesteps):
+        if timesteps[-4:] is '.csv':
+	    filename_str = filename[:-4] + '.' + str(i) + '.csv'
+	else
+	    filename_str = filename + '.' + str(i) + '.csv'
+        with open(filename_str, 'rb') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                Array[i] = float(row[variable]) 
+    return(Array)
