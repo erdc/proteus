@@ -27,7 +27,7 @@
 #define CELL_BASED_EV_COEFF 1
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define EPS_FOR_GAMMA_INDICATOR 1E-10
-#define C_FOR_GAMMA_INDICATOR 3.0
+#define C_FOR_GAMMA_INDICATOR 0.25 // increase gamma to make the indicator more agressive (less dissipative)
 #define USE_GAMMA_INDICATOR 1
 #define ANISOTROPIC_DIFFUSION 1
 
