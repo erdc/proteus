@@ -359,12 +359,14 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
     sprintf(buffer,"Need to error adapt %f%%",triggeredPercentage);
     logEvent(buffer,3);
 
+/*
     if(nTriggers%10==0)
     {
         char namebuffer[50];
         sprintf(namebuffer,"needErrorAdapt_%i",nTriggers);
         apf::writeVtkFiles(namebuffer, m);
     }
+*/
     nTriggers++;
   }
   apf::destroyField(currentField);

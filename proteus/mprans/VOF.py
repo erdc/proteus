@@ -1411,7 +1411,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
-        jacobian.fwrite("matdebug_p%s.vof.txt" % self.comm.rank())
+        #jacobian.fwrite("matdebug_p%s.vof.txt" % self.comm.rank())
         return jacobian
 
     def calculateElementQuadrature(self):
