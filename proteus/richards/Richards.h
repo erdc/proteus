@@ -34,8 +34,7 @@ namespace proteus
     //The base class defining the interface
   public:
     virtual ~Richards_base(){}
-    virtual void calculateResidual(//element
-                                   double dt,
+    virtual void calculateResidual(double dt,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -47,7 +46,6 @@ namespace proteus
 				   double* u_grad_trial_ref,
 				   double* u_test_ref,
 				   double* u_grad_test_ref,
-				   //element boundary
 				   double* mesh_trial_trace_ref,
 				   double* mesh_grad_trial_trace_ref,
 				   double* dS_ref,
@@ -57,7 +55,6 @@ namespace proteus
 				   double* u_grad_test_trace_ref,
 				   double* normal_ref,
 				   double* boundaryJac_ref,
-				   //physics
 				   int nElements_global,
 				   double* ebqe_penalty_ext,
 				   int* elementMaterialTypes,	
@@ -87,7 +84,6 @@ namespace proteus
 				   double* velocity,
 				   double* q_m,
 				   double* q_u,
-				   double* q_dV,
 				   double* q_m_betaBDF,
 				   double* cfl,
                                    double* edge_based_cfl,
@@ -107,13 +103,10 @@ namespace proteus
 				   double* ebqe_phi,double epsFact,
 				   double* ebqe_u,
 				   double* ebqe_flux,
-                                   // PARAMETERS FOR EDGE BASED STABILIZATION
                                    double cE,
                                    double cK,
-                                   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
                                    double uL,
                                    double uR,
-                                   // PARAMETERS FOR EDGE VISCOSITY
                                    int numDOFs,
                                    int NNZ,
                                    int* csrRowIndeces_DofLoops,
@@ -121,7 +114,6 @@ namespace proteus
                                    int* csrRowIndeces_CellLoops,
                                    int* csrColumnOffsets_CellLoops,
                                    int* csrColumnOffsets_eb_CellLoops,
-                                   // C matrices
                                    double* Cx,
                                    double* Cy,
                                    double* Cz,
@@ -130,11 +122,9 @@ namespace proteus
                                    double* CTz,
                                    double* ML,
                                    double* delta_x_ij,
-                                   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
                                    int LUMPED_MASS_MATRIX,
                                    int STABILIZATION_TYPE,
                                    int ENTROPY_TYPE,
-                                   // FOR FCT
                                    double* dLow,
                                    double* fluxMatrix,
                                    double* uDotLow,
@@ -142,7 +132,6 @@ namespace proteus
                                    double* dt_times_dH_minus_dL,
                                    double* min_u_bc,
                                    double* max_u_bc,
-                                   // AUX QUANTITIES OF INTEREST
                                    double* quantDOFs)=0;
     virtual void calculateJacobian(//element
                                    double dt,

@@ -843,8 +843,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                limited_solution)
 
     def kth_FCT_step(self):
-        import pdb
-        pdb._set_trace()
+        #import pdb
+        #pdb.set_trace()
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()        
         limitedFlux = np.zeros(self.nnz)
         limited_solution = np.zeros((len(rowptr) - 1),'d')
@@ -1183,7 +1183,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['velocity'],#self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
-            self.q[('dV_u',0)],
             self.timeIntegration.beta_bdf[0],
             self.q[('cfl',0)],
             self.edge_based_cfl,

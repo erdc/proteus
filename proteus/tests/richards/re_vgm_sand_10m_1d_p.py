@@ -46,7 +46,7 @@ for i in range(nMediaTypes+1):
     thetaStypes[i]  = thetaS
     thetaRtypes[i]  = thetaR
     thetaSRtypes[i] = thetaStypes[i] - thetaRtypes[i]
-    KsTypes[i,:]    = [dimensionless_conductivity,dimensionless_conductivity,dimensionless_conductivity]#m/d?
+    KsTypes[i,:]    = [dimensionless_conductivity]#,dimensionless_conductivity,dimensionless_conductivity]#m/d?
 
 useSeepageFace = True
 if optRichards:
