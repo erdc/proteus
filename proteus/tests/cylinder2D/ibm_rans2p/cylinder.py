@@ -14,7 +14,7 @@ ct = Context.Options([
     ("parallel",False,"Use parallel or not"),
     ("dt_fixed",0.005,"fixed time step"),
     ##################################
-    ("StrongDirichlet",     True,"weak or strong"),
+    ("StrongDirichlet",     False,"weak or strong"),
     ("use_sbm",             0,"use sbm instead of imb"),
     ("spaceOrder",          1,"FE space for velocity"),
     ("timeOrder",           2,"1=be or 2=vbdf"),#both works, but 2 gives better cd-cl

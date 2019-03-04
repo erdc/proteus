@@ -11,7 +11,10 @@
 #include "SedClosure.h"
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
-#define CUT_CELL_INTEGRATION 0.0
+#define CUT_CELL_INTEGRATION 1
+double sgn(double val) {
+  return double((0.0 < val) - (val < 0.0));
+}
 //////////////////////
 // ***** TODO ***** //
 //////////////////////
@@ -590,7 +593,7 @@ namespace proteus
                 M_PI/6., 0.05, 1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck(),
-        C_sbm(2.0),
+        C_sbm(10.0),
         beta_sbm(0.0)
           {/*        std::cout<<"Constructing cppRANS3PF2D<CompKernelTemplate<"
                      <<0<<","
@@ -1250,10 +1253,10 @@ namespace proteus
                 particle_surfaceArea[i] += dV * D_s;
                 particle_netForces[i * 3 + 0] += force_x;
                 particle_netForces[i * 3 + 1] += force_y;
-                particle_netForces[(i+  nParticles)*3+0]+= force_stress_x;
-                particle_netForces[(i+2*nParticles)*3+0]+= force_p_x;
-                particle_netForces[(i+  nParticles)*3+1]+= force_stress_y;
-                particle_netForces[(i+2*nParticles)*3+1]+= force_p_y;
+                particle_netForces[(i+  nParticles)*3+0]+= force_p_x;
+                particle_netForces[(i+2*nParticles)*3+0]+= force_stress_x;
+                particle_netForces[(i+  nParticles)*3+1]+= force_p_y;
+                particle_netForces[(i+2*nParticles)*3+1]+= force_stress_y;
                 particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
               }
 
@@ -2310,6 +2313,7 @@ namespace proteus
         surrogate_boundaries.clear();
         surrogate_boundary_elements.clear();
         surrogate_boundary_particle.clear();
+        double cut_cell_boundary_length=0.0, p_force_x=0.0, p_force_y=0.0;
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {
             if (TransportMatrix.size() != NNZ_1D)
@@ -2435,8 +2439,9 @@ namespace proteus
                     element_active = 1.0;//for now leave all elements active
                     //P1 interpolation operator; only 2D for now
                     double GI[6*3];//3 DOF to 6DOF for linear interpolation onto 4T refinement
-                    double sub_mesh_dof[6*3], sub_u_dof[15], sub_v_dof[15], sub_phi_dof[6];//6 3D points
+                    double sub_mesh_dof[6*3], sub_u_dof[15], sub_v_dof[15], sub_phi_dof[6], sub_p_dof[6];//6 3D points
                     int boundaryNodes[6] = {0,0,0,0,0,0};
+                    std::vector<int> ls_nodes;
                     for (int I=0;I<nDOF_mesh_trial_element;I++)
                       {
                         for (int K=0;K<nDOF_mesh_trial_element;K++)
@@ -2450,16 +2455,31 @@ namespace proteus
                         const double eps = 1.0e-4;
                         double delta_phi=0.0,theta;
                         delta_phi = _distance[(I+1)%3] - _distance[I];
-                        if (fabs(delta_phi) > eps)//level set does NOT lie on edge (intersects line SOMEWHERE)
+                        if (fabs(delta_phi) > eps)//level sets are not parallel to edge
                           //need tolerance selection guidance
                           {
                             theta = -_distance[I]/delta_phi;//zero level set is at theta*xIp1+(1-theta)*xI
-                            if (theta > 1.0-eps || theta < eps)//zero level does NOT intersect between nodes
+                            if (theta > 1.0-eps || theta < eps)//zero level does NOT intersect between nodes; it may got through a node
                               {
-                                theta = 0.5;//just put the subelement node at midpoint
+                                if (theta > 1.0-eps && theta <= 1.0)//
+                                  {
+                                    ls_nodes.push_back((I+1)%3);
+                                    //todo, fix connectivity for this case--can't use 4T
+                                    assert(false);
+                                  }
+                                else if (theta > 0.0 && theta < eps)//
+                                  {
+                                    ls_nodes.push_back(I);
+                                    assert(false);
+                                  }
+                                else
+                                  theta = 0.5;//just put the subelement node at midpoint
                               }
                             else
-                              boundaryNodes[3+I]=1;
+                              {
+                                boundaryNodes[3+I]=1;
+                                ls_nodes.push_back(3+I);
+                              }
                           }
                         else //level set lies on edge
                           {
@@ -2469,12 +2489,21 @@ namespace proteus
                                 boundaryNodes[I]=1;
                                 boundaryNodes[3+I]=1;
                                 boundaryNodes[(I+1)%3]=1;
+                                ls_nodes.push_back(I);
+                                ls_nodes.push_back((I+1)%3);
                               }
                           }
                         assert(theta <= 1.0);
                         GI[3*3 + I*3 + I] = 1.0-theta;
                         GI[3*3 + I*3 + (I+1)%3] = theta;
                         GI[3*3 + I*3 + (I+2)%3] = 0.0;
+                      }
+                    if (ls_nodes.size() != 2)
+                      {
+                        std::cout<<"level set nodes not 2 "<<ls_nodes.size()<<std::endl;
+                        for(int i=0;i<ls_nodes.size();i++)
+                          std::cout<<ls_nodes[i]<<std::endl;
+                        std::sort(ls_nodes.begin(),ls_nodes.end());
                       }
                     int sub_mesh_l2g[12] = {0,3,5,
                                             1,4,3,
@@ -2483,6 +2512,7 @@ namespace proteus
                     for (int I=0; I<6; I++)
                       {
                         sub_phi_dof[I] = 0.0;
+                        sub_p_dof[I] = 0.0;
                         for (int K=0; K<3; K++)
                           sub_mesh_dof[I*3+K] = 0.0; 
                         for (int J=0; J<3; J++)
@@ -2492,8 +2522,33 @@ namespace proteus
                                 sub_mesh_dof[I*3+K] += GI[I*3+J]*mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+J]+K];
                               }
                             sub_phi_dof[I] += GI[I*3+J]*phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+J]];
+                            sub_p_dof[I] += GI[I*3+J]*p_dof[p_l2g[eN*nDOF_per_element_pressure+J]];
                           }
                       }
+                    int L = ls_nodes[0],  R=ls_nodes[1];
+                    double DX=sub_mesh_dof[L*3+0] - sub_mesh_dof[R*3+0];
+                    double DY=sub_mesh_dof[L*3+1] - sub_mesh_dof[R*3+1];
+                    double DS = std::sqrt(DX*DX+DY*DY);
+                    double nx = -DY/DS, ny = DX/DS;
+                    double nxL,nyL,nxR,nyR;
+                    get_normal_to_ith_ball(nParticles,ball_center,ball_radius,
+                                           0,
+                                           sub_mesh_dof[L*3+0],sub_mesh_dof[L*3+1],0.0,
+                                           nxL,nyL);
+                    get_normal_to_ith_ball(nParticles,ball_center,ball_radius,
+                                           0,
+                                           sub_mesh_dof[R*3+0],sub_mesh_dof[R*3+1],0.0,
+                                           nxR,nyR);
+                    //std::cout<<"dot L "<<nx_tmp*nxL+ny_tmp*nyL<<std::endl;
+                    //std::cout<<"dot R "<<nx_tmp*nxR+ny_tmp*nyR<<std::endl;
+                    double n_fluid_sign = -sgn(nx*0.5*(nxL+nxR)+ny*0.5*(nyL+nyR));
+                    nx*=n_fluid_sign;
+                    ny*=n_fluid_sign;
+                    //double dot_test=std::fabs(nx_tmp*nx+ny_tmp*ny);
+                    //assert(dot_test > 1.0-1.0e-4 && dot_test < 1.0 + 1.0e-4); 
+                    cut_cell_boundary_length += DS;
+                    p_force_x += sub_p_dof[L]*nx*0.5*DS + sub_p_dof[R]*nx*0.5*DS;
+                    p_force_y += sub_p_dof[L]*ny*0.5*DS + sub_p_dof[R]*ny*0.5*DS;
                     //TODO for P2
                     //1. Now define the Lagrange nodes for P2 on the submesh X
                     //2. Define and evaluate the P2 trial functions for the parent element at the new submesh P2 nodes. X
@@ -2551,7 +2606,7 @@ namespace proteus
                       }
                     for (int I=0; I<6; I++)
                       {
-                        std::cout<<sub_mesh_dof[I*3+0]<<'\t'<<sub_mesh_dof[I*3+1]<<'\t'<<sub_mesh_dof[I*3+2]<<'\t'<<boundaryNodes[I]<<'\t'<<sub_phi_dof[I]<<'\t'<<sub_u_dof[I]<<'\t'<<sub_v_dof[I]<<'\t'<<G2I[I*6+0]<<'\t'<<G2I[I*6+1]<<'\t'<<G2I[I*6+2]<<'\t'<<G2I[I*6+3]<<'\t'<<G2I[I*6+4]<<'\t'<<G2I[I*6+5]<<std::endl;
+                        std::cout<<sub_mesh_dof[I*3+0]<<'\t'<<sub_mesh_dof[I*3+1]<<'\t'<<sub_mesh_dof[I*3+2]<<'\t'<<boundaryNodes[I]<<'\t'<<sub_phi_dof[I]<<'\t'<<sub_p_dof[I]<<'\t'<<sub_u_dof[I]<<'\t'<<sub_v_dof[I]<<'\t'<<G2I[I*6+0]<<'\t'<<G2I[I*6+1]<<'\t'<<G2I[I*6+2]<<'\t'<<G2I[I*6+3]<<'\t'<<G2I[I*6+4]<<'\t'<<G2I[I*6+5]<<std::endl;
                       }
                   }
               }
@@ -3622,8 +3677,8 @@ namespace proteus
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
 
-	  if(CUT_CELL_INTEGRATION > 0)
-	    std::cout<<std::flush;
+        if(CUT_CELL_INTEGRATION > 0)
+          std::cout<<std::flush;
 	// loop in DOFs for discrete upwinding
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {
@@ -3742,7 +3797,7 @@ namespace proteus
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
               {
                 // Initialization of the force to 0
-                register double Fx = 0.0, Fy = 0.0, Mz = 0.0;
+                register double Fx = 0.0, Fy = 0.0, Fxp = 0.0, Fyp = 0.0, surfaceArea=0.0, Mz = 0.0;
                 register int ebN = surrogate_boundaries[ebN_s],
                   eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                   ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
@@ -3981,6 +4036,9 @@ namespace proteus
                     double ny = P_normal[1];
                     Fx -= p_ext*nx*dS;
                     Fy -= p_ext*ny*dS;
+                    Fxp -= p_ext*nx*dS;
+                    Fyp -= p_ext*ny*dS;
+                    surfaceArea += dS;
                     if(use_ball_as_particle==1)
                     {
                         r_x = x_ext - ball_center[surrogate_boundary_particle[ebN_s] * 3 + 0];
@@ -3994,13 +4052,17 @@ namespace proteus
                     Mz  += r_x*Fy-r_y*Fx;
                   }//kb
                 if(USE_SBM==1
-                        && ebN < nElementBoundaries_owned)//avoid double counting
-                {
+                   && ebN < nElementBoundaries_owned)//avoid double counting
+                  {
+                    particle_surfaceArea[surrogate_boundary_particle[ebN_s]] += surfaceArea;
                     particle_netForces[3*surrogate_boundary_particle[ebN_s]+0] += Fx;
                     particle_netForces[3*surrogate_boundary_particle[ebN_s]+1] += Fy;
+                    particle_netForces[3*(  nParticles+surrogate_boundary_particle[ebN_s])+0] += Fxp;
+                    particle_netForces[3*(2*nParticles+surrogate_boundary_particle[ebN_s])+0] += (Fx-Fxp);
+                    particle_netForces[3*(  nParticles+surrogate_boundary_particle[ebN_s])+1] += Fyp;
+                    particle_netForces[3*(2*nParticles+surrogate_boundary_particle[ebN_s])+1] += (Fy-Fyp);
                     particle_netMoments[3*surrogate_boundary_particle[ebN_s]+2]+= Mz;
-                }
-
+                  }
               }//ebN_s
             //std::cout<<" sbm force over surrogate boundary is: "<<Fx<<"\t"<<Fy<<std::endl;
             //
@@ -4922,6 +4984,13 @@ namespace proteus
         /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
         /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
         /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
+        if (CUT_CELL_INTEGRATION)
+          {
+            particle_surfaceArea[0] = cut_cell_boundary_length;
+            particle_netForces[(0+nParticles)*3 +0] = p_force_x;
+            particle_netForces[(0+nParticles)*3 +1] = p_force_y;
+            std::cout<<"===end mesh==="<<std::endl<<std::flush;
+          }
       }
 
       void calculateJacobian(//element
