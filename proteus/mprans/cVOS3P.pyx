@@ -178,6 +178,10 @@ cdef extern from "mprans/VOS3P.h" namespace "proteus":
                           double * dLow,
                           double * fluxMatrix,
                           double * limitedFlux,
+                          double * min_u_bc,
+                          double * max_u_bc,
+                          double global_min_u,
+                          double global_max_u,
                           int * csrRowIndeces_DofLoops,
                           int * csrColumnOffsets_DofLoops)
         void calculateResidual_entropy_viscosity(double dt,
@@ -700,6 +704,10 @@ cdef class VOS3P:
                      numpy.ndarray dLow,
                      numpy.ndarray fluxMatrix,
                      numpy.ndarray limitedFlux,
+                     numpy.ndarray min_u_bc,
+                     numpy.ndarray max_u_bc,
+                     double global_min_u,
+                     double global_max_u,
                      numpy.ndarray csrRowIndeces_DofLoops,
                      numpy.ndarray csrColumnOffsets_DofLoops):
         self.thisptr.kth_FCT_step(dt,
@@ -715,6 +723,10 @@ cdef class VOS3P:
                                   < double * > dLow.data,
                                   < double * > fluxMatrix.data,
                                   < double * > limitedFlux.data,
+                                  < double * > min_u_bc.data,
+                                  < double * > max_u_bc.data,
+                                  global_min_u,
+                                  global_max_u,
                                   < int * > csrRowIndeces_DofLoops.data,
                                   < int * > csrColumnOffsets_DofLoops.data)
     def calculateResidual_entropy_viscosity(self,

@@ -26,7 +26,7 @@ void applyDGlimitingP1Lagrange1d(int limiterFlag,
 				 int nNodes_element,
 				 int nElementBoundaries_element,
 				 int nDOF_element,
-				 int * elementNodesArray,  
+				 int * elementNodesArray,
 				 int * elementNeighborsArray,
 				 double * nodeArray,
 				 double * elementBarycentersArray,
@@ -34,6 +34,22 @@ void applyDGlimitingP1Lagrange1d(int limiterFlag,
 				 int * tag,
 				 double * Uin,
 				 double * Uout);
+
+extern
+void applyDGlimitingP1Lagrange1d_withVacuumTol(int enforcePositivity,
+	       double vacuumTol,
+	       int nElements_global,
+	       int nNodes_element,
+	       int nElementBoundaries_element,
+	       int nDOF_element,
+	       int * elementNodesArray,
+	       int * elementNeighborsArray,
+	       double * nodeArray,
+	       double * elementBarycentersArray,
+	       int * l2g,
+	       int * tag,
+	       double * Uin,
+	       double * Uout);
 extern
 void computeElementNeighborShapeGradients(int nElements_global,
 					  int nElementBoundaries_element,
@@ -54,7 +70,7 @@ void computeCockburnDGlimiterArrays2d(int nElements_global,
 				      const double * elementNeighborShapeGradients,
 				      double * alphas,
 				      int * alphaNeighbors);
-
+extern
 void applyCockburnDGlimiterP1Lagrange2d(double nu,
 					double Mh2,
 					int nElements_global,
@@ -68,7 +84,7 @@ void applyCockburnDGlimiterP1Lagrange2d(double nu,
 					int * alphaNeighbors,
 					double * Uin,
 					double * Uout);
-
+extern
 void applyDurlofskyDGlimiterP1Lagrange2d(int killExtrema,
 					 int allowMinWithUndershoot,
 					 int nElements_global,
@@ -90,7 +106,7 @@ void applyDurlofskyDGlimiterP1Lagrange2d(int killExtrema,
 					 double * Uin,
 					 double * Uout);
 
-
+extern
 void applyDurlofskyDGlimiterP1Lagrange3d(int killExtrema,
 					 int allowMinWithUndershoot,
 					 int nElements_global,
@@ -111,5 +127,28 @@ void applyDurlofskyDGlimiterP1Lagrange3d(int killExtrema,
 					 int * tag,
 					 double * Uin,
 					 double * Uout);
+extern
+void applyDurlofskyDGlimiterP1Lagrange2d_withVacuumTol(int killExtrema,
+						       int allowMinWithUndershoot,
+						       int enforcePositivity,
+						       double vacuumTol,
+						       int nElements_global,
+						       int nElementBoundaries_element,
+						       int nNodes_element,
+						       int nSpace,
+						       int nDOF_element,
+						       const int * elementNeighborsArray,
+						       const int * elementBoundariesArray,
+						       const int * elementNodesArray,
+						       const double * nodeArray,
+						       const double * elementBarycentersArray,
+						       const double * elementBoundaryBarycentersArray,
+						       const double * elementNeighborShapeGradients,
+						       const int * l2g,
+						       const double * grad_v0,
+						       double * elementAverages,
+						       int * tag,
+						       double * Uin,
+						       double * Uout);
 
 #endif

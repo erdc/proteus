@@ -3,6 +3,7 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cRDLS import *
+from proteus.Comm import globalMax
 
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd):

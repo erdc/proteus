@@ -227,6 +227,10 @@ namespace proteus
 			      double* dLow,
 			      double* FluxMatrix,
 			      double* limitedFlux,
+			      double* min_u_bc,
+			      double* max_u_bc,
+			      double global_min_u,
+			      double global_max_u,
 			      int* csrRowIndeces_DofLoops, 
 			      int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateResidual_entropy_viscosity(//element
@@ -513,12 +517,12 @@ namespace proteus
       double flow=0.0;
       for (int I=0; I < nSpace; I++)
         flow += n[I]*velocity[I];
-      //std::cout<<" isDOFBoundary_u= "<<isDOFBoundary_u<<" flow= "<<flow<<std::endl;
       if (isDOFBoundary_u == 1)
         {
-          //std::cout<<"Dirichlet boundary u and bc_u "<<u<<'\t'<<bc_u<<std::endl;
           if (flow >= 0.0)
             {
+              /* std::cout<<" isDOFBoundary_u= "<<isDOFBoundary_u<<" flow= "<<flow<<std::endl; */
+              /* std::cout<<"Dirichlet boundary u and bc_u "<<u<<'\t'<<bc_u<<std::endl; */
               flux = u*flow;
               //flux = flow;
             }
@@ -1673,6 +1677,10 @@ namespace proteus
                       double* dLow,
                       double* FluxMatrix, 
                       double* limitedFlux, // INPUT/OUTPUT
+		      double* min_u_bc,
+		      double* max_u_bc,
+		      double global_min_u,
+		      double global_max_u,
                       int* csrRowIndeces_DofLoops, 
                       int* csrColumnOffsets_DofLoops)
     {
@@ -1696,7 +1704,7 @@ namespace proteus
               ij=0;
               for (int i=0; i<numDOFs; i++)
                 {
-                  double maxi=1.0, Pposi=0;
+                  double Pposi=0, Pnegi=0;
                   for (int offset=csrRowIndeces_DofLoops[i];
                        offset<csrRowIndeces_DofLoops[i+1]; offset++)
                     {
@@ -1704,21 +1712,24 @@ namespace proteus
                       // compute Flux correction
                       double Fluxij = FluxMatrix[ij] - limitedFlux[ij];	      
                       Pposi += Fluxij*((Fluxij > 0) ? 1. : 0.);
+		      Pnegi += Fluxij*((Fluxij < 0) ? 1. : 0.);
                       // update ij
                       ij+=1;
                     }
                   // compute Q vectors
                   double mi = ML[i];
                   double solLimi = solLim[i];
-                  double Qposi = mi*(maxi-solLimi);
+                  double Qposi = mi*(global_max_u-solLimi);
+		  double Qnegi = mi*(global_min_u-solLimi);
                   // compute R vectors
                   Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
+		  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));
                 }
               ij=0;
               for (int i=0; i<numDOFs; i++)
                 {
                   double ith_Limiter_times_FluxCorrectionMatrix = 0.;
-                  double Rposi = Rpos[i];
+                  double Rposi = Rpos[i], Rnegi = Rneg[i];
                   for (int offset=csrRowIndeces_DofLoops[i];
                        offset<csrRowIndeces_DofLoops[i+1]; offset++)
                     {
@@ -1727,10 +1738,12 @@ namespace proteus
                       double Fluxij = FluxMatrix[ij] - limitedFlux[ij];
                       // compute limiter
                       double Lij = 1.0;
-                      Lij = (Fluxij>0 ? Rposi : Rpos[j]);		    
+                      //Lij = (Fluxij>0 ? Rposi : Rpos[j]);
+		      Lij = (Fluxij>0 ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]));
                       // compute limited flux 
                       ith_Limiter_times_FluxCorrectionMatrix += Lij*Fluxij;		    
-			
+
+		      // ***** UPDATE VECTORS FOR NEXT FCT ITERATION ***** //
                       // update limited flux
                       limitedFlux[ij] = Lij*Fluxij;
 			
@@ -1742,7 +1755,7 @@ namespace proteus
                     }
                   //update limited solution
                   double mi = ML[i];
-                  solLim[i] += 1.0/mi*ith_Limiter_times_FluxCorrectionMatrix;	    
+                  solLim[i] += 1.0/mi*ith_Limiter_times_FluxCorrectionMatrix;
                 }
             }
         }
@@ -1753,7 +1766,7 @@ namespace proteus
       ij=0;
       for (int i=0; i<numDOFs; i++)
         {
-          double mini=soln[i], maxi=soln[i];
+	  double mini=fmin(min_u_bc[i],solLim[i]), maxi=fmax(max_u_bc[i],solLim[i]);
           double Pposi = 0, Pnegi = 0.;
           for (int offset=csrRowIndeces_DofLoops[i];
                offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -1764,8 +1777,8 @@ namespace proteus
               maxi = fmax(maxi,soln[j]);
               // compute P vectors //
               double fij = dt*(MC[ij]*(uDotLow[i]-uDotLow[j]) + dLow[ij]*(uLow[i]-uLow[j]));
-              Pposi += fij * (fij > 0 ? 1. : 0.);
-              Pnegi += fij * (fij < 0 ? 1. : 0.);
+              Pposi += fij * (fij > 0. ? 1. : 0.);
+              Pnegi += fij * (fij < 0. ? 1. : 0.);
               //update ij
               ij+=1;
             }
@@ -1773,35 +1786,50 @@ namespace proteus
           double mi = ML[i];
           double Qposi = mi*(maxi-solLim[i]);
           double Qnegi = mi*(mini-solLim[i]);
+
           // compute R vectors //
           Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
-          Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));	    	
+          Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));
         }
 
       // COMPUTE LIMITERS //
       ij=0;
       for (int i=0; i<numDOFs; i++)
-        {
-          double ith_limited_flux_correction = 0;
-          double Rposi = Rpos[i];
-          double Rnegi = Rneg[i];
-          for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
-            {
-              int j = csrColumnOffsets_DofLoops[offset];
-              // compute flux correction
-              double fij = dt*(MC[ij]*(uDotLow[i]-uDotLow[j]) + dLow[ij]*(uLow[i]-uLow[j]));
-              // compute limiters
-              double Lij = 1.0;
-              Lij = fij > 0 ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]);
-              // compute ith_limited_flux_correction
-              ith_limited_flux_correction += Lij*fij;
-              ij+=1;
-            }
-          double mi = ML[i];
-          solLim[i] += 1./mi*ith_limited_flux_correction;
-        }
-    }
+	{
+	  double ith_limited_flux_correction = 0;
+	  double Rposi = Rpos[i];
+	  double Rnegi = Rneg[i];
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      // compute flux correction
+	      double fij = dt*(MC[ij]*(uDotLow[i]-uDotLow[j]) + dLow[ij]*(uLow[i]-uLow[j]));
+	      // compute limiters
+	      double Lij = 1.0;
+	      Lij = fij > 0. ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]);
+	      // compute ith_limited_flux_correction
+	      ith_limited_flux_correction += Lij*fij;
+	      ij+=1;
+	    }
+	  double mi = ML[i];
+	  solLim[i] += 1./mi*ith_limited_flux_correction;
 
+	  // clean round off error 
+	  if (solLim[i] > 1.0+1E-13)
+	    {
+	      std::cout << "upper bound violated... " << 1.0-solLim[i] << std::endl;
+	      abort();
+	    }	  
+	  else if (solLim[i] < -1E-13)
+	    {
+	      std::cout << "lower bound violated... " << solLim[i] << std::endl;
+	      abort();
+	    }
+	  else
+	    solLim[i] = fmax(0.,fmin(solLim[i],1.0));
+	}
+    }
+    
     void calculateResidual_entropy_viscosity(//element
                                              double dt,
                                              double* mesh_trial_ref,
@@ -2217,8 +2245,10 @@ namespace proteus
 
               if (flow >= 0 && isFluxBoundary_u[ebNE_kb] != 1 )  //outflow. This is handled via the transport matrices. Then flux_ext=0 and dflux_ext!=0
                 {
+                  /* if (x_ext > 1.0e-8) */
+                  /*   std::cout<<"Outflow boundary VOS3P "<<flow<<" u_ext "<<u_ext<<" x "<<x_ext<<" y "<<y_ext<<std::endl; */
                   dflux_ext = flow;
-                  flux_ext = 0;
+                  flux_ext = 0.0;
                   // save external u
                   ebqe_u[ebNE_kb] = u_ext;
                 }
@@ -2547,7 +2577,7 @@ namespace proteus
       //}
 	
     }
-
+    
     void calculateMassMatrix(//element
                              double dt,
                              double* mesh_trial_ref,
