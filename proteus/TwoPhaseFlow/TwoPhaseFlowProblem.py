@@ -239,7 +239,7 @@ class OutputStepping:
 
     def setOutputStepping(self):
         # COMPUTE dt_init #
-        self.dt_init = min(0.1 * self.dt_output, self.dt_init)
+        self.dt_init = min(self.dt_output, self.dt_init)
         if self.nDTout is None:
             self.nDTout = int(round(old_div(self.final_time, self.dt_output)))
         else:

@@ -267,6 +267,8 @@ class ParametersModelRDLS(ParametersModelBase):
         self.epsFact = 0.33
         self.shockCapturingFactor = 0.9
         self.lag_shockCapturing = False
+        # overwrite minTol
+        self.minTol = 1e-5
         # freeze attributes
         self._freeze()
 
@@ -308,6 +310,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         self.epsFact = epsFact
         self.epsTimeStep = 0.1
         self.nSmoothOut = 0.
+        self.nSmoothIn = 0.
         self.grading = 1.1
         self.grading_type = 2
         self.resetNodeVelocityArray = None

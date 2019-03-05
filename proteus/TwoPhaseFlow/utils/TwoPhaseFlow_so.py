@@ -57,7 +57,6 @@ for i in range(params.nModels):
 # ****************************************** #
 systemStepControllerType = Sequential_MinAdaptiveModelStep
 if ct.myTpFlowProblem.outputStepping['dt_fixed']:
-    systemStepControllerType = Sequential_FixedStep
     dt_system_fixed = ct.opts.dt_fixed
 if params.Models.rans3p['index'] is not None: #rans3p
     PINIT_model = params.Models.pressureInitial['index']
@@ -78,6 +77,8 @@ needEBQ = False
 # **************************** #
 outputStepping = ct.myTpFlowProblem.outputStepping
 tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
+if tnList[1] == tnList[2]:
+    del tnList[1]
 if outputStepping['dt_output'] is None:
     if outputStepping['dt_fixed'] > 0:
         if outputStepping['dt_init'] < outputStepping['dt_fixed']:
