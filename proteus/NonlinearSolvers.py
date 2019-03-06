@@ -831,12 +831,35 @@ class ExplicitLumpedMassMatrix(Newton):
 
     def no_solve(self,u,r=None,b=None,par_u=None,par_r=None):
         self.computeResidual(u,r,b)
-        u[:] = r
         ############
         # FCT STEP #
         ############
         if hasattr(self.F.coefficients,'FCT') and self.F.coefficients.FCT==True:
             self.F.FCTStep()
+        else:
+            u[:]=self.F.uLow
+        ###########################################
+        # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+        
+class ExplicitLumpedMassMatrixForRichards(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        self.computeResidual(u,r,b)
+        ############
+        # FCT STEP #
+        ############
+        if hasattr(self.F.coefficients,'FCT') and self.F.coefficients.FCT==True:
+            self.F.FCTStep()
+        else:
+            u[:]=self.F.uLow
         ###########################################
         # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
         ###########################################
@@ -973,6 +996,42 @@ class ExplicitConsistentMassMatrixForVOF(Newton):
             self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
             self.linearSolverFailed = self.linearSolver.failed()
         u-=self.du
+        ############
+        # FCT STEP #
+        ############
+        if self.F.coefficients.FCT==True:
+            self.F.FCTStep()
+        ###########################################
+        # DISTRIBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+
+class ExplicitConsistentMassMatrixForRichards(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        #########################
+        # COMPUTE MAIN SOLUTION #
+        #########################
+        self.computeResidual(u,r,b)
+        if self.updateJacobian or self.fullNewton:
+            self.F.getJacobian(self.J)
+            self.linearSolver.prepare(b=r)
+            self.updateJacobian = False
+        self.du[:]=0.0
+        # Set sparse factors
+        if not self.directSolver:
+            if self.EWtol:
+                self.setLinearSolverTolerance(r)
+        if not self.linearSolverFailed:
+            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            self.linearSolverFailed = self.linearSolver.failed()
+        self.F.invert(self.du, u)
         ############
         # FCT STEP #
         ############
@@ -3237,10 +3296,14 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
         levelNonlinearSolverType = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
     elif (levelNonlinearSolverType == ExplicitLumpedMassMatrix):
         levelNonlinearSolverType = ExplicitLumpedMassMatrix
+    elif (levelNonlinearSolverType == ExplicitLumpedMassMatrixForRichards):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrixForRichards
     elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixWithRedistancing):
         levelNonlinearSolverType = ExplicitConsistentMassMatrixWithRedistancing
     elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixForVOF):
         levelNonlinearSolverType = ExplicitConsistentMassMatrixForVOF
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixForRichards):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixForRichards
     elif (levelNonlinearSolverType == NewtonWithL2ProjectionForMassCorrection):
         levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
     elif (levelNonlinearSolverType == CLSVOFNewton):

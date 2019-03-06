@@ -129,10 +129,111 @@ namespace proteus
                                    double* fluxMatrix,
                                    double* uDotLow,
                                    double* uLow,
-                                   double* dt_times_dH_minus_dL,
-                                   double* min_u_bc,
-                                   double* max_u_bc,
-                                   double* quantDOFs)=0;
+                                   double* dt_times_fH_minus_fL,
+                                   double* min_s_bc,
+                                   double* max_s_bc,
+                                   double* quantDOFs,
+                                   double* sLow,
+                                   double* sn)=0;
+    virtual void invert(double dt,
+                        double* mesh_trial_ref,
+                        double* mesh_grad_trial_ref,
+                        double* mesh_dof,
+                        double* mesh_velocity_dof,
+                        double MOVING_DOMAIN,
+                        int* mesh_l2g,
+                        double* dV_ref,
+                        double* u_trial_ref,
+                        double* u_grad_trial_ref,
+                        double* u_test_ref,
+                        double* u_grad_test_ref,
+                        double* mesh_trial_trace_ref,
+                        double* mesh_grad_trial_trace_ref,
+                        double* dS_ref,
+                        double* u_trial_trace_ref,
+                        double* u_grad_trial_trace_ref,
+                        double* u_test_trace_ref,
+                        double* u_grad_test_trace_ref,
+                        double* normal_ref,
+                        double* boundaryJac_ref,
+                        int nElements_global,
+                        double* ebqe_penalty_ext,
+                        int* elementMaterialTypes,	
+                        int* isSeepageFace,
+                        int* a_rowptr,
+                        int* a_colind,
+                        double rho,
+                        double beta,
+                        double* gravity,
+                        double* alpha,
+                        double* n,
+                        double* thetaR,
+                        double* thetaSR,
+                        double* KWs,
+                        double useMetrics,
+                        double alphaBDF,
+                        int lag_shockCapturing,
+                        double shockCapturingDiffusion,
+                        double sc_uref,
+                        double sc_alpha,
+                        int* u_l2g,
+                        int* r_l2g,
+                        double* elementDiameter,
+                        int degree_polynomial,
+                        double* u_dof,
+                        double* u_dof_old,	
+                        double* velocity,
+                        double* q_m,
+                        double* q_u,
+                        double* q_m_betaBDF,
+                        double* cfl,
+                        double* edge_based_cfl,
+                        double* q_numDiff_u, 
+                        double* q_numDiff_u_last, 
+                        int offset_u, int stride_u, 
+                        double* globalResidual,
+                        int nExteriorElementBoundaries_global,
+                        int* exteriorElementBoundariesArray,
+                        int* elementBoundaryElementsArray,
+                        int* elementBoundaryLocalElementBoundariesArray,
+                        double* ebqe_velocity_ext,
+                        int* isDOFBoundary_u,
+                        double* ebqe_bc_u_ext,
+                        int* isFluxBoundary_u,
+                        double* ebqe_bc_flux_u_ext,
+                        double* ebqe_phi,double epsFact,
+                        double* ebqe_u,
+                        double* ebqe_flux,
+                        double cE,
+                        double cK,
+                        double uL,
+                        double uR,
+                        int numDOFs,
+                        int NNZ,
+                        int* csrRowIndeces_DofLoops,
+                        int* csrColumnOffsets_DofLoops,
+                        int* csrRowIndeces_CellLoops,
+                        int* csrColumnOffsets_CellLoops,
+                        int* csrColumnOffsets_eb_CellLoops,
+                        double* Cx,
+                        double* Cy,
+                        double* Cz,
+                        double* CTx,
+                        double* CTy,
+                        double* CTz,
+                        double* ML,
+                        double* delta_x_ij,
+                        int LUMPED_MASS_MATRIX,
+                        int STABILIZATION_TYPE,
+                        int ENTROPY_TYPE,
+                        double* dLow,
+                        double* fluxMatrix,
+                        double* uDotLow,
+                        double* uLow,
+                        double* dt_times_fH_minus_fL,
+                        double* min_s_bc,
+                        double* max_s_bc,
+                        double* quantDOFs)=0;
     virtual void calculateJacobian(//element
                                    double dt,
 				   double* mesh_trial_ref,
@@ -202,17 +303,19 @@ namespace proteus
                                    int LUMPED_MASS_MATRIX)=0;
     virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
                          int numDOFs, //number of DOFs
+                         double dt,
                          double* lumped_mass_matrix, //lumped mass matrix (as vector)
                          double* soln, //DOFs of solution at time tn
+                         double* pn, //DOFs of solution at time tn
                          double* solH, //DOFs of high order solution at tnp1
                          double* uLow,
                          double* limited_solution,
                          int* csrRowIndeces_DofLoops, //csr row indeces
                          int* csrColumnOffsets_DofLoops, //csr column offsets
                          double* MassMatrix, //mass matrix
-                         double* dt_times_dH_minus_dL, //low minus high order dissipative matrices
-                         double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
-                         double* max_u_bc,
+                         double* dt_times_fH_minus_fL, //low minus high order dissipative matrices
+                         double* min_s_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+                         double* max_s_bc,
                          int LUMPED_MASS_MATRIX
                          )=0;
     virtual void kth_FCT_step(double dt,
@@ -334,11 +437,13 @@ namespace proteus
 						     double* fluxMatrix,
                                                      double* uDotLow,
 						     double* uLow,
-                                                     double* dt_times_dH_minus_dL,
-                                                     double* min_u_bc,
-                                                     double* max_u_bc,
+                                                     double* dt_times_fH_minus_fL,
+                                                     double* min_s_bc,
+                                                     double* max_s_bc,
                                                      // AUX QUANTITIES OF INTEREST
-                                                     double* quantDOFs)=0;
+                                                     double* quantDOFs,
+                                                     double* sLow,
+                                                     double* sn)=0;
     virtual void calculateMassMatrix(//element
                                      double dt,
                                      double* mesh_trial_ref,
@@ -844,11 +949,13 @@ namespace proteus
                              double* fluxMatrix,
                              double* uDotLow,
                              double* uLow,
-                             double* dt_times_dH_minus_dL,
-                             double* min_u_bc,
-                             double* max_u_bc,
+                             double* dt_times_fH_minus_fL,
+                             double* min_s_bc,
+                             double* max_s_bc,
                              // AUX QUANTITIES OF INTEREST
-                             double* quantDOFs)
+                             double* quantDOFs,
+                             double* sLow,
+                             double* sn)
       {
         assert(a_rowptr[nSpace] == nnz);
         assert(a_rowptr[nSpace] == nSpace);
@@ -1644,17 +1751,19 @@ namespace proteus
       }//computeJacobian
       void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
                    int numDOFs, //number of DOFs
+                   double dt,
                    double* lumped_mass_matrix, //lumped mass matrix (as vector)
                    double* soln, //DOFs of solution at time tn
+                   double* pn, //DOFs of solution at time tn
                    double* solH, //DOFs of high order solution at tnp1
                    double* uLow,
                    double* limited_solution,
                    int* csrRowIndeces_DofLoops, //csr row indeces
                    int* csrColumnOffsets_DofLoops, //csr column offsets
                    double* MassMatrix, //mass matrix
-                   double* dt_times_dH_minus_dL, //low minus high order dissipative matrices
-                   double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
-                   double* max_u_bc,
+                   double* dt_times_fH_minus_fL, //low minus high order dissipative matrices
+                   double* min_s_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+                   double* max_s_bc,
                    int LUMPED_MASS_MATRIX
                    )
       {
@@ -1674,8 +1783,8 @@ namespace proteus
             // compute low order solution
             // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
             solL[i] = uLow[i];
-
-            double mini=min_u_bc[i], maxi=max_u_bc[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
+            double sdoti = (solHi - solni);
+            double mini=min_s_bc[i], maxi=max_s_bc[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
             if (GLOBAL_FCT==1)
               {
                 mini = 0.;
@@ -1692,14 +1801,21 @@ namespace proteus
                 ////////////////////////
                 if (GLOBAL_FCT == 0)
                   {
-                    mini = fmin(mini,soln[j]);
-                    maxi = fmax(maxi,soln[j]);
+                    //standard
+                    mini = fmin(mini,solL[j]);
+                    maxi = fmax(maxi,solL[j]);
+                    //monolithic
+                    /* mini = fmin(mini,pn[j]); */
+                    /* maxi = fmax(maxi,pn[j]); */
                   }
                 // i-th row of flux correction matrix
-                double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
-                FluxCorrectionMatrix[ij] = ML_minus_MC * (solH[j]-soln[j] - (solHi-solni))
-                  + dt_times_dH_minus_dL[ij]*(soln[j]-solni);
+                double sdotj = (solH[j] - soln[j]);
 
+                double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+                //FluxCorrectionMatrix[ij] = dt_times_fH_minus_fL[ij];
+                FluxCorrectionMatrix[ij] = MassMatrix[ij]*(sdoti - sdotj) + dt_times_fH_minus_fL[ij];
+                //ML_minus_MC * (solH[j]-soln[j] - (solHi-solni))
+                    
                 ///////////////////////
                 // COMPUTE P VECTORS //
                 ///////////////////////
@@ -1712,8 +1828,13 @@ namespace proteus
             ///////////////////////
             // COMPUTE Q VECTORS //
             ///////////////////////
+            //standard
             double Qposi = mi*(maxi-solL[i]);
             double Qnegi = mi*(mini-solL[i]);
+            //monolithic
+            /* double gamma=10.0*mi; */
+            /* double Qposi =fmin(0.5*mi*(1.0-soln[i]), gamma*(maxi-pn[i])); */
+            /* double Qnegi =fmax(0.5*mi*(0.0-soln[i]), gamma*(mini-pn[i])); */
 
             ///////////////////////
             // COMPUTE R VECTORS //
@@ -1991,18 +2112,20 @@ namespace proteus
                                                double* fluxMatrix,
                                                double* uDotLow,
                                                double* uLow,
-                                               double* dt_times_dH_minus_dL,
-                                               double* min_u_bc,
-                                               double* max_u_bc,
+                                               double* dt_times_fH_minus_fL,
+                                               double* min_s_bc,
+                                               double* max_s_bc,
                                                // AUX QUANTITIES OF INTEREST
-                                               double* quantDOFs)
+                                               double* quantDOFs,
+                                               double* sLow,
+                                               double* sn)
       {
         register double Rpos[numDOFs], Rneg[numDOFs];
         //register double FluxCorrectionMatrix[NNZ];
         // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
         // Allocate space for the transport matrices
         // This is used for first order KUZMIN'S METHOD
-        register double TransportMatrix[NNZ];
+        register double TransportMatrix[NNZ],TransportMatrixConsistent[NNZ];
         std::valarray<double> u_free_dof_old(numDOFs);
         for(int eN=0;eN<nElements_global;eN++)
           for (int j=0;j<nDOF_trial_element;j++)
@@ -2013,6 +2136,7 @@ namespace proteus
         for (int i=0; i<NNZ; i++)
           {
             TransportMatrix[i] = 0.;
+            TransportMatrixConsistent[i] = 0.;
           }
 
         // compute entropy and init global_entropy_residual and boundary_integral
@@ -2043,7 +2167,8 @@ namespace proteus
             register double
               elementResidual_u[nDOF_test_element],
               element_entropy_residual[nDOF_test_element],Phi[nDOF_trial_element];
-            register double  elementTransport[nDOF_test_element][nDOF_trial_element];
+            register double  elementTransport[nDOF_test_element][nDOF_trial_element],
+              elementTransportConsistent[nDOF_test_element][nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
                 Phi[i] = u_dof_old[i];
@@ -2054,6 +2179,7 @@ namespace proteus
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     elementTransport[i][j]=0.0;
+                    elementTransportConsistent[i][j]=0.0;
                   }
               }
             //loop over quadrature points and compute integrands
@@ -2176,8 +2302,7 @@ namespace proteus
                         DENTROPY_uni = ENTROPY_TYPE == 1 ? DENTROPY(porosity_times_uni,uL,uR) : DENTROPY_LOG(porosity_times_uni,uL,uR);
                         element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
                       }
-                    //cek todo, fix elemnetResidual
-                    elementResidual_u[i] += (u-un)*u_test_dV[i];
+                    elementResidual_u[i] += m*u_test_dV[i];
                     ///////////////
                     // j-th LOOP // To construct transport matrices
                     ///////////////
@@ -2190,6 +2315,11 @@ namespace proteus
                                                                                   a,
                                                                                   &u_grad_trial[j_nSpace],
                                                                                   &u_grad_test_dV[i_nSpace]);
+                        elementTransportConsistent[i][j] += Kr*ck.SimpleDiffusionJacobian_weak(a_rowptr,
+                                                                                               a_colind,
+                                                                                               a,
+                                                                                               &u_grad_trial[j_nSpace],
+                                                                                               &u_grad_test_dV[i_nSpace]);
                       }
                   }//i
                 //save solution for other models
@@ -2209,13 +2339,14 @@ namespace proteus
                 // distribute entropy_residual
                 if (STABILIZATION_TYPE==1) // EV Stab
                   global_entropy_residual[gi] += element_entropy_residual[i];
-
                 // distribute transport matrices
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     int eN_i_j = eN_i*nDOF_trial_element+j;
                     TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]]
                       += elementTransport[i][j];
+                    TransportMatrixConsistent[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]]
+                      += elementTransportConsistent[i][j];
                   }//j
               }//i
           }//elements
@@ -2410,7 +2541,9 @@ namespace proteus
                 double porosity_times_solnj = 1.0*u_free_dof_old[j];
                 // Update Cij matrices
                 Cij[0] = Cx[ij];
+#if nSpace == 2
                 Cij[1] = Cy[ij];
+#endif
 #if nSpace == 3
                 Cij[2] = Cz[ij];
 #endif
@@ -2496,6 +2629,7 @@ namespace proteus
             double ith_dissipative_term = 0;
             double ith_low_order_dissipative_term = 0;
             double ith_flux_term = 0;
+            double ith_consistent_flux_term = 0;
             double dLii = 0.;
             double m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
 
@@ -2508,7 +2642,10 @@ namespace proteus
                 for (int I=0;I<nSpace;I++)
                   solnj -= rho*gravity[I]*mesh_dof[j*3+I];
                 double porosityj = 1.0;
-                double dLowij, dLij, dEVij, dHij;
+                double dLowij, dLij, dEVij, dHij, fH,fL,fA;
+                fH = -TransportMatrixConsistent[ij]*(solnj-solni);
+                ith_consistent_flux_term += fH;
+                fA = fH;
                 if (-TransportMatrix[ij]*(solnj - solni) <= 0.0)
                   {
                     evaluateCoefficients(a_rowptr,
@@ -2530,7 +2667,9 @@ namespace proteus
                                          da,
                                          Kr,
                                          dKr);
-                    ith_flux_term += Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+                    fL=Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+                    ith_flux_term += fL;
+                    fA -= fL;
                   }
                 else
                   {
@@ -2553,61 +2692,11 @@ namespace proteus
                                          da,
                                          Kr,
                                          dKr);
-                    ith_flux_term += Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+                    fL = Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+                    ith_flux_term += fL;
+                    fA -= fL;
                   }
-                //std::cout<<"i "<<i<<" j "<<j<<" grad ij "<<(solnj - solni)<<" flux ij "<<fmax(0.0, -TransportMatrix[ij])*(solnj - solni)<<std::endl;
-                /* if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term) */
-                /*   { */
-                /*     // artificial compression */
-                /*     double solij = 0.5*(porosityi*solni+porosityj*solnj); */
-                /*     double Compij = cK*fmax(solij*(1.0-solij),0.0)/(fabs(porosityi*solni-porosityj*solnj)+1E-14); */
-                /*     // first-order dissipative operator */
-                /*     dLowij = fmax(fabs(TransportMatrix[ij]),fabs(TransportMatrix[ij]));//symmetric */
-                /*     //dLij = fmax(0.,fmax(psi[i]*TransportMatrix[ij], // Approach by S. Badia */
-                /*     //              psi[j]*TransposeTransportMatrix[ij])); */
-                /*     dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV */
-                /*     if (STABILIZATION_TYPE==1) //EV Stab */
-                /*       { */
-                /*         // high-order (entropy viscosity) dissipative operator */
-                /*         dEVij = fmax(fabs(global_entropy_residual[i]), */
-                /*                      fabs(global_entropy_residual[j])); */
-                /*         dHij = fmin(dLowij,dEVij) * fmax(1.0-Compij,0.0); // artificial compression */
-                /*       } */
-                /*     else // smoothness based indicator */
-                /*       { */
-                /*         dHij = dLij * fmax(1.0-Compij,0.0); // artificial compression */
-                /*         //dHij = dLowij; */
-                /*         //dLij = dLowij; */
-
-                /*         dEVij = fmax(fabs(global_entropy_residual[i]), */
-                /*                      fabs(global_entropy_residual[j])); */
-                /*         //dHij = fmin(dLowij,dEVij);//\*fmax(1.0-Compij,0.0); // artificial compression */
-                /*         //dHij = 0.; */
-                /*         dHij = dLowij; */
-                /*         //  */
-                /*       } */
-                /*     dHij = dLowij; */
-                /*     dLij = dLowij; */
-                /*     dLow[ij]=dLowij; */
-		    
-                /*     //dissipative terms */
-                /*     ith_dissipative_term += dHij*(solnj-solni); */
-                /*     ith_low_order_dissipative_term += dLij*(solnj-solni); */
-                /*     //dHij - dLij. This matrix is needed during FCT step */
-                /*     dt_times_dH_minus_dL[ij] = dt*(dHij - dLij); */
-                /*     dLii -= dLij; */
-		    
-                /*     fluxMatrix[ij] = -dt*(TransportMatrix[ij]*solnj */
-                /*                           -TransposeTransportMatrix[ij]*solni */
-                /*                           -dHij*(solnj-solni)); */
-                /*   } */
-                /* else //i==j */
-                /*   { */
-                /*     dt_times_dH_minus_dL[ij] = 0; */
-                /*     fluxMatrix[ij] = 0;//TransportMatrix[ij]*solnj; */
-                /*     dLow[ij]=0.; // not true but works since *= (ui-uj) */
-                /*   } */
-                //update ij
+                dt_times_fH_minus_fL[ij] = dt*fA;
                 ij+=1;
               }
             double mi = ML[i];
@@ -2616,6 +2705,8 @@ namespace proteus
 
 
             uDotLow[i] = 1.0/mi*ith_flux_term;
+            //cek hack, test consistent flux
+            //uDotLow[i] = 1.0/mi*ith_consistent_flux_term;
             //+ boundary_integral[i]);
             //- ith_low_order_dissipative_term);
             evaluateCoefficients(a_rowptr,
@@ -2637,11 +2728,13 @@ namespace proteus
                                  da,
                                  Kr,
                                  dKr);
-            uLow[i] = m + dt*uDotLow[i];//cek should introduce mn,mnp1 or somethign clearer
+            sn[i] = m;
+            sLow[i] = m + dt*uDotLow[i];//cek should introduce mn,mnp1 or somethign clearer
+            globalResidual[i] += dt*ith_consistent_flux_term;
             //cek debug
             //std::cout<<"dt*divergence "<<dt*uDotLow[i]<<std::endl;
             //std::cout<<"mass density old "<<m<<std::endl;
-            m = uLow[i];
+            m = sLow[i];
             //std::cout<<"mass density "<<m<<std::endl;
             evaluateInverseCoefficients(a_rowptr,
                                         a_colind,
@@ -2660,7 +2753,6 @@ namespace proteus
                                         df,
                                         a,
                                         da);
-            globalResidual[i] = uLow[i];
             //uLow[i] = u_dof_old[i] - dt/mi*(ith_flux_term
             //						  + boundary_integral[i]
             //						  - ith_low_order_dissipative_term);
@@ -2735,6 +2827,138 @@ namespace proteus
         //  globalResidual[i] = solni + 1.0/mi*ith_Limiter_times_FluxCorrectionMatrix;
         //}
 	
+      }
+      void invert(//element
+                  double dt,
+                  double* mesh_trial_ref,
+                  double* mesh_grad_trial_ref,
+                  double* mesh_dof,
+                  double* mesh_velocity_dof,
+                  double MOVING_DOMAIN,
+                  int* mesh_l2g,
+                  double* dV_ref,
+                  double* u_trial_ref,
+                  double* u_grad_trial_ref,
+                  double* u_test_ref,
+                  double* u_grad_test_ref,
+                  //element boundary
+                  double* mesh_trial_trace_ref,
+                  double* mesh_grad_trial_trace_ref,
+                  double* dS_ref,
+                  double* u_trial_trace_ref,
+                  double* u_grad_trial_trace_ref,
+                  double* u_test_trace_ref,
+                  double* u_grad_test_trace_ref,
+                  double* normal_ref,
+                  double* boundaryJac_ref,
+                  //physics
+                  int nElements_global,
+                  double* ebqe_penalty_ext,
+                  int* elementMaterialTypes,	
+                  int* isSeepageFace,
+                  int* a_rowptr,
+                  int* a_colind,
+                  double rho,
+                  double beta,
+                  double* gravity,
+                  double* alpha,
+                  double* n,
+                  double* thetaR,
+                  double* thetaSR,
+                  double* KWs,
+                  double useMetrics,
+                  double alphaBDF,
+                  int lag_shockCapturing,
+                  double shockCapturingDiffusion,
+                  double sc_uref,
+                  double sc_alpha,
+                  int* u_l2g,
+                  int* r_l2g,
+                  double* elementDiameter,
+                  int degree_polynomial,
+                  double* u_dof,
+                  double* u_dof_old,	
+                  double* velocity,
+                  double* q_m,
+                  double* q_u,
+                  double* q_m_betaBDF,
+                  double* cfl,
+                  double* edge_based_cfl,
+                  double* q_numDiff_u, 
+                  double* q_numDiff_u_last, 
+                  int offset_u, int stride_u, 
+                  double* globalResidual,
+                  int nExteriorElementBoundaries_global,
+                  int* exteriorElementBoundariesArray,
+                  int* elementBoundaryElementsArray,
+                  int* elementBoundaryLocalElementBoundariesArray,
+                  double* ebqe_velocity_ext,
+                  int* isDOFBoundary_u,
+                  double* ebqe_bc_u_ext,
+                  int* isFluxBoundary_u,
+                  double* ebqe_bc_flux_u_ext,
+                  double* ebqe_phi,double epsFact,
+                  double* ebqe_u,
+                  double* ebqe_flux,
+                  // PARAMETERS FOR EDGE BASED STABILIZATION
+                  double cE,
+                  double cK,
+                  // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+                  double uL,
+                  double uR,
+                  // PARAMETERS FOR EDGE VISCOSITY
+                  int numDOFs,
+                  int NNZ,
+                  int* csrRowIndeces_DofLoops,
+                  int* csrColumnOffsets_DofLoops,
+                  int* csrRowIndeces_CellLoops,
+                  int* csrColumnOffsets_CellLoops,
+                  int* csrColumnOffsets_eb_CellLoops,
+                  // C matrices
+                  double* Cx,
+                  double* Cy,
+                  double* Cz,
+                  double* CTx,
+                  double* CTy,
+                  double* CTz,
+                  double* ML,
+                  double* delta_x_ij,
+                  // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+                  int LUMPED_MASS_MATRIX,
+                  int STABILIZATION_TYPE,
+                  int ENTROPY_TYPE,
+                  // FOR FCT
+                  double* dLow,
+                  double* fluxMatrix,
+                  double* uDotLow,
+                  double* uLow,
+                  double* dt_times_fH_minus_fL,
+                  double* min_s_bc,
+                  double* max_s_bc,
+                  // AUX QUANTITIES OF INTEREST
+                  double* quantDOFs)
+      {
+        for (int i=0; i<numDOFs; i++)
+          {
+            double dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
+            evaluateInverseCoefficients(a_rowptr,
+                                        a_colind,
+                                        rho,
+                                        beta,
+                                        gravity,
+                                        alpha[elementMaterialTypes[0]],//cek hack, only for 1 material
+                                        n[elementMaterialTypes[0]],
+                                        thetaR[elementMaterialTypes[0]],
+                                        thetaSR[elementMaterialTypes[0]],
+                                        &KWs[elementMaterialTypes[0]*nnz],			      
+                                        globalResidual[i],//output
+                                        u_dof[i],//input
+                                        dm,
+                                        f,
+                                        df,
+                                        a,
+                                        da);
+          }
       }
 
       void calculateMassMatrix(//element
@@ -2926,6 +3150,8 @@ namespace proteus
                 //
                 //calculate time derivatives
                 //
+                //cek hack
+                dm=1.0;
                 ck.bdf(alphaBDF,
                        q_m_betaBDF[eN_k],//since m_t isn't used, we don't have to correct mass
                        m,
@@ -2990,7 +3216,7 @@ namespace proteus
                             //std::cout<<"jac "<<'\t'<<q_numDiff_u_last[eN_k]<<'\t'<<dm_t<<'\t'<<df[0]<<df[1]<<'\t'<<dsubgridError_u_u[j]<<std::endl;
                             dm_t = 1.0;//cek, will solving for continuum density explicitly
                             elementJacobian_u_u[i][j] +=
-                              dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
+                              ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
                           }
                       }//j
                   }//i

@@ -99,7 +99,8 @@ multilevelNonlinearSolver = Newton
 
 #levelNonlinearSolver = FAS
 levelNonlinearSolver = Newton
-levelNonlinearSolver = ExplicitLumpedMassMatrix
+levelNonlinearSolver = ExplicitLumpedMassMatrixForRichards
+#levelNonlinearSolver = ExplicitConsistentMassMatrixForRichards
 #levelNonlinearSolver = NLStarILU
 #levelNonlinearSolver = NLGaussSeidel
 #levelNonlinearSolver = NLJacobi
