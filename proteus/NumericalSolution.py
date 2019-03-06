@@ -1583,10 +1583,24 @@ class NS_base(object):  # (HasTraits):
         self.nSequenceSteps = 0
         nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
         self.nSolveSteps=0
+
+        import time
+        if hasattr(self.so,'measureSpeedOfCode'):
+            measureSpeed = self.so.measureSpeedOfCode
+        else:
+            measureSpeed = False
+        #
+        startToMeasureSpeed = False
+        numTimeSteps=0
+        start=0
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
+            if measureSpeed and startToMeasureSpeed and numTimeSteps==0 and self.comm.isMaster():
+                start = time.time()
+                logEvent("**********... start measuring speed of the code",level=1)
+            #
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
 
             self.opts.save_dof = True
@@ -1746,6 +1760,48 @@ class NS_base(object):  # (HasTraits):
                 self.nSolveSteps += 1
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
+                #
+                if measureSpeed and startToMeasureSpeed and self.comm.isMaster():
+                    numTimeSteps += 1
+                    logEvent("**********... end of time step. Number of time steps (to measure speed of the code): " + str(numTimeSteps),level=1)
+                if measureSpeed and numTimeSteps==100 and self.comm.isMaster():
+                    end = time.time()
+                    Nproc = self.comm.size()
+                    NDOFs=0
+                    for i,mod in enumerate(self.modelList):
+                        if (i in self.so.modelSpinUpList) == False: #To remove spin up models
+                            NDOFs += len(mod.uList[0])
+                    #
+                    file = open("speed_measurement.txt","w")
+                    file.write("Num of time steps: " + str(numTimeSteps) + "\n")
+                    file.write("Total time: " + str(end-start) + "\n")
+                    file.write("Num of processors: " + str(Nproc) + "\n")
+                    file.write("Total num of DOFs: " + str(NDOFs) + "\n")
+                    file.write("Num of DOFs per processor: " + str(NDOFs/Nproc) + "\n")
+                    file.write("Time per time step, per processor: " + str((end-start)/numTimeSteps*Nproc) + "\n")
+                    file.write("Time per time step, per DOF, per processor: " + str((end-start)/numTimeSteps*Nproc/NDOFs) + "\n")
+                    file.close()
+                    measureSpeed = False
+                #
+            if measureSpeed and startToMeasureSpeed and self.comm.isMaster():
+                end = time.time()
+                Nproc = self.comm.size()
+                NDOFs=0
+                for i,mod in enumerate(self.modelList):
+                    if (i in self.so.modelSpinUpList) == False:
+                        NDOFs += len(mod.uList[0])
+                #
+                file = open("speed_measurement.txt","w")
+                file.write("Num of time steps: " + str(numTimeSteps) + "\n")
+                file.write("Total time: " + str(end-start) + "\n")
+                file.write("Num of processors: " + str(Nproc) + "\n")
+                file.write("Total num of DOFs: " + str(NDOFs) + "\n")
+                file.write("Num of DOFs per processor: " + str(NDOFs/Nproc) + "\n")
+                file.write("Time per time step, per processor: " + str((end-start)/numTimeSteps*Nproc) + "\n")
+                file.write("Time per time step, per DOF, per processor: " + str((end-start)/numTimeSteps*Nproc/NDOFs) + "\n")
+                file.close()
+                measureSpeed = False
+            #
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
@@ -1763,6 +1819,9 @@ class NS_base(object):  # (HasTraits):
             #self.nSolveSteps += 1
             #if(self.PUMI_estimateError()):
             #  self.PUMI_adaptMesh()
+            if measureSpeed and self.comm.isMaster():
+                startToMeasureSpeed = True
+            #
         logEvent("Finished calculating solution",level=3)
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
