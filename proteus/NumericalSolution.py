@@ -1770,7 +1770,7 @@ class NS_base(object):  # (HasTraits):
                     NDOFs=0
                     for i,mod in enumerate(self.modelList):
                         if (i in self.so.modelSpinUpList) == False: #To remove spin up models
-                            NDOFs += len(mod.uList[0])
+                            NDOFs += mod.par_uList[0].size
                     #
                     file = open("speed_measurement.txt","w")
                     file.write("Num of time steps: " + str(numTimeSteps) + "\n")
@@ -1778,7 +1778,6 @@ class NS_base(object):  # (HasTraits):
                     file.write("Num of processors: " + str(Nproc) + "\n")
                     file.write("Total num of DOFs: " + str(NDOFs) + "\n")
                     file.write("Num of DOFs per processor: " + str(NDOFs/Nproc) + "\n")
-                    file.write("Time per time step, per processor: " + str((end-start)/numTimeSteps*Nproc) + "\n")
                     file.write("Time per time step, per DOF, per processor: " + str((end-start)/numTimeSteps*Nproc/NDOFs) + "\n")
                     file.close()
                     measureSpeed = False
@@ -1789,7 +1788,7 @@ class NS_base(object):  # (HasTraits):
                 NDOFs=0
                 for i,mod in enumerate(self.modelList):
                     if (i in self.so.modelSpinUpList) == False:
-                        NDOFs += len(mod.uList[0])
+                        NDOFs += mod.par_uList[0].size
                 #
                 file = open("speed_measurement.txt","w")
                 file.write("Num of time steps: " + str(numTimeSteps) + "\n")
@@ -1797,7 +1796,6 @@ class NS_base(object):  # (HasTraits):
                 file.write("Num of processors: " + str(Nproc) + "\n")
                 file.write("Total num of DOFs: " + str(NDOFs) + "\n")
                 file.write("Num of DOFs per processor: " + str(NDOFs/Nproc) + "\n")
-                file.write("Time per time step, per processor: " + str((end-start)/numTimeSteps*Nproc) + "\n")
                 file.write("Time per time step, per DOF, per processor: " + str((end-start)/numTimeSteps*Nproc/NDOFs) + "\n")
                 file.close()
                 measureSpeed = False
