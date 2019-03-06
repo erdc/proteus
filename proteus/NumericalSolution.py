@@ -1006,7 +1006,7 @@ class NS_base:  # (HasTraits):
             # This is hardcoded for the RANS3PF to be the 4th model
             scalar[:,0] = self.modelList[4].levelModelList[0].coefficients.phi_s
             p0.domain.PUMIMesh.transferFieldToPUMI(
-                'phisError', scalar)
+                'phi_s', scalar)
 
             del scalar
             #Get Physical Parameters

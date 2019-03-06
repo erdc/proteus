@@ -161,7 +161,7 @@ stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find stack -type f) ${BOOTSTRAP} ${MATLAB_SETUP}
+${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f) ${BOOTSTRAP} ${MATLAB_SETUP}
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"

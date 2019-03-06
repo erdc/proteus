@@ -53,8 +53,8 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::Field *phif = m->findField("phi");
   assert(phif);
   ////////////////////////////////////////
-  apf::Field *phisError = m->findField("phisError");
-  assert(phis);
+  apf::Field *phisError = m->findField("phi_s");
+  assert(phisError);
   /////////////////////////////////////////
   apf::Field *phiCorr = m->findField("phiCorr");
   assert(phiCorr);
