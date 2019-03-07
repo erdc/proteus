@@ -65,6 +65,7 @@ if optRichards:
                                          ENTROPY_TYPE=1,
                                          LUMPED_MASS_MATRIX=True,
                                          FCT=False,
+                                         MONOLITHIC=False,
                                          num_fct_iter=1,
                                          # FOR ENTROPY VISCOSITY
                                          cE=1.0,

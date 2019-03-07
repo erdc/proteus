@@ -316,8 +316,8 @@ namespace proteus
                          double* dt_times_fH_minus_fL, //low minus high order dissipative matrices
                          double* min_s_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
                          double* max_s_bc,
-                         int LUMPED_MASS_MATRIX
-                         )=0;
+                         int LUMPED_MASS_MATRIX,
+                         int MONOLITHIC)=0;
     virtual void kth_FCT_step(double dt,
 			      int num_fct_iter,
 			      int NNZ, //number on non-zero entries on sparsity pattern
@@ -1764,12 +1764,14 @@ namespace proteus
                    double* dt_times_fH_minus_fL, //low minus high order dissipative matrices
                    double* min_s_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
                    double* max_s_bc,
-                   int LUMPED_MASS_MATRIX
+                   int LUMPED_MASS_MATRIX,
+                   int MONOLITHIC
                    )
       {
         register double Rpos[numDOFs], Rneg[numDOFs];
         register double FluxCorrectionMatrix[NNZ];
         register double solL[numDOFs];
+        register double sdot[numDOFs];
         //////////////////
         // LOOP in DOFs //
         //////////////////
@@ -1784,6 +1786,7 @@ namespace proteus
             // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
             solL[i] = uLow[i];
             double sdoti = (solHi - solni);
+            sdot[i] = 0.0;
             double mini=min_s_bc[i], maxi=max_s_bc[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
             if (GLOBAL_FCT==1)
               {
@@ -1801,21 +1804,30 @@ namespace proteus
                 ////////////////////////
                 if (GLOBAL_FCT == 0)
                   {
-                    //standard
-                    mini = fmin(mini,solL[j]);
-                    maxi = fmax(maxi,solL[j]);
-                    //monolithic
-                    /* mini = fmin(mini,pn[j]); */
-                    /* maxi = fmax(maxi,pn[j]); */
+                    if (MONOLITHIC == 0)
+                      {
+                        mini = fmin(mini,solL[j]);
+                        maxi = fmax(maxi,solL[j]);
+                      }
+                    else
+                      {
+                        mini = fmin(mini,pn[j]);
+                        maxi = fmax(maxi,pn[j]);
+                      }
                   }
                 // i-th row of flux correction matrix
                 double sdotj = (solH[j] - soln[j]);
 
-                double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
-                //FluxCorrectionMatrix[ij] = dt_times_fH_minus_fL[ij];
-                FluxCorrectionMatrix[ij] = MassMatrix[ij]*(sdoti - sdotj) + dt_times_fH_minus_fL[ij];
-                //ML_minus_MC * (solH[j]-soln[j] - (solHi-solni))
-                    
+                double I_plus_ML_minus_MC = (i==j ? 1. : 0.)*(1. + mi) - MassMatrix[ij];
+                sdot[i] +=  I_plus_ML_minus_MC*(solH[j]-soln[j])/mi;
+                if (MONOLITHIC == 0)
+                  {
+                    FluxCorrectionMatrix[ij] = (LUMPED_MASS_MATRIX == 1 ? 0. : 1.)*MassMatrix[ij]*(sdoti - sdotj) + dt_times_fH_minus_fL[ij];
+                  }
+                else
+                  {
+                    FluxCorrectionMatrix[ij] = dt_times_fH_minus_fL[ij];                  
+                  }
                 ///////////////////////
                 // COMPUTE P VECTORS //
                 ///////////////////////
@@ -1824,18 +1836,25 @@ namespace proteus
 
                 //update ij
                 ij+=1;
+                //std::cout<<"sdoti error"<<fabs(sdoti-sdot[i])<<std::endl;
               }
             ///////////////////////
             // COMPUTE Q VECTORS //
             ///////////////////////
-            //standard
-            double Qposi = mi*(maxi-solL[i]);
-            double Qnegi = mi*(mini-solL[i]);
-            //monolithic
-            /* double gamma=10.0*mi; */
-            /* double Qposi =fmin(0.5*mi*(1.0-soln[i]), gamma*(maxi-pn[i])); */
-            /* double Qnegi =fmax(0.5*mi*(0.0-soln[i]), gamma*(mini-pn[i])); */
-
+            double gamma;
+            double Qposi;
+            double Qnegi;
+            if (MONOLITHIC == 0)
+              {
+                Qposi = mi*(maxi-solL[i]);
+                Qnegi = mi*(mini-solL[i]);
+              }
+            else
+              {
+                gamma=10.0*mi;
+                Qposi =fmin(0.5*mi*(1.0-soln[i]), gamma*(maxi-pn[i]));
+                Qnegi =fmax(0.5*mi*(0.0-soln[i]), gamma*(mini-pn[i]));
+              }
             ///////////////////////
             // COMPUTE R VECTORS //
             ///////////////////////
@@ -1850,15 +1869,25 @@ namespace proteus
         for (int i=0; i<numDOFs; i++)
           {
             double ith_Limiter_times_FluxCorrectionMatrix = 0.;
+            double alpha_fA, alpha_dot, beta_ij=1.0;
             double Rposi = Rpos[i], Rnegi = Rneg[i];
+            double sdoti = (solH[i] - soln[i]);
             // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
             for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
               {
                 int j = csrColumnOffsets_DofLoops[offset];
-                ith_Limiter_times_FluxCorrectionMatrix +=
-                  ((FluxCorrectionMatrix[ij]>0) ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]))
+                double sdotj = (solH[j] - soln[j]);
+                alpha_fA = ((FluxCorrectionMatrix[ij]>0) ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]))
                   * FluxCorrectionMatrix[ij];
-                //ith_Limiter_times_FluxCorrectionMatrix += FluxCorrectionMatrix[ij];
+                alpha_dot = fmin(1.0, beta_ij*fabs(alpha_fA)/MassMatrix[ij]/fmax(1.0e-8,fabs(sdoti-sdotj)));
+                if (MONOLITHIC == 0)
+                  {
+                    ith_Limiter_times_FluxCorrectionMatrix += alpha_fA;
+                  }
+                else
+                  {
+                    ith_Limiter_times_FluxCorrectionMatrix += alpha_fA + (LUMPED_MASS_MATRIX == 1 ? 0. : 1.)*dt*alpha_dot*MassMatrix[ij]*(sdoti-sdotj);
+                  }
                 //update ij
                 ij+=1;
               }

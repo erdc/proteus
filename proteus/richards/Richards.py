@@ -205,6 +205,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  STABILIZATION_TYPE=0,
                  ENTROPY_TYPE=2,  # logarithmic
                  LUMPED_MASS_MATRIX=False,
+                 MONOLITHIC=True,
                  FCT=True,
                  num_fct_iter=1,
                  # FOR ENTROPY VISCOSITY
@@ -267,6 +268,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.Ksw_types = Ksw_types
         # EDGE BASED (AND ENTROPY) VISCOSITY
         self.LUMPED_MASS_MATRIX = LUMPED_MASS_MATRIX
+        self.MONOLITHIC = MONOLITHIC
         self.STABILIZATION_TYPE = STABILIZATION_TYPE
         self.ENTROPY_TYPE = ENTROPY_TYPE
         self.FCT = FCT
@@ -835,7 +837,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dt_times_dC_minus_dL,
             self.min_s_bc,
             self.max_s_bc,
-            self.coefficients.LUMPED_MASS_MATRIX)
+            self.coefficients.LUMPED_MASS_MATRIX,
+            self.coefficients.MONOLITHIC)
         old_dof = self.u[0].dof.copy()
         self.invert(limited_solution, self.u[0].dof)
         self.timeIntegration.u[:] = self.u[0].dof

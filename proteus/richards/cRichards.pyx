@@ -189,7 +189,8 @@ cdef extern from "Richards.h" namespace "proteus":
                      double* dt_times_dH_minus_dL,
                      double* min_s_bc,
                      double* max_s_bc,
-                     int LUMPED_MASS_MATRIX)
+                     int LUMPED_MASS_MATRIX,
+                     int MONOLITHIC)
         void kth_FCT_step(double dt,
                           int num_fct_iter,
                           int NNZ,
@@ -846,7 +847,8 @@ cdef class cRichards_base:
                 numpy.ndarray dt_times_dH_minus_dL,
                 numpy.ndarray min_s_bc,
                 numpy.ndarray max_s_bc,
-                int LUMPED_MASS_MATRIX):
+                int LUMPED_MASS_MATRIX,
+                int MONOLITHIC):
         self.thisptr.FCTStep(NNZ,
                              numDOFs,
                              dt,
@@ -862,7 +864,8 @@ cdef class cRichards_base:
                              < double* > dt_times_dH_minus_dL.data,
                              < double* > min_s_bc.data,
                              < double* > max_s_bc.data,
-                             LUMPED_MASS_MATRIX)
+                             LUMPED_MASS_MATRIX,
+                             MONOLITHIC)
 
     def kth_FCT_step(self,
                      double dt,
