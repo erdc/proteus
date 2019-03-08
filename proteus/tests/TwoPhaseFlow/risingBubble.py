@@ -22,9 +22,6 @@ opts= Context.Options([
     ("refinement",3,"level of refinement")
     ],mutable=True)
 
-# Change parameters for automated testing #
-opts.refinement=2
-
 assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
 assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
 
@@ -125,7 +122,7 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
-                                             useSuperlu=False)
+                                             useSuperlu=True)
 physical_parameters = myTpFlowProblem.Parameters.physical
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
 if opts.test_case==1:
