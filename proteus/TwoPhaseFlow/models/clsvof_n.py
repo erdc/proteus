@@ -88,3 +88,4 @@ else:
 l_atol_res = nl_atol_res
 tolFac=0.
 maxNonlinearIts = 50
+maxLineSearches = 0

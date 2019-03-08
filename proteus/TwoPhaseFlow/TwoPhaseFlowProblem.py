@@ -29,7 +29,7 @@ class TwoPhaseFlowProblem:
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
                  # OTHERS #
-                 useSuperlu=False):
+                 useSuperlu=True):
         # ***** SET OF ASSERTS ***** #
         if ns_model is not None:
             assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
