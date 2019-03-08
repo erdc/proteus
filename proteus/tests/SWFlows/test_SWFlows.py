@@ -14,7 +14,7 @@ class TestSWFlows(object):
 
     def test_solitary(self):
         # call runSWEs
-        os.system("parun --SWEs solitary.py")
+        os.system("PYTHONPATH={0} parun --SWEs solitary.py".format(self._scriptdir))
 
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/solitary.h5'
@@ -26,7 +26,7 @@ class TestSWFlows(object):
 
     def test_parab1D(self):
         # Call runSWEs
-        os.system("parun --SWEs parab1D.py")
+        os.system("PYTHONPATH={0} parun -v  --SWEs parab1D.py".format(self._scriptdir))
 
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/parab1D.h5'
@@ -38,7 +38,7 @@ class TestSWFlows(object):
 
     def test_dam3Bumps(self):
         # Call runSWEs
-        os.system("parun --SWEs dam3Bumps.py")
+        os.system("PYTHONPATH={0} parun -v  --SWEs dam3Bumps.py".format(self._scriptdir))
 
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/dam3Bumps.h5'

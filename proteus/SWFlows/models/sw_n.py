@@ -61,9 +61,9 @@ else:
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
 try_supg_stabilization = True
-subgridError = SW2D.SubgridError(coefficients,nd,lag=True)
-shockCapturing = SW2D.ShockCapturing(coefficients,nd,shockCapturingFactor=0.1,lag=True)
-numericalFluxType = SW2D.NumericalFlux
+subgridError = None
+shockCapturing = None
+numericalFluxType = SW2DCV.NumericalFlux
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
