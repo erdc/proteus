@@ -1770,7 +1770,7 @@ class NS_base(object):  # (HasTraits):
                     NDOFs=0
                     for i,mod in enumerate(self.modelList):
                         if (i in self.so.modelSpinUpList) == False: #To remove spin up models
-                            NDOFs += mod.par_uList[0].size
+                            NDOFs += mod.par_uList[0].size if mod.par_uList[0] is not None else len(mod.uList[0])
                     #
                     file = open("speed_measurement.txt","w")
                     file.write("Num of time steps: " + str(numTimeSteps) + "\n")
@@ -1788,7 +1788,7 @@ class NS_base(object):  # (HasTraits):
                 NDOFs=0
                 for i,mod in enumerate(self.modelList):
                     if (i in self.so.modelSpinUpList) == False:
-                        NDOFs += mod.par_uList[0].size
+                        NDOFs += mod.par_uList[0].size if mod.par_uList[0] is not None else len(mod.uList[0])
                 #
                 file = open("speed_measurement.txt","w")
                 file.write("Num of time steps: " + str(numTimeSteps) + "\n")
