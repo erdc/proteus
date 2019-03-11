@@ -1203,10 +1203,10 @@ namespace proteus
             else
             {
                 phi_s = particle_signed_distances[i * sd_offset];
-                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
-                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
-                vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
-                vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
+                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * 3 + 0];
+                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * 3 + 1];
+                vel[0] = particle_velocities[i * sd_offset * 3 + 0];
+                vel[1] = particle_velocities[i * sd_offset * 3 + 1];
                 center[0] = particle_centroids[3*i+0];
                 center[1] = particle_centroids[3*i+1];
 
@@ -1353,10 +1353,10 @@ namespace proteus
             else
             {
                 phi_s = particle_signed_distances[i * sd_offset];
-                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
-                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
-                vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
-                vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
+                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * 3 + 0];
+                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * 3 + 1];
+                vel[0] = particle_velocities[i * sd_offset * 3 + 0];
+                vel[1] = particle_velocities[i * sd_offset * 3 + 1];
                 center[0] = particle_centroids[3*i+0];
                 center[1] = particle_centroids[3*i+1];
 
@@ -3027,8 +3027,8 @@ namespace proteus
                                            nParticles,
                                            nQuadraturePoints_global,
                                            &particle_signed_distances[eN_k],
-                                           &particle_signed_distance_normals[eN_k_nSpace],
-                                           &particle_velocities[eN_k_nSpace],
+                                           &particle_signed_distance_normals[eN_k_3d],
+                                           &particle_velocities[eN_k_3d],
                                            particle_centroids,
                                            use_ball_as_particle,
                                            ball_center,
@@ -3089,8 +3089,8 @@ namespace proteus
                                            nParticles,
                                            nQuadraturePoints_global,
                                            &particle_signed_distances[eN_k],
-                                           &particle_signed_distance_normals[eN_k_nSpace],
-                                           &particle_velocities[eN_k_nSpace],
+                                           &particle_signed_distance_normals[eN_k_3d],
+                                           &particle_velocities[eN_k_3d],
                                            particle_centroids,
                                            use_ball_as_particle,
                                            ball_center,
@@ -3865,10 +3865,10 @@ namespace proteus
                     else
                     {
                         dist = ebq_global_phi_solid[ebN_kb];
-                        P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
-                        P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
-                        bc_u_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+0];
-                        bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
+                        P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*3+0];
+                        P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*3+1];
+                        bc_u_ext = ebq_particle_velocity_solid [ebN_kb*3+0];
+                        bc_v_ext = ebq_particle_velocity_solid [ebN_kb*3+1];
 
                     }
 
@@ -5301,6 +5301,7 @@ namespace proteus
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
                   eN_k_nSpace = eN_k*nSpace,
+                  eN_k_3d = eN_k*3,
                   eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
                 //declare local storage
@@ -5641,8 +5642,8 @@ namespace proteus
                                            nParticles,
                                            nQuadraturePoints_global,
                                            &particle_signed_distances[eN_k],
-                                           &particle_signed_distance_normals[eN_k_nSpace],
-                                           particle_velocities,
+                                           &particle_signed_distance_normals[eN_k_3d],
+                                           &particle_velocities[eN_k_3d],
                                            particle_centroids,
                                            use_ball_as_particle,
                                            ball_center,
@@ -6260,10 +6261,10 @@ namespace proteus
                     else
                     {
                         dist = ebq_global_phi_solid[ebN_kb];
-                        P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*nSpace+0];
-                        P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*nSpace+1];
-                        bc_u_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+0];
-                        bc_v_ext = ebq_particle_velocity_solid [ebN_kb*nSpace+1];
+                        P_normal[0] = ebq_global_grad_phi_solid[ebN_kb*3+0];
+                        P_normal[1] = ebq_global_grad_phi_solid[ebN_kb*3+1];
+                        bc_u_ext = ebq_particle_velocity_solid [ebN_kb*3+0];
+                        bc_v_ext = ebq_particle_velocity_solid [ebN_kb*3+1];
                     }
                     distance[0] = -P_normal[0]*dist;//distance=vector from \tilde{x} to x. It holds also when dist<0.0
                     distance[1] = -P_normal[1]*dist;
