@@ -470,13 +470,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
         self.particle_centroids = np.zeros((self.nParticles, 3), 'd')
         self.particle_signed_distances = np.zeros((self.nParticles,) + self.model.q[('u', 0)].shape, 'd')
-        self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
-        self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
+        self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
+        self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
 
         self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
         self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
-        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
-        self.ebq_particle_velocity_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
+        self.ebq_global_grad_phi_s = numpy.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
+        self.ebq_particle_velocity_s = numpy.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
 
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
