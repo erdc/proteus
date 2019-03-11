@@ -740,6 +740,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.barycenters = numpy.zeros((nBoundariesMax, 3), 'd')
         comm = Comm.get()
         if comm.isMaster():
+            self.timeHistory = open(os.path.join(proteus.Profiling.logDir, "timeHistory.txt"), "w")
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir, "wettedAreaHistory.txt"), "w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir, "forceHistory_v.txt"), "w")
@@ -1070,6 +1071,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         if self.model.isActiveDOF[dof] < 0.5:
                             self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
         if self.model.comm.isMaster():
+            self.timeHistory.write("%21.16e\n" % (t,))
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
@@ -2138,8 +2140,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # fill vector rowptr_scalar
         for i in range(1, self.rowptr_1D.size):
             self.rowptr_1D[i]=(self.rowptr_1D[i - 1] +
-                               old_div((self.rowptr[nSpace * (i - 1) + 1] -
-                                        self.rowptr[nSpace * (i - 1)]), nSpace))
+                               (self.rowptr[nSpace * (i - 1) + 1] -
+                                self.rowptr[nSpace * (i - 1)])//nSpace)
         # fill vector colind_cMatrix
         ith_row = 0
         for i in range(len(self.rowptr)-1):  # 0 to total num of DOFs (i.e. num of rows of jacobian)
@@ -2148,7 +2150,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     offset_1D = list(range(self.rowptr_1D[ith_row],
                                            self.rowptr_1D[ith_row + 1]))
                     if (j % nSpace == 0):
-                        self.colind_1D[offset_1D[old_div(j, nSpace)]] = old_div(self.colind[offset], nSpace)
+                        self.colind_1D[offset_1D[j//nSpace]] = self.colind[offset]//nSpace
                 ith_row += 1
 
     def getResidual(self, u, r):
@@ -2501,7 +2503,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numDOFs_1D,
             self.nnz_1D,
             self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
-            old_div(self.csrColumnOffsets[(0, 0)], self.nSpace_global),
+            self.csrColumnOffsets[(0, 0)]//self.nSpace_global,
             self.rowptr_1D,
             self.colind_1D,
             self.coefficients.INT_BY_PARTS_PRESSURE)

@@ -13,7 +13,7 @@ from proteus import Context
 
 opts = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.04, "maximum size of edges"),
+    ("he",0.01, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure")
@@ -119,13 +119,13 @@ domain.writePLY("mesh")
 #domain.writeAsymptote("mesh")
 #triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
 #triangleOptions = "VApq30Dena"
-triangleOptions= "VApq30Dena"
+triangleOptions= "Apq30ena"
 
 logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time stepping
 T=opts.T
 dt_fixed = 0.005#0.03
-dt_init = 0.0025#min(0.1*dt_fixed,0.001)
+dt_init = 0.005#min(0.1*dt_fixed,0.001)
 runCFL=0.33
 nDTout = int(round(old_div(T,dt_fixed)))
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]

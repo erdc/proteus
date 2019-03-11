@@ -54,14 +54,21 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     dragAlpha=dragAlpha,
                                     PSTAB=0.0)
 
+def vel(x,t):
+    U = Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
+    if t < 2.0:
+        return t*U/2.0
+    else:
+        return U
+    return U
 
 def getDBC_u(x,flag):
     if flag in[ boundaryTags['left']]:
-        return lambda x,t: Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
+        return vel
     elif flag in [boundaryTags['front'],boundaryTags['back'],boundaryTags['top'],boundaryTags['bottom'],boundaryTags['obstacle']]:
         return lambda x,t: 0.0
     elif ns_forceStrongDirichlet==False and flag == boundaryTags['right']:
-        return lambda x,t: Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
+        return vel
 
 def getDBC_v(x,flag):
     if flag in[boundaryTags['left']]:
