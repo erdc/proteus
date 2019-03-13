@@ -721,9 +721,7 @@ namespace proteus
                                   const double& vf,
                                   const double& phi,
                                   const double n[nSpace],
-                                  const int nParticles,
-                                  const int sd_offset,
-                                  const double* particle_signed_distances,
+                                  const double distance_to_omega_solid,
                                   const double& kappa,
                                   const double porosity,//VRANS specific
                                   const double& p,
@@ -858,21 +856,8 @@ namespace proteus
 
         // mass (volume accumulation)
         //..hardwired
-        double phi_s = 1.0;
-        if(use_ball_as_particle==1)
-        {
-            get_distance_to_ball(nParticles,ball_center,ball_radius,x,y,z,phi_s);
-        }
-        else
-        {
-            for (int i = 0; i < nParticles; i++)
-            {
-                double temp_phi_s = particle_signed_distances[i * sd_offset];
-                if (temp_phi_s < phi_s)
-                    phi_s = temp_phi_s;
-            }
-        }
-        double phi_s_effect = (phi_s > 0.0) ? 1.0 : 0.0;
+
+        double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 0.0;
         if(USE_SBM>0)
           phi_s_effect = 1.0;
         //u momentum accumulation
@@ -2875,6 +2860,15 @@ namespace proteus
                                          x,y,z,
                                          phi_solid[eN_k]);
                 }
+                else
+                {
+                  phi_solid[eN_k] = 1e10;
+                  for (int i = 0; i < nParticles; i++)
+                  {
+                    double distance_to_i_th_solid = particle_signed_distances[i * nElements_global * nQuadraturePoints_element + eN * nQuadraturePoints_element + k];
+                    phi_solid[eN_k] = (distance_to_i_th_solid < phi_solid[eN_k])?distance_to_i_th_solid:phi_solid[eN_k];
+                  }
+                }
                 /* // */
                 //calculate pde coefficients at quadrature points
                 //
@@ -2894,9 +2888,7 @@ namespace proteus
                                      vf[eN_k],
                                      phi[eN_k],
                                      &normal_phi[eN_k_nSpace],
-                                     nParticles,
-                                     nQuadraturePoints_global,
-                                     &particle_signed_distances[eN_k],
+                                     phi_solid[eN_k],
                                      kappa_phi[eN_k],
                                      //VRANS
                                      porosity,
@@ -4243,6 +4235,19 @@ namespace proteus
                 //
                 //calculate the pde coefficients using the solution and the boundary values for the solution
                 //
+                double distance_to_omega_solid(1e10);
+                if (use_ball_as_particle == 1)
+                {
+                  get_distance_to_ball(nParticles, ball_center, ball_radius, x_ext, y_ext, z_ext, distance_to_omega_solid);
+                }
+                else
+                {
+                  for (int i = 0; i < nParticles; i++)
+                  {
+                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_owned * nQuadraturePoints_elementBoundary + ebN * nQuadraturePoints_elementBoundary + kb];
+                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
+                  }
+                }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
@@ -4260,9 +4265,7 @@ namespace proteus
                                      ebqe_vf_ext[ebNE_kb],
                                      ebqe_phi_ext[ebNE_kb],
                                      &ebqe_normal_phi_ext[ebNE_kb_nSpace],
-                                     nParticles,
-                                     nQuadraturePoints_global,
-                                     &particle_signed_distances[ebNE_kb],
+                                     distance_to_omega_solid,
                                      ebqe_kappa_phi_ext[ebNE_kb],
                                      //VRANS
                                      porosity_ext,
@@ -4356,9 +4359,7 @@ namespace proteus
                                      bc_ebqe_vf_ext[ebNE_kb],
                                      bc_ebqe_phi_ext[ebNE_kb],
                                      &ebqe_normal_phi_ext[ebNE_kb_nSpace],
-                                     nParticles,
-                                     nQuadraturePoints_global,
-                                     &particle_signed_distances[ebNE_kb],
+                                     distance_to_omega_solid,
                                      ebqe_kappa_phi_ext[ebNE_kb],
                                      //VRANS
                                      porosity_ext,
@@ -5506,9 +5507,7 @@ namespace proteus
                                      vf[eN_k],
                                      phi[eN_k],
                                      &normal_phi[eN_k_nSpace],
-                                     nParticles,
-                                     nQuadraturePoints_global,
-                                     &particle_signed_distances[eN_k],
+                                     phi_solid[eN_k],//computed in getResidual
                                      kappa_phi[eN_k],
                                      //VRANS
                                      porosity,
@@ -6620,6 +6619,19 @@ namespace proteus
                 //
                 //calculate the internal and external trace of the pde coefficients
                 //
+                double distance_to_omega_solid(1e10);
+                if (use_ball_as_particle == 1)
+                {
+                  get_distance_to_ball(nParticles, ball_center, ball_radius, x_ext, y_ext, z_ext, distance_to_omega_solid);
+                }
+                else
+                {
+                  for (int i = 0; i < nParticles; i++)
+                  {
+                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_owned * nQuadraturePoints_elementBoundary + ebN * nQuadraturePoints_elementBoundary + kb];
+                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
+                  }
+                }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
@@ -6637,9 +6649,7 @@ namespace proteus
                                      ebqe_vf_ext[ebNE_kb],
                                      ebqe_phi_ext[ebNE_kb],
                                      &ebqe_normal_phi_ext[ebNE_kb_nSpace],
-                                     nParticles,
-                                     nQuadraturePoints_global,
-                                     &particle_signed_distances[ebNE_kb],
+                                     distance_to_omega_solid,
                                      ebqe_kappa_phi_ext[ebNE_kb],
                                      //VRANS
                                      porosity_ext,
@@ -6733,9 +6743,7 @@ namespace proteus
                                      bc_ebqe_vf_ext[ebNE_kb],
                                      bc_ebqe_phi_ext[ebNE_kb],
                                      &ebqe_normal_phi_ext[ebNE_kb_nSpace],
-                                     nParticles,
-                                     nQuadraturePoints_global,
-                                     &particle_signed_distances[ebNE_kb],
+                                     distance_to_omega_solid,
                                      ebqe_kappa_phi_ext[ebNE_kb],
                                      //VRANS
                                      porosity_ext,
