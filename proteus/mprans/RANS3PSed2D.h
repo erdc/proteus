@@ -6,7 +6,7 @@
 #include "ModelFactory.h"
 #include "SedClosure.h"
 #define DRAG_FAC 1.0
-#define TURB_FORCE_FAC 0.0
+#define TURB_FORCE_FAC 1.0
 namespace proteus
 {
   class cppRANS3PSed2D_base
@@ -601,11 +601,11 @@ namespace proteus
         double rho,rho_f,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
-        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-        d_mu = (1.0-useVF)*smoothedDirac(eps_mu,phi);
+	//        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+	//        d_mu = (1.0-useVF)*smoothedDirac(eps_mu,phi);
   
-        //calculate eddy viscosity
-        switch (turbulenceClosureModel)
+        //calculate eddy viscosity - NO NEED FOR SOLID PHASE Coefficients
+	/*        switch (turbulenceClosureModel)
           {
             double norm_S;
           case 1:
@@ -629,18 +629,18 @@ namespace proteus
                 cs_1=0.027*pow(10.0,-3.23*pow(re_1,-0.92));
               nu_t1 = cs_1*h_e*h_e*norm_S;
             }
-          }
+          }*/
       
         rho = rho_s;
         rho_f = rho_0*(1.0-H_rho)+rho_1*H_rho;
-        nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-        nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
+	//        nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
+	//        nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
         //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-        nu += nu_t;
+	//        nu += nu_t;
         //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        mu = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+	//        mu = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
-        eddy_viscosity = rho_0*nu_t0*(1.0-H_mu)+rho_1*nu_t1*H_mu;
+	//        eddy_viscosity = rho_0*nu_t0*(1.0-H_mu)+rho_1*nu_t1*H_mu;
 
         // mass (volume accumulation)
         //..hardwired
@@ -758,6 +758,12 @@ namespace proteus
         mom_u_source = -rho*g[0];// - vos*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
         mom_v_source = -rho*g[1];// - vos*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
         /* mom_w_source = -vos*g[2];// - vos*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
+	if(vos > closure.frFraction_)
+	  {
+	    mom_u_source += (rho-rho_f)*g[0];
+	    mom_v_source += (rho-rho_f)*g[1];
+ 
+	  }
    
         //u momentum Hamiltonian (pressure)
         mom_u_ham = grad_p[0];
@@ -863,9 +869,9 @@ namespace proteus
         
         //new_beta/=rhoFluid;
         //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
-        mom_u_source +=  new_beta*((u - u_f) + TURB_FORCE_FAC*one_by_vos*nu_t*gradC_x/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(u-u_f);
+        mom_u_source +=  new_beta*((u - u_f) + TURB_FORCE_FAC*DRAG_FAC*one_by_vos*nu_t*gradC_x/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(u-u_f);
 
-        mom_v_source +=  new_beta*((v - v_f) + TURB_FORCE_FAC*one_by_vos*nu_t*gradC_y/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(v-v_f);
+        mom_v_source +=  new_beta*((v - v_f) + TURB_FORCE_FAC*DRAG_FAC*one_by_vos*nu_t*gradC_y/closure.sigmaC_) + (1.0-DRAG_FAC)*beta2*(v-v_f);
 
         /* mom_w_source += new_beta*(w-w_s); */
 
@@ -895,8 +901,8 @@ namespace proteus
                                           double dmom_w_source[nSpace])
 				   
       {
-        double meanPack = (closure.maxFraction_ + closure.frFraction_)/2.;
-        double epsPack = (closure.maxFraction_ - closure.frFraction_)/2.;
+        double meanPack = (closure.maxFraction_ + closure.vos_limiter_)/2.;
+        double epsPack = (closure.maxFraction_ - closure.vos_limiter_)/2.;
         double dVos = vos - meanPack;
         double sigma = smoothedHeaviside( epsPack, dVos);
         double packPenalty = 1e6;
@@ -917,12 +923,13 @@ namespace proteus
                                       double& mom_w_source)
       {
         double coeff = closure.gradp_friction(vos);
+        double one_by_vos = 2.0*vos/(vos*vos + fmax(1.0e-8,vos*vos));
    
-        mom_u_source += coeff * grad_vos[0];
-        mom_v_source += coeff * grad_vos[1];
+        mom_u_source += coeff * grad_vos[0]*one_by_vos;
+        mom_v_source += coeff * grad_vos[1]*one_by_vos;
         //mom_w_source += coeff * grad_vos[2];
 
-      }  
+	}  
 
       inline
         void updateFrictionalStress(const double LAG_MU_FR,
@@ -1981,7 +1988,7 @@ namespace proteus
                                                   q_grad_vos[eN_k_nSpace+1],
                                                   q_grad_vos[eN_k_nSpace+1]);
 
-                updateFrictionalPressure(vos,
+		updateFrictionalPressure(vos,
                                          grad_vos,
                                          mom_u_source,
                                          mom_v_source,
