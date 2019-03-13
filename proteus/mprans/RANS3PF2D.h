@@ -2308,8 +2308,8 @@ namespace proteus
 			     // int by parts pressure
 			     int INT_BY_PARTS_PRESSURE)
       {
-	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
-	register double psi[numDOFs_1D];
+	std::valarray<double> TransportMatrix(NNZ_1D), TransposeTransportMatrix(NNZ_1D);
+	std::valarray<double> psi(numDOFs_1D);
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {
 	    for (int i=0; i<NNZ_1D; i++)

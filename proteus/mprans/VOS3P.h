@@ -1577,9 +1577,9 @@ namespace proteus
                  int LUMPED_MASS_MATRIX
                  )
     {
-      register double Rpos[numDOFs], Rneg[numDOFs];
-      register double FluxCorrectionMatrix[NNZ];
-      register double solL[numDOFs];
+      std::valarray<double> Rpos(numDOFs), Rneg(numDOFs);
+      std::valarray<double> FluxCorrectionMatrix(NNZ);
+      std::valarray<double> solL(numDOFs);
       //////////////////
       // LOOP in DOFs //
       //////////////////
@@ -1684,7 +1684,7 @@ namespace proteus
                       int* csrRowIndeces_DofLoops, 
                       int* csrColumnOffsets_DofLoops)
     {
-      register double Rpos[numDOFs], Rneg[numDOFs];
+      std::valarray<double> Rpos(numDOFs), Rneg(numDOFs);
       int ij=0;
 
       //////////////////////////////////////////////////////
@@ -1937,12 +1937,12 @@ namespace proteus
                                              // AUX QUANTITIES OF INTEREST
                                              double* quantDOFs)
     {
-      register double Rpos[numDOFs], Rneg[numDOFs];
-      //register double FluxCorrectionMatrix[NNZ];
+      std::valarray<double> Rpos(numDOFs), Rneg(numDOFs);
+      //std::valarray<double> FluxCorrectionMatrix(NNZ);
       // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
       // Allocate space for the transport matrices
       // This is used for first order KUZMIN'S METHOD
-      register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
+      std::valarray<double> TransportMatrix(NNZ), TransposeTransportMatrix(NNZ);
       std::valarray<double> u_free_dof_old(numDOFs),porosity_free_dof(numDOFs);
       for(int eN=0;eN<nElements_global;eN++)
         for (int j=0;j<nDOF_trial_element;j++)
@@ -1958,7 +1958,7 @@ namespace proteus
         }
 
       // compute entropy and init global_entropy_residual and boundary_integral
-      register double psi[numDOFs], eta[numDOFs], global_entropy_residual[numDOFs], boundary_integral[numDOFs];
+      std::valarray<double> psi(numDOFs), eta(numDOFs), global_entropy_residual(numDOFs), boundary_integral(numDOFs);
       for (int i=0; i<numDOFs; i++)
         {
           // NODAL ENTROPY //

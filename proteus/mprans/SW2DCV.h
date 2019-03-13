@@ -2,6 +2,7 @@
 #define SW2DCV_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include <assert.h>
@@ -871,8 +872,8 @@ namespace proteus
 		 double* huBT,
 		 double* hvBT)
     {
-      register double Rneg[numDOFs],Rpos[numDOFs],
-	hLow[numDOFs],huLow[numDOFs],hvLow[numDOFs];
+      std::valarray<double> Rneg(numDOFs),Rpos(numDOFs),
+	hLow(numDOFs),huLow(numDOFs),hvLow(numDOFs);
 
       ////////////////////////
       // FIRST LOOP in DOFs //
@@ -1098,8 +1099,8 @@ namespace proteus
 			double* huBT,
 			double* hvBT)
     {
-      register double Rneg[numDOFs],Rpos[numDOFs],
-	Kmax[numDOFs], hLow[numDOFs],huLow[numDOFs],hvLow[numDOFs];
+      std::valarray<double> Rneg(numDOFs),Rpos(numDOFs),
+	Kmax(numDOFs), hLow(numDOFs),huLow(numDOFs),hvLow(numDOFs);
 
       ////////////////////////
       // FIRST LOOP in DOFs //
@@ -1361,7 +1362,7 @@ namespace proteus
                                  double* edge_based_cfl,
 				 int debug)
     {
-      register double psi[numDOFsPerEqn];
+      std::valarray<double> psi(numDOFsPerEqn);
       double max_edge_based_cfl = 0.;
       int ij=0;
       for (int i=0; i<numDOFsPerEqn; i++)
@@ -1777,7 +1778,7 @@ namespace proteus
           //////////////////////////////////////////////
 	  // To compute:
 	  //     * Entropy at i-th node
-          register double eta[numDOFsPerEqn];
+	  std::valarray<double> eta(numDOFsPerEqn);
           for (int i=0; i<numDOFsPerEqn; i++)
 	    {
 	      // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
@@ -1796,14 +1797,8 @@ namespace proteus
 	  //     * Smoothness indicator
 	  //     * global entropy residual
           int ij = 0;
-          register double
-	    hyp_flux_h[numDOFsPerEqn],
-	    hyp_flux_hu[numDOFsPerEqn],
-	    hyp_flux_hv[numDOFsPerEqn],
-	    global_entropy_residual[numDOFsPerEqn],
-	    psi[numDOFsPerEqn],
-	    etaMax[numDOFsPerEqn],
-	    etaMin[numDOFsPerEqn];
+	  std::valarray<double> hyp_flux_h(numDOFsPerEqn), hyp_flux_hu(numDOFsPerEqn), hyp_flux_hv(numDOFsPerEqn),
+	    global_entropy_residual(numDOFsPerEqn), psi(numDOFsPerEqn), etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
 	  for (int i=0; i<numDOFsPerEqn; i++)
             {
               double hi = h_dof_old[i]; // solution at time tn for the ith DOF

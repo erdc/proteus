@@ -2,6 +2,7 @@
 #define MCorr_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include PROTEUS_LAPACK_H
@@ -2033,8 +2034,8 @@ namespace proteus
 		   double* MassMatrix //mass matrix
 		   )
       {
-	register double Rpos[numDOFs], Rneg[numDOFs];
-	register double FluxCorrectionMatrix[NNZ];
+	std::valarray<double> Rpos(numDOFs), Rneg(numDOFs);
+	std::valarray<double> FluxCorrectionMatrix(NNZ);
 	//////////////////
 	// LOOP in DOFs //
 	//////////////////
