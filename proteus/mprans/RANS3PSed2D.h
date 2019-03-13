@@ -758,6 +758,12 @@ namespace proteus
         mom_u_source = -rho*g[0];// - vos*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
         mom_v_source = -rho*g[1];// - vos*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
         /* mom_w_source = -vos*g[2];// - vos*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
+	if(vos > closure.frFraction_)
+	  {
+	    mom_u_source += (rho-rho_f)*g[0];
+	    mom_v_source += (rho-rho_f)*g[1];
+ 
+	  }
    
         //u momentum Hamiltonian (pressure)
         mom_u_ham = grad_p[0];
@@ -923,7 +929,7 @@ namespace proteus
         mom_v_source += coeff * grad_vos[1]*one_by_vos;
         //mom_w_source += coeff * grad_vos[2];
 
-      }  
+	}  
 
       inline
         void updateFrictionalStress(const double LAG_MU_FR,
@@ -1982,7 +1988,7 @@ namespace proteus
                                                   q_grad_vos[eN_k_nSpace+1],
                                                   q_grad_vos[eN_k_nSpace+1]);
 
-                updateFrictionalPressure(vos,
+		updateFrictionalPressure(vos,
                                          grad_vos,
                                          mom_u_source,
                                          mom_v_source,
