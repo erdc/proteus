@@ -231,13 +231,13 @@ class TestProjScheme(object):
             print (np.amax(actual.root.u_t11) - np.amin(actual.root.u_t11))
             print (np.amax(actual.root.v_t11) - np.amin(actual.root.v_t11))
         assert np.isclose(np.amax(actual.root.p_t11) - np.amin(actual.root.p_t11),
-                          0.56488226811,
+                          0.5487319518741025,
                           atol=1e-10)
         assert np.isclose(np.amax(actual.root.u_t11) - np.amin(actual.root.u_t11),
-                          1.68689324190,
+                          1.6868932771883602,
                           atol=1e-10)
         assert np.isclose(np.amax(actual.root.v_t11) - np.amin(actual.root.v_t11),
-                          1.68689318024,
+                          1.6868932176078706,
                           atol=1e-10)
         actual.close()
 
@@ -278,12 +278,12 @@ class TestProjScheme(object):
             print (np.amax(actual.root.u_t11) - np.amin(actual.root.u_t11))
             print (np.amax(actual.root.v_t11) - np.amin(actual.root.v_t11))
         assert np.isclose(np.amax(actual.root.p_t11) - np.amin(actual.root.p_t11),
-                          0.58587588032,
+                          0.7118950927442875,
                           atol=1e-10)
         assert np.isclose(np.amax(actual.root.u_t11) - np.amin(actual.root.u_t11),
-                          1.68689320810,
+                          1.6868932482099295,
                           atol=1e-10)
         assert np.isclose(np.amax(actual.root.v_t11) - np.amin(actual.root.v_t11),
-                          1.68689315840,
+                          1.6868933504337913,
                           atol=1e-10)
         actual.close()
