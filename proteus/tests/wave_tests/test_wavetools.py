@@ -2230,6 +2230,74 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         self.assertTrue( round(aRF.eta(x,t) == aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8) )
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
+class VerifyCombinedWaves(unittest.TestCase):
+    def testFailureCombinedWaves(self):
+        from proteus.WaveTools import MonochromaticWaves
+        from proteus.WaveTools import CombineWaves
+        period = 2.
+        waveHeight = 1.
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 0.6
+        dir2 = 0.5
+        waveDir = np.array([dir1,dir2, 0])
+        phi0 = 0.
+        a = MonochromaticWaves(period,
+                               waveHeight,
+                               mwl,
+                               depth,
+                               g,
+                               waveDir)
+
+        with self.assertRaises(SystemExit) as cm:
+            waveList = [period,a]
+            CombineWaves(waveList)          
+        self.assertEqual(cm.exception.code, 1)
+        with self.assertRaises(SystemExit) as cm1:
+            waveList = [a,period]
+            CombineWaves(waveList)          
+        self.assertEqual(cm1.exception.code, 1)
+    def testClassCombinedWaves(self):
+        from proteus.WaveTools import MonochromaticWaves
+        from proteus.WaveTools import RandomWaves
+        from proteus.WaveTools import CombineWaves
+        period = 2.
+        waveHeight = 1.
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 0.6
+        dir2 = 0.5
+        waveDir = np.array([dir1,dir2, 0])
+        phi0 = 0.
+        MW = MonochromaticWaves(period,
+                                waveHeight,
+                                mwl,
+                                depth,
+                                g,
+                                waveDir)
+        RW = RandomWaves(period,
+                         waveHeight,
+                         mwl,
+                         depth,
+                         waveDir,
+                         g,
+                         50,
+                         2,
+                         "JONSWAP")
+        
+        waveList = [MW,RW]
+        CW = CombineWaves(waveList)
+        x = np.zeros(3,)
+        t = 2.1
+        CW_test = RW.eta(x,t)+MW.eta(x,t)
+        npt.assert_equal(CW.eta(x,t),CW_test)        
+        CW_test = RW.u(x,t)+MW.u(x,t)
+        npt.assert_equal(CW.u(x,t),CW_test)        
+        
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
