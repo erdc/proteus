@@ -732,7 +732,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_diffusive.setConstantBC(0.)
         self.vs_diffusive.setConstantBC(0.)
 #end sediment
-        self.ws_diffusive.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInit_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInc_dirichlet.setConstantBC(0.)
