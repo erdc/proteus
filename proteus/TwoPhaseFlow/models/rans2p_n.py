@@ -1,57 +1,40 @@
 from __future__ import absolute_import
+from proteus import *
 from proteus.default_n import *
-from proteus import (StepControl,
-                     TimeIntegration,
-                     NonlinearSolvers,
-                     LinearSolvers,
-                     LinearAlgebraTools)
-from proteus.mprans import RANS2P
-import rans2p_p as physics
+from rans2p_p import *
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
-ct = physics.ct
-myTpFlowProblem = physics.myTpFlowProblem
-nd = myTpFlowProblem.nd
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
+he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
-
-params = myTpFlowProblem.Parameters
-mparams = params.Models # model parameters
-myparams = params.Models.rans2p
-pparams = params.physical # physical parameters
-meshparams = params.mesh
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-he = meshparams.he
-triangleFlag = meshparams.triangleFlag
-nnx = meshparams.nnx
-nny = meshparams.nny
-nnz = meshparams.nnz
-triangleOptions = meshparams.triangleOptions
-parallelPartitioningType = meshparams.parallelPartitioningType
-nLayersOfOverlapForParallel = meshparams.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
+triangleFlag = myTpFlowProblem.triangleFlag
+nnx = myTpFlowProblem.nnx
+nny = myTpFlowProblem.nny
+nnz = myTpFlowProblem.nnz
+triangleOptions = domain.MeshOptions.triangleOptions
 
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
-ns_shockCapturingFactor = myparams.ns_shockCapturingFactor
-ns_lag_shockCapturing = myparams.ns_lag_shockCapturing
-ns_lag_subgridError = myparams.ns_lag_subgridError
+ns_shockCapturingFactor = rans2p_parameters['ns_shockCapturingFactor']
+ns_lag_shockCapturing = rans2p_parameters['ns_lag_shockCapturing']
+ns_lag_subgridError = rans2p_parameters['ns_lag_subgridError']
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeDiscretization = myparams.timeDiscretization
+timeDiscretization=rans2p_parameters['timeDiscretization']
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
-    timeOrder = myparams.timeOrder
+    timeOrder = rans2p_parameters['timeOrder']
     stepController  = Min_dt_cfl_controller
 else: #backward euler
     timeIntegration = BackwardEuler_cfl
@@ -77,8 +60,8 @@ else:
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
 fullNewtonFlag = True
-multilevelNonlinearSolver = NonlinearSolvers.Newton
-levelNonlinearSolver = NonlinearSolvers.Newton
+multilevelNonlinearSolver = Newton
+levelNonlinearSolver      = Newton
 nonlinearSmoother = None
 nonlinearSolverConvergenceTest = 'rits'
 levelNonlinearSolverConvergenceTest = 'r'
@@ -87,13 +70,12 @@ levelNonlinearSolverConvergenceTest = 'r'
 # ********** NUMERICAL FLUXES AND STABILIZATION ********** #
 # ******************************************************** #
 numericalFluxType = RANS2P.NumericalFlux
-# conservativeFlux = {0:'pwl-bdm-opt'}
-conservativeFlux = None
-subgridError = RANS2P.SubgridError(coefficients=physics.coefficients,
+conservativeFlux = None #{0:'pwl-bdm-opt'}
+subgridError = RANS2P.SubgridError(coefficients=coefficients,
                                    nd=nd,
                                    lag=ns_lag_subgridError,
                                    hFactor=FESpace['hFactor'])
-shockCapturing = RANS2P.ShockCapturing(coefficients=physics.coefficients,
+shockCapturing = RANS2P.ShockCapturing(coefficients=coefficients,
                                        nd=nd,
                                        shockCapturingFactor=ns_shockCapturingFactor,
                                        lag=ns_lag_shockCapturing)
@@ -117,7 +99,7 @@ linearSolverConvergenceTest             = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-ns_nl_atol_res = max(myparams.minTol, myparams.tolFac*he**2)
+ns_nl_atol_res = max(1.0e-8, 0.01 * he ** 2)
 nl_atol_res = ns_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.01
@@ -126,5 +108,3 @@ l_atol_res = 0.01*ns_nl_atol_res
 useEisenstatWalker = False
 maxNonlinearIts = 50
 maxLineSearches = 0
-
-auxiliaryVariables = myparams.auxiliaryVariables

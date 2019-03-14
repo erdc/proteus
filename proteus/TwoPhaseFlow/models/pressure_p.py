@@ -8,8 +8,8 @@ from proteus.mprans import Pres
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
-
 myTpFlowProblem = ct.myTpFlowProblem 
+physical_parameters   = myTpFlowProblem.physical_parameters
 initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
@@ -17,26 +17,18 @@ nd = myTpFlowProblem.nd
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
-params = myTpFlowProblem.Parameters
-mparams = params.Models # model parameters
-pparams = params.physical # physical parameters
-
-# MESH #
-meshparams = params.mesh
-genMesh = meshparams.genMesh
-
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-rho_0 = pparams['densityA']
-g = pparams['gravity']
+rho_0 = physical_parameters['densityA']
+g = physical_parameters['gravity']
 
 # ************************************ #
 # ********** MODEL INDEXING ********** #
 # ************************************ #
-PRESSURE_model = mparams.pressure['index']
-V_model = mparams.rans3p['index']
-PINC_model = mparams.pressureIncrement['index']
+PRESSURE_model=3
+V_model=1
+PINC_model=2
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #
@@ -56,9 +48,5 @@ initialConditions = {0: initialConditions['pressure']}
 # ***************************************** #    
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
-    dirichletConditions = {0: boundaryConditions['pressure_DBC']}
-    advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC']}
-else:
-    dirichletConditions = {0: lambda x, flag: domain.bc[flag].p_dirichlet.init_cython()}
-    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].p_advective.init_cython()}
+dirichletConditions = {0: boundaryConditions['pressure_DBC']} 
+advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC']}
