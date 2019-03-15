@@ -28,8 +28,8 @@
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define EPS_FOR_GAMMA_INDICATOR 1E-10
 #define C_FOR_GAMMA_INDICATOR 0.25 // increase gamma to make the indicator more agressive (less dissipative)
-#define USE_GAMMA_INDICATOR 1
-#define ANISOTROPIC_DIFFUSION 1
+#define USE_GAMMA_INDICATOR 0
+#define ANISOTROPIC_DIFFUSION 0
 
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
@@ -42,6 +42,11 @@ namespace proteus
   class cppRANS3PF_base
   {
   public:
+    std::valarray<double> TransportMatrix, TransposeTransportMatrix;
+    std::valarray<double> uStar_psi, vStar_psi, wStar_psi;
+    std::valarray<double> uStar_hi, vStar_hi, wStar_hi, den_hi;
+    std::valarray<double> uStar_min_hiHe, vStar_min_hiHe, wStar_min_hiHe;
+    std::valarray<double> uStar_gamma, vStar_gamma, wStar_gamma;
     virtual ~cppRANS3PF_base() {}
     virtual void setSedClosure(double aDarcy,
                                double betaForch,
@@ -2101,7 +2106,7 @@ namespace proteus
                              const double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_velocityStar_solid,
-                             const double* q_vos,//sed fraction - gco check 
+                             const double* q_vos,//sed fraction - gco check
                              const double* q_dvos_dt,
                              const double* q_grad_vos,
                              const double* q_dragAlpha,
@@ -2295,11 +2300,22 @@ namespace proteus
 			     int INT_BY_PARTS_PRESSURE)
       {
 	register double element_uStar_He[nElements_global], element_vStar_He[nElements_global], element_wStar_He[nElements_global];
-	register double uStar_hi[numDOFs_1D], vStar_hi[numDOFs_1D], wStar_hi[numDOFs_1D], den_hi[numDOFs_1D];
-	register double uStar_min_hiHe[numDOFs_1D], vStar_min_hiHe[numDOFs_1D], wStar_min_hiHe[numDOFs_1D];
-	register double uStar_gamma[numDOFs_1D], vStar_gamma[numDOFs_1D], wStar_gamma[numDOFs_1D];
-	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
-	register double uStar_psi[numDOFs_1D], vStar_psi[numDOFs_1D], wStar_psi[numDOFs_1D];
+	uStar_hi.resize(numDOFs_1D,0.0);
+	vStar_hi.resize(numDOFs_1D,0.0);
+	wStar_hi.resize(numDOFs_1D,0.0);
+	den_hi.resize(numDOFs_1D,0.0);
+	uStar_min_hiHe.resize(numDOFs_1D,0.0);
+	vStar_min_hiHe.resize(numDOFs_1D,0.0);
+	wStar_min_hiHe.resize(numDOFs_1D,0.0);
+	uStar_gamma.resize(numDOFs_1D,0.0);
+	vStar_gamma.resize(numDOFs_1D,0.0);
+	wStar_gamma.resize(numDOFs_1D,0.0);
+	TransportMatrix.resize(NNZ_1D,0.0);
+	TransposeTransportMatrix.resize(NNZ_1D,0.0);
+	uStar_psi.resize(numDOFs_1D,0.0);
+	vStar_psi.resize(numDOFs_1D,0.0);
+	wStar_psi.resize(numDOFs_1D,0.0);
+
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {
 	    for (int i=0; i<NNZ_1D; i++)

@@ -30,8 +30,8 @@
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define EPS_FOR_GAMMA_INDICATOR 1E-10
 #define C_FOR_GAMMA_INDICATOR 0.25 // increase gamma to make the indicator more agressive (less dissipative)
-#define USE_GAMMA_INDICATOR 1
-#define ANISOTROPIC_DIFFUSION 1
+#define USE_GAMMA_INDICATOR 0
+#define ANISOTROPIC_DIFFUSION 0
 
 inline void baryCoords(const double r0[2],
                        const double r1[2],
@@ -51,8 +51,12 @@ namespace proteus
   {
 
   public:
+    std::valarray<double> TransportMatrix, TransposeTransportMatrix;
+    std::valarray<double> uStar_psi, vStar_psi, wStar_psi;
+    std::valarray<double> uStar_hi, vStar_hi, wStar_hi, den_hi;
+    std::valarray<double> uStar_min_hiHe, vStar_min_hiHe, wStar_min_hiHe;
+    std::valarray<double> uStar_gamma, vStar_gamma, wStar_gamma;
     virtual ~cppRANS3PF2D_base() {}
-
     virtual void setSedClosure(double aDarcy,
                                double betaForch,
                                double grain,
@@ -1115,7 +1119,7 @@ namespace proteus
 					    viscosity)*DRAG_FAC;
         //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
         double beta2 = 156976.4;//hack, fall velocity of 0.1 with hydrostatic water
-        
+
         mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s) - TURB_FORCE_FAC*new_beta*nu_t*gradC_x/closure.sigmaC_  +
           (1.0 - phi_s)*(1.0-DRAG_FAC)*beta2*(u-u_s);
 	mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s) - TURB_FORCE_FAC*new_beta*nu_t*gradC_y/closure.sigmaC_ +
@@ -2335,11 +2339,18 @@ namespace proteus
 			     int INT_BY_PARTS_PRESSURE)
       {
 	register double element_uStar_He[nElements_global], element_vStar_He[nElements_global];
-	register double uStar_hi[numDOFs_1D], vStar_hi[numDOFs_1D], den_hi[numDOFs_1D];
-	register double uStar_min_hiHe[numDOFs_1D], vStar_min_hiHe[numDOFs_1D];
-	register double uStar_gamma[numDOFs_1D], vStar_gamma[numDOFs_1D];
-	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
-	register double uStar_psi[numDOFs_1D], vStar_psi[numDOFs_1D];
+	uStar_hi.resize(numDOFs_1D,0.0);
+	vStar_hi.resize(numDOFs_1D,0.0);
+	den_hi.resize(numDOFs_1D,0.0);
+	uStar_min_hiHe.resize(numDOFs_1D,0.0);
+	vStar_min_hiHe.resize(numDOFs_1D,0.0);
+	uStar_gamma.resize(numDOFs_1D,0.0);
+	vStar_gamma.resize(numDOFs_1D,0.0);
+	TransportMatrix.resize(NNZ_1D,0.0);
+	TransposeTransportMatrix.resize(NNZ_1D,0.0);
+	uStar_psi.resize(numDOFs_1D,0.0);
+	vStar_psi.resize(numDOFs_1D,0.0);
+
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {
 	    for (int i=0; i<NNZ_1D; i++)
@@ -2520,7 +2531,7 @@ namespace proteus
                       {
                         sub_phi_dof[I] = 0.0;
                         for (int K=0; K<3; K++)
-                          sub_mesh_dof[I*3+K] = 0.0; 
+                          sub_mesh_dof[I*3+K] = 0.0;
                         for (int J=0; J<3; J++)
                           {
                             for (int K=0; K<3; K++)
@@ -2536,7 +2547,7 @@ namespace proteus
                     //3. Form the G2I interpolation operator X
                     //4. Interpolate the P2 DOF from the parent element to the submesh DOF X
                     double G2I[15*6];//6 DOF to 15 DOF for quadratic interpolation onto 4T refinement
-                    double lagrangeNodes[9*3];//9 new quadratic nodes in addition to the 6 we have 
+                    double lagrangeNodes[9*3];//9 new quadratic nodes in addition to the 6 we have
                     for (int K=0;K<3;K++)
                       {
                         lagrangeNodes[0*3+K] = 0.5*(sub_mesh_dof[0*3+K] + sub_mesh_dof[3*3+0*3+K]);
@@ -3638,7 +3649,7 @@ namespace proteus
                 /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
                 globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=element_active*elementResidual_u[i];
                 globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=element_active*elementResidual_v[i];
-                ncDrag[offset_u+stride_u*vel_l2g[eN_i]]+=mom_u_source_i[i]; 
+                ncDrag[offset_u+stride_u*vel_l2g[eN_i]]+=mom_u_source_i[i];
                 ncDrag[offset_v+stride_v*vel_l2g[eN_i]]+=mom_v_source_i[i];
                 betaDrag[vel_l2g[eN_i]] += betaDrag_i[i];
                 vos_vel_nodes[vel_l2g[eN_i]] += vos_i[i];
