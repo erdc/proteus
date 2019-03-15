@@ -1782,21 +1782,21 @@ class NS_base(object):  # (HasTraits):
                             NDOFs += mod.par_uList[0].size if mod.par_uList[0] is not None else len(mod.uList[0])
                     #
                     with open ("speed_measurement.txt","w") as file:
-                        # write file 
-                        file.write("""Num of time steps: {nts:d} \n""".format(nts=numTimeSteps))
-                        file.write("""Total time: {t:f} \n""".format(t=(end-start)))
-                        file.write("""Num of processors: {Nproc:d} \n""".format(Nproc=Nproc))
-                        file.write("""Total num of DOFs: {NDOFs:d} \n""".format(NDOFs=NDOFs))
-                        file.write("""Num of DOFs per processor: {x:d} \n""".format(x=int(NDOFs/Nproc)))
-                        file.write("""Time per time step, per DOF, per processor: {x:.4E} \n""".format(x=(end-start)/numTimeSteps*Nproc/NDOFs))
-                        # log info
-                        logEvent("""*** Measurement for the speed of the code  ***""", level=4)
-                        logEvent("""    Num of time steps: {nts:d}""".format(nts=numTimeSteps),level=4)
-                        logEvent("""    Total time: {t:f}""".format(t=(end-start)),level=4)
-                        logEvent("""    Num of processors: {Nproc:d}""".format(Nproc=Nproc),level=4)
-                        logEvent("""    Total num of DOFs: {NDOFs:d}""".format(NDOFs=NDOFs),level=4)
-                        logEvent("""    Num of DOFs per processor: {x:d}""".format(x=int(NDOFs/Nproc)),level=4)
-                        logEvent("""    Time per time step, per DOF, per processor: {x:.4E}""".format(x=(end-start)/numTimeSteps*Nproc/NDOFs),level=4)
+                        # write file and log this event
+                        multiple_line_string = """ ******************** Measurements of speed ********************
+                        Num of time steps: {nts:d}
+                        Total time: {t:f}
+                        Num of processors: {Nproc:d}
+                        Total num of DOFs: {NDOFs:d}
+                        Num of DOFs per processor: {aux1:d}
+                        Time per time step, per DOF, per processor: {aux2:.4E} \n""".format(nts=numTimeSteps,
+                                                                                            t=(end-start),
+                                                                                            Nproc=Nproc,
+                                                                                            NDOFs=NDOFs,
+                                                                                            aux1=int(NDOFs/Nproc),
+                                                                                            aux2=(end-start)/numTimeSteps*Nproc/NDOFs)
+                        file.write(multiple_line_string)
+                        logEvent(multiple_line_string,level=4)
                     #
                     measureSpeed = False
                 #
@@ -1809,21 +1809,21 @@ class NS_base(object):  # (HasTraits):
                         NDOFs += mod.par_uList[0].size if mod.par_uList[0] is not None else len(mod.uList[0])
                 #
                 with open ("speed_measurement.txt","w") as file:
-                    # write file
-                    file.write("""Num of time steps: {nts:d} \n""".format(nts=numTimeSteps))
-                    file.write("""Total time: {t:f} \n""".format(t=(end-start)))
-                    file.write("""Num of processors: {Nproc:d} \n""".format(Nproc=Nproc))
-                    file.write("""Total num of DOFs: {NDOFs:d} \n""".format(NDOFs=NDOFs))
-                    file.write("""Num of DOFs per processor: {x:d} \n""".format(x=int(NDOFs/Nproc)))
-                    file.write("""Time per time step, per DOF, per processor: {x:.4E} \n""".format(x=(end-start)/numTimeSteps*Nproc/NDOFs))
-                    # log info
-                    logEvent("""*** Measurement for the speed of the code  ***""", level=4)
-                    logEvent("""    Num of time steps: {nts:d}""".format(nts=numTimeSteps),level=4)
-                    logEvent("""    Total time: {t:f}""".format(t=(end-start)),level=4)
-                    logEvent("""    Num of processors: {Nproc:d}""".format(Nproc=Nproc),level=4)
-                    logEvent("""    Total num of DOFs: {NDOFs:d}""".format(NDOFs=NDOFs),level=4)
-                    logEvent("""    Num of DOFs per processor: {x:d}""".format(x=int(NDOFs/Nproc)),level=4)
-                    logEvent("""    Time per time step, per DOF, per processor: {x:.4E}""".format(x=(end-start)/numTimeSteps*Nproc/NDOFs),level=4)
+                    # write file and log this event
+                    multiple_line_string = """ ******************** Measurements of speed ********************
+                    Num of time steps: {nts:d}
+                    Total time: {t:f}
+                    Num of processors: {Nproc:d}
+                    Total num of DOFs: {NDOFs:d}
+                    Num of DOFs per processor: {aux1:d}
+                    Time per time step, per DOF, per processor: {aux2:.4E} \n""".format(nts=numTimeSteps,
+                               t=(end-start),
+                               Nproc=Nproc,
+                               NDOFs=NDOFs,
+                               aux1=int(NDOFs/Nproc),
+                               aux2=(end-start)/numTimeSteps*Nproc/NDOFs)
+                    file.write(multiple_line_string)
+                    logEvent(multiple_line_string,level=4)
                 #
                 measureSpeed = False
             #
