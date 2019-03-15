@@ -857,7 +857,8 @@ namespace proteus
         // mass (volume accumulation)
         //..hardwired
 
-        double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 0.0;
+        //double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 1e-10;
+        double phi_s_effect = smoothedHeaviside(eps_rho*0.3,distance_to_omega_solid)*(1-1e-10)+1e-10;
         if(USE_SBM>0)
           phi_s_effect = 1.0;
         //u momentum accumulation
@@ -3264,7 +3265,25 @@ namespace proteus
        					  tau_v0,
        					  tau_p0,
        					  q_cfl[eN_k]);
-
+          if(q_cfl[eN_k]>1000)
+          {
+            std::cout<<eN<<"\t"
+                  <<k<<"\t"
+                  <<hFactor<<"\t"
+       					  <<elementDiameter[eN]<<"\t"
+       					  <<tmpR<<"\t"
+       					  <<dmom_u_acc_u<<"\t"
+       					  <<dmom_adv_sge<<"\t"
+       					  <<mom_uu_diff_ten[1]<<"\t"
+       					  <<dmom_u_ham_grad_p[0]<<"\t"
+       					  <<tau_v0<<"\t"
+       					  <<tau_p0<<"\t"
+       					  <<q_cfl[eN_k]
+                  <<"\n";
+          }
+          //YY: penalty term used in algortihm has no contraints on dt here.
+          if(phi_solid[eN_k]<=h_phi)
+            q_cfl[eN_k] = 0.0;
        		calculateSubgridError_tau(Ct_sge,Cd_sge,
        					  G,G_dd_G,tr_G,
        					  tmpR,//dmom_u_acc_u_t,
@@ -4598,6 +4617,32 @@ namespace proteus
                                                flux_mom_w_adv_ext,
                                                &ebqe_velocity_star[ebNE_kb_nSpace],
                                                &ebqe_velocity[ebNE_kb_nSpace]);
+                if(std::isnan(ebqe_velocity[ebNE_kb_nSpace]) || std::isnan(ebqe_velocity[ebNE_kb_nSpace+1]))
+                 std::cout<<"************************************YY-something-wrong-nan-value=ebne\t"<<ebNE<<"\t"
+                          <<kb<<"\t"
+                          <<distance_to_omega_solid<<"\t"
+                          <<dmom_u_acc_u_ext<<"\t"<<ebqe_rho[ebNE_kb]<<"\t"
+                          <<rho_0<<","<<rho_1<<","<<ebqe_phi_ext[ebNE_kb]<<","<<porosity_ext<<","<<
+                           normal[0]<<","<<normal[1]<<","<<
+                           dmom_u_acc_u_ext<<","<<
+                           bc_p_ext<<","<<
+                           bc_u_ext<<","<<
+                           bc_v_ext<<","<<
+                           bc_w_ext<<","<<
+                           bc_mass_adv_ext<<","<<
+                           bc_mom_u_adv_ext<<","<<
+                           bc_mom_v_adv_ext<<","<<
+                           bc_mom_w_adv_ext<<","<<
+                           ebqe_bc_flux_mass_ext[ebNE_kb]+MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1])<<","<<//BC is relative mass flux
+                           ebqe_bc_flux_mom_u_adv_ext[ebNE_kb]<<","<<
+                           ebqe_bc_flux_mom_v_adv_ext[ebNE_kb]<<","<<
+                           ebqe_bc_flux_mom_w_adv_ext[ebNE_kb]<<","<<
+                           p_ext<<","<<
+                           u_ext<<","<<
+                           v_ext<<","<<
+                           w_ext<<","<<
+                           ebqe_velocity[ebNE_kb_nSpace]<<","<<ebqe_velocity[ebNE_kb_nSpace+1]<<","
+                          <<"\n";
                 // mql: save gradient of solution for other models and to compute errors
                 for (int I=0;I<nSpace;I++)
                   {
