@@ -229,7 +229,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)  
 
-    def setAtmosphere(self, orientation=None, vof_air=1.):
+    def setAtmosphere(self, orientation=None, vof_air=1., kInflow=None, dInflow=None):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
@@ -251,7 +251,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.pInit_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
         self.vos_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(1e-30)
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
@@ -267,9 +266,21 @@ class BC_RANS(BoundaryConditions.BC_Base):
         if orientation[2] == 1. or orientation[2] == -1.:
             self.w_diffusive.setConstantBC(0.)
             self.ws_diffusive.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(1e-30)
-        self.k_diffusive.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.)
+        if kInflow is not None:
+            self.k_dirichlet.setConstantBC(kInflow)
+            self.k_diffusive.setConstantBC(0.)
+        else:
+            self.k_dirichlet.setConstantBC(1.)
+            self.k_diffusive.setConstantBC(0.)
+            logEvent("WARNING: Dirichlet condition for k in "+str(self.BC_type)+" has not been set")
+        if dInflow is not None:
+            self.dissipation_dirichlet.setConstantBC(dInflow)
+            self.dissipation_diffusive.setConstantBC(0.)
+        else:
+            self.dissipation_dirichlet.setConstantBC(1e10)
+            self.dissipation_diffusive.setConstantBC(0.)
+            logEvent("WARNING: Dirichlet condition for dissipation in "+str(self.BC_type)+" has not been set")
+
 
     def setRigidBodyMoveMesh(self, body):
         """
@@ -481,9 +492,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.vs_dirichlet.setConstantBC(0.0)
         self.ws_dirichlet.setConstantBC(0.0)
         self.k_dirichlet.setConstantBC(kInflow)
+        self.k_diffusive.setConstantBC(0.0)
         self.dissipation_dirichlet.setConstantBC(dInflow)
         self.dissipation_diffusive.setConstantBC(0.)
-        self.k_diffusive.setConstantBC(0.0)
 
     def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
@@ -737,8 +748,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.pInit_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInc_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
-        self.k_diffusive.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.)
         if U is not None:
             def get_inlet_ux_dirichlet(i):
                 def ux_dirichlet(x, t):
@@ -760,15 +769,21 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.v_dirichlet.uOfXT = get_inlet_ux_dirichlet(1)
             self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2)
             self.u_diffusive.resetBC()
-
+#Tubulence
         if kInflow is not None:
-            self.k_dirichlet.uOfXT = inlet_k_dirichlet
-            self.k_advective.resetBC()
-            self.k_diffusive.resetBC()
+            self.k_dirichlet.setConstantBC(kInflow)
+            self.k_diffusive.setConstantBC(0.)
+        else:
+            self.k_dirichlet.setConstantBC(1.)
+            self.k_diffusive.setConstantBC(0.)
+            logEvent("WARNING: Dirichlet condition for k in "+str(self.BC_type)+" has not been set")
         if dissipationInflow is not None:
-            self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
-            self.dissipation_advective.resetBC()
-            self.dissipation_diffusive.resetBC()
+            self.dissipation_dirichlet.setConstantBC(dissipationInflow)
+            self.dissipation_diffusive.setConstantBC(0.)
+        else:
+            self.dissipation_dirichlet.setConstantBC(1e10)
+            self.dissipation_diffusive.setConstantBC(0.)
+            logEvent("WARNING: Dirichlet condition for dissipation in "+str(self.BC_type)+" has not been set")
 
 
 # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
