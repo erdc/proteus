@@ -1,5 +1,6 @@
-dist: trusty
-sudo: required
+os: linux
+dist: xenial
+#sudo: required
 
 language: python
 
@@ -7,10 +8,9 @@ env:
   - TEST_PROFILE="proteus"
   - TEST_PROFILE="1st_set"
   - TEST_PROFILE="2nd_set"  
-    #- TEST_PROFILE="air-water-vv"
 
 python:
-- 2.7
+  - 2.7
 
 addons:
   apt:
@@ -22,40 +22,28 @@ addons:
 
 before_install:
 - pip install pyliblzma
-- mkdir git-lfs-install
-- cd git-lfs-install
-- wget https://github.com/git-lfs/git-lfs/releases/download/v2.6.1/git-lfs-linux-amd64-v2.6.1.tar.gz
-- tar xzvf git-lfs-linux-amd64-v2.6.1.tar.gz
-- PREFIX=${HOME} ./install.sh
-- export PATH=${HOME}/bin:${PATH}
-- cd ..
 
 install:
-- git lfs fetch
-- git lfs checkout
+- git lfs pull
 - ./stack/hit/bin/hit init-home
 - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
-- ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_14_04 --objects="build"
+- ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_16_04 --objects="build"
 - make stack/default.yaml
 - pushd $HOME
 - mkdir -p hashdist_src
 - mkdir -p hashdist_bld
-- cd .hashdist
-- rm -rf src bld
-- ln -s ../hashdist_src src 
-- ln -s ../hashdist_bld bld
-- pwd
-- ls bld src
+- rm -rf .hashdist/src .hashdist/bld
+- ln -s $HOME/hashdist_src .hashdist/src 
+- ln -s $HOME/hashdist_bld .hashdist/bld
 - popd
-- cd stack
+- pushd stack
 - ../stack/hit/bin/hit build -j 2 -v default.yaml
-- cd ..
-- make distclean
-- PROTEUS_OPT="-O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make install N=2
+- popd
+- export PATHSAVE=$PATH
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
+- PROTEUS_OPT="-O2 -UNDEBUG -w" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
 - export SSL_CERT_DIR=/etc/ssl/certs
-- ls $SSL_CERT_DIR
 - pip install matplotlib
 
 cache:
@@ -65,17 +53,14 @@ cache:
     - $HOME/hashdist_bld    
 
 script:
-  - which python
-  - python -c "import sys; print sys.path"
-  - python -c "import backports"
-  - python -c "import backports.functools_lru_cache"
   - export MPLBACKEND="AGG"
-  - python -c "import matplotlib"
-  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then py.test --forked -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests --cov=linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus; fi
+  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
   
-  - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then py.test --forked -v air-water-vv/Tests/1st_set/; fi
+  - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
   
-  - if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then py.test --forked -v air-water-vv/Tests/2nd_set/; fi
+  - if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set; fi
+  - unset LD_LIBRARY_PATH #reset things so we don't break cache?
+  - export PATH=$PATHSAVE
 
 notifications:
   email:
