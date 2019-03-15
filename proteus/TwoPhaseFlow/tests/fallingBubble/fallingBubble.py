@@ -15,6 +15,10 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 opts= Context.Options([
     ('nd',2,"Num of dimensions"),
     ('ns_model',0,"ns_model = {rans2p,rans3p}"),
+<<<<<<< HEAD
+=======
+    ('ls_model',1,"ls_model = {ncls,clsvof}"),
+>>>>>>> TwoPhaseFlow
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
@@ -30,7 +34,11 @@ opts= Context.Options([
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
 tank_dim = (1.0,1.0) if opts.nd == 2 else (1.0,1.0,1.0)
+<<<<<<< HEAD
 # MESH 
+=======
+# MESH
+>>>>>>> TwoPhaseFlow
 refinement = opts.refinement
 structured=True
 boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
@@ -39,7 +47,11 @@ if structured:
     nnx = 4 * refinement**2 + 1
     nny = nnx
     nnz = None if opts.nd == 2 else nnx
+<<<<<<< HEAD
     domain = Domain.RectangularDomain(tank_dim)    
+=======
+    domain = Domain.RectangularDomain(tank_dim)
+>>>>>>> TwoPhaseFlow
     domain.boundaryTags = boundaryTags
     he = tank_dim[0]/(nnx - 1)
 else:
@@ -170,7 +182,11 @@ def vel_v_AFBC(x,flag):
 def vel_w_AFBC(x,flag):
     if not (flag==boundaryTags['top']):
         return lambda x,t: 0.
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> TwoPhaseFlow
 # DIFFUSIVE FLUX #
 def pressure_increment_DFBC(x,flag):
     if not (flag == boundaryTags['top']):
@@ -208,7 +224,11 @@ boundaryConditions = {
     'vel_v_DBC': vel_v_DBC,
     'vel_w_DBC': vel_w_DBC,
     'clsvof_DBC': clsvof_DBC,
+<<<<<<< HEAD
     # ADVECTIVE FLUX BCs # 
+=======
+    # ADVECTIVE FLUX BCs #
+>>>>>>> TwoPhaseFlow
     'pressure_AFBC': pressure_AFBC,
     'pressure_increment_AFBC': pressure_increment_AFBC,
     'vel_u_AFBC': vel_u_AFBC,
@@ -222,6 +242,10 @@ boundaryConditions = {
     'vel_w_DFBC': vel_w_DFBC,
     'clsvof_DFBC': clsvof_DFBC}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+<<<<<<< HEAD
+=======
+                                             ls_model=opts.ls_model,
+>>>>>>> TwoPhaseFlow
                                              nd=opts.nd,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -233,3 +257,25 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
+<<<<<<< HEAD
+=======
+
+params = myTpFlowProblem.Parameters
+
+# MESH PARAMETERS
+params.mesh.genMesh = opts.genMesh
+params.mesh.he = he
+if structured:
+    params.mesh.nnx = nnx
+    params.mesh.nny = nny
+
+# if opts.ns_model == 0:
+#     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
+# elif opts.ns_model == 1:
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+#     myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+#     myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+#     myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+#     myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4
+>>>>>>> TwoPhaseFlow

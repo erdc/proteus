@@ -8,6 +8,7 @@ from proteus.mprans import RANS3PF
 # ********** READ FROM myTpFlowProblem ********** #
 # *********************************************** #
 ct = Context.get()
+<<<<<<< HEAD
 myTpFlowProblem = ct.myTpFlowProblem 
 physical_parameters = myTpFlowProblem.physical_parameters
 rans3p_parameters   = myTpFlowProblem.rans3p_parameters
@@ -18,10 +19,19 @@ MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0
 if myTpFlowProblem.forceTerms is not None:
     forceTerms = myTpFlowProblem.forceTerms
     MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=1
+=======
+
+myTpFlowProblem = ct.myTpFlowProblem 
+initialConditions   = myTpFlowProblem.initialConditions
+boundaryConditions  = myTpFlowProblem.boundaryConditions
+nd = myTpFlowProblem.nd
+movingDomain = myTpFlowProblem.movingDomain
+>>>>>>> TwoPhaseFlow
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
 
+<<<<<<< HEAD
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
@@ -31,10 +41,30 @@ rho_1 = physical_parameters['densityB']
 nu_1 = physical_parameters['viscosityB']
 sigma_01 = physical_parameters['surf_tension_coeff']
 g = physical_parameters['gravity']
+=======
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+pparams = params.physical # physical parameters
+
+# MESH #
+meshparams = params.mesh
+genMesh = meshparams.genMesh
+
+# ***************************************** #
+# ********** PHYSICAL PARAMETERS ********** #
+# ***************************************** #
+rho_0 = pparams['densityA']
+nu_0 = pparams['viscosityA']
+rho_1 = pparams['densityB']
+nu_1 = pparams['viscosityB']
+sigma_01 = pparams['surf_tension_coeff']
+g = pparams['gravity']
+>>>>>>> TwoPhaseFlow
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
+<<<<<<< HEAD
 useMetrics = rans3p_parameters['useMetrics']
 epsFact_viscosity = rans3p_parameters['epsFact_viscosity']
 epsFact_density = rans3p_parameters['epsFact_density']
@@ -50,6 +80,22 @@ ARTIFICIAL_VISCOSITY = rans3p_parameters['ARTIFICIAL_VISCOSITY']
 INT_BY_PARTS_PRESSURE = rans3p_parameters['INT_BY_PARTS_PRESSURE']
 cE = rans3p_parameters['cE']
 cMax = rans3p_parameters['cMax']
+=======
+useMetrics = mparams.rans3p['useMetrics']
+epsFact_viscosity = mparams.rans3p['epsFact_viscosity']
+epsFact_density = mparams.rans3p['epsFact_density']
+ns_forceStrongDirichlet = mparams.rans3p['ns_forceStrongDirichlet']
+weak_bc_penalty_constant = mparams.rans3p['weak_bc_penalty_constant']
+useRBLES = mparams.rans3p['useRBLES']
+useRANS = mparams.rans3p['useRANS']
+ns_closure = mparams.rans3p['ns_closure']
+useVF = mparams.rans3p['useVF']
+PSTAB = mparams.rans3p['PSTAB']
+USE_SUPG = mparams.rans3p['USE_SUPG']
+ARTIFICIAL_VISCOSITY = mparams.rans3p['ARTIFICIAL_VISCOSITY']
+cE = mparams.rans3p['cE']
+cMax = mparams.rans3p['cMax']
+>>>>>>> TwoPhaseFlow
 
 # *************************************** #
 # ********** TURBULENCE MODELS ********** #
@@ -66,10 +112,17 @@ RD_model=None
 MCORR_model=None
 SED_model=None
 VOS_model=None
+<<<<<<< HEAD
 CLSVOF_model=0
 V_model=1
 PINC_model=2
 PRESSURE_model=3
+=======
+CLSVOF_model = mparams.clsvof['index']
+V_model = mparams.rans3p['index']
+PINC_model = mparams.pressureIncrement['index']
+PRESSURE_model = mparams.pressure['index']
+>>>>>>> TwoPhaseFlow
 
 # ********************************** #
 # ********** COEFFICIENTS ********** #
@@ -105,9 +158,13 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     PSTAB=PSTAB,
                                     USE_SUPG=USE_SUPG,
                                     ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY,
+<<<<<<< HEAD
                                     INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE,
                                     cE=cE, cMax=cMax,
                                     MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY)
+=======
+                                    cE=cE, cMax=cMax)
+>>>>>>> TwoPhaseFlow
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
@@ -123,6 +180,7 @@ else:
 # ***************************************** #    
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
+<<<<<<< HEAD
 if nd==2:
     dirichletConditions = {0: boundaryConditions['vel_u_DBC'],
                            1: boundaryConditions['vel_v_DBC']}
@@ -140,3 +198,28 @@ else:
     diffusiveFluxBoundaryConditions = {0:{0: boundaryConditions['vel_u_DFBC']},
                                        1:{1: boundaryConditions['vel_v_DFBC']},
                                        2:{2: boundaryConditions['vel_w_DFBC']}}
+=======
+
+if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModule is False:
+    dirichletConditions = {0: boundaryConditions['vel_u_DBC'],
+                           1: boundaryConditions['vel_v_DBC']}
+    advectiveFluxBoundaryConditions = {0: boundaryConditions['vel_u_AFBC'],
+                                       1: boundaryConditions['vel_v_AFBC']}
+    diffusiveFluxBoundaryConditions = {0: {0: boundaryConditions['vel_u_DFBC']},
+                                       1: {1: boundaryConditions['vel_v_DFBC']}}
+    if nd == 3:
+        dirichletConditions[2] = boundaryConditions['vel_w_DBC']
+        advectiveFluxBoundaryConditions[2] = boundaryConditions['vel_w_AFBC']
+        diffusiveFluxBoundaryConditions[2] = {2: boundaryConditions['vel_w_AFBC']}
+else:
+    dirichletConditions = {0: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
+                           1: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}
+    advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].u_advective.init_cython(),
+                                       1: lambda x, flag: domain.bc[flag].v_advective.init_cython()}
+    diffusiveFluxBoundaryConditions = {0: {0:lambda x, flag: domain.bc[flag].u_diffusive.init_cython()},
+                                       1: {1:lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
+    if nd == 3:
+        dirichletConditions[2] = lambda x, flag: domain.bc[flag].w_dirichlet.init_cython()
+        advectiveFLuxBoundaryConditions[2] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
+        diffusiveFluxBoundaryConditions[2] = {2: lambda x, flag: domain.bc[flag].w_diffusive.init_cython()}
+>>>>>>> TwoPhaseFlow

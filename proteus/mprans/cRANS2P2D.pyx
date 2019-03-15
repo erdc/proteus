@@ -82,6 +82,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
+                               int * rp_l2g,
+                               int * rvel_l2g,
                                double * p_dof,
                                double * u_dof,
                                double * v_dof,
@@ -412,7 +414,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                           int * csrRowIndeces_p_p, int * csrColumnOffsets_p_p,
                                           int * csrRowIndeces_u_u, int * csrColumnOffsets_u_u,
                                           int * csrRowIndeces_v_v, int * csrColumnOffsets_v_v,
-                                          int * csrRowIndeces_v_v, int * csrColumnOffsets_w_w,
+                                          int * csrRowIndeces_w_w, int * csrColumnOffsets_w_w,
                                           double * advection_matrix)
         void getTwoPhaseInvScaledLaplaceOperator(double * mesh_trial_ref,
                                                  double * mesh_grad_trial_ref,
@@ -440,11 +442,11 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                                  int * sdInfo_p_p_rowptr, int * sdInfo_p_p_colind,
                                                  int * sdInfo_u_u_rowptr, int * sdInfo_u_u_colind,
                                                  int * sdInfo_v_v_rowptr, int * sdInfo_v_v_colind,
-                                                 int * sdInfo_w_w_rowptr, int * sdInfo_w_w_colind,                                                 
+                                                 int * sdInfo_w_w_rowptr, int * sdInfo_w_w_colind,
                                                  int * csrRowIndeces_p_p, int * csrColumnOffsets_p_p,
                                                  int * csrRowIndeces_u_u, int * csrColumnOffsets_u_u,
                                                  int * csrRowIndeces_v_v, int * csrColumnOffsets_v_v,
-                                                 int * csrRowIndeces_w_w, int * csrColumnOffsets_w_w,                                                 
+                                                 int * csrRowIndeces_w_w, int * csrColumnOffsets_w_w,
                                                  double * laplace_matrix)
         void getTwoPhaseScaledMassOperator(int scale_type,
                                            int use_numerical_viscosity,
@@ -482,13 +484,15 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                            int * csrRowIndeces_v_v,
                                            int * csrColumnOffsets_v_v,
                                            int * csrRowIndeces_w_w,
-                                           int * csrColumnOffsets_w_w,                                           
+                                           int * csrColumnOffsets_w_w,
                                            double * mass_matrix)
     RANS2P2D_base * newRANS2P2D(int nSpaceIn,
                                 int nQuadraturePoints_elementIn,
                                 int nDOF_mesh_trial_elementIn,
                                 int nDOF_trial_elementIn,
                                 int nDOF_test_elementIn,
+                                int nDOF_v_trial_elementIn,
+                                int nDOF_v_test_elementIn,
                                 int nQuadraturePoints_elementBoundaryIn,
                                 int CompKernelFlag)
 
@@ -501,6 +505,8 @@ cdef class cRANS2P2D_base:
                   int nDOF_mesh_trial_elementIn,
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
+                  int nDOF_v_trial_elementIn,
+                  int nDOF_v_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
                   int CompKernelFlag):
         self.thisptr = newRANS2P2D(nSpaceIn,
@@ -508,6 +514,8 @@ cdef class cRANS2P2D_base:
                                    nDOF_mesh_trial_elementIn,
                                    nDOF_trial_elementIn,
                                    nDOF_test_elementIn,
+                                   nDOF_v_trial_elementIn,
+                                   nDOF_v_test_elementIn,
                                    nQuadraturePoints_elementBoundaryIn,
                                    CompKernelFlag)
 
@@ -590,6 +598,8 @@ cdef class cRANS2P2D_base:
                           # VRANS end
                           numpy.ndarray p_l2g,
                           numpy.ndarray vel_l2g,
+                          numpy.ndarray rp_l2g,
+                          numpy.ndarray rvel_l2g,
                           numpy.ndarray p_dof,
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
@@ -769,6 +779,8 @@ cdef class cRANS2P2D_base:
                                        # VRANS end
                                        < int * > p_l2g.data,
                                        < int * > vel_l2g.data,
+                                       < int * > rp_l2g.data,
+                                       < int * > rvel_l2g.data,
                                        < double * > p_dof.data,
                                        < double * > u_dof.data,
                                        < double * > v_dof.data,

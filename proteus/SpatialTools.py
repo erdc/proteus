@@ -445,7 +445,10 @@ class Cuboid(Shape):
                         self.BC['x-'],
                         self.BC['z+']]
         # self.BC = BCContainer(self.BC_dict)
-        self.barycenter = np.array(barycenter) or np.array(coords)
+        if barycenter is None:
+            self.barycenter = np.array(coords)
+        else:
+            self.barycenter = np.array(barycenter)
         self.It = np.array([[old_div((W**2.+H**2.),12.), 0, 0],
                             [0, old_div((L**2.+H**2.),12.), 0],
                             [0, 0, old_div((W**2.+L**2.),12.)]])
@@ -522,7 +525,6 @@ class Sphere(Shape):
         coords=(0.,0.,0.)
         n_domain_vertices = 8
         radius = self.radius
-        coords = self.coords
         nSectors = self.nSectors
         diameter=2.0*radius
         grain_centers  = {}
@@ -717,7 +719,7 @@ class Sphere(Shape):
                     facets.append([[ bottom_nodes[(ii,jj)],bottom_nodes[(ii+1,jj)],bottom_nodes[(ii,jj+1)] ]])
                     facets.append([[ bottom_nodes[(ii+1,jj)],bottom_nodes[(ii+1,jj+1)],bottom_nodes[(ii,jj+1)] ]])
                     nF+=2
-        self.vertices = np.array(vertices)
+        self.vertices = np.array(vertices)+self.coords
 
         self.vertexFlags = np.array([1]*len(vertices))
         self.facets = np.array(facets)
@@ -1301,6 +1303,7 @@ def _assembleGeometry(domain, BC_class):
         boundary conditions of the shape.
     """
     # reinitialize geometry of domain
+    domain.useSpatialTools = True
     domain.vertices = []
     domain.vertexFlags = []
     domain.segments = []
@@ -1540,15 +1543,20 @@ def _generateMesh(domain):
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
+    from proteus import Comm
+    comm = Comm.get()
     mesh = domain.MeshOptions
-    if mesh.outputFiles['poly'] is True:
-        domain.writePoly(mesh.outputFiles_name)
-    if mesh.outputFiles['ply'] is True:
-        domain.writePLY(mesh.outputFiles_name)
-    if mesh.outputFiles['asymptote'] is True:
-        domain.writeAsymptote(mesh.outputFiles_name)
-    if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
-        domain.writeGeo(mesh.outputFiles_name)
+    if comm.isMaster():
+        if mesh.outputFiles['poly'] is True:
+            domain.writePoly(mesh.outputFiles_name)
+        if mesh.outputFiles['ply'] is True:
+            domain.writePLY(mesh.outputFiles_name)
+        if mesh.outputFiles['asymptote'] is True:
+            domain.writeAsymptote(mesh.outputFiles_name)
+        if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
+            domain.writeGeo(mesh.outputFiles_name)
+    else:
+        domain.polyfile=mesh.outputFiles_name
     mesh.setTriangleOptions()
 
 

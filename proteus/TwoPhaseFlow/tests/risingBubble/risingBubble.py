@@ -16,9 +16,16 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 opts= Context.Options([
     ("test_case",1,"Rising bubble test cases"),
     ('ns_model',1,"ns_model = {rans2p,rans3p}"),
+<<<<<<< HEAD
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.25,"Desired CFL restriction"),
+=======
+    ('ls_model',1,"ls_model = {ncls,clsvof}"),
+    ("final_time",3.0,"Final time for simulation"),
+    ("dt_output",0.01,"Time interval to output solution"),
+    ("cfl",0.33,"Desired CFL restriction"),
+>>>>>>> TwoPhaseFlow
     ("refinement",3,"level of refinement")
     ])
 
@@ -37,8 +44,12 @@ tank_dim = (1.0,2.0)
 refinement = opts.refinement
 structured=True
 if structured:
+<<<<<<< HEAD
     nnx = 5*(2**refinement)+1
     #nnx = 4 * refinement**2 +2
+=======
+    nnx = 4 * refinement**2 +2
+>>>>>>> TwoPhaseFlow
     nny = 2*nnx
     domain = Domain.RectangularDomain(tank_dim)
     boundaryTags = domain.boundaryTags
@@ -78,6 +89,7 @@ class clsvof_init_cond(object):
         r = np.sqrt((x[0]-xB)**2 + (x[1]-yB)**2)
         # dist to surface of bubble
         dB = rB - r
+<<<<<<< HEAD
         #return dB
         if dB>0:
             return 1.0
@@ -85,6 +97,9 @@ class clsvof_init_cond(object):
             return 0.0
         else:
             return -1.0
+=======
+        return dB
+>>>>>>> TwoPhaseFlow
 
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
@@ -118,6 +133,10 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+<<<<<<< HEAD
+=======
+                                             ls_model=opts.ls_model,
+>>>>>>> TwoPhaseFlow
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -130,9 +149,14 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=False)
+<<<<<<< HEAD
 physical_parameters = myTpFlowProblem.physical_parameters
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
 myTpFlowProblem.clsvof_parameters['disc_ICs']=True
+=======
+physical_parameters = myTpFlowProblem.Parameters.physical
+physical_parameters['gravity'] = [0.0, -0.98, 0.0]
+>>>>>>> TwoPhaseFlow
 if opts.test_case==1:
     physical_parameters['densityA'] = 1000.0
     physical_parameters['viscosityA'] = 10.0/physical_parameters['densityA']
@@ -146,3 +170,25 @@ else: #test_case=2
     physical_parameters['densityB'] = 1.0
     physical_parameters['viscosityB'] = 0.1/physical_parameters['densityB']
     physical_parameters['surf_tension_coeff'] = 1.96    
+<<<<<<< HEAD
+=======
+
+params = myTpFlowProblem.Parameters
+
+# MESH PARAMETERS
+params.mesh.genMesh = opts.genMesh
+params.mesh.he = he
+if structured:
+    params.mesh.nnx = nnx
+    params.mesh.nny = nny
+
+# if opts.ns_model == 0:
+#     myTpFlowProblem.Parameters.Models.rans2p['index'] = 0
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 1
+# elif opts.ns_model == 1:
+#     myTpFlowProblem.Parameters.Models.clsvof['index'] = 0
+#     myTpFlowProblem.Parameters.Models.rans3p['index'] = 1
+#     myTpFlowProblem.Parameters.Models.pressureIncrement['index'] = 2
+#     myTpFlowProblem.Parameters.Models.pressure['index'] = 3
+#     myTpFlowProblem.Parameters.Models.pressureInitial['index'] = 4
+>>>>>>> TwoPhaseFlow

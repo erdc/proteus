@@ -58,10 +58,16 @@ class D_base(object):
         self.BCbyFlag = {}
         # use_gmsh hack
         self.use_gmsh = False
-        self.MeshOptions = MeshTools.MeshOptions(self)
+        self.MeshOptions = MeshTools.MeshOptions(self.nd)
         # for PUMI compatibility
         self.faceList=[] #list of the boundary IDs that have corresponding BCs, might be the same as self.facets[]
         self.regList=[] # list of regions in the domain, this might be the same as self.regions[]
+        # to know if domain uses SpatialTools
+        # automatically set to True when proteus.SpatialTools.assembleDomain()
+        # is called
+        self.useSpatialTools = False
+        # default value for barycenters (compatibility with TwoPhaseFlow)
+        self.barycenters = None
 
     #Get the mesh entity to model entity classification for every entity
     def isOnLine(self,pointA,pointB,testPoint):
@@ -400,7 +406,7 @@ class RectangularDomain(D_base):
         elif self.nd==3:
             fileString="""
 # vertices
-8 3 0 0
+8 3 0 1
 1 %(x0)f %(x1)f %(x2)f 1
 2 %(x0)f %(x1pL1)f %(x2)f 2
 3 %(x0pL0)f %(x1pL1)f %(x2)f 3

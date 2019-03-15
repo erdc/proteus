@@ -52,7 +52,7 @@ else:
 
 # ----- TANK ----- #
 if opts.nd==2:
-    tank = Tank2D(domain, tank_dim) 
+    tank = Tank2D(domain, tank_dim)
 else:
     tank = Tank3D(domain, tank_dim)
 
@@ -124,3 +124,15 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
+<<<<<<< HEAD
+=======
+myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.Parameters.Models.rans2p.epsFact_viscosity = 3.
+myTpFlowProblem.Parameters.Models.rans2p.epsFact_density = 3.
+myTpFlowProblem.Parameters.Models.rans2p.ns_shockCapturingFactor = 0.25
+myTpFlowProblem.Parameters.Models.rans2p.timeDiscretization = 'vbdf'
+
+myTpFlowProblem.Parameters.physical.gravity = np.array([0., -9.8, 0.])
+
+myTpFlowProblem.outputStepping.systemStepExact = True
+>>>>>>> TwoPhaseFlow

@@ -510,7 +510,7 @@ class Newton(NonlinearSolver):
         while (not self.converged(r) and
                not self.failed()):
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)
+                     %(self.its-1, self.norm_r), level=7)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(old_div(self.norm_r,(self.rtol_r*self.norm_r0+self.atol_r))),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
@@ -530,7 +530,7 @@ class Newton(NonlinearSolver):
                         self.norm_2_Jinv_current = np.inf
                     self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
                     self.betaK_current = self.norm_2_Jinv_current
-                self.linearSolver.prepare(b=r)
+                self.linearSolver.prepare(b=r,newton_its=self.its-1)
             self.du[:]=0.0
             if not self.directSolver:
                 if self.EWtol:
@@ -539,6 +539,7 @@ class Newton(NonlinearSolver):
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 self.linearSolverFailed = self.linearSolver.failed()
             u-=self.du
+
             if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
@@ -669,13 +670,13 @@ class Newton(NonlinearSolver):
                     Viewers.newWindow()
                 #raw_input("wait")
             logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-                %(self.its-1, self.norm_r), level=1)
+                     %(self.its-1, self.norm_r), level=7)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(old_div(self.norm_r,(self.rtol_r*self.norm_r0+self.atol_r)))),level=1)
             logEvent(memory("Newton","Newton"),level=4)
             return self.failedFlag
         logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
-            %(self.its-1, self.norm_r), level=1)
+                 %(self.its-1, self.norm_r), level=7)
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(old_div(self.norm_r,(self.rtol_r*self.norm_r0+self.atol_r)))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
@@ -812,6 +813,23 @@ class ExplicitLumpedMassMatrix(Newton):
     """
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        # compute fluxes
+        self.computeResidual(u,r,b)
+        #u[:]=self.F.uLow
+
+        ############
+        # FCT STEP #
+        ############
+        self.F.kth_FCT_step()
+
+        ###########################################
+        # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
+        ###########################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+
+    def no_solve(self,u,r=None,b=None,par_u=None,par_r=None):
         self.computeResidual(u,r,b)
         u[:] = r
         ############
@@ -1261,7 +1279,6 @@ class CLSVOFNewton(Newton):
         maxIts = self.maxIts
         self.maxIts=1
         # set tolerances for this spin up stage
-        
         tol = self.atol_r
         norm_r0 = self.norm(r)
         norm_r = 1.0*norm_r0
@@ -1993,7 +2010,7 @@ class NewtonNS(NonlinearSolver):
                     self.norm_2_Jinv_current = old_div(1.0,sqrt(min(self.JLsolver.eigenvalues_r)))
                     self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
                     self.betaK_current = self.norm_2_Jinv_current
-                self.linearSolver.prepare(b=r)
+                self.linearSolver.prepare(b=r,newton_its=self.its-1)
             self.du[:]=0.0
             if not self.directSolver:
                 if self.EWtol:
@@ -3014,7 +3031,7 @@ class MultilevelNonlinearSolver(object):
             else:
                 par_u=None
                 par_r=None
-            logEvent("  NumericalAnalytics Newton iteration for level " + repr(l), level = 0)
+            logEvent("  NumericalAnalytics Newton iteration for level " + repr(l), level = 7)
             self.solverList[l].solve(u = uList[l],
                                      r = rList[l],
                                      b = bList[l],

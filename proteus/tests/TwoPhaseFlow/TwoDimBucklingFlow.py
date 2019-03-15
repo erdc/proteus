@@ -187,6 +187,10 @@ boundaryConditions = {
     'vel_v_DFBC': lambda x,flag: lambda x,t: 0.0,
     'clsvof_DFBC': lambda x,flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+<<<<<<< HEAD
+=======
+                                             ls_model=1,
+>>>>>>> TwoPhaseFlow
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -198,6 +202,7 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
+<<<<<<< HEAD
 myTpFlowProblem.physical_parameters['densityA'] = 1800.0
 myTpFlowProblem.physical_parameters['viscosityA'] = 500.0/1800.0
 myTpFlowProblem.physical_parameters['densityB'] = 1.0
@@ -205,3 +210,23 @@ myTpFlowProblem.physical_parameters['viscosityB'] = 2.0E-5/1.0
 myTpFlowProblem.physical_parameters['surf_tension_coeff'] = 0.
 myTpFlowProblem.rans3p_parameters['ns_forceStrongDirichlet']=True
 #myTpFlowProblem.clsvof_parameters['lambdaFact']=1.0
+=======
+myTpFlowProblem.Parameters.physical['densityA'] = 1800.0
+myTpFlowProblem.Parameters.physical['viscosityA'] = 500.0/1800.0
+myTpFlowProblem.Parameters.physical['densityB'] = 1.0
+myTpFlowProblem.Parameters.physical['viscosityB'] = 2.0E-5/1.0
+myTpFlowProblem.Parameters.physical['surf_tension_coeff'] = 0.
+myTpFlowProblem.Parameters.physical.gravity = np.array([0., -9.8, 0.])
+#myTpFlowProblem.clsvof_parameters['lambdaFact']=1.0
+
+myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.Parameters.Models.rans3p.epsFact_viscosity = 3.
+myTpFlowProblem.Parameters.Models.rans3p.epsFact_density = 3.
+myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
+myTpFlowProblem.Parameters.Models.rans3p.timeDiscretization = 'vbdf'
+myTpFlowProblem.Parameters.Models.rans3p.ns_forceStrongDirichlet = True
+
+myTpFlowProblem.outputStepping.systemStepExact = True
+
+myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+>>>>>>> TwoPhaseFlow

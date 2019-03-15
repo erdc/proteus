@@ -30,7 +30,7 @@ opts= Context.Options([
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
 tank_dim = (1.0,1.0) if opts.nd == 2 else (1.0,1.0,1.0)
-# MESH 
+# MESH
 refinement = opts.refinement
 structured=True
 boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
@@ -39,7 +39,7 @@ if structured:
     nnx = 4 * refinement**2 + 1
     nny = nnx
     nnz = None if opts.nd == 2 else nnx
-    domain = Domain.RectangularDomain(tank_dim)    
+    domain = Domain.RectangularDomain(tank_dim)
     domain.boundaryTags = boundaryTags
     he = tank_dim[0]/(nnx - 1)
 else:
@@ -170,7 +170,7 @@ def vel_v_AFBC(x,flag):
 def vel_w_AFBC(x,flag):
     if not (flag==boundaryTags['top']):
         return lambda x,t: 0.
-    
+
 # DIFFUSIVE FLUX #
 def pressure_increment_DFBC(x,flag):
     if not (flag == boundaryTags['top']):
@@ -208,7 +208,7 @@ boundaryConditions = {
     'vel_v_DBC': vel_v_DBC,
     'vel_w_DBC': vel_w_DBC,
     'clsvof_DBC': clsvof_DBC,
-    # ADVECTIVE FLUX BCs # 
+    # ADVECTIVE FLUX BCs #
     'pressure_AFBC': pressure_AFBC,
     'pressure_increment_AFBC': pressure_increment_AFBC,
     'vel_u_AFBC': vel_u_AFBC,
@@ -233,3 +233,15 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
+<<<<<<< HEAD
+=======
+myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.Parameters.Models.rans2p.epsFact_viscosity = 3.
+myTpFlowProblem.Parameters.Models.rans2p.epsFact_density = 3.
+myTpFlowProblem.Parameters.Models.rans2p.ns_shockCapturingFactor = 0.25
+myTpFlowProblem.Parameters.Models.rans2p.timeDiscretization = 'vbdf'
+
+myTpFlowProblem.Parameters.physical.gravity = np.array([0., -9.8, 0.])
+
+myTpFlowProblem.outputStepping.systemStepExact = True
+>>>>>>> TwoPhaseFlow

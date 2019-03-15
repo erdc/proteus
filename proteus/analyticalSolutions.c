@@ -53,14 +53,12 @@ int PlaneCouetteFlow_u(int *iwork, double *rwork, int nPoints, double t, double 
 */
 	int i;
 	double vx=rwork[0], h=rwork[1];
-        double xs=rwork[2], ys=rwork[3], zs=rwork[4];
-        double X,Y,Z;
+        double ys=rwork[3];
+        double Y;
 
  	for (i=0; i<nPoints; i++)
  	{
-             X = x[i*3+0] - xs;
              Y = x[i*3+1] - ys;
-             Z = x[i*3+2] - zs;
 		
 	     u[i] = vx*(Y/h);
  	}
@@ -354,7 +352,7 @@ int LinearAD_DiracIC_advectiveVelocity(int *iwork, double *rwork, int nPoints, d
 	}
 	free(u);
 
-	return 0;
+	return iret;
 }
 /**
   \brief Linear Advective Diffusion Dirac Initial Condition(diffusive velocity)
@@ -394,7 +392,7 @@ int LinearAD_DiracIC_diffusiveVelocity(int *iwork, double *rwork, int nPoints, d
 		 f[i*3+j] = -a * f[i*3+j];
 	    }
 	}
-	return 0;
+	return iret;
 }
 /**
   \brief Linear Advective Diffusion Dirac Initial Condition (du)
@@ -443,7 +441,7 @@ int LinearAD_DiracIC_du(int *iwork, double *rwork, int nPoints, double T, double
 	}
 	free(u);
 
-	return 0;
+	return iret;
 }
 
 /**
@@ -476,7 +474,7 @@ int LinearAD_DiracIC_totalVelocity(int *iwork, double *rwork, int nPoints, doubl
 	double *f_adv = (double *)malloc(nPoints*3*sizeof(double));
 	
 	iret = LinearAD_DiracIC_advectiveVelocity(iwork, rwork, nPoints, T, x, f_adv);
-	iret = LinearAD_DiracIC_diffusiveVelocity(iwork, rwork, nPoints, T, x, f);
+	iret += LinearAD_DiracIC_diffusiveVelocity(iwork, rwork, nPoints, T, x, f);
 
 	for (i=0; i<nPoints; i++)
 	{
@@ -487,7 +485,7 @@ int LinearAD_DiracIC_totalVelocity(int *iwork, double *rwork, int nPoints, doubl
 	}
 	free(f_adv);
 
-	return 0;
+	return iret;
 }
 /**
   \brief Linear Advection-Diffusion Steady State
@@ -585,7 +583,7 @@ The exact solution of
 	     u[i] *= exp(-c*t);
 	}
 
-	return 0;
+	return iret;
 }
 /**
   \brief Linear Avection Diffusion Reaction Decay Dirac Initial Condition (dr)
@@ -624,7 +622,7 @@ int LinearADR_Decay_DiracIC_dr(int *iwork, double *rwork, int nPoints, double T,
        dr[i] = c;
   }
 
-  return 0;
+  return iret;
 }
 /**
   \brief Linear Avection Diffusion Reaction Decay Dirac Initial Condition (reaction)
@@ -663,7 +661,7 @@ int LinearADR_Decay_DiracIC_r(int *iwork, double *rwork, int nPoints, double T, 
        r[i] = u[i] * c;
   }
 
-  return 0;
+  return iret;
 }
 /**
   \brief Linear Avection Diffusion Reaction Sine function
@@ -770,7 +768,7 @@ int LinearADR_Sine_advectiveVelocity(int *iwork, double *rwork, int nPoints, dou
 	}
         free( u );
 
-	return 0;
+	return iret;
 }
 /**
   \brief Linear Avection Diffusion Reaction Sine function (diffusive velocity)
@@ -819,7 +817,7 @@ int LinearADR_Sine_diffusiveVelocity(int *iwork, double *rwork, int nPoints, dou
 	}
         free(du);
 
-	return 0;
+	return iret;
 }
 /**
   \brief Linear Avection Diffusion Reaction Sine function (dr)
@@ -862,7 +860,7 @@ int LinearADR_Sine_dr(int *iwork, double *rwork, int nPoints, double t, double *
 	   dr[i] = c;
 	}
 
-	return 0;
+	return iret;
 }
 /**
   \brief Linear Avection Diffusion Reaction Sine function (du)
@@ -966,7 +964,7 @@ int LinearADR_Sine_r(int *iwork, double *rwork, int nPoints, double t, double *x
 	  r[i] = c*u[i] + D*cos(Y) + E*sin(Y);
   }
 
-  return 0;
+  return iret;
 }
 /**
   \brief Linear Avection Diffusion Reaction Sine function (total velocity)
@@ -1002,7 +1000,7 @@ int LinearADR_Sine_totalVelocity(int *iwork, double *rwork, int nPoints, double 
 	double *f_adv = (double *)malloc(nPoints*3*sizeof(double));
 
 	iret = LinearADR_Sine_advectiveVelocity(iwork, rwork, nPoints, t, x, f_adv);
-	iret = LinearADR_Sine_diffusiveVelocity(iwork, rwork, nPoints, t, x, f);
+	iret += LinearADR_Sine_diffusiveVelocity(iwork, rwork, nPoints, t, x, f);
 
 	for (i=0;i<nPoints;i++)
 	{
@@ -1013,7 +1011,7 @@ int LinearADR_Sine_totalVelocity(int *iwork, double *rwork, int nPoints, double 
 	}
 	free(f_adv);
 
-	return 0;
+	return iret;
 }
 /**
   \brief Nonlinear Advection-Diffusion Steady State
@@ -1042,7 +1040,7 @@ int NonlinearAD_SteadyState(int *iwork, double *rwork, int nPoints, double t, do
     u(1) = 0
 */
 {
-	int i, iret;
+	int i, iret=0;
 	int q=iwork[0], r=iwork[1];
 	double b=rwork[0], a=rwork[1];
 	double x, lu, f0, ff, fC;
@@ -1134,7 +1132,7 @@ int NonlinearAD_SteadyState(int *iwork, double *rwork, int nPoints, double t, do
 			printf("q,r not implemented");	
 		}
          }
-      return 0;
+      return iret;
 }
 
 /**
@@ -1187,7 +1185,7 @@ The approximate analytical solution of
 	 }
     }
 
-    return 0;
+    return iret;
 }
 /**
   \brief Non Linear Avection Diffusion Reaction Decay Dirac Initial Condition (dr)
@@ -1227,7 +1225,7 @@ int NonlinearADR_Decay_DiracIC_dr(int *iwork, double *rwork, int nPoints, double
 	 dr[i] = d*c*pow(u[i],(d-1.0));
     }
 
-    return 0;
+    return iret;
 }
 
 /**
@@ -1268,7 +1266,7 @@ int NonlinearADR_Decay_DiracIC_r(int *iwork, double *rwork, int nPoints, double 
 	 r[i] = c*pow(u[i],d);
     }
 
-    return 0;
+    return iret;
 }
 
 /**
@@ -1408,9 +1406,9 @@ int PlanePoiseuilleFlow_u(int *iwork, double *rwork, int nPoints, double t, doub
 	int i;
 	double h=rwork[0], mu=rwork[1];
         double GradP = rwork[2], q = rwork[3];
-        double xs=rwork[4], ys=rwork[5], zs=rwork[6];
+        double ys=rwork[5];
         double umax;
-        double X, Y, Z;
+        double Y;
 
         if(GradP != 0.0)
           {
@@ -1428,9 +1426,7 @@ int PlanePoiseuilleFlow_u(int *iwork, double *rwork, int nPoints, double t, doub
 
  	for (i=0; i<nPoints; i++)
  	{
-             X = x[i*3+0] - xs;
              Y = x[i*3+1] - ys;
-             Z = x[i*3+2] - zs;
 	       
 	     u[i] = (4.0*umax*Y*(h-Y))/(h*h);
  	}
@@ -1502,9 +1498,9 @@ int PoiseuillePipeFlow(int *iwork, double *rwork, int nPoints, double t, double 
 	int i;
 	double r=rwork[0], mu = rwork[1];
         double GradP=rwork[2], Q=rwork[3];
-        double xs=rwork[4], ys=rwork[5], zs=rwork[6];
+        double ys=rwork[5];
         double umax;
-        double X, Y, Z;
+        double Y;
 
         if(GradP != 0.0)
           {
@@ -1522,9 +1518,7 @@ int PoiseuillePipeFlow(int *iwork, double *rwork, int nPoints, double t, double 
  
  	for (i=0; i<nPoints; i++)
  	{
-             X = x[i*3+0] - xs;
              Y = x[i*3+1] - ys;
-             Z = x[i*3+2] - zs;
 		
 	     u[i] = umax*(1.0 - ((Y*Y)/(r*r)));
  	}
@@ -1582,8 +1576,8 @@ int PoiseuillePipeFlow_P(int *iwork, double *rwork, int nPoints, double t, doubl
 	int i;
 	double r=rwork[0], mu=rwork[1];
         double GradP=rwork[2], Q=rwork[3], L=rwork[4];
-        double xs=rwork[5], ys=rwork[6], zs=rwork[7];
-        double X, Y, Z;
+        double xs=rwork[5];
+        double X;
 
 
         if(GradP == 0.0 && Q != 0.0)
@@ -1599,8 +1593,6 @@ int PoiseuillePipeFlow_P(int *iwork, double *rwork, int nPoints, double t, doubl
  	for (i=0; i<nPoints; i++)
  	{
              X = x[i*3+0] - xs;
-             Y = x[i*3+1] - ys;
-             Z = x[i*3+2] - zs;
 		
              u[i] = -GradP*L*(1.0-X);
  	}

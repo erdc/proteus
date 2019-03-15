@@ -93,7 +93,7 @@ facetFlags=[boundaryTags['bottom'],
             boundaryTags['box_right'],
             boundaryTags['box_back'],
             boundaryTags['box_left'],
-            boundaryTags['box_top']]        
+            boundaryTags['box_top']]
 regions=[[0.5*L[0],0.5*L[1],0.5*L[2]]]
 regionFlags=[0]
 domain = Domain.PiecewiseLinearComplexDomain(vertices=vertices,
@@ -116,13 +116,12 @@ domain.MeshOptions.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 class zero(object):
     def uOfXT(self,x,t):
         return 0.
-    
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
         waterLine_x = 1.22
         waterLine_z = 0.55
         phi_x = x[0]-waterLine_x
-        phi_z = x[2]-waterLine_z 
+        phi_z = x[2]-waterLine_z
         if phi_x < 0.0:
             if phi_z < 0.0:
                 return max(phi_x,phi_z)
@@ -163,10 +162,10 @@ def vel_w_DBC(x,flag):
                          flag == boundaryTags['box_front'] or
                          flag == boundaryTags['box_back']):
         return lambda  x,t: 0.0
-    
+
 def pressure_increment_DBC(x,flag):
     if flag == boundaryTags['top'] and openTop:
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 def pressure_DBC(x,flag):
     if flag == boundaryTags['top'] and openTop:
@@ -175,7 +174,7 @@ def pressure_DBC(x,flag):
 def clsvof_DBC(x,flag):
     if openTop and flag == boundaryTags['top']:
         return lambda x,t: 1.0
-    
+
 # ADVECTIVE FLUX BOUNDARY CONDITIONS #
 def vel_u_AFBC(x,flag):
     if non_slip_BCs and (flag == boundaryTags['box_left'] or
@@ -220,7 +219,7 @@ def pressure_increment_AFBC(x,flag):
 def pressure_AFBC(x,flag):
     if not(flag == boundaryTags['top'] and openTop):
         return lambda x,t: 0.0
-    
+
 def clsvof_AFBC(x,flag):
     if openTop and flag == boundaryTags['top']:
         return None
@@ -231,7 +230,7 @@ def clsvof_AFBC(x,flag):
 def pressure_increment_DFBC(x,flag):
     if not (flag == boundaryTags['top'] and openTop):
         return lambda x,t: 0.0
-    
+
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
@@ -264,6 +263,10 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: lambda x,t: 0.,
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+<<<<<<< HEAD
+=======
+                                             ls_model=1,
+>>>>>>> TwoPhaseFlow
                                              nd=3,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -275,4 +278,19 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions)
+<<<<<<< HEAD
 myTpFlowProblem.physical_parameters['gravity'] = [0.0,0.0,-9.8]
+=======
+myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,0.0,-9.8])
+
+myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.Parameters.Models.rans2p.epsFact_viscosity = 3.
+myTpFlowProblem.Parameters.Models.rans2p.epsFact_density = 3.
+myTpFlowProblem.Parameters.Models.rans2p.ns_shockCapturingFactor = 0.25
+myTpFlowProblem.Parameters.Models.rans2p.timeDiscretization = 'vbdf'
+
+myTpFlowProblem.outputStepping.systemStepExact = True
+
+myTpFlowProblem.Parameters.mesh.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
+myTpFlowProblem.Parameters.mesh.setParallelPartitioningType('node')
+>>>>>>> TwoPhaseFlow
