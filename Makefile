@@ -107,7 +107,7 @@ stack/hit/bin/hit:
 	cd stack && git submodule update --init
 	@echo "Adding source cache if not done already"
 	-./stack/hit/bin/hit init-home
-	-./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_src --objects="source"
+	-./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
 
 stack:
 	@echo "Updating stack submodule"
@@ -120,7 +120,7 @@ air-water-vv:
 bld_cache: stack/hit/bin/hit
 	@echo "Trying to add build cache for your arch"
 	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
-	./stack/hit/bin/hit remote add http://192.237.213.149/hashdist_${HASHSTACK_BLD} --objects="build"
+	./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_${HASHSTACK_BLD} --objects="build"
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
@@ -186,8 +186,8 @@ develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG -Og" ${PROTEUS_DEVELOP_BUILD_CMD}
-	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG -Og" ${PROTEUS_DEVELOP_CMD}
+	${PROTEUS_ENV} ${PROTEUS_DEVELOP_BUILD_CMD}
+	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
 	@echo "installing scripts"
 	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
@@ -247,7 +247,7 @@ doc:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
-
+	-pip install sphinx sphinx-bootstrap-theme
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 	@echo "**********************************"
 	@echo "Trying to open the html at"

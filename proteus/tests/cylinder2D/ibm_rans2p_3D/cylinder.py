@@ -16,7 +16,6 @@ ct = Context.Options([
     ("dt_fixed",0.005,"fixed time step"),
     ##################################
     ("Refinement",          6,"refinement"),
-    ("StrongDirichlet",     True,"weak or strong"),
     ("use_sbm",             0,"use sbm instead of imb"),
     ("spaceOrder",          1,"FE space for velocity"),
     ("timeOrder",           2,"1=be or 2=vbdf"),#both works, but 2 gives better cd-cl
@@ -198,7 +197,7 @@ if ct.onlySaveFinalSolution == True:
 #===============================================================================
 # Numerical parameters
 #===============================================================================
-ns_forceStrongDirichlet = ct.StrongDirichlet
+ns_forceStrongDirichlet = ct.forceStrongDirichlet
 
 ns_sed_forceStrongDirichlet = False
 if useMetrics:

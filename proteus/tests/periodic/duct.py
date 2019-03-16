@@ -21,6 +21,7 @@ opts = Context.Options([
     ("grid", True, "Use a regular grid"),
     ("triangles", True, "Use triangular or tetrahedral elements"),
     ("spaceOrder", 1, "Use (bi-)linear or (bi-)quadratic spaces"),
+    ("useTaylorHood", False, "Use Taylor-Hood element"),
     ("timeOrder", 1, "Use bdf1 or bdf2"),
     ("periodic", False, "Use periodic boundary conditions"),
     ("weak", True, "Use weak boundary conditions"),
@@ -96,9 +97,9 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      forceStrongDirichlet=not opts.weak,
                                      turbulenceClosureModel=0,
                                      NONCONSERVATIVE_FORM=1.0,
-                                     MOMENTUM_SGE=1.0,
-                                     PRESSURE_SGE=1.0,
-                                     VELOCITY_SGE=1.0,
+                                     MOMENTUM_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     PRESSURE_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     VELOCITY_SGE=0.0 if opts.useTaylorHood else 1.0,
                                      nullSpace=nullSpace)
 
 eps=1.0e-8
@@ -126,25 +127,54 @@ if opts.periodic:
                                      2:getPDBC,
                                      3:getPDBC}
 
-pSol = AnalyticalSolutions.PlanePoiseuilleFlow_p(plateSeperation=h,
+pSol2 = AnalyticalSolutions.PlanePoiseuilleFlow_p(plateSeperation=h,
                                                  mu = mu,
                                                  grad_p = -G)
-uSol = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
+uSol2 = AnalyticalSolutions.PlanePoiseuilleFlow_u(plateSeperation=h,
                                                  mu = mu,
                                                  grad_p = -G)
-vSol = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
+vSol2 = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
                                                  mu = mu,
                                                  grad_p = -G)
+class pRot(AnalyticalSolutions.SteadyState):
+    def __init__(self):
+        pass
+    def uOfX(self, x):
+        if p.nd==3:
+            return pSol2.uOfX([x[0],x[2],x[1]])
+        else:
+            return pSol2.uOfX(x)
 
-p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol}
-if p.nd == 3:
-    p.analyticalSolution[3] = AnalyticalSolutions.PlanePoiseuilleFlow_v(plateSeperation=h,
-                                                                        mu = mu,
-                                                                        grad_p = -G)
+class uRot(AnalyticalSolutions.SteadyState):
+    def __init__(self):
+        pass
+    def uOfX(self, x):
+        if p.nd==3:
+            return uSol2.uOfX([x[0],x[2],x[1]])
+        else:
+            return uSol2.uOfX(x)
+
+class vRot(AnalyticalSolutions.SteadyState):
+    def __init__(self):
+        pass
+    def uOfX(self, x):
+        if p.nd==3:
+            return vSol2.uOfX([x[0],x[2],x[1]])
+        else:
+            return vSol2.uOfX(x)
+
+pSol = pRot()
+uSol = uRot()
+vSol = vRot()
+
+if p.nd == 2:
+    p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol}
+elif p.nd == 3:
+    p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol, 3: vRot()}
 
 initialConditions = p.analyticalSolution
 
-nsave=100
+nsave=25
 dt_init = 1.0e-3
 DT = (p.T-dt_init)/float(nsave-1)
 p.tnList = [0.0,dt_init]+[dt_init+i*DT for i in range(nsave)]
@@ -420,12 +450,11 @@ elif opts.timeOrder == 0:
     n.timeIntegration = TimeIntegration.NoIntegration
 
 n.stepController  = StepControl.Min_dt_cfl_controller
-n.systemStepExact = False
+n.systemStepExact = True
 
-useTaylorHood = False
 if opts.spaceOrder == 1:
     if opts.triangles:
-        if useTaylorHood:
+        if opts.useTaylorHood:
             n.femSpaces = {0:FemTools.C0_AffineLinearOnSimplexWithNodalBasis,
                            1:FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis,
                            2:FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis}
@@ -442,7 +471,7 @@ if opts.spaceOrder == 1:
             n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,3)
             n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
     else:
-        if useTaylorHood:
+        if opts.useTaylorHood:
             n.femSpaces = {0:FemTools.C0_AffineLinearOnCubeWithNodalBasis,
                            1:FemTools.C0_AffineQuadraticOnCubeWithNodalBasis,
                            2:FemTools.C0_AffineQuadraticOnCubeWithNodalBasis}
@@ -551,8 +580,8 @@ elif opts.pc_type == 'two_phase_PCD':
 
 n.linear_solver_options_prefix = 'rans2p_'
 
-n.linTolFac = 0.1
-n.l_atol_res = 0.1*n.nl_atol_res
+n.linTolFac = 0.0
+n.l_atol_res = 0.01*n.nl_atol_res
 
 n.conservativeFlux = None
 
@@ -579,10 +608,13 @@ else:
 if opts.triangles:
     space_name="p{0}".format(opts.spaceOrder)
 else:
-    space_name="1{0}".format(opts.spaceOrder)
+    space_name="q{0}".format(opts.spaceOrder)
 
+if opts.useTaylorHood:
+    space_name+="TH"
+    
 name = "duct{0}t{1}{2}d{3}he{4}".format(space_name,
-                                               opts.timeOrder,
-                                               opts.nd,
-                                               mesh_name,
-                                               he)
+                                        opts.timeOrder,
+                                        opts.nd,
+                                        mesh_name,
+                                        he)

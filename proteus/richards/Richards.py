@@ -406,6 +406,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi_ip={}
         #mesh
         #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
         self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('grad(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
@@ -643,6 +644,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['velocity'],#self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
+            self.q[('dV_u',0)],
             self.timeIntegration.beta_bdf[0],
             self.q[('cfl',0)],
             self.q[('cfl',0)],#cek hack self.shockCapturing.numDiff[0],
