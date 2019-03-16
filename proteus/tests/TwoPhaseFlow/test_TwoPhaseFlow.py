@@ -40,13 +40,13 @@ class TestTwoPhaseFlow(object):
                   "-f damBreak.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1'")
         self.compare_vs_saved_files("damBreak")
 
-    @pytest.mark.skip(reason="long test")
+#    @pytest.mark.skip(reason="long test")
     def test_TwoDimBucklingFlow(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "-f TwoDimBucklingFlow.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.05'")
         self.compare_vs_saved_files("TwoDimBucklingFlow")
 
-    @pytest.mark.skip(reason="long test")
+#    @pytest.mark.skip(reason="long test")
     def test_fillingTank(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "-f fillingTank.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.01'")
