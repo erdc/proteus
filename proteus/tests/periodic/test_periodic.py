@@ -84,15 +84,14 @@ def test_periodic_2D(load_periodic_opts_2D,
                                    load_periodic_duct[3],
                                    opts)
     ns.calculateSolution('test_run')
-
     script_dir = os.path.dirname(__file__)
     relpath = 'comparison_files/basic_2d_test.h5'
     expected = tables.open_file(os.path.join(script_dir,relpath))
     actual = tables.open_file('ductq1t12dpghe0.0975609756098.h5')
 
-    assert numpy.allclose(expected.root.velocity_t59.read(),
-                          actual.root.velocity_t59.read(),
-                          atol=1e-10)
+    assert numpy.allclose(expected.root.velocity_t25.read(),
+                          actual.root.velocity_t25.read(),
+                          atol=1e-8)
     expected.close()
     actual.close()
 
@@ -110,8 +109,8 @@ def test_periodic_3D(load_periodic_opts_3D,
     expected = tables.open_file(os.path.join(script_dir,relpath))
     actual = tables.open_file('ductp1t13dpghe0.2.h5')
 
-    assert numpy.allclose(expected.root.velocity_t24.read(),
-                          actual.root.velocity_t24.read(),
+    assert numpy.allclose(expected.root.velocity_t25.read(),
+                          actual.root.velocity_t25.read(),
                           atol=1e-10)
     expected.close()
     actual.close()
@@ -130,8 +129,8 @@ def test_periodic_3D_amg(load_periodic_opts_3D_T2,
     expected = tables.open_file(os.path.join(script_dir,relpath))
     actual = tables.open_file('ductp1t13dpghe0.2.h5')
 
-    assert numpy.allclose(expected.root.velocity_t24.read(),
-                          actual.root.velocity_t24.read(),
-                          atol=1e-10)
+    assert numpy.allclose(expected.root.velocity_t25.read(),
+                          actual.root.velocity_t25.read(),
+                          atol=1e-6)
     expected.close()
     actual.close()
