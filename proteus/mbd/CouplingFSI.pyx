@@ -1,5 +1,7 @@
+#!python
 # distutils: language = c++
-# cython: profile=True
+# cython: profile=True, binding=True, embedsignature=True
+
 """
 Coupling between Chrono and Proteus is done in this file.
 
@@ -10,11 +12,11 @@ Objects starting with 'Ch' (e.g. ChBody) are objects that only have Chrono
 logic associated to them.
 
 Some ProtCh objects give access to the Chrono object:
-my_protchsystem = ProtChSystem(gravity=np.ndarray([0.,-9.81,0.]))
+my_protchsystem = ProtChSystem()
 my_protchbody = ProtChBody(system=my_protchsystem)
-my_chbody = ProtChBody.ChBody
+my_chbody = my_protchbody.ChBody
 my_chbody.SetPos(...)
-my_chbody.SetPos(...)
+my_chbody.SetRot(...)
 
 # pass the index of the boundaries (or particle index) where forces must be integrated
 my_protchbody.setIndexBoundary(i_start=1, i_end=5)
@@ -41,262 +43,40 @@ from libcpp.memory cimport (shared_ptr,
                             make_shared)
 from collections import OrderedDict
 from cython.operator cimport dereference as deref
+# from cython.cpp cimport static_cast
 import xml.etree.ElementTree as ET
 import h5py
 # chrono C++ headers
 cimport ChronoHeaders as ch
 # chrono Python headers
-from proteus.mbd cimport pyChronoCore as pych
 from proteus.mprans import BodyDynamics as bd
 from proteus.Archiver import indentXML
+import pychrono as chrono
+from pychrono import fea as chrono_fea
 
+# needed for sphinx docs
+__all__ = ['ProtChSystem',
+           'ProtChBody',
+           'ProtChMesh',
+           'ProtChMoorings',
+           'ProtChAddedMass']
 
-cdef extern from "ChRigidBody.h":
-    cdef cppclass cppMesh:
-        shared_ptr[ch.ChMesh] mesh
-        void SetAutomaticGravity(bool val)
-    cppMesh * newMesh(ch.ChSystem*, shared_ptr[ch.ChMesh])
-    cdef cppclass cppCable:
-        ch.ChSystem& system
-        ch.ChMesh& mesh
-        vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
-        vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        vector[shared_ptr[ch.ChVector]] forces_drag
-        vector[shared_ptr[ch.ChVector]] forces_addedmass
-        double L0
-        double length
-        int nb_elems
-        bool applyDrag
-        bool applyAddedMass
-        bool applyBuoyancy
-        vector[ch.ChVector] mvecs
-        vector[ch.ChVector] mvecs_tangents
-        void buildNodes()
-        void buildMaterials()
-        void buildElements()
-        void buildMesh()
-        void updateDragForces()
-        void updateBuoyancyForces()
-        void setDragCoefficients(double Cd_axial, double Cd_normal)
-        void setAddedMassCoefficients(double Cd_axial, double Cd_normal)
-        void setRestLengthPerElement(vector[double] length_array);
-        void setIyy(double Iyy_in)
-    cdef cppclass cppMultiSegmentedCable:
-        ch.ChSystem& system
-        ch.ChMesh& mesh
-        vector[shared_ptr[cppCable]] cables
-        vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
-        vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        shared_ptr[ch.ChLinkPointFrame] constraint_back
-        shared_ptr[ch.ChLinkPointFrame] constraint_front
-        vector[shared_ptr[ch.ChVector]] forces_drag
-        vector[shared_ptr[ch.ChVector]] forces_addedmass
-        void buildNodes()
-        void buildCable()
-        # void setVelocityAtNodes(double* fluid_velocity)
-        void attachFrontNodeToBody(shared_ptr[ch.ChBody])
-        void attachBackNodeToBody(shared_ptr[ch.ChBody])
-        void updateDragForces()
-        void updateAddedMassForces()
-        void applyForces()
-        void updateBuoyancyForces()
-        void setFluidVelocityAtNodes(vector[ch.ChVector] fluid_velocity)
-        void setFluidAccelerationAtNodes(vector[ch.ChVector] fluid_acceleration)
-        void setFluidDensityAtNodes(vector[double] dens)
-        void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceSMC] material)
-        ch.ChVector getTensionElement(int i, double eta)
-    cppMultiSegmentedCable * newMoorings(ch.ChSystem* system,
-                                         shared_ptr[ch.ChMesh] mesh,
-                                         vector[double] length,
-                                         vector[int] nb_elems,
-                                         vector[double] d,
-                                         vector[double] rho,
-                                         vector[double] E,
-                                         string beam_type
-        )
-    cdef cppclass cppSurfaceBoxNodesCloud:
-        ch.ChSystem& system
-        ch.ChVector position
-        ch.ChVector dimensions
-        shared_ptr[ch.ChBodyEasyBox] body;
-        void setNodesSize(double size)
-    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ch.ChSystem* system,
-                                                      shared_ptr[ch.ChMesh] mesh,
-                                                      ch.ChVector position,
-                                                      ch.ChVector dimensions)
-    void cppAttachNodeToNodeFEAxyzD(cppMultiSegmentedCable* cable1,
-                                    int node1,
-                                    cppMultiSegmentedCable* cable2,
-                                    int node2)
-    void cppAttachNodeToNodeFEAxyzrot(cppMultiSegmentedCable* cable1,
-                                      int node1,
-                                      cppMultiSegmentedCable* cable2,
-                                      int node2)
-
-cdef extern from "ChRigidBody.h":
-    cdef cppclass cppSystem:
-        ch.ChSystem* system
-        void DoStepDynamics(dt)
-        void step(double proteus_dt, int n_substeps)
-        void setChTimeStep(double dt)
-        void setGravity(double* gravity)
-        void setDirectory(string directory)
-        void setTimestepperType(string tstype, bool verbose)
-        void setCollisionEnvelopeMargin(double envelope, double margin)
-    cppSystem * newSystem(double* gravity)
-    cdef cppclass cppRigidBody:
-        shared_ptr[ch.ChBody] body
-        double mass
-        ch.ChVector pos
-        ch.ChVector pos_last
-        ch.ChVector vel
-        ch.ChVector vel_last
-        ch.ChVector acc
-        ch.ChVector acc_last
-        ch.ChVector angvel
-        ch.ChVector angvel_last
-        ch.ChVector angacc
-        ch.ChVector angacc_last
-        # ChVector inertia
-        ch.ChMatrix33 rotm
-        ch.ChMatrix33 rotm_last
-        ch.ChQuaternion rotq
-        ch.ChQuaternion rotq_last
-        ch.ChVector free_x
-        ch.ChVector free_r
-        ch.ChVector F
-        ch.ChVector F_last
-        ch.ChVector M
-        ch.ChVector M_last
-        ch.ChTriangleMeshConnected trimesh
-        vector[ch.ChVector] trimesh_pos
-        vector[ch.ChVector] trimesh_pos0
-        ch.ChVector pos0_trimesh
-        ch.ChQuaternion rotq0_trimesh
-        cppRigidBody(cppSystem* system)
-        void calculate_init()
-        void prestep(double* force, double* torque)
-        void poststep()
-        ch.ChVector hxyz(double* x, double dt)
-        double hx(double* x, double dt)
-        double hy(double* x, double dt)
-        double hz(double* x, double dt)
-        void addSpring(double stiffness,
-                       double damping,
-                       double* fairlead,
-                       double* anchor,
-                       double rest_length)
-        void addPrismaticLinksWithSpring(double* pris1,
-                                         double* pris2,
-                                         double stiffness,
-                                         double damping,
-                                         double rest_length);
-        void addPrismaticLinkX(double* pris1);
-        void setRotation(double* quat)
-        void setPosition(double* pos)
-        void setConstraints(double* free_x, double* free_r)
-        void setInertiaXX(double* inertia)
-        void setName(string name)
-        void setPrescribedMotionCustom(vector[double] t, vector[double] x,
-                                       vector[double] y, vector[double] z,
-                                       vector[double] ang, vector[double] ang2,
-                                       vector[double] ang3, double t_max)
-        void setPrescribedMotionPoly(double coeff1)
-        void setPrescribedMotionSine(double a, double f)
-        void updateTriangleMeshVisualisationPos()
-    cppRigidBody * newRigidBody(cppSystem* system)
-    void ChLinkLockBodies(shared_ptr[ch.ChBody] body1,
-                          shared_ptr[ch.ChBody] body2,
-                          ch.ChSystem* system,
-                          ch.ChCoordsys coordsys,
-                          double limit_X,
-                          double limit_Y,
-                          double limit_Z,
-                          double limit_Rx,
-                          double limit_Ry,
-                          double limit_Rz)
 
 cdef class ProtChBody:
-    cdef cppRigidBody * thisptr
-    cdef ch.ChQuaternion rotation
-    cdef ch.ChQuaternion rotation_last
-    cdef vector[ch.ChVector] trimesh_nodes
-    cdef vector[ch.ChTriangle] trimesh_triangles
-    cdef public:
-      str record_file
-      object model
-      ProtChSystem ProtChSystem
-      object Shape
-      int nd
-      int i_start
-      int i_end
-      double dt
-      double width_2D
-      object record_dict
-      object prescribed_motion_function
-      pych.ChBodyAddedMass ChBody
-      np.ndarray position
-      np.ndarray position_last
-      np.ndarray F  # force as retrieved from Chrono
-      np.ndarray M  # moment as retreived from Chrono
-      np.ndarray F_last
-      np.ndarray M_last
-      np.ndarray F_prot  # force retrieved from Proteus (fluid)
-      np.ndarray M_prot  # moment retrieved from Proteus (fluid)
-      np.ndarray F_prot_last
-      np.ndarray M_prot_last
-      np.ndarray F_applied  # force applied and passed to Chrono
-      np.ndarray M_applied  # moment applied and passed to Chrono
-      np.ndarray F_applied_last
-      np.ndarray M_applied_last
-      np.ndarray F_Aij
-      np.ndarray M_Aij
-      np.ndarray F_Aij_last
-      np.ndarray M_Aij_last
-      np.ndarray acceleration
-      np.ndarray acceleration_last
-      np.ndarray velocity
-      np.ndarray velocity_fluid
-      np.ndarray velocity_last
-      np.ndarray ang_acceleration_last
-      np.ndarray ang_acceleration
-      np.ndarray ang_velocity_last
-      np.ndarray ang_velocity
-      double ang_vel_norm
-      double ang_vel_norm_last
-      np.ndarray barycenter0
-      np.ndarray rotation_init
-      np.ndarray rotm
-      np.ndarray rotm_last
-      np.ndarray rotq
-      np.ndarray rotq_last
-      np.ndarray adams_vel
-      string name
-      bool predicted
-      double dt_predict
-      np.ndarray h_predict  # predicted displacement
-      double h_ang_predict  # predicted angular displacement (angle)
-      np.ndarray h_ang_vel_predict  # predicted angular velocity
-      np.ndarray h_predict_last  # predicted displacement
-      double h_ang_predict_last  # predicted angular displacement (angle)
-      np.ndarray h_ang_vel_predict_last  # predicted angular velocity
-      np.ndarray Aij  # added mass array
-      bool applyAddedMass  # will apply added mass if True (default)
-      string hdfFileName
 
     def __cinit__(self,
                   ProtChSystem system=None):
         self.ProtChSystem = system
         # create new cppRigidBody
         self.thisptr = newRigidBody(system.thisptr)
-        self.ChBody = pych.ChBodyAddedMass()
-        self.thisptr.body = self.ChBody.sharedptr_chbody  # give pointer to cpp class
-        # add body to system
+        self.ChBodyAddedMass = ChBodyAddedMass()
+        self.ChBody = self.ChBodyAddedMass.ChBodySWIG
+        self.thisptr.body = self.ChBodyAddedMass.sharedptr_chbody  # give pointer to cpp class
+        # # add body to system
         if system is not None:
             self.ProtChSystem.addProtChBody(self)
         # initialise values
         self.record_dict = OrderedDict()
-        self.setRotation(np.array([1.,0.,0.,0.]))  # initialise rotation (nan otherwise)
         self.F_prot = np.zeros(3)  # initialise empty Proteus force
         self.M_prot = np.zeros(3)  # initialise empty Proteus moment
         self.F_applied = np.zeros(3)  # initialise empty Applied force
@@ -347,7 +127,10 @@ cdef class ProtChBody:
             if take_shape_name is True:
                 self.setName(shape.name)
         self.nd = shape.Domain.nd
-        self.SetPosition(shape.barycenter)
+        new_vec = chrono.ChVectorD(shape.barycenter[0],
+                                   shape.barycenter[1],
+                                   shape.barycenter[2])
+        self.ChBody.SetPos(new_vec)
 
     def addTriangleMeshFromShape(self,
                                  object shape=None,
@@ -384,6 +167,7 @@ cdef class ProtChBody:
                                          double sphereswept_thickness=0.005):
         """Adds triangle mesh to collision model and for IBM calculations
         """
+        self.thisptr.trimesh = make_shared[ch.ChTriangleMeshConnected]()
         self.trimesh_nodes.clear()
         self.trimesh_triangles.clear()
         for v in vertices:
@@ -394,7 +178,7 @@ cdef class ProtChBody:
             self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
                                                            self.trimesh_nodes.at(f[1]),
                                                            self.trimesh_nodes.at(f[2])))
-            self.thisptr.trimesh.addTriangle(self.trimesh_triangles.at(f_i))
+            deref(self.thisptr.trimesh).addTriangle(self.trimesh_triangles.at(f_i))
         if pos is None:
             pos = np.zeros(3)
         cdef ch.ChMatrix33 rotmat
@@ -404,7 +188,7 @@ cdef class ProtChBody:
             for j in range(rot.shape[1]):
                 rotmat.SetElement(i, j, rot[i, j])
         # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
-        deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(self.thisptr.trimesh,
+        deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(<shared_ptr[ch.ChTriangleMesh]> self.thisptr.trimesh,
                                                                             is_static,
                                                                             is_convex,
                                                                             ch.ChVector(pos[0],
@@ -412,6 +196,7 @@ cdef class ProtChBody:
                                                                                         pos[2]),
                                                                             rotmat,
                                                                             sphereswept_thickness)
+        self.thisptr.has_trimesh = True
         cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
         self.thisptr.pos0_trimesh = pos0
         cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
@@ -453,13 +238,13 @@ cdef class ProtChBody:
 
     def getTriangleMeshInfo(self):
         # vertices
-        cdef vector[ch.ChVector]* chpos = &self.thisptr.trimesh.getCoordsVertices()
+        cdef vector[ch.ChVector[double]] chpos = deref(self.thisptr.trimesh).getCoordsVertices()
         cdef double[:,:] pos = np.zeros((chpos.size(),3 ))
         for i in range(chpos.size()):
             pos[i, 0] = chpos.at(i).x()
             pos[i, 1] = chpos.at(i).y()
             pos[i, 2] = chpos.at(i).z()
-        cdef vector[ch.ChVector[int]]* chel_connect = &self.thisptr.trimesh.getIndicesVertexes()
+        cdef vector[ch.ChVector[int]] chel_connect = deref(self.thisptr.trimesh).getIndicesVertexes()
             # connection of vertices
         cdef int[:,:] el_connect = np.zeros((chel_connect.size(), 3), dtype=np.int32)
         for i in range(chel_connect.size()):
@@ -508,17 +293,14 @@ cdef class ProtChBody:
     def attachAuxiliaryVariables(self,avDict):
         pass
 
-    def setInertiaXX(self, np.ndarray inertia):
-        self.thisptr.setInertiaXX(<double*> inertia.data)
-
     def setInitialRot(self, rot):
         cdef np.ndarray zeros = np.zeros(3)
         self.rotation_init = rot
         self.thisptr.prestep(<double*> zeros.data,
                              <double*> zeros.data)
         if self.rotation_init is not None:
-            Profiling.logEvent("$$$$$ SETTING ROT")
-            self.thisptr.setRotation(<double*> self.rotation_init.data)
+            new_quat = chrono.ChQuaternionD(rot[0], rot[1], rot[2], rot[3])
+            self.ChBody.SetRot(new_quat)
         self.thisptr.poststep()
 
     def hxyz(self, np.ndarray x, double t, debug=False):
@@ -537,7 +319,7 @@ cdef class ProtChBody:
             # self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.scheme == "CSS":
             h_body_vec = self.thisptr.hxyz(<double*> x.data, t)
-            h_body = pych.ChVector_to_npArray(h_body_vec)
+            h_body = np.array([h_body_vec.x(), h_body_vec.y(), h_body_vec.z()])
             h += h_body
         elif self.ProtChSystem.scheme == "ISS":
             # remove previous prediction
@@ -571,7 +353,7 @@ cdef class ProtChBody:
                 print("x_old: ", x+h)
                 print("F_applied: ", self.F_applied)
             h_body_vec = self.thisptr.hxyz(<double*> xx.data, t)
-            h_body = pych.ChVector_to_npArray(h_body_vec)
+            h_body = np.array(h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
             h += h_body
             # add current prediction
             # rotate first
@@ -712,37 +494,6 @@ cdef class ProtChBody:
         self.thisptr.addSpring(stiffness, damping, <double*> fairlead.data,
                                <double*> anchor.data, rest_length)
 
-    def SetPosition(self, np.ndarray position):
-        """Sets position of body manually
-
-        Parameters
-        ----------
-        position: array_like
-            new position of body (must be array of length 3)
-        """
-        self.position = position
-        self.thisptr.setPosition(<double*> position.data)
-
-    def SetPosition(self, np.ndarray position):
-        """Sets position of body manually
-
-        Parameters
-        ----------
-        position: array_like
-            new position of body (must be array of length 3)
-        """
-        self.thisptr.setPosition(<double*> position.data)
-
-    def setRotation(self, np.ndarray quaternion):
-        """Sets rotation of body manually
-
-        Parameters
-        ----------
-        rotation: array_like
-            new rotation of body (quaternion: must be array of length 4)
-        """
-        self.thisptr.setRotation(<double*> quaternion.data)
-
     def setConstraints(self, np.ndarray free_x, np.ndarray free_r):
         """Sets constraints on the body
         (!) Only acts on Proteus and gravity forces
@@ -756,7 +507,7 @@ cdef class ProtChBody:
         """
         self.thisptr.setConstraints(<double*> free_x.data, <double*> free_r.data)
 
-    def setAddedMass(self, double[:,:] added_mass):
+    def setAddedMass(self, np.ndarray Aij):
         """
         Sets the added mass matrix of the body
 
@@ -766,17 +517,27 @@ cdef class ProtChBody:
             Added mass matrix (must be 6x6 array!)
         """
 
-        assert added_mass.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
-        assert added_mass.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
+        Aij[0, 1:] *= self.thisptr.free_x.x()
+        Aij[1, 0] *= self.thisptr.free_x.y()
+        Aij[1, 2:] *= self.thisptr.free_x.y()
+        Aij[2, :2] *= self.thisptr.free_x.z()
+        Aij[2, 3:] *= self.thisptr.free_x.z()
+        Aij[3, :3] *= self.thisptr.free_r.x()
+        Aij[3, 4:] *= self.thisptr.free_r.x()
+        Aij[4, :4] *= self.thisptr.free_r.y()
+        Aij[4, 5] *= self.thisptr.free_r.y()
+        Aij[5, :5] *= self.thisptr.free_r.z()
+        assert Aij.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
+        assert Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         cdef double mass = self.ChBody.GetMass()
-        cdef np.ndarray iner = self.ChBody.GetInertia()
+        cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
         cdef np.ndarray AM = np.zeros((6,6))  # added mass matrix
         cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
         cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
         cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
         # added mass matrix
-        AM += added_mass
+        AM += Aij
         self.Aij[:] = AM
         # mass matrix
         MM[0,0] = mass
@@ -798,8 +559,16 @@ cdef class ProtChBody:
             for j in range(6):
                 chFM.SetElement(i, j, FM[i, j])
                 inv_chFM.SetElement(i, j, inv_FM[i, j])
-        self.ChBody.SetMfullmass(chFM)
-        self.ChBody.SetInvMfullmass(inv_chFM)
+        self.ChBodyAddedMass.SetMfullmass(chFM)
+        self.ChBodyAddedMass.SetInvMfullmass(inv_chFM)
+
+        aa = np.zeros(6)
+
+        aa[:3] = pyvec2array(self.ChBody.GetPos_dtdt())
+        aa[3:] = pyvec2array(self.ChBody.GetWacc_loc())
+        Aija = np.dot(Aij, aa)
+        self.F_Aij = Aija[:3]
+        self.M_Aij = Aija[3:]
 
     def getPressureForces(self):
         """Gives pressure forces from fluid (Proteus) acting on body.
@@ -852,36 +621,10 @@ cdef class ProtChBody:
         M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
-        rx, ry, rz = self.barycenter0-self.ChBody.GetPos()
+        rx, ry, rz = self.barycenter0-pyvec2array(self.ChBody.GetPos())
         Mp = np.array([ry*Fz-rz*Fy, -(rx*Fz-rz*Fx), (rx*Fy-ry*Fx)])
         M_t += Mp
         return M_t
-
-    def SetPos(self, double[:] pos):
-        """Sets current position of body
-
-        Parameters
-        ----------
-        pos: array_like
-            position of body (array of length 3)
-        """
-        assert len(pos) == 3, 'Position aray must be of length 3'
-        cdef ch.ChVector pos_vec
-        pos_vec = ch.ChVector[double](pos[0], pos[1], pos[2])
-        deref(self.thisptr.body).SetPos(pos_vec)
-
-    def SetRot(self, double[:] rot):
-        """Sets current rotation (quaternion) of body
-
-        Parameters
-        ----------
-        rot: array_like
-           rotation of body (array of length 4)
-        """
-        assert len(rot) == 4, 'Position aray must be of length 4'
-        cdef ch.ChQuaternion rot_vec
-        rot_vec = ch.ChQuaternion[double](rot[0], rot[1], rot[2], rot[3])
-        deref(self.thisptr.body).SetRot(rot_vec)
 
     def getRotationMatrix(self):
         """Gives current rotation (matrix) of body
@@ -922,70 +665,14 @@ cdef class ProtChBody:
                     self.Aij += am.Aij[i]
                 if self.width_2D:
                     self.Aij *= self.width_2D
-        # setting added mass
-        if self.applyAddedMass is True:
-            Aij = np.zeros((6,6))
-            Aij[:] = self.Aij[:]
-            Aij[0, 1:] *= self.thisptr.free_x.x()
-            Aij[1, 0] *= self.thisptr.free_x.y()
-            Aij[1, 2:] *= self.thisptr.free_x.y()
-            Aij[2, :2] *= self.thisptr.free_x.z()
-            Aij[2, 3:] *= self.thisptr.free_x.z()
-            Aij[3, :3] *= self.thisptr.free_r.x()
-            Aij[3, 4:] *= self.thisptr.free_r.x()
-            Aij[4, :4] *= self.thisptr.free_r.y()
-            Aij[4, 5] *= self.thisptr.free_r.y()
-            Aij[5, :5] *= self.thisptr.free_r.z()
-            self.setAddedMass(Aij)
-            aa = np.zeros(6)
-            aa[:3] = self.acceleration
-            aa[3:] = self.ang_acceleration
-            Aija = np.dot(Aij, aa)
-        if self.ProtChSystem.model is not None:
-            self.F_prot = self.getPressureForces()+self.getShearForces()
-            self.M_prot = self.getMoments()
-            if self.width_2D:
-                self.F_prot *= self.width_2D
-                self.M_prot *= self.width_2D
+            # setting added mass
             if self.applyAddedMass is True:
-                self.F_Aij = Aija[:3]
-                self.M_Aij = Aija[3:]
-                self.F_prot += self.F_Aij
-                self.M_prot += self.M_Aij
-            if self.ProtChSystem.first_step is True:
-                # just apply initial conditions for 1st time step
-                F_bar = self.F_prot
-                M_bar = self.M_prot
-            else:
-                # actual force applied to body
-                if self.ProtChSystem.prediction == "backwardEuler":
-                    F_bar = self.F_prot
-                    M_bar = self.M_prot
-                if self.ProtChSystem.prediction == "forwardEuler":
-                    F_bar = self.F_prot_last
-                    M_bar = self.M_prot_last
-                if self.ProtChSystem.prediction == "implicitOrder2":
-                    F_bar = (self.F_prot+self.F_prot_last)/2.
-                    M_bar = (self.M_prot+self.M_prot_last)/2.
-                    # self.F_applied = self.F_prot
-                    # self.M_applied = self.M_prot
-                    # self.F_applied = 2*F_bar - self.F_applied_last
-                    # self.M_applied = 2*M_bar - self.M_applied_last
-            F_solid_type = 1
-            if F_solid_type == 1:
-                F_body = F_bar
-                M_body = M_bar
-            elif F_solid_type == 2:
-                if np.linalg.norm(self.F_prot_last) == 0:  # first time step
-                    F_body = F_bar
-                    M_body = M_bar
-                else:
-                    F_body = 2*F_bar-self.F_applied_last
-                    M_body = 2*M_bar-self.M_applied_last
-            self.setExternalForces(F_body, M_body)
-        self.predicted = False
+                Aij = np.zeros((6,6))
+                Aij[:] = self.Aij[:]
+                self.setAddedMass(Aij)
+            self.setExternalForces()
 
-    def setExternalForces(self, np.ndarray forces, np.ndarray moments):
+    def setExternalForces(self, np.ndarray forces=None, np.ndarray moments=None):
         """Sets external forces to body.
         Called during prestep or can be called manually. If called manually,
         must be a Chrono only simulation.
@@ -997,10 +684,54 @@ cdef class ProtChBody:
         moments: array_like
             moments array (length 3)
         """
-        self.F_applied = forces
-        self.M_applied = moments
+        if forces is not None:
+            self.F_prot = forces
+        if moments is not None:
+            self.M_prot = moments
+        if self.ProtChSystem.model is not None:
+            self.F_prot = self.getPressureForces()+self.getShearForces()
+            self.M_prot = self.getMoments()
+        if self.width_2D:
+            self.F_prot *= self.width_2D
+            self.M_prot *= self.width_2D
+        cdef np.ndarray F_bar = np.zeros(3)
+        cdef np.ndarray M_bar = np.zeros(3)
+        F_bar[:] = self.F_prot[:]
+        M_bar[:] = self.M_prot[:]
+        if self.applyAddedMass is True:
+            F_bar += self.F_Aij
+            M_bar += self.M_Aij
+        if self.ProtChSystem.first_step is False:
+            # actual force applied to body
+            if self.ProtChSystem.prediction == "backwardEuler":
+                F_bar = F_bar
+                M_bar = M_bar
+            if self.ProtChSystem.prediction == "forwardEuler":
+                F_bar = self.F_prot_last+self.Aij_last
+                M_bar = self.M_prot_last+self.Aij_last
+            if self.ProtChSystem.prediction == "implicitOrder2":
+                F_bar = (F_bar+self.F_prot_last+self.F_Aij_last)/2.
+                M_bar = (M_bar+self.M_prot_last+self.M_Aij_last)/2.
+                # self.F_applied = self.F_prot
+                # self.M_applied = self.M_prot
+                # self.F_applied = 2*F_bar - self.F_applied_last
+                # self.M_applied = 2*M_bar - self.M_applied_last
+        F_solid_type = 1
+        if F_solid_type == 1:
+            F_body = F_bar
+            M_body = M_bar
+        elif F_solid_type == 2:
+            if np.linalg.norm(self.F_prot_last) == 0:  # first time step
+                F_body = F_bar
+                M_body = M_bar
+            else:
+                F_body = 2*F_bar-self.F_applied_last
+                M_body = 2*M_bar-self.M_applied_last
+        self.F_applied = F_body
+        self.M_applied = M_body
         self.thisptr.prestep(<double*> self.F_applied.data,
                              <double*> self.M_applied.data)
+        self.predicted = False
 
     def poststep(self):
         """Called after Chrono system step.
@@ -1009,7 +740,8 @@ cdef class ProtChBody:
         """
         if self.prescribed_motion_function is not None:
             new_x = self.callPrescribedMotion(self.ProtChSystem.model.stepController.t_model_last)
-            self.thisptr.setPosition(<double*> new_x.data)
+            new_vec = chrono.ChVectorD(new_x[0], new_x[1], new_x[2])
+            self.ChBody.SetPos(new_vec)
         self.thisptr.poststep()
         self.getValues()
         comm = Comm.get().comm.tompi4py()
@@ -1032,8 +764,9 @@ cdef class ProtChBody:
                                             self.ProtChSystem.chrono_processor)
         if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
-            self._recordH5()
-            self._recordXML()
+            if self.thisptr.has_trimesh:
+                self._recordH5()
+                self._recordXML()
         # need to pass position and rotation values to C++ side
         # needed for transformations when calling hx, hy, hz, hxyz
         e0, e1, e2, e3 = self.rotq
@@ -1050,7 +783,7 @@ cdef class ProtChBody:
         self.thisptr.pos_last = pos_last
         if self.ProtChSystem.model_addedmass is not None:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
-            am.barycenters[self.i_start:self.i_end] = self.ChBody.GetPos()
+            am.barycenters[self.i_start:self.i_end] = pyvec2array(self.ChBody.GetPos())
         self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
 
     def prediction(self):
@@ -1116,9 +849,9 @@ cdef class ProtChBody:
         if self.Shape is not None:
             self.barycenter0 = self.Shape.barycenter.copy()
         else:
-            self.barycenter0 = self.ChBody.GetPos()
-        self.position_last[:] = self.ChBody.GetPos()
-        self.position[:] = self.ChBody.GetPos()
+            self.barycenter0 = pyvec2array(self.ChBody.GetPos())
+        self.position_last[:] = pyvec2array(self.ChBody.GetPos())
+        self.position[:] = pyvec2array(self.ChBody.GetPos())
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
@@ -1132,7 +865,6 @@ cdef class ProtChBody:
         self.storeValues()
         # set mass matrix with no added mass
         self.setAddedMass(np.zeros((6,6)))
-        # self.thisptr.setRotation(<double*> self.rotation_init.data)
         self.thisptr.calculate_init()
         #
 
@@ -1252,7 +984,7 @@ cdef class ProtChBody:
         self.position_last = self.position
         self.acceleration_last = self.acceleration
         self.rotq_last = self.rotq
-        self.rotm_last = self.rotm
+        # self.rotm_last = self.rotm
         self.ang_acceleration_last = self.ang_acceleration
         self.ang_velocity_last = self.ang_velocity
         self.F_last = self.F
@@ -1275,8 +1007,8 @@ cdef class ProtChBody:
                                                 self.ProtChSystem.chrono_processor)
             self.rotq_last = comm.bcast(self.rotq_last,
                                         self.ProtChSystem.chrono_processor)
-            self.rotm_last = comm.bcast(self.rotm_last,
-                                        self.ProtChSystem.chrono_processor)
+            # self.rotm_last = comm.bcast(self.rotm_last,
+            #                             self.ProtChSystem.chrono_processor)
             self.ang_velocity_last = comm.bcast(self.ang_velocity_last,
                                                 self.ProtChSystem.chrono_processor)
             self.ang_acceleration_last = comm.bcast(self.ang_acceleration_last,
@@ -1298,39 +1030,43 @@ cdef class ProtChBody:
         """Get values (pos, vel, acc, etc.) from C++ to python
         """
         # position
-        self.position = self.ChBody.GetPos()
+        self.position = pyvec2array(self.ChBody.GetPos())
         # rotation
-        self.rotq = self.ChBody.GetRot()
-        self.rotm = self.ChBody.GetA()
+        self.rotq = pyquat2array(self.ChBody.GetRot())
+        # self.rotm = mat332array(self.ChBody.GetA())
         # acceleration
-        self.acceleration = self.ChBody.GetPos_dtdt()
+        self.acceleration = pyvec2array(self.ChBody.GetPos_dtdt())
         #velocity
-        self.velocity = self.ChBody.GetPos_dt()
+        self.velocity = pyvec2array(self.ChBody.GetPos_dt())
         # angular acceleration
-        self.ang_acceleration = self.ChBody.GetWacc_loc()
+        self.ang_acceleration = pyvec2array(self.ChBody.GetWacc_loc())
         # angular velocity
-        self.ang_velocity = self.ChBody.GetWvel_loc()
+        self.ang_velocity = pyvec2array(self.ChBody.GetWvel_loc())
         # norm of angular velocity
         self.ang_vel_norm = np.sqrt(self.ang_velocity[0]**2
                                     +self.ang_velocity[1]**2
                                     +self.ang_velocity[2]**2)
         # force
-        self.F = pych.ChVector_to_npArray(self.thisptr.F)
+        self.F = np.array([self.thisptr.F.x(),
+                           self.thisptr.F.y(),
+                           self.thisptr.F.z()])
         # moment
-        self.M = pych.ChVector_to_npArray(self.thisptr.M)
+        self.M = np.array([self.thisptr.M.x(),
+                           self.thisptr.M.y(),
+                           self.thisptr.M.z()])
         if self.ProtChSystem.parallel_mode is True:
             comm = Comm.get().comm.tompi4py()
             self.position = comm.bcast(self.position, self.ProtChSystem.chrono_processor)
             self.velocity = comm.bcast(self.velocity, self.ProtChSystem.chrono_processor)
             self.acceleration = comm.bcast(self.acceleration, self.ProtChSystem.chrono_processor)
             self.rotq = comm.bcast(self.rotq, self.ProtChSystem.chrono_processor)
-            self.rotm = comm.bcast(self.rotm, self.ProtChSystem.chrono_processor)
+            # self.rotm = comm.bcast(self.rotm, self.ProtChSystem.chrono_processor)
             self.ang_velocity = comm.bcast(self.ang_velocity, self.ProtChSystem.chrono_processor)
             self.ang_acceleration = comm.bcast(self.ang_acceleration, self.ProtChSystem.chrono_processor)
             self.ang_vel_norm = comm.bcast(self.ang_vel_norm, self.ProtChSystem.chrono_processor)
 
 
-    def setRecordValues(self, filename=None, all_values=False, pos=False,
+    def setRecordValues(self, all_values=False, pos=False,
                         rot=False, ang_disp=False, F=False, M=False,
                         inertia=False, vel=False, acc=False, ang_vel=False,
                         ang_acc=False, h_predict=False):
@@ -1340,9 +1076,6 @@ cdef class ProtChBody:
 
         Parameters
         ----------
-        filename: Optional[string]
-            Name of file, if not set, the file will be named as follows:
-            'record_[shape.name].csv'
         all_values: bool
             Set to True to record all values listed below.
         time: bool
@@ -1437,8 +1170,8 @@ cdef class ProtChBody:
     def _recordValues(self):
         """Records values of body attributes in a csv file.
         """
-        record_file = os.path.join(Profiling.logDir, 'record_' + self.name)
-        t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
+        record_file = os.path.join(Profiling.logDir, self.name)
+        t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
@@ -1505,7 +1238,7 @@ cdef class ProtChBody:
 
     def _recordXML(self):
         tCount = self.ProtChSystem.tCount
-        t = self.ProtChSystem.t
+        t = self.ProtChSystem.ChSystem.GetChTime()
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
         # if tCount == 0:
         root = ET.Element("Xdmf",
@@ -1546,7 +1279,7 @@ cdef class ProtChBody:
                                   "DataType": "Int",
                                   "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
                                                            Xdmf_NodesPerElement)})
-        elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
+        elements.text = self.hdfFileName+".h5:/elementsSpatial_Domain"+str(tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
         nodes = ET.SubElement(geometry,
                               "DataItem",
@@ -1555,7 +1288,7 @@ cdef class ProtChBody:
                                "Precision": "8",
                                "Dimensions": "%i %i" % (pos.shape[0],
                                                         pos.shape[1])})
-        nodes.text = self.hdfFileName+".h5:/nodes_t"+str(tCount)
+        nodes.text = self.hdfFileName+".h5:/nodesSpatial_Domain"+str(tCount)
 
         tree = ET.ElementTree(root)
 
@@ -1611,52 +1344,18 @@ cdef class ProtChBody:
 
 
 cdef class ProtChSystem:
-    cdef cppSystem * thisptr
-    cdef double proteus_dt
-    cdef double proteus_dt_last
-    cdef double proteus_dt_next
-    cdef string directory
-    cdef object u
-    cdef int nd
-    cdef object femSpace_velocity
-    cdef object femSpace_pressure
-    cdef object nodes_kdtree
-    cdef int min_nb_steps
-    cdef double dt_fluid_next
-    cdef double dt
-    cdef double dt_last
-    cdef double t
-    cdef public:
-        object model
-        object model_module
-        double dt_init
-        double dt_fluid
-        double dt_fluid_last
-        cdef object subcomponents
-        double chrono_dt
-        bool build_kdtree
-        bool dist_search
-        bool parallel_mode
-        int chrono_processor
-        bool first_step
-        string scheme  # coupling scheme
-        string prediction  # force for prediction
-        int step_nb  # number of steps
-        int step_start  # starting step
-        double sampleRate
-        double next_sample
-        bool record_values
-        object model_mesh
-        object model_addedmass
-        ProtChAddedMass ProtChAddedMass
-        int tCount
-        bool initialised
-        bool update_substeps
 
-    def __cinit__(self, np.ndarray gravity=None, int nd=3, dt_init=0., sampleRate=0):
-        if gravity is not None:
-            self.thisptr = newSystem(<double*> gravity.data)
+    def __cinit__(self, int nd=3, dt_init=0., sampleRate=0):
+        self.thisptr = newSystem()
         self.subcomponents = []
+        # cannot call it self.ChSystem or self.ChSystemSMC (conflict in C++ - unknown reason)
+        self.ChSystemSMC = chrono.ChSystemSMC()
+        self.ChSystem = self.ChSystemSMC
+        # self.ChSystemSMC.this.disown()
+        cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChSystemSMC.this
+        cdef shared_ptr[ch.ChSystemSMC]* pt_to_shp = <shared_ptr[ch.ChSystemSMC]*> swig_obj.ptr;
+        self.thisptr.systemSMC = pt_to_shp[0]
+        self.thisptr.system = <shared_ptr[ch.ChSystem]> pt_to_shp[0]
         self.dt_init = dt_init
         self.model = None
         self.nd = nd
@@ -1691,21 +1390,30 @@ cdef class ProtChSystem:
         self.initialised = False
         self.update_substeps = False
 
+    def setTimeStep(self, double dt):
+        """Sets time step for Chrono solver.
+        Calculations in Chrono will use this time step within the
+        Proteus time step (if bigger)
+        Parameters
+        ----------
+        dt: float
+            Chrono time step size
+        """
+        self.chrono_dt = dt
+        self.thisptr.chrono_dt = dt
+
     def addProtChBody(self, ProtChBody body):
-        self.thisptr.system.AddBody(body.ChBody.sharedptr_chbody)
+        # self.ChSystemSMC.Add(body.ChBody)
+        self.ChSystem.Add(body.ChBody)
         body.ProtChSystem = self
         self.addSubcomponent(body)  # add body to system (for pre and post steps)
 
-    def GetChTime(self):
-        """Gives time of Chrono system simulation
+    def addProtChMesh(self, ProtChMesh mesh):
+        self.thisptr.addMesh(mesh.mesh)
+        mesh.ProtChSystem = self
 
-        Returns
-        -------
-        time: double
-            time of chrono system
-        """
-        time = self.thisptr.system.GetChTime()
-        return time
+    def setSolverDiagonalPreconditioning(self, bool boolval):
+        self.thisptr.setSolverDiagonalPreconditioning(boolval)
 
     def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
         assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
@@ -1757,7 +1465,7 @@ cdef class ProtChSystem:
         self.step_nb += 1
         # self.thisptr.system.setChTime()
         comm = Comm.get().comm.tompi4py()
-        t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+        t = comm.bcast(self.ChSystem.GetChTime(), self.chrono_processor)
         Profiling.logEvent('Solving Chrono system from t='
                         +str(t)
                         +' with dt='+str(self.dt)
@@ -1774,7 +1482,7 @@ cdef class ProtChSystem:
                         if type(s) is ProtChMoorings:
                             # update forces keeping same fluid vel/acc
                             s.updateForces()
-        t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+        t = comm.bcast(self.ChSystem.GetChTime(), self.chrono_processor)
         Profiling.logEvent('Solved Chrono system to t='+str(t))
         if self.scheme == "ISS":
             Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
@@ -1802,7 +1510,7 @@ cdef class ProtChSystem:
         elif proteus_dt is not None:
             self.proteus_dt = proteus_dt
             self.proteus_dt_next = proteus_dt  # BAD PREDICTION IF TIME STEP NOT REGULAR
-            self.t = t = self.thisptr.system.GetChTime()
+            self.t = t = self.ChSystem.GetChTime()
         else:
             sys.exit('ProtChSystem: no time step set in calculate()')
         if self.model is not None:
@@ -1823,11 +1531,6 @@ cdef class ProtChSystem:
         self.record_values = False
         self.first_step = False  # first step passed
         self.tCount += 1
-
-    def addBodyEasyBox(self, pych.ChBodyEasyBox body):
-        """Hack to add BodyEasyBox
-        """
-        self.thisptr.system.AddBody(body.sharedptr_chbody)
 
     def calculate_init(self):
         """Does chrono system initialisation
@@ -1851,7 +1554,7 @@ cdef class ProtChSystem:
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
-            self.thisptr.system.SetupInitial()
+            self.ChSystem.SetupInitial()
             Profiling.logEvent("Finished init"+str(self.next_sample))
             for s in self.subcomponents:
                 s.poststep()
@@ -1870,29 +1573,6 @@ cdef class ProtChSystem:
         tstypes = ["Euler", "HHT", "Trapezoidal"]
         assert str(tstype) in tstypes, str(tstype)+" not a valid choice."
         self.thisptr.setTimestepperType(tstype, verbose)
-
-    def setTimeStep(self, double dt):
-        """Sets time step for Chrono solver.
-        Calculations in Chrono will use this time step within the
-        Proteus time step (if bigger)
-
-        Parameters
-        ----------
-        dt: float
-            Chrono time step size
-        """
-        self.chrono_dt = dt
-        self.thisptr.setChTimeStep(dt)
-
-    def setGravity(self, np.ndarray gravity):
-        """Sets gravity acceleration of the Chrono system
-
-        Parameters
-        ----------
-        gravity: array_like
-            Gravity acceleration (array of length 3)
-        """
-        self.thisptr.setGravity(<double*> gravity.data)
 
     def addSubcomponent(self, subcomponent):
         """Adds subcomponent to system
@@ -2164,26 +1844,17 @@ cdef class ProtChSystem:
 #    print(gg.x, gg.y, gg.z)
 
 
-cdef class Mesh:
-    cdef cppMesh * thisptr
-    def __cinit__(self, ProtChSystem system):
-        cdef shared_ptr[ch.ChMesh] mesh = make_shared[ch.ChMesh]()
-        self.thisptr = newMesh(system.thisptr.system, mesh)
-    def setAutomaticGravity(self, bool val):
-        self.thisptr.SetAutomaticGravity(val)
+cdef class ProtChMesh:
 
-cdef class SurfaceBoxNodesCloud:
-    cdef cppSurfaceBoxNodesCloud * thisptr
-    def __cinit__(self, ProtChSystem system, Mesh mesh, np.ndarray position, np.ndarray dimensions):
-        cdef ch.ChVector[double] pos = ch.ChVector[double](position[0], position[1], position[2])
-        cdef ch.ChVector[double] dim = ch.ChVector[double](dimensions[0], dimensions[1], dimensions[2])
-        self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system,
-                                               mesh.thisptr.mesh,
-                                               pos,
-                                               dim)
-        # self.System.addBody(self)
-    def setNodesSize(self, double size):
-        self.thisptr.setNodesSize(size)
+    def __cinit__(self, ProtChSystem system):
+        self.ChMeshh = chrono_fea.ChMesh()
+        self.ChMeshh.SetAutomaticGravity(True)
+        cdef SwigPyObject *swig_obj = <SwigPyObject*> self.ChMeshh.this
+        cdef shared_ptr[ch.ChMesh]* pt_to_shp = <shared_ptr[ch.ChMesh]*> swig_obj.ptr;
+        self.mesh = pt_to_shp[0]
+        system.addProtChMesh(self)
+
+
 
 # def linkMoorings(System system, Moorings mooringA, int nodeA_ind, Moorings mooringB, int nodeB_ind):
 #     """
@@ -2229,46 +1900,10 @@ cdef class ProtChMoorings:
     beam_type: str
         Type of elements (default: "CableANCF").
     """
-    cdef cppMultiSegmentedCable * thisptr
-    cdef public:
-      # vector[pyfea.ChNodeFEAxyzD] nodes
-      # vector[pyfea.ChElementCableANCF] elems
-      # vector[ProtChCable] cables
-      str record_file
-      object model
-      ProtChSystem ProtChSystem
-      object Mesh
-      int nd
-      object nodes_function
-      object nodes_function_tangent
-      object fluid_velocity_function
-      ProtChBody body_front
-      ProtChBody body_back
-      bool front_body
-      bool back_body
-      bool nodes_built
-      bool external_forces_from_ns
-      bool external_forces_manual
-      np.ndarray fluid_density_array
-      np.ndarray fluid_velocity_array
-      np.ndarray fluid_velocity_array_previous
-      np.ndarray fluid_acceleration_array
-      string name
-      string beam_type
-      int nodes_nb # number of nodes
-      np.ndarray nb_elems
-      double[:] _record_etas
-      object _record_names
-      object _record_etas_names
-      bool initialized
-      int[:] nearest_node_array
-      int[:] containing_element_array
-      int[:] owning_rank
-      string hdfFileName
-      double[:] tCount_value
+
     def __cinit__(self,
                   ProtChSystem system,
-                  Mesh mesh,
+                  ProtChMesh mesh,
                   double[:] length,
                   np.ndarray nb_elems,
                   double[:] d,
@@ -2295,7 +1930,7 @@ cdef class ProtChMoorings:
             vec_rho.push_back(rho[i])
             vec_E.push_back(E[i])
         self.thisptr = newMoorings(system.thisptr.system,
-                                   mesh.thisptr.mesh,
+                                   mesh.mesh,
                                    vec_length,
                                    vec_nb_elems,
                                    vec_d,
@@ -2307,7 +1942,7 @@ cdef class ProtChMoorings:
         self.nodes_built = False
         self.setName('mooring')
         self.external_forces_from_ns = True
-        self.external_forces_manual = False
+        self.external_forces_manual = True
         self._record_etas = np.array([0.])
         self._record_names = ['ux', 'uy', 'uz',
                               'ax', 'ay', 'az',
@@ -2318,6 +1953,7 @@ cdef class ProtChMoorings:
         self._record_etas_names = []
         for eta in self._record_etas:
             self._record_etas_names += ['sx'+str(eta), 'sy'+str(eta), 'sz'+str(eta)]
+        self.tCount = 0
 
     def setName(self, string name):
         """Sets name of cable, used for csv file
@@ -2339,8 +1975,8 @@ cdef class ProtChMoorings:
                                         'sz'+str(eta)]
 
     def _recordH5(self):
-        tCount = self.ProtChSystem.tCount
-        t = self.ProtChSystem.t
+        tCount = self.tCount
+        t = self.ProtChSystem.ChSystem.GetChTime()
         self.hdfFileName = self.name
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
         if tCount == 0:
@@ -2349,9 +1985,9 @@ cdef class ProtChMoorings:
             f = h5py.File(hdfFileName, 'a')
         pos = self.getNodesPosition()
         element_connection = np.array([[i, i+1] for i in range(len(pos)-1)])
-        dset = f.create_dataset('nodes_t'+str(tCount), pos.shape)
+        dset = f.create_dataset('nodesSpatial_Domain'+str(tCount), pos.shape)
         dset[...] = pos
-        dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')
+        dset = f.create_dataset('elementsSpatial_Domain'+str(tCount), element_connection.shape, dtype='i8')
         dset[...] = element_connection
         # time
         datav = t
@@ -2433,19 +2069,19 @@ cdef class ProtChMoorings:
         f.close()
 
     def _recordXML(self):
-        tCount = self.ProtChSystem.tCount
-        t = self.ProtChSystem.t
+        tCount = self.tCount
+        t = self.ProtChSystem.ChSystem.GetChTime()
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
         # if tCount == 0:
         root = ET.Element("Xdmf",
-                            {"Version": "2.0",
-                             "xmlns:xi": "http://www.w3.org/2001/XInclude"})
+                          {"Version": "2.0",
+                           "xmlns:xi": "http://www.w3.org/2001/XInclude"})
         domain = ET.SubElement(root, "Domain")
         arGridCollection = ET.SubElement(domain,
-                                        "Grid",
-                                        {"Name": "Mesh"+" Spatial_Domain",
-                                         "GridType": "Collection",
-                                         "CollectionType": "Temporal"})
+                                         "Grid",
+                                         {"Name": "Mesh"+" Spatial_Domain",
+                                          "GridType": "Collection",
+                                          "CollectionType": "Temporal"})
         # else:
         #     tree = ET.parse(xmlFile)
         #     root = tree.getroot()
@@ -2475,7 +2111,7 @@ cdef class ProtChMoorings:
                                   "DataType": "Int",
                                   "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
                                                          Xdmf_NodesPerElement)})
-        elements.text = self.hdfFileName+".h5:/elements_t"+str(tCount)
+        elements.text = self.hdfFileName+".h5:/elementsSpatial_Domain"+str(tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
         nodes = ET.SubElement(geometry,
                               "DataItem",
@@ -2484,7 +2120,7 @@ cdef class ProtChMoorings:
                                "Precision": "8",
                                "Dimensions": "%i %i" % (pos.shape[0],
                                                         pos.shape[1])})
-        nodes.text = self.hdfFileName+".h5:/nodes_t"+str(tCount)
+        nodes.text = self.hdfFileName+".h5:/nodesSpatial_Domain"+str(tCount)
         all_names = self._record_names+self._record_etas_names
         for name in all_names:
             attr = ET.SubElement(arGrid,
@@ -2527,7 +2163,7 @@ cdef class ProtChMoorings:
             with open(record_file, mode) as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(row)
-        t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
+        t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
@@ -2624,7 +2260,7 @@ cdef class ProtChMoorings:
         cdef ch.ChVector T
         if self.thisptr.constraint_back:
             T = deref(self.thisptr.constraint_back).Get_react_force()
-            return pych.ChVector_to_npArray(T)
+            return np.array([T.x(), T.y(), T.z()])
         else:
             return np.zeros(3)
 
@@ -2635,7 +2271,7 @@ cdef class ProtChMoorings:
         cdef ch.ChVector T
         if self.thisptr.constraint_front:
             T = deref(self.thisptr.constraint_front).Get_react_force()
-            return pych.ChVector_to_npArray(T)
+            return np.array([T.x(), T.y(), T.z()])
         else:
             return np.zeros(3)
 
@@ -2677,18 +2313,19 @@ cdef class ProtChMoorings:
             self._recordValues()
             self._recordH5()
             self._recordXML()
+            self.tCount += 1
 
     def setApplyDrag(self, bool boolval):
         for i in range(self.thisptr.cables.size()):
-            deref(self.thisptr.cables[i]).applyDrag = True
+            deref(self.thisptr.cables[i]).applyDrag = boolval
 
     def setApplyAddedMass(self, bool boolval):
         for i in range(self.thisptr.cables.size()):
-            deref(self.thisptr.cables[i]).applyAddedMass = True
+            deref(self.thisptr.cables[i]).applyAddedMass = boolval
 
     def setApplyBuoyancy(self, bool boolval):
         for i in range(self.thisptr.cables.size()):
-            deref(self.thisptr.cables[i]).applyBuoyancy = True
+            deref(self.thisptr.cables[i]).applyBuoyancy = boolval
 
     def setNodesPositionFunction(self, function_position, function_tangent=None):
         """Function to build nodes
@@ -2831,6 +2468,8 @@ cdef class ProtChMoorings:
 
         (!) Must be called after setNodesPositionFunction()
         """
+        # self.nodes_positions0 = positions
+        # self.nodes_tangents0 = tangents
         cdef ch.ChVector[double] vec
         if positions is None:
             for i in range(self.thisptr.cables.size()):
@@ -2880,11 +2519,45 @@ cdef class ProtChMoorings:
                     x, y, z = tangents[i][j]
                     vec = ch.ChVector[double](x, y, z)
                     deref(self.thisptr.cables[i]).mvecs_tangents.push_back(vec)
-        self.buildNodes()
+        # self.buildNodes()
 
     def buildNodes(self):
+        # build nodes
         self.thisptr.buildNodes()
+        # get pointers to access nodes in python
+        cdef SwigPyObject *swig_obj
+        cdef int nodeN
+        self.nodes = []
+        for nodeN in range(self.thisptr.nb_nodes_tot):
+            if self.beam_type == "BeamEuler":
+                node = chrono_fea.ChNodeFEAxyzrot()
+            elif self.beam_type == "CableANCF":
+                node = chrono_fea.ChNodeFEAxyzD()
+            node.this.disown()
+            swig_obj = <SwigPyObject*> node.this
+            if self.beam_type == "BeamEuler":
+                swig_obj.ptr = <shared_ptr[ch.ChNodeFEAxyzrot]*> &self.thisptr.nodesRot.at(nodeN)
+            elif self.beam_type == "CableANCF":
+                swig_obj.ptr = <shared_ptr[ch.ChNodeFEAxyzD]*> &self.thisptr.nodes.at(nodeN)
+            self.nodes += [node]
         self.nodes_built = True
+        # build elements
+        self.thisptr.buildElements()
+        # get pointers to access elements in python
+        cdef int elemN
+        self.elements = []
+        for elemN in range(self.thisptr.nb_elems_tot-1):
+            if self.beam_type == "BeamEuler":
+                elem = chrono_fea.ChElementBeamEuler()
+            elif self.beam_type == "CableANCF":
+                elem = chrono_fea.ChElementCableANCF()
+            elem.this.disown()
+            swig_obj = <SwigPyObject*> elem.this
+            if self.beam_type == "BeamEuler":
+                swig_obj.ptr = <shared_ptr[ch.ChElementBeamEuler]*> &self.thisptr.elemsCableANCF.at(elemN)
+            elif self.beam_type == "CableANCF":
+                swig_obj.ptr = <shared_ptr[ch.ChElementCableANCF]*> &self.thisptr.elemsCableANCF.at(elemN)
+            self.elements += [elem]
         if self.beam_type == "BeamEuler":
             self.nodes_nb = self.thisptr.nodesRot.size()
         elif self.beam_type == "CableANCF":
@@ -2990,7 +2663,7 @@ cdef class ProtChMoorings:
             dire[i] = [vec.x(), vec.y(), vec.z()]
         return dire
 
-    def setContactMaterial(self, pych.ChMaterialSurfaceSMC mat):
+    def setContactMaterial(self, mat):
         """Sets contact material of the cable
 
         Parameters
@@ -2998,7 +2671,10 @@ cdef class ProtChMoorings:
         mat: ChMaterialSurfaceSMC
             Material of cable.
         """
-        self.thisptr.setContactMaterial(mat.sharedptr)
+        cdef SwigPyObject *swig_obj = <SwigPyObject*> mat.this
+        cdef shared_ptr[ch.ChMaterialSurfaceSMC]* pt_to_shp = <shared_ptr[ch.ChMaterialSurfaceSMC]*> swig_obj.ptr;
+        cdef shared_ptr[ch.ChMaterialSurfaceSMC] matp = pt_to_shp[0]
+        self.thisptr.setContactMaterial(matp)
 
     def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None,
                           fluid_acceleration_array=None):
@@ -3287,9 +2963,6 @@ cdef class ProtChAddedMass:
     This auxiliary variable is ONLY used to attach the AddedMass
     model to a ProtChSystem
     """
-    cdef public:
-        object model
-        ProtChSystem ProtChSystem
 
     def __cinit__(self,
                   system):
@@ -3320,49 +2993,105 @@ cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cab
         cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)
 
 
-cpdef linkBodies(ProtChBody body1,
-                 ProtChBody body2,
-                 ProtChSystem system,
-                 pych.ChCoordsys coordsys,
-                 double limit_X=0.,
-                 double limit_Y=0.,
-                 double limit_Z=0.,
-                 double limit_Rx=0.,
-                 double limit_Ry=0.,
-                 double limit_Rz=0.):
-    """Create a link between 2 bodies.
-    Master body is body2.
+# cpdef linkBodies(ProtChBody body1,
+#                  ProtChBody body2,
+#                  ProtChSystem system,
+#                  object coordsys,
+#                  double limit_X=0.,
+#                  double limit_Y=0.,
+#                  double limit_Z=0.,
+#                  double limit_Rx=0.,
+#                  double limit_Ry=0.,
+#                  double limit_Rz=0.):
+#     """Create a link between 2 bodies.
+#     Master body is body2.
 
-    Parameters:
-    -----------
-    body1: ProtChBody
-        Instance of first body
-    body2: ProtChBody
-        Instance of second body
-    body2: ProtChSystem
-        Instance of system to add link
-    coordsys: proteus.mbd.pyChronoCore.ChCoordsys
-        Coordinate system of link
-    limit_X: double
-        Limit in x direction
-    limit_Y: double
-        Limit in y direction
-    limit_Z: double
-        Limit in z direction
-    limit_Rx: double
-        Limit rotation around x axis
-    limit_Ry: double
-        Limit rotation around y axis
-    limit_Rz: double
-        Limit rotation around z axis
+#     Parameters:
+#     -----------
+#     body1: ProtChBody
+#         Instance of first body
+#     body2: ProtChBody
+#         Instance of second body
+#     body2: ProtChSystem
+#         Instance of system to add link
+#     coordsys: proteus.mbd.pyChronoCore.ChCoordsys
+#         Coordinate system of link
+#     limit_X: double
+#         Limit in x direction
+#     limit_Y: double
+#         Limit in y direction
+#     limit_Z: double
+#         Limit in z direction
+#     limit_Rx: double
+#         Limit rotation around x axis
+#     limit_Ry: double
+#         Limit rotation around y axis
+#     limit_Rz: double
+#         Limit rotation around z axis
+#     """
+#     ChLinkLockBodies(body1.ChBodyAddedMass.sharedptr_chbody,
+#                      body2.ChBodyAddedMass.sharedptr_chbody,
+#                      system.thisptr.system,
+#                      coordsys.cppobj,
+#                      limit_X,
+#                      limit_Y,
+#                      limit_Z,
+#                      limit_Rx,
+#                      limit_Ry,
+#                      limit_Rz)
+
+cdef class ChBodyAddedMass:
+    """Cython class for ChBodyAddedMass
+    (!) Uses shared_ptr
     """
-    ChLinkLockBodies(body1.ChBody.sharedptr_chbody,
-                     body2.ChBody.sharedptr_chbody,
-                     system.thisptr.system,
-                     coordsys.cppobj,
-                     limit_X,
-                     limit_Y,
-                     limit_Z,
-                     limit_Rx,
-                     limit_Ry,
-                     limit_Rz)
+
+    def __cinit__(self):
+        # make shared_ptr object (C++ syntax for Chrono)
+        self.sharedptr = make_shared[ch.ChBodyAddedMass]()
+        self.sharedptr_chbody = <shared_ptr[ch.ChBody]> self.sharedptr
+        # get a raw ptr for SWIG
+        self.thisptr = self.sharedptr.get()
+        self.bodyptr = self.sharedptr_chbody.get()
+        # create SWIG ChBody
+        self.ChBodySWIG = chrono.ChBody()
+        self.ChBodySWIG.this.disown()
+        # delete? object pointed to by SWIG
+        # point to new object (base of ChBodyAddedMass: ChBody)
+        cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChBodySWIG.this
+        swig_obj.ptr = <shared_ptr[ch.ChBody]*> &self.sharedptr_chbody
+        # cdef shared_ptr[ch.ChSystemSMC]* pt_to_shp = <shared_ptr[ch.ChSystemSMC]*> swig_obj.ptr;
+        # self.thisptr.system = pt_to_shp[0]
+        # cdef SwigPyObject *swig_obj = <SwigPyObject*>self.ChBodySWIG.this
+        # swig_obj.ptr = <ch.ChBody*?> &self.bodyptr
+
+    cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
+        self.thisptr.SetMfullmass(Mfullmass_in)
+
+    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
+        self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
+
+
+
+
+
+def vec2array(vec):
+    return np.array([vec.x(), vec.y(), vec.z()])
+
+def pyvec2array(vec):
+    return np.array([vec.x, vec.y, vec.z])
+
+def mat332array(mat):
+    return np.array([[mat.Get_A_Xaxis().x(), mat.Get_A_Xaxis().y(), mat.Get_A_Xaxis().z()],
+                     [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
+                     [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
+
+def pymat332array(mat):
+    return np.array([[mat.Get_A_Xaxis().x, mat.Get_A_Xaxis().y, mat.Get_A_Xaxis().z],
+                     [mat.Get_A_Yaxis().x, mat.Get_A_Yaxis().y, mat.Get_A_Yaxis().z],
+                     [mat.Get_A_Zaxis().x, mat.Get_A_Zaxis().y, mat.Get_A_Zaxis().z]])
+
+def quat2array(quat):
+    return np.array([quat.e0(), quat.e1(), quat.e2(), quat.e3()])
+
+def pyquat2array(quat):
+    return np.array([quat.e0, quat.e1, quat.e2, quat.e3])

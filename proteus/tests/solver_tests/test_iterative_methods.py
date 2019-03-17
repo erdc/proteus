@@ -286,9 +286,9 @@ def test_amg_basic(load_small_step_matrix,
     index_sets = build_amg_index_sets(L_sizes)
 
     #Initialize ksp object
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
                                                       index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))   
     F_ksp.solve(b,x)
     assert F_ksp.its == 9
@@ -301,9 +301,9 @@ def test_amg_iteration_performance(load_medium_step_matrix,
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
                                                       index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
 
     F_ksp.solve(b,x)
@@ -316,9 +316,9 @@ def test_amg_step_problem_01(load_rans2p_step_newton_1,
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
                                                       index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
     assert F_ksp.its == 59
@@ -330,9 +330,9 @@ def test_amg_step_problem_02(load_rans2p_step_newton_5,
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
-    F_ksp = initialize_asm_ksp_obj(mat_A.getSubMatrix(index_sets[0],
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
                                                       index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.getSubMatrix(index_sets[0],
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
     assert F_ksp.its == 60

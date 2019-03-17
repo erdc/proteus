@@ -197,3 +197,8 @@ void ChBodyAddedMass::IntLoadResidual_Mv(const unsigned int off,      // offset 
   R.PasteSumMatrix(variables.GetMfullmass()*ww*c, off, 0);
 }
 }  // end namespace chrono
+
+chrono::ChBodyAddedMass * newChBodyAddedMass()
+{
+  return new chrono::ChBodyAddedMass();
+};
