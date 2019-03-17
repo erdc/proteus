@@ -6536,7 +6536,7 @@ class FiniteElementFunction(object):
     underlying basis functions that comes from `femSpace`'s
     ParametricFiniteElementSpace object
     """
-    def __init__(self,finiteElementSpace,dof=None,dim_dof=1,name="no_name",isVector=False):
+    def __init__(self,finiteElementSpace,dof=None,dof_last=None,dof_last_last=None,dim_dof=1,name="no_name",isVector=False):
         #: Name assigned to the FiniteElementFunction instance
         self.name=name
         #: boolean variable identifying whether the
