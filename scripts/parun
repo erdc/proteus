@@ -249,7 +249,7 @@ comm = Comm.init()
 logDir = None
 if opts.dataDir != '':
     if comm.isMaster() and not os.path.exists(opts.dataDir):
-    	try:
+        try:
             os.makedirs(opts.dataDir)
         except Exception as e:
             print(

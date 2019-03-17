@@ -602,11 +602,11 @@ namespace proteus
         double rho,rho_f,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
-        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-        d_mu = (1.0-useVF)*smoothedDirac(eps_mu,phi);
+	//        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+	//        d_mu = (1.0-useVF)*smoothedDirac(eps_mu,phi);
   
         //calculate eddy viscosity
-        switch (turbulenceClosureModel)
+	/*        switch (turbulenceClosureModel)NO NEED FOR SOLID PHASE Coefficients
           {
             double norm_S;
           case 1:
@@ -635,17 +635,17 @@ namespace proteus
               nu_t1 = cs_1*h_e*h_e*norm_S;
             }
           }
-      
+	*/
         rho = rho_s;
         rho_f = rho_0*(1.0-H_rho)+rho_1*H_rho;
-        nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
-        nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
+	//        nu_t= nu_t0*(1.0-H_mu)+nu_t1*H_mu;
+	//        nu = nu_0*(1.0-H_mu)+nu_1*H_mu;
         //nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-        nu += nu_t;
+	//        nu += nu_t;
         //mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-        mu = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+	//        mu = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
-        eddy_viscosity = rho_0*nu_t0*(1.0-H_mu)+rho_1*nu_t1*H_mu;
+	//        eddy_viscosity = rho_0*nu_t0*(1.0-H_mu)+rho_1*nu_t1*H_mu;
 
         // mass (volume accumulation)
         //..hardwired
@@ -763,7 +763,13 @@ namespace proteus
         mom_u_source = -rho*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
         mom_v_source = -rho*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
         mom_w_source = -rho*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
-   
+    	if(vos > closure.frFraction_)
+	  {
+	    mom_u_source += (rho-rho_f)*g[0];
+	    mom_v_source += (rho-rho_f)*g[1];
+	    mom_w_source += (rho-rho_f)*g[2];
+
+	  }
         //u momentum Hamiltonian (pressure)
         mom_u_ham = grad_p[0];// /rho;
         dmom_u_ham_grad_p[0]=1.0;// /rho;
