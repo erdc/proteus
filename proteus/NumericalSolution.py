@@ -800,7 +800,7 @@ class NS_base(object):  # (HasTraits):
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
-                lm.u_store = copy.deepcopy(lm.u)
+                lm.u_store = lm.u.copy()
                 lm.dt_store = copy.deepcopy(lm.timeIntegration.dt)
                 for ci in range(0,lm.coefficients.nc):
                     lm.u[ci].dof[:] = lm.u[ci].dof_last
@@ -1148,7 +1148,7 @@ class NS_base(object):  # (HasTraits):
         import copy
         for m in self.modelList:
             for lm in m.levelModelList:
-                lm.u_store = copy.deepcopy(lm.u)
+                lm.u_store = lm.u.copy()
         self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
         self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
 
@@ -1656,7 +1656,7 @@ class NS_base(object):  # (HasTraits):
                                 m.rList):
                 if self.opts.save_dof:
                     import copy
-                    lm.u_store = copy.deepcopy(lm.u)
+                    lm.u_store = lm.u.copy()
                     lm.setUnknowns(m.uList[0])
                     for ci in range(lm.coefficients.nc):
                         lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
@@ -1745,7 +1745,7 @@ class NS_base(object):  # (HasTraits):
             import copy
             for m in self.modelList:
                 for lm in m.levelModelList:
-                    lm.u_store = copy.deepcopy(lm.u)
+                    lm.u_store = lm.u.copy()
                     lm.setUnknowns(m.uList[0])
                     for ci in range(lm.coefficients.nc):
                         lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
@@ -1796,7 +1796,7 @@ class NS_base(object):  # (HasTraits):
                         import copy
                         for m in self.modelList:
                             for lm in m.levelModelList:
-                                lm.u_store = copy.deepcopy(lm.u)
+                                lm.u_store = lm.u.copy()
                                 lm.setUnknowns(m.uList[0])
                                 for ci in range(lm.coefficients.nc):
                                     lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
