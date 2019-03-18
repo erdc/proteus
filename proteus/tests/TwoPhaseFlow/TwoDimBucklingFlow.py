@@ -242,7 +242,7 @@ myTpFlowProblem.useBoundaryConditionsModule = False
 myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = False
 myTpFlowProblem.Parameters.Models.rans3p.ns_forceStrongDirichlet = True
 myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
-yTpFlowProblem.Parameters.Models.rans3p.epsFact_density = 3.
+myTpFlowProblem.Parameters.Models.rans3p.epsFact_density = 3.
 myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
 
 myTpFlowProblem.outputStepping.systemStepExact = True

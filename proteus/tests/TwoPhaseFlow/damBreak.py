@@ -129,9 +129,6 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 
-auxVariables={'clsvof': [height_gauges1, height_gauges2],
-              'pressure': [pressure_gauges]}
-
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
                                              nd=2,
                                              cfl=opts.cfl,
@@ -144,6 +141,8 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
-                                             auxVariables=auxVariables,
                                              useSuperlu=True)
-myTpFlowProblem.clsvof_parameters['disc_ICs']=True
+myTpFlowProblem.Parameters.Models.clsvof['disc_ICs'] = True
+myTpFlowProblem.Parameters.Models.clsvof.auxiliaryVariables = [height_gauges1, height_gauges2]
+myTpFlowProblem.Parameters.Models.pressure.auxiliaryVariables = [pressure_gauges]
+myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
