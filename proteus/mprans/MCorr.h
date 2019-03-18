@@ -2,6 +2,7 @@
 #define MCorr_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include PROTEUS_LAPACK_H
@@ -11,6 +12,8 @@ namespace proteus
   class MCorr_base
   {
   public:
+    std::valarray<double> Rpos, Rneg;
+    std::valarray<double> FluxCorrectionMatrix;
     virtual ~MCorr_base(){}
     virtual void calculateResidual(//element
                                    double* mesh_trial_ref,
@@ -2033,8 +2036,8 @@ namespace proteus
 		   double* MassMatrix //mass matrix
 		   )
       {
-	register double Rpos[numDOFs], Rneg[numDOFs];
-	register double FluxCorrectionMatrix[NNZ];
+	Rpos.resize(numDOFs,0.0), Rneg.resize(numDOFs,0.0);
+	FluxCorrectionMatrix.resize(NNZ,0.0);
 	//////////////////
 	// LOOP in DOFs //
 	//////////////////
