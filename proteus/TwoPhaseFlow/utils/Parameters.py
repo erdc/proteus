@@ -175,6 +175,7 @@ class ParametersModelRANS3P(ParametersModelBase):
         self.PSTAB = 0
         self.USE_SUPG = True
         self.ARTIFICIAL_VISCOSITY = 2
+        self.INT_BY_PARTS_PRESSURE = 1
         self.cE = 1.
         self.cMax = 1.
         # freeze attributes

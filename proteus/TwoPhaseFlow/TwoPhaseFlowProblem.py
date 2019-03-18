@@ -58,6 +58,10 @@ class TwoPhaseFlowProblem:
         if boundaryConditions is not None:
             assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
             # assertion now done in TwoPhaseFlow_so.py
+        self.forceTerms = forceTerms
+        if forceTerms is not None:
+            assert type(forceTerms)==dict, "forceTerms must be a dictionary"
+            assert len(forceTerms) in [2,3], "forceTerms must have two or three components"
 
         # ***** SAVE PARAMETERS ***** #
         self.domain=domain
