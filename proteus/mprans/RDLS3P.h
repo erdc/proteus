@@ -2,6 +2,7 @@
 #define RDLS3P_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
@@ -19,6 +20,7 @@ namespace proteus
   class cppRDLS3P_base
   {
   public:
+    std::valarray<double> weighted_lumped_mass_matrix;
     virtual ~cppRDLS3P_base(){}
     virtual void calculateResidual(//element
                                    double* mesh_trial_ref,
@@ -1922,7 +1924,7 @@ namespace proteus
                                 double* lumped_qy,
                                 double* lumped_qz)
       {
-        register double weighted_lumped_mass_matrix[numDOFs];
+        weighted_lumped_mass_matrix.resize(numDOFs,0.0);
         for (int i=0; i<numDOFs; i++)
           {
             // output vectors
