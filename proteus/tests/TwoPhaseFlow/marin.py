@@ -275,7 +275,8 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              nnz=None,
                                              domain=domain,
                                              initialConditions=initialConditions,
-                                             boundaryConditions=boundaryConditions)
+                                             boundaryConditions=boundaryConditions,
+                                             useSuperlu=True)
 myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,0.0,-9.8])
 
 myTpFlowProblem.useBoundaryConditionsModule = False

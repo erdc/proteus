@@ -2,6 +2,7 @@
 #define NCLS_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
@@ -1717,13 +1718,13 @@ namespace proteus
 					   double* ML
 					   )
       {
-	register double L2_norm_per_node[numDOFs];
+	std::valarray<double> L2_norm_per_node(numDOFs);
 	double L2_norm=0.;
 	for (int i=0; i<numDOFs; i++)
 	  L2_norm_per_node[i] = 0.;
 
 	// Allocate space for the transport matrices
-	register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
+	std::valarray<double> TransportMatrix(NNZ), TransposeTransportMatrix(NNZ);
 	for (int i=0; i<NNZ; i++)
 	  {
 	    TransportMatrix[i] = 0.;
@@ -1850,7 +1851,7 @@ namespace proteus
 	//////////////////////////////////
 	// Smoothness indicator is based on the solution.
 	// psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
-	register double psi[numDOFs];
+	std::valarray<double> psi(numDOFs);
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double alphai;
@@ -2099,7 +2100,7 @@ namespace proteus
 
 	// Allocate space for the transport matrices
 	// This is used for first order KUZMIN'S METHOD
-	register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
+	std::valarray<double> TransportMatrix(NNZ), TransposeTransportMatrix(NNZ);
 	for (int i=0; i<NNZ; i++)
 	  {
 	    TransportMatrix[i] = 0.;
@@ -2107,7 +2108,7 @@ namespace proteus
 	  }
 
 	// Allocate and init to zero the Entropy residual vector
-	register double global_entropy_residual[numDOFs]; //, eta[numDOFs];
+	std::valarray<double> global_entropy_residual(numDOFs); //, eta(numDOFs);
 	if (STABILIZATION_TYPE==1) //EV stab
 	  for (int i=0; i<numDOFs; i++)
 	    global_entropy_residual[i] = 0.;
@@ -2318,9 +2319,9 @@ namespace proteus
 	// COMPUTE g, ETA and others //
 	///////////////////////////////
 	// NOTE: see VOF.h for a different but equivalent implementation of this.
-	register double gx[numDOFs], gy[numDOFs], gz[numDOFs], eta[numDOFs],
-	  alpha_numerator_pos[numDOFs], alpha_numerator_neg[numDOFs],
-	  alpha_denominator_pos[numDOFs], alpha_denominator_neg[numDOFs];
+	std::valarray<double> gx(numDOFs), gy(numDOFs), gz(numDOFs), eta(numDOFs),
+	  alpha_numerator_pos(numDOFs), alpha_numerator_neg(numDOFs),
+	  alpha_denominator_pos(numDOFs), alpha_denominator_neg(numDOFs);
 	int ij = 0;
 	for (int i=0; i<numDOFs; i++)
 	  {
@@ -2376,7 +2377,7 @@ namespace proteus
 	//////////////////////////////////////////////////////////
 	// Smoothness indicator is based on the solution.
 	// psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
-	register double psi[numDOFs], etaMax[numDOFs], etaMin[numDOFs];
+	std::valarray<double> psi(numDOFs), etaMax(numDOFs), etaMin(numDOFs);
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double xi, yi, zi, SumPos=0., SumNeg=0.;

@@ -198,7 +198,8 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              nnz=None,
                                              domain=domain,
                                              initialConditions=initialConditions,
-                                             boundaryConditions=boundaryConditions)
+                                             boundaryConditions=boundaryConditions,
+                                             useSuperlu=True)
 myTpFlowProblem.Parameters.physical['densityA'] = 1800.0
 myTpFlowProblem.Parameters.physical['viscosityA'] = 500.0/1800.0
 myTpFlowProblem.Parameters.physical['densityB'] = 1.0

@@ -2308,8 +2308,8 @@ namespace proteus
 			     // int by parts pressure
 			     int INT_BY_PARTS_PRESSURE)
       {
-	register double TransportMatrix[NNZ_1D], TransposeTransportMatrix[NNZ_1D];
-	register double psi[numDOFs_1D];
+	std::valarray<double> TransportMatrix(NNZ_1D), TransposeTransportMatrix(NNZ_1D);
+	std::valarray<double> psi(numDOFs_1D);
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {
 	    for (int i=0; i<NNZ_1D; i++)
@@ -3028,7 +3028,7 @@ namespace proteus
                                            nQuadraturePoints_global,
                                            &particle_signed_distances[eN_k],
                                            &particle_signed_distance_normals[eN_k_nSpace],
-                                           particle_velocities,
+                                           &particle_velocities[eN_k_nSpace],
                                            particle_centroids,
                                            use_ball_as_particle,
                                            ball_center,
@@ -3090,7 +3090,7 @@ namespace proteus
                                            nQuadraturePoints_global,
                                            &particle_signed_distances[eN_k],
                                            &particle_signed_distance_normals[eN_k_nSpace],
-                                           particle_velocities,
+                                           &particle_velocities[eN_k_nSpace],
                                            particle_centroids,
                                            use_ball_as_particle,
                                            ball_center,

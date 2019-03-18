@@ -2,6 +2,7 @@
 #define CLSVOF_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
@@ -2270,8 +2271,8 @@ namespace proteus
 		   double* MassMatrix //mass matrix
 		   )
       {
-	register double Rpos[numDOFs], Rneg[numDOFs];
-	register double FluxCorrectionMatrix[NNZ];
+	std::valarray<double> Rpos(numDOFs), Rneg(numDOFs);
+	std::valarray<double> FluxCorrectionMatrix(NNZ);
 	//////////////////
 	// LOOP in DOFs //
 	//////////////////

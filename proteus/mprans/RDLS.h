@@ -2,6 +2,7 @@
 #define RDLS_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
@@ -1922,7 +1923,7 @@ namespace proteus
                                 double* lumped_qy,
                                 double* lumped_qz)
       {
-        register double weighted_lumped_mass_matrix[numDOFs];
+	std::valarray<double> weighted_lumped_mass_matrix(numDOFs);
         for (int i=0; i<numDOFs; i++)
           {
             // output vectors

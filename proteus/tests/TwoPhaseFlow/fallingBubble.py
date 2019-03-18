@@ -232,7 +232,8 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              nnz=None,
                                              domain=domain,
                                              initialConditions=initialConditions,
-                                             boundaryConditions=boundaryConditions)
+                                             boundaryConditions=boundaryConditions,
+                                             useSuperlu=True)
 myTpFlowProblem.useBoundaryConditionsModule = False
 myTpFlowProblem.Parameters.Models.rans2p.epsFact_viscosity = 3.
 myTpFlowProblem.Parameters.Models.rans2p.epsFact_density = 3.
