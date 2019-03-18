@@ -22,11 +22,6 @@ for i in range(len(sys.argv)):
 # Load module
 if pathMyTpFlowProblem is not None:
     sys.path.append(pathMyTpFlowProblem)
-
-# ***************************** #
-# ********** CONTEXT ********** #
-# ***************************** #
-# name = "TwoPhaseFlow"
 case = __import__(name)
 
 # Create context
@@ -41,6 +36,7 @@ params = ct.myTpFlowProblem.Parameters
 assert hasattr(ct,'myTpFlowProblem'), "Create myTpFlowProblem from TwoPhaseFlowProblem"
 ns_model = ct.myTpFlowProblem.ns_model
 outputStepping = ct.myTpFlowProblem.outputStepping
+fastArchive = ct.myTpFlowProblem.fastArchive
 
 # **************************** #
 # ********** pnList ********** #
@@ -71,6 +67,11 @@ if params.Models.rans3p['index'] is not None: #rans3p
 #
 needEBQ_GLOBAL = False
 needEBQ = False
+
+# ******************************************* #
+# ********** Measure speed of code ********** #
+# ******************************************* #
+measureSpeedOfCode = True
 
 # **************************** #
 # ********** tnList ********** #

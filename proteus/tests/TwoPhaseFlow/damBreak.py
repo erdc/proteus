@@ -1,95 +1,102 @@
 """
-Rising bubble test
+danbreak 2-D
 """
 from __future__ import division
 from past.utils import old_div
 import numpy as np
-from proteus import (Domain, Context)
+from proteus import (Domain, Context)                     
 from proteus.Profiling import logEvent
 from proteus.mprans.SpatialTools import Tank2D
 from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+from proteus.Gauges import PointGauges, LineIntegralGauges, LineGauges
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
-    ("test_case",1,"Rising bubble test cases: 1,2"),
-    ('ns_model',1,"ns_model = {rans2p,rans3p}"),
     ("final_time",3.0,"Final time for simulation"),
-    ("dt_output",0.1,"Time interval to output solution"),
-    ("cfl",0.2,"Desired CFL restriction"),
+    ("dt_output",0.01,"Time interval to output solution"),
+    ("cfl",0.25,"Desired CFL restriction"),
+    ("he",0.01,"he relative to Length of domain in x"),
     ("refinement",3,"level of refinement")
-    ("ARTIFICIAL_VISCOSITY",3,"artificial viscosity")
     ])
-
-assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
-assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
 
 # ****************** #
 # ***** GAUGES ***** #
 # ****************** #
-# None
+height_gauges1 = LineGauges(gauges=((("phi",),
+                                        (((2.724, 0.0, 0.0),
+                                          (2.724, 1.8, 0.0)), # We consider this one in our paper
+                                         ((2.228, 0.0, 0.0),
+                                          (2.228, 1.8, 0.0)), # We consider this one in our paper
+                                         ((1.732, 0.0, 0.0),
+                                          (1.732, 1.8, 0.0)),
+                                         ((0.582, 0.0, 0.0),
+	                                  (0.582, 1.8, 0.0)))),),
+                                        fileName="height1.csv")
+
+height_gauges2 = LineGauges(gauges=((("phi",),
+                                     (((0.0, 0.0, 0.0),
+                                       (0.0, 0.0, -0.01)),
+                                      ((0.0, 0.0, 0.0),
+                                        (3.22, 0.0, 0.0)))),),
+                            fileName="height2.csv")
+
+pressure_gauges = PointGauges(gauges=((('p',),
+                                      ((3.22, 0.16, 0.0), #P1                                                               
+                                       (3.22, 0.584, 0.0), #P3                                                               
+                                       (3.22, 0.12, 0.0))),), # This is the one considered in our paper
+                                       fileName="pressure.csv")
+
 
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
-tank_dim = (1.0,2.0) 
+tank_dim = (3.22,1.8) 
 refinement = opts.refinement
-structured=True
+structured=False
 if structured:
-    nnx = 5*(2**refinement)+1
-    #nnx = 4 * refinement**2 +2
-    nny = 2*nnx
+    nny = 5*(2**refinement)+1
+    nnx = 2*(nnx-1)+1
     domain = Domain.RectangularDomain(tank_dim)
     boundaryTags = domain.boundaryTags
     triangleFlag=1
-    he=1.0/(nnx-1)
 else:
     nnx = nny = None
     domain = Domain.PlanarStraightLineGraphDomain()
-    domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
-    he = old_div(tank_dim[0], float(4 * refinement - 1))
-    domain.MeshOptions.he = he
-    triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
 # ----- TANK ----- #
-tank = Tank2D(domain, tank_dim)
+tank = Tank2D(domain, tank_dim) 
 
 # ----- EXTRA BOUNDARY CONDITIONS ----- #
-tank.BC['y+'].setNoSlip()
-tank.BC['y-'].setNoSlip()
+tank.BC['y+'].setAtmosphere()
+tank.BC['y-'].setFreeSlip()
 tank.BC['x+'].setFreeSlip()
 tank.BC['x-'].setFreeSlip()
 
-he = old_div(tank_dim[0], float(4 * refinement - 1))
+he = tank_dim[0]*opts.he
 domain.MeshOptions.he = he
 st.assembleDomain(domain)
+domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
 # ****************************** #
 class zero(object):
     def uOfXT(self,x,t):
-        return 0.
+        return 0.0
 
+waterLine_y = 0.6
+waterLine_x = 1.2
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
-        xB = 0.5
-        yB = 0.5
-        rB = 0.25
-        zB = 0.0
-        # dist to center of bubble
-        r = np.sqrt((x[0]-xB)**2 + (x[1]-yB)**2)
-        # dist to surface of bubble
-        dB = rB - r
-        #return dB
-        if dB>0:
-            return 1.0
-        elif dB==0:
-            return 0.0
-        else:
+        if x[0] < waterLine_x and x[1] < waterLine_y: 
             return -1.0
+        elif x[0] > waterLine_x or x[1] > waterLine_y: 
+            return 1.0
+        else:
+            return 0.0        
 
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
@@ -99,7 +106,6 @@ initialConditions = {'pressure': zero(),
                      'pressure_increment': zero(),
                      'vel_u': zero(),
                      'vel_v': zero(),
-                     'vel_w': zero(),
                      'clsvof': clsvof_init_cond()}
 boundaryConditions = {
     # DIRICHLET BCs #
@@ -122,7 +128,11 @@ boundaryConditions = {
     'vel_v_DFBC': lambda x, flag: domain.bc[flag].v_diffusive.init_cython(),
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
-myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+
+auxVariables={'clsvof': [height_gauges1, height_gauges2],
+              'pressure': [pressure_gauges]}
+
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -134,28 +144,6 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
+                                             auxVariables=auxVariables,
                                              useSuperlu=True)
-physical_parameters = myTpFlowProblem.Parameters.physical
-physical_parameters['gravity'] = [0.0, -0.98, 0.0]
-if opts.test_case==1:
-    physical_parameters['densityA'] = 1000.0
-    physical_parameters['kinematicViscosityA'] = 10.0/physical_parameters['densityA']
-    physical_parameters['densityB'] = 100.0
-    physical_parameters['kinematicViscosityB'] = 1.0/physical_parameters['densityB']
-    physical_parameters['surf_tension_coeff'] = 24.5
-    physical_parameters['gravity'] = [0.0, -0.98, 0.0]
-else: #test_case=2
-    physical_parameters['densityA'] = 1000.0
-    physical_parameters['kinematicViscosityA'] = 10.0/physical_parameters['densityA']
-    physical_parameters['densityB'] = 1.0
-    physical_parameters['kinematicViscosityB'] = 0.1/physical_parameters['densityB']
-    physical_parameters['surf_tension_coeff'] = 1.96
-
-myTpFlowProblem.useBoundaryConditionsModule = False
-myTpFlowProblem.Parameters.Models.rans3p.epsFact_viscosity = 3.
-myTpFlowProblem.Parameters.Models.rans3p.epsFact_density = 3.
-myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
-myTpFlowProblem.Parameters.Models.rans3p.timeDiscretization = 'vbdf'
-myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = True
-
-myTpFlowProblem.outputStepping.systemStepExact = True
+myTpFlowProblem.clsvof_parameters['disc_ICs']=True

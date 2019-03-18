@@ -219,6 +219,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         self.outputQuantDOFs = True
         self.computeMetrics = 1
         self.eps_tolerance_clsvof = False
+        self.disc_ICs = False
         # freeze attributes
         self._freeze()
 
@@ -343,8 +344,8 @@ class ParametersPhysical(ParametersBase):
         super(ParametersPhysical, self).__init__()
         self.densityA = 998.2
         self.densityB = 1.205
-        self.viscosityA = 1.004e-6
-        self.viscosityB = 1.500e-5
+        self.kinematicViscosityA = 1.004e-6
+        self.kinematicViscosityB = 1.500e-5
         self.surf_tension_coeff = 72.8e-3
         self.gravity = [0., -9.81, 0.]
         # freeze attributes

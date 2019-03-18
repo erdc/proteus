@@ -1,15 +1,16 @@
 """
-Multiphase Flow Test
+TwoPhaseFlow
 """
 from __future__ import division
 from past.utils import old_div
 import numpy as np
-from proteus import (Domain, Context,
+from proteus import (Domain, Context, Gauges
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 from proteus.mprans.SpatialTools import Tank2D
 from proteus.mprans.SpatialTools import Tank3D
 from proteus.mprans import SpatialTools as st
+from proteus.Profiling import logEvent
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 import math
 
@@ -17,24 +18,51 @@ import math
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
-    ('ns_model',0,"ns_model = {rans2p,rans3p}"),
+    ('ns_model',1,"ns_model={0,1} for {rans2p,rans3p}"),
     ("final_time",7.5,"Final time for simulation"),
-    ("dt_output",0.01,"Time interval to output solution"),
-    ("cfl",0.33,"Desired CFL restriction"),
-    ("he",0.5,"Max mesh element diameter")
+    ("dt_output",0.1,"Time interval to output solution"),
+    ("gauges", True, "Collect data for validation"),
+    ("cfl",0.2,"Desired CFL restriction"),
+    ("he",0.5,"Max mesh element diameter"),
+    ("ARTIFICIAL_VISCOSITY",3,"artificial viscosity")
     ])
+
+assert opts.ns_model==1, "use ns_model=1 (rans3pf) for this"
 
 # ****************** #
 # ***** GAUGES ***** #
 # ****************** #
-# None
+if opts.gauges:
+    pressure_gauges = PointGauges(gauges=((('p',),
+                                           ((2.389,0.526,0.025), #P1
+                                            (2.389,0.526,0.099), #P3
+                                            (2.414,0.474,0.165), #P5
+                                            (2.487,0.474,0.165))),), #P7
+                                  fileName="pressure.csv")
+    point_height_gauges = PointGauges(gauges=((('phi',),
+                                               ((2.389,0.526,0.025), #P1
+                                                (2.389,0.526,0.099), #P3
+                                                (2.414,0.474,0.165), #P5
+                                                (2.487,0.474,0.165))),), #P7
+                                      fileName="point_clsvof.csv")
+    height_gauges = LineGauges(gauges=((("phi",),
+                                        (((2.724, 0.5, 0.0),
+                                          (2.724, 0.5, 1.0)),
+                                         ((2.228, 0.5, 0.0),
+                                          (2.228, 0.5, 1.0)),
+                                         ((1.732, 0.5, 0.0),
+                                          (1.732, 0.5, 1.0)),
+                                         ((0.582, 0.5, 0.0),
+                                          (0.582, 0.5, 1.0)))),),
+                               fileName="height.csv")
+>>>>>>> origin/mquezada/TwoPhaseFlowForPaper2
 
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
 L      = [3.22,1.0,1.0]
-box_L  = [0.161,0.403,0.161]
-box_xy = [2.3955,0.2985]
+box_L  = [0.16,0.4,0.16]
+box_xy = [2.39,0.3]
 he = opts.he
 boundaries=['left','right','bottom','top','front','back','box_left','box_right','box_top','box_front','box_back',]
 boundaryTags=dict([(key,i+1) for (i,key) in enumerate(boundaries)])
@@ -117,22 +145,31 @@ class zero(object):
     def uOfXT(self,x,t):
         return 0.
 
+disc_ICs=True
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
         waterLine_x = 1.22
         waterLine_z = 0.55
         phi_x = x[0]-waterLine_x
         phi_z = x[2]-waterLine_z
-        if phi_x < 0.0:
-            if phi_z < 0.0:
-                return max(phi_x,phi_z)
+        if disc_ICs:
+            if x[0] < waterLine_x and x[2] < waterLine_z: 
+                return -1.0
+            elif x[0] > waterLine_x or x[2] > waterLine_z: 
+                return 1.0
             else:
-                return phi_z
+                return 0.0
         else:
-            if phi_z < 0.0:
-                return phi_x
+            if phi_x < 0.0:
+                if phi_z < 0.0:
+                    return max(phi_x,phi_z)
+                else:
+                    return phi_z
             else:
-                return math.sqrt(phi_x**2 + phi_z**2)
+                if phi_z < 0.0:
+                    return phi_x
+                else:
+                    return math.sqrt(phi_x**2 + phi_z**2)
 
 # ******************************* #
 # ***** BOUNDARY CONDITIONS ***** #
@@ -163,10 +200,10 @@ def vel_w_DBC(x,flag):
                          flag == boundaryTags['box_front'] or
                          flag == boundaryTags['box_back']):
         return lambda  x,t: 0.0
-
+    
 def pressure_increment_DBC(x,flag):
     if flag == boundaryTags['top'] and openTop:
-        return lambda x,t: 0.0
+        return lambda x,t: 0.0    
 
 def pressure_DBC(x,flag):
     if flag == boundaryTags['top'] and openTop:
@@ -280,12 +317,9 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
 myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,0.0,-9.8])
 
 myTpFlowProblem.useBoundaryConditionsModule = False
-myTpFlowProblem.Parameters.Models.rans2p.epsFact_viscosity = 3.
-myTpFlowProblem.Parameters.Models.rans2p.epsFact_density = 3.
-myTpFlowProblem.Parameters.Models.rans2p.ns_shockCapturingFactor = 0.25
-myTpFlowProblem.Parameters.Models.rans2p.timeDiscretization = 'vbdf'
+myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = disc_ICs
+myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+myTpFlowProblem.Parameters.Models.clsvof.auxiliaryVariables = [point_height_gauges, height_gauges]
+myTpFlowProblem.Parameters.Models.pressure.auxiliaryVariables = [pressure_gauges]
 
 myTpFlowProblem.outputStepping.systemStepExact = True
-
-myTpFlowProblem.Parameters.mesh.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
-myTpFlowProblem.Parameters.mesh.setParallelPartitioningType('node')

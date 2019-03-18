@@ -1,38 +1,25 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from pressureInitial_p import *
-import pressureInitial_p as physics
+from pressureincrement_p import *
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
-ct = physics.ct
-myTpFlowProblem = physics.myTpFlowProblem
-nd = myTpFlowProblem.nd
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
+he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
-
-params = myTpFlowProblem.Parameters
-mparams = params.Models # model parameters
-myparams = mparams.pressureInitial
-pparams = params.physical # physical parameters
-meshparams = params.mesh
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-he = meshparams.he
-triangleFlag = meshparams.triangleFlag
-nnx = meshparams.nnx
-nny = meshparams.nny
-nnz = meshparams.nnz
-triangleOptions = meshparams.triangleOptions
-parallelPartitioningType = meshparams.parallelPartitioningType
-nLayersOfOverlapForParallel = meshparams.nLayersOfOverlapForParallel
-restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
+triangleFlag = myTpFlowProblem.triangleFlag
+nnx = myTpFlowProblem.nnx
+nny = myTpFlowProblem.nny
+nnz = myTpFlowProblem.nnz
+triangleOptions = domain.MeshOptions.triangleOptions
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
@@ -57,23 +44,24 @@ levelNonlinearSolverConvergenceTest = 'r'
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
-numericalFluxType = NumericalFlux.ConstantAdvection_exterior
+numericalFluxType = PresInc.NumericalFlux
 conservativeFlux=None
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
 # ************************************ #
 matrix = LinearAlgebraTools.SparseMatrix
-linearSmoother    = LinearSolvers.NavierStokesPressureCorrection # pure neumann laplacian solver
 multilevelLinearSolver = LinearSolvers.KSP_petsc4py
 levelLinearSolver = LinearSolvers.KSP_petsc4py
+
+linearSmoother = None
 if useSuperlu:
     linearSmoother    = None
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
 #
-linear_solver_options_prefix = 'pinit_'
-linearSolverConvergenceTest = 'r-true'
+linear_solver_options_prefix = 'phi_'
+linearSolverConvergenceTest             = 'r-true'
 maxLineSearches=0
 
 # ******************************** #
@@ -84,5 +72,4 @@ nl_atol_res = pressure_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.0
 l_atol_res = 0.1*pressure_nl_atol_res
-
-auxiliaryVariables = myparams.auxiliaryVariables
+maxNonlinearIts = 1
