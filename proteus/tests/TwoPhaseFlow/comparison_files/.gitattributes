@@ -1,0 +1,6 @@
+fillingTank.h5 filter=lfs diff=lfs merge=lfs -text
+marin.h5 filter=lfs diff=lfs merge=lfs -text
+moses.h5 filter=lfs diff=lfs merge=lfs -text
+risingBubble.h5 filter=lfs diff=lfs merge=lfs -text
+TwoDimBucklingFlow.h5 filter=lfs diff=lfs merge=lfs -text
+damBreak.h5 filter=lfs diff=lfs merge=lfs -text
