@@ -173,8 +173,8 @@ class ParametersModelRANS3P(ParametersModelBase):
         self.timeDiscretization = 'vbdf'
         self.timeOrder = 2
         self.PSTAB = 0
-        self.USE_SUPG = True
-        self.ARTIFICIAL_VISCOSITY = 2
+        self.USE_SUPG = False
+        self.ARTIFICIAL_VISCOSITY = 3
         self.INT_BY_PARTS_PRESSURE = 1
         self.cE = 1.
         self.cMax = 1.
@@ -219,6 +219,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         self.lambdaFact = 10.
         self.outputQuantDOFs = True
         self.computeMetrics = 1
+        self.computeMetricsForBubble = False
         self.eps_tolerance_clsvof = False
         self.disc_ICs = False
         # freeze attributes

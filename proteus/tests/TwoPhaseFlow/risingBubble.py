@@ -19,7 +19,7 @@ opts= Context.Options([
     ("final_time",3.0,"Final time for simulation"),
     ("dt_output",0.1,"Time interval to output solution"),
     ("cfl",0.2,"Desired CFL restriction"),
-    ("refinement",3,"level of refinement")
+    ("refinement",3,"level of refinement"),
     ("ARTIFICIAL_VISCOSITY",3,"artificial viscosity")
     ])
 
@@ -46,25 +46,37 @@ if structured:
     triangleFlag=1
     he=1.0/(nnx-1)
 else:
-    nnx = nny = None
-    domain = Domain.PlanarStraightLineGraphDomain()
-    domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+    vertices = [[0.0, 0.0],  #0
+                [tank_dim[0], 0.0],  #1
+                [tank_dim[0], tank_dim[1]],  #2
+                [0.0, tank_dim[1]]]  #3
+    vertexFlags = [boundaryTags['bottom'],
+                   boundaryTags['bottom'],
+                   boundaryTags['top'],
+                   boundaryTags['top']]
+    segments = [[0, 1],
+                [1, 2],
+                [2, 3],
+                [3, 0]]
+    segmentFlags = [boundaryTags['bottom'],
+                    boundaryTags['right'],
+                    boundaryTags['top'],
+                    boundaryTags['left']]
+    regions = [[tank_dim[0]/2., tank_dim[1]/2.]]
+    regionFlags = [1]
+    domain = Domain.PlanarStraightLineGraphDomain(vertices=vertices,
+                                                  vertexFlags=vertexFlags,
+                                                  segments=segments,
+                                                  segmentFlags=segmentFlags,
+                                                  regions=regions,
+                                                  regionFlags=regionFlags)    
+    domain.boundaryTags = boundaryTags
+    domain.writePoly("mesh")
+    domain.writePLY("mesh")
+    domain.writeAsymptote("mesh")
     he = old_div(tank_dim[0], float(4 * refinement - 1))
     domain.MeshOptions.he = he
     triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
-
-# ----- TANK ----- #
-tank = Tank2D(domain, tank_dim)
-
-# ----- EXTRA BOUNDARY CONDITIONS ----- #
-tank.BC['y+'].setNoSlip()
-tank.BC['y-'].setNoSlip()
-tank.BC['x+'].setFreeSlip()
-tank.BC['x-'].setFreeSlip()
-
-he = old_div(tank_dim[0], float(4 * refinement - 1))
-domain.MeshOptions.he = he
-st.assembleDomain(domain)
 
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
@@ -91,6 +103,36 @@ class clsvof_init_cond(object):
         else:
             return -1.0
 
+#################
+# NAVIER STOKES #
+#################
+# DIRICHLET BCs #
+def vel_u_DBC(x,flag):
+    if flag==boundaryTags['bottom'] or flag==boundaryTags['top']:
+        return lambda x,t: 0.0
+
+def vel_v_DBC(x,flag):
+    if flag==boundaryTags['bottom'] or flag==boundaryTags['top']:
+        return lambda x,t: 0.0    
+
+# ADVECTIVE FLUX #
+def vel_u_AFBC(x,flag):
+    if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
+        return lambda x,t: 0.0
+
+def vel_v_AFBC(x,flag):
+    if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
+        return lambda x,t: 0.0
+
+# DIFFUSIVE FLUX #
+def vel_u_DFBC(x,flag):
+    if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
+        return lambda x,t: 0.0
+
+def vel_v_DFBC(x,flag):
+    if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
+        return lambda x,t: 0.0
+    
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
@@ -103,24 +145,21 @@ initialConditions = {'pressure': zero(),
                      'clsvof': clsvof_init_cond()}
 boundaryConditions = {
     # DIRICHLET BCs #
-    'pressure_DBC': lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
-    'pressure_increment_DBC': lambda x, flag: domain.bc[flag].pInc_dirichlet.init_cython(),
-    'vel_u_DBC': lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
-    'vel_v_DBC': lambda x, flag: domain.bc[flag].v_dirichlet.init_cython(),
-    'vel_w_DBC': lambda x, flag: domain.bc[flag].w_dirichlet.init_cython(),
-    'clsvof_DBC': lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython(),
+    'pressure_DBC': lambda x, flag: None,
+    'pressure_increment_DBC': lambda x, flag: None,
+    'vel_u_DBC': vel_u_DBC,
+    'vel_v_DBC': vel_v_DBC,
+    'clsvof_DBC': lambda x, flag: None,
     # ADVECTIVE FLUX BCs #
-    'pressure_AFBC': lambda x, flag: domain.bc[flag].p_advective.init_cython(),
-    'pressure_increment_AFBC': lambda x, flag: domain.bc[flag].pInc_advective.init_cython(),
-    'vel_u_AFBC': lambda x, flag: domain.bc[flag].u_advective.init_cython(),
-    'vel_v_AFBC': lambda x, flag: domain.bc[flag].v_advective.init_cython(),
-    'vel_w_AFBC': lambda x, flag: domain.bc[flag].w_advective.init_cython(),
-    'clsvof_AFBC': lambda x, flag: domain.bc[flag].vof_advective.init_cython(),
+    'pressure_AFBC': lambda x, flag: lambda x, t: 0.0,
+    'pressure_increment_AFBC': lambda x, flag: lambda x, t: 0.0, 
+    'vel_u_AFBC': vel_u_AFBC,
+    'vel_v_AFBC': vel_v_AFBC,
+    'clsvof_AFBC': lambda x, flag: lambda x, t: 0.0,
     # DIFFUSIVE FLUX BCs #
-    'pressure_increment_DFBC': lambda x, flag: domain.bc[flag].pInc_diffusive.init_cython(),
-    'vel_u_DFBC': lambda x, flag: domain.bc[flag].u_diffusive.init_cython(),
-    'vel_v_DFBC': lambda x, flag: domain.bc[flag].v_diffusive.init_cython(),
-    'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
+    'pressure_increment_DFBC': lambda x, flag: lambda x, t: 0.0,
+    'vel_u_DFBC': vel_v_DFBC,
+    'vel_v_DFBC': vel_v_DFBC,
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              nd=2,
@@ -152,10 +191,9 @@ else: #test_case=2
     physical_parameters['surf_tension_coeff'] = 1.96
 
 myTpFlowProblem.useBoundaryConditionsModule = False
-myTpFlowProblem.Parameters.Models.rans3p.epsFact_viscosity = 3.
-myTpFlowProblem.Parameters.Models.rans3p.epsFact_density = 3.
 myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
-myTpFlowProblem.Parameters.Models.rans3p.timeDiscretization = 'vbdf'
+myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
 myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = True
+myTpFlowProblem.Parameters.Models.clsvof.computeMetricsForBubble = True
 
 myTpFlowProblem.outputStepping.systemStepExact = True

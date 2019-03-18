@@ -55,7 +55,6 @@ if opts.gauges:
                                          ((0.582, 0.5, 0.0),
                                           (0.582, 0.5, 1.0)))),),
                                fileName="height.csv")
->>>>>>> origin/mquezada/TwoPhaseFlowForPaper2
 
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
