@@ -796,6 +796,7 @@ namespace proteus
                                   double* ball_radius,
                                   double* ball_velocity,
                                   double* ball_angular_velocity,
+                                  double& phi_s_effect,
 				  // int by parts pressure
 				  int INT_BY_PARTS_PRESSURE)
       {
@@ -858,7 +859,7 @@ namespace proteus
         //..hardwired
 
         //double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 1e-10;
-        double phi_s_effect = smoothedHeaviside(eps_rho*0.3,distance_to_omega_solid)*(1-1e-10)+1e-10;
+        phi_s_effect = smoothedHeaviside(eps_rho*0.3,distance_to_omega_solid)*(1-1e-10)+1e-10;
         if(USE_SBM>0)
           phi_s_effect = 1.0;
         //u momentum accumulation
@@ -2756,6 +2757,7 @@ namespace proteus
                   //
 		  velStar[nSpace],
 		  //
+                phi_s_effect=1.0,//1=fluid,0=solid
                   G[nSpace*nSpace],G_dd_G,tr_G,norm_Rv,h_phi, dmom_adv_star[nSpace],dmom_adv_sge[nSpace];
                 //get jacobian, etc for mapping reference element
                 ck.calculateMapping_element(eN,
@@ -2966,6 +2968,7 @@ namespace proteus
                                      ball_radius,
                                      ball_velocity,
                                      ball_angular_velocity,
+                                     phi_s_effect,
 				     INT_BY_PARTS_PRESSURE);
 
                 //VRANS
@@ -3258,32 +3261,32 @@ namespace proteus
        		calculateSubgridError_tau(hFactor,
        					  elementDiameter[eN],
        					  tmpR,//dmom_u_acc_u_t,
-       					  dmom_u_acc_u,
+       					  dmom_u_acc_u/phi_s_effect,//YY:phi_s_effect decrease CFL condition dramatically
        					  dmom_adv_sge,
        					  mom_uu_diff_ten[1],
        					  dmom_u_ham_grad_p[0],
        					  tau_v0,
        					  tau_p0,
        					  q_cfl[eN_k]);
-          if(q_cfl[eN_k]>1000)
-          {
-            std::cout<<eN<<"\t"
-                  <<k<<"\t"
-                  <<hFactor<<"\t"
-       					  <<elementDiameter[eN]<<"\t"
-       					  <<tmpR<<"\t"
-       					  <<dmom_u_acc_u<<"\t"
-       					  <<dmom_adv_sge<<"\t"
-       					  <<mom_uu_diff_ten[1]<<"\t"
-       					  <<dmom_u_ham_grad_p[0]<<"\t"
-       					  <<tau_v0<<"\t"
-       					  <<tau_p0<<"\t"
-       					  <<q_cfl[eN_k]
-                  <<"\n";
-          }
+          // if(q_cfl[eN_k]>1000)
+          // {
+          //   std::cout<<eN<<"\t"
+          //         <<k<<"\t"
+          //         <<hFactor<<"\t"
+       		// 			  <<elementDiameter[eN]<<"\t"
+       		// 			  <<tmpR<<"\t"
+       		// 			  <<dmom_u_acc_u<<"\t"
+       		// 			  <<dmom_adv_sge<<"\t"
+       		// 			  <<mom_uu_diff_ten[1]<<"\t"
+       		// 			  <<dmom_u_ham_grad_p[0]<<"\t"
+       		// 			  <<tau_v0<<"\t"
+       		// 			  <<tau_p0<<"\t"
+       		// 			  <<q_cfl[eN_k]
+          //         <<"\n";
+          // }
           //YY: penalty term used in algortihm has no contraints on dt here.
-          if(phi_solid[eN_k]<=h_phi)
-            q_cfl[eN_k] = 0.0;
+          // if(phi_solid[eN_k]<=h_phi)
+          //   q_cfl[eN_k] = 0.0;
        		calculateSubgridError_tau(Ct_sge,Cd_sge,
        					  G,G_dd_G,tr_G,
        					  tmpR,//dmom_u_acc_u_t,
@@ -4169,6 +4172,7 @@ namespace proteus
                   //VRANS
                   porosity_ext,
                   //
+                  phi_s_effect=1.0,//1=fluid,0=solid,
                   G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty,
                   force_x,force_y,force_z,force_p_x,force_p_y,force_p_z,force_v_x,force_v_y,force_v_z,r_x,r_y,r_z;
                 //compute information about mapping from reference element to physical element
@@ -4361,6 +4365,7 @@ namespace proteus
                                      ball_radius,
                                      ball_velocity,
                                      ball_angular_velocity,
+                                     phi_s_effect,
 				     INT_BY_PARTS_PRESSURE);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
@@ -4455,6 +4460,7 @@ namespace proteus
                                      ball_radius,
                                      ball_velocity,
                                      ball_angular_velocity,
+                                     phi_s_effect,
 				     INT_BY_PARTS_PRESSURE);
 
                 //Turbulence closure model
@@ -5452,6 +5458,8 @@ namespace proteus
                   dmom_w_source[nSpace],
                   mass_source,
                   //
+                  phi_s_effect=1.0,//1=fluid,0=solid
+                  //
                   G[nSpace*nSpace],G_dd_G,tr_G,h_phi, dmom_adv_star[nSpace], dmom_adv_sge[nSpace];
                 //get jacobian, etc for mapping reference element
                 ck.calculateMapping_element(eN,
@@ -5629,6 +5637,7 @@ namespace proteus
                                      ball_radius,
                                      ball_velocity,
                                      ball_angular_velocity,
+                                     phi_s_effect,
 				     INT_BY_PARTS_PRESSURE);
                 //VRANS
                 mass_source = q_mass_source[eN_k];
@@ -6587,6 +6596,8 @@ namespace proteus
                   //VRANS
                   porosity_ext,
                   //
+                  phi_s_effect=1.0,//1=fluid,0=solid
+                  //
                   G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
                 ck.calculateMapping_elementBoundary(eN,
                                                     ebN_local,
@@ -6771,6 +6782,7 @@ namespace proteus
                                      ball_radius,
                                      ball_velocity,
                                      ball_angular_velocity,
+                                     phi_s_effect,
 				     INT_BY_PARTS_PRESSURE);
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
@@ -6865,6 +6877,7 @@ namespace proteus
                                      ball_radius,
                                      ball_velocity,
                                      ball_angular_velocity,
+                                     phi_s_effect,
 				     INT_BY_PARTS_PRESSURE);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
