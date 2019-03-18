@@ -801,6 +801,8 @@ class NS_base(object):  # (HasTraits):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
                 lm.u_store = lm.u.copy()
+                for ci in range(0,lm.coefficients.nc):
+                    lm.u_store[ci] = lm.u[ci].copy()
                 lm.dt_store = copy.deepcopy(lm.timeIntegration.dt)
                 for ci in range(0,lm.coefficients.nc):
                     lm.u[ci].dof[:] = lm.u[ci].dof_last
@@ -1149,6 +1151,9 @@ class NS_base(object):  # (HasTraits):
         for m in self.modelList:
             for lm in m.levelModelList:
                 lm.u_store = lm.u.copy()
+                for ci in range(0,lm.coefficients.nc):
+                    lm.u_store[ci] = lm.u[ci].copy()
+
         self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
         self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
 
@@ -1657,6 +1662,9 @@ class NS_base(object):  # (HasTraits):
                 if self.opts.save_dof:
                     import copy
                     lm.u_store = lm.u.copy()
+                    for ci in range(0,lm.coefficients.nc):
+                        lm.u_store[ci] = lm.u[ci].copy()
+
                     lm.setUnknowns(m.uList[0])
                     for ci in range(lm.coefficients.nc):
                         lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
@@ -1746,6 +1754,9 @@ class NS_base(object):  # (HasTraits):
             for m in self.modelList:
                 for lm in m.levelModelList:
                     lm.u_store = lm.u.copy()
+                    for ci in range(0,lm.coefficients.nc):
+                        lm.u_store[ci] = lm.u[ci].copy()
+
                     lm.setUnknowns(m.uList[0])
                     for ci in range(lm.coefficients.nc):
                         lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
@@ -1797,11 +1808,15 @@ class NS_base(object):  # (HasTraits):
                         for m in self.modelList:
                             for lm in m.levelModelList:
                                 lm.u_store = lm.u.copy()
+                                for ci in range(lm.coefficients.nc):
+                                    lm.u_store[ci] = lm.u[ci].copy()
                                 lm.setUnknowns(m.uList[0])
                                 for ci in range(lm.coefficients.nc):
                                     lm.u[ci].dof_last_last[:] = lm.u[ci].dof_last
                                     lm.u[ci].dof_last[:] = lm.u[ci].dof
+                                for ci in range(lm.coefficients.nc):
                                     lm.u[ci].dof[:] = lm.u_store[ci].dof
+                                #lm.setFreeDOF(m.uList[0])
                         logEvent("saving previous velocity dofs %s" % self.nSolveSteps)
 
 
