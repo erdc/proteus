@@ -270,8 +270,9 @@ def pressure_increment_DFBC(x,flag):
 
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
-############################################
+###########################################
 outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
+outputStepping.systemStepExact = True
 initialConditions = {'pressure': zero(),
                      'pressure_increment': zero(),
                      'vel_u': zero(),
@@ -320,3 +321,5 @@ myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = disc_ICs
 myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
 myTpFlowProblem.Parameters.Models.clsvof.auxiliaryVariables = [point_height_gauges, height_gauges]
 myTpFlowProblem.Parameters.Models.pressure.auxiliaryVariables = [pressure_gauges]
+
+myTpFlowProblem.Parameters.mesh.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)

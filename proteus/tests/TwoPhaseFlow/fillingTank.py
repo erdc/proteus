@@ -251,7 +251,7 @@ myTpFlowProblem.Parameters.Models.clsvof['disc_ICs']=False if IC_type==0 else Tr
 myTpFlowProblem.Parameters.Models.rans3p['ns_forceStrongDirichlet']=True
 myTpFlowProblem.Parameters.Models.rans3p['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
 if opts.test_case==1:
-    physical_parameters=myTpFlowProblem.physical_parameters
+    physical_parameters=myTpFlowProblem.Parameters.physical
     physical_parameters['densityA'] = 1000.0
     physical_parameters['kinematicViscosityA'] = 1.0/physical_parameters['densityA']
     physical_parameters['densityB'] = 1.0
@@ -259,4 +259,4 @@ if opts.test_case==1:
     physical_parameters['surf_tension_coeff'] = 0.
     physical_parameters['gravity'] = [0.0, -1.0, 0.0]
 
-
+myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
