@@ -209,6 +209,7 @@ clsvof_DFBC = lambda x,flag: None
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
 outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
+outputStepping.systemStepExact = True
 initialConditions = {'pressure': zero(),
                      'pressure_increment': zero(),
                      'vel_u': zero(),
@@ -233,6 +234,7 @@ boundaryConditions = {
     'vel_v_DFBC': vel_v_DFBC,
     'clsvof_DFBC': clsvof_DFBC}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+                                             ls_model=1,
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -245,9 +247,9 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=True)
-myTpFlowProblem.clsvof_parameters['disc_ICs']=False if IC_type==0 else True
-myTpFlowProblem.rans3p_parameters['ns_forceStrongDirichlet']=True
-myTpFlowProblem.rans3p_parameters['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+myTpFlowProblem.Parameters.Models.clsvof['disc_ICs']=False if IC_type==0 else True
+myTpFlowProblem.Parameters.Models.rans3p['ns_forceStrongDirichlet']=True
+myTpFlowProblem.Parameters.Models.rans3p['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
 if opts.test_case==1:
     physical_parameters=myTpFlowProblem.physical_parameters
     physical_parameters['densityA'] = 1000.0
