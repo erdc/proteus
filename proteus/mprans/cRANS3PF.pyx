@@ -236,15 +236,13 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double* vos_vel_nodes,
 			       double * entropyResidualPerNode,
 			       double * laggedEntropyResidualPerNode,
-                               double * uStar_dMatrix,
-                               double * vStar_dMatrix,
-                               double * wStar_dMatrix,
+                               double * dMatrix,
                                int numDOFs_1D,
                                int NNZ_1D,
 			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
                                int *rowptr_1D, int *colind_1D,
-                               double *isBoundary_1D,
                                int INT_BY_PARTS_PRESSURE)
+
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -447,9 +445,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_dynamic_viscosity_as_function,
                                int USE_SBM,
                                int ARTIFICIAL_VISCOSITY,
-                               double * uStar_dMatrix,
-                               double * vStar_dMatrix,
-                               double * wStar_dMatrix,
+                               double * dMatrix,
                                int numDOFs_1D,
 			       int offset_u, int offset_v, int offset_w,
 			       int stride_u, int stride_v, int stride_w,
@@ -478,20 +474,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                       double * vel_trial_trace_ref,
                                       double * ebqe_velocity,
                                       double * velocityAverage)
-        void getBoundaryDOFs(double* mesh_dof,
-			     int* mesh_l2g,
-			     double* mesh_trial_trace_ref,
-			     double* mesh_grad_trial_trace_ref,
-			     double* dS_ref,
-                             double* vel_test_trace_ref,
-			     double* normal_ref,
-			     double* boundaryJac_ref,
-			     int* vel_l2g,
-			     int nExteriorElementBoundaries_global,
-		             int* exteriorElementBoundariesArray,
-			     int* elementBoundaryElementsArray,
-			     int* elementBoundaryLocalElementBoundariesArray,
-			     double *isBoundary_1D)
+
     cppRANS3PF_base * newRANS3PF(int nSpaceIn,
                                  int nQuadraturePoints_elementIn,
                                  int nDOF_mesh_trial_elementIn,
@@ -669,7 +652,9 @@ cdef class RANS3PF:
                           numpy.ndarray u_dof_old_old,
                           numpy.ndarray v_dof_old_old,
                           numpy.ndarray w_dof_old_old,
-                          uStar,
+                          numpy.ndarray uStar_dof,
+                          numpy.ndarray vStar_dof,
+                          numpy.ndarray wStar_dof,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -806,20 +791,13 @@ cdef class RANS3PF:
                           numpy.ndarray vos_vel_nodes,
 			  numpy.ndarray entropyResidualPerNode,
 			  numpy.ndarray laggedEntropyResidualPerNode,
-                          dMatrix,
+                          numpy.ndarray dMatrix,
                           int numDOFs_1D,
                           int NNZ_1D,
 			  numpy.ndarray csrRowIndeces_1D, numpy.ndarray csrColumnOffsets_1D,
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
-                          numpy.ndarray isBoundary_1D,
                           int INT_BY_PARTS_PRESSURE):
-        cdef numpy.ndarray uStar_dof = uStar[0]
-        cdef numpy.ndarray vStar_dof = uStar[1]
-        cdef numpy.ndarray wStar_dof = uStar[2]
-        cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
-        cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
-        cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1046,15 +1024,12 @@ cdef class RANS3PF:
                                        < double *> vos_vel_nodes.data,
 			               <double * > entropyResidualPerNode.data,
 			               <double * > laggedEntropyResidualPerNode.data,
-                                       <double * > uStar_dMatrix.data,
-                                       <double * > vStar_dMatrix.data,
-                                       <double * > wStar_dMatrix.data,
+                                       <double * > dMatrix.data,
                                        numDOFs_1D,
                                        NNZ_1D,
 				       <int*> csrRowIndeces_1D.data,<int*>csrColumnOffsets_1D.data,
                                        <int*> rowptr_1D.data,
                                        <int*> colind_1D.data,
-                                       <double*> isBoundary_1D.data,
                                        INT_BY_PARTS_PRESSURE)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1257,16 +1232,13 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_dynamic_viscosity_as_function,
                           int USE_SBM,
                           int ARTIFICIAL_VISCOSITY,
-                          dMatrix,
+                          numpy.ndarray dMatrix,
                           int numDOFs_1D,
                           int offset_u, int offset_v, int offset_w,
 			  int stride_u, int stride_v, int stride_w,
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
                           int INT_BY_PARTS_PRESSURE):
-        cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
-        cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
-        cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -1465,9 +1437,7 @@ cdef class RANS3PF:
                                         < double * > ebqe_dynamic_viscosity_as_function.data,
                                         USE_SBM,
                                        ARTIFICIAL_VISCOSITY,
-                                       <double *> uStar_dMatrix.data,
-                                       <double *> vStar_dMatrix.data,
-                                       <double *> wStar_dMatrix.data,
+                                       <double *> dMatrix.data,
                                        numDOFs_1D,
                                        offset_u, offset_v, offset_w,
 			               stride_u, stride_v, stride_w,
@@ -1500,6 +1470,7 @@ cdef class RANS3PF:
                                  numpy.ndarray vel_trial_trace_ref,
                                  numpy.ndarray ebqe_velocity,
                                  numpy.ndarray velocityAverage):
+
         self.thisptr.calculateVelocityAverage(nExteriorElementBoundaries_global,
                                               < int * > exteriorElementBoundariesArray.data,
                                               nInteriorElementBoundaries_global,
@@ -1522,35 +1493,7 @@ cdef class RANS3PF:
                                               < double * > vel_trial_trace_ref.data,
                                               < double * > ebqe_velocity.data,
                                               < double * > velocityAverage.data)
-    def getBoundaryDOFs(self,
-			numpy.ndarray mesh_dof,
-			numpy.ndarray mesh_l2g,
-			numpy.ndarray mesh_trial_trace_ref,
-			numpy.ndarray mesh_grad_trial_trace_ref,
-			numpy.ndarray dS_ref,
-                        numpy.ndarray vel_test_trace_ref,
-			numpy.ndarray normal_ref,
-			numpy.ndarray boundaryJac_ref,
-			numpy.ndarray vel_l2g,
-			int nExteriorElementBoundaries_global,
-			numpy.ndarray exteriorElementBoundariesArray,
-			numpy.ndarray elementBoundaryElementsArray,
-			numpy.ndarray elementBoundaryLocalElementBoundariesArray,
-			numpy.ndarray isBoundary_1D):
-        self.thisptr.getBoundaryDOFs(<double*> mesh_dof.data,
-			             <int*> mesh_l2g.data,
-			             <double*> mesh_trial_trace_ref.data,
-			             <double*> mesh_grad_trial_trace_ref.data,
-			             <double*> dS_ref.data,
-                                     <double*> vel_test_trace_ref.data,
-			             <double*> normal_ref.data,
-			             <double*> boundaryJac_ref.data,
-			             <int*> vel_l2g.data,
-			             nExteriorElementBoundaries_global,
-			             <int*> exteriorElementBoundariesArray.data,
-			             <int*> elementBoundaryElementsArray.data,
-			             <int*> elementBoundaryLocalElementBoundariesArray.data,
-			             <double*> isBoundary_1D.data)
+
 
 cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
     cdef cppclass cppRANS3PF2D_base:
@@ -1786,14 +1729,11 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double* vos_vel_nodes,
 			       double * entropyResidualPerNode,
 			       double * laggedEntropyResidualPerNode,
-                               double * uStar_dMatrix,
-                               double * vStar_dMatrix,
-                               double * wStar_dMatrix,
+                               double * dMatrix,
                                int numDOFs_1D,
                                int NNZ_1D,
 			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
                                int *rowptr_1D, int *colind_1D,
-                               double *isBoundary_1D,
                                int INT_BY_PARTS_PRESSURE)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -1997,9 +1937,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * ebqe_dynamic_viscosity_as_function,
                                int USE_SBM,
                                int ARTIFICIAL_VISCOSITY,
-                               double * uStar_dMatrix,
-                               double * vStar_dMatrix,
-                               double * wStar_dMatrix,
+                               double * dMatrix,
                                int numDOFs_1D,
 			       int offset_u, int offset_v, int offset_w,
 			       int stride_u, int stride_v, int stride_w,
@@ -2028,20 +1966,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                       double * vel_trial_trace_ref,
                                       double * ebqe_velocity,
                                       double * velocityAverage)
-        void getBoundaryDOFs(double* mesh_dof,
-			     int* mesh_l2g,
-			     double* mesh_trial_trace_ref,
-			     double* mesh_grad_trial_trace_ref,
-			     double* dS_ref,
-                             double* vel_test_trace_ref,
-			     double* normal_ref,
-			     double* boundaryJac_ref,
-			     int* vel_l2g,
-			     int nExteriorElementBoundaries_global,
-		             int* exteriorElementBoundariesArray,
-			     int* elementBoundaryElementsArray,
-			     int* elementBoundaryLocalElementBoundariesArray,
-			     double *isBoundary_1D)
+
     cppRANS3PF2D_base * newRANS3PF2D(int nSpaceIn,
                                      int nQuadraturePoints_elementIn,
                                      int nDOF_mesh_trial_elementIn,
@@ -2218,7 +2143,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray u_dof_old_old,
                           numpy.ndarray v_dof_old_old,
                           numpy.ndarray w_dof_old_old,
-                          uStar,
+                          numpy.ndarray uStar_dof,
+                          numpy.ndarray vStar_dof,
+                          numpy.ndarray wStar_dof,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -2355,20 +2282,13 @@ cdef class RANS3PF2D:
                           numpy.ndarray vos_vel_nodes,
 			  numpy.ndarray entropyResidualPerNode,
 			  numpy.ndarray laggedEntropyResidualPerNode,
-                          dMatrix,
+                          numpy.ndarray dMatrix,
                           int numDOFs_1D,
                           int NNZ_1D,
 			  numpy.ndarray csrRowIndeces_1D, numpy.ndarray csrColumnOffsets_1D,
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
-                          numpy.ndarray isBoundary_1D,
                           int INT_BY_PARTS_PRESSURE):
-        cdef numpy.ndarray uStar_dof = uStar[0]
-        cdef numpy.ndarray vStar_dof = uStar[1]
-        cdef numpy.ndarray wStar_dof = uStar[2]
-        cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
-        cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
-        cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -2595,15 +2515,12 @@ cdef class RANS3PF2D:
                                        < double *> vos_vel_nodes.data,
 			               <double * > entropyResidualPerNode.data,
 			               <double * > laggedEntropyResidualPerNode.data,
-                                       <double * > uStar_dMatrix.data,
-                                       <double * > vStar_dMatrix.data,
-                                       <double * > wStar_dMatrix.data,
+                                       <double * > dMatrix.data,
                                        numDOFs_1D,
                                        NNZ_1D,
 				       <int*> csrRowIndeces_1D.data,<int*>csrColumnOffsets_1D.data,
                                        <int*> rowptr_1D.data,
                                        <int*> colind_1D.data,
-                                       <double*> isBoundary_1D.data,
                                        INT_BY_PARTS_PRESSURE)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -2806,16 +2723,13 @@ cdef class RANS3PF2D:
                           numpy.ndarray ebqe_dynamic_viscosity_as_function,
                           int USE_SBM,
                           int ARTIFICIAL_VISCOSITY,
-                          dMatrix,
+                          numpy.ndarray dMatrix,
                           int numDOFs_1D,
                           int offset_u, int offset_v, int offset_w,
 			  int stride_u, int stride_v, int stride_w,
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
                           int INT_BY_PARTS_PRESSURE):
-        cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
-        cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
-        cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -3014,9 +2928,7 @@ cdef class RANS3PF2D:
                                         < double * > ebqe_dynamic_viscosity_as_function.data,
                                         USE_SBM,
                                        ARTIFICIAL_VISCOSITY,
-                                       <double *> uStar_dMatrix.data,
-                                       <double *> vStar_dMatrix.data,
-                                       <double *> wStar_dMatrix.data,
+                                       <double *> dMatrix.data,
                                        numDOFs_1D,
                                        offset_u, offset_v, offset_w,
 			               stride_u, stride_v, stride_w,
@@ -3070,32 +2982,4 @@ cdef class RANS3PF2D:
                                               < double * > vel_trial_trace_ref.data,
                                               < double * > ebqe_velocity.data,
                                               < double * > velocityAverage.data)
-    def getBoundaryDOFs(self,
-			numpy.ndarray mesh_dof,
-			numpy.ndarray mesh_l2g,
-			numpy.ndarray mesh_trial_trace_ref,
-			numpy.ndarray mesh_grad_trial_trace_ref,
-			numpy.ndarray dS_ref,
-                        numpy.ndarray vel_test_trace_ref,
-			numpy.ndarray normal_ref,
-			numpy.ndarray boundaryJac_ref,
-			numpy.ndarray vel_l2g,
-			int nExteriorElementBoundaries_global,
-			numpy.ndarray exteriorElementBoundariesArray,
-			numpy.ndarray elementBoundaryElementsArray,
-			numpy.ndarray elementBoundaryLocalElementBoundariesArray,
-			numpy.ndarray isBoundary_1D):
-        self.thisptr.getBoundaryDOFs(<double*> mesh_dof.data,
-			             <int*> mesh_l2g.data,
-			             <double*> mesh_trial_trace_ref.data,
-			             <double*> mesh_grad_trial_trace_ref.data,
-			             <double*> dS_ref.data,
-                                     <double*> vel_test_trace_ref.data,
-			             <double*> normal_ref.data,
-			             <double*> boundaryJac_ref.data,
-			             <int*> vel_l2g.data,
-			             nExteriorElementBoundaries_global,
-			             <int*> exteriorElementBoundariesArray.data,
-			             <int*> elementBoundaryElementsArray.data,
-			             <int*> elementBoundaryLocalElementBoundariesArray.data,
-			             <double*> isBoundary_1D.data)
+

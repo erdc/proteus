@@ -28,13 +28,8 @@ class TwoPhaseFlowProblem:
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
-                 # FORCE FIELD FOR NAVIER STOKES #
-                 forceTerms=None,
-                 # AUXILIARY VARIABLES #
-                 auxVariables=None,
                  # OTHERS #
-                 useSuperlu=False,
-                 fastArchive=False):
+                 useSuperlu=False):
         # ***** SET OF ASSERTS ***** #
         if ns_model is not None:
             assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
@@ -58,10 +53,6 @@ class TwoPhaseFlowProblem:
         if boundaryConditions is not None:
             assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
             # assertion now done in TwoPhaseFlow_so.py
-        self.forceTerms = forceTerms
-        if forceTerms is not None:
-            assert type(forceTerms)==dict, "forceTerms must be a dictionary"
-            assert len(forceTerms) in [2,3], "forceTerms must have two or three components"
 
         # ***** SAVE PARAMETERS ***** #
         self.domain=domain
@@ -140,7 +131,6 @@ class TwoPhaseFlowProblem:
                 ind += 1
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
-        self.fastArchive = fastArchive
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
@@ -249,7 +239,7 @@ class OutputStepping:
 
     def setOutputStepping(self):
         # COMPUTE dt_init #
-        self.dt_init = min(self.dt_output, self.dt_init)
+        self.dt_init = min(0.1 * self.dt_output, self.dt_init)
         if self.nDTout is None:
             self.nDTout = int(round(old_div(self.final_time, self.dt_output)))
         else:
@@ -312,9 +302,9 @@ class FESpace:
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
 default_physical_parameters ={'densityA': 998.2,
-                              'kinematicViscosityA': 1.004e-6,
+                              'viscosityA': 1.004e-6,
                               'densityB': 1.205,
-                              'kinematicViscosityB': 1.500e-5,
+                              'viscosityB': 1.500e-5,
                               'surf_tension_coeff': 72.8E-3,
                               'gravity': [0.0, -9.8, 0.0]}
 
@@ -322,8 +312,8 @@ default_physical_parameters ={'densityA': 998.2,
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
 default_rans2p_parameters = {'useMetrics': 1.0,
-                             'epsFact_viscosity': 1.5,
-                             'epsFact_density': 1.5,
+                             'epsFact_viscosity': 3.0,
+                             'epsFact_density': 3.0,
                              'ns_forceStrongDirichlet': False,
                              'weak_bc_penalty_constant': 1.0E6,
                              'useRBLES': 0.0,
@@ -336,8 +326,8 @@ default_rans2p_parameters = {'useMetrics': 1.0,
                              'timeDiscretization': 'vbdf',
                              'timeOrder': 2}
 default_rans3p_parameters = {'useMetrics': 1.0,
-                             'epsFact_viscosity': 1.5,
-                             'epsFact_density': 1.5,
+                             'epsFact_viscosity': 3.0,
+                             'epsFact_density': 3.0,
                              'ns_forceStrongDirichlet': False,
                              'ns_sed_forceStrongDirichlet': False,
                              'weak_bc_penalty_constant': 1.0E6,
@@ -351,9 +341,8 @@ default_rans3p_parameters = {'useMetrics': 1.0,
                              'timeDiscretization': 'vbdf',
                              'timeOrder': 2,
                              'PSTAB': 0,
-                             'USE_SUPG': False,
-                             'ARTIFICIAL_VISCOSITY': 3, #edge based with smoothness indicator
-                             'INT_BY_PARTS_PRESSURE': 1,
+                             'USE_SUPG': True,
+                             'ARTIFICIAL_VISCOSITY': 2,
                              'cE': 1.0,
                              'cMax': 1.0}
 default_clsvof_parameters = {'useMetrics': 1.0,
@@ -363,8 +352,6 @@ default_clsvof_parameters = {'useMetrics': 1.0,
                              'lambdaFact': 10.0,
                              'outputQuantDOFs': True,
                              'computeMetrics': 1,
-                             'computeMetricsForBubble': False,
-                             'eps_tolerance_clsvof': False,
-                             'disc_ICs': False}
+                             'eps_tolerance_clsvof': False}
 default_general = {'nLevels': 1,
                    'nLayersOfOverlapForParallel': 0}

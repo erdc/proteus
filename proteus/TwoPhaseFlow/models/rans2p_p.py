@@ -34,9 +34,9 @@ genMesh = meshparams.genMesh
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
 rho_0 = pparams['densityA']
-nu_0 = pparams['kinematicViscosityA']
+nu_0 = pparams['viscosityA']
 rho_1 = pparams['densityB']
-nu_1 = pparams['kinematicViscosityB']
+nu_1 = pparams['viscosityB']
 sigma_01 = pparams['surf_tension_coeff']
 g = pparams['gravity']
 

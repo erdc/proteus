@@ -173,12 +173,10 @@ class ParametersModelRANS3P(ParametersModelBase):
         self.timeDiscretization = 'vbdf'
         self.timeOrder = 2
         self.PSTAB = 0
-        self.USE_SUPG = False
-        self.ARTIFICIAL_VISCOSITY = 3
-        self.INT_BY_PARTS_PRESSURE = 1
+        self.USE_SUPG = True
+        self.ARTIFICIAL_VISCOSITY = 2
         self.cE = 1.
         self.cMax = 1.
-        self.forceTerms = None
         # freeze attributes
         self._freeze()
 
@@ -220,9 +218,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         self.lambdaFact = 10.
         self.outputQuantDOFs = True
         self.computeMetrics = 1
-        self.computeMetricsForBubble = False
         self.eps_tolerance_clsvof = False
-        self.disc_ICs = False
         # freeze attributes
         self._freeze()
 
@@ -269,10 +265,8 @@ class ParametersModelRDLS(ParametersModelBase):
         self.applyRedistancing = True
         self.backgroundDiffusionFactor = 0.01
         self.epsFact = 0.33
-        self.shockCapturingFactor = 0.9
+        self.shockCapturingFactor = shockCapturingFactor
         self.lag_shockCapturing = False
-        # overwrite minTol
-        self.minTol = 1e-5
         # freeze attributes
         self._freeze()
 
@@ -314,7 +308,6 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         self.epsFact = epsFact
         self.epsTimeStep = 0.1
         self.nSmoothOut = 0.
-        self.nSmoothIn = 0.
         self.grading = 1.1
         self.grading_type = 2
         self.resetNodeVelocityArray = None
@@ -347,8 +340,8 @@ class ParametersPhysical(ParametersBase):
         super(ParametersPhysical, self).__init__()
         self.densityA = 998.2
         self.densityB = 1.205
-        self.kinematicViscosityA = 1.004e-6
-        self.kinematicViscosityB = 1.500e-5
+        self.viscosityA = 1.004e-6
+        self.viscosityB = 1.500e-5
         self.surf_tension_coeff = 72.8e-3
         self.gravity = [0., -9.81, 0.]
         # freeze attributes

@@ -17,7 +17,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
-myparams = mparams.pressureInitial
+myparams = mparams.pressure
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -83,6 +83,6 @@ pressure_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 nl_atol_res = pressure_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.0
-l_atol_res = 0.1*pressure_nl_atol_res
+l_atol_res = 0.01*pressure_nl_atol_res
 
 auxiliaryVariables = myparams.auxiliaryVariables

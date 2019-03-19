@@ -14,7 +14,6 @@ initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
 movingDomain = myTpFlowProblem.movingDomain
-MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
@@ -31,18 +30,15 @@ genMesh = meshparams.genMesh
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
 rho_0 = pparams['densityA']
-nu_0 = pparams['kinematicViscosityA']
+nu_0 = pparams['viscosityA']
 rho_1 = pparams['densityB']
-nu_1 = pparams['kinematicViscosityB']
+nu_1 = pparams['viscosityB']
 sigma_01 = pparams['surf_tension_coeff']
 g = pparams['gravity']
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
-if mparams.rans3p.forceTerms is not None:
-    forceTerms = mparams.rans3p.forceTerms
-    MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=1
 useMetrics = mparams.rans3p['useMetrics']
 epsFact_viscosity = mparams.rans3p['epsFact_viscosity']
 epsFact_density = mparams.rans3p['epsFact_density']
@@ -55,7 +51,6 @@ useVF = mparams.rans3p['useVF']
 PSTAB = mparams.rans3p['PSTAB']
 USE_SUPG = mparams.rans3p['USE_SUPG']
 ARTIFICIAL_VISCOSITY = mparams.rans3p['ARTIFICIAL_VISCOSITY']
-INT_BY_PARTS_PRESSURE = mparams.rans3p['INT_BY_PARTS_PRESSURE']
 cE = mparams.rans3p['cE']
 cMax = mparams.rans3p['cMax']
 
@@ -113,9 +108,7 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     PSTAB=PSTAB,
                                     USE_SUPG=USE_SUPG,
                                     ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY,
-                                    INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE,
-                                    cE=cE, cMax=cMax,
-                                    MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY)
+                                    cE=cE, cMax=cMax)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
@@ -142,7 +135,7 @@ if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModul
     if nd == 3:
         dirichletConditions[2] = boundaryConditions['vel_w_DBC']
         advectiveFluxBoundaryConditions[2] = boundaryConditions['vel_w_AFBC']
-        diffusiveFluxBoundaryConditions[2] = {2: boundaryConditions['vel_w_DFBC']}
+        diffusiveFluxBoundaryConditions[2] = {2: boundaryConditions['vel_w_AFBC']}
 else:
     dirichletConditions = {0: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
                            1: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}

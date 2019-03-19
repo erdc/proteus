@@ -20,7 +20,6 @@ namespace proteus
   class RDLS_base
   {
   public:
-    std::valarray<double> weighted_lumped_mass_matrix;
     virtual ~RDLS_base(){}
     virtual void calculateResidual(//element
                                    double* mesh_trial_ref,
@@ -1924,7 +1923,7 @@ namespace proteus
                                 double* lumped_qy,
                                 double* lumped_qz)
       {
-        weighted_lumped_mass_matrix.resize(numDOFs,0.0);
+	std::valarray<double> weighted_lumped_mass_matrix(numDOFs);
         for (int i=0; i<numDOFs; i++)
           {
             // output vectors
