@@ -15,9 +15,6 @@ boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
 movingDomain = myTpFlowProblem.movingDomain
 MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0
-if myTpFlowProblem.forceTerms is not None:
-    forceTerms = myTpFlowProblem.forceTerms
-    MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=1
 
 # DOMAIN #
 domain = myTpFlowProblem.domain
@@ -43,6 +40,9 @@ g = pparams['gravity']
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
+if mparams.rans3p.forceTerms is not None:
+    forceTerms = mparams.rans3p.forceTerms
+    MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=1
 useMetrics = mparams.rans3p['useMetrics']
 epsFact_viscosity = mparams.rans3p['epsFact_viscosity']
 epsFact_density = mparams.rans3p['epsFact_density']

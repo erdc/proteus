@@ -310,12 +310,13 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
-                                             forceTerms=forceTerms,
                                              useSuperlu=True)
 myTpFlowProblem.useBoundaryConditionsModule = False
 myTpFlowProblem.Parameters.physical['gravity'] = [0.0,0.0,-9.8]
 myTpFlowProblem.Parameters.Models.clsvof['disc_ICs']=True
 myTpFlowProblem.Parameters.Models.rans3p['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
+myTpFlowProblem.Parameters.Models.rans3p.forceTerms = forceTerms
 
-myTpFlowProblem.Parameters.mesh.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 myTpFlowProblem.Parameters.mesh.setParallelPartitioningType('node')
+myTpFlowProblem.Parameters.mesh.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)

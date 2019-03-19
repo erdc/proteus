@@ -178,6 +178,7 @@ class ParametersModelRANS3P(ParametersModelBase):
         self.INT_BY_PARTS_PRESSURE = 1
         self.cE = 1.
         self.cMax = 1.
+        self.forceTerms = None
         # freeze attributes
         self._freeze()
 
