@@ -142,7 +142,7 @@ if domain.useSpatialTools is False or myTpFlowProblem.useBoundaryConditionsModul
     if nd == 3:
         dirichletConditions[2] = boundaryConditions['vel_w_DBC']
         advectiveFluxBoundaryConditions[2] = boundaryConditions['vel_w_AFBC']
-        diffusiveFluxBoundaryConditions[2] = {2: boundaryConditions['vel_w_AFBC']}
+        diffusiveFluxBoundaryConditions[2] = {2: boundaryConditions['vel_w_DFBC']}
 else:
     dirichletConditions = {0: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
                            1: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}

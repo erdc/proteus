@@ -4,7 +4,7 @@ TwoPhaseFlow
 from __future__ import division
 from past.utils import old_div
 import numpy as np
-from proteus import (Domain, Context, Gauges
+from proteus import (Domain, Context, Gauges,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 from proteus.mprans.SpatialTools import Tank2D
@@ -33,28 +33,28 @@ assert opts.ns_model==1, "use ns_model=1 (rans3pf) for this"
 # ***** GAUGES ***** #
 # ****************** #
 if opts.gauges:
-    pressure_gauges = PointGauges(gauges=((('p',),
-                                           ((2.389,0.526,0.025), #P1
-                                            (2.389,0.526,0.099), #P3
-                                            (2.414,0.474,0.165), #P5
-                                            (2.487,0.474,0.165))),), #P7
-                                  fileName="pressure.csv")
-    point_height_gauges = PointGauges(gauges=((('phi',),
-                                               ((2.389,0.526,0.025), #P1
-                                                (2.389,0.526,0.099), #P3
-                                                (2.414,0.474,0.165), #P5
-                                                (2.487,0.474,0.165))),), #P7
-                                      fileName="point_clsvof.csv")
-    height_gauges = LineGauges(gauges=((("phi",),
-                                        (((2.724, 0.5, 0.0),
-                                          (2.724, 0.5, 1.0)),
-                                         ((2.228, 0.5, 0.0),
-                                          (2.228, 0.5, 1.0)),
-                                         ((1.732, 0.5, 0.0),
-                                          (1.732, 0.5, 1.0)),
-                                         ((0.582, 0.5, 0.0),
-                                          (0.582, 0.5, 1.0)))),),
-                               fileName="height.csv")
+    pressure_gauges = Gauges.PointGauges(gauges=((('p',),
+                                                  ((2.389,0.526,0.025), #P1
+                                                   (2.389,0.526,0.099), #P3
+                                                   (2.414,0.474,0.165), #P5
+                                                   (2.487,0.474,0.165))),), #P7
+                                         fileName="pressure.csv")
+    point_height_gauges = Gauges.PointGauges(gauges=((('phi',),
+                                                      ((2.389,0.526,0.025), #P1
+                                                       (2.389,0.526,0.099), #P3
+                                                       (2.414,0.474,0.165), #P5
+                                                       (2.487,0.474,0.165))),), #P7
+                                             fileName="point_clsvof.csv")
+    height_gauges = Gauges.LineGauges(gauges=((("phi",),
+                                               (((2.724, 0.5, 0.0),
+                                                 (2.724, 0.5, 1.0)),
+                                                ((2.228, 0.5, 0.0),
+                                                 (2.228, 0.5, 1.0)),
+                                                ((1.732, 0.5, 0.0),
+                                                 (1.732, 0.5, 1.0)),
+                                                ((0.582, 0.5, 0.0),
+                                                 (0.582, 0.5, 1.0)))),),
+                                      fileName="height.csv")
 
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
@@ -152,9 +152,9 @@ class clsvof_init_cond(object):
         phi_x = x[0]-waterLine_x
         phi_z = x[2]-waterLine_z
         if disc_ICs:
-            if x[0] < waterLine_x and x[2] < waterLine_z: 
+            if x[0] < waterLine_x and x[2] < waterLine_z:
                 return -1.0
-            elif x[0] > waterLine_x or x[2] > waterLine_z: 
+            elif x[0] > waterLine_x or x[2] > waterLine_z:
                 return 1.0
             else:
                 return 0.0
@@ -199,10 +199,10 @@ def vel_w_DBC(x,flag):
                          flag == boundaryTags['box_front'] or
                          flag == boundaryTags['box_back']):
         return lambda  x,t: 0.0
-    
+
 def pressure_increment_DBC(x,flag):
     if flag == boundaryTags['top'] and openTop:
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 def pressure_DBC(x,flag):
     if flag == boundaryTags['top'] and openTop:
@@ -320,5 +320,3 @@ myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = disc_ICs
 myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
 myTpFlowProblem.Parameters.Models.clsvof.auxiliaryVariables = [point_height_gauges, height_gauges]
 myTpFlowProblem.Parameters.Models.pressure.auxiliaryVariables = [pressure_gauges]
-
-myTpFlowProblem.outputStepping.systemStepExact = True

@@ -17,7 +17,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
-myparams = mparams.pressure
+myparams = mparams.pressureIncrement
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
