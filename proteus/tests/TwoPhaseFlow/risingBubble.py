@@ -14,13 +14,14 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts= Context.Options([
-    ("test_case",1,"Rising bubble test cases"),
+    ("test_case",1,"Rising bubble test cases: 1,2"),
     ('ns_model',1,"ns_model = {rans2p,rans3p}"),
     ("final_time",3.0,"Final time for simulation"),
-    ("dt_output",0.01,"Time interval to output solution"),
-    ("cfl",0.33,"Desired CFL restriction"),
-    ("refinement",3,"level of refinement")
-    ],mutable=True)
+    ("dt_output",0.1,"Time interval to output solution"),
+    ("cfl",0.2,"Desired CFL restriction"),
+    ("refinement",3,"level of refinement"),
+    ("ARTIFICIAL_VISCOSITY",3,"artificial viscosity")
+    ])
 
 assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
 assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
@@ -33,32 +34,49 @@ assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
-tank_dim = (1.0,2.0)
+tank_dim = (1.0,2.0) 
 refinement = opts.refinement
 structured=True
 if structured:
-    nnx = 4 * refinement**2 +2
+    nnx = 5*(2**refinement)+1
+    #nnx = 4 * refinement**2 +2
     nny = 2*nnx
     domain = Domain.RectangularDomain(tank_dim)
     boundaryTags = domain.boundaryTags
     triangleFlag=1
+    he=1.0/(nnx-1)
 else:
-    nnx = nny = None
-    domain = Domain.PlanarStraightLineGraphDomain()
-
-# ----- TANK ----- #
-tank = Tank2D(domain, tank_dim)
-
-# ----- EXTRA BOUNDARY CONDITIONS ----- #
-tank.BC['y+'].setNoSlip()
-tank.BC['y-'].setNoSlip()
-tank.BC['x+'].setFreeSlip()
-tank.BC['x-'].setFreeSlip()
-
-he = old_div(tank_dim[0], float(4 * refinement - 1))
-domain.MeshOptions.he = he
-st.assembleDomain(domain)
-domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+    vertices = [[0.0, 0.0],  #0
+                [tank_dim[0], 0.0],  #1
+                [tank_dim[0], tank_dim[1]],  #2
+                [0.0, tank_dim[1]]]  #3
+    vertexFlags = [boundaryTags['bottom'],
+                   boundaryTags['bottom'],
+                   boundaryTags['top'],
+                   boundaryTags['top']]
+    segments = [[0, 1],
+                [1, 2],
+                [2, 3],
+                [3, 0]]
+    segmentFlags = [boundaryTags['bottom'],
+                    boundaryTags['right'],
+                    boundaryTags['top'],
+                    boundaryTags['left']]
+    regions = [[tank_dim[0]/2., tank_dim[1]/2.]]
+    regionFlags = [1]
+    domain = Domain.PlanarStraightLineGraphDomain(vertices=vertices,
+                                                  vertexFlags=vertexFlags,
+                                                  segments=segments,
+                                                  segmentFlags=segmentFlags,
+                                                  regions=regions,
+                                                  regionFlags=regionFlags)    
+    domain.boundaryTags = boundaryTags
+    domain.writePoly("mesh")
+    domain.writePLY("mesh")
+    domain.writeAsymptote("mesh")
+    he = old_div(tank_dim[0], float(4 * refinement - 1))
+    domain.MeshOptions.he = he
+    triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
@@ -77,8 +95,44 @@ class clsvof_init_cond(object):
         r = np.sqrt((x[0]-xB)**2 + (x[1]-yB)**2)
         # dist to surface of bubble
         dB = rB - r
-        return dB
+        #return dB
+        if dB>0:
+            return 1.0
+        elif dB==0:
+            return 0.0
+        else:
+            return -1.0
 
+#################
+# NAVIER STOKES #
+#################
+# DIRICHLET BCs #
+def vel_u_DBC(x,flag):
+    if flag==boundaryTags['bottom'] or flag==boundaryTags['top']:
+        return lambda x,t: 0.0
+
+def vel_v_DBC(x,flag):
+    if flag==boundaryTags['bottom'] or flag==boundaryTags['top']:
+        return lambda x,t: 0.0    
+
+# ADVECTIVE FLUX #
+def vel_u_AFBC(x,flag):
+    if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
+        return lambda x,t: 0.0
+
+def vel_v_AFBC(x,flag):
+    if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
+        return lambda x,t: 0.0
+
+# DIFFUSIVE FLUX #
+def vel_u_DFBC(x,flag):
+    if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
+        return lambda x,t: 0.0
+
+def vel_v_DFBC(x,flag):
+    if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
+        return lambda x,t: 0.0
+    
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
@@ -91,24 +145,21 @@ initialConditions = {'pressure': zero(),
                      'clsvof': clsvof_init_cond()}
 boundaryConditions = {
     # DIRICHLET BCs #
-    'pressure_DBC': lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
-    'pressure_increment_DBC': lambda x, flag: domain.bc[flag].pInc_dirichlet.init_cython(),
-    'vel_u_DBC': lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
-    'vel_v_DBC': lambda x, flag: domain.bc[flag].v_dirichlet.init_cython(),
-    'vel_w_DBC': lambda x, flag: domain.bc[flag].w_dirichlet.init_cython(),
-    'clsvof_DBC': lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython(),
+    'pressure_DBC': lambda x, flag: None,
+    'pressure_increment_DBC': lambda x, flag: None,
+    'vel_u_DBC': vel_u_DBC,
+    'vel_v_DBC': vel_v_DBC,
+    'clsvof_DBC': lambda x, flag: None,
     # ADVECTIVE FLUX BCs #
-    'pressure_AFBC': lambda x, flag: domain.bc[flag].p_advective.init_cython(),
-    'pressure_increment_AFBC': lambda x, flag: domain.bc[flag].pInc_advective.init_cython(),
-    'vel_u_AFBC': lambda x, flag: domain.bc[flag].u_advective.init_cython(),
-    'vel_v_AFBC': lambda x, flag: domain.bc[flag].v_advective.init_cython(),
-    'vel_w_AFBC': lambda x, flag: domain.bc[flag].w_advective.init_cython(),
-    'clsvof_AFBC': lambda x, flag: domain.bc[flag].vof_advective.init_cython(),
+    'pressure_AFBC': lambda x, flag: lambda x, t: 0.0,
+    'pressure_increment_AFBC': lambda x, flag: lambda x, t: 0.0, 
+    'vel_u_AFBC': vel_u_AFBC,
+    'vel_v_AFBC': vel_v_AFBC,
+    'clsvof_AFBC': lambda x, flag: lambda x, t: 0.0,
     # DIFFUSIVE FLUX BCs #
-    'pressure_increment_DFBC': lambda x, flag: domain.bc[flag].pInc_diffusive.init_cython(),
-    'vel_u_DFBC': lambda x, flag: domain.bc[flag].u_diffusive.init_cython(),
-    'vel_v_DFBC': lambda x, flag: domain.bc[flag].v_diffusive.init_cython(),
-    'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
+    'pressure_increment_DFBC': lambda x, flag: lambda x, t: 0.0,
+    'vel_u_DFBC': vel_v_DFBC,
+    'vel_v_DFBC': vel_v_DFBC,
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              nd=2,
@@ -127,22 +178,22 @@ physical_parameters = myTpFlowProblem.Parameters.physical
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
 if opts.test_case==1:
     physical_parameters['densityA'] = 1000.0
-    physical_parameters['viscosityA'] = 10.0/physical_parameters['densityA']
+    physical_parameters['kinematicViscosityA'] = 10.0/physical_parameters['densityA']
     physical_parameters['densityB'] = 100.0
-    physical_parameters['viscosityB'] = 1.0/physical_parameters['densityB']
+    physical_parameters['kinematicViscosityB'] = 1.0/physical_parameters['densityB']
     physical_parameters['surf_tension_coeff'] = 24.5
     physical_parameters['gravity'] = [0.0, -0.98, 0.0]
 else: #test_case=2
     physical_parameters['densityA'] = 1000.0
-    physical_parameters['viscosityA'] = 10.0/physical_parameters['densityA']
+    physical_parameters['kinematicViscosityA'] = 10.0/physical_parameters['densityA']
     physical_parameters['densityB'] = 1.0
-    physical_parameters['viscosityB'] = 0.1/physical_parameters['densityB']
+    physical_parameters['kinematicViscosityB'] = 0.1/physical_parameters['densityB']
     physical_parameters['surf_tension_coeff'] = 1.96
 
 myTpFlowProblem.useBoundaryConditionsModule = False
-myTpFlowProblem.Parameters.Models.rans3p.epsFact_viscosity = 3.
-myTpFlowProblem.Parameters.Models.rans3p.epsFact_density = 3.
 myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
-myTpFlowProblem.Parameters.Models.rans3p.timeDiscretization = 'vbdf'
+myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = True
+myTpFlowProblem.Parameters.Models.clsvof.computeMetricsForBubble = True
 
 myTpFlowProblem.outputStepping.systemStepExact = True
