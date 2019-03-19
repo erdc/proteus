@@ -41,8 +41,6 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         fixedNodeMaterialTypes[3]=1   (!) must be integers
     nSmoothOut: int
         number of smoothing steps after finishing pseudo time stepping
-    nSmoothIn: int
-        number of smoothing steps after finishing pseudo time stepping
     epsFact_density: double
         epsFact*he_min where refinement is the same
     epsTimeStep: double
@@ -72,7 +70,6 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  fixedElementMaterialTypes=None,
                  noNodeVelocityNodeMaterialTypes=None,
                  nSmoothOut=0,
-                 nSmoothIn=0,
                  epsFact_density=0,
                  epsTimeStep=1.,
                  ntimes_solved=1,
@@ -99,7 +96,6 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.fixedNodeMaterialTypes = fixedNodeMaterialTypes
         self.fixedElementMaterialTypes = fixedElementMaterialTypes
         self.nSmoothOut = nSmoothOut
-        self.nSmoothIn = nSmoothIn
         self.dt_last = None
         self.u_phi = None
         self.nt = 0
@@ -228,6 +224,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             self.t = self.model.t_mesh
             self.poststepdone = False
             if self.resetNodeVelocityArray is True and self.ntimes_i == 0:
+                print('reset')
                 self.mesh.nodeVelocityArray[:] = 0.
 
     def postStep(self, t, firstStep=False):
@@ -279,7 +276,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
             self.gamma0 = 10.  # user defined parameter
             self.na = np.log(self.gamma)/np.log(self.gamma0)
             nNodes_owned = self.mesh.nNodes_owned
-            if self.dt_last is not None or firstStep is False:
+            if self.dt_last is not None:
                 # pseudo-time step
                 self.PHI[:] = self.mesh.nodeArray[:]
                 self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,

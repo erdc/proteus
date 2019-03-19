@@ -22,6 +22,11 @@ for i in range(len(sys.argv)):
 # Load module
 if pathMyTpFlowProblem is not None:
     sys.path.append(pathMyTpFlowProblem)
+
+# ***************************** #
+# ********** CONTEXT ********** #
+# ***************************** #
+# name = "TwoPhaseFlow"
 case = __import__(name)
 
 # Create context
@@ -36,7 +41,6 @@ params = ct.myTpFlowProblem.Parameters
 assert hasattr(ct,'myTpFlowProblem'), "Create myTpFlowProblem from TwoPhaseFlowProblem"
 ns_model = ct.myTpFlowProblem.ns_model
 outputStepping = ct.myTpFlowProblem.outputStepping
-fastArchive = ct.myTpFlowProblem.fastArchive
 
 # **************************** #
 # ********** pnList ********** #
@@ -53,6 +57,7 @@ for i in range(params.nModels):
 # ****************************************** #
 systemStepControllerType = Sequential_MinAdaptiveModelStep
 if ct.myTpFlowProblem.outputStepping['dt_fixed']:
+    systemStepControllerType = Sequential_FixedStep
     dt_system_fixed = ct.opts.dt_fixed
 if params.Models.rans3p['index'] is not None: #rans3p
     PINIT_model = params.Models.pressureInitial['index']
@@ -68,18 +73,11 @@ if params.Models.rans3p['index'] is not None: #rans3p
 needEBQ_GLOBAL = False
 needEBQ = False
 
-# ******************************************* #
-# ********** Measure speed of code ********** #
-# ******************************************* #
-measureSpeedOfCode = True
-
 # **************************** #
 # ********** tnList ********** #
 # **************************** #
 outputStepping = ct.myTpFlowProblem.outputStepping
 tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
-if tnList[1] == tnList[2]:
-    del tnList[1]
 if outputStepping['dt_output'] is None:
     if outputStepping['dt_fixed'] > 0:
         if outputStepping['dt_init'] < outputStepping['dt_fixed']:

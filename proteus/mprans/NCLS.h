@@ -36,12 +36,6 @@ namespace proteus
   {
     //The base class defining the interface
   public:
-    std::valarray<double> L2_norm_per_node;
-    std::valarray<double> TransportMatrix, TransposeTransportMatrix;
-    std::valarray<double> psi, etaMax, etaMin;
-    std::valarray<double> global_entropy_residual;
-    std::valarray<double> gx, gy, gz, eta,
-      alpha_numerator_pos, alpha_numerator_neg, alpha_denominator_pos, alpha_denominator_neg;
     virtual ~NCLS_base(){}
     virtual void calculateResidual(//element
                                    double dt,
@@ -1724,13 +1718,13 @@ namespace proteus
 					   double* ML
 					   )
       {
-	L2_norm_per_node.resize(numDOFs,0.0);
+	std::valarray<double> L2_norm_per_node(numDOFs);
 	double L2_norm=0.;
 	for (int i=0; i<numDOFs; i++)
 	  L2_norm_per_node[i] = 0.;
 
 	// Allocate space for the transport matrices
-	TransportMatrix.resize(NNZ,0.0), TransposeTransportMatrix.resize(NNZ,0.0);
+	std::valarray<double> TransportMatrix(NNZ), TransposeTransportMatrix(NNZ);
 	for (int i=0; i<NNZ; i++)
 	  {
 	    TransportMatrix[i] = 0.;
@@ -1857,7 +1851,7 @@ namespace proteus
 	//////////////////////////////////
 	// Smoothness indicator is based on the solution.
 	// psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
-	psi.resize(numDOFs,0.0);
+	std::valarray<double> psi(numDOFs);
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double alphai;
@@ -2106,7 +2100,7 @@ namespace proteus
 
 	// Allocate space for the transport matrices
 	// This is used for first order KUZMIN'S METHOD
-	TransportMatrix.resize(NNZ,0.0), TransposeTransportMatrix.resize(NNZ,0.0);
+	std::valarray<double> TransportMatrix(NNZ), TransposeTransportMatrix(NNZ);
 	for (int i=0; i<NNZ; i++)
 	  {
 	    TransportMatrix[i] = 0.;
@@ -2114,7 +2108,7 @@ namespace proteus
 	  }
 
 	// Allocate and init to zero the Entropy residual vector
-	global_entropy_residual.resize(numDOFs,0.0);
+	std::valarray<double> global_entropy_residual(numDOFs); //, eta(numDOFs);
 	if (STABILIZATION_TYPE==1) //EV stab
 	  for (int i=0; i<numDOFs; i++)
 	    global_entropy_residual[i] = 0.;
@@ -2325,10 +2319,9 @@ namespace proteus
 	// COMPUTE g, ETA and others //
 	///////////////////////////////
 	// NOTE: see VOF.h for a different but equivalent implementation of this.
-	gx.resize(numDOFs,0.0), gy.resize(numDOFs,0.0), gz.resize(numDOFs,0.0),
-	  eta.resize(numDOFs,0.0),
-	  alpha_numerator_pos.resize(numDOFs,0.0), alpha_numerator_neg.resize(numDOFs,0.0),
-	  alpha_denominator_pos.resize(numDOFs,0.0), alpha_denominator_neg.resize(numDOFs,0.0);
+	std::valarray<double> gx(numDOFs), gy(numDOFs), gz(numDOFs), eta(numDOFs),
+	  alpha_numerator_pos(numDOFs), alpha_numerator_neg(numDOFs),
+	  alpha_denominator_pos(numDOFs), alpha_denominator_neg(numDOFs);
 	int ij = 0;
 	for (int i=0; i<numDOFs; i++)
 	  {
@@ -2384,7 +2377,7 @@ namespace proteus
 	//////////////////////////////////////////////////////////
 	// Smoothness indicator is based on the solution.
 	// psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
-	psi.resize(numDOFs,0.0), etaMax.resize(numDOFs,0.0), etaMin.resize(numDOFs,0.0);
+	std::valarray<double> psi(numDOFs), etaMax(numDOFs), etaMin(numDOFs);
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double xi, yi, zi, SumPos=0., SumNeg=0.;

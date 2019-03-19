@@ -27,7 +27,6 @@ namespace proteus
   {
     //The base class defining the interface
   public:
-    std::valarray<double> Rpos, Rneg, FluxCorrectionMatrix;
     virtual ~CLSVOF_base(){}
     virtual void calculateResidual(//element
                                    double dt,
@@ -2272,9 +2271,8 @@ namespace proteus
 		   double* MassMatrix //mass matrix
 		   )
       {
-	Rpos.resize(numDOFs, 0.0);
-	Rneg.resize(numDOFs, 0.0);
-	FluxCorrectionMatrix.resize(NNZ, 0.0);
+	std::valarray<double> Rpos(numDOFs), Rneg(numDOFs);
+	std::valarray<double> FluxCorrectionMatrix(NNZ);
 	//////////////////
 	// LOOP in DOFs //
 	//////////////////

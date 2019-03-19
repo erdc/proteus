@@ -52,7 +52,6 @@ coefficients = MoveMeshMonitor.Coefficients(func=myparams.func,
                                             fixedElementMaterialTypes=myparams.fixedElementMaterialTypes,
                                             noNodeVelocityNodeMaterialTypes=myparams.noNodeVelocityNodeMaterialTypes,
                                             nSmoothOut=myparams.nSmoothOut,
-                                            nSmoothIn=myparams.nSmoothIn,
                                             epsTimeStep=myparams.epsTimeStep,
                                             epsFact_density=myparams.epsFact,
                                             grading=myparams.grading,
@@ -75,6 +74,4 @@ dirichletConditions = {0: getDBC}
 
 def getDFBC(x, flag):
     return lambda x, t: 0.
-
-# advectiveFluxBoundaryConditions = {0: getDFBC}
 diffusiveFluxBoundaryConditions = {0: {0: getDFBC}}

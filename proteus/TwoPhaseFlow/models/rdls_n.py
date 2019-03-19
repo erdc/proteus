@@ -101,6 +101,6 @@ l_atol_res = 0.001*nl_atol_res
 useEisenstatWalker = False#True
 tolFac = 0.
 maxNonlinearIts = 25
-maxLineSearches = 25
+maxLineSearches = 0
 
 auxiliaryVariables = myparams.auxiliaryVariables

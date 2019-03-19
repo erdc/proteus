@@ -141,7 +141,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
 
     def __init__(self,
-                 outputQuantDOFs = True,
                  INT_BY_PARTS_PRESSURE=0,
                  MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0,
                  CORRECT_VELOCITY=True,
@@ -228,7 +227,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_angular_velocity=None,
                  particles=None
                  ):
-        self.outputQuantDOFs=outputQuantDOFs
         self.INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE
         self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
         self.CORRECT_VELOCITY = CORRECT_VELOCITY
@@ -1879,7 +1877,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setupFieldStrides()
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
-        self.isBoundary_1D = None
 
         # mql: material parameters defined by a function at quad points
         self.q['density'] = numpy.zeros(
@@ -2097,9 +2094,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Added by mql for discrete upwinding stab
         self.entropyResidualPerNode = numpy.zeros(self.u[0].dof.shape, 'd')
         self.laggedEntropyResidualPerNode = numpy.zeros(self.u[0].dof.shape, 'd')
-        self.uStar_dMatrix = None
-        self.vStar_dMatrix = None
-        self.wStar_dMatrix = None
+        self.dMatrix = None
         self.numDOFs = None
 
     def updateMaterialParameters(self):
@@ -2243,32 +2238,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ncDrag[:]=0.0
         self.betaDrag[:]=0.0
         self.vos_vel_nodes[:]=0.0
-
-        if self.uStar_dMatrix is None:
+        
+        if self.dMatrix is None:
             self.getSparsityPatternForComponents()
-            self.uStar_dMatrix = numpy.zeros(self.nnz_1D)
-            self.vStar_dMatrix = numpy.zeros(self.nnz_1D)
-            self.wStar_dMatrix = numpy.zeros(self.nnz_1D)
-        #
-        if self.isBoundary_1D is None:
-            self.isBoundary_1D = numpy.zeros(self.numDOFs_1D)
-            self.rans3pf.getBoundaryDOFs(
-                self.mesh.nodeArray,
-                self.mesh.elementNodesArray,
-                self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
-                self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
-                self.elementBoundaryQuadratureWeights[('u', 0)],
-                self.u[0].femSpace.psi_trace,
-                self.u[0].femSpace.elementMaps.boundaryNormals,
-                self.u[0].femSpace.elementMaps.boundaryJacobians,
-                self.u[0].femSpace.dofMap.l2g,
-                self.mesh.nExteriorElementBoundaries_global,
-                self.mesh.exteriorElementBoundariesArray,
-                self.mesh.elementBoundaryElementsArray,
-                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                self.isBoundary_1D)
-            self.isBoundary_1D[:] = 1.0*(self.isBoundary_1D > 0)
-            self.quantDOFs[:] = self.isBoundary_1D
+            self.dMatrix = numpy.zeros(self.nnz_1D)
         #
 
         self.rans3pf.calculateResidual(
@@ -2365,7 +2338,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u_dof_old_old,
             self.v_dof_old_old,
             self.w_dof_old_old,
-            [self.uStar_dof, self.vStar_dof, self.wStar_dof],
+            self.uStar_dof,
+            self.vStar_dof,
+            self.wStar_dof,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
@@ -2519,19 +2494,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ncDrag,
             self.betaDrag,
             self.vos_vel_nodes,
-            # For edge based stabilization #
+          # For edge based stabilization #
             self.entropyResidualPerNode,
             self.laggedEntropyResidualPerNode,
-            [self.uStar_dMatrix, self.vStar_dMatrix, self.wStar_dMatrix],
+            self.dMatrix,
             self.numDOFs_1D,
             self.nnz_1D,
             self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
             old_div(self.csrColumnOffsets[(0, 0)], self.nSpace_global),
             self.rowptr_1D,
             self.colind_1D,
-            self.isBoundary_1D,
             self.coefficients.INT_BY_PARTS_PRESSURE)
-
         r*=self.isActiveDOF
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
@@ -2839,7 +2812,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.use_sbm,
             # for edge based dissipation
             self.coefficients.ARTIFICIAL_VISCOSITY,
-            [self.uStar_dMatrix, self.vStar_dMatrix, self.wStar_dMatrix],
+            self.dMatrix,
             self.numDOFs_1D,
             self.offset[0],
             self.offset[1],
