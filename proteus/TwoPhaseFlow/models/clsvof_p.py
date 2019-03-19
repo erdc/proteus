@@ -49,7 +49,8 @@ coefficients = CLSVOF.Coefficients(V_model=V_model,
                                    epsFactRedist=myparams.epsFactRedist,
                                    lambdaFact=myparams.lambdaFact,
                                    outputQuantDOFs=myparams.outputQuantDOFs,
-                                   computeMetrics=myparams.computeMetrics)
+                                   computeMetrics=myparams.computeMetrics,
+                                   disc_ICs=myparams.disc_ICs)
 coefficients.variableNames=['phi']
 name="clsvof"
 

@@ -1074,7 +1074,7 @@ public:
     const int NSPACE2=NSPACE*NSPACE;
     for(int I=0;I<NSPACE;I++)
       for(int J=0;J<NSPACE;J++)
-	hess[I*2+J] = 0.0;
+	hess[I*NSPACE+J] = 0.0;
     for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
       for(int I=0;I<NSPACE;I++)
 	for(int J=0;J<NSPACE;J++)
@@ -1113,7 +1113,8 @@ public:
     const int NSPACE2=NSPACE*NSPACE;
     for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
       for(int I=0;I<NSPACE;I++)
-	hess_trial[j*NSPACE+I] = 0.0;
+	for(int J=0;J<NSPACE;J++)
+	  hess_trial[j*NSPACE2+I*NSPACE+J] = 0.0;
     for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
       for(int I=0;I<NSPACE;I++)
 	for(int J=0;J<NSPACE;J++)
