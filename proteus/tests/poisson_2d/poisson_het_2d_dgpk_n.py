@@ -2,7 +2,10 @@ from __future__ import absolute_import
 from builtins import range
 from proteus import *
 from proteus.default_n import *
-from .poisson_het_2d_p import *
+try:
+    from .poisson_het_2d_p import *
+except:
+    from poisson_het_2d_p import *
 
 parallel = True
 numerical_flux_flag = 'NIPG'
