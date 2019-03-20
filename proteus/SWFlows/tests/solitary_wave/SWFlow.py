@@ -107,7 +107,7 @@ class x_mom_at_t0(object):
 class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
-        return 0.*h
+        return 0. * h
 
 
 """
