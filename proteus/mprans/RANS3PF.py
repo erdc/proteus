@@ -141,6 +141,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
 
     def __init__(self,
+                 forceTerms = None,
                  outputQuantDOFs = True,
                  INT_BY_PARTS_PRESSURE=0,
                  MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0,
@@ -228,6 +229,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_angular_velocity=None,
                  particles=None
                  ):
+        self.forceTerms = forceTerms
         self.outputQuantDOFs=outputQuantDOFs
         self.INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE
         self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
@@ -971,7 +973,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # COMPUTE MATERIAL PARAMETERS AND FORCE TERMS AS FUNCTIONS (if provided)
         if self.model.hasMaterialParametersAsFunctions:
             self.model.updateMaterialParameters()
-        if self.model.hasForceTermsAsFunctions:
+        if self.forceTerms is not None:
             self.model.updateForceTerms()
         self.model.dt_last = self.model.timeIntegration.dt
 
@@ -1137,11 +1139,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if ('materialParameters') in dir(options):
             self.materialParameters = options.materialParameters
             self.hasMaterialParametersAsFunctions = True
-        # mql: Check if forceTerms are declared
-        self.hasForceTermsAsFunctions = False
-        if ('forceTerms') in dir(options):
-            self.forceTerms = options.forceTerms
-            self.hasForceTermsAsFunctions = True
         # mql: Check if analytical pressure function is declared
         if ('analyticalPressureSolution') in dir(options):
             self.analyticalPressureSolution = options.analyticalPressureSolution
@@ -2127,10 +2124,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              1: y,
              2: z}
         t = self.timeIntegration.t
-        self.q[('force', 0)][:] = self.forceTerms[0](X, t)
-        self.q[('force', 1)][:] = self.forceTerms[1](X, t)
+        self.q[('force', 0)][:] = self.coefficients.forceTerms[0](X, t)
+        self.q[('force', 1)][:] = self.coefficients.forceTerms[1](X, t)
         try:
-            self.q[('force', 2)][:] = self.forceTerms[2](X, t)
+            self.q[('force', 2)][:] = self.coefficients.forceTerms[2](X, t)
         except:
             pass
 
