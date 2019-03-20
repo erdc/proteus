@@ -8,8 +8,6 @@ from proteus import (StepControl,
 from proteus.mprans import RANS3PF
 import rans3p_p as physics
 
-forceTerms = physics.forceTerms
-
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
