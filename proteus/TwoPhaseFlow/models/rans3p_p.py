@@ -14,6 +14,7 @@ initialConditions   = myTpFlowProblem.initialConditions
 boundaryConditions  = myTpFlowProblem.boundaryConditions
 nd = myTpFlowProblem.nd
 movingDomain = myTpFlowProblem.movingDomain
+forceTerms = None
 MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0
 
 # DOMAIN #
