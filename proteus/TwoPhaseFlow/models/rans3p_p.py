@@ -116,7 +116,6 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     ARTIFICIAL_VISCOSITY=ARTIFICIAL_VISCOSITY,
                                     INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE,
                                     cE=cE, cMax=cMax,
-                                    forceTerms=forceTerms,
                                     MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY)
 
 # **************************************** #
