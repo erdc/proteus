@@ -858,17 +858,17 @@ namespace proteus
         // mass (volume accumulation)
         //..hardwired
 
-        //double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 1e-10;
+        //phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 1e-10;
         phi_s_effect = smoothedHeaviside(eps_rho*0.3,distance_to_omega_solid)*(1-1e-10)+1e-10;
         if(USE_SBM>0)
           phi_s_effect = 1.0;
         //u momentum accumulation
-        mom_u_acc=phi_s_effect * u;//trick for non-conservative form
-        dmom_u_acc_u=phi_s_effect * rho*porosity;
+        mom_u_acc=u;//trick for non-conservative form
+        dmom_u_acc_u= phi_s_effect * rho*porosity;
 
         //v momentum accumulation
-        mom_v_acc=phi_s_effect * v;
-        dmom_v_acc_v=phi_s_effect * rho*porosity;
+        mom_v_acc=v;
+        dmom_v_acc_v= phi_s_effect * rho*porosity;
 
         /* //w momentum accumulation */
         /* mom_w_acc=w; */
