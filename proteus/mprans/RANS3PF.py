@@ -971,7 +971,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # COMPUTE MATERIAL PARAMETERS AND FORCE TERMS AS FUNCTIONS (if provided)
         if self.model.hasMaterialParametersAsFunctions:
             self.model.updateMaterialParameters()
-        if self.model.hasForceTermsAsFunctions:
+        if self.model.hasForceTermsAsFunctions or self.forceTerms != None:
             self.model.updateForceTerms()
         self.model.dt_last = self.model.timeIntegration.dt
 
