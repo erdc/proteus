@@ -971,7 +971,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # COMPUTE MATERIAL PARAMETERS AND FORCE TERMS AS FUNCTIONS (if provided)
         if self.model.hasMaterialParametersAsFunctions:
             self.model.updateMaterialParameters()
-        if self.model.hasForceTermsAsFunctions or self.forceTerms != None:
+        if self.model.forceTerms is not None:
             self.model.updateForceTerms()
         self.model.dt_last = self.model.timeIntegration.dt
 
@@ -1138,11 +1138,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.materialParameters = options.materialParameters
             self.hasMaterialParametersAsFunctions = True
         # mql: Check if forceTerms are declared
-        self.hasForceTermsAsFunctions = False
         if ('forceTerms') in dir(options):
             self.forceTerms = options.forceTerms
-            if self.forceTerms != None:
-                self.hasForceTermsAsFunctions = True
         # mql: Check if analytical pressure function is declared
         if ('analyticalPressureSolution') in dir(options):
             self.analyticalPressureSolution = options.analyticalPressureSolution
