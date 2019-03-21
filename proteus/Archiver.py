@@ -867,7 +867,7 @@ class XdmfWriter(object):
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":"%e" % (t,),"Name":"%i" % (tCount)})
                 topology    = SubElement(self.arGrid,"Topology",
                                          {"Type":Xdmf_ElementTopology,
-                                          "NumberOfElements":str(mesh.globalMesh.nElements_global).decode()})
+                                          "NumberOfElements": "%i" % (mesh.globalMesh.nElements_global,)})
                 elements    = SubElement(topology,"DataItem",
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Int",

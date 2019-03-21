@@ -6106,9 +6106,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int of
 									  np.ndarray a,
 									  np.ndarray grad_w,
 									  np.ndarray dS,
-									  jac):
-    cdef np.ndarray rowptr, colind, jac_array
-    (rowptr,colind,jac_array) = jac.getCSRrepresentation()
+									  np.ndarray jac):
     cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
     cdef int nElementBoundaries_element = grad_w.shape[1]
     cdef int nQuadraturePoints_elementBoundary = grad_w.shape[2]
@@ -6141,7 +6139,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int of
 									   <double*> a.data,
 									   <double*> grad_w.data,
 									   <double*> dS.data,
-									   <double*> jac_array.data)
+									   <double*> jac.data)
 def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int offset_r,
 									  int stride_r,
 									  int offset_u,
@@ -6163,9 +6161,7 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int of
 									  np.ndarray a,
 									  np.ndarray grad_w,
 									  np.ndarray dS,
-									  jac):
-    cdef np.ndarray rowptr, colind, jac_array
-    (rowptr,colind,jac_array) = jac.getCSRrepresentation()
+									  np.ndarray jac):
     cdef int nExteriorElementBoundaries_global = exteriorElementBoundaries.shape[0]
     cdef int nQuadraturePoints_elementBoundary = grad_w.shape[1]
     cdef int nDOF_test_element = grad_w.shape[2]
@@ -6197,7 +6193,7 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int of
 									   <double*> a.data,
 									   <double*> grad_w.data,
 									   <double*> dS.data,
-									   <double*> jac_array.data)
+									   <double*> jac.data)
 def updateInteriorElementBoundaryDiffusionAdjoint_sd(np.ndarray rowptr,
 						     np.ndarray colind,
 						     np.ndarray interiorElementBoundaries,
@@ -6409,8 +6405,8 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.nd
 									   np.ndarray grad_w,
 									   np.ndarray dS,
 									   jac):
-    cdef np.ndarray rowptr2, colind2, jac_array
-    (rowptr2,colind2,jac_array) = jac.getCSRrepresentation()
+    cdef np.ndarray rowptr_dummy, colind_dummy, jac_array
+    (rowptr_dummy,colind_dummy,jac_array) = jac.getCSRrepresentation()
     cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
     cdef int nElementBoundaries_element = grad_w.shape[1]
     cdef int nQuadraturePoints_elementBoundary = grad_w.shape[2]

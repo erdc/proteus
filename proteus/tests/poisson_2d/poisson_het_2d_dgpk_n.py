@@ -8,8 +8,8 @@ except:
     from poisson_het_2d_p import *
 
 parallel = False
-numerical_flux_flag = 'NIPG'
-polynomial_order = 2
+numerical_flux_flag = 'IIPG'
+polynomial_order = 1
 
 
 timeIntegration = NoIntegration
