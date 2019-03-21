@@ -1140,6 +1140,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # mql: Check if forceTerms are declared
         if ('forceTerms') in dir(options):
             self.forceTerms = options.forceTerms
+        else:
+            self.forceTerms = None
         # mql: Check if analytical pressure function is declared
         if ('analyticalPressureSolution') in dir(options):
             self.analyticalPressureSolution = options.analyticalPressureSolution
