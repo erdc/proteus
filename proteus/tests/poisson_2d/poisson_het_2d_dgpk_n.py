@@ -7,7 +7,7 @@ try:
 except:
     from poisson_het_2d_p import *
 
-parallel = True
+parallel = False
 numerical_flux_flag = 'NIPG'
 polynomial_order = 2
 
