@@ -384,12 +384,12 @@ if opts.TwoPhaseFlow:
         else:
             so.ct.myTpFlowProblem.useSuperlu=True
     for (pModule,nModule) in so.pnList:
-        log("Loading p module = "+pModule)
-        pList.append(proteus.defaults.load_physics(pModule,path=path_models))
+        log("Loading p module = "+pModule.name)
+        pList.append(pModule)
         if pList[-1].name == None:
             pList[-1].name = pModule
-        log("Loading n module = "+nModule)
-        nList.append(proteus.defaults.load_numerics(nModule,path=path_models))
+        log("Loading n module = "+nModule.name)
+        nList.append(nModule)
     #
     if so.sList == []:
         for i in range(len(so.pnList)):

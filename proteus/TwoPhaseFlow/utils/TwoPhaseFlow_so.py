@@ -46,7 +46,7 @@ pnList = [None for i in range(params.nModels)]
 for i in range(params.nModels):
     model = params.models_list[i]
     print(model['name'], i, params.nModels)
-    pnList[model['index']] = (model['name']+'_p', model['name']+'_n')
+    pnList[model['index']] = (model.p, model.n)
 
 # ****************************************** #
 # ********** TIME STEP CONTROLLER ********** #
