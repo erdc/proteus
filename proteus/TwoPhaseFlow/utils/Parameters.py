@@ -46,7 +46,7 @@ class ParametersHolder:
         self.models_list = []
         self.Models = ParametersModelsHolder(self._Problem)
         self.physical = ParametersPhysical()
-        self.mesh = MeshOptions(nd=self._Problem.domain.nd)
+        self.mesh = self._Problem.domain.MeshOptions
 
     def initializeParameters(self):
         all_models = [self.Models.rans2p,
