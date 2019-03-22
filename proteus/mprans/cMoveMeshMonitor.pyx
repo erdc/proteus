@@ -215,7 +215,7 @@ cdef class cCoefficients:
         cdef int ntimesteps = len(t_range)
         cdef int[:] eN_phi = np.zeros(len(xx), dtype=np.int32)
         cdef double[:] normal = np.zeros(3)
-        cdef double t_last = 0
+        cdef double t_last = t_min
         cdef double dt = 0
         cdef int flag
         cdef bool fixed
@@ -269,6 +269,8 @@ cdef class cCoefficients:
         cdef int[:,:] elementBoundaryNodesArray = pc.mesh.elementBoundaryNodesArray
         cdef int[:] fixedNodesBoolArray = pc.mesh.fixedNodesBoolArray
         cdef int nSmoothOut = pc.nSmoothOut
+        cdef int nSmoothIn = pc.nSmoothIn
+        cdef int nSmooth = 0
         cdef bool inside_eN = False
         cdef double[:] vec = np.zeros(3)
         cdef double[:] vec2 = np.zeros(3)
@@ -700,10 +702,15 @@ cdef class cCoefficients:
                                  nodeNumbering_subdomain2global,
                                  nodeOffsets_subdomain_owned)
 
-        if nSmoothOut > 0 and ntimes_i == ntimes_solved-1:
-            comm.barrier()
-            logEvent('Smoothing Mesh with Laplace Smoothing - '+str(nSmoothOut))
-            for iS in range(nSmoothOut):
+
+        if nSmoothIn > 0:
+            nSmooth = nSmoothIn
+        elif nSmoothOut > 0 and ntimes_i == ntimes_solved-1:
+            nSmooth = nSmoothOut
+        comm.barrier()
+        if nSmooth > 0:
+            logEvent('Smoothing Mesh with Laplace Smoothing - '+str(nSmooth))
+            for iS in range(nSmooth):
                 # elementVolumesArray = self.model.q['abs(det(J))'][:,0]
                 # elementBarycentersArray = self.mesh.elementBarycentersArray
                 # ms.updateElementVolumes(elementVolumesArray_=elementVolumesArray,

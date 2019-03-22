@@ -1,8 +1,13 @@
 from __future__ import absolute_import
-from proteus import *
-from proteus.default_n import *
-from pressure_p import *
-import pressure_p as physics
+from proteus import (FemTools,
+                     Quadrature,
+                     TimeIntegration,
+                     NumericalFlux,
+                     NonlinearSolvers,
+                     LinearSolvers,
+                     LinearAlgebraTools)
+import moveMeshElastic_p as physics
+from proteus import Context
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
@@ -17,7 +22,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
-myparams = mparams.pressure
+myparams = mparams.moveMeshMonitor
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -34,57 +39,66 @@ parallelPartitioningType = meshparams.parallelPartitioningType
 nLayersOfOverlapForParallel = meshparams.nLayersOfOverlapForParallel
 restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 
-# *************************************** #
+# ************************************** #
 # ********** TIME INTEGRATION ********** #
-# *************************************** #
-stepController=FixedStep
+# ************************************** #
+# time stepping
+runCFL = cfl
+timeIntegration = TimeIntegration.NoIntegration
 
-# ******************************************* #
-# ********** FINITE ELEMENT SAPCES ********** #
-# ******************************************* #
+
 elementQuadrature = FESpace['elementQuadrature']
 elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
-femSpaces = {0:FESpace['pBasis']}
+femSpaces = {0: FESpace['velBasis'],
+             1: FESpace['velBasis']}
+if nd == 3:
+    femSpaces[2] = FESpace['velBasis']
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
 multilevelNonlinearSolver = NonlinearSolvers.Newton
 levelNonlinearSolver = NonlinearSolvers.Newton
-nonlinearSolverConvergenceTest      = 'r'
+nonlinearSmoother = None
+fullNewtonFlag = True
+#
+nonlinearSolverConvergenceTest = 'r'
 levelNonlinearSolverConvergenceTest = 'r'
+
 
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
-numericalFluxType = NumericalFlux.ConstantAdvection_exterior
-conservativeFlux=None
+massLumping = False
+numericalFluxType = NumericalFlux.Stress_IIPG_exterior
+conservativeFlux = None
+subgridError = None
+shockCapturing = None
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
 # ************************************ #
 matrix = LinearAlgebraTools.SparseMatrix
+linearSmoother = None
+multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+levelLinearSolver = LinearSolvers.KSP_petsc4py
 if useSuperlu:
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
-else:
-    multilevelLinearSolver = KSP_petsc4py
-    levelLinearSolver      = KSP_petsc4py
-    parallelPartitioningType = parallelPartitioningType
-    nLayersOfOverlapForParallel = nLayersOfOverlapForParallel
-    nonlinearSmoother = None
-    linearSmoother    = None
-linear_solver_options_prefix = 'pressure_'
-linearSolverConvergenceTest         = 'r-true'
-maxLineSearches = 0
+#
+linear_solver_options_prefix = 'mesh_'
+linearSolverConvergenceTest = 'r-true'
 
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-pressure_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
-nl_atol_res = pressure_nl_atol_res
-tolFac = 0.0
-linTolFac = 0.0
-l_atol_res = 0.1*pressure_nl_atol_res
+nl_atol_res = max(myparams.minTol, myparams.tolFac*he**2)
+linTolFac = 0.001
+l_atol_res = 0.001*nl_atol_res
+#
+# useEisenstatWalker = False#True
+tolFac = 0.
+maxNonlinearIts = 4#should be linear
+maxLineSearches = 0
 
 auxiliaryVariables = myparams.auxiliaryVariables
