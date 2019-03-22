@@ -160,7 +160,6 @@ class ParametersModelBase(FreezableClass):
         super(ParametersModelBase, self).__init__()
         self.name = name
         self.index = index
-        self.tolFac = 0.001
         self.auxiliaryVariables = []
         self._Problem = Problem
         self.p = Physics_base(nd=self._Problem.domain.nd)
@@ -194,7 +193,7 @@ class ParametersModelBase(FreezableClass):
         self.n.l_atol_res = None
         # self.n.linTolFac = 0.001
         # self.n.useEisenstatWalker = False
-        self.n.tolFac = 0.
+        # self.n.tolFac = 0.
         # self.n.maxNonlinearIts = 50
         # self.n.maxLineSearches = 0
 
@@ -211,9 +210,9 @@ class ParametersModelBase(FreezableClass):
         pass
 
     def initializeNumerics(self):
+        self.n.runCFL = self._Problem.cfl
         # MESH
         mesh = self._Problem.Parameters.mesh
-        self.n.he = mesh.he
         self.n.triangleFlag = mesh.triangleFlag
         self.n.nnx = mesh.nnx
         self.n.nny = mesh.nny
@@ -284,6 +283,8 @@ class ParametersModelRANS2P(ParametersModelBase):
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         self._freeze()
 
     def _initializePhysics(self):
@@ -610,6 +611,7 @@ class ParametersModelPressure(ParametersModelBase):
         # TOLERANCES
         self.n.tolFac = 0.0
         self.n.linTolFac = 0.0
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
 
@@ -669,6 +671,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
         # TOLERANCES
         self.n.tolFac = 0.0
         self.n.linTolFac = 0.0
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
 
@@ -732,7 +735,8 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         # TOLERANCES
         self.n.tolFac = 0.0
         self.n.linTolFac = 0.0
-        self.n.maxNonlinearIts = 1
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
 
@@ -811,6 +815,8 @@ class ParametersModelCLSVOF(ParametersModelBase):
         # NON LINEAR SOLVER
         self.n.levelNonlinearSolver = NonlinearSolvers.CLSVOFNewton
         self.n.addOption('updateJacobian', True)
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 50
         # freeze attributes
         self._freeze()
 
@@ -891,6 +897,8 @@ class ParametersModelVOF(ParametersModelBase):
         self.n.numericalFluxType = VOF.NumericalFlux
         # LINEAR ALGEBRA
         self.n.linear_solver_options_prefix = 'vof_'
+        # TOLERANCES
+        self.n.tolFac = 0.
         # freeze attributes
         self._freeze()
 
@@ -980,6 +988,8 @@ class ParametersModelNCLS(ParametersModelBase):
         self.n.numericalFluxType = NCLS.NumericalFlux
         # LINEAR ALGEBRA
         self.n.linear_solver_options_prefix = 'ncls_'
+        # TOLERANCES
+        self.n.tolFac = 0.
         # freeze attributes
         self._freeze()
 
@@ -1058,6 +1068,12 @@ class ParametersModelRDLS(ParametersModelBase):
         scopts._freeze()
         # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.DoNothing
+        # LINEAR ALGEBRA
+        self.n.linear_solver_options_prefix = 'rdls_'
+        # TOLERANCES
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 25
+        self.n.maxLineSearches = 25
         # freeze attributes
         self._freeze()
 
@@ -1111,8 +1127,6 @@ class ParametersModelRDLS(ParametersModelBase):
             self.n.nl_atol_res = max(1e-5, 0.01*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
-        self.n.maxNonlinearIts = 25
-        self.n.maxLineSearches = 25
 
 class ParametersModelMCorr(ParametersModelBase):
     """
@@ -1130,6 +1144,12 @@ class ParametersModelMCorr(ParametersModelBase):
         copts._freeze()
         # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.DoNothing
+        # LINEAR ALGEBRA
+        self.n.linear_solver_options_prefix = 'mcorr_'
+        # TOLERANCES
+        self.n.linTolFac = 0.
+        self.n.tolFac = 0.
+        self.n.useEisenstatWalker = True
         # freeze attributes
         self._freeze()
 

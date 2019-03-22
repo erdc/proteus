@@ -317,9 +317,10 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
 myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,0.0,-9.8])
 
 myTpFlowProblem.useBoundaryConditionsModule = False
-myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = disc_ICs
-myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
-myTpFlowProblem.Parameters.Models.clsvof.auxiliaryVariables = [point_height_gauges, height_gauges]
-myTpFlowProblem.Parameters.Models.pressure.auxiliaryVariables = [pressure_gauges]
+m = myTpFlowProblem.Parameters.Models
+m.clsvof.p.CoefficientsOptions.disc_ICs = disc_ICs
+m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.clsvof.auxiliaryVariables = [point_height_gauges, height_gauges]
+m.pressure.auxiliaryVariables = [pressure_gauges]
 
 myTpFlowProblem.Parameters.mesh.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)

@@ -146,10 +146,11 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
                                              useSuperlu=True)
 myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,-9.8,0.0])
 myTpFlowProblem.useBoundaryConditionsModule = False
-myTpFlowProblem.Parameters.Models.clsvof.p.CoefficientsOptions.['disc_ICs'] = True
-myTpFlowProblem.Parameters.Models.clsvof.auxiliaryVariables = [height_gauges1, height_gauges2]
-myTpFlowProblem.Parameters.Models.pressure.auxiliaryVariables = [pressure_gauges]
-myTpFlowProblem.Parameters.Models.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
+m = myTpFlowProblem.Parameters.Models
+m.clsvof.p.CoefficientsOptions.disc_ICs = True
+m.clsvof.auxiliaryVariables = [height_gauges1, height_gauges2]
+m.pressure.auxiliaryVariables = [pressure_gauges]
+m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
 
 myTpFlowProblem.Parameters.mesh.he = he
 myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)

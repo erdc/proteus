@@ -252,6 +252,4 @@ adaptMesh_nSteps = 10
 adaptMesh_numIter = 2
 """If the mesh adaption  algorithm is iterative, do this many iterates"""
 
-he = None
-
 quad = None
