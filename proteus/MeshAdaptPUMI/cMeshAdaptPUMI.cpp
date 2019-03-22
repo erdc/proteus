@@ -152,6 +152,28 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   return 0;
 }
 
+int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile)
+{
+  //assume analytic 
+  comm_size = PCU_Comm_Peers();
+  comm_rank = PCU_Comm_Self();
+  m = apf::loadMdsMesh(".null", meshFile);
+  m->verify();
+
+  //create analytic geometry 
+  gmi_model* testModel = createSphereInBox();
+  m->verify();
+
+
+/*
+  apf::writeVtkFiles("afterAnalytic",m);
+  std::cout<<"test Model "<<testModel<<" mesh model "<<m->getModel()<<std::endl;
+  std::abort();
+*/
+  return 0;
+}
+
+
 
 int MeshAdaptPUMIDrvr::getSimmetrixBC()
 /**

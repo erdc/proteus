@@ -21,6 +21,7 @@ class MeshAdaptPUMIDrvr{
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
+  int loadMeshForAnalytic(const char* meshFile); //mesh and construct analytic geometry
   void writeMesh(const char* meshFile);
 
   //Functions to construct proteus mesh data structures
@@ -58,6 +59,9 @@ class MeshAdaptPUMIDrvr{
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
   int gradeMesh();
+
+  //analytic geometry
+  gmi_model* createSphereInBox();
 
   //Quality Check Functions
   double getMinimumQuality();
