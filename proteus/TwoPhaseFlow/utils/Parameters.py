@@ -75,6 +75,8 @@ class ParametersHolder:
         logEvent('----------')
         self.nModels = 0
         self.models_list = []
+        n_base = Numerics_base()
+        p_base = Physics_base()
         for i in range(len(all_models)):
             model = all_models[i]
             if model['index'] >= 0:
@@ -93,13 +95,25 @@ class ParametersHolder:
                 logEvent('END OF COEFFICIENTS OPTIONS')
                 for key, value in model.p.__dict__.items():
                     if key[0] != '_':  # do not print hidden attributes
-                        logEvent('{key}: {value}'. format(key=key, value=value))
+                        if key in p_base.__dict__.keys():
+                            if value != p_base.__dict__[key]:
+                                logEvent('(!) {key}: {value}'. format(key=key, value=value))
+                            else:
+                                logEvent('{key}: {value}'. format(key=key, value=value))
+                        else:
+                            logEvent('{key}: {value}'. format(key=key, value=value))
                 logEvent('-----')
                 logEvent('{name} NUMERICS'.format(name=model.name))
                 logEvent('-----')
                 for key, value in model.n.__dict__.items():
                     if key[0] != '_':  # do not print hidden attributes
-                        logEvent('{key}: {value}'. format(key=key, value=value))
+                        if key in n_base.__dict__.keys():
+                            if value != n_base.__dict__[key]:
+                                logEvent('(!) {key}: {value}'. format(key=key, value=value))
+                            else:
+                                logEvent('{key}: {value}'. format(key=key, value=value))
+                        else:
+                            logEvent('{key}: {value}'. format(key=key, value=value))
                 logEvent('----------')
 
         logEvent('-----')
@@ -289,6 +303,8 @@ class ParametersModelRANS2P(ParametersModelBase):
         seopts = self.n.SubgridErrorOptions
         seopts.lag = True
         seopts._freeze()
+        # LEVEL MODEL
+        self.p.LevelModelType = RANS2P.LevelModel
         # NON LINEAR SOLVER
         self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # NUMERICAL FLUX
@@ -1177,10 +1193,10 @@ class ParametersModelRDLS(ParametersModelBase):
         # NON LINEAR SOLVER
         self.n.nonlinearSmoother = NonlinearSolvers.NLGaussSeidel
         # NUMERICAL FLUX
-        self.n.subgridError = NCLS.SubgridError(coefficients=self.p.coefficients,
+        self.n.subgridError = RDLS.SubgridError(coefficients=self.p.coefficients,
                                                 nd=nd)
         scopts = self.n.ShockCapturingOptions
-        self.n.shockCapturing = NCLS.ShockCapturing(coefficients=self.p.coefficients,
+        self.n.shockCapturing = RDLS.ShockCapturing(coefficients=self.p.coefficients,
                                                     nd=nd,
                                                     shockCapturingFactor=scopts.shockCapturingFactor,
                                                     lag=scopts.lag)
@@ -1261,7 +1277,7 @@ class ParametersModelMCorr(ParametersModelBase):
                 return 0.0
             def uOfXT(self,X,t):
                 return 0.0
-        initialConditions  = {0:zero_phi()}
+        self.p.initialConditions  = {0:zero_phi()}
         # BOUNDARY CONDITIONS
         # N/A
 
