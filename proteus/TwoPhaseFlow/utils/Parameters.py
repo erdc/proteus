@@ -177,8 +177,8 @@ class ParametersModelBase(FreezableClass):
         # self.n.fullNewtonFlag = True
         self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # self.n.levelNonlinearSolver = NonlinearSolvers.Newton
-        # self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
-        # self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         # self.n.nonlinearSmoother = None
         # self.n.levelNonlinearSolverConvergenceTest = 'r'
         # self.n.nonlinearSolverConvergenceTest = 'r'
