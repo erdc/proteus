@@ -102,6 +102,26 @@ class ParametersHolder:
                         logEvent('{key}: {value}'. format(key=key, value=value))
                 logEvent('----------')
 
+        logEvent('-----')
+        logEvent('-----')
+        logEvent('-----')
+        logEvent('-----')
+        logEvent('-----')
+        n = Numerics_base()
+        p = Physics_base()
+        for i in range(len(all_models)):
+            model = all_models[i]
+            if model['index'] >= 0:
+                logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
+                logEvent('-----')
+                for key, value in p.__dict__.items():
+                    if key[0] != '_' and value != model.p.__dict__[key]:  # do not print hidden attributes
+                        logEvent('{key}: {value}'. format(key=key, value=model.p[key]))
+                logEvent('-----n')
+                for key, value in n.__dict__.items():
+                    if key[0] != '_' and value != model.n.__dict__[key]:  # do not print hidden attributes
+                        logEvent('{key}: {value}'. format(key=key, value=model.n[key]))
+
 
 class ParametersModelsHolder:
     """
@@ -174,17 +194,14 @@ class ParametersModelBase(FreezableClass):
         self.n._freeze()
         # NON LINEAR SOLVERS
         # self.n.fullNewtonFlag = True
-        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
+        # self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # self.n.levelNonlinearSolver = NonlinearSolvers.Newton
-        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
-        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         # self.n.nonlinearSmoother = None
         # self.n.levelNonlinearSolverConvergenceTest = 'r'
         # self.n.nonlinearSolverConvergenceTest = 'r'
         # LINEAR ALGEBRA
         # self.n.matrix = LinearAlgebraTools.SparseMatrix
         # self.n.linearSmoother = None
-        self.n.linearSolverConvergenceTest = 'r-true'
         # NUMERICAL FLUX
         # self.n.massLumping = False
         # self.n.conservativeFlux = None
@@ -204,6 +221,7 @@ class ParametersModelBase(FreezableClass):
         self.p.genMesh = self._Problem.Parameters.mesh.genMesh
         # initialize extra parameters
         self._initializePhysics()
+        self.p._unfreeze()
 
     def _initializePhysics(self):
         # to overwrite for each models
@@ -229,15 +247,11 @@ class ParametersModelBase(FreezableClass):
         if self._Problem.useSuperlu:
             self.n.multilevelLinearSolver = LinearSolvers.LU
             self.n.levelLinearSolver = LinearSolvers.LU
-        else:
-            if self.n.multilevelLinearSolver is None:
-                self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
-            if self.n.levelLinearSolver is None:
-                self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         # AUXILIARY VARIABLES
         self.n.auxiliaryVariables = self.auxiliaryVariables
         # initialize extra parameters
         self._initializeNumerics()
+        self.n._unfreeze()
 
     def _initializeNumerics(self):
         # to overwrite for each models
@@ -276,10 +290,14 @@ class ParametersModelRANS2P(ParametersModelBase):
         seopts.lag = True
         seopts._freeze()
         # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # NUMERICAL FLUX
         self.n.numericalFluxType = RANS2P.NumericalFlux
         # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'rans2p_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
@@ -455,8 +473,12 @@ class ParametersModelRANS3P(ParametersModelBase):
         # NUMERICAL FLUX
         self.n.numericalFluxType = RANS3PF.NumericalFlux
         # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'rans3p_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         self.n.nonlinearSolverConvergenceTest = 'rits'
         self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
@@ -588,9 +610,9 @@ class ParametersModelRANS3P(ParametersModelBase):
         # TOLERANCES
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(1e-10, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = 0.01*self.n.nl_atol_res
+            self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
 
 class ParametersModelPressure(ParametersModelBase):
@@ -604,13 +626,18 @@ class ParametersModelPressure(ParametersModelBase):
         copts._freeze()
         # LEVEL MODEL
         self.p.LevelModelType = Pres.LevelModel
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'pressure_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # NUMERICAL FLUX 
         self.n.numericalFluxType = NumericalFlux.ConstantAdvection_exterior
         # TOLERANCES
-        self.n.tolFac = 0.0
-        self.n.linTolFac = 0.0
+        self.n.tolFac = 0.
+        self.n.linTolFac = 0.
         self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
@@ -652,7 +679,7 @@ class ParametersModelPressure(ParametersModelBase):
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(1e-10, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -662,15 +689,19 @@ class ParametersModelPressureInitial(ParametersModelBase):
     def __init__(self, Problem):
         super(ParametersModelPressureInitial, self).__init__(name='pressureInitial', index=None,
                                                              Problem=Problem)
-        # LINEAR ALGEBRA
-        self.n.linear_solver_options_prefix = 'pinit_'
         # NUMERICAL FLUX 
         self.n.numericalFluxType = NumericalFlux.ConstantAdvection_exterior
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linearSmoother = LinearSolvers.NavierStokesPressureCorrection # pure neumann laplacian solver
+        self.n.linear_solver_options_prefix = 'pinit_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
-        self.n.tolFac = 0.0
-        self.n.linTolFac = 0.0
+        self.n.tolFac = 0.
+        self.n.linTolFac = 0.
         self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
@@ -718,7 +749,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(1e-10, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -728,13 +759,21 @@ class ParametersModelPressureIncrement(ParametersModelBase):
     def __init__(self, Problem):
         super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement', index=None,
                                                                Problem=Problem)
-        # LINEAR ALGEBRA
-        self.n.linear_solver_options_prefix = 'phi_'
+        # LEVEL MODEL
+        self.p.LevelModelType = PresInc.LevelModel
         # NUMERICAL FLUX 
         self.n.numericalFluxType = PresInc.NumericalFlux
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
+        # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.linear_solver_options_prefix = 'phi_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
-        self.n.tolFac = 0.0
-        self.n.linTolFac = 0.0
+        self.n.tolFac = 0.
+        self.n.linTolFac = 0.
         self.n.maxNonlinearIts = 50
         self.n.maxLineSearches = 0
         # freeze attributes
@@ -785,9 +824,9 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(1e-10, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = 0.1*self.n.nl_atol_res
+            self.n.l_atol_res = 0.01*self.n.nl_atol_res
 
 
 class ParametersModelCLSVOF(ParametersModelBase):
@@ -810,11 +849,16 @@ class ParametersModelCLSVOF(ParametersModelBase):
         self.p.LevelModelType = CLSVOF.LevelModel
         # NUMERICAL FLUX
         self.n.numericalFluxType = CLSVOF.NumericalFlux
-        # LINEAR ALGEBRA
-        self.n.linear_solver_options_prefix = 'clsvof_'
         # NON LINEAR SOLVER
         self.n.levelNonlinearSolver = NonlinearSolvers.CLSVOFNewton
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         self.n.addOption('updateJacobian', True)
+        # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.linear_solver_options_prefix = 'clsvof_'
+        self.n.linearSolverConvergenceTest = 'r-true'
+        # TOLERANCES
         self.n.tolFac = 0.
         self.n.maxNonlinearIts = 50
         # freeze attributes
@@ -862,7 +906,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         # TIME
         self.n.runCFL = self._Problem.cfl
         self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
-        self.n.stepController = StepControl.Min_dt_cfl_controller
+        self.n.stepController = StepControl.Min_dt_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
@@ -872,7 +916,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
             if self.p.CoefficientsOptions.eps_tolerance_clsvof:
                 self.nl_atol_res = 1e-12
             else:
-                self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+                self.n.nl_atol_res = max(1e-8, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -895,9 +939,16 @@ class ParametersModelVOF(ParametersModelBase):
         self.n.ShockCapturingOptions.lag = True
         # NUMERICAL FLUX
         self.n.numericalFluxType = VOF.NumericalFlux
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'vof_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         self.n.tolFac = 0.
         # freeze attributes
         self._freeze()
@@ -986,9 +1037,16 @@ class ParametersModelNCLS(ParametersModelBase):
         self.n.ShockCapturingOptions.lag = True
         # NUMERICAL FLUX
         self.n.numericalFluxType = NCLS.NumericalFlux
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'ncls_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         self.n.tolFac = 0.
         # freeze attributes
         self._freeze()
@@ -1068,8 +1126,13 @@ class ParametersModelRDLS(ParametersModelBase):
         scopts._freeze()
         # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.DoNothing
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'rdls_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
         self.n.tolFac = 0.
         self.n.maxNonlinearIts = 25
@@ -1144,11 +1207,18 @@ class ParametersModelMCorr(ParametersModelBase):
         copts._freeze()
         # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.DoNothing
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'mcorr_'
+        self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         self.n.useEisenstatWalker = True
         # freeze attributes
         self._freeze()
