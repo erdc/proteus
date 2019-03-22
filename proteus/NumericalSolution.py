@@ -67,7 +67,7 @@ class NS_base(object):  # (HasTraits):
        }
     """
 
-    def __init__(self,so,pList,nList,sList,opts,simFlagsList=None):
+    def __init__(self,so,pList,nList,sList,opts,simFlagsList=None,TwoPhaseFlow=False):
         from . import Comm
         comm=Comm.get()
         self.comm=comm
@@ -84,6 +84,7 @@ class NS_base(object):  # (HasTraits):
         #: Dictionary of command line arguments
         self.opts=opts
         self.simFlagsList=simFlagsList
+        self.TwoPhaseFlow=TwoPhaseFlow
         self.timeValues={}
         Profiling.memory("Memory used before initializing"+so.name)
         memBase = Profiling.memLast #save current memory usage for later
@@ -560,6 +561,10 @@ class NS_base(object):  # (HasTraits):
           from scipy import spatial
           meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
           meshVertex2Model= [0]*theMesh.nNodes_owned
+
+          assert theDomain.vertices, "model vertices (domain.vertices) were not specified"
+          assert theDomain.vertexFlags, "model classification (domain.vertexFlags) needs to be specified"
+
           for idx,vertex in enumerate(theDomain.vertices):
             if(pCT.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
               vertex.append(0.0) #need to make a 3D coordinate
@@ -777,32 +782,44 @@ class NS_base(object):  # (HasTraits):
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
 
-        logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
-        if p0.domain.nd == 3:
+        if self.TwoPhaseFlow:
+            nLevels = p0.myTpFlowProblem.general['nLevels']
+            nLayersOfOverlapForParallel = p0.myTpFlowProblem.general['nLayersOfOverlapForParallel']
+            parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+            domain = p0.myTpFlowProblem.domain
+            domain.MeshOptions.setParallelPartitioningType('element')
+        else:
+            nLevels = n0.nLevels
+            nLayersOfOverlapForParallel = n0.nLayersOfOverlapForParallel
+            parallelPartitioningType = n0.parallelPartitioningType
+            domain = p0.domain
+
+        logEvent("Generating %i-level mesh from PUMI mesh" % (nLevels,))
+        if domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
               0,0,0,skipInit=True,
-              nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-              parallelPartitioningType=n0.parallelPartitioningType)
-        if p0.domain.nd == 2:
+              nLayersOfOverlap=nLayersOfOverlapForParallel,
+              parallelPartitioningType=parallelPartitioningType)
+        if domain.nd == 2:
           mlMesh = MeshTools.MultilevelTriangularMesh(
               0,0,0,skipInit=True,
-              nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-              parallelPartitioningType=n0.parallelPartitioningType)
+              nLayersOfOverlap=nLayersOfOverlapForParallel,
+              parallelPartitioningType=parallelPartitioningType)
         if self.comm.size()==1:
             mlMesh.generateFromExistingCoarseMesh(
-                mesh,n0.nLevels,
-                nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-                parallelPartitioningType=n0.parallelPartitioningType)
+                mesh,nLevels,
+                nLayersOfOverlap=nLayersOfOverlapForParallel,
+                parallelPartitioningType=parallelPartitioningType)
         else:
             mlMesh.generatePartitionedMeshFromPUMI(
-                mesh,n0.nLevels,
-                nLayersOfOverlap=n0.nLayersOfOverlapForParallel)
+                mesh,nLevels,
+                nLayersOfOverlap=nLayersOfOverlapForParallel)
         self.mlMesh_nList=[]
         for p in self.pList:
             self.mlMesh_nList.append(mlMesh)
-        if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+        if (domain.PUMIMesh.size_field_config() == "isotropicProteus"):
             mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
-        if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+        if (domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
             mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
             mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
 
@@ -881,11 +898,11 @@ class NS_base(object):  # (HasTraits):
             coef = lm.coefficients
             if coef.vectorComponents is not None:
               vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-              p0.domain.PUMIMesh.transferFieldToProteus(
+              domain.PUMIMesh.transferFieldToProteus(
                      coef.vectorName, vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
-              p0.domain.PUMIMesh.transferFieldToProteus(
+              domain.PUMIMesh.transferFieldToProteus(
                      coef.vectorName+"_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last[:] = vector[:,vci]
@@ -895,10 +912,10 @@ class NS_base(object):  # (HasTraits):
               if coef.vectorComponents is None or \
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                p0.domain.PUMIMesh.transferFieldToProteus(
+                domain.PUMIMesh.transferFieldToProteus(
                     coef.variableNames[ci], scalar)
                 lm.u[ci].dof[:] = scalar[:,0]
-                p0.domain.PUMIMesh.transferFieldToProteus(
+                domain.PUMIMesh.transferFieldToProteus(
                     coef.variableNames[ci]+"_old", scalar)
                 lm.u[ci].dof_last[:] = scalar[:,0]
                 del scalar
@@ -946,7 +963,7 @@ class NS_base(object):  # (HasTraits):
             assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
             logEvent("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
-        p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+        domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
         self.systemStepController.modelList = self.modelList
         self.systemStepController.exitModelStep = {}
         self.systemStepController.controllerList = []
@@ -1059,8 +1076,24 @@ class NS_base(object):  # (HasTraits):
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
 
+        if self.TwoPhaseFlow:
+            domain = p0.myTpFlowProblem.domain
+            rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
+            nu_0 = p0.myTpFlowProblem.physical_parameters['viscosityA']
+            rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
+            nu_1 = p0.myTpFlowProblem.physical_parameters['viscosityB']
+            g = p0.myTpFlowProblem.physical_parameters['gravity']
+            epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
+        else:
+            domain = p0.domain
+            rho_0  = p0.rho_0
+            nu_0   = p0.nu_0
+            rho_1  = p0.rho_1
+            nu_1   = p0.nu_1
+            g      = p0.g
+            epsFact_density = p0.epsFact_density
         logEvent("Copying coordinates to PUMI")
-        p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+        domain.PUMIMesh.transferFieldToPUMI("coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
         logEvent("Copying DOF and parameters to PUMI")
@@ -1072,12 +1105,12 @@ class NS_base(object):  # (HasTraits):
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
 
-              p0.domain.PUMIMesh.transferFieldToPUMI(
-                     coef.vectorName, vector)
+              domain.PUMIMesh.transferFieldToPUMI(
+                  coef.vectorName, vector)
               #Transfer dof_last
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
-              p0.domain.PUMIMesh.transferFieldToPUMI(
+              domain.PUMIMesh.transferFieldToPUMI(
                      coef.vectorName+"_old", vector)
               del vector
             for ci in range(coef.nc):
@@ -1085,12 +1118,12 @@ class NS_base(object):  # (HasTraits):
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                 scalar[:,0] = lm.u[ci].dof[:]
-                p0.domain.PUMIMesh.transferFieldToPUMI(
+                domain.PUMIMesh.transferFieldToPUMI(
                     coef.variableNames[ci], scalar)
 
                 #Transfer dof_last
                 scalar[:,0] = lm.u[ci].dof_last[:]
-                p0.domain.PUMIMesh.transferFieldToPUMI(
+                domain.PUMIMesh.transferFieldToPUMI(
                      coef.variableNames[ci]+"_old", scalar)
                 del scalar
 
@@ -1099,17 +1132,17 @@ class NS_base(object):  # (HasTraits):
         del scalar
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
-        rho = numpy.array([self.pList[0].ct.rho_0,
-                           self.pList[0].ct.rho_1])
-        nu = numpy.array([self.pList[0].ct.nu_0,
-                          self.pList[0].ct.nu_1])
-        g = numpy.asarray(self.pList[0].ct.g)
+        rho = numpy.array([rho_0,
+                           rho_1])
+        nu = numpy.array([nu_0,
+                          nu_1])
+        g = numpy.asarray(g)
         if(hasattr(self,"tn")):
             deltaT = self.tn-self.tn_last
         else:
             deltaT = 0
-        epsFact = p0.epsFact_density
-        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+        epsFact = epsFact_density
+        domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
         del rho, nu, g, epsFact
 
 
@@ -1199,14 +1232,19 @@ class NS_base(object):  # (HasTraits):
 
             #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
-        if (hasattr(p0.domain, 'PUMIMesh') and
-            p0.domain.PUMIMesh.adaptMesh() and
+
+	if self.TwoPhaseFlow:
+	    domain = p0.myTpFlowProblem.domain
+	else:
+	    domain = p0.domain
+        if (hasattr(domain, 'PUMIMesh') and
+            domain.PUMIMesh.adaptMesh() and
             self.so.useOneMesh and
-            self.nSolveSteps%p0.domain.PUMIMesh.numAdaptSteps()==0):
-            if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
-                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_size",
+            self.nSolveSteps%domain.PUMIMesh.numAdaptSteps()==0):
+            if (domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+                domain.PUMIMesh.transferFieldToPUMI("proteus_size",
                                                        self.modelList[0].levelModelList[0].mesh.size_field)
-            if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+            if (domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
                 #Insert a function to define the size_scale/size_frame fields here.
                 #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
                 for i in range(len(self.modelList[0].levelModelList[0].mesh.size_scale)):
@@ -1219,28 +1257,28 @@ class NS_base(object):  # (HasTraits):
                       else:
                         self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 0.0
                 self.modelList[0].levelModelList[0].mesh.size_scale
-                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
-                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
+                domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
+                domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
 
             self.PUMI_transferFields()
 
             logEvent("Estimate Error")
-            sfConfig = p0.domain.PUMIMesh.size_field_config()
+            sfConfig = domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
-              errorTotal= p0.domain.PUMIMesh.get_local_error()
-              if(p0.domain.PUMIMesh.willAdapt()):
+              errorTotal= domain.PUMIMesh.get_local_error()
+              if(domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
             elif(sfConfig=="VMS"):
-              errorTotal = p0.domain.PUMIMesh.get_VMS_error()
-              if(p0.domain.PUMIMesh.willAdapt()):
+              errorTotal = domain.PUMIMesh.get_VMS_error()
+              if(domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
             elif(sfConfig=='meshQuality'):
-              minQual = p0.domain.PUMIMesh.getMinimumQuality()
+              minQual = domain.PUMIMesh.getMinimumQuality()
               if(minQual):
                 logEvent('The quality is %f ' % minQual)
               adaptMeshNow=True
@@ -1279,36 +1317,42 @@ class NS_base(object):  # (HasTraits):
 
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
-        sfConfig = p0.domain.PUMIMesh.size_field_config()
+
+        if self.TwoPhaseFlow:
+            domain = p0.myTpFlowProblem.domain
+        else:
+            domain = p0.domain
+
+        sfConfig = domain.PUMIMesh.size_field_config()
         logEvent("h-adapt mesh by calling AdaptPUMIMesh")
         if(sfConfig=="pseudo"):
             logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
         else:
-            p0.domain.PUMIMesh.adaptPUMIMesh()
+            domain.PUMIMesh.adaptPUMIMesh()
 
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
         #if(sfConfig=="ERM"):
-        #  p0.domain.PUMIMesh.get_local_error()
-        #  while(p0.domain.PUMIMesh.willAdapt()):
-        #    p0.domain.PUMIMesh.adaptPUMIMesh()
-        #    p0.domain.PUMIMesh.get_local_error()
+        #  domain.PUMIMesh.get_local_error()
+        #  while(domain.PUMIMesh.willAdapt()):
+        #    domain.PUMIMesh.adaptPUMIMesh()
+        #    domain.PUMIMesh.get_local_error()
 
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
         #PUMI conversion #1, they should be merged
         #into a function
-        if p0.domain.nd == 3:
+        if domain.nd == 3:
           mesh = MeshTools.TetrahedralMesh()
         else:
           mesh = MeshTools.TriangularMesh()
 
-        mesh.convertFromPUMI(p0.domain.PUMIMesh,
-                             p0.domain.faceList,
-                             p0.domain.regList,
+        mesh.convertFromPUMI(domain.PUMIMesh,
+                             domain.faceList,
+                             domain.regList,
                              parallel = self.comm.size() > 1,
-                             dim = p0.domain.nd)
+                             dim = domain.nd)
 
         self.PUMI2Proteus(mesh)
       ##chitak end Adapt
