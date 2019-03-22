@@ -81,25 +81,21 @@ class AR_base(object):
             if useGlobalXMF:
                 xmlFile_old=open(os.path.join(self.dataDir,
                                               filename+".xmf"),
-                                 "r",
-                                          encoding="utf-8")
+                                 "rb")
             else:
                 xmlFile_old=open(os.path.join(self.dataDir,
                                               filename+str(self.rank).decode()+".xmf"),
-                                 "r",
-                                          encoding="utf-8")
+                                 "rb")
             self.tree=ElementTree(file=xmlFile_old)
             if self.comm.isMaster():
                 self.xmlFileGlobal = open(os.path.join(self.dataDir,
                                                        filename+".xmf"),
-                                          "a",
-                                          encoding="utf-8")
+                                          "ab")
                 self.treeGlobal=copy.deepcopy(self.tree)
             if not useGlobalXMF:
                 self.xmlFile=open(os.path.join(self.dataDir,
                                                filename+str(self.rank).decode()+".xmf"),
-                                  "a",
-                                          encoding="utf-8")
+                                  "ab")
             if self.has_h5py and not useTextArchive:
                 self.hdfFilename=filename+".h5"
                 self.hdfFile=h5py.File(os.path.join(self.dataDir,self.hdfFilename),
@@ -127,13 +123,11 @@ class AR_base(object):
             if useGlobalXMF:
                 self.xmlFile=open(os.path.join(self.dataDir,
                                                filename+".xmf"),
-                                  "r",
-                                          encoding="utf-8")
+                                  "rb")
             else:
                 self.xmlFile=open(os.path.join(self.dataDir,
                                                filename+str(self.rank).decode()+".xmf"),
-                                  "r",
-                                          encoding="utf-8")
+                                  "rb")
             self.tree=ElementTree(file=self.xmlFile)
             if self.has_h5py and not useTextArchive:
                 self.hdfFilename=filename+".h5"
@@ -177,20 +171,17 @@ class AR_base(object):
             if not self.useGlobalXMF:
                 self.xmlFile=open(os.path.join(self.dataDir,
                                                filename+str(self.rank).decode()+".xmf"),
-                                  "w",
-                                          encoding="utf-8")
+                                  "wb")
             self.tree=ElementTree(
                 Element("Xdmf",
                         {"Version":"2.0",
                          "xmlns:xi":"http://www.w3.org/2001/XInclude"})
             )
             if self.comm.isMaster():
-                self.xmlFilenameGlobal= os.path.join(self.dataDir,
-                                                     filename+".xmf")
                 self.xmlFileGlobal=open(
-                    self.xmlFilenameGlobal,
-                    "w",
-                                          encoding="utf-8")
+                    os.path.join(self.dataDir,
+                                 filename+".xmf"),
+                    "wb")
                 self.treeGlobal=ElementTree(
                     Element("Xdmf",
                             {"Version":"2.0",
@@ -245,11 +236,9 @@ class AR_base(object):
                             Grid = fromstring(grid_array[j])
                             SpatialCollection.append(Grid)
         self.clear_xml()
-        #self.xmlFileGlobal.write(self.xmlHeader)
+        self.xmlFileGlobal.write(bytes(self.xmlHeader,"utf-8"))
         indentXML(self.treeGlobal.getroot())
-        #import pdb
-        #pdb.set_trace()
-        self.treeGlobal.write(self.xmlFilenameGlobal,encoding="utf-8")
+        self.treeGlobal.write(self.xmlFileGlobal,encoding="utf-8")
     def clear_xml(self):
         if not self.useGlobalXMF:
             self.xmlFile.seek(0)
@@ -290,8 +279,7 @@ class AR_base(object):
                     del Grid[0]#delete Time in grid
                     SpatialCollection.append(Grid) #append Grid without Time
             for i in range(1,self.size):
-                xmlFile=open(os.path.join(self.dataDir,self.filename+str(i)+".xmf"),"r",
-                                          encoding="utf-8")
+                xmlFile=open(os.path.join(self.dataDir,self.filename+str(i)+".xmf"),"rb")
                 tree = ElementTree(file=xmlFile)
                 XDMF=tree.getroot()
                 Domain=XDMF[-1]
@@ -301,8 +289,7 @@ class AR_base(object):
                         del Grid[0]#Time
                         Grid_all.append(Grid)
                 xmlFile.close()
-            f = open(os.path.join(self.dataDir,self.filename+".xmf"),"w",
-                                          encoding="utf-8")
+            f = open(os.path.join(self.dataDir,self.filename+".xmf"),"wb")
             indentXML(self.tree.getroot())
             self.tree.write(f)
             f.close()
@@ -402,10 +389,9 @@ class AR_base(object):
             if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
                 del TemporalGridCollection[:]
         if self.comm.isMaster():
-            #self.xmlFileGlobal.write(self.xmlHeader)
+            self.xmlFileGlobal.write(bytes(self.xmlHeader,"utf-8"))
             indentXML(self.treeGlobal.getroot())
-            #self.treeGlobal.write("test.xmf")
-            self.treeGlobal.write(self.xmlFilenameGlobal, encoding="utf-8")
+            self.treeGlobal.write("test.xmf", encoding="utf-8")
             self.xmlFileGlobal.flush()
             #delete grids for step from tree
             XDMF = self.treeGlobal.getroot()
