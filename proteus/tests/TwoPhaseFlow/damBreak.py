@@ -102,6 +102,7 @@ class clsvof_init_cond(object):
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
 outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
+outputStepping.systemStepExact = True
 initialConditions = {'pressure': zero(),
                      'pressure_increment': zero(),
                      'vel_u': zero(),
@@ -129,10 +130,8 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 
-auxVariables={'clsvof': [height_gauges1, height_gauges2],
-              'pressure': [pressure_gauges]}
-
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
+                                             ls_model=1,
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -144,6 +143,13 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
-                                             auxVariables=auxVariables,
                                              useSuperlu=True)
-myTpFlowProblem.clsvof_parameters['disc_ICs']=True
+myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,-9.8,0.0])
+myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.Parameters.Models.clsvof['disc_ICs'] = True
+myTpFlowProblem.Parameters.Models.clsvof.auxiliaryVariables = [height_gauges1, height_gauges2]
+myTpFlowProblem.Parameters.Models.pressure.auxiliaryVariables = [pressure_gauges]
+myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
+
+myTpFlowProblem.Parameters.mesh.he = he
+myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
