@@ -558,6 +558,7 @@ class ParametersModelRANS3P(ParametersModelBase):
                 self.p.diffusiveFluxBoundaryConditions[2] = {2: lambda x, flag: domain.bc[flag].w_diffusive.init_cython()}
 
     def _initializeNumerics(self):
+        self.n.forceTerms = self.p.forceTerms
         nd = self._Problem.domain.nd
         # TIME
         if self.timeDiscretization=='vbdf':
