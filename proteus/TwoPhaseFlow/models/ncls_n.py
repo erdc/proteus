@@ -1,8 +1,12 @@
 from __future__ import absolute_import
-from proteus import *
 from proteus.default_n import *
-from pressure_p import *
-import pressure_p as physics
+from proteus import (StepControl,
+                     TimeIntegration,
+                     NonlinearSolvers,
+                     LinearSolvers,
+                     LinearAlgebraTools)
+from proteus.mprans import NCLS
+import ncls_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
@@ -17,7 +21,7 @@ domain = myTpFlowProblem.domain
 
 params = myTpFlowProblem.Parameters
 mparams = params.Models # model parameters
-myparams = mparams.pressure
+myparams = mparams.ncls
 pparams = params.physical # physical parameters
 meshparams = params.mesh
 
@@ -34,57 +38,67 @@ parallelPartitioningType = meshparams.parallelPartitioningType
 nLayersOfOverlapForParallel = meshparams.nLayersOfOverlapForParallel
 restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 
-# *************************************** #
+# ************************************** #
 # ********** TIME INTEGRATION ********** #
-# *************************************** #
-stepController=FixedStep
+# ************************************** #
+timeIntegration = TimeIntegration.BackwardEuler_cfl
+stepController  = StepControl.Min_dt_cfl_controller
+runCFL = cfl
 
 # ******************************************* #
-# ********** FINITE ELEMENT SAPCES ********** #
+# ********** FINITE ELEMENT SPACES ********** #
 # ******************************************* #
 elementQuadrature = FESpace['elementQuadrature']
 elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
-femSpaces = {0:FESpace['pBasis']}
+femSpaces = {0: FESpace['lsBasis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
 multilevelNonlinearSolver = NonlinearSolvers.Newton
 levelNonlinearSolver = NonlinearSolvers.Newton
-nonlinearSolverConvergenceTest      = 'r'
+fullNewtonFlag = True
+nonlinearSmoother = None
+#
 levelNonlinearSolverConvergenceTest = 'r'
 
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
-numericalFluxType = NumericalFlux.ConstantAdvection_exterior
-conservativeFlux=None
+massLumping = False
+numericalFluxType = NCLS.NumericalFlux
+conservativeFlux = None
+subgridError = NCLS.SubgridError(coefficients=physics.coefficients,
+                                nd=nd)
+shockCapturing = NCLS.ShockCapturing(coefficients=physics.coefficients,
+                                     nd=nd,
+                                     shockCapturingFactor=myparams.shockCapturingFactor,
+                                     lag=myparams.lag_shockCapturing)
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
 # ************************************ #
 matrix = LinearAlgebraTools.SparseMatrix
+linearSmoother = None
+multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+levelLinearSolver = LinearSolvers.KSP_petsc4py
 if useSuperlu:
     multilevelLinearSolver = LinearSolvers.LU
     levelLinearSolver = LinearSolvers.LU
-else:
-    multilevelLinearSolver = KSP_petsc4py
-    levelLinearSolver      = KSP_petsc4py
-    parallelPartitioningType = parallelPartitioningType
-    nLayersOfOverlapForParallel = nLayersOfOverlapForParallel
-    nonlinearSmoother = None
-    linearSmoother    = None
-linear_solver_options_prefix = 'pressure_'
-linearSolverConvergenceTest         = 'r-true'
-maxLineSearches = 0
+#
+linear_solver_options_prefix = 'ncls_'
+linearSolverConvergenceTest = 'r-true'
 
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-pressure_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
-nl_atol_res = pressure_nl_atol_res
-tolFac = 0.0
-linTolFac = 0.0
-l_atol_res = 0.1*pressure_nl_atol_res
+nl_atol_res = max(myparams.minTol, myparams.tolFac*he**2)
+linTolFac = 0.001
+l_atol_res = 0.001*nl_atol_res
+#
+useEisenstatWalker = False#True
+tolFac = 0.
+maxNonlinearIts = 50
+maxLineSearches = 0
 
 auxiliaryVariables = myparams.auxiliaryVariables

@@ -2,24 +2,37 @@ from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from pressureInitial_p import *
+import pressureInitial_p as physics
 
 # *********************************************** #
 # ********** Read from myTpFlowProblem ********** #
 # *********************************************** #
+ct = physics.ct
+myTpFlowProblem = physics.myTpFlowProblem
+nd = myTpFlowProblem.nd
 cfl = myTpFlowProblem.cfl
 FESpace = myTpFlowProblem.FESpace
-he = myTpFlowProblem.he
 useSuperlu = myTpFlowProblem.useSuperlu
 domain = myTpFlowProblem.domain
+
+params = myTpFlowProblem.Parameters
+mparams = params.Models # model parameters
+myparams = mparams.pressureInitial
+pparams = params.physical # physical parameters
+meshparams = params.mesh
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
 # *************************************** #
-triangleFlag = myTpFlowProblem.triangleFlag
-nnx = myTpFlowProblem.nnx
-nny = myTpFlowProblem.nny
-nnz = myTpFlowProblem.nnz
-triangleOptions = domain.MeshOptions.triangleOptions
+he = meshparams.he
+triangleFlag = meshparams.triangleFlag
+nnx = meshparams.nnx
+nny = meshparams.nny
+nnz = meshparams.nnz
+triangleOptions = meshparams.triangleOptions
+parallelPartitioningType = meshparams.parallelPartitioningType
+nLayersOfOverlapForParallel = meshparams.nLayersOfOverlapForParallel
+restrictFineSolutionToAllMeshes = meshparams.restrictFineSolutionToAllMeshes
 
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
@@ -71,3 +84,5 @@ nl_atol_res = pressure_nl_atol_res
 tolFac = 0.0
 linTolFac = 0.0
 l_atol_res = 0.1*pressure_nl_atol_res
+
+auxiliaryVariables = myparams.auxiliaryVariables
