@@ -24,7 +24,7 @@ boundaryFlags = domain.boundaryFlags
 domain.regionConstraints = [old_div((he**3),6.0)]
 domain.writePoly("gl_6_3d")
 domain.writePLY("gl_6_3d")
-triangleOptions="VApq1.15q15fena"
+triangleOptions="VApq1.15q15feena"
 
 #mechanical properties
 SRF = 1.0#65#15
