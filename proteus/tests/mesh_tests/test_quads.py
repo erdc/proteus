@@ -30,7 +30,7 @@ def simple_mesh():
     skipInit = False
     mlMesh = MeshTools.MultilevelQuadrilateralMesh(nnx,nny,1,
                                                    x[0],x[1],0.0,
-                                                   L[0],L[1],1,
+                                                   L[0],L[1],1.0,
                                                    refinementLevels,
                                                    skipInit,
                                                    nLayersOfOverlap,

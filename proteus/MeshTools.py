@@ -1171,13 +1171,14 @@ class Mesh(object):
         self.max_nElements_node = max(len(nodeElementsDict[nN]) for  nN in range(self.nNodes_global))
         self.nElements_node = np.zeros((self.nNodes_global),'i')
         #mwf make a 1d array now
-        #self.nodeElementsArray = np.zeros((self.nNodes_global,self.max_nElements_node),'i')
+        #self.nodeElementsArrayOld = np.zeros((self.nNodes_global,self.max_nElements_node),'i')
         self.nodeElementOffsets = np.zeros((self.nNodes_global+1,),'i')
-        for nN,elementList in nodeElementsDict.items():
+        for nN in range(len(nodeElementsDict)):
+            elementList = nodeElementsDict[nN]
             self.nElements_node[nN] = len(elementList)
             self.nodeElementOffsets[nN+1] = self.nodeElementOffsets[nN]+self.nElements_node[nN]
             #for eN_element,eN in enumerate(elementList):
-            #    self.nodeElementsArray[nN,eN_element]=eN
+            #    self.nodeElementsArrayOld[nN,eN_element]=eN
         self.nodeElementsArray = np.zeros((self.nodeElementOffsets[self.nNodes_global],),'i')
         for nN,elementList in nodeElementsDict.items():
             for eN_element,eN in enumerate(elementList):

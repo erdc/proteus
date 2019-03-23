@@ -239,9 +239,8 @@ if opts.debug:
 log = Profiling.logEvent
 
 log("Initializing Proteus")
-log("HashDist Version: " + version.hashdist)
-log("HashStack Version: " + version.hashstack)
-log("Proteus Version: " + version.proteus)
+log("Stack Version: {0}".format(version.stack))
+log("Proteus Version: {0}".format(version.proteus))
 
 log("Initializing MPI")
 if opts.petscOptions != None:

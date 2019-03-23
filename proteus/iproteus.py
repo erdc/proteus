@@ -224,8 +224,7 @@ if opts.dataDir != '':
     logDir = opts.dataDir
 
 log("Initializing Proteus")
-log("HashDist Version: {0}".format(version.hashdist))
-log("HashStack Version: {0}".format(version.hashstack))
+log("Stack Version: {0}".format(version.stack))
 log("Proteus Version: {0}".format(version.proteus))
 
 log("Initializing MPI")
