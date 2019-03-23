@@ -50,7 +50,7 @@ cdef class MeshAdaptPUMI:
     cdef int numIter, numAdaptSteps
     cdef int isReconstructed
     cdef int adaptMesh 
-    def __cinit__(self, hmax=100.0, hmin=1e-8, hPhi=1e-2, adaptMesh=0, numIter=10, numAdaptSteps=10 ,sfConfig="ERM",maType="test",logType="off",targetError=0,targetElementCount=0,reconstructedFlag=0,maxAspectRatio=100.0,gradingFact=1.5):
+    def __cinit__(self, hmax=100.0, hmin=1e-8, hPhi=1e-2, adaptMesh=0, numIter=10, numAdaptSteps=10 ,sfConfig=b"ERM",maType=b"test",logType=b"off",targetError=0,targetElementCount=0,reconstructedFlag=0,maxAspectRatio=100.0,gradingFact=1.5):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
         self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, hPhi, adaptMesh, numIter, numAdaptSteps, sfConfig,maType,logType,targetError,targetElementCount,reconstructedFlag,maxAspectRatio,gradingFact)
     def __dealloc__(self):

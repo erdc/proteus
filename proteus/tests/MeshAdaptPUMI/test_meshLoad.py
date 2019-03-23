@@ -13,7 +13,7 @@ def test_meshLoadPUMI(verbose=0):
     cubeMdl=testDir + '/cube.dmg'
     cube670p1=testDir + '/cube.smb'
     meshAdaptInstance = MeshAdaptPUMI.MeshAdaptPUMI()
-    meshAdaptInstance.loadModelAndMesh(cubeMdl, cube670p1)
+    meshAdaptInstance.loadModelAndMesh(bytes(cubeMdl,'utf-8'), bytes(cube670p1,'utf-8'))
     mesh = MeshTools.TetrahedralMesh()
     mesh.cmesh = cmeshTools.CMesh()
     meshAdaptInstance.constructFromSerialPUMIMesh(mesh.cmesh)

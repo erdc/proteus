@@ -17,8 +17,8 @@ def test_gmshLoadAndAdapt(verbose=0):
     Mesh=testDir + '/Couette.msh'
 
     domain = Domain.PUMIDomain() #initialize the domain
-    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic',targetError=1)
-    domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
+    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'ERM',maType=b'isotropic',targetError=1)
+    domain.PUMIMesh.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
     domain.faceList=[[80],[76],[42],[24],[82],[78]]
 
     mesh = MeshTools.TetrahedralMesh()
@@ -28,7 +28,7 @@ def test_gmshLoadAndAdapt(verbose=0):
     nElements_initial = mesh.nElements_global
     mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
 
-    domain.PUMIMesh.transferFieldToPUMI("coordinates",mesh.nodeArray)
+    domain.PUMIMesh.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
 
     rho = numpy.array([998.2,998.2])
     nu = numpy.array([1.004e-6, 1.004e-6])
@@ -46,19 +46,19 @@ def test_gmshLoadAndAdapt(verbose=0):
     vector[:,0] = dummy
     vector[:,1] = Uinf*mesh.nodeArray[:,2]/Lz #v-velocity
     vector[:,2] = dummy
-    domain.PUMIMesh.transferFieldToPUMI("velocity", vector)
+    domain.PUMIMesh.transferFieldToPUMI(b"velocity", vector)
     del vector
     del dummy
 
     scalar=numpy.zeros((mesh.nNodes_global,1),'d')
-    domain.PUMIMesh.transferFieldToPUMI("p", scalar)
+    domain.PUMIMesh.transferFieldToPUMI(b"p", scalar)
 
     scalar[:,0] = mesh.nodeArray[:,2]
-    domain.PUMIMesh.transferFieldToPUMI("phi", scalar)
+    domain.PUMIMesh.transferFieldToPUMI(b"phi", scalar)
     del scalar
 
     scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
-    domain.PUMIMesh.transferFieldToPUMI("vof", scalar)
+    domain.PUMIMesh.transferFieldToPUMI(b"vof", scalar)
 
     errorTotal=domain.PUMIMesh.get_local_error()
     ok(errorTotal<1e-14)
@@ -83,8 +83,8 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     Model=testDir + '/Couette2D.null'
     Mesh=testDir + '/Couette2D.msh'
     domain = Domain.PUMIDomain(dim=2) #initialize the domain
-    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic',targetError=1)
-    domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
+    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'ERM',maType=b'isotropic',targetError=1)
+    domain.PUMIMesh.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
     domain.faceList=[[14],[12],[11],[13]]
 
     mesh = MeshTools.TriangularMesh()
@@ -94,7 +94,7 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     nElements_initial = mesh.nElements_global
     mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
 
-    domain.PUMIMesh.transferFieldToPUMI("coordinates",mesh.nodeArray)
+    domain.PUMIMesh.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
 
     rho = numpy.array([998.2,998.2])
     nu = numpy.array([1.004e-6, 1.004e-6])
@@ -112,19 +112,19 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     vector[:,0] = Uinf*mesh.nodeArray[:,1]/Lz #v-velocity
     vector[:,1] = dummy
     vector[:,2] = dummy
-    domain.PUMIMesh.transferFieldToPUMI("velocity", vector)
+    domain.PUMIMesh.transferFieldToPUMI(b"velocity", vector)
     del vector
     del dummy
 
     scalar=numpy.zeros((mesh.nNodes_global,1),'d')
-    domain.PUMIMesh.transferFieldToPUMI("p", scalar)
+    domain.PUMIMesh.transferFieldToPUMI(b"p", scalar)
 
     scalar[:,0] = mesh.nodeArray[:,1]
-    domain.PUMIMesh.transferFieldToPUMI("phi", scalar)
+    domain.PUMIMesh.transferFieldToPUMI(b"phi", scalar)
     del scalar
 
     scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
-    domain.PUMIMesh.transferFieldToPUMI("vof", scalar)
+    domain.PUMIMesh.transferFieldToPUMI(b"vof", scalar)
 
     errorTotal=domain.PUMIMesh.get_local_error()
     ok(errorTotal<1e-14)
@@ -149,7 +149,7 @@ def test_2DmultiRegion(verbose=0):
     Mesh=testDir + '/TwoQuads.smb'
     domain = Domain.PUMIDomain(dim=2) #initialize the domain
     domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI()
-    domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
+    domain.PUMIMesh.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
     domain.faceList=[[14],[12],[11],[13],[15],[16]]
     domain.regList=[[41],[42]]
 
