@@ -973,7 +973,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.csrRowIndeces[(0, 0)] // 3 // 3,
-                                                                      old_div(self.csrColumnOffsets[(0, 0)], 3),
+                                                                      self.csrColumnOffsets[(0, 0)] // 3,
                                                                       elementMassMatrix,
                                                                       self.MC_global)
             diamD2 = numpy.sum(self.q['abs(det(J))'][:] * self.elementQuadratureWeights[('u', 0)])
@@ -1009,7 +1009,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.l2g[0]['nFreeDOF'],
                                                                           self.l2g[0]['freeLocal'],
                                                                           self.csrRowIndeces[(0, 0)] // 3 // 3,
-                                                                          old_div(self.csrColumnOffsets[(0, 0)], 3),
+                                                                          self.csrColumnOffsets[(0, 0)] // 3,
                                                                           self.cterm[d],
                                                                           self.cterm_global[d])
                 # C Transpose matrices
@@ -1035,7 +1035,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.l2g[0]['nFreeDOF'],
                                                                           self.l2g[0]['freeLocal'],
                                                                           self.csrRowIndeces[(0, 0)] // 3 // 3,
-                                                                          old_div(self.csrColumnOffsets[(0, 0)], 3),
+                                                                          self.csrColumnOffsets[(0, 0)] // 3,
                                                                           self.cterm_transpose[d],
                                                                           self.cterm_global_transpose[d])
         if self.boundaryIndex is None and self.normalx is not None:
