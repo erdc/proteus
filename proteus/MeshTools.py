@@ -5067,8 +5067,8 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                 # The following four lines should be called elsewhere...Most of this is don in
                 # the c-function calls that are not implemented yet for 2D quads
                 self.meshList[0].nElements_owned = self.meshList[0].nElements_global
-                self.meshList[0].nodeNumbering_subdomain2global.resize(self.meshList[0].nNodes_global)
-                self.meshList[0].elementNumbering_subdomain2global.resize(self.meshList[0].nElements_global)
+                self.meshList[0].nodeNumbering_subdomain2global.resize(self.meshList[0].nNodes_global,refcheck=False)
+                self.meshList[0].elementNumbering_subdomain2global.resize(self.meshList[0].nElements_global,refcheck=False)
                 self.meshList[0].nodeOffsets_subdomain_owned[-1] = self.meshList[0].nNodes_global
                 self.meshList[0].nNodes_owned = self.meshList[0].nNodes_global
                 self.meshList[0].elementOffsets_subdomain_owned[-1] = self.meshList[0].nElements_global
