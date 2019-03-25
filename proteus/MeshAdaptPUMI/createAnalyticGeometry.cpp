@@ -483,7 +483,7 @@ void makeBox(gmi_model* model)
 //create sphere
 const double pi = apf::pi;
 int sphereFaceID = 123;
-double radius = 0.5;
+double radius = 0.1;
 double xyz_offset[3]={1.0,1.0,2.5};
 
 /*
@@ -539,7 +539,12 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
       apf::ModelEntity* g_ent = m->toModel(ent);
       int modelTag = m->getModelTag(g_ent);
       int modelType = m->getModelType(g_ent);
-      m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,modelTag));
+      if(modelTag > 139 && modelTag< 148)
+      {
+        m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,sphereFaceID));
+      }
+      else
+        m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,modelTag));
 
     }
     m->end(it);
@@ -599,11 +604,23 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
       }
       else if (modelType==2 && modelTag == sphereFaceID)
       {
-        //std::cout<<"What is sphere pt? "<<pt<<" old param? "<<oldParam<<std::endl;  
-        newParam[0] = atan2((pt[1]-xyz_offset[1]),(pt[0]-xyz_offset[0]));
-        newParam[1] = acos((pt[2]-xyz_offset[2])/radius);
+        double argy = (pt[1]-xyz_offset[1]);
+        double argx = (pt[0]-xyz_offset[0]);
+        //double eps = 1e-12;
+        if(argx == 0 && argy ==0)
+          newParam[0] = 0.0; // not sure if this will happen or if this is right
+        else 
+          newParam[0] = atan2(argy,argx);
+        double arg2 = (pt[2]-xyz_offset[2])/radius;
+        if(arg2 < -1.0)
+          arg2 = -1.0;
+        else if (arg2 > 1.0)
+          arg2 = 1.0; 
+
+        newParam[1] = acos(arg2);
         //std::cout<<pt[2]<<" offset "<<xyz_offset[2]<<" "<<radius<<std::endl;
-        std::cout<<pt[2]<<" offset "<<xyz_offset[2]<<" "<<radius<<" newParam "<<newParam[1]<<std::endl;
+        std::cout<<pt<<" offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<" "<<xyz_offset[2]<<" "<<radius<<" newParam "<<newParam<<std::endl;
+        std::cout<<"acos arg "<<pt[2]-xyz_offset[2]<<" acos "<<acos(-1)<<" "<<acos(1)<<std::endl;
         if(newParam[0]<0)
           newParam[0] = newParam[0]+2*apf::pi;
         if(newParam[0]>2*apf::pi)
@@ -611,6 +628,8 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
         //std::cout<<"newParam x after "<<newParam[0]<<std::endl;
         
         //std::cout<<"newParam y before "<<newParam[1]<<std::endl;
+
+        //this is probably unnecessary
         if(newParam[1]<0.0)
           newParam[1] = -1*newParam[1];
         if(newParam[1]>apf::pi)
@@ -623,7 +642,6 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
     } //end if
   } //end while
   m->end(it);
-
 }
 
 gmi_model* MeshAdaptPUMIDrvr::createSphereInBox()
@@ -639,6 +657,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox()
   //add the box
   makeBox(model);
 
+  apf::writeVtkFiles("initialInitial",m);
   setParameterization(model,m);
 
   apf::Field* size_initial = apf::createLagrangeField(m,"size_initial",apf::SCALAR,1);
@@ -649,9 +668,9 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox()
     apf::Vector3 pt;
     m->getPoint(ent,0,pt);
     if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < radius*1.5)
-      apf::setScalar(size_initial,ent,0,0.1);
+      apf::setScalar(size_initial,ent,0,0.025);
     else
-      apf::setScalar(size_initial,ent,0,0.2);
+      apf::setScalar(size_initial,ent,0,0.1);
   }
   m->end(it);
 
@@ -662,6 +681,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox()
   in->shouldFixShape = true;
   ma::adaptVerbose(in,false);
   apf::destroyField(size_initial);
+  m->verify();
   
   apf::writeVtkFiles("initialAdapt",m);
   return model;
