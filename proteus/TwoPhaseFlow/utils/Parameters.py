@@ -14,6 +14,7 @@ from proteus.mprans import (RANS2P,
                             NCLS,
                             MCorr,
                             CLSVOF,
+                            AddedMass,
                             MoveMesh,
                             MoveMeshMonitor,
                             Pres,
@@ -222,6 +223,8 @@ class ParametersModelBase(FreezableClass):
         self.n.parallelPartitioningType = mesh.parallelPartitioningType
         self.n.nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
         self.n.restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
+        # TIME INTEGRATION
+        self.n.runCFL = self._Problem.cfl
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.elementQuadrature = FESpace['elementQuadrature']
@@ -854,7 +857,6 @@ class ParametersModelCLSVOF(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # TIME
-        self.n.runCFL = self._Problem.cfl
         self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
         self.n.stepController = StepControl.Min_dt_cfl_controller
         # FINITE ELEMENT SPACES
@@ -884,6 +886,11 @@ class ParametersModelVOF(ParametersModelBase):
         copts.sc_beta = sc_beta
         copts.epsFact = epsFact
         copts._freeze()
+        # LEVEL MODEL
+        self.p.LevelModelType = VOF.LevelModel
+        # TIME INTEGRATION
+        self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
+        self.n.stepController  = StepControl.Min_dt_cfl_controller
         # NUMERICS
         self.n.ShockCapturingOptions.shockCapturingFactor = shockCapturingFactor
         self.n.ShockCapturingOptions.lag = True
@@ -891,6 +898,10 @@ class ParametersModelVOF(ParametersModelBase):
         self.n.numericalFluxType = VOF.NumericalFlux
         # LINEAR ALGEBRA
         self.n.linear_solver_options_prefix = 'vof_'
+        # TOLERANCES
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
 
@@ -908,8 +919,6 @@ class ParametersModelVOF(ParametersModelBase):
         else:
             assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3P must be used with VOF'
         RD_model = mparams.rdls.index
-        # LEVEL MODEL
-        self.p.LevelModelType = VOF.LevelModel
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = VOF.Coefficients(V_model=V_model,
@@ -938,7 +947,6 @@ class ParametersModelVOF(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # TIME
-        self.n.runCFL = self._Problem.cfl
         self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
         self.n.stepController = StepControl.Min_dt_cfl_controller
         # FINITE ELEMENT SPACES
@@ -974,12 +982,23 @@ class ParametersModelNCLS(ParametersModelBase):
         copts.sc_beta = sc_beta
         copts.epsFact = epsFact
         copts._freeze()
+        # LEVEL MODEL
+        self.p.LevelModelType = NCLS.LevelModel
+        # TIME INTEGRATION
+        self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
+        self.n.stepController  = StepControl.Min_dt_cfl_controller
+        # NUMERICAL FLUX
+        self.n.numericalFluxType = NCLS.NumericalFlux
         self.n.ShockCapturingOptions.shockCapturingFactor = shockCapturingFactor
         self.n.ShockCapturingOptions.lag = True
         # NUMERICAL FLUX
         self.n.numericalFluxType = NCLS.NumericalFlux
         # LINEAR ALGEBRA
         self.n.linear_solver_options_prefix = 'ncls_'
+        # TOLERANCES
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
 
@@ -995,7 +1014,6 @@ class ParametersModelNCLS(ParametersModelBase):
         else:
             assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3P must be used with VOF'
         RD_model = mparams.rdls.index
-        self.p.LevelModelType = NCLS.LevelModel
         copts = self.p.CoefficientsOptions
         self.p.coefficients = NCLS.Coefficients(V_model=V_model,
                                                 RD_model=RD_model,
@@ -1018,7 +1036,6 @@ class ParametersModelNCLS(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # TIME
-        self.n.runCFL = self._Problem.cfl
         self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
         self.n.stepController = StepControl.Min_dt_cfl_controller
         # FINITE ELEMENT SPACES
@@ -1056,8 +1073,22 @@ class ParametersModelRDLS(ParametersModelBase):
         scopts.shockCapturingFactor = 0.9
         scopts.lag = False
         scopts._freeze()
+        # LEVEL MODEL
+        self.p.LevelModelType = RDLS.LevelModel
+        # TIME INTEGRATION
+        self.n.timeIntegration = TimeIntegration.NoIntegration
+        self.n.stepController = StepControl.Newton_controller
+        # NONLINEAR SOLVERS
+        self.n.nonlinearSmoother = NonlinearSolvers.NLGaussSeidel
         # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.DoNothing
+        # LINEAR ALGEBRA
+        self.n.linear_solver_options_prefix = 'rdls_'
+        # TOLERANCES
+        self.n.useEisenstatWalker = False
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 25
+        self.n.maxLineSearches = 25
         # freeze attributes
         self._freeze()
 
@@ -1067,8 +1098,6 @@ class ParametersModelRDLS(ParametersModelBase):
         nModelId = mparams.ncls.index
         assert nModelId is not None, 'ncls model index was not set!'
         rdModelId = mparams.rdls.index
-        # LEVEL MODEL
-        self.p.LevelModelType = RDLS.LevelModel
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = RDLS.Coefficients(applyRedistancing=copts.applyRedistancing,
@@ -1111,8 +1140,6 @@ class ParametersModelRDLS(ParametersModelBase):
             self.n.nl_atol_res = max(1e-5, 0.01*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
-        self.n.maxNonlinearIts = 25
-        self.n.maxLineSearches = 25
 
 class ParametersModelMCorr(ParametersModelBase):
     """
@@ -1128,8 +1155,20 @@ class ParametersModelMCorr(ParametersModelBase):
         copts.epsFactDirac = epsFact
         copts.epsFactDiffusion = 10.
         copts._freeze()
+        # LEVEL MODEL
+        self.p.LevelModelType = MCorr.LevelModel
+        # TIME
+        self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
+        self.n.stepController  = StepControl.Min_dt_cfl_controller
         # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.DoNothing
+        # LINEAR ALGEBRA
+        self.n.linear_solver_options_prefix = 'mcorr_'
+        # TOLERANCES
+        self.n.useEisenstatWalker = True
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
 
@@ -1196,10 +1235,66 @@ class ParametersModelAddedMass(ParametersModelBase):
     def __init__(self, Problem):
         super(ParametersModelAddedMass, self).__init__(name='addedMass', index=None,
                                                        Problem=Problem)
-        self.flags_rigidbody = None
+        copts = self.p.CoefficientsOptions
+        copts.flags_rigidbody = None
+        copts._freeze()
+        # LEVEL MODEL
+        self.p.LevelModelType = AddedMass.LevelModel
+        # TIME
+        self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
+        self.n.stepController = StepControl.Min_dt_cfl_controller
+        # NONLINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.AddedMassNewton
+        self.n.levelNonlinearSolver = NonlinearSolvers.AddedMassNewton
+        self.n.nonlinearSmoother = NonlinearSolvers.AddedMassNewton
+        # NUMERICAL FLUX
+        self.n.numericalFluxType = AddedMass.NumericalFlux
+        # LINEAR ALGEBRA
+        self.n.matrix = LinearAlgebraTools.SparseMatrix
+        self.n.linearSmoother = LinearSolvers.NavierStokesPressureCorrection
+        self.n.linear_solver_options_prefix = 'am_'
+        # TOLERANCES
+        self.n.linTolFac = 0.
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 1
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
 
+    def _initializePhysics(self):
+        domain = self._Problem.domain
+        nd = domain.nd
+        # MODEL INDEXING
+        mparams = self._Problem.Parameters.Models
+        V_model = mparams.rans3p.index
+        # COEFFICIENTS
+        copts = self.p.CoefficientsOptions
+        self.p.coefficients = AddedMass.Coefficients(nd=nd,
+                                                     V_model=V_model,
+                                                     barycenters=domain.barycenters,
+                                                     flags_rigidbody=copts.flags_rigidbody)
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        class dp_IC:
+            def uOfXT(self, x, t):
+                return 0.0
+        self.p.initialConditions = {0: dp_IC()}
+        # BOUNDARY CONDITIONS
+        BC = self._Problem.boundaryConditions
+        self.p.dirichletConditions = {0: lambda x, flag: None}
+        self.p.advectiveFluxBoundaryConditions = {}
+        self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: getFlux_am}}
+
+    def _initializeNumerics(self):
+        # FINITE ELEMENT SPACES
+        FESpace = self._Problem.FESpace
+        self.n.femSpaces = {0: FESpace['lsBasis']}
+        # TOLERANCES
+        mesh = self._Problem.Parameters.mesh
+        if self.n.nl_atol_res is None:
+            self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
+        if self.n.l_atol_res is None:
+            self.n.l_atol_res = self.n.nl_atol_res
 
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
     """
@@ -1207,25 +1302,93 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
     def __init__(self, Problem):
         super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor', index=None,
                                                              Problem=Problem)
-        self.func = lambda x, t: 1000.
-        self.he_min = 0.
-        self.he_max = 1000.
-        self.epsFact = epsFact
-        self.epsTimeStep = 0.1
-        self.nSmoothOut = 0.
-        self.nSmoothIn = 0.
-        self.grading = 1.1
-        self.grading_type = 2
-        self.resetNodeVelocityArray = None
-        self.useLS = True
-        self.fixedNodeMaterialTypes = None
-        self.fixedElementMaterialTypes = None
-        self.noNodeVelocityNodeMaterialTypes = None
-        self.scale_with_nd = False
-        self.do_firstStep = False
-        self.ntimes_solved = 1
+        copts = self.p.CoefficientsOptions
+        copts.func = lambda x, t: 1000.
+        copts.he_min = 0.
+        copts.he_max = 1000.
+        copts.epsFact = epsFact
+        copts.epsTimeStep = 0.1
+        copts.nSmoothOut = 0.
+        copts.nSmoothIn = 0.
+        copts.grading = 1.1
+        copts.grading_type = 2
+        copts.resetNodeVelocityArray = None
+        copts.useLS = True
+        copts.fixedNodeMaterialTypes = None
+        copts.fixedElementMaterialTypes = None
+        copts.noNodeVelocityNodeMaterialTypes = None
+        copts.scale_with_nd = False
+        copts.do_firstStep = False
+        copts.ntimes_solved = 1
+        copts._freeze()
+        # TIME INTEGRATION
+        self.n.timeIntegration = TimeIntegration.NoIntegration
+        # NONLINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.MoveMeshMonitorNewton
+        self.n.levelNonlinearSolver = NonlinearSolvers.MoveMeshMonitorNewton
+        self.n.nonlinearSmoother = NonlinearSolvers.MoveMeshMonitorNewton
+        # NUMERICAL FLUX
+        self.n.numericalFluxType = NumericalFlux.Diffusion_SIPG_exterior
+        # LINEAR ALGEBRA
+        self.n.linearSmoother = LinearSolvers.NavierStokesPressureCorrection
+        self.n.linear_solver_options_prefix = 'mesh2_'
+        # TOLERANCES
+        self.n.linTolFac = 0.
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 1
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
+
+    def _initializePhysics(self):
+        domain = self._Problem.domain
+        nd = domain.nd
+        # MODEL INDEXING
+        mparams = self._Problem.Parameters.Models
+        ME_MODEL = mparams.moveMeshMonitor.index
+        assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
+        if myparams.useLS is True:
+            LS_MODEL = mparams.ncls.index
+        else:
+            LS_MODEL = None
+        # COEFFICIENTS
+        copts = self.p.CoefficientsOptions
+        self.p.coefficients = MoveMeshMonitor.Coefficients(func=copts.func,
+                                                           nd=nd,
+                                                           he_max=copts.he_max,
+                                                           he_min=copts.he_min,
+                                                           ntimes_solved=copts.ntimes_solved,
+                                                           LS_MODEL=LS_MODEL,
+                                                           ME_MODEL=ME_MODEL,
+                                                           fixedNodeMaterialTypes=copts.fixedNodeMaterialTypes,
+                                                           fixedElementMaterialTypes=copts.fixedElementMaterialTypes,
+                                                           noNodeVelocityNodeMaterialTypes=copts.noNodeVelocityNodeMaterialTypes,
+                                                           nSmoothOut=copts.nSmoothOut,
+                                                           nSmoothIn=copts.nSmoothIn,
+                                                           epsTimeStep=copts.epsTimeStep,
+                                                           epsFact_density=copts.epsFact,
+                                                           grading=copts.grading,
+                                                           grading_type=copts.grading_type,
+                                                           scale_with_nd=copts.scale_with_nd,
+                                                           do_firstStep=copts.do_firstStep)
+        # INITIAL CONDITIONS
+        self.p.initialConditions = None
+        # BOUNDARY CONDITIONS
+        BC = self._Problem.boundaryConditions
+        self.p.dirichletConditions = {0: lambda x, flag: None}
+        # self.p.advectiveFluxBoundaryConditions = {}
+        self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: None}}
+
+    def _initializeNumerics(self):
+        # FINITE ELEMENT SPACES
+        FESpace = self._Problem.FESpace
+        self.n.femSpaces = {0: FESpace['lsBasis']}
+        # TOLERANCES
+        mesh = self._Problem.Parameters.mesh
+        if self.n.nl_atol_res is None:
+            self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
+        if self.n.l_atol_res is None:
+            self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
 
 class ParametersModelMoveMeshElastic(ParametersModelBase):
@@ -1234,10 +1397,95 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
     def __init__(self, Problem):
         super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic', index=None,
                                                              Problem=Problem)
-        self.E = 1.
-        self.nu = 0.3
+        copts = self.p.CoefficientsOptions
+        copts.E = 1.
+        copts.nu = 0.3
+        copts._freeze()
+        # LEVEL MODEL
+        self.p.LevelModelType = MoveMesh.LevelModel
+        # TIME INTEGRATION
+        self.n.timeIntegration = TimeIntegration.NoIntegration
+        # NUMERICAL FLUX
+        self.n.numericalFluxType = NumericalFlux.Diffusion_IIPG_exterior
+        # LINEAR ALGEBRA
+        self.n.linear_solver_options_prefix = 'mesh_'
+        # TOLERANCES
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 4
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
+
+    def _initializePhysics(self):
+        domain = self._Problem.domain
+        nd = domain.nd
+        # NUM PARAMS
+        nMediaTypes = len(domain.regionFlags)  # (!) should be region flags
+        smTypes = np.zeros((nMediaTypes+1, 2), 'd')
+        smFlags = np.zeros((nMediaTypes+1,), 'i')
+        smTypes[:, 0] = copts.E
+        smTypes[:, 1] = copts.nu
+        # MODEL INDEXING
+        mparams = self._Problem.Parameters.Models
+        ME_model = mparams.moveMeshElastic.index
+        assert ME_model is not None, 'vof model index was not set!'
+        if mparams.rans2p.index is not None:
+            V_model = mparams.rans2p.index
+        elif mparams.rans3p.index is not None:
+            V_model = mparams.rans3p.index
+        else:
+            assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3P must be used with VOF'
+        # COEFFICIENTS
+        copts = self.p.CoefficientsOptions
+        self.p.coefficients = MoveMesh.Coefficients(nd=nd,
+                                                    V_model=V_model,
+                                                    modelType_block=smFlags,
+                                                    modelParams_block=smTypes,
+                                                    meIndex=ME_model)
+        # INITIAL CONDITIONS
+        self.p.initialConditions = None
+        # BOUNDARY CONDITIONS
+        BC = self._Problem.boundaryConditions
+        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+            self.p.dirichletConditions = {0: BC['hx'],
+                                          1: BC['hy']}
+            self.p.stressFluxBoundaryConditions = {0: BC['u_stress'],
+                                                   1: BC['v_stress']}
+            if nd == 3:
+                self.p.dirichletConditions[2] = BC['hz']
+                self.p.stressFluxBoundaryConditions[2] = BC['w_stress']
+
+        else:
+            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].hx_dirichlet.init_cython(),
+                                          1: lambda x, flag: domain.bc[flag].hy_dirichlet.init_cython()}
+            self.p.stressFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].u_stress.init_cython(),
+                                                   1: lambda x, flag: domain.bc[flag].v_stress.init_cython()}
+            if nd == 3:
+                self.p.dirichletConditions[2] = lambda x, flag: domain.bc[flag].hz_dirichlet.init_cython()
+                self.p.stressFluxBoundaryConditions[2] = lambda x, flag: domain.bc[flag].w_stress.init_cython()
+        self.p.fluxBoundaryConditions = {0: 'noFlow',
+                                         1: 'noFlow'}
+        self.p.advectiveFluxBoundaryConditions = {}
+
+        self.p.diffusiveFluxBoundaryConditions = {0: {},
+                                                  1: {}}
+        if nd == 3:
+            self.p.fluxBoundaryConditions[2] = 'noFlow'
+            self.p.diffusiveFluxBoundaryConditions[2] = {}
+
+    def _initializeNumerics(self):
+        # FINITE ELEMENT SPACES
+        FESpace = self._Problem.FESpace
+        self.n.femSpaces = {0: FESpace['velBasis'],
+                            1: FESpace['velBasis']}
+        if nd == 3:
+            self.n.femSpaces[2] = FESpace['velBasis']
+        # TOLERANCES
+        mesh = self._Problem.Parameters.mesh
+        if self.n.nl_atol_res is None:
+            self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
+        if self.n.l_atol_res is None:
+            self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
 
 class ParametersPhysical(FreezableClass):
