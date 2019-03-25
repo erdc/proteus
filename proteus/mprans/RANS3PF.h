@@ -860,11 +860,11 @@ namespace proteus
         if(USE_SBM>0)
           phi_s_effect = 1.0;
         //u momentum accumulation
-        mom_u_acc=phi_s_effect*u;//trick for non-conservative form
+        mom_u_acc=u;//trick for non-conservative form
         dmom_u_acc_u=rho*phi_s_effect*porosity;
 
         //v momentum accumulation
-        mom_v_acc=phi_s_effect*v;
+        mom_v_acc=v;
         dmom_v_acc_v=rho*phi_s_effect*porosity;
 
         //w momentum accumulation
