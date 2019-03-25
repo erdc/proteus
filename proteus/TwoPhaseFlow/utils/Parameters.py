@@ -629,7 +629,7 @@ class ParametersModelRANS3P(ParametersModelBase):
         # TOLERANCES
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(1e-10, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -698,7 +698,7 @@ class ParametersModelPressure(ParametersModelBase):
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(1e-10, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -768,7 +768,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(1e-10, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -843,7 +843,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(1e-10, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.01*self.n.nl_atol_res
 
@@ -934,7 +934,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
             if self.p.CoefficientsOptions.eps_tolerance_clsvof:
                 self.nl_atol_res = 1e-12
             else:
-                self.n.nl_atol_res = max(1e-8, 0.01*mesh.he**2)
+                self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -1216,7 +1216,7 @@ class ParametersModelRDLS(ParametersModelBase):
         # TOLERANCES
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(1e-5, 0.01*mesh.he)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
