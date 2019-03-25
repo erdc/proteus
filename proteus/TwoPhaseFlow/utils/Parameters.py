@@ -1366,7 +1366,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         self.p.initialConditions = {0: dp_IC()}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
-        self.p.dirichletConditions = {0: lambda x, flag: None}
+        self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].pAddedMass_dirichlet.init_cython()}
         self.p.advectiveFluxBoundaryConditions = {}
         self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: getFlux_am}}
 
