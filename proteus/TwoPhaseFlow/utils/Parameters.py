@@ -1351,7 +1351,12 @@ class ParametersModelAddedMass(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
         mparams = self._Problem.Parameters.Models
-        V_model = mparams.rans3p.index
+        if mparams.rans2p.index is not None:
+            V_model = mparams.rans2p.index
+        elif mparams.rans3p.index is not None:
+            V_model = mparams.rans3p.index
+        else:
+            assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3P must be used with addedMass'
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = AddedMass.Coefficients(nd=nd,
@@ -1368,7 +1373,11 @@ class ParametersModelAddedMass(ParametersModelBase):
         BC = self._Problem.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].pAddedMass_dirichlet.init_cython()}
         self.p.advectiveFluxBoundaryConditions = {}
-        self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: getFlux_am}}
+        def getFlux_am(x, flag):
+            #the unit rigid motions will applied internally
+            #leave this set to zero
+            return lambda x,t: 0.0
+        self.p.diffusiveFluxBoundaryConditions = {0: {0: getFlux_am}}
 
     def _initializeNumerics(self):
         # FINITE ELEMENT SPACES
