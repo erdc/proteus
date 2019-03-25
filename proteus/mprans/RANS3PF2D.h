@@ -857,7 +857,7 @@ namespace proteus
         // mass (volume accumulation)
         //..hardwired
 
-        double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 0.0;
+        double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 1e-10;
         if(USE_SBM>0)
           phi_s_effect = 1.0;
         //u momentum accumulation
