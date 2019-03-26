@@ -141,6 +141,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
 
     def __init__(self,
+                 outputQuantDOFs = True,
                  INT_BY_PARTS_PRESSURE=0,
                  MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=0,
                  CORRECT_VELOCITY=True,
@@ -227,6 +228,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_angular_velocity=None,
                  particles=None
                  ):
+        self.outputQuantDOFs=outputQuantDOFs
         self.INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE
         self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
         self.CORRECT_VELOCITY = CORRECT_VELOCITY
@@ -469,13 +471,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
         self.particle_centroids = np.zeros((self.nParticles, 3), 'd')
-        self.particle_signed_distances        = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1]),'d')
-        self.particle_signed_distance_normals = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
-        self.particle_velocities              = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
-        self.phisField                        = 1e10*numpy.ones((self.model.q['x'].shape[0],self.model.q['x'].shape[1]), 'd')
-        self.ebq_global_phi_s        = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1]),'d') * 1e10
-        self.ebq_global_grad_phi_s   = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
-        self.ebq_particle_velocity_s = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
+        self.particle_signed_distances = np.zeros((self.nParticles,) + self.model.q[('u', 0)].shape, 'd')
+        self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
+        self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
+
+        self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
+        self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
+        self.ebq_global_grad_phi_s = numpy.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
+        self.ebq_particle_velocity_s = numpy.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
 
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
@@ -972,7 +975,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # COMPUTE MATERIAL PARAMETERS AND FORCE TERMS AS FUNCTIONS (if provided)
         if self.model.hasMaterialParametersAsFunctions:
             self.model.updateMaterialParameters()
-        if self.model.hasForceTermsAsFunctions:
+        if self.model.forceTerms is not None:
             self.model.updateForceTerms()
         self.model.dt_last = self.model.timeIntegration.dt
 
@@ -1148,10 +1151,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.materialParameters = options.materialParameters
             self.hasMaterialParametersAsFunctions = True
         # mql: Check if forceTerms are declared
-        self.hasForceTermsAsFunctions = False
         if ('forceTerms') in dir(options):
             self.forceTerms = options.forceTerms
-            self.hasForceTermsAsFunctions = True
+        else:
+            self.forceTerms = None
         # mql: Check if analytical pressure function is declared
         if ('analyticalPressureSolution') in dir(options):
             self.analyticalPressureSolution = options.analyticalPressureSolution
@@ -1889,6 +1892,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setupFieldStrides()
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.isBoundary_1D = None
 
         # mql: material parameters defined by a function at quad points
         self.q['density'] = numpy.zeros(
@@ -2106,7 +2110,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Added by mql for discrete upwinding stab
         self.entropyResidualPerNode = numpy.zeros(self.u[0].dof.shape, 'd')
         self.laggedEntropyResidualPerNode = numpy.zeros(self.u[0].dof.shape, 'd')
-        self.dMatrix = None
+        self.uStar_dMatrix = None
+        self.vStar_dMatrix = None
+        self.wStar_dMatrix = None
         self.numDOFs = None
 
     def updateMaterialParameters(self):
@@ -2250,10 +2256,32 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ncDrag[:]=0.0
         self.betaDrag[:]=0.0
         self.vos_vel_nodes[:]=0.0
-        
-        if self.dMatrix is None:
+
+        if self.uStar_dMatrix is None:
             self.getSparsityPatternForComponents()
-            self.dMatrix = numpy.zeros(self.nnz_1D)
+            self.uStar_dMatrix = numpy.zeros(self.nnz_1D)
+            self.vStar_dMatrix = numpy.zeros(self.nnz_1D)
+            self.wStar_dMatrix = numpy.zeros(self.nnz_1D)
+        #
+        if self.isBoundary_1D is None:
+            self.isBoundary_1D = numpy.zeros(self.numDOFs_1D)
+            self.rans3pf.getBoundaryDOFs(
+                self.mesh.nodeArray,
+                self.mesh.elementNodesArray,
+                self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
+                self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
+                self.elementBoundaryQuadratureWeights[('u', 0)],
+                self.u[0].femSpace.psi_trace,
+                self.u[0].femSpace.elementMaps.boundaryNormals,
+                self.u[0].femSpace.elementMaps.boundaryJacobians,
+                self.u[0].femSpace.dofMap.l2g,
+                self.mesh.nExteriorElementBoundaries_global,
+                self.mesh.exteriorElementBoundariesArray,
+                self.mesh.elementBoundaryElementsArray,
+                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                self.isBoundary_1D)
+            self.isBoundary_1D[:] = 1.0*(self.isBoundary_1D > 0)
+            self.quantDOFs[:] = self.isBoundary_1D
         #
 
         self.rans3pf.calculateResidual(
@@ -2350,9 +2378,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u_dof_old_old,
             self.v_dof_old_old,
             self.w_dof_old_old,
-            self.uStar_dof,
-            self.vStar_dof,
-            self.wStar_dof,
+            [self.uStar_dof, self.vStar_dof, self.wStar_dof],
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
@@ -2506,17 +2532,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ncDrag,
             self.betaDrag,
             self.vos_vel_nodes,
-          # For edge based stabilization #
+            # For edge based stabilization #
             self.entropyResidualPerNode,
             self.laggedEntropyResidualPerNode,
-            self.dMatrix,
+            [self.uStar_dMatrix, self.vStar_dMatrix, self.wStar_dMatrix],
             self.numDOFs_1D,
             self.nnz_1D,
             self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
             self.csrColumnOffsets[(0, 0)]//self.nSpace_global,
             self.rowptr_1D,
             self.colind_1D,
+            self.isBoundary_1D,
             self.coefficients.INT_BY_PARTS_PRESSURE)
+
         r*=self.isActiveDOF
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
@@ -2824,7 +2852,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.use_sbm,
             # for edge based dissipation
             self.coefficients.ARTIFICIAL_VISCOSITY,
-            self.dMatrix,
+            [self.uStar_dMatrix, self.vStar_dMatrix, self.wStar_dMatrix],
             self.numDOFs_1D,
             self.offset[0],
             self.offset[1],
