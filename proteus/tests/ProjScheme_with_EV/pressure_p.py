@@ -7,7 +7,7 @@ from .NS_convergence import *
 from proteus.mprans import Pres
 
 name = "pressure"
-#LevelModelType = Pres.LevelModel
+LevelModelType = Pres.LevelModel
 coefficients=Pres.Coefficients(modelIndex=PRESSURE_model,
                                fluidModelIndex=V_model,
                                pressureIncrementModelIndex=PINC_model,
