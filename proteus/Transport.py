@@ -1844,8 +1844,6 @@ class OneLevelTransport(NonlinearEquation):
                             zeroRow = False
                     if zeroRow:
                         raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+repr(global_dofN)+". You probably need add diagonal mass or reaction term")
-                    #print "row = ",global_dofN,"\t",self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]].max()
-        rowptr, colind, nzval = jacobian.getCSRrepresentation()
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
     def getJacobian_dense(self,jacobian):

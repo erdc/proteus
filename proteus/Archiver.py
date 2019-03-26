@@ -864,20 +864,20 @@ class XdmfWriter(object):
                 Xdmf_ElementTopology = "Tetrahedron"
             if ar.global_sync:
                 self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-                self.arTime = SubElement(self.arGrid,"Time",{"Value":"%e" % (t,),"Name":"%i" % (tCount)})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":"{0:e}".format(t),"Name":"{0:d}".format(tCount)})
                 topology    = SubElement(self.arGrid,"Topology",
                                          {"Type":Xdmf_ElementTopology,
-                                          "NumberOfElements":str(mesh.globalMesh.nElements_global).decode()})
+                                          "NumberOfElements": "{0:d}".format(mesh.globalMesh.nElements_global)})
                 elements    = SubElement(topology,"DataItem",
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Int",
-                                          "Dimensions":"%i %i" % (mesh.globalMesh.nElements_global,mesh.nNodes_element)})
+                                          "Dimensions":"{0:d} {1:d}".format(mesh.globalMesh.nElements_global,mesh.nNodes_element)})
                 geometry    = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
                 nodes       = SubElement(geometry,"DataItem",
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Float",
                                           "Precision":"8",
-                                          "Dimensions":"%i %i" % (dofMap.nDOF_all_processes,3)})
+                                          "Dimensions":"{0:d} {1:d}".format(dofMap.nDOF_all_processes,3)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+str(tCount)
@@ -887,7 +887,7 @@ class XdmfWriter(object):
                     if init or meshChanged:
                         #this will fail if elements_dgp1 already exists
                         if ar.has_h5py:
-                            ar.create_dataset_sync('elements'+spaceSuffix+str(tCount),
+                            ar.create_dataset_sync('elements{0}{1:d}'.format(spaceSuffix,tCount),
                                                    offsets = mesh.globalMesh.elementOffsets_subdomain_owned,
                                                    data = dofMap.l2g)
                         else:
@@ -899,7 +899,7 @@ class XdmfWriter(object):
                                 dgnodes[dofMap.l2g[eN,nN],:]=mesh.nodeArray[mesh.elementNodesArray[eN,nN]]
                         #make more pythonic loop
                         if ar.has_h5py:
-                            ar.create_dataset_sync('nodes'+spaceSuffix+str(tCount),
+                            ar.create_dataset_sync('nodes{0}{1:d}'.format(spaceSuffix,tCount),
                                                    offsets=dofMap.dof_offsets_subdomain_owned,
                                                    data = dgnodes)
                         else:
@@ -981,21 +981,21 @@ class XdmfWriter(object):
                 Xdmf_ElementTopology = "Tet_10"
             if ar.global_sync:
                 self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-                self.arTime = SubElement(self.arGrid,"Time",{"Value":"%e" % (t,),"Name":str(tCount)})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":"{0:e}".format(t),"Name":"{0:d}".format(tCount)})
                 topology    = SubElement(self.arGrid,"Topology",
                                          {"Type":Xdmf_ElementTopology,
-                                          "NumberOfElements":str(mesh.globalMesh.nElements_global)})
+                                          "NumberOfElements":"{0:d}".format(mesh.globalMesh.nElements_global)})
                 elements    = SubElement(topology,"DataItem",
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Int",
-                                          "Dimensions":"%i %i" % (mesh.globalMesh.nElements_global,dofMap.l2g.shape[-1])})
+                                          "Dimensions":"{0:d} {1:d}".format(mesh.globalMesh.nElements_global,dofMap.l2g.shape[-1])})
                 geometry    = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
                 #try to use fancy functions later
                 nodes       = SubElement(geometry,"DataItem",
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Float",
                                           "Precision":"8",
-                                          "Dimensions":"%i %i" % (dofMap.nDOF_all_processes,3)})
+                                          "Dimensions":"{0:d} {1:d}".format(dofMap.nDOF_all_processes,3)})
                 if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+str(tCount)
@@ -2153,28 +2153,28 @@ class XdmfWriter(object):
                     elif spaceDim == 3:
                         Xdmf_ElementTopology = "Tetrahedron"
                 self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-                self.arTime = SubElement(self.arGrid,"Time",{"Value":"%e" % (t,),"Name":str(tCount)})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":"{0:e}".format(t),"Name":"{0:d}".format(tCount)})
                 topology    = SubElement(self.arGrid,"Topology",
                                          {"Type":Xdmf_ElementTopology,
-                                          "NumberOfElements":str(mesh.nElements_global)})
+                                          "NumberOfElements":"{0:d}".format(mesh.nElements_global)})
                 #mwf hack, allow for a mixed element mesh
                 if mesh.nNodes_element is None:
                     assert 'xdmf_topology' in dir(mesh)
                     elements = SubElement(topology,"DataItem",
                                           {"Format":ar.dataItemFormat,
                                            "DataType":"Int",
-                                           "Dimensions":"%i" % len(self.xdmf_topology)})
+                                           "Dimensions":"{0:d}".format(len(self.xdmf_topology))})
                 else:
                     elements    = SubElement(topology,"DataItem",
                                              {"Format":ar.dataItemFormat,
                                               "DataType":"Int",
-                                              "Dimensions":"%i %i" % (mesh.nElements_global,mesh.nNodes_element)})
+                                              "Dimensions":"{0:d} {1:d}".format(mesh.nElements_global,mesh.nNodes_element)})
                 geometry    = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
                 nodes       = SubElement(geometry,"DataItem",
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Float",
                                           "Precision":"8",
-                                          "Dimensions":"%i %i" % (mesh.nNodes_global,3)})
+                                          "Dimensions":"{0:d} {1:d}".format(mesh.nNodes_global,3)})
                 #just reuse spatial mesh entries
                 if ar.hdfFile is not None:
                     if ar.has_h5py:

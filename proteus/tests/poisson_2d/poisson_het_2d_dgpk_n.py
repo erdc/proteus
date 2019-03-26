@@ -2,10 +2,13 @@ from __future__ import absolute_import
 from builtins import range
 from proteus import *
 from proteus.default_n import *
-from .poisson_het_2d_p import *
+try:
+    from .poisson_het_2d_p import *
+except:
+    from poisson_het_2d_p import *
 
-parallel = True
-numerical_flux_flag = 'NIPG'
+parallel = False
+numerical_flux_flag = 'SIPG'
 polynomial_order = 2
 
 
@@ -17,11 +20,11 @@ if polynomial_order == 2:
 else:
     femSpaces = dict((i,DG_AffineLinearOnSimplexWithNodalBasis) for i in range(nc))
 
-elementQuadrature = SimplexGaussQuadrature(nd,4)
-elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
+elementQuadrature = SimplexGaussQuadrature(nd,3)
+elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
 nn = 11
-nLevels = 3
+nLevels = 1
 if parallel:
     nLevels = 1
     nn = nn*2**(nLevels-1)
@@ -72,11 +75,11 @@ else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
     linearSolverConvergenceTest= 'r'
-
+    #matrix = np.array
 linTolFac = 0.0
 
 if polynomial_order == 2:
-    cfluxtag  = 'dg-point-eval' #'dg-point-eval','dg'
+   cfluxtag  = 'dg-point-eval' #'dg-point-eval','dg'
 else:
-    cfluxtag  = 'dg'
+   cfluxtag  = 'dg'
 conservativeFlux = dict((i,cfluxtag) for i in range(nc))
