@@ -19,7 +19,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int adaptMesh
         int isReconstructed
         int loadModelAndMesh(char *, char*)
-        int loadMeshForAnalytic(char *)
+        int loadMeshForAnalytic(char *,double*, double*, double)
         int getSimmetrixBC()
         int reconstructFromProteus(Mesh&,Mesh&,int)
         int reconstructFromProteus2(Mesh&,int*,int*)
@@ -70,8 +70,11 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
-    def loadMeshForAnalytic(self, meshName):
-        return self.thisptr.loadMeshForAnalytic(meshName)
+    def loadMeshForAnalytic(self, meshName, np.ndarray[np.double_t,ndim=1,mode="c"] boxDim, np.ndarray[np.double_t,ndim=1,mode="c"] sphereCenter, double sphereRadius):
+        boxDim = np.ascontiguousarray(boxDim)
+        sphereCenter = np.ascontiguousarray(sphereCenter)
+        sphereRadius = np.ascontiguousarray(sphereRadius)
+        return self.thisptr.loadMeshForAnalytic(meshName,&boxDim[0],&sphereCenter[0],sphereRadius)
     def reconstructFromProteus(self,cmeshTools.CMesh cmesh,cmeshTools.CMesh global_cmesh,hasModel=0):
         return self.thisptr.reconstructFromProteus(cmesh.mesh,global_cmesh.mesh,hasModel)
     def reconstructFromProteus2(self,cmeshTools.CMesh cmesh,np.ndarray[int,ndim=1,mode="c"] isModelVert,

@@ -152,7 +152,7 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile)
+int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile,double* boxDim,double* sphereCenter, double radius)
 {
   //assume analytic 
   comm_size = PCU_Comm_Peers();
@@ -161,7 +161,7 @@ int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile)
   m->verify();
 
   //create analytic geometry 
-  gmi_model* testModel = createSphereInBox();
+  gmi_model* testModel = createSphereInBox(boxDim,sphereCenter,radius);
   m->verify();
 
 

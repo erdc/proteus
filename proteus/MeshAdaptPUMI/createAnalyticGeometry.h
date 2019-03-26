@@ -29,7 +29,7 @@ extern double boxLength;
 extern double boxWidth;
 extern double boxHeight;
 extern int sphereFaceID;
-extern double radius;
+extern double sphereRadius;
 extern double xyz_offset[3];
 
 
