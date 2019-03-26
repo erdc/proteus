@@ -105,7 +105,6 @@ namespace proteus
                                    double hFactor,
                                    int nElements_global,
                                    int nElements_owned,
-                                   int nElementBoundaries_global,
                                    int nElementBoundaries_owned,
                                    int nNodes_owned,
                                    double useRBLES,
@@ -364,7 +363,6 @@ namespace proteus
                                    double hFactor,
                                    int nElements_global,
                                    int nElements_owned,
-                                   int nElementBoundaries_global,
                                    int nElementBoundaries_owned,
                                    int nNodes_owned,
                                    double useRBLES,
@@ -2097,7 +2095,6 @@ namespace proteus
                              double hFactor,
                              int nElements_global,
                              int nElements_owned,
-                             int nElementBoundaries_global,
                              int nElementBoundaries_owned,
                              int nNodes_owned,
                              double useRBLES,
@@ -4247,7 +4244,7 @@ namespace proteus
                 {
                   for (int i = 0; i < nParticles; i++)
                   {
-                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_global * nQuadraturePoints_elementBoundary + ebNE_kb];
+                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_owned * nQuadraturePoints_elementBoundary + ebN * nQuadraturePoints_elementBoundary + kb];
                     distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
                   }
                 }
@@ -4965,7 +4962,6 @@ namespace proteus
                              double hFactor,
                              int nElements_global,
                              int nElements_owned,
-                             int nElementBoundaries_global,
                              int nElementBoundaries_owned,
                              int nNodes_owned,
                              double useRBLES,
@@ -6631,7 +6627,7 @@ namespace proteus
                 {
                   for (int i = 0; i < nParticles; i++)
                   {
-                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_global * nQuadraturePoints_elementBoundary + ebNE_kb];
+                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_owned * nQuadraturePoints_elementBoundary + ebN * nQuadraturePoints_elementBoundary + kb];
                     distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
                   }
                 }
