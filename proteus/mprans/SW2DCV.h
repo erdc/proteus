@@ -2,6 +2,7 @@
 #define SW2DCV_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include <assert.h>
@@ -79,87 +80,88 @@ namespace proteus
   class SW2DCV_base
   {
   public:
+    std::valarray<double> Rneg, Rpos, hLow, huLow, hvLow, Kmax;
     virtual ~SW2DCV_base(){}
-      virtual void FCTStep(double dt,
-			   int NNZ, //number on non-zero entries on sparsity pattern
-			   int numDOFs, //number of DOFs
-			   double* lumped_mass_matrix, //lumped mass matrix (as vector)
-			   double* h_old, //DOFs of solution at last stage
-			   double* hu_old,
-			   double* hv_old,
-			   double* b_dof,
-			   double* high_order_hnp1, //DOFs of high order solution at tnp1
-			   double* high_order_hunp1,
-			   double* high_order_hvnp1,
-			   double* extendedSourceTerm_hu,
-			   double* extendedSourceTerm_hv,
-			   double* limited_hnp1,
-			   double* limited_hunp1,
-			   double* limited_hvnp1,
-			   int* csrRowIndeces_DofLoops, //csr row indeces
-			   int* csrColumnOffsets_DofLoops, //csr column offsets
-			   double* MassMatrix, //mass matrix
-			   double* dH_minus_dL,
-			   double* muH_minus_muL,
-			   double hEps,
-			   double* hReg,
-			   int LUMPED_MASS_MATRIX,
-			   // LOCAL LIMITING
-			   double* dLow,
-			   double* hBT,
-			   double* huBT,
-			   double* hvBT
-			   )=0;
-      virtual void convexLimiting(double dt,
-				  int NNZ, //number on non-zero entries on sparsity pattern
-				  int numDOFs, //number of DOFs
-				  double* lumped_mass_matrix, //lumped mass matrix (as vector)
-				  double* h_old, //DOFs of solution at last stage
-				  double* hu_old,
-				  double* hv_old,
-				  double* b_dof,
-				  double* high_order_hnp1, //DOFs of high order solution at tnp1
-				  double* high_order_hunp1,
-				  double* high_order_hvnp1,
-				  double* extendedSourceTerm_hu,
-				  double* extendedSourceTerm_hv,
-				  double* limited_hnp1,
-				  double* limited_hunp1,
-				  double* limited_hvnp1,
-				  int* csrRowIndeces_DofLoops, //csr row indeces
-				  int* csrColumnOffsets_DofLoops, //csr column offsets
-				  double* MassMatrix, //mass matrix
-				  double* dH_minus_dL,
-				  double* muH_minus_muL,
-				  double hEps,
-				  double* hReg,
-				  int LUMPED_MASS_MATRIX,
-				  // LOCAL LIMITING
-				  double* dLow,
-				  double* hBT,
-				  double* huBT,
-				  double* hvBT
-				  )=0;
-      virtual double calculateEdgeBasedCFL(double g,
-                                           int numDOFsPerEqn, //number of DOFs
-                                           double* lumped_mass_matrix, //lumped mass matrix (as vector)
-                                           double* h_old, //DOFs of solution at last stage
-                                           double* hu_old,
-                                           double* hv_old,
-                                           double* b_dof,
-                                           int* csrRowIndeces_DofLoops, //csr row indeces
-                                           int* csrColumnOffsets_DofLoops, //csr column offsets
-                                           double hEps,
-                                           double* hReg,
-                                           double* Cx,
-                                           double* Cy,
-                                           double* CTx,
-                                           double* CTy,
-                                           double* dLow,
-                                           double run_cfl,
-                                           double* edge_based_cfl,
-					   int debug
-                                           )=0;
+    virtual void FCTStep(double dt,
+			 int NNZ, //number on non-zero entries on sparsity pattern
+			 int numDOFs, //number of DOFs
+			 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+			 double* h_old, //DOFs of solution at last stage
+			 double* hu_old,
+			 double* hv_old,
+			 double* b_dof,
+			 double* high_order_hnp1, //DOFs of high order solution at tnp1
+			 double* high_order_hunp1,
+			 double* high_order_hvnp1,
+			 double* extendedSourceTerm_hu,
+			 double* extendedSourceTerm_hv,
+			 double* limited_hnp1,
+			 double* limited_hunp1,
+			 double* limited_hvnp1,
+			 int* csrRowIndeces_DofLoops, //csr row indeces
+			 int* csrColumnOffsets_DofLoops, //csr column offsets
+			 double* MassMatrix, //mass matrix
+			 double* dH_minus_dL,
+			 double* muH_minus_muL,
+			 double hEps,
+			 double* hReg,
+			 int LUMPED_MASS_MATRIX,
+			 // LOCAL LIMITING
+			 double* dLow,
+			 double* hBT,
+			 double* huBT,
+			 double* hvBT
+			 )=0;
+    virtual void convexLimiting(double dt,
+				int NNZ, //number on non-zero entries on sparsity pattern
+				int numDOFs, //number of DOFs
+				double* lumped_mass_matrix, //lumped mass matrix (as vector)
+				double* h_old, //DOFs of solution at last stage
+				double* hu_old,
+				double* hv_old,
+				double* b_dof,
+				double* high_order_hnp1, //DOFs of high order solution at tnp1
+				double* high_order_hunp1,
+				double* high_order_hvnp1,
+				double* extendedSourceTerm_hu,
+				double* extendedSourceTerm_hv,
+				double* limited_hnp1,
+				double* limited_hunp1,
+				double* limited_hvnp1,
+				int* csrRowIndeces_DofLoops, //csr row indeces
+				int* csrColumnOffsets_DofLoops, //csr column offsets
+				double* MassMatrix, //mass matrix
+				double* dH_minus_dL,
+				double* muH_minus_muL,
+				double hEps,
+				double* hReg,
+				int LUMPED_MASS_MATRIX,
+				// LOCAL LIMITING
+				double* dLow,
+				double* hBT,
+				double* huBT,
+				double* hvBT
+				)=0;
+    virtual double calculateEdgeBasedCFL(double g,
+					 int numDOFsPerEqn, //number of DOFs
+					 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+					 double* h_old, //DOFs of solution at last stage
+					 double* hu_old,
+					 double* hv_old,
+					 double* b_dof,
+					 int* csrRowIndeces_DofLoops, //csr row indeces
+					 int* csrColumnOffsets_DofLoops, //csr column offsets
+					 double hEps,
+					 double* hReg,
+					 double* Cx,
+					 double* Cy,
+					 double* CTx,
+					 double* CTy,
+					 double* dLow,
+					 double run_cfl,
+					 double* edge_based_cfl,
+					 int debug
+					 )=0;
     virtual void calculateResidual(// last EDGE BASED version
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -871,8 +873,11 @@ namespace proteus
 		 double* huBT,
 		 double* hvBT)
     {
-      register double Rneg[numDOFs],Rpos[numDOFs],
-	hLow[numDOFs],huLow[numDOFs],hvLow[numDOFs];
+      Rneg.resize(numDOFs,0.0);
+      Rpos.resize(numDOFs,0.0);
+      hLow.resize(numDOFs,0.0);
+      huLow.resize(numDOFs,0.0);
+      hvLow.resize(numDOFs,0.0);
 
       ////////////////////////
       // FIRST LOOP in DOFs //
@@ -1098,8 +1103,12 @@ namespace proteus
 			double* huBT,
 			double* hvBT)
     {
-      register double Rneg[numDOFs],Rpos[numDOFs],
-	Kmax[numDOFs], hLow[numDOFs],huLow[numDOFs],hvLow[numDOFs];
+      Rneg.resize(numDOFs,0.0);
+      Rpos.resize(numDOFs,0.0);
+      hLow.resize(numDOFs,0.0);
+      huLow.resize(numDOFs,0.0);
+      hvLow.resize(numDOFs,0.0);
+      Kmax.resize(numDOFs,0.0);
 
       ////////////////////////
       // FIRST LOOP in DOFs //
@@ -1361,7 +1370,7 @@ namespace proteus
                                  double* edge_based_cfl,
 				 int debug)
     {
-      register double psi[numDOFsPerEqn];
+      std::valarray<double> psi(numDOFsPerEqn);
       double max_edge_based_cfl = 0.;
       int ij=0;
       for (int i=0; i<numDOFsPerEqn; i++)
@@ -1777,7 +1786,7 @@ namespace proteus
           //////////////////////////////////////////////
 	  // To compute:
 	  //     * Entropy at i-th node
-          register double eta[numDOFsPerEqn];
+	  std::valarray<double> eta(numDOFsPerEqn);
           for (int i=0; i<numDOFsPerEqn; i++)
 	    {
 	      // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
@@ -1796,14 +1805,8 @@ namespace proteus
 	  //     * Smoothness indicator
 	  //     * global entropy residual
           int ij = 0;
-          register double
-	    hyp_flux_h[numDOFsPerEqn],
-	    hyp_flux_hu[numDOFsPerEqn],
-	    hyp_flux_hv[numDOFsPerEqn],
-	    global_entropy_residual[numDOFsPerEqn],
-	    psi[numDOFsPerEqn],
-	    etaMax[numDOFsPerEqn],
-	    etaMin[numDOFsPerEqn];
+	  std::valarray<double> hyp_flux_h(numDOFsPerEqn), hyp_flux_hu(numDOFsPerEqn), hyp_flux_hv(numDOFsPerEqn),
+	    global_entropy_residual(numDOFsPerEqn), psi(numDOFsPerEqn), etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
 	  for (int i=0; i<numDOFsPerEqn; i++)
             {
               double hi = h_dof_old[i]; // solution at time tn for the ith DOF
