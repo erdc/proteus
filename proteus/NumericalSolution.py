@@ -381,7 +381,7 @@ class NS_base(object):  # (HasTraits):
                 else:
                   mesh = MeshTools.TriangularMesh()
                 logEvent("Converting PUMI mesh to Proteus")
-                mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
+                mesh.convertFromPUMI(p.domain,p.domain.PUMIMesh, p.domain.faceList,
                     p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
                 if p.domain.nd == 3:
@@ -779,8 +779,8 @@ class NS_base(object):  # (HasTraits):
     def PUMI2Proteus(self,mesh):
         #p0 = self.pList[0] #This can probably be cleaned up somehow
         #n0 = self.nList[0]
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         if self.TwoPhaseFlow:
             nLevels = p0.myTpFlowProblem.general['nLevels']
@@ -1073,8 +1073,8 @@ class NS_base(object):  # (HasTraits):
                     self.systemStepController.t_system_last+1.0e-6)
 
     def PUMI_transferFields(self):
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
@@ -1348,7 +1348,8 @@ class NS_base(object):  # (HasTraits):
         else:
           mesh = MeshTools.TriangularMesh()
 
-        mesh.convertFromPUMI(domain.PUMIMesh,
+        mesh.convertFromPUMI(domain,
+                             domain.PUMIMesh,
                              domain.faceList,
                              domain.regList,
                              parallel = self.comm.size() > 1,

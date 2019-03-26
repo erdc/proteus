@@ -1599,7 +1599,7 @@ class Mesh(object):
             gnuplot.flush()
         input('Please press return to continue... \n')
 
-    def convertFromPUMI(self, PUMIMesh, faceList,regList, parallel=False, dim=3):
+    def convertFromPUMI(self, domain, PUMIMesh, faceList,regList, parallel=False, dim=3):
         from . import cmeshTools
         from . import MeshAdaptPUMI
         from . import cpartitioning
@@ -1681,7 +1681,8 @@ class Mesh(object):
           else:
               for i in range(len(faceList)):
                 for j in range(len(faceList[i])):
-                  PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
+                  #PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
+                  PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), domain.boundaryLabels[i], faceList[i][j])
               for i in range(len(regList)):
                 for j in range(len(regList[i])):
                   PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
