@@ -240,12 +240,13 @@ class TwoPhaseFlowProblem:
             PINIT_model = params.Models.pressureInitial.index
             assert PINIT_model is not None, 'must set pressureInitial model index when using rans3p'
             so.modelSpinUpList = [PINIT_model]
-            class Sequential_MinAdaptiveModelStepPS(Sequential_MinAdaptiveModelStep):
+            from proteus.default_so import defaultSystem
+            class Sequential_MinAdaptiveModelStepPS(SplitOperator.Sequential_MinAdaptiveModelStep):
                 def __init__(self,modelList,system=defaultSystem,stepExact=True):
-                    Sequential_MinAdaptiveModelStep.__init__(self,modelList,system,stepExact)
-                    self.modelList = modelList[:len(pnList)-1]
+                    SplitOperator.Sequential_MinAdaptiveModelStep.__init__(self,modelList,system,stepExact)
+                    self.modelList = modelList[:len(so.pnList)-1]
             #
-            so.systemStepControllerType = SplitOperator.Sequential_MinAdaptiveModelStepPS
+            so.systemStepControllerType = Sequential_MinAdaptiveModelStepPS
         # others
         so.needEBQ_GLOBAL = False
         so.needEBQ = False
