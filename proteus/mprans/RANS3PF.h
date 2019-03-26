@@ -2668,7 +2668,7 @@ namespace proteus
                   phi_solid[eN_k] = 1e10;
                   for (int i = 0; i < nParticles; i++)
                   {
-                    double distance_to_i_th_solid = particle_signed_distances[i * nElements_global * nQuadraturePoints_element + eN * nQuadraturePoints_element + k];
+                    double distance_to_i_th_solid = particle_signed_distances[i * nElements_global * nQuadraturePoints_element + eN_k];
                     phi_solid[eN_k] = (distance_to_i_th_solid < phi_solid[eN_k])?distance_to_i_th_solid:phi_solid[eN_k];
                   }
                 }
@@ -4046,18 +4046,10 @@ namespace proteus
                 //
                 //calculate the pde coefficients using the solution and the boundary values for the solution
                 //
-                double distance_to_omega_solid(1e10);
+                double distance_to_omega_solid = ebq_global_phi_solid[ebNE_kb];
                 if (use_ball_as_particle == 1)
                 {
                   get_distance_to_ball(nParticles, ball_center, ball_radius, x_ext, y_ext, z_ext, distance_to_omega_solid);
-                }
-                else
-                {
-                  for (int i = 0; i < nParticles; i++)
-                  {
-                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_owned * nQuadraturePoints_elementBoundary + ebN * nQuadraturePoints_elementBoundary + kb];
-                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
-                  }
                 }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
@@ -6495,18 +6487,10 @@ namespace proteus
                 //
                 //calculate the internal and external trace of the pde coefficients
                 //
-                double distance_to_omega_solid(1e10);
+                double distance_to_omega_solid = ebq_global_phi_solid[ebNE_kb];
                 if (use_ball_as_particle == 1)
                 {
                   get_distance_to_ball(nParticles, ball_center, ball_radius, x_ext, y_ext, z_ext, distance_to_omega_solid);
-                }
-                else
-                {
-                  for (int i = 0; i < nParticles; i++)
-                  {
-                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_owned * nQuadraturePoints_elementBoundary + ebN * nQuadraturePoints_elementBoundary + kb];
-                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
-                  }
                 }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
