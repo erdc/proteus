@@ -21,7 +21,7 @@ class MeshAdaptPUMIDrvr{
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
-  int loadMeshForAnalytic(const char* meshFile); //mesh and construct analytic geometry
+  int loadMeshForAnalytic(const char* meshFile,double* boxDim, double* sphereCenter, double radius); //mesh and construct analytic geometry
   void writeMesh(const char* meshFile);
 
   //Functions to construct proteus mesh data structures
@@ -61,7 +61,7 @@ class MeshAdaptPUMIDrvr{
   int gradeMesh();
 
   //analytic geometry
-  gmi_model* createSphereInBox();
+  gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
 
   //Quality Check Functions
   double getMinimumQuality();

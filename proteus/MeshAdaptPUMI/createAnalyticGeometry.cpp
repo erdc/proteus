@@ -25,9 +25,9 @@ agm_use add_adj(gmi_model* m, agm_bdry b, int dim,int tag)
   return agm_add_use(topo, b, agm_from_gmi(de));
 }
 
-double boxLength = 2.0;
-double boxWidth = 2.0;
-double boxHeight = 4.0;
+double boxLength;// = 5.0;
+double boxWidth; //= 5.0;
+double boxHeight;// = 6.0;
 int edgeMap[12] = {50,48,46,52,11,16,20,6,73,72,71,74};
 int faceLoop[6] = {80,78,76,82,42,24};
 
@@ -483,8 +483,10 @@ void makeBox(gmi_model* model)
 //create sphere
 const double pi = apf::pi;
 int sphereFaceID = 123;
-double radius = 0.1;
-double xyz_offset[3]={1.0,1.0,2.5};
+//double radius = 0.1;
+//double xyz_offset[3]={1.0,1.0,2.5};
+double sphereRadius;
+double xyz_offset[3];
 
 /*
 void sphereFace(double const p[2], double x[3], void*)
@@ -498,9 +500,9 @@ void sphereFace(double const p[2], double x[3], void*)
 void sphereFace(double const p[2], double x[3], void*)
 {
   //x[0] = 1.0+radius*cos(p[0]) * sin(p[1]);
-  x[0] = xyz_offset[0]+radius*cos(p[0]) * sin(p[1]);
-  x[1] = xyz_offset[1]+radius*sin(p[0]) * sin(p[1]);
-  x[2] = xyz_offset[2]+radius*cos(p[1]);
+  x[0] = xyz_offset[0]+sphereRadius*cos(p[0]) * sin(p[1]);
+  x[1] = xyz_offset[1]+sphereRadius*sin(p[0]) * sin(p[1]);
+  x[2] = xyz_offset[2]+sphereRadius*cos(p[1]);
 }
 
 
@@ -611,7 +613,7 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
           newParam[0] = 0.0; // not sure if this will happen or if this is right
         else 
           newParam[0] = atan2(argy,argx);
-        double arg2 = (pt[2]-xyz_offset[2])/radius;
+        double arg2 = (pt[2]-xyz_offset[2])/sphereRadius;
         if(arg2 < -1.0)
           arg2 = -1.0;
         else if (arg2 > 1.0)
@@ -619,7 +621,7 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
 
         newParam[1] = acos(arg2);
         //std::cout<<pt[2]<<" offset "<<xyz_offset[2]<<" "<<radius<<std::endl;
-        std::cout<<pt<<" offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<" "<<xyz_offset[2]<<" "<<radius<<" newParam "<<newParam<<std::endl;
+        std::cout<<pt<<" offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<" "<<xyz_offset[2]<<" "<<sphereRadius<<" newParam "<<newParam<<std::endl;
         std::cout<<"acos arg "<<pt[2]-xyz_offset[2]<<" acos "<<acos(-1)<<" "<<acos(1)<<std::endl;
         if(newParam[0]<0)
           newParam[0] = newParam[0]+2*apf::pi;
@@ -644,8 +646,17 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
   m->end(it);
 }
 
-gmi_model* MeshAdaptPUMIDrvr::createSphereInBox()
+gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCenter, double radius)
 {
+  sphereRadius = radius;
+  boxLength = boxDim[0];
+  boxWidth = boxDim[1];
+  boxHeight = boxDim[2];
+  xyz_offset[0] = sphereCenter[0];
+  xyz_offset[1] = sphereCenter[1];
+  xyz_offset[2] = sphereCenter[2];
+  
+
 
   //create the analytic model 
   gmi_model* model = gmi_make_analytic();
@@ -667,22 +678,25 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox()
   {
     apf::Vector3 pt;
     m->getPoint(ent,0,pt);
-    if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < radius*1.5)
+    if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < sphereRadius*1.5)
       apf::setScalar(size_initial,ent,0,0.025);
     else
       apf::setScalar(size_initial,ent,0,0.1);
   }
   m->end(it);
 
+/*
   ma::Input* in = ma::configure(m,size_initial);
   in->maximumIterations = 10;
   in->shouldSnap = true;
   in->shouldTransferParametric = true;
   in->shouldFixShape = true;
-  ma::adaptVerbose(in,false);
+  in->debugFolder="./debug_fine";
+  ma::adaptVerbose(in,true);
   apf::destroyField(size_initial);
   m->verify();
   
   apf::writeVtkFiles("initialAdapt",m);
+*/
   return model;
 }
