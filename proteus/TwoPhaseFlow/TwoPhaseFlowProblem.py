@@ -228,6 +228,7 @@ class TwoPhaseFlowProblem:
     def initializeSO(self):
         so = self.so
         params = self.Parameters
+        so.fastArchive = self.fastArchive
         so.pnList = [None for i in range(params.nModels)]
         for i in range(params.nModels):
             model = params.models_list[i]
