@@ -79,6 +79,10 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.pInc_advective = BoundaryCondition() 
         self.pInit_diffusive = BoundaryCondition() 
         self.pInc_diffusive = BoundaryCondition() 
+        # clsvof
+        self.clsvof_dirichlet = BoundaryCondition()
+        self.clsvof_advective = BoundaryCondition()
+        self.clsvof_diffusive = BoundaryCondition()
 
     def reset(self):
         """
@@ -122,6 +126,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_diffusive.resetBC()
         self.vs_diffusive.resetBC()
         self.ws_diffusive.resetBC()
+        self.clsvof_dirichlet.resetBC()
+        self.clsvof_advective.resetBC()
+        self.clsvof_diffusive.resetBC()
 
     def setNonMaterial(self):
         """
