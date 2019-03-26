@@ -228,7 +228,7 @@ class TwoPhaseFlowProblem:
     def initializeSO(self):
         so = self.so
         params = self.Parameters
-        so.fastArchive = self.fastArchive
+        # list of models
         so.pnList = [None for i in range(params.nModels)]
         for i in range(params.nModels):
             model = params.models_list[i]
@@ -252,6 +252,7 @@ class TwoPhaseFlowProblem:
         so.needEBQ_GLOBAL = False
         so.needEBQ = False
         so.measureSpeedOfCode = True
+        so.fastArchive = self.fastArchive
         # archiving time
         outputStepping = self.outputStepping
         tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]

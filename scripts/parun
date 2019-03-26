@@ -347,13 +347,20 @@ if opts.TwoPhaseFlow:
     from proteus import Context
     if opts.pathMyTpFlowProblem is not None:
         sys.path.append(opts.pathMyTpFlowProblem)
-    case = __import__(opts.fileName[:-3])
+    name = opts.fileName[:-3]
+    case = __import__(name)
     Context.setFromModule(case)
     ct = Context.get()
     prob = ct.myTpFlowProblem
+    # useSuperlu ? #
+    if prob.useSuperlu is None: #if useSuperlu is None, then I decide
+        if opts.TpFlowParallel:
+            prob.useSuperlu=False
+        else:
+            prob.useSuperlu=True
     prob.initializeAll()
     so = prob.so
-    so.name = 'TwoPhaseFlow'
+    so.name = name
     #################
     # PUMI WORKFLOW #
     #################
@@ -385,12 +392,6 @@ if opts.TwoPhaseFlow:
             prob.domain.MeshOptions.setParallelPartitioningType('element')
             prob.domain.PUMIMesh.loadModelAndMesh("Reconstructed.dmg","splitMesh/splitMesh.smb")
     # END OF PUMI WORKFLOW #
-    # useSuperlu ? #
-    if prob.useSuperlu is None: #if useSuperlu is None, then I decide
-        if opts.TpFlowParallel:
-            prob.useSuperlu=False
-        else:
-            prob.useSuperlu=True
     for (pModule,nModule) in so.pnList:
         log("Loading p module = "+pModule.name)
         pList.append(pModule)
