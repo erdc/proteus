@@ -578,6 +578,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.momentHistory = open(os.path.join(proteus.Profiling.logDir, "momentHistory.txt"), "w")
             if self.nParticles:
                 self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_forceHistory.txt"), "w")
+                self.particle_pforceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_pforceHistory.txt"), "w")
+                self.particle_vforceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_vforceHistory.txt"), "w")
                 self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir, "particle_momentHistory.txt"), "w")
         self.comm = comm
     # initialize so it can run as single phase
@@ -754,7 +756,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                      "\nForces_v\n" +
                      `self.netForces_v[:,:]`)
             self.timeHistory.write("%21.16e\n" % (t,))
+            self.timeHistory.flush()
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+            self.wettedAreaHistory.flush()
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
             self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_v[-1, :]))
@@ -764,6 +768,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if self.nParticles:
                 self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
                 self.particle_forceHistory.flush()
+                self.particle_pforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+self.nParticles, :]))
+                self.particle_pforceHistory.flush()
+                self.particle_vforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+2*self.nParticles, :]))
+                self.particle_vforceHistory.flush()
                 self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
                 self.particle_momentHistory.flush()
 

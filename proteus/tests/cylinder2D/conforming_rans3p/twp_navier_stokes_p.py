@@ -52,8 +52,9 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     turbulenceClosureModel=ns_closure,
                                     movingDomain=movingDomain,
                                     dragAlpha=dragAlpha,
-                                    PSTAB=0.0)
-
+                                    PSTAB=0.0,
+                                    USE_SUPG=0.0,
+                                    ARTIFICIAL_VISCOSITY=1)
 def vel(x,t):
     U = Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
     if t < 2.0:

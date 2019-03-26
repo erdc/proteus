@@ -13,7 +13,7 @@ from proteus import Context
 
 opts = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.01, "maximum size of edges"),
+    ("he",0.02, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure")
@@ -88,7 +88,7 @@ elif pspaceOrder == 2:
         pbasis = C0_AffineQuadraticOnSimplexWithNodalBasis
 
 
-weak_bc_penalty_constant = 100.0
+weak_bc_penalty_constant = 10.0
 nLevels = 1
 #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
 parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
@@ -138,7 +138,7 @@ if opts.onlySaveFinalSolution == True:
 ns_forceStrongDirichlet = False
 ns_sed_forceStrongDirichlet = False
 if useMetrics:
-    ns_shockCapturingFactor  = 0.5
+    ns_shockCapturingFactor  = 0.0
     ns_lag_shockCapturing = True
     ns_lag_subgridError = True
     ls_shockCapturingFactor  = 0.5

@@ -748,7 +748,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir, "forceHistory_v.txt"), "w")
             self.momentHistory = open(os.path.join(proteus.Profiling.logDir, "momentHistory.txt"), "w")
             if self.nParticles:
+                self.particle_surfaceAreaHistory = open(os.path.join(proteus.Profiling.logDir, "particle_surfaceAreaHistory.txt"), "w")
                 self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_forceHistory.txt"), "w")
+                self.particle_pforceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_pforceHistory.txt"), "w")
+                self.particle_vforceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_vforceHistory.txt"), "w")
                 self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir, "particle_momentHistory.txt"), "w")
     # initialize so it can run as single phase
 
@@ -1074,7 +1077,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
         if self.model.comm.isMaster():
             self.timeHistory.write("%21.16e\n" % (t,))
+            self.timeHistory.flush()
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+            self.wettedAreaHistory.flush()
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
             self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_v[-1, :]))
@@ -1082,8 +1087,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1, :]))
             self.momentHistory.flush()
             if self.nParticles:
+                self.particle_surfaceAreaHistory.write("%21.16e\n" % tuple(self.particle_surfaceArea[:]))
+                self.particle_surfaceAreaHistory.flush()
                 self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
                 self.particle_forceHistory.flush()
+                self.particle_pforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+self.nParticles, :]))
+                self.particle_pforceHistory.flush()
+                self.particle_vforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+2*self.nParticles, :]))
+                self.particle_vforceHistory.flush()
                 self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
                 self.particle_momentHistory.flush()
 
@@ -2357,7 +2368,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['eddy_viscosity'],
             self.pressureModel.u[0].femSpace.dofMap.l2g,
             self.u[0].femSpace.dofMap.l2g,
-            self.pressureModel.u[0].dof,
+            self.pressureModel.p_sharp_dof,
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,

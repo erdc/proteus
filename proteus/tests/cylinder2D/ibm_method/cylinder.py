@@ -12,7 +12,7 @@ from proteus import Context
 
 ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.01, "maximum size of edges"),
+    ("he",0.02, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure"),
@@ -252,7 +252,7 @@ if ct.onlySaveFinalSolution == True:
 ns_forceStrongDirichlet = False
 ns_sed_forceStrongDirichlet = False
 if useMetrics:
-    ns_shockCapturingFactor  = 0.5
+    ns_shockCapturingFactor  = 0.0
     ns_lag_shockCapturing = True
     ns_lag_subgridError = True
     ls_shockCapturingFactor  = 0.5
