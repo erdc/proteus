@@ -4,8 +4,10 @@ Rising bubble test
 from __future__ import division
 from past.utils import old_div
 import numpy as np
-from proteus import (Domain, Context)                     
+from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
+from proteus.mprans.SpatialTools import Tank2D
+from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 
 # *************************** #
@@ -23,7 +25,7 @@ opts= Context.Options([
 
 assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
 assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
-    
+
 # ****************** #
 # ***** GAUGES ***** #
 # ****************** #
@@ -82,7 +84,7 @@ else:
 class zero(object):
     def uOfXT(self,x,t):
         return 0.
-    
+
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
         xB = 0.5
@@ -172,11 +174,8 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=True)
-physical_parameters = myTpFlowProblem.physical_parameters
+physical_parameters = myTpFlowProblem.Parameters.physical
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
-myTpFlowProblem.clsvof_parameters['disc_ICs']=True
-myTpFlowProblem.clsvof_parameters['computeMetricsForBubble']=True
-myTpFlowProblem.rans3p_parameters['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
 if opts.test_case==1:
     physical_parameters['densityA'] = 1000.0
     physical_parameters['kinematicViscosityA'] = 10.0/physical_parameters['densityA']
@@ -189,4 +188,12 @@ else: #test_case=2
     physical_parameters['kinematicViscosityA'] = 10.0/physical_parameters['densityA']
     physical_parameters['densityB'] = 1.0
     physical_parameters['kinematicViscosityB'] = 0.1/physical_parameters['densityB']
-    physical_parameters['surf_tension_coeff'] = 1.96    
+    physical_parameters['surf_tension_coeff'] = 1.96
+
+myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
+myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = True
+myTpFlowProblem.Parameters.Models.clsvof.computeMetricsForBubble = True
+
+myTpFlowProblem.outputStepping.systemStepExact = True
