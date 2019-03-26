@@ -80,7 +80,7 @@ class ParametersHolder:
         p_base = Physics_base()
         for i in range(len(all_models)):
             model = all_models[i]
-            if model['index'] >= 0:
+            if model['index'] is not None:
                 model.initializePhysics()
                 model.initializeNumerics()
                 self.nModels += 1
@@ -126,7 +126,7 @@ class ParametersHolder:
         p = Physics_base()
         for i in range(len(all_models)):
             model = all_models[i]
-            if model['index'] >= 0:
+            if model['index'] is not None:
                 logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
                 logEvent('-----')
                 for key, value in p.__dict__.items():
