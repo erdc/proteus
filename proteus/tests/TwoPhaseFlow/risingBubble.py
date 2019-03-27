@@ -34,7 +34,7 @@ assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
-tank_dim = (1.0,2.0) 
+tank_dim = (1.0,2.0)
 refinement = opts.refinement
 structured=True
 if structured:
@@ -69,7 +69,7 @@ else:
                                                   segments=segments,
                                                   segmentFlags=segmentFlags,
                                                   regions=regions,
-                                                  regionFlags=regionFlags)    
+                                                  regionFlags=regionFlags)
     domain.boundaryTags = boundaryTags
     domain.writePoly("mesh")
     domain.writePLY("mesh")
@@ -113,7 +113,7 @@ def vel_u_DBC(x,flag):
 
 def vel_v_DBC(x,flag):
     if flag==boundaryTags['bottom'] or flag==boundaryTags['top']:
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 # ADVECTIVE FLUX #
 def vel_u_AFBC(x,flag):
@@ -132,7 +132,7 @@ def vel_u_DFBC(x,flag):
 def vel_v_DFBC(x,flag):
     if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
         return lambda x,t: 0.0
-    
+
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
@@ -152,7 +152,7 @@ boundaryConditions = {
     'clsvof_DBC': lambda x, flag: None,
     # ADVECTIVE FLUX BCs #
     'pressure_AFBC': lambda x, flag: lambda x, t: 0.0,
-    'pressure_increment_AFBC': lambda x, flag: lambda x, t: 0.0, 
+    'pressure_increment_AFBC': lambda x, flag: lambda x, t: 0.0,
     'vel_u_AFBC': vel_u_AFBC,
     'vel_v_AFBC': vel_v_AFBC,
     'clsvof_AFBC': lambda x, flag: lambda x, t: 0.0,
@@ -191,9 +191,10 @@ else: #test_case=2
     physical_parameters['surf_tension_coeff'] = 1.96
 
 myTpFlowProblem.useBoundaryConditionsModule = False
-myTpFlowProblem.Parameters.Models.rans3p.ns_shockCapturingFactor = 0.5
-myTpFlowProblem.Parameters.Models.rans3p.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
-myTpFlowProblem.Parameters.Models.clsvof.disc_ICs = True
-myTpFlowProblem.Parameters.Models.clsvof.computeMetricsForBubble = True
+m = myTpFlowProblem.Parameters.Models
+m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
+m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.clsvof.p.CoefficientsOptions.disc_ICs = True
+m.clsvof.p.CoefficientsOptions.computeMetricsForBubble = True
 
 myTpFlowProblem.outputStepping.systemStepExact = True
