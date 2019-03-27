@@ -528,7 +528,7 @@ namespace proteus
       da_de = porosity*dnu_t_de/sigma_a;
 
       r = -porosity*(F_e - gamma_e - dSed)*dissipation;
-      dr_de = porosity*( gamma_e + dgamma_e_d_dissipation + dSed);
+      dr_de = -porosity*dF_e_d_dissipation + porosity*( gamma_e + dgamma_e_d_dissipation + dSed);
 
     }
 
