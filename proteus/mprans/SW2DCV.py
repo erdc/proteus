@@ -345,6 +345,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+        if firstStep:
+            # Init boundaryIndex
+            assert (self.model.boundaryIndex is None and self.model.normalx is not None, "Check boundaryIndex, normalx and normaly")
+            self.model.boundaryIndex = []
+            for i in range(self.model.normalx.size):
+                if self.model.normalx[i] != 0 or self.model.normaly[i] != 0:
+                    self.model.boundaryIndex.append(i)
+            self.model.boundaryIndex = np.array(self.model.boundaryIndex)
+        #
         self.model.h_dof_old[:] = self.model.u[0].dof
         self.model.hu_dof_old[:] = self.model.u[1].dof
         self.model.hv_dof_old[:] = self.model.u[2].dof
@@ -1094,14 +1103,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.normaly = numpy.zeros(self.u[0].dof.shape, 'd')
         # quantDOFs
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
-        # boundary Index
-        if self.boundaryIndex is None and self.normalx is not None:
-            self.boundaryIndex = []
-            for i in range(self.normalx.size):
-                if self.normalx[i] != 0 or self.normaly[i] != 0:
-                    self.boundaryIndex.append(i)
-            self.boundaryIndex = np.array(self.boundaryIndex)
-        #
+        # boundary Index: I do this in preStep since I need normalx and normaly to be initialized first
         # Allocate space for dLow (for the first stage in the SSP method)
         self.dLow = numpy.zeros(self.Cx.shape, 'd')
         self.hBT = numpy.zeros(self.Cx.shape, 'd')
@@ -1142,6 +1144,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             self.updateReflectingBoundaryConditions()
         #
+        # INIT BOUNDARY INDEX #
+        # NOTE: this must be done after the first call to getResidual (to have normalx and normaly initialized)
+        # I do this in preStep if firstStep=True
+
         # CONSTRAINT DOFs #
         if self.coefficients.constrainedDOFs is not None:
             self.updateConstrainedDOFs()
