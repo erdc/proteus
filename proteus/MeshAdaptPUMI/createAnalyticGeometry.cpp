@@ -17,17 +17,9 @@ agm_use add_adj(gmi_model* m, agm_bdry b, int tag)
   return agm_add_use(topo, b, agm_from_gmi(de));
 }
 
-agm_use add_adj(gmi_model* m, agm_bdry b, int dim,int tag)
-{
-  agm* topo = gmi_analytic_topo(m);
-  //int dim = agm_dim_from_type(agm_bounds(topo, b).type);
-  gmi_ent* de = gmi_find(m, dim, tag);
-  return agm_add_use(topo, b, agm_from_gmi(de));
-}
-
-double boxLength;// = 5.0;
-double boxWidth; //= 5.0;
-double boxHeight;// = 6.0;
+double boxLength;
+double boxWidth;
+double boxHeight;
 int edgeMap[12] = {50,48,46,52,11,16,20,6,73,72,71,74};
 int faceLoop[6] = {80,78,76,82,42,24};
 
@@ -483,49 +475,23 @@ void makeBox(gmi_model* model)
 //create sphere
 const double pi = apf::pi;
 int sphereFaceID = 123;
-//double radius = 0.1;
-//double xyz_offset[3]={1.0,1.0,2.5};
 double sphereRadius;
 double xyz_offset[3];
 
-/*
 void sphereFace(double const p[2], double x[3], void*)
 {
-  x[0] = 1.0+radius*cos(p[0]) * cos(p[1]);
-  x[1] = 1.0+radius*sin(p[0]) * cos(p[1]);
-  x[2] = 2.5+radius*sin(p[1]);
-}
-*/
-
-void sphereFace(double const p[2], double x[3], void*)
-{
-  //x[0] = 1.0+radius*cos(p[0]) * sin(p[1]);
   x[0] = xyz_offset[0]+sphereRadius*cos(p[0]) * sin(p[1]);
   x[1] = xyz_offset[1]+sphereRadius*sin(p[0]) * sin(p[1]);
   x[2] = xyz_offset[2]+sphereRadius*cos(p[1]);
 }
 
-
-//based on guess on how simmetrix parameterizes
-/*
-void sphereFace(double const p[2], double x[3], void*)
-{
-  //x[0] = 1.0+radius*cos(p[0]+pi) * cos(p[1]);
-  x[0] = 1.0+radius*cos(p[0]+pi) * cos(p[1]);
-  x[1] = 1.0+radius*sin(p[0]+pi) * cos(p[1]);
-  x[2] = 2.5+radius*sin(p[1]);
-}
-*/
-
 void makeSphere(gmi_model* model)
 {
   int faPer[2] = {1, 0};
-  //double faRan[2][2] = {{0,6.28318530718},{-1.57079632679,1.57079632679}};
   double faRan[2][2] = {{0,6.28318530718},{0.0,apf::pi}};
 
   gmi_add_analytic(model, 2, sphereFaceID, sphereFace, faPer, faRan, 0);
   std::cout<<"This is the new offset "<< xyz_offset[2]<<std::endl;
-  //gmi_add_analytic_region(model, 1);
 }
 
 void setParameterization(gmi_model* model,apf::Mesh2* m)
@@ -555,10 +521,7 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
   m->acceptChanges();
 
   //Need to set the parametric coordinates of each of the boundary vertices
-  //apf::MeshEntity* ent;
-
   std::map<int,int> edgeParam;
-  //int edgeMap[12] = {50,48,46,52,11,16,20,6,73,72,71,74};
   int edgeScales[12] = {0,1,0,1,0,1,0,1,2,2,2,2};
   double edgeLengths[3] = {boxLength,boxWidth,boxHeight};
   for(int i=0;i<12;i++)
@@ -593,7 +556,6 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
       {
         int relevantIndex = edgeParam[modelTag];
         newParam[0]=pt[relevantIndex]/edgeLengths[relevantIndex];
-        //std::cout<<"EDGE ID "<<modelTag<<" relevant Index "<<relevantIndex<<" pt "<<pt<<" old parameterization "<< oldParam<<" new parameterization "<<newParam<<std::endl;
         m->setParam(ent,newParam);
       }
       else if (modelType==2 && modelTag!=sphereFaceID)
@@ -602,13 +564,11 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
         newParam[0] = pt[relevantIndex[0]]/edgeLengths[relevantIndex[0]];
         newParam[1] = pt[relevantIndex[1]]/edgeLengths[relevantIndex[1]];
         m->setParam(ent,newParam);
-        //std::cout<<"FACE ID "<<modelTag<<" relevant Index "<<relevantIndex[0]<<" "<<relevantIndex[1]<<" pt "<<pt<<" old parameterization "<< oldParam<<" new parameterization "<<newParam<<std::endl;
       }
       else if (modelType==2 && modelTag == sphereFaceID)
       {
         double argy = (pt[1]-xyz_offset[1]);
         double argx = (pt[0]-xyz_offset[0]);
-        //double eps = 1e-12;
         if(argx == 0 && argy ==0)
           newParam[0] = 0.0; // not sure if this will happen or if this is right
         else 
@@ -620,25 +580,17 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
           arg2 = 1.0; 
 
         newParam[1] = acos(arg2);
-        //std::cout<<pt[2]<<" offset "<<xyz_offset[2]<<" "<<radius<<std::endl;
-        std::cout<<pt<<" offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<" "<<xyz_offset[2]<<" "<<sphereRadius<<" newParam "<<newParam<<std::endl;
-        std::cout<<"acos arg "<<pt[2]-xyz_offset[2]<<" acos "<<acos(-1)<<" "<<acos(1)<<std::endl;
         if(newParam[0]<0)
           newParam[0] = newParam[0]+2*apf::pi;
         if(newParam[0]>2*apf::pi)
           newParam[0] = newParam[0]-2*apf::pi;
-        //std::cout<<"newParam x after "<<newParam[0]<<std::endl;
         
-        //std::cout<<"newParam y before "<<newParam[1]<<std::endl;
-
         //this is probably unnecessary
         if(newParam[1]<0.0)
           newParam[1] = -1*newParam[1];
         if(newParam[1]>apf::pi)
           newParam[1] = -1*(newParam[1]-2.0*apf::pi);
-        //std::cout<<"newParam y after "<<newParam[1]<<std::endl;
 
-        //std::cout<<"original "<<pt<<" new Param "<<newParam<<std::endl;
         m->setParam(ent,newParam);
       }
     } //end if
