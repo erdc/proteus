@@ -436,8 +436,8 @@ namespace proteus
         +
         (grad_vx[1] + grad_vy[0])*(grad_vx[1] + grad_vy[0]);
 
-      //Sediment terms
-      double theta = 1e-10; //Granural temperature- currently set to (almost) zero.
+      Sediment terms
+            double theta = 1e-10; //Granural temperature- currently set to (almost) zero.
  	                   //Response time only controled by drag, not collisions
                            //Switch on when collision stress model is on.
 
@@ -458,7 +458,7 @@ namespace proteus
 		      nu_t,
 		      g);
 	}		    
-
+      
       //K-Omega, 1998
       if (dissipation_model_flag==2)
         {
@@ -520,8 +520,8 @@ namespace proteus
       a = porosity*(nu_t/sigma_a + nu);
       da_de = porosity*dnu_t_de/sigma_a;
 
-      r = -porosity*(F_e - gamma_e - dSed)*dissipation;
-      dr_de = porosity*( gamma_e + dgamma_e_d_dissipation + dSed);
+      r = -porosity*F_e + porosity*gamma_e*dissipation+porosity*dSed*dissipation;
+      dr_de = -porosity*dF_e_d_dissipation + porosity*gamma_e + porosity*dgamma_e_d_dissipation + porosity*dSed ;
     }
 
     inline
