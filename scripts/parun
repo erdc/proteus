@@ -335,7 +335,6 @@ if len(args) < 1 and not opts.TwoPhaseFlow:
 log("Importing input modules")
 
 if opts.TwoPhaseFlow:
-    path_models = proteus.__path__[0]+"/TwoPhaseFlow/models/"
     path_utils = proteus.__path__[0]+"/TwoPhaseFlow/utils/"
     so_name = "TwoPhaseFlow_so.py"
     if opts.fileName != "":
@@ -344,7 +343,23 @@ if opts.TwoPhaseFlow:
     else:
         log("Loading so module = "+so_name)
     #
-    so = proteus.defaults.load_system(so_name[:-3],path=path_utils)
+    from proteus import Context
+    if opts.pathMyTpFlowProblem is not None:
+        sys.path.append(opts.pathMyTpFlowProblem)
+    name = opts.fileName[:-3]
+    case = __import__(name)
+    Context.setFromModule(case)
+    ct = Context.get()
+    prob = ct.myTpFlowProblem
+    # useSuperlu ? #
+    if prob.useSuperlu is None: #if useSuperlu is None, then I decide
+        if opts.TpFlowParallel:
+            prob.useSuperlu=False
+        else:
+            prob.useSuperlu=True
+    prob.initializeAll()
+    so = prob.so
+    so.name = name
     #################
     # PUMI WORKFLOW #
     #################
@@ -352,43 +367,37 @@ if opts.TwoPhaseFlow:
     if opts.pumi:
         from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if opts.pumiStage == 1:
-            so.ct.myTpFlowProblem.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI()
+            prob.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI()
         else:
-            so.ct.myTpFlowProblem.domain = Domain.PUMIDomain(dim=so.ct.myTpFlowProblem.nd)
-            he = so.ct.myTpFlowProblem.he #*float(spaceOrder)
+            prob.domain = Domain.PUMIDomain(dim=prob.nd)
+            he = prob.he #*float(spaceOrder)
             adaptMeshFlag = 1
             adaptMesh_nSteps = 5
             adaptMesh_numIter = 3
             hmax = he*12.0;
             hmin = he/4.0;
             hPhi = he
-            so.ct.myTpFlowProblem.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax,
-                                                                              hmin=hmin,
-                                                                              hPhi = hPhi,
-                                                                              adaptMesh=adaptMeshFlag,
-                                                                              numIter=adaptMesh_numIter,
-                                                                              numAdaptSteps=adaptMesh_nSteps,
-                                                                              sfConfig="isotropic",
-                                                                              logType="on",
-                                                                              reconstructedFlag=2)
+            prob.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax,
+                                                             hmin=hmin,
+                                                             hPhi = hPhi,
+                                                             adaptMesh=adaptMeshFlag,
+                                                             numIter=adaptMesh_numIter,
+                                                             numAdaptSteps=adaptMesh_nSteps,
+                                                             sfConfig="isotropic",
+                                                             logType="on",
+                                                             reconstructedFlag=2)
             #read the geometry and mesh
             parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
-            so.ct.myTpFlowProblem.domain.MeshOptions.setParallelPartitioningType('element')
-            so.ct.myTpFlowProblem.domain.PUMIMesh.loadModelAndMesh("Reconstructed.dmg","splitMesh/splitMesh.smb")
+            prob.domain.MeshOptions.setParallelPartitioningType('element')
+            prob.domain.PUMIMesh.loadModelAndMesh("Reconstructed.dmg","splitMesh/splitMesh.smb")
     # END OF PUMI WORKFLOW #
-    # useSuperlu ? #
-    if so.ct.myTpFlowProblem.useSuperlu is None: #if useSuperlu is None, then I decide
-        if opts.TpFlowParallel:
-            so.ct.myTpFlowProblem.useSuperlu=False
-        else:
-            so.ct.myTpFlowProblem.useSuperlu=True
     for (pModule,nModule) in so.pnList:
-        log("Loading p module = "+pModule)
-        pList.append(proteus.defaults.load_physics(pModule,path=path_models))
+        log("Loading p module = "+pModule.name)
+        pList.append(pModule)
         if pList[-1].name == None:
             pList[-1].name = pModule
-        log("Loading n module = "+nModule)
-        nList.append(proteus.defaults.load_numerics(nModule,path=path_models))
+        log("Loading n module = "+nModule.name)
+        nList.append(nModule)
     #
     if so.sList == []:
         for i in range(len(so.pnList)):
