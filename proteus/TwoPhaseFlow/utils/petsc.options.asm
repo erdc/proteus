@@ -12,4 +12,6 @@
 -phi_ksp_type fgmres -phi_pc_type  hypre -phi_pc_hypre_type boomeramg -phi_ksp_max_it 2000
 -pressure_ksp_type fgmres -pressure_pc_type   hypre -pressure_pc_hypre_type    boomeramg -pressure_ksp_gmres_restart 300 -pressure_ksp_knoll -pressure_ksp_max_it 2000
 -pinit_ksp_type fgmres -pinit_pc_type   hypre -pinit_pc_hypre_type    boomeramg -pinit_ksp_gmres_restart 300 -pinit_ksp_knoll -pinit_ksp_max_it 2000
--log_summary
+-am_ksp_type cg -am_ksp_constant_null_space -am_pc_type hypre -am_pc_hypre_type boomeramg -am_pc_factor_shift_type NONZERO -am_pc_factor_shift_amount 1.0e-10 -am_ksp_info
+#-log_summary
+#-help
