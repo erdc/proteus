@@ -11,7 +11,7 @@
 #include "SedClosure.h"
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
-#define CUT_CELL_INTEGRATION 1
+#define CUT_CELL_INTEGRATION 0
 double sgn(double val) {
   return double((0.0 < val) - (val < 0.0));
 }
