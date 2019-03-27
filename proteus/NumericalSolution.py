@@ -1595,6 +1595,8 @@ class NS_base(object):  # (HasTraits):
         import time
         if hasattr(self.so,'measureSpeedOfCode'):
             measureSpeed = self.so.measureSpeedOfCode
+        elif hasattr(n,'measureSpeedOfCode'):
+            measureSpeed = n.measureSpeedOfCode
         else:
             measureSpeed = False
         #
