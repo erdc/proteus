@@ -96,10 +96,10 @@ lag_shockCapturing_ls=True
 lag_shockCapturing_rd=False
 
 # use absolute tolerances on al models
-atolRedistance = max(1.0e-12,0.1*he)
-atolConservation = max(1.0e-12,0.001*he**2)
-atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
-atolLevelSet     = max(1.0e-12,0.001*he**2)
+atolRedistance = 1.0e-5
+atolConservation = 1.0e-9
+atolVolumeOfFluid= 1.0e-9
+atolLevelSet     = 1.0e-9
 #controls
 linearSolverConvergenceTest = 'r-true' #rits is do a set number of iterations, r-true uses true residual, PETSc default is preconditioned residual
 #redist solver
