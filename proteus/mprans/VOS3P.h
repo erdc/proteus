@@ -34,6 +34,13 @@ namespace proteus
   {
     //The base class defining the interface
   public:
+    std::valarray<double> Rpos, Rneg;
+    std::valarray<double> FluxCorrectionMatrix;
+    std::valarray<double> solL;
+    std::valarray<double> TransportMatrix, TransposeTransportMatrix;
+    std::valarray<double> u_free_dof_old,porosity_free_dof;
+    std::valarray<double> psi, eta, global_entropy_residual, boundary_integral;
+
     virtual ~cppVOS3P_base(){}
     virtual void calculateResidual(//element
                                    double dt,
@@ -231,7 +238,7 @@ namespace proteus
 			      double* max_u_bc,
 			      double global_min_u,
 			      double global_max_u,
-			      int* csrRowIndeces_DofLoops, 
+			      int* csrRowIndeces_DofLoops,
 			      int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateResidual_entropy_viscosity(//element
                                                      double dt,
@@ -416,7 +423,7 @@ namespace proteus
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
       ck()
     {}
-      
+
     inline
     void evaluateCoefficients(const double v[nSpace],
                               const double& u,
@@ -434,7 +441,7 @@ namespace proteus
           df[I] = v[I]*porosity;
         }
     }
-      
+
     inline
     void calculateCFL(const double& elementDiameter,
                       const double df[nSpace],
@@ -448,7 +455,7 @@ namespace proteus
       nrm_v = sqrt(nrm_v);
       cfl = nrm_v/h;
     }
-      
+
     inline
     void calculateSubgridError_tau(const double& elementDiameter,
                                    const double& dmt,
@@ -466,7 +473,7 @@ namespace proteus
       oneByAbsdt =  fabs(dmt);
       tau = 1.0/(2.0*nrm_v/h + oneByAbsdt + 1.0e-8);
     }
-      
+
     inline
     void calculateSubgridError_tau(     const double&  Ct_sge,
                                         const double   G[nSpace*nSpace],
@@ -479,10 +486,10 @@ namespace proteus
       for(int I=0;I<nSpace;I++)
         for (int J=0;J<nSpace;J++)
           v_d_Gv += Ai[I]*G[I*nSpace+J]*Ai[J];
-        
+
       tau_v = 1.0/sqrt(Ct_sge*A0*A0 + v_d_Gv + 1.0e-8);
     }
-      
+
     inline
     void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
                                      const double& elementDiameter,
@@ -502,7 +509,7 @@ namespace proteus
       den = sqrt(n_grad_u) + 1.0e-8;
       numDiff = num/den;
     }
-      
+
     inline
     void exteriorNumericalAdvectiveFlux(const int& isDOFBoundary_u,
                                         const int& isFluxBoundary_u,
@@ -513,7 +520,7 @@ namespace proteus
                                         const double velocity[nSpace],
                                         double& flux)
     {
-        
+
       double flow=0.0;
       for (int I=0; I < nSpace; I++)
         flow += n[I]*velocity[I];
@@ -549,7 +556,7 @@ namespace proteus
               //std::cout<<"warning: cppVOS open boundary with no external trace, setting to zero for inflow"<<std::endl;
               flux = 0.0;
             }
-            
+
         }
       //flux = flow;
       //std::cout<<"flux error "<<flux-flow<<std::endl;
@@ -1577,9 +1584,9 @@ namespace proteus
                  int LUMPED_MASS_MATRIX
                  )
     {
-      register double Rpos[numDOFs], Rneg[numDOFs];
-      register double FluxCorrectionMatrix[NNZ];
-      register double solL[numDOFs];
+      Rpos.resize(numDOFs,0.0), Rneg.resize(numDOFs,0.0);
+      FluxCorrectionMatrix.resize(NNZ,0.0);
+      solL.resize(numDOFs,0.0);
       //////////////////
       // LOOP in DOFs //
       //////////////////
@@ -1675,29 +1682,29 @@ namespace proteus
                       double* uDotLow,
                       double* uLow,
                       double* dLow,
-                      double* FluxMatrix, 
+                      double* FluxMatrix,
                       double* limitedFlux, // INPUT/OUTPUT
 		      double* min_u_bc,
 		      double* max_u_bc,
 		      double global_min_u,
 		      double global_max_u,
-                      int* csrRowIndeces_DofLoops, 
+                      int* csrRowIndeces_DofLoops,
                       int* csrColumnOffsets_DofLoops)
     {
-      register double Rpos[numDOFs], Rneg[numDOFs];
+      Rpos.resize(numDOFs,0.0), Rneg.resize(numDOFs,0.0);
       int ij=0;
 
       //////////////////////////////////////////////////////
       // ********** COMPUTE LOW ORDER SOLUTION ********** //
       //////////////////////////////////////////////////////
       if (num_fct_iter == 0)
-        { // No FCT for global bounds 
+        { // No FCT for global bounds
           for (int i=0; i<numDOFs; i++)
             {
               solLim[i] = uLow[i];
             }
         }
-      else // do FCT iterations (with global bounds) on low order solution 
+      else // do FCT iterations (with global bounds) on low order solution
         {
           for (int iter=0; iter<num_fct_iter; iter++)
             {
@@ -1710,7 +1717,7 @@ namespace proteus
                     {
                       int j = csrColumnOffsets_DofLoops[offset];
                       // compute Flux correction
-                      double Fluxij = FluxMatrix[ij] - limitedFlux[ij];	      
+                      double Fluxij = FluxMatrix[ij] - limitedFlux[ij];
                       Pposi += Fluxij*((Fluxij > 0) ? 1. : 0.);
 		      Pnegi += Fluxij*((Fluxij < 0) ? 1. : 0.);
                       // update ij
@@ -1740,16 +1747,16 @@ namespace proteus
                       double Lij = 1.0;
                       //Lij = (Fluxij>0 ? Rposi : Rpos[j]);
 		      Lij = (Fluxij>0 ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]));
-                      // compute limited flux 
-                      ith_Limiter_times_FluxCorrectionMatrix += Lij*Fluxij;		    
+                      // compute limited flux
+                      ith_Limiter_times_FluxCorrectionMatrix += Lij*Fluxij;
 
 		      // ***** UPDATE VECTORS FOR NEXT FCT ITERATION ***** //
                       // update limited flux
                       limitedFlux[ij] = Lij*Fluxij;
-			
+
                       //update FluxMatrix
-                      FluxMatrix[ij] = Fluxij;		   
-			
+                      FluxMatrix[ij] = Fluxij;
+
                       //update ij
                       ij+=1;
                     }
@@ -1814,12 +1821,12 @@ namespace proteus
 	  double mi = ML[i];
 	  solLim[i] += 1./mi*ith_limited_flux_correction;
 
-	  // clean round off error 
+	  // clean round off error
 	  if (solLim[i] > 1.0+1E-13)
 	    {
 	      std::cout << "upper bound violated... " << 1.0-solLim[i] << std::endl;
 	      abort();
-	    }	  
+	    }
 	  else if (solLim[i] < -1E-13)
 	    {
 	      std::cout << "lower bound violated... " << solLim[i] << std::endl;
@@ -1829,7 +1836,7 @@ namespace proteus
 	    solLim[i] = fmax(0.,fmin(solLim[i],1.0));
 	}
     }
-    
+
     void calculateResidual_entropy_viscosity(//element
                                              double dt,
                                              double* mesh_trial_ref,
@@ -1937,13 +1944,13 @@ namespace proteus
                                              // AUX QUANTITIES OF INTEREST
                                              double* quantDOFs)
     {
-      register double Rpos[numDOFs], Rneg[numDOFs];
+      Rpos.resize(numDOFs,0.0), Rneg.resize(numDOFs,0.0);
       //register double FluxCorrectionMatrix[NNZ];
       // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
       // Allocate space for the transport matrices
       // This is used for first order KUZMIN'S METHOD
-      register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
-      std::valarray<double> u_free_dof_old(numDOFs),porosity_free_dof(numDOFs);
+      TransportMatrix.resize(NNZ,0.0), TransposeTransportMatrix.resize(NNZ,0.0);
+      u_free_dof_old.resize(numDOFs,0.0), porosity_free_dof.resize(numDOFs,0.0);
       for(int eN=0;eN<nElements_global;eN++)
         for (int j=0;j<nDOF_trial_element;j++)
           {
@@ -1958,7 +1965,10 @@ namespace proteus
         }
 
       // compute entropy and init global_entropy_residual and boundary_integral
-      register double psi[numDOFs], eta[numDOFs], global_entropy_residual[numDOFs], boundary_integral[numDOFs];
+      psi.resize(numDOFs,0.0);
+      eta.resize(numDOFs,0.0);
+      global_entropy_residual.resize(numDOFs,0.0);
+      boundary_integral.resize(numDOFs,0.0);
       for (int i=0; i<numDOFs; i++)
         {
           // NODAL ENTROPY //
@@ -2263,7 +2273,7 @@ namespace proteus
                     flux_ext = ebqe_bc_flux_u_ext[ebNE_kb];
                   else
                     {
-                      std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl;
+                      std::cout<<"warning: VOS open boundary with no external trace, setting to zero for inflow"<<std::endl;
                       flux_ext = 0.0;
                     }
                 }
@@ -2466,19 +2476,19 @@ namespace proteus
                       //dHij = fmin(dLowij,dEVij);//*fmax(1.0-Compij,0.0); // artificial compression
                       //dHij = 0.;
                       dHij = dLowij;
-                      // 
+                      //
                     }
                   dHij = dLowij;
                   dLij = dLowij;
                   dLow[ij]=dLowij;
-		    
+
                   //dissipative terms
                   ith_dissipative_term += dHij*(solnj-solni);
                   ith_low_order_dissipative_term += dLij*(solnj-solni);
                   //dHij - dLij. This matrix is needed during FCT step
                   dt_times_dH_minus_dL[ij] = dt*(dHij - dLij);
                   dLii -= dLij;
-		    
+
                   fluxMatrix[ij] = -dt*(TransportMatrix[ij]*solnj
                                         -TransposeTransportMatrix[ij]*solni
                                         -dHij*(solnj-solni));
@@ -2499,9 +2509,9 @@ namespace proteus
 
           uDotLow[i] = - 1.0/mi*(ith_flux_term
                                  + boundary_integral[i]
-                                 - ith_low_order_dissipative_term);	    
+                                 - ith_low_order_dissipative_term);
           uLow[i] = u_free_dof_old[i] + dt*uDotLow[i];
-	      
+
           //uLow[i] = u_dof_old[i] - dt/mi*(ith_flux_term
           //						  + boundary_integral[i]
           //						  - ith_low_order_dissipative_term);
@@ -2513,7 +2523,7 @@ namespace proteus
           //else
           //globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
         }
-	
+
       //ij=0;
       //for (int i=0; i<numDOFs; i++)
       //{
@@ -2546,7 +2556,7 @@ namespace proteus
       //abort();
       //}
       //}
-	
+
       //ij=0;
       //for (int i=0; i<numDOFs; i++)
       //{
@@ -2554,11 +2564,11 @@ namespace proteus
       //  double Rposi = Rpos[i];
       //  double Rnegi = Rneg[i];
 
-      //if (Rposi > 1.0 || Rposi < 0.0)	      
+      //if (Rposi > 1.0 || Rposi < 0.0)
       //std::cout << "Rposi: " << Rposi << std::endl;
-      //if (Rnegi > 1.0 || Rnegi < 0.0)	      
-      //std::cout << "Rnegi: " << Rnegi << std::endl;	    
-	    
+      //if (Rnegi > 1.0 || Rnegi < 0.0)
+      //std::cout << "Rnegi: " << Rnegi << std::endl;
+
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       //  for (int offset=csrRowIndeces_DofLoops[i];
       //	 offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -2572,12 +2582,12 @@ namespace proteus
       //	ij+=1;
       //    }
       //  double mi = ML[i];
-      //  double solni = u_dof_old[i];    
+      //  double solni = u_dof_old[i];
       //  globalResidual[i] = solni + 1.0/mi*ith_Limiter_times_FluxCorrectionMatrix;
       //}
-	
+
     }
-    
+
     void calculateMassMatrix(//element
                              double dt,
                              double* mesh_trial_ref,
