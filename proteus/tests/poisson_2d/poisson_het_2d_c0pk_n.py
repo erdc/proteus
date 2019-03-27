@@ -2,9 +2,12 @@ from __future__ import absolute_import
 from builtins import range
 from proteus import *
 from proteus.default_n import *
-from .poisson_het_2d_p import *
+try:
+    from .poisson_het_2d_p import *
+except:
+    from poisson_het_2d_p import *
 
-parallel = True
+parallel = False
 polynomial_order = 2
 timeIntegration = NoIntegration
 nDTout = 1
@@ -58,6 +61,7 @@ if parallel:
     #linear_solver_options_prefix = 'poisson_'
     linearSmoother = None
 else:
+    numericalFluxType = Advection_DiagonalUpwind_Diffusion_SIPG_exterior
     multilevelLinearSolver = LU
     levelLinearSolver = LU
     linearSolverConvergenceTest= 'r'

@@ -1,0 +1,239 @@
+\documentclass[english,11pt]{article}
+
+\usepackage[hmargin=0.9in, vmargin=0.75in]{geometry}
+\usepackage[latin9]{inputenc}
+\usepackage{babel}
+\usepackage{subfig}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage[colorlinks=true,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb,amsfonts}
+\usepackage{color}
+\usepackage[numbers]{natbib}
+\let\cite=\citet
+
+\usepackage{verbatim}
+\usepackage{listings}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{ %
+  backgroundcolor=\color{white},   % choose the background color
+  basicstyle=\footnotesize,        % size of fonts used for the code
+  breaklines=true,                 % automatic line breaking only at whitespace
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  keywordstyle=\color{blue},       % keyword style
+  stringstyle=\color{mymauve},     % string literal style
+  }
+
+%=============================================================================
+%                              Macros
+%=============================================================================
+\newcommand{\code}[1]{{\bf \large \color{blue}\lstinline{#1}}}
+
+%%---------------------------------------------------%%
+%%---------------------- TITLE ----------------------%%
+%%---------------------------------------------------%%
+
+
+\begin{document}
+
+\title{TwoPhaseFlow}
+\date{}
+\maketitle
+%\printindex
+
+\section{How to set up a problem}
+
+Create a python file with an object called \code{myTpFlowProblem} from
+the class \code{TwoPhaseFlowProblem}. Here is an example. 
+\vspace{2ex}
+
+\begin{lstlisting}[language=python, frame=single]
+  import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+  myTpFlowProblem = TpFlow.TwoPhaseFlowProblem
+                               (ns_model=0,
+                                nd=2,
+                                cfl=0.33,
+                                outputStepping=outputStepping,
+                                structured=structured,
+                                he=he,
+                                nnx=nnx,
+                                nny=nny,
+                                nnz=None,
+                                domain=domain,
+                                initialConditions=initialConditions,
+                                boundaryConditions=boundaryConditions,
+                                useSuperlu=False)
+\end{lstlisting}
+
+\subsection{The TwoPhaseFlowProblem class} 
+This is the main class. It serves as a container for different information 
+related to the problem, physical parameters and numerical methods.
+
+\subsubsection{Input parameters}
+\begin{itemize}
+\item {\bf ns\_model} (default: {\it ns\_model=0}).
+  Selects the Navier-Stokes solver from
+  ({\it ns\_model=0}) a coupled velocity-pressure solver and
+  ({\it ns\_model=1}) a projection scheme solver. See \S\ref{sec:numerical_methods}
+  for more details. 
+
+\item {\bf nd} (default: {\it nd=2}).
+  Number of physical dimensions. It must be $nd=\{2,3\}$. 
+
+\item {\bf cfl} (default: {\it cfl=0.33}).
+  Desired/target CFL.
+
+\item {\bf outputStepping} (no default).
+  Object from OutputStepping class that defines and controls the outupt frequency of the solution.
+  The user must define a final time and either: 1) how often the solution is output or 2) how many
+  outputs to produce. 
+  The user can also define {\it dt\_init} to create the first output after the initial condition.
+  By default {\it dt\_init=0.001}. 
+  Here are two examples.
+  
+\begin{lstlisting}[language=python, frame=single]
+  import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+  final_time=1.0
+  outputStepping = TpFlow.OutputStepping(final_time, dt_output=0.01)  
+\end{lstlisting}  
+
+\begin{lstlisting}[language=python, frame=single]
+  import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+  final_time=1.0
+  outputStepping = TpFlow.OutputStepping(final_time, nDTout=10)
+\end{lstlisting}  
+
+\item {\bf structured} (default: {\it structured=False}).
+  True or False to define if the mesh is structured or not. 
+
+\item {\bf he} (no default).
+  Characteristic size of elements. This is standard in Proteus.
+
+\item {\bf nnx, nny, nnz} (no default).
+  Number of elements in x, y and z respectively. This is needed only if {\it structured=True}.
+
+\item {\bf domain} (no default).
+  Standard domain in Proteus.
+
+\item {\bf triangleFlag} (default: {\it triangleFlag=1}).
+  Defines the orientation of the mesh elements when {\it structured=True}.
+
+\item {\bf initialConditions} (no default).
+  Dictionary of initial conditions. Here is an example.
+
+\begin{lstlisting}[language=python, frame=single]
+  initialConditions = {
+    'pressure': zero(),
+    'pressure_increment': zero(),
+    'vel_u': zero(),
+    'vel_v': zero(),
+    'vel_w': zero(),
+    'clsvof': clsvof_init_cond()}
+\end{lstlisting}  
+where Zero, etc. are user defined python classes.
+
+\item {\bf boundaryConditions} (no default).
+  Dictionary of boundary conditions. Here is an example.
+  
+\begin{lstlisting}[language=python, frame=single]
+  boundaryConditions = {
+    # DIRICHLET BCs #
+    'pressure_DBC': pressure_DBC,
+    'pressure_increment_DBC': pressure_increment_DBC,
+    'vel_u_DBC': vel_u_DBC,
+    'vel_v_DBC': vel_v_DBC,
+    'vel_w_DBC': vel_w_DBC,
+    'clsvof_DBC': clsvof_DBC,
+    # ADVECTIVE FLUX BCs #
+    'pressure_AFBC': pressure_AFBC,
+    'pressure_increment_AFBC': pressure_increment_AFBC,
+    'vel_u_AFBC': vel_u_AFBC,
+    'vel_v_AFBC': vel_v_AFBC,
+    'vel_w_AFBC': vel_w_AFBC,
+    'clsvof_AFBC': clsvof_AFBC,
+    # DIFFUSIVE FLUX BCs #
+    'pressure_increment_DFBC': pressure_increment_DFBC,
+    'vel_u_DFBC': vel_u_DFBC,
+    'vel_v_DFBC': vel_v_DFBC,
+    'vel_w_DFBC': vel_w_DFBC,
+    'clsvof_DFBC': clsvof_DFBC}
+\end{lstlisting}  
+where pressure\_DBC, etc. are user defined python functions.
+
+\item {\bf useSuperlu} (no default).
+  Use or not superlu. By default we don't use superlu but we allow the user to override this.  
+  Note that superlu can't be used if the null space of the matrix is non empty
+  (e.g. Poisson problem with Neumann boundary conditions).
+  
+\end{itemize}
+
+
+\section{How to run a problem}
+Use Proteus' {\it parun} script by passing
+\begin{lstlisting}
+  --TwoPhaseFlow --path path_to_problem -f name_of_problem.py
+\end{lstlisting}
+along with the normal set of Proteus flags and parameters.
+Note: if {\it -{}-path} is not passed then {\it name\_of\_problem.py} must be located in the
+current directory. Here is an example:
+\begin{lstlisting}[frame=single]
+  parun --TwoPhaseFlow -f risingBubble.py -l1 -v -C `final_time=3.0 refinement=4'
+\end{lstlisting}
+
+\section{Numerical methods}\label{sec:numerical_methods}
+\subsubsection*{Navier-Stokes}
+\begin{itemize}
+\item If {\it ns\_model=0} the Navier-Stokes equations are solved via a coupled velocity-pressure
+  method with $\mathbb{P}_1-\mathbb{P}_1$ finite element spaces and SUPG stabilization as in
+  \cite{bazilevs2007variational, brooks1982streamline}.
+  Extra artificial viscosity is added via shock capturing, see
+  \cite{bazilevs2007yzbeta,tezduyar2007supg,tezduyar2006computation,tezduyar2006stabilization}.
+
+\item If {\it ns\_model=1} the Navier-Stokes equations are solved via the projection scheme 
+  by \cite{guermond2009splitting} with $\mathbb{P}_2-\mathbb{P}_1$ finite element spaces.
+  Extra artificial viscosity is added to the momentum equation following
+  \cite{guermond2011entropy,cappanera2017momentum}.
+  Surface tension is considered in this case via the semi-implicit method by \cite{hysing2006new}. 
+  
+\end{itemize}
+
+\subsubsection*{Level-set}
+We consider the phase conservative level-set method by \cite{quezada2018monolithic}. 
+
+\section{Example}
+This example considers the two rising bubble benchmark problems in \cite{hysing2009quantitative}. 
+
+\lstinputlisting[language=python, frame=single]{example/risingBubble.py}
+
+\vspace{2ex}
+To run the first test case in parallel using 4 processors type 
+
+\begin{lstlisting}[frame=single]
+  mpiexec -np 4 parun --TwoPhaseFlow -l1 -v -f risingBubble.py -C ``test_case=1 structured=True refinement=5''
+\end{lstlisting}
+
+The results for the two benchmarks at $t=3$ are shown in figure \ref{fig:rising_bubble} 
+
+\begin{figure}[h]
+  \centering
+  \subfloat[Test case 1]{\includegraphics[scale=0.25]{example/test_case1.png}} \qquad \qquad \qquad
+  \subfloat[Test case 2]{\includegraphics[scale=0.25]{example/test_case2.png}} 
+  \caption{Solution of rising bubble benchmarks from \cite{hysing2009quantitative} at $t=3$.
+  We show the level set function and its zero contour plot for refinement=3, 4 and 5 in black, red and green respectively.}
+  \label{fig:rising_bubble}
+\end{figure}
+
+\bibliographystyle{abbrvnat}
+%\bibliographystyle{unsrtnat}
+%\bibliographystyle{plain}
+\bibliography{References.bib}
+
+
+\end{document}
