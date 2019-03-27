@@ -186,7 +186,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_dirichlet.setConstantBC(0.)
         self.vs_dirichlet.setConstantBC(0.)
         self.ws_dirichlet.setConstantBC(0.)  
-        self.k_dirichlet.setConstantBC(0.)  
         # advective
         self.p_advective.setConstantBC(0.)
         self.pInit_advective.setConstantBC(0.)
@@ -379,6 +378,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.dissipation_diffusive.resetBC()
         self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
+        self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
+        self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
+        self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
         """
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
         self.vof_advective.setConstantBC(0.)
@@ -491,10 +493,10 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_dirichlet.setConstantBC(0.0)
         self.vs_dirichlet.setConstantBC(0.0)
         self.ws_dirichlet.setConstantBC(0.0)
-        self.k_dirichlet.setConstantBC(kInflow)
-        self.k_diffusive.setConstantBC(0.0)
-        self.dissipation_dirichlet.setConstantBC(dInflow)
-        self.dissipation_diffusive.setConstantBC(0.)
+        self.k_advective.setConstantBC(kInflow)
+#        self.k_diffusive.setConstantBC(0.0)
+        self.dissipation_advective.setConstantBC(dInflow)
+#        self.dissipation_diffusive.setConstantBC(0.)
 
     def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
