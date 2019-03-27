@@ -118,8 +118,8 @@ class SC_base(object):
         #self.substeps = [self.t_model]
         self.setSubsteps([self.t_model])
         logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
-                                                                   self.dt_model),
-            level=1)
+                                                                        self.dt_model),
+                 level=1)
     def updateSubstep(self):
         for m in self.model.levelModelList:
             m.timeIntegration.updateStage()
@@ -558,6 +558,7 @@ class Min_dt_controller(SC_base):
         self.saveSolution()
         for m in self.model.levelModelList:
             m.timeIntegration.initialize_dt(t0,tOut,m.q)
+        self.t_model_last = t0
         self.dt_model = m.timeIntegration.dt
         self.set_dt_allLevels()
         self.substeps = [self.t_model]
