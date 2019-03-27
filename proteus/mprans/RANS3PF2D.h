@@ -2329,20 +2329,21 @@ namespace proteus
                              // For edge based discretization
                              double * entropyResidualPerNode,
                              double * laggedEntropyResidualPerNode,
-                             double * uStar_dMatrix,
-                             double * vStar_dMatrix,
-                             double * wStar_dMatrix,
-                             int numDOFs_1D,
-                             int NNZ_1D,
-                             int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
-                             int *rowptr_1D, int *colind_1D,
-                             double *isBoundary_1D,
-                             int INT_BY_PARTS_PRESSURE)
-{
-  surrogate_boundaries.clear();
-  surrogate_boundary_elements.clear();
-  surrogate_boundary_particle.clear();
-  double cut_cell_boundary_length=0.0, p_force_x=0.0, p_force_y=0.0;
+			     double * uStar_dMatrix,
+			     double * vStar_dMatrix,
+			     double * wStar_dMatrix,
+			     int numDOFs_1D,
+			     int NNZ_1D,
+			     int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
+			     int *rowptr_1D, int *colind_1D,
+			     double *isBoundary_1D,
+			     // int by parts pressure
+			     int INT_BY_PARTS_PRESSURE)
+      {
+        surrogate_boundaries.clear();
+        surrogate_boundary_elements.clear();
+        surrogate_boundary_particle.clear();
+        double cut_cell_boundary_length=0.0, p_force_x=0.0, p_force_y=0.0;
 	register double element_uStar_He[nElements_global], element_vStar_He[nElements_global];
 	uStar_hi.resize(numDOFs_1D,0.0);
 	vStar_hi.resize(numDOFs_1D,0.0);
@@ -3745,8 +3746,8 @@ namespace proteus
             /* mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak)); */
           }//elements
 
-	if(CUT_CELL_INTEGRATION > 0)
-	  std::cout<<std::flush;
+        if(CUT_CELL_INTEGRATION > 0)
+          std::cout<<std::flush;
 	// loop in DOFs for discrete upwinding
 	if (ARTIFICIAL_VISCOSITY==3 || ARTIFICIAL_VISCOSITY==4)
 	  {
