@@ -116,6 +116,7 @@ namespace proteus
                                    double hFactor,
                                    int nElements_global,
                                    int nElements_owned,
+                                   int nElementBoundaries_global,
                                    int nElementBoundaries_owned,
                                    int nNodes_owned,
                                    double useRBLES,
@@ -377,6 +378,7 @@ namespace proteus
                                    double hFactor,
                                    int nElements_global,
                                    int nElements_owned,
+                                   int nElementBoundaries_global,
                                    int nElementBoundaries_owned,
                                    int nNodes_owned,
                                    double useRBLES,
@@ -2124,6 +2126,7 @@ namespace proteus
                              double hFactor,
                              int nElements_global,
                              int nElements_owned,
+                             int nElementBoundaries_global,
                              int nElementBoundaries_owned,
                              int nNodes_owned,
                              double useRBLES,
@@ -4442,10 +4445,18 @@ namespace proteus
                 //
                 //calculate the pde coefficients using the solution and the boundary values for the solution
                 //
-                double distance_to_omega_solid = ebq_global_phi_solid[ebNE_kb];
+                double distance_to_omega_solid = 1e10;
                 if (use_ball_as_particle == 1)
                 {
                   get_distance_to_ball(nParticles, ball_center, ball_radius, x_ext, y_ext, z_ext, distance_to_omega_solid);
+                }
+                else
+                {
+                  for (int i = 0; i < nParticles; i++)
+                  {
+                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_global * nQuadraturePoints_elementBoundary + ebNE_kb];
+                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
+                  }
                 }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
@@ -5168,6 +5179,7 @@ namespace proteus
                              double hFactor,
                              int nElements_global,
                              int nElements_owned,
+                             int nElementBoundaries_global,
                              int nElementBoundaries_owned,
                              int nNodes_owned,
                              double useRBLES,
@@ -6769,10 +6781,18 @@ namespace proteus
                 //
                 //calculate the internal and external trace of the pde coefficients
                 //
-                double distance_to_omega_solid = ebq_global_phi_solid[ebNE_kb];
+                double distance_to_omega_solid = 1e10;
                 if (use_ball_as_particle == 1)
                 {
                   get_distance_to_ball(nParticles, ball_center, ball_radius, x_ext, y_ext, z_ext, distance_to_omega_solid);
+                }
+                else
+                {
+                  for (int i = 0; i < nParticles; i++)
+                  {
+                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_global * nQuadraturePoints_elementBoundary + ebNE_kb];
+                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
+                  }
                 }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
