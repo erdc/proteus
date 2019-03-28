@@ -85,8 +85,8 @@ class TestAddedMass2D(unittest.TestCase):
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         ns.calculateSolution('addedmass2D')
         Aij = ns.so.ct.body.Aij
-        npt.assert_almost_equal(Aij[0,0], 500.1800561050536, decimal=5)
-        npt.assert_almost_equal(Aij[1,1], 1299.5160407630476, decimal=4)
+        npt.assert_almost_equal(Aij[0,0], 231.9854077642408, decimal=5)
+        npt.assert_almost_equal(Aij[1,1], 600.4898230969727, decimal=4)
         self.teardown_method(self)
 
 if __name__ == "__main__":

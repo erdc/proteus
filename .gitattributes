@@ -19,3 +19,8 @@ proteus/tests/HotStart_3P/comparison_files/T01P1_hotstart.h5 filter=lfs diff=lfs
 proteus/tests/HotStart_3P/comparison_files/T01P2_hotstart.h5 filter=lfs diff=lfs merge=lfs -text
 proteus/tests/cylinder2D/sbm_3Dmesh/comparison_files/T001_P1_sbm_3Dmesh.h5 filter=lfs diff=lfs merge=lfs -text
 proteus/tests/cylinder2D/ibm_rans2p/comparison_files/T1_ibm_rans2p.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/conforming_rans2p/plot_lift_drag_from_pv_files.ipynb filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/conforming_rans3p/plot_lift_drag_from_pv_files.ipynb filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/ibm_method/plot_lift_drag_force_from_particle.ipynb filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/ibm_rans2p/plot_lift_drag_force_from_particle.ipynb filter=lfs diff=lfs merge=lfs -text
+proteus/tests/cylinder2D/sbm_method/plot_lift_drag_force_from_particle.ipynb filter=lfs diff=lfs merge=lfs -text

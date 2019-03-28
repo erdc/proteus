@@ -14,7 +14,7 @@ nd=3
 from .griffiths_lane_6 import *
 genMesh=True
 he = 4.0
-he*=0.5
+#he*=0.5
 #he*=0.5
 #he*=0.5
 #he*=0.33

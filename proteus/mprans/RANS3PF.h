@@ -587,6 +587,8 @@ namespace proteus
     class cppRANS3PF : public cppRANS3PF_base
     {
     public:
+      std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
+      double C_sbm, beta_sbm;
       cppHsuSedStress<3> closure;
       const int nDOF_test_X_trial_element,
         nSpace2=9;
@@ -610,7 +612,9 @@ namespace proteus
               0.05,
               1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
-        ck()
+        ck(),
+        C_sbm(2.0),
+        beta_sbm(0.0)
           {/*        std::cout<<"Constructing cppRANS3PF<CompKernelTemplate<"
                      <<0<<","
                      <<0<<","
@@ -2348,7 +2352,6 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=0.0;
         double globalConservationError=0.0;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-        std::vector<int> surrogate_boundaries, surrogate_boundary_elements, surrogate_boundary_particle;
         for(int eN=0;eN<nElements_global;eN++)
           {
 	    register double  elementTransport[nDOF_test_element][nDOF_trial_element];
@@ -3856,11 +3859,10 @@ namespace proteus
                             normal[i] *= -1.0;
                         }
                     }
+                    //hack: this won't work for two-phase flow, need mixture viscosity
                     double visco = nu_0*rho_0;
-                    double Csb=10;
-                    double C_adim = Csb*visco/h_penalty;
-                    double beta = 0.0;
-                    double beta_adim = beta*h_penalty*visco;
+                    double C_adim = C_sbm*visco/h_penalty;
+                    double beta_adim = beta_sbm*h_penalty*visco;
 
                     const double grad_u_d[3] = {get_dot_product(distance,grad_u_ext),
                                                 get_dot_product(distance,grad_v_ext),
@@ -5113,7 +5115,6 @@ namespace proteus
         //
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles * 3), particle_netMoments(nParticles * 3);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-        std::vector<int> surrogate_boundaries, surrogate_boundary_elements,surrogate_boundary_particle;
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double eps_rho,eps_mu;
@@ -5190,75 +5191,6 @@ namespace proteus
                     }
                     assert(opp_node >=0);
                     assert(opp_node <nDOF_mesh_trial_element);
-                    //For parallel. Two reasons:
-                    //if none of nodes of this edge is owned by this processor,
-                    //1. The surrogate_boundary_elements corresponding to this edge is -1, which gives 0 JacDet and infty h_penalty.
-                    //2. there is no contribution of the integral over this edge to Jacobian and residual.
-                    const int ebN = elementBoundariesArray[eN*nDOF_mesh_trial_element+opp_node];//only works for simplices
-                    const int eN_oppo = (eN == elementBoundaryElementsArray[ebN*2+0])?elementBoundaryElementsArray[ebN*2+1]:elementBoundaryElementsArray[ebN*2+0];
-                    if((mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]<nNodes_owned
-                        || mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]<nNodes_owned
-                        || mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]<nNodes_owned
-                       )&&eN_oppo !=-1)//not a boundary face
-                    {
-                        surrogate_boundaries.push_back(ebN);
-                        //now find which element neighbor this element is
-                        //since each face has 2 neighbor elements.
-                        //YY: what if this face is a boundary face?
-                        if (eN == elementBoundaryElementsArray[ebN*2+0])
-                            surrogate_boundary_elements.push_back(1);
-                        else
-                            surrogate_boundary_elements.push_back(0);
-
-                        //check which particle this surrogate edge is related to.
-                        //The method is to check one quadrature point inside of this element.
-                        //It works based on the assumption that the distance between any two particles
-                        //is larger than 2*h_min, otherwise it depends on the choice of the quadrature point
-                        //or one edge belongs to two particles .
-                        //But in any case, phi_s is well defined as the minimum.
-                        int j=-1;
-                        double distance=1e10, distance_to_ith_particle;
-                        if(use_ball_as_particle==1)
-                        {
-                            double middle_point_coord[3]={0.0};
-                            double middle_point_distance;
-                            middle_point_coord[0] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+0]
-                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+0]
-                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+0])/3.0;
-                            middle_point_coord[1] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+1]
-                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+1]
-                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+1])/3.0;
-                            middle_point_coord[2] = (mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+1)%4]+2]
-                                                              +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+2)%4]+2]
-                                                                        +mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+(opp_node+3)%4]+2])/3.0;
-                            j = get_distance_to_ball(nParticles, ball_center, ball_radius,
-                                    middle_point_coord[0],middle_point_coord[1],middle_point_coord[2],
-                                    middle_point_distance);
-                        }
-                        else
-                        {
-                            for (int i=0;i<nParticles;++i)
-                            {
-                                distance_to_ith_particle=particle_signed_distances[i*nElements_global*nQuadraturePoints_element
-                                                                                   +eN*nQuadraturePoints_element
-                                                                                   +0];//0-th quadrature point
-                                if (distance_to_ith_particle<distance)
-                                {
-                                    distance = distance_to_ith_particle;
-                                    j = i;
-                                }
-                            }
-                        }
-                        surrogate_boundary_particle.push_back(j);
-                    }else{
-                        //If the integral over the surrogate boundary is needed, we have to make sure all edges are in surrogate_boundaries,
-                        //which is based on the assumption that if none of its nodes is owned by the processor, then the edge is not owned
-                        //by the processor. This assert is used to make sure this is the case.
-                        if(ebN<nElementBoundaries_owned)//eN_oppo ==-1
-                        {
-                            assert(eN_oppo==-1);
-                        }
-                    }
                 }
                 else if (pos_counter == 4)// element is in fluid totally
                 {
@@ -6266,11 +6198,10 @@ namespace proteus
                     assert(h_penalty>0.0);
                     if (h_penalty < std::abs(dist))
                         h_penalty = std::abs(dist);
+                    //hack: this won't work for two-phase flow, need mixture viscosity
                     double visco = nu_0*rho_0;
-                    double Csb=10;
-                    double C_adim = Csb*visco/h_penalty;
-                    double beta = 0.0;
-                    double beta_adim = beta*h_penalty*visco;
+                    double C_adim = C_sbm*visco/h_penalty;
+                    double beta_adim = beta_sbm*h_penalty*visco;
 
 
                     double res[3];

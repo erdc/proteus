@@ -12,11 +12,12 @@ from proteus import Context
 
 ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("Refinement",4, "refinement"),
+    ("he",0.04, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
-    ("vspaceOrder",1,"FE space for velocity"),
+    ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure"),
-    ("use_sbm",True,"use sbm instead of imb")
+    ("use_sbm",True,"use sbm instead of imb"),
+    ("use_regions",False, "use refinement regions")
 ], mutable=True)
 
 
@@ -26,8 +27,6 @@ else:
     USE_SBM=0
 
 #  Discretization -- input options
-#Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
-Refinement = ct.Refinement
 sedimentDynamics=False
 genMesh = True
 movingDomain = False
@@ -99,12 +98,7 @@ elif pspaceOrder == 2:
 # Domain and mesh
 #L = (0.584,0.350)
 L = (2.2, 0.41)
-he = old_div(L[0],float(4*Refinement-1))
-he*=0.5
-he*=0.5
-#he*=0.5
-#he*=0.5
-#he*=0.5
+he = ct.he
 weak_bc_penalty_constant = 100.0
 nLevels = 1
 #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
@@ -125,97 +119,135 @@ structured = False
 # lineGauges_phi = LineGauges_phi(lineGauges.endpoints, linePoints=20)
 
 if useHex:
-    nnx = 4 * Refinement + 1
-    nny = 2 * Refinement + 1
+    nnx = ceil(L[0]/ct.he)
+    nny = ceil(L[1]/ct.he)
     hex = True
     domain = Domain.RectangularDomain(L)
 else:
     boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
     boundaryTags = dict([(key, i + 1) for (i, key) in enumerate(boundaries)])
     if structured:
-        nnx = 4 * Refinement
-        nny = 2 * Refinement
+        nnx = ceil(L[0]/ct.he)
+        nny = ceil(L[1]/ct.he)
     else:
-        vertices = [[0.0, 0.0],  #0
-                    [L[0], 0.0],  #1
-                    [L[0], L[1]],  #2
-                    [0.0, L[1]],  #3
-                    [0.2-0.16,L[1]*0.2],
-                    [0.2-0.16,L[1]*0.8],
-                    [0.2+0.3,L[1]*0.8],
-                    [0.2+0.3,L[1]*0.2],
-                    # the following are set for refining the mesh
+        if ct.use_regions:
+            vertices = [[0.0, 0.0],  #0
+                        [L[0], 0.0],  #1
+                        [L[0], L[1]],  #2
+                        [0.0, L[1]],  #3
+                        [0.2-0.16,L[1]*0.2],
+                        [0.2-0.16,L[1]*0.8],
+                        [0.2+0.3,L[1]*0.8],
+                        [0.2+0.3,L[1]*0.2],
+                        # the following are set for refining the mesh
                     [0.2-0.06,0.2-0.06],
-                    [0.2-0.06,0.2+0.06],
-                    [0.2+0.06,0.2+0.06],
-                    [0.2+0.06,0.2-0.06]]
+                        [0.2-0.06,0.2+0.06],
+                        [0.2+0.06,0.2+0.06],
+                        [0.2+0.06,0.2-0.06]]
 
                     
                     
-        vertexFlags = [boundaryTags['bottom'],
-                       boundaryTags['bottom'],
-                       boundaryTags['top'],
-                       boundaryTags['top'],
-                       # the interior vertices should be flaged to 0
-                       0, 0, 0, 0,
-                       0, 0, 0, 0 ]
-
-        segments = [[0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0],
-                    #Interior segments
-                    [4, 5],
-                    [5, 6],
-                    [6, 7],
-                    [7,4],
-                    [8,9],
-                    [9,10],
-                    [10,11],
-                    [11,8]]
-        segmentFlags = [boundaryTags['bottom'],
-                        boundaryTags['right'],
-                        boundaryTags['top'],
-                        boundaryTags['left'],
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0]
-
-        regions = [[0.95*L[0], 0.2],[0.2-0.15,0.2],[0.2,0.2]]
-        regionFlags = [1,2,3]
-        regionConstraints=[0.5*he**2,0.5*(old_div(he,2.0))**2,0.5*(old_div(he,6.0))**2]
-        #        for gaugeName,gaugeCoordinates in pointGauges.locations.iteritems():
-        #            vertices.append(gaugeCoordinates)
-        #            vertexFlags.append(pointGauges.flags[gaugeName])
-
-        # for gaugeName, gaugeLines in lineGauges.linepoints.iteritems():
-        #     for gaugeCoordinates in gaugeLines:
-        #         vertices.append(gaugeCoordinates)
-        #         vertexFlags.append(lineGauges.flags[gaugeName])
-        domain = Domain.PlanarStraightLineGraphDomain(vertices=vertices,
-                                                      vertexFlags=vertexFlags,
-                                                      segments=segments,
-                                                      segmentFlags=segmentFlags,
-                                                      regions=regions,
-                                                      regionFlags=regionFlags,
-                                                      regionConstraints=regionConstraints)
+            vertexFlags = [boundaryTags['bottom'],
+                           boundaryTags['bottom'],
+                           boundaryTags['top'],
+                           boundaryTags['top'],
+                           # the interior vertices should be flaged to 0
+                           0, 0, 0, 0,
+                           0, 0, 0, 0 ]
+            
+            segments = [[0, 1],
+                        [1, 2],
+                        [2, 3],
+                        [3, 0],
+                        #Interior segments
+                        [4, 5],
+                        [5, 6],
+                        [6, 7],
+                        [7,4],
+                        [8,9],
+                        [9,10],
+                        [10,11],
+                        [11,8]]
+            segmentFlags = [boundaryTags['bottom'],
+                            boundaryTags['right'],
+                            boundaryTags['top'],
+                            boundaryTags['left'],
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0]
+            
+            regions = [[0.95*L[0], 0.2],[0.2-0.15,0.2],[0.2,0.2]]
+            regionFlags = [1,2,3]
+            regionConstraints=[0.5*he**2,0.5*(old_div(he,2.0))**2,0.5*(old_div(he,6.0))**2]
+            #        for gaugeName,gaugeCoordinates in pointGauges.locations.iteritems():
+            #            vertices.append(gaugeCoordinates)
+            #            vertexFlags.append(pointGauges.flags[gaugeName])
+            
+            # for gaugeName, gaugeLines in lineGauges.linepoints.iteritems():
+            #     for gaugeCoordinates in gaugeLines:
+            #         vertices.append(gaugeCoordinates)
+            #         vertexFlags.append(lineGauges.flags[gaugeName])
+            domain = Domain.PlanarStraightLineGraphDomain(vertices=vertices,
+                                                          vertexFlags=vertexFlags,
+                                                          segments=segments,
+                                                          segmentFlags=segmentFlags,
+                                                          regions=regions,
+                                                          regionFlags=regionFlags,
+                                                          regionConstraints=regionConstraints)
+        else:
+            vertices = [[0.0, 0.0],  #0
+                        [L[0], 0.0],  #1
+                        [L[0], L[1]],  #2
+                        [0.0, L[1]]]  #3
+            vertexFlags = [boundaryTags['bottom'],
+                           boundaryTags['bottom'],
+                           boundaryTags['top'],
+                           boundaryTags['top']]
+            segments = [[0, 1],
+                        [1, 2],
+                        [2, 3],
+                        [3, 0]]
+            segmentFlags = [boundaryTags['bottom'],
+                            boundaryTags['right'],
+                            boundaryTags['top'],
+                            boundaryTags['left']]
+            
+            regions = [[0.95*L[0], 0.2]]
+            regionFlags = [1]
+            regionConstraints=[0.5*he**2]
+            #        for gaugeName,gaugeCoordinates in pointGauges.locations.iteritems():
+            #            vertices.append(gaugeCoordinates)
+            #            vertexFlags.append(pointGauges.flags[gaugeName])
+            
+            # for gaugeName, gaugeLines in lineGauges.linepoints.iteritems():
+            #     for gaugeCoordinates in gaugeLines:
+            #         vertices.append(gaugeCoordinates)
+            #         vertexFlags.append(lineGauges.flags[gaugeName])
+            domain = Domain.PlanarStraightLineGraphDomain(vertices=vertices,
+                                                          vertexFlags=vertexFlags,
+                                                          segments=segments,
+                                                          segmentFlags=segmentFlags,
+                                                          regions=regions,
+                                                          regionFlags=regionFlags,
+                                                          regionConstraints=regionConstraints)
+            
         #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
         domain.writePoly("mesh")
         domain.writePLY("mesh")
         domain.writeAsymptote("mesh")
-        #triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
+        #triangleOptions = "VApq30ena%8.8f" % ((he ** 2) / 2.0,)
         triangleOptions = "VApq30Dena"
 
 logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time stepping
 T=ct.T
-dt_fixed = 0.01#0.03
+dt_fixed = 0.005#0.03
 dt_init = 0.005#min(0.1*dt_fixed,0.001)
 runCFL=0.33
 nDTout = int(round(old_div(T,dt_fixed)))
@@ -334,11 +366,11 @@ waterLine_z = 1.6
 
 U = 1.5 # this is the inlet max velocity not the mean velocity
 def velRamp(t):
+    if t < 2.0:
+        return t*U/2.0
+    else:
+        return U
     return U
-#     if t < 0.25:
-#         return U*(1.0+math.cos((t-0.25)*math.pi/0.25))/2.0
-#     else:
-#         return U
 
 
 

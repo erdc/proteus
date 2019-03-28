@@ -90,7 +90,7 @@ systemStepControllerType = Sequential_MinAdaptiveModelStepPS
 
 # systemStepControllerType = Sequential_FixedStep #Sequential_FixedStep_Simple # uses time steps in so.tnList
 # dt_system_fixed = 0.01; 
-# systemStepExact=False;
+systemStepExact=False
 
 
 needEBQ_GLOBAL = False
