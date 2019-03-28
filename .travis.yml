@@ -35,6 +35,8 @@ install:
 - ln -s $HOME/hashdist_bld .hashdist/bld
 - popd
 - pushd stack
+- echo $PWD
+- ls -l
 - ./hit/bin/hit build -j 2 -v default.yaml
 - popd
 - export PATHSAVE=$PATH
