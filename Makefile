@@ -128,6 +128,7 @@ cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.tx
 
 stack/default.yaml: stack/hit/bin/hit
 	@echo "Linking stack/default.yaml for this arch"
+        -rm ${PWD}/stack/default.yaml
 	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
