@@ -26,7 +26,7 @@ dt_system_fixed = cylinder.dt_fixed
 systemStepControllerType = Sequential_MinAdaptiveModelStepPS
 
 # stepController = StepControl.Min_dt_cfl_controller
-# systemStepExact=False
+systemStepExact=False
 
 # systemStepControllerType = Sequential_FixedStep #Sequential_FixedStep_Simple # uses time steps in so.tnList
 # dt_system_fixed = 0.01; 
