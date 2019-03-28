@@ -60,7 +60,7 @@ barycenters = numpy.zeros((8,3),'d')
 barycenters[7,:] = hull_cg
 
 vessel = 5415
-genMesh=True
+genMesh=False
 he = 1.5
 #he *=0.5
 #he *=0.5 #171 minutes on 8x36 cores
