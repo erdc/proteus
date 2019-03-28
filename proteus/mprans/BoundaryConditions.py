@@ -79,6 +79,10 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.pInc_advective = BoundaryCondition() 
         self.pInit_diffusive = BoundaryCondition() 
         self.pInc_diffusive = BoundaryCondition() 
+        # clsvof
+        self.clsvof_dirichlet = BoundaryCondition()
+        self.clsvof_advective = BoundaryCondition()
+        self.clsvof_diffusive = BoundaryCondition()
 
     def reset(self):
         """
@@ -122,6 +126,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_diffusive.resetBC()
         self.vs_diffusive.resetBC()
         self.ws_diffusive.resetBC()
+        self.clsvof_dirichlet.resetBC()
+        self.clsvof_advective.resetBC()
+        self.clsvof_diffusive.resetBC()
 
     def setNonMaterial(self):
         """
@@ -744,12 +751,13 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.vos_advective.setConstantBC(0.)
         self.us_diffusive.setConstantBC(0.)
         self.vs_diffusive.setConstantBC(0.)
-#end sediment
         self.ws_diffusive.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInit_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInc_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)
         if U is not None:
             def get_inlet_ux_dirichlet(i):
                 def ux_dirichlet(x, t):
