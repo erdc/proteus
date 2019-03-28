@@ -436,8 +436,8 @@ namespace proteus
         +
         (grad_vx[1] + grad_vy[0])*(grad_vx[1] + grad_vy[0]);
 
-      Sediment terms
-            double theta = 1e-10; //Granural temperature- currently set to (almost) zero.
+//      Sediment terms
+        double theta = 1e-10; //Granural temperature- currently set to (almost) zero.
  	                   //Response time only controled by drag, not collisions
                            //Switch on when collision stress model is on.
 
