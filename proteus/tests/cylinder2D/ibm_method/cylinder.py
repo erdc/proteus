@@ -12,7 +12,7 @@ from proteus import Context
 
 ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.02, "maximum size of edges"),
+    ("he",0.04, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure"),

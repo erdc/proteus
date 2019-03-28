@@ -9,7 +9,7 @@ from proteus import Context
 
 ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.01, "maximum size of edges"),
+    ("he",0.02, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("parallel",False,"Use parallel or not"),
     ("dt_fixed",0.005,"fixed time step"),
