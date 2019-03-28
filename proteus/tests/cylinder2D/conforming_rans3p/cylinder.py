@@ -88,7 +88,7 @@ elif pspaceOrder == 2:
         pbasis = C0_AffineQuadraticOnSimplexWithNodalBasis
 
 
-weak_bc_penalty_constant = 100.0
+weak_bc_penalty_constant = 10.0
 nLevels = 1
 #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
 parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
@@ -119,13 +119,13 @@ domain.writePLY("mesh")
 #domain.writeAsymptote("mesh")
 #triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
 #triangleOptions = "VApq30Dena"
-triangleOptions= "VApq30Dena"
+triangleOptions= "Apq30ena"
 
 logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time stepping
 T=opts.T
 dt_fixed = 0.005#0.03
-dt_init = 0.0025#min(0.1*dt_fixed,0.001)
+dt_init = 0.005#min(0.1*dt_fixed,0.001)
 runCFL=0.33
 nDTout = int(round(old_div(T,dt_fixed)))
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]
@@ -138,7 +138,7 @@ if opts.onlySaveFinalSolution == True:
 ns_forceStrongDirichlet = False
 ns_sed_forceStrongDirichlet = False
 if useMetrics:
-    ns_shockCapturingFactor  = 0.5
+    ns_shockCapturingFactor  = 0.0
     ns_lag_shockCapturing = True
     ns_lag_subgridError = True
     ls_shockCapturingFactor  = 0.5
