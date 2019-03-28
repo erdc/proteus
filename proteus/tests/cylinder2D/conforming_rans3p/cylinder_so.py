@@ -89,7 +89,7 @@ systemStepControllerType = Sequential_MinAdaptiveModelStepPS
 needEBQ_GLOBAL = False
 needEBQ = False
 
-# systemStepExact=False
+systemStepExact=False
 
 tnList = cylinder.tnList
 
