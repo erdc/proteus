@@ -3501,6 +3501,13 @@ namespace proteus
 		q_velocity[eN_k_nSpace+0]=u;
 		q_velocity[eN_k_nSpace+1]=v;
 		/* q_velocity[eN_k_nSpace+2]=w; */
+    if(distance_to_omega_solid < 0.0)
+    {
+      q_velocity[eN_k_nSpace+0]=0.0;
+      q_velocity[eN_k_nSpace+1]=0.0;
+      /* q_velocity[eN_k_nSpace+2]=w; */
+    
+    }
 		for (int I=0;I<nSpace;I++)
 		  {
 		    q_grad_u[eN_k_nSpace+I] = grad_u[I];
