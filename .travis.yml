@@ -44,7 +44,7 @@ install:
 - export LD_LIBRARY_PATH=$PWD/linux/lib:$LD_LIBRARY_PATH
 - PROTEUS_OPT="-w -O1 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
 - export SSL_CERT_DIR=/etc/ssl/certs
-- ./linux/bin/pip3 install matplotlib
+#- ./linux/bin/pip3 install matplotlib
 
 cache:
   - timeout: 1000
