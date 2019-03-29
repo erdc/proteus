@@ -2,7 +2,7 @@
 #define MODELFACTORY_H
 #include <iostream>
 
-//#define FULL_BUILD 1
+#define FULL_BUILD 1
 #define NO_INSTANCE std::cout<<"Constructing model object from template class:"<<std::endl \
   <<"return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<" \
   <<nSpaceIn<<","                                                       \
@@ -303,6 +303,18 @@ namespace proteus
                               abort();
                             }
                         }
+                      else if (nQuadraturePoints_elementIn == 28)//hk=0.5
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 5)
+                            {
+                              return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,28,3,3,3,5>());
+                            }
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
                       else if (nQuadraturePoints_elementIn == 36)//hk=0.3
                         {
                           if (nQuadraturePoints_elementBoundaryIn == 3)
@@ -320,6 +332,18 @@ namespace proteus
                           if (nQuadraturePoints_elementBoundaryIn == 3)
                             {
                               return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,100,3,3,3,3>());
+                            }
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else if (nQuadraturePoints_elementIn == 448)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 5)
+                            {
+                              return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,448,3,3,3,5>());
                             }
                           else
                             {
@@ -413,11 +437,35 @@ namespace proteus
                               abort();
                             }
                         }
+                      else if (nQuadraturePoints_elementIn == 28)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 5)
+                            {
+                              return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,28,3,6,6,5>());
+                            }
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
                       else if (nQuadraturePoints_elementIn == 112)
                         {
                           if (nQuadraturePoints_elementBoundaryIn == 5)
                             {
                               return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,112,3,6,6,5>());
+                            }
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else if (nQuadraturePoints_elementIn == 448)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 5)
+                            {
+                              return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,448,3,6,6,5>());
                             }
                           else
                             {
