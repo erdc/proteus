@@ -479,6 +479,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
         self.ebq_global_grad_phi_s = numpy.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
         self.ebq_particle_velocity_s = numpy.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
+        self.dof_phi_s = numpy.ones((self.model.u[0].dof.shape[0],), 'd')*1e10
 
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
@@ -489,6 +490,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.particles.updateSDF(self.mesh.nodeArray,
                                      self.model.q['x'],
                                      self.model.ebq_global['x'],
+                                     self.model.lagrangeNodes,
                                      self.phi_s,
                                      self.particle_signed_distances,
                                      self.particle_signed_distance_normals,
@@ -537,6 +539,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(0.0, self.model.q['x'][eN, k])
                         self.particle_velocities[i, eN, k] = vel(0.0, self.model.q['x'][eN, k])
+                for I in range(self.model.lagrangeNodes.shape[0]):
+                    d, n = sdf(0.0, self.model.lagrangeNodes[I])
+                    self.dof_phi_s[I] = min(d,self.dof_phi_s[I])
+
                 self.model.q[('phis', i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel', i)] = self.particle_velocities[i]
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
@@ -724,7 +730,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     sdf_at_node, _ = sdf(mesh.nodeArray[j,:])
                 elif self.particles is not None:
                     sdf_at_node = sdf(mesh.nodeArray[j,:])
-                if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                if (sdf_at_node < self.phi_s[j]):
                     self.phi_s[j] = sdf_at_node
 
         # cek we eventually need to use the local element diameter
@@ -1002,11 +1008,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                              t,
                                              self.particle_netForces,
                                              self.particle_netMoments)
-
                 self.particles.updateSDF(self.mesh.nodeArray,
                                          self.model.q['x'],
                                          self.model.ebq_global['x'],
+                                         self.model.lagrangeNodes,
                                          self.phi_s,
+                                         self.dof_phi_s,
                                          self.particle_signed_distances,
                                          self.particle_signed_distance_normals,
                                          self.particle_velocities,
@@ -1019,6 +1026,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 for i in range(self.particles.size()):
                     self.particle_centroids[i,:] = self.particles[i].x()
             else:
+                self.dof_phi_s[:] = 1e10
                 self.phi_s[:] = 1e10
                 self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
                 for i in range(self.nParticles):
@@ -1032,8 +1040,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     for j in range(self.mesh.nodeArray.shape[0]):
                         vel_at_node = vel(self.mesh.nodeArray[j, :])
                         sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
-                        if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                        if (sdf_at_node < self.phi_s[j]):
                             self.phi_s[j] = sdf_at_node
+                    for I in range(self.model.lagrangeNodes.shape[0]):
+                        d, n = sdf(self.model.lagrangeNodes[I])
+                        self.dof_phi_s[I] = min(d,self.dof_phi_s[I])
                     for eN in range(self.model.q['x'].shape[0]):
                         for k in range(self.model.q['x'].shape[1]):
                             self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
@@ -1830,6 +1841,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         log("Interpolation points for nonlinear diffusion potential (phi_ip)", level=9)
         for (k, v) in list(self.phi_ip.items()):
             log(str((k, v.shape)), level=9)
+        if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
+            self.lagrangeNodes = self.mesh.nodeArray
+        elif isinstance(self.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
+            self.lagrangeNodes = self.u[0].femSpace.dofMap.lagrangeNodesArray
+
         #
         # allocate residual and Jacobian storage
         #
@@ -2347,6 +2363,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebq_global_grad_phi_s,
             self.coefficients.ebq_particle_velocity_s,
             self.coefficients.phi_s,
+            self.coefficients.dof_phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
             self.coefficients.q_velocityStar_solid,
@@ -2538,7 +2555,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.colind_1D,
             self.isBoundary_1D,
             self.coefficients.INT_BY_PARTS_PRESSURE)
-
         r*=self.isActiveDOF
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
