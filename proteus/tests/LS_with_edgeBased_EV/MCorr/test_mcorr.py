@@ -86,7 +86,7 @@ class TestMCorr(object):
         actual = tables.open_file('cons_ls_level_3_supg.h5','r')
         assert np.allclose(expected.root.vof_t2,
                            actual.root.vof_t2,
-                           atol=1e-8)
+                           atol=1e-5)
         expected.close()
         actual.close()
 
@@ -132,7 +132,7 @@ class TestMCorr(object):
         actual = tables.open_file('cons_ls_level_3_edge_based_EV.h5','r')
         assert np.allclose(expected.root.vof_t2,
                            actual.root.vof_t2,
-                           atol=1e-8)
+                           atol=1e-5)
         expected.close()
         actual.close()        
         

@@ -657,7 +657,6 @@ def setup_given_extensions(extensions):
                       'proteus.tests.CLSVOF.with_RANS3PF',
                       'proteus.tests.CLSVOF.pure_level_set',
                       'proteus.TwoPhaseFlow',
-                      'proteus.TwoPhaseFlow.models',
                       'proteus.TwoPhaseFlow.utils',
                       'proteus.tests.TwoPhaseFlow',
                       'proteus.tests.SWEs',
