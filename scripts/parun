@@ -499,7 +499,7 @@ for p,simFlags in zip(pList,simFlagsList):
         #control convention on case file for multiple models, doesn't effect parun right now
         simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ repr(comm.rank())
 if opts.batchFileName != "":
-    log("Reading batch file = ",opts.batchFileName)
+    log("Reading batch file = {0}".format(opts.batchFileName))
     #try to split batch file into executable blocks delimited by
     #s or start on line by itself
     #terminate batch file with a q or quit on a line by itself
