@@ -2738,21 +2738,22 @@ namespace proteus
                 //
                 //calculate pde coefficients at quadrature points
                 //
+                double distance_to_omega_solid = 1e10;
                 if(use_ball_as_particle==1)
                 {
                     get_distance_to_ball(nParticles, ball_center, ball_radius,
                                          x,y,z,
-                                         phi_solid[eN_k]);
+                                         distance_to_omega_solid);
                 }
                 else
                 {
-                  phi_solid[eN_k] = 1e10;
                   for (int i = 0; i < nParticles; i++)
                   {
                     double distance_to_i_th_solid = particle_signed_distances[i * nElements_global * nQuadraturePoints_element + eN_k];
-                    phi_solid[eN_k] = (distance_to_i_th_solid < phi_solid[eN_k])?distance_to_i_th_solid:phi_solid[eN_k];
+                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
                   }
                 }
+                phi_solid[eN_k] = distance_to_omega_solid;//save it
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
                                      particle_eps,
@@ -2769,7 +2770,7 @@ namespace proteus
                                      vf[eN_k],
                                      phi[eN_k],
                                      &normal_phi[eN_k_nSpace],
-                                     phi_solid[eN_k],
+                                     distance_to_omega_solid,
                                      kappa_phi[eN_k],
                                      //VRANS
                                      porosity,
@@ -5414,6 +5415,7 @@ namespace proteus
                 //
                 //calculate pde coefficients and derivatives at quadrature points
                 //
+                double distance_to_omega_solid = phi_solid[eN_k];//computed in getResidual
                 double eddy_viscosity(0.),rhoSave,nuSave;//not really interested in saving eddy_viscosity in jacobian
                 evaluateCoefficients(eps_rho,
                                      eps_mu,
@@ -5431,7 +5433,7 @@ namespace proteus
                                      vf[eN_k],
                                      phi[eN_k],
                                      &normal_phi[eN_k_nSpace],
-                                     phi_solid[eN_k],
+                                     distance_to_omega_solid,
                                      kappa_phi[eN_k],
                                      //VRANS
                                      porosity,
