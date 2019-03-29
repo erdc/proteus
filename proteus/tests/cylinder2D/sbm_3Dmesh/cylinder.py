@@ -16,7 +16,7 @@ from proteus import Context
 ct = Context.Options([
     ("T", 3.0, "Time interval [0, T]"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
-    ("Refinement",3, "Specify initial mesh size by giving number of cells in each direction"),
+    ("Refinement",2, "Specify initial mesh size by giving number of cells in each direction"),
     ("spaceOrder",1,"FE space for velocity"),
     ("parallel",False,"Use parallel or not"),
     ("dt_fixed",0.005,"fixed time step"),

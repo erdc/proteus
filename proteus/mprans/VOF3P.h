@@ -2,6 +2,7 @@
 #define VOF3P_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
@@ -41,6 +42,10 @@ namespace proteus
   {
     //The base class defining the interface
   public:
+    std::valarray<double> Rpos, Rneg;
+    std::valarray<double> FluxCorrectionMatrix;
+    std::valarray<double> TransportMatrix, TransposeTransportMatrix;
+    std::valarray<double> psi, eta, global_entropy_residual, boundary_integral;
     virtual ~cppVOF3P_base(){}
     virtual void calculateResidualElementBased(//element
 					       double dt,
@@ -1632,8 +1637,8 @@ namespace proteus
 		   int STABILIZATION_TYPE
 		   )
       {
-	register double Rpos[numDOFs], Rneg[numDOFs];
-	register double FluxCorrectionMatrix[NNZ];
+	Rpos.resize(numDOFs,0.0), Rneg.resize(numDOFs,0.0);
+	FluxCorrectionMatrix.resize(NNZ,0.0);
 	//////////////////
 	// LOOP in DOFs //
 	//////////////////
@@ -1829,7 +1834,7 @@ namespace proteus
 	// NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
 	// Allocate space for the transport matrices
 	// This is used for first order KUZMIN'S METHOD
-	register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
+	TransportMatrix.resize(NNZ,0.0), TransposeTransportMatrix.resize(NNZ,0.0);
 	for (int i=0; i<NNZ; i++)
 	  {
 	    TransportMatrix[i] = 0.;
@@ -1837,7 +1842,10 @@ namespace proteus
 	  }
 
 	// compute entropy and init global_entropy_residual and boundary_integral
-	register double psi[numDOFs], eta[numDOFs], global_entropy_residual[numDOFs], boundary_integral[numDOFs];
+	psi.resize(numDOFs,0.0);
+	eta.resize(numDOFs,0.0);
+	global_entropy_residual.resize(numDOFs,0.0);
+	boundary_integral.resize(numDOFs,0.0);
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    // NODAL ENTROPY //
