@@ -57,6 +57,8 @@ _Physics_base = recordtype.recordtype('Physics_base',
                                       for k in physics_default_keys],
                                      use_slots=False)
 class Physics_base(_Physics_base):
+    __frozen = False
+
     def __init__(self, **args):
         super(Physics_base,self).__init__(**args)
         for k in set(physics_default_keys) - set(args.keys()):
@@ -66,6 +68,31 @@ class Physics_base(_Physics_base):
                     self.__dict__[k] = copy.deepcopy(v)
                 except:
                     pass
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem__(self, key, val):
+        self.__setattr__(key, val)
+
+    def __setattr__(self, key, val):
+        if self.__frozen and not hasattr(self, key):
+            raise TypeError("{key} is not an option".format(key=key))
+        object.__setattr__(self, key, val)
+
+    def _freeze(self):
+        self.__frozen = True
+
+    def _unfreeze(self):
+        self.__frozen = False
+
+    def addOption(self, name, value):
+        if self.__frozen is True:
+            frozen = True
+            self.__frozen = False
+        self.__setattr__(name, value)
+        if frozen is True:
+            self._freeze()
                 
 def reset_default_p():
     for k,v in Physics_base().__dict__.items():
@@ -121,6 +148,8 @@ _Numerics_base = recordtype.recordtype('Numerics_base',
                                        for k in numerics_default_keys],
                                       use_slots=False)
 class Numerics_base(_Numerics_base):
+    __frozen = False
+
     def __init__(self, **args):
         super(Numerics_base,self).__init__(**args)
         for k in set(numerics_default_keys) - set(args.keys()):
@@ -130,6 +159,32 @@ class Numerics_base(_Numerics_base):
                     self.__dict__[k] = copy.deepcopy(default_n.__dict__[k])
                 except:
                     pass
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem__(self, key, val):
+        self.__setattr__(key, val)
+
+    def __setattr__(self, key, val):
+        if self.__frozen and not hasattr(self, key):
+            raise TypeError("{key} is not an option".format(key=key))
+        object.__setattr__(self, key, val)
+
+    def _freeze(self):
+        self.__frozen = True
+
+    def _unfreeze(self):
+        self.__frozen = False
+
+    def addOption(self, name, value):
+        if self.__frozen is True:
+            frozen = True
+            self.__frozen = False
+        self.__setattr__(name, value)
+        if frozen is True:
+            self._freeze()
+
 def reset_default_n():
     for k,v in Numerics_base().__dict__.items():
         default_n.__dict__[k] = v
