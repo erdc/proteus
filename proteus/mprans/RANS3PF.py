@@ -2243,6 +2243,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
 
+
         try:
             if self.coefficients.use_sbm > 0:
                 self.isActiveDOF[:] = 0.0
@@ -2283,7 +2284,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.isBoundary_1D[:] = 1.0*(self.isBoundary_1D > 0)
             self.quantDOFs[:] = self.isBoundary_1D
         #
-
         self.rans3pf.calculateResidual(
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2330,6 +2330,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.hFactor,
             self.mesh.nElements_global,
             self.mesh.nElements_owned,
+            self.mesh.nElementBoundaries_global,
             self.mesh.nElementBoundaries_owned,
             self.mesh.nNodes_owned,
             self.coefficients.useRBLES,
@@ -2666,6 +2667,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.hFactor,
             self.mesh.nElements_global,
             self.mesh.nElements_owned,
+            self.mesh.nElementBoundaries_global,
             self.mesh.nElementBoundaries_owned,
             self.mesh.nNodes_owned,
             self.coefficients.useRBLES,
