@@ -1062,7 +1062,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                     corresponding_point_on_boundary[j] = self.model.ebq_global['x'][ebN,kb][j] - sdf_at_quad_pt*sdNormals[j]
                                 self.ebq_particle_velocity_s[ebN,kb,:]=vel(0.0,corresponding_point_on_boundary)
                 self.model.q[('phis')] = self.phisField
-                 #Update velocity inside the particle
+                #Update velocity inside the particle
                 for ci_g_dof,ci_fg_dof in self.model.dirichletConditions[0].global2freeGlobal.items():
                     if isinstance(self.model.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
                         xyz = self.model.mesh.nodeArray[ci_g_dof,:]
