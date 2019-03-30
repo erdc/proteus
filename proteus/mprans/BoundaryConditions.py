@@ -36,6 +36,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.vof_dirichlet = BoundaryCondition()  # VOF
         self.k_dirichlet = BoundaryCondition()  # kappa
         self.dissipation_dirichlet = BoundaryCondition()  # dissipation
+        self.pAddedMass_dirichlet = BoundaryCondition()
         # _advective
         self.p_advective = BoundaryCondition()
         self.u_advective = BoundaryCondition()
