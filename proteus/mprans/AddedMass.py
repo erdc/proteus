@@ -93,7 +93,11 @@ class Coefficients(TC_base):
         Attach the model for velocity and density to PresureIncrement model
         """
         self.flowModel = modelList[self.flowModelIndex]
-        self.q_rho = self.flowModel.q['rho']
+        try:
+            self.q_rho = self.flowModel.q['rho']
+        except:
+            self.q_rho = self.flowModel.coefficients.q_rho
+        self.particle_Aij = np.zeros((self.flowModel.coefficients.nParticles, 6, 6), 'd')
 
     def initializeMesh(self, mesh):
         """
@@ -661,11 +665,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.setUnknowns(u)
         self.Aij[:,:,self.added_mass_i]=0.0
+        self.coefficients.particle_Aij[:,:,self.added_mass_i]=0.0
         self.addedMass.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.elementNodesArray,
+            self.mesh.nodeDiametersArray,
             self.elementQuadratureWeights[('u', 0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
@@ -697,7 +703,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.Aij,
             self.added_mass_i,
             self.barycenters,
-            self.flags_rigidbody)
+            self.flags_rigidbody,
+            self.coefficients.particle_Aij,
+            self.coefficients.flowModel.coefficients.nParticles,
+            self.coefficients.flowModel.coefficients.particle_epsFact,
+            self.coefficients.flowModel.coefficients.ball_center,
+            self.coefficients.flowModel.coefficients.ball_radius,
+            self.coefficients.flowModel.coefficients.ball_velocity,
+            self.coefficients.flowModel.coefficients.ball_angular_velocity)
+        
         for k in range(self.Aij.shape[0]):
             for j in range(self.Aij.shape[2]):
                 self.Aij[k,j,self.added_mass_i] = globalSum(
@@ -707,6 +721,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 numpy.set_printoptions(precision=2, linewidth=160)
                 logEvent("Added Mass Tensor for rigid body i" + repr(i))
                 logEvent("Aij = \n"+str(self.Aij[i]))
+        for i in range(self.coefficients.flowModel.coefficients.nParticles):
+            numpy.set_printoptions(precision=2, linewidth=160)
+            logEvent("Added Mass Tensor for immersed rigid body i" + repr(i))
+            logEvent("Aij = \n"+str(self.coefficients.particle_Aij[i]))
         for dofN, g in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items()):
             r[self.offset[0] + self.stride[0] * dofN] = self.u[0].dof[dofN] - \
                 g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)

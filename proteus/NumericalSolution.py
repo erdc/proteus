@@ -1466,7 +1466,6 @@ class NS_base(object):  # (HasTraits):
         else:
             self.tCount=0#time step counter
 
-
         logEvent("Attaching models and running spin-up step if requested")
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         spinup = []

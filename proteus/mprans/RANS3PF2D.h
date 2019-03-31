@@ -140,6 +140,7 @@ namespace proteus
                                    const double* ebq_global_grad_phi_solid,
                                    const double* ebq_particle_velocity_solid,
                                          double* phi_solid_nodes,
+                                   const double* lagrangeNodes,
                                          double* dof_phi_solid,
                                          double* phi_solid,
                                    const double* q_velocity_solid,
@@ -2152,6 +2153,7 @@ namespace proteus
                              const double* ebq_global_grad_phi_solid,
                              const double* ebq_particle_velocity_solid,
                                    double* phi_solid_nodes,
+                             const double* lagrangeNodes,
                                    double* dof_phi_solid,
                                    double* phi_solid,
                              const double* q_velocity_solid,
@@ -2775,22 +2777,37 @@ namespace proteus
                   {
                     if(use_ball_as_particle==1)
                       {
-                        assert(false);
-                        get_distance_to_ball(nParticles, ball_center, ball_radius,
-                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
-                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
-                                             mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
-                                             _distance);
+                        int i = get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                                     lagrangeNodes[3*vel_l2g[eN*nDOF_trial_element+I]+0],
+                                                     lagrangeNodes[3*vel_l2g[eN*nDOF_trial_element+I]+1],
+                                                     lagrangeNodes[3*vel_l2g[eN*nDOF_trial_element+I]+2],
+                                                     _distance);
+                        if(_distance <=0.0)
+                          {
+                            get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
+                                                     ball_velocity,ball_angular_velocity,
+                                                     i,
+                                                     lagrangeNodes[3*vel_l2g[eN*nDOF_trial_element+I]+0],
+                                                     lagrangeNodes[3*vel_l2g[eN*nDOF_trial_element+I]+1],
+                                                     lagrangeNodes[3*vel_l2g[eN*nDOF_trial_element+I]+2],
+                                                     u_dof[vel_l2g[eN*nDOF_trial_element + I]],
+                                                     v_dof[vel_l2g[eN*nDOF_trial_element + I]]);
+                          }
+                        else
+                          {
+                            assert(_distance >0.0);
+                            isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + I]]=1.0;
+                            isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + I]]=1.0;
+                          }
                       }
                     else
                       {
                         _distance = dof_phi_solid[vel_l2g[eN*nDOF_trial_element+I]];
-                        //std::cout<<"dof_phi_solid["<<vel_l2g[eN*nDOF_trial_element+I]<<"] = "<<_distance<<std::endl;
-                      }
-                    if ( _distance >= 0)
-                      {
-                        isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + I]]=1.0;
-                        isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + I]]=1.0;
+                        if ( _distance >= 0)
+                          {
+                            isActiveDOF[offset_u+stride_u*vel_l2g[eN*nDOF_trial_element + I]]=1.0;
+                            isActiveDOF[offset_v+stride_v*vel_l2g[eN*nDOF_trial_element + I]]=1.0;
+                          }
                       }
                   }
               }

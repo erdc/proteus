@@ -2364,6 +2364,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebq_global_grad_phi_s,
             self.coefficients.ebq_particle_velocity_s,
             self.coefficients.phi_s,
+            self.lagrangeNodes,
             self.coefficients.dof_phi_s,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,

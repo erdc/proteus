@@ -18,6 +18,7 @@ namespace proteus
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
                                    int* mesh_l2g,
+                                   double* nodeDiametersArray,
                                    double* dV_ref,
                                    double* u_trial_ref,
                                    double* u_grad_trial_ref,
@@ -50,7 +51,14 @@ namespace proteus
                                    double* Aij,
                                    int added_mass_i,
                                    double* barycenters,
-                                   int* flags_rigidbody)=0;
+                                   int* flags_rigidbody,
+                                   double* particle_Aij,
+                                   int nParticles,
+                                   double particle_epsFact,
+                                   double* ball_center,
+                                   double* ball_radius,
+                                   double* ball_velocity,
+                                   double* ball_angular_velocity)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -84,6 +92,82 @@ namespace proteus
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
                                    int* csrColumnOffsets_eb_u_u)=0;
+      inline double smoothedDirac(double eps, double phi)
+      {
+        double d;
+        if (phi > eps)
+          d=0.0;
+        else if (phi < -eps)
+          d=0.0;
+        else
+          d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
+        return d;
+      }
+      void get_symmetric_gradient_dot_vec(const double *grad_u, const double *grad_v, const double *n,double res[2])
+      {
+//          res[0] =         2.0*grad_u[0]*n[0]+(grad_u[1]+grad_v[0])*n[1];
+//          res[1] = (grad_v[0]+grad_u[1])*n[0]+          2*grad_v[1]*n[1];
+          res[0] = grad_u[0]*n[0]+grad_u[1]*n[1];
+          res[1] = grad_v[0]*n[0]+grad_v[1]*n[1];
+      }
+      double get_cross_product(const double *u, const double *v)
+      {
+          return u[0]*v[1]-u[1]*v[0];
+      }
+      double get_dot_product(const double *u, const double *v)
+      {
+          return u[0]*v[0]+u[1]*v[1];
+      }
+      int get_distance_to_ball(int n_balls,double* ball_center, double* ball_radius, double x, double y, double z, double& distance)
+      {
+          distance = 1e10;
+          int index = -1;
+          double d_ball_i;
+          for (int i=0; i<n_balls; ++i)
+          {
+              d_ball_i = std::sqrt((ball_center[i*3+0]-x)*(ball_center[i*3+0]-x)
+                                  +(ball_center[i*3+1]-y)*(ball_center[i*3+1]-y)
+//                                  +(ball_center[i*3+2]-z)*(ball_center[i*3+2]-z)
+                                  ) - ball_radius[i];
+              if(d_ball_i<distance)
+              {
+                  distance = d_ball_i;
+                  index = i;
+              }
+          }
+          return index;
+      }
+      void get_distance_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+                                  int I,
+                                  double x, double y, double z,
+                                  double& distance)
+      {
+          distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
+                                    + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
+//                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
+                            ) - ball_radius[I];
+      }
+      void get_normal_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+                                  int I,
+                                  double x, double y, double z,
+                                  double& nx, double& ny)
+      {
+          double distance = std::sqrt((ball_center[I*3+0]-x)*(ball_center[I*3+0]-x)
+                                    + (ball_center[I*3+1]-y)*(ball_center[I*3+1]-y)
+//                                  + (ball_center[I*3+2]-z)*(ball_center[I*3+2]-z)
+                            );
+          nx = (x - ball_center[I*3+0])/(distance+1e-10);
+          ny = (y - ball_center[I*3+1])/(distance+1e-10);
+      }
+      void get_velocity_to_ith_ball(int n_balls,double* ball_center, double* ball_radius,
+                                    double* ball_velocity, double* ball_angular_velocity,
+                                    int I,
+                                    double x, double y, double z,
+                                    double& vx, double& vy)
+      {
+          vx = ball_velocity[3*I + 0] - ball_angular_velocity[3*I + 2]*(y-ball_center[3*I + 1]);
+          vy = ball_velocity[3*I + 1] + ball_angular_velocity[3*I + 2]*(x-ball_center[3*I + 0]);
+      }
   };
 
   template<class CompKernelType,
@@ -128,6 +212,7 @@ namespace proteus
                                          double* mesh_grad_trial_ref,
                                          double* mesh_dof,
                                          int* mesh_l2g,
+                                         double* nodeDiametersArray,
                                          double* dV_ref,
                                          double* u_trial_ref,
                                          double* u_grad_trial_ref,
@@ -156,7 +241,15 @@ namespace proteus
                                          int* elementBoundaryElementsArray,
                                          int* elementBoundaryLocalElementBoundariesArray,
                                          double* element_u,
-                                         int eN)
+                                         int eN,
+                                         int added_mass_i,
+                                         double* particle_Aij,
+                                         int nParticles,
+                                         double particle_epsFact,
+                                         double* ball_center,
+                                         double* ball_radius,
+                                         double* ball_velocity,
+                                         double* ball_angular_velocity)
     {
       for (int i=0;i<nDOF_test_element;i++)
         {
@@ -178,7 +271,7 @@ namespace proteus
             u_grad_trial[nDOF_trial_element*nSpace],
             u_test_dV[nDOF_trial_element],
             u_grad_test_dV[nDOF_test_element*nSpace],
-            dV,x,y,z,
+            dV,x,y,z=0.0,
             G[nSpace*nSpace],G_dd_G,tr_G;
           //
           //compute solution and gradients at quadrature points
@@ -211,10 +304,79 @@ namespace proteus
                   u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
                 }
             }
+          double h_phi;
+          ck.calculateH_element(eN,
+                                k,
+                                nodeDiametersArray,
+                                mesh_l2g,
+                                mesh_trial_ref,
+                                h_phi);
           //
           //calculate pde coefficients at quadrature points
           //
           evaluateCoefficients(q_rho[eN_k], a);
+          double boundary_source=0.0;
+          for(int pN=0;pN<nParticles;pN++)
+            {
+              double phi_s=1e10,phi_s_normal[3]={0.,0.,0.}, D_s=0;
+              get_distance_to_ith_ball(nParticles,ball_center,ball_radius,pN,x,y,z,phi_s);
+              get_normal_to_ith_ball(nParticles,ball_center,ball_radius,pN,x,y,z,phi_s_normal[0],phi_s_normal[1]);
+              double eps_s  = particle_epsFact*h_phi;
+              D_s = smoothedDirac(eps_s, phi_s);
+              double rx, ry, rz;
+              rx = x - ball_center[pN*3+0];
+              ry = y - ball_center[pN*3+1];
+              rz = z - ball_center[pN*3+2];
+              double added_mass_a[3] = {0.0, 0.0, 0.0};
+              switch (added_mass_i)
+                {
+                case 0:
+                  added_mass_a[0] = 1.0;
+                  break;
+                case 1:
+                  added_mass_a[1] = 1.0;
+                  break;
+                case 2:
+                  added_mass_a[2] = 1.0;
+                  break;
+                case 3:
+                  added_mass_a[1] = -rz;
+                  added_mass_a[2] =  ry;
+                  break;
+                case 4:
+                  added_mass_a[0] =  rz;
+                  added_mass_a[2] = -rx;
+                  break;
+                case 5:
+                  added_mass_a[0] = -ry;
+                  added_mass_a[1] =  rx;
+                  break;
+                default:
+                  assert(0);
+                }
+              /* get_velocity_to_ith_ball(nParticles,ball_center,ball_radius, */
+              /*                          ball_velocity,ball_angular_velocity, */
+              /*                          i,x,y,z, */
+              /*                          vel[0],vel[1]); */
+              /* center[0] = ball_center[3*i+0]; */
+              /* center[1] = ball_center[3*i+1]; */
+              //NOTE: phi_s_normal points out of solid, so sign is opposite of exterior numerical flux, which uses normal pointing out of fluid
+              boundary_source += D_s*(added_mass_a[0]*phi_s_normal[0] + added_mass_a[1]*phi_s_normal[1] + added_mass_a[2]*phi_s_normal[2]);
+              double px, py, pz;
+              px = -u*phi_s_normal[0];
+              py = -u*phi_s_normal[1];
+              if (nSpace==3)
+                pz = -u*phi_s_normal[2];
+              else
+                pz=0.0;
+              double dS=D_s*dV;
+              particle_Aij[36*pN+added_mass_i+6*0] += px*dS;
+              particle_Aij[36*pN+added_mass_i+6*1] += py*dS;
+              particle_Aij[36*pN+added_mass_i+6*2] += pz*dS;
+              particle_Aij[36*pN+added_mass_i+6*3] += (ry*pz-rz*py)*dS;
+              particle_Aij[36*pN+added_mass_i+6*4] += (rz*px-rx*pz)*dS;
+              particle_Aij[36*pN+added_mass_i+6*5] += (rx*py-ry*px)*dS;
+            }
           //
           //update element residual
           //
@@ -223,7 +385,7 @@ namespace proteus
               //register int eN_k_i=eN_k*nDOF_test_element+i;
               //register int eN_k_i_nSpace = eN_k_i*nSpace;
               register int  i_nSpace=i*nSpace;
-              elementResidual_u[i] += ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]);
+              elementResidual_u[i] += ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]) + ck.Reaction_weak(boundary_source, u_test_dV[i]);
             }//i
         }
     }
@@ -233,6 +395,7 @@ namespace proteus
                            double* mesh_grad_trial_ref,
                            double* mesh_dof,
                            int* mesh_l2g,
+                           double* nodeDiametersArray,
                            double* dV_ref,
                            double* u_trial_ref,
                            double* u_grad_trial_ref,
@@ -265,7 +428,14 @@ namespace proteus
                            double* Aij,
                            int added_mass_i,
                            double* barycenters,
-                           int* flags_rigidbody)
+                           int* flags_rigidbody,
+                           double* particle_Aij,
+                           int nParticles,
+                           double particle_epsFact,
+                           double* ball_center,
+                           double* ball_radius,
+                           double* ball_velocity,
+                           double* ball_angular_velocity)
     {
       for(int eN=0;eN<nElements_global;eN++)
         {
@@ -276,7 +446,7 @@ namespace proteus
                 jac[nSpace*nSpace],
                 jacDet,
                 jacInv[nSpace*nSpace],
-                dV,x,y,z;
+                dV,x,y,z=0.0;
               ck.calculateMapping_element(eN,
                                           k,
                                           mesh_dof,
@@ -314,6 +484,7 @@ namespace proteus
                                    mesh_grad_trial_ref,
                                    mesh_dof,
                                    mesh_l2g,
+                                   nodeDiametersArray,
                                    dV_ref,
                                    u_trial_ref,
                                    u_grad_trial_ref,
@@ -340,7 +511,15 @@ namespace proteus
                                    elementBoundaryElementsArray,
                                    elementBoundaryLocalElementBoundariesArray,
                                    element_u,
-                                   eN);
+                                   eN,
+                                   added_mass_i,
+                                   particle_Aij,
+                                   nParticles,
+                                   particle_epsFact,
+                                   ball_center,
+                                   ball_radius,
+                                   ball_velocity,
+                                   ball_angular_velocity);
           //
           //load element into global residual and save element residual
           //
@@ -443,34 +622,34 @@ namespace proteus
               rz = z_ext-barycenters[3*eBMT+2];
               double added_mass_a[3] = {0.0, 0.0, 0.0};
 	      if (eBMT > 0)
-		{
-		  switch (added_mass_i)
-		    {
-		    case 0:
-		      added_mass_a[0] = 1.0;
-		      break;
-		    case 1:
-		      added_mass_a[1] = 1.0;
-		      break;
-		    case 2:
-		      added_mass_a[2] = 1.0;
-		      break;
-		    case 3:
-		      added_mass_a[1] = -rz;
-		      added_mass_a[2] =  ry;
-		      break;
-		    case 4:
-		      added_mass_a[0] =  rz;
-		      added_mass_a[2] = -rx;
-		      break;
-		    case 5:
-		      added_mass_a[0] = -ry;
-		      added_mass_a[1] =  rx;
-		      break;
-		    default:
-		      assert(0);
-		    }
-		}
+	        {
+	          switch (added_mass_i)
+	            {
+	            case 0:
+	              added_mass_a[0] = 1.0;
+	              break;
+	            case 1:
+	              added_mass_a[1] = 1.0;
+	              break;
+	            case 2:
+	              added_mass_a[2] = 1.0;
+	              break;
+	            case 3:
+	              added_mass_a[1] = -rz;
+	              added_mass_a[2] =  ry;
+	              break;
+	            case 4:
+	              added_mass_a[0] =  rz;
+	              added_mass_a[2] = -rx;
+	              break;
+	            case 5:
+	              added_mass_a[0] = -ry;
+	              added_mass_a[1] =  rx;
+	              break;
+	            default:
+	              assert(0);
+	            }
+	        }
               // normalise unit accelerations (necessary for angular ones)
 	      //I think we want the angular acceleration to be 1
 	      //but the flux uses whatever the linear acceleration works
@@ -576,7 +755,7 @@ namespace proteus
             dV,
             u_test_dV[nDOF_test_element],
             u_grad_test_dV[nDOF_test_element*nSpace],
-            x,y,z,
+            x,y,z=0.0,
             G[nSpace*nSpace],G_dd_G,tr_G;
           //
           //calculate solution and gradients at quadrature points
