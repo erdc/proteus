@@ -391,7 +391,7 @@ class AR_base(object):
         if self.comm.isMaster():
             self.xmlFileGlobal.write(bytes(self.xmlHeader,"utf-8"))
             indentXML(self.treeGlobal.getroot())
-            self.treeGlobal.write("test.xmf", encoding="utf-8")
+            self.treeGlobal.write(self.xmlFileGlobal, encoding="utf-8")
             self.xmlFileGlobal.flush()
             #delete grids for step from tree
             XDMF = self.treeGlobal.getroot()
