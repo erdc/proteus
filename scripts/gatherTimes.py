@@ -58,9 +58,9 @@ def gatherTimes(filename,dataDir='.',addname="_complete", tCount=None, global_sy
                 for j in range(size):
                     Grid = fromstring(grid_array[j])
                     SpatialCollection.append(Grid)
-    xmlFile = open(filename+addname+".xmf","w")
+    xmlFile = open(filename+addname+".xmf","wb")
     indentXML(tree.getroot())
-    tree.write(xmlFile)
+    tree.write(xmlFile,encoding='utf-8')
     xmlFile.close()
 
 if __name__ == '__main__':
