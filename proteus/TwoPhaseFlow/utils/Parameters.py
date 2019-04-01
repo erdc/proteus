@@ -1578,6 +1578,8 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
             self.p.diffusiveFluxBoundaryConditions[2] = {}
 
     def _initializeNumerics(self):
+        domain = self._Problem.domain
+        nd = domain.nd
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['velBasis'],
