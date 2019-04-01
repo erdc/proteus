@@ -1,6 +1,7 @@
 from __future__ import division
 from past.utils import old_div
 from builtins import object
+import numpy as np
 from proteus.Profiling import logEvent
 from proteus.MeshTools import MeshOptions
 from proteus.defaults import (Physics_base,
@@ -1525,6 +1526,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         nMediaTypes = len(domain.regionFlags)  # (!) should be region flags
         smTypes = np.zeros((nMediaTypes+1, 2), 'd')
         smFlags = np.zeros((nMediaTypes+1,), 'i')
+        copts = self.p.CoefficientsOptions
         smTypes[:, 0] = copts.E
         smTypes[:, 1] = copts.nu
         # MODEL INDEXING
