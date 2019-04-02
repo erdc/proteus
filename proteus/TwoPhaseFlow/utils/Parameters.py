@@ -1506,7 +1506,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         # NONLINEAR SOLVER
         self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # NUMERICAL FLUX
-        self.n.numericalFluxType = NumericalFlux.Diffusion_IIPG_exterior
+        self.n.numericalFluxType = NumericalFlux.Stress_IIPG_exterior
         # LINEAR ALGEBRA
         self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
