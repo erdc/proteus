@@ -322,6 +322,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # the level set model
         self.model = modelList[self.modelIndex]
         # the velocity
+        self.fluid_model = modelList[self.flowModelIndex]
         if self.flowModelIndex >= 0:
             self.flowModel = modelList[self.flowModelIndex]
             self.q_v = modelList[self.flowModelIndex].q[('velocity', 0)]
@@ -402,6 +403,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
             # self.fluxArray.append(self.fluxIntegral)
             # self.timeArray.append(self.model.timeIntegration.t)
+        self.model.q[('u',0)] = np.where(self.fluid_model.coefficients.particle_signed_distances[0,:] < 0.0, 
+                                         -self.fluid_model.coefficients.particle_signed_distances[0,:], 
+                                         self.model.q[('u',0)])
+
         copyInstructions = {}
         return copyInstructions
 

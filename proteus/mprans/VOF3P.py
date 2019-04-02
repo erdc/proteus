@@ -377,6 +377,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.ebqe_phi = np.zeros(self.model.ebqe[('u', 0)].shape, 'd') # cek hack, we don't need this
         # flow model
+        self.fluid_model = modelList[self.V_model]
         if self.V_model is not None:
             if ('velocity', 0) in modelList[self.V_model].q:
                 self.q_v = modelList[self.V_model].q[('velocity', 0)]
@@ -479,6 +480,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #                                                        self.model.ebqe['n'],
             #                                                        self.model.mesh)
             #logEvent("Divergence = %12.5e" % (divergence,),level=2)
+        self.model.q[('u',0)] = np.where(self.fluid_model.coefficients.particle_signed_distances[0,:] < 0.0, 
+                                         1.0, 
+                                         self.model.q[('u',0)])
+
         copyInstructions = {}
         return copyInstructions
 
