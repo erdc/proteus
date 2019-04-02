@@ -1466,6 +1466,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.nSpace_global == 2:
             import copy
             self.u[3] = copy.deepcopy(self.u[2])
+            self.u[3].name='size_gauge'
+            
             self.timeIntegration.m_tmp[3] = self.timeIntegration.m_tmp[2].copy()
             self.timeIntegration.beta_bdf[3] = self.timeIntegration.beta_bdf[2].copy()
             self.coefficients.sdInfo[(1, 3)] = (numpy.array([0, 1, 2], dtype='i'),
