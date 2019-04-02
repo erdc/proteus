@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+from sys import exit
 import numpy as np
 cimport numpy as np
 cdef extern from "numericalFlux.h":
