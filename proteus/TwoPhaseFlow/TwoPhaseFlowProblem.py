@@ -256,7 +256,7 @@ class TwoPhaseFlowProblem:
         # archiving time
         outputStepping = self.outputStepping
         tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
-        if tnList[1] == tnList[2]:
+        if len(tnList) > 2 and tnList[1] == tnList[2]:
             del tnList[1]
         if outputStepping['dt_output'] is None:
             if outputStepping['dt_fixed'] > 0:
