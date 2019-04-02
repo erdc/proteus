@@ -2017,7 +2017,10 @@ class NS_base(object):  # (HasTraits):
                                                                                         initialPhase=True,meshChanged=True)
             try:
                 phi_s = {}
-                phi_s[0] = model.levelModelList[-1].coefficients.phi_s
+                try:
+                    phi_s[0] = model.levelModelList[-1].coefficients.dof_phi_s
+                except:
+                    phi_s[0] = model.levelModelList[-1].coefficients.phi_s
                 model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
                                                                        self.tnList[0],
                                                                        self.tCount,
@@ -2141,7 +2144,10 @@ class NS_base(object):  # (HasTraits):
             if self.fastArchive==False:
                 try:
                     phi_s = {}
-                    phi_s[0] = model.levelModelList[-1].coefficients.phi_s
+                    try:
+                        phi_s[0] = model.levelModelList[-1].coefficients.dof_phi_s
+                    except:
+                        phi_s[0] = model.levelModelList[-1].coefficients.phi_s
                     model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
                                                                            self.tnList[0],
                                                                            self.tCount,

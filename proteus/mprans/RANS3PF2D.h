@@ -2782,6 +2782,7 @@ namespace proteus
                                                      lagrangeNodes[3*vel_l2g[eN*nDOF_trial_element+I]+1],
                                                      lagrangeNodes[3*vel_l2g[eN*nDOF_trial_element+I]+2],
                                                      _distance);
+                        dof_phi_solid[vel_l2g[eN*nDOF_trial_element+I]] = _distance;
                         if(_distance <=0.0)
                           {
                             get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,

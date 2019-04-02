@@ -542,7 +542,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 for I in range(self.model.lagrangeNodes.shape[0]):
                     d, n = sdf(0.0, self.model.lagrangeNodes[I])
                     self.dof_phi_s[I] = min(d,self.dof_phi_s[I])
-
                 self.model.q[('phis', i)] = self.particle_signed_distances[i]
                 self.model.q[('phis_vel', i)] = self.particle_velocities[i]
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
