@@ -58,7 +58,7 @@ else:
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
 bt['back'] = bt['top']
-if not opts.structured:
+if opts.structured:
     domain.writePoly("tank2d")
 
 ################
