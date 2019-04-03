@@ -12,6 +12,7 @@
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
 #define CUT_CELL_INTEGRATION 0
+#define PSEUDO_PENALTY 0b10111
 double sgn(double val) {
   return double((0.0 < val) - (val < 0.0));
 }
@@ -973,20 +974,20 @@ namespace proteus
         /* dmom_w_adv_w[2]=0.0; */
 
         //u momentum diffusion tensor
-        mom_uu_diff_ten[0] = phi_s_effect * porosity*2.0*mu;
-        mom_uu_diff_ten[1] = phi_s_effect * porosity*mu;
+        mom_uu_diff_ten[0] = ((PSEUDO_PENALTY & (1<<2))?1.0:phi_s_effect) * porosity*2.0*mu;
+        mom_uu_diff_ten[1] = ((PSEUDO_PENALTY & (1<<2))?1.0:phi_s_effect) * porosity*mu;
         /* mom_uu_diff_ten[2] = porosity*mu; */
 
-        mom_uv_diff_ten[0]=phi_s_effect * porosity*mu;
+        mom_uv_diff_ten[0] = ((PSEUDO_PENALTY & (1<<2))?1.0:phi_s_effect) * porosity*mu;
 
         /* mom_uw_diff_ten[0]=porosity*mu; */
 
         //v momentum diffusion tensor
-        mom_vv_diff_ten[0] = phi_s_effect * porosity*mu;
-        mom_vv_diff_ten[1] = phi_s_effect * porosity*2.0*mu;
+        mom_vv_diff_ten[0] = ((PSEUDO_PENALTY & (1<<2))?1.0:phi_s_effect) * porosity*mu;
+        mom_vv_diff_ten[1] = ((PSEUDO_PENALTY & (1<<2))?1.0:phi_s_effect) * porosity*2.0*mu;
         /* mom_vv_diff_ten[2] = porosity*mu; */
 
-        mom_vu_diff_ten[0]=phi_s_effect * porosity*mu;
+        mom_vu_diff_ten[0] = ((PSEUDO_PENALTY & (1<<2))?1.0:phi_s_effect) * porosity*mu;
 
         /* mom_vw_diff_ten[0]=porosity*mu; */
 
@@ -1012,15 +1013,15 @@ namespace proteus
 
         //u momentum Hamiltonian (pressure)
 	double aux_pressure = (KILL_PRESSURE_TERM==1 ? 0. : 1.)*(INT_BY_PARTS_PRESSURE==1 ? 0. : 1.);
-        mom_u_ham = phi_s_effect * porosity*grad_p[0]*aux_pressure;
-        dmom_u_ham_grad_p[0]=phi_s_effect * porosity*aux_pressure;
+        mom_u_ham = ((PSEUDO_PENALTY & (1<<3))?1.0:phi_s_effect) * porosity*grad_p[0]*aux_pressure;
+        dmom_u_ham_grad_p[0]=((PSEUDO_PENALTY & (1<<3))?1.0:phi_s_effect) * porosity*aux_pressure;
         dmom_u_ham_grad_p[1]=0.0;
         /* dmom_u_ham_grad_p[2]=0.0; */
 
         //v momentum Hamiltonian (pressure)
-        mom_v_ham = phi_s_effect * porosity*grad_p[1]*aux_pressure;
+        mom_v_ham = ((PSEUDO_PENALTY & (1<<3))?1.0:phi_s_effect) * porosity*grad_p[1]*aux_pressure;
         dmom_v_ham_grad_p[0]=0.0;
-        dmom_v_ham_grad_p[1]=phi_s_effect * porosity*aux_pressure;
+        dmom_v_ham_grad_p[1]=((PSEUDO_PENALTY & (1<<3))?1.0:phi_s_effect) * porosity*aux_pressure;
         /* dmom_v_ham_grad_p[2]=0.0; */
 
         /* //w momentum Hamiltonian (pressure) */
@@ -1143,6 +1144,7 @@ namespace proteus
                                            double* ball_radius,
                                            double* ball_velocity,
                                            double* ball_angular_velocity,
+                                           const double alphaBDF,
                                            const double porosity, //VRANS specific
                                            const double penalty,
                                            const double alpha,
@@ -1243,12 +1245,12 @@ namespace proteus
 
             C = (D_s * C_surf + (1.0 - H_s) * C_vol);
             force_x = dV * D_s * (p * fluid_outward_normal[0]
-                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
-                                  +C_surf*(u-u_s)*rho
+                                  // -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+                                  // +C_surf*(u-u_s)*rho
                                   );
             force_y = dV * D_s * (p * fluid_outward_normal[1]
-                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
-                                  +C_surf*(v-v_s)*rho
+                                  // -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+                                  // +C_surf*(v-v_s)*rho
                                   );
             force_p_x = dV * D_s * p * fluid_outward_normal[0];
             force_p_y = dV * D_s * p * fluid_outward_normal[1];
@@ -1273,32 +1275,37 @@ namespace proteus
                 particle_netForces[(i+2*nParticles)*3+1]+= force_stress_y;
                 particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
               }
-
+            if(PSEUDO_PENALTY & 1)
+            {
+              C = (1.0-H_s)*alphaBDF;
+            }
             // These should be done inside to make sure the correct velocity of different particles are used
             mom_u_source += C * (u - u_s);
             mom_v_source += C * (v - v_s);
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
+            if(!(PSEUDO_PENALTY & (1<<1)))
+            {
+              //Nitsche terms
+              mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
+              dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
+              dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
 
-            //Nitsche terms
-            mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
-            dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
+              mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
+              dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
+              dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
-            dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
+              mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
+              mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
+              dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
+              dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
 
-            mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
-            mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
-            dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
-
-            mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
-            mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
-            dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
+              mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
+              mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
+              dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
+              dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
+            }
           }
       }
       inline void compute_force_around_solid(bool element_owned,
@@ -3146,6 +3153,7 @@ namespace proteus
                                            ball_radius,
                                            ball_velocity,
                                            ball_angular_velocity,
+                                           alphaBDF,
                                            porosity,
                                            particle_penalty_constant/h_phi,
                                            particle_alpha/h_phi,
@@ -3578,11 +3586,11 @@ namespace proteus
                       ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) +
 		      (INT_BY_PARTS_PRESSURE==1 ? -1.0*p*vel_grad_test_dV[i_nSpace+0] : 0.) +
                       //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
-                      USE_SUPG*ck.SubgridError(subgridError_u,Lstar_u_u[i]) +
-                      ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]) +
+                      ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*USE_SUPG*ck.SubgridError(subgridError_u,Lstar_u_u[i]) +
+                      ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]) +
                       //surface tension
-                      ck.NumericalDiffusion(delta*sigma*dV,v1,vel_tgrad_test_i) +  //exp.
-                      ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_u,vel_tgrad_test_i); //imp.
+                      ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusion(delta*sigma*dV,v1,vel_tgrad_test_i) +  //exp.
+                      ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_u,vel_tgrad_test_i); //imp.
                     mom_u_source_i[i] += ck.Reaction_weak(mom_u_source,vel_test_dV[i]);
                     betaDrag_i[i] += ck.Reaction_weak(dmom_u_source[0],
                                                       vel_test_dV[i]);
@@ -3599,11 +3607,11 @@ namespace proteus
                       ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) +
 		      (INT_BY_PARTS_PRESSURE==1 ? -1.0*p*vel_grad_test_dV[i_nSpace+1] : 0.) +
                       //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
-                      USE_SUPG*ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
-                      ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]) +
+                      ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*USE_SUPG*ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
+                      ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]) +
                       //surface tension
-                      ck.NumericalDiffusion(delta*sigma*dV,v2,vel_tgrad_test_i) +  //exp.
-                      ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_v,vel_tgrad_test_i); //imp.
+                      ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusion(delta*sigma*dV,v2,vel_tgrad_test_i) +  //exp.
+                      ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_v,vel_tgrad_test_i); //imp.
                     mom_v_source_i[i] += ck.Reaction_weak(mom_v_source,vel_test_dV[i]);
 
                     /* elementResidual_w[i] +=
@@ -5811,6 +5819,7 @@ namespace proteus
                                            ball_radius,
                                            ball_velocity,
                                            ball_angular_velocity,
+                                           alphaBDF,
                                            porosity,
                                            particle_penalty_constant/h_phi,
                                            particle_alpha/h_phi,
@@ -6154,10 +6163,10 @@ namespace proteus
                           ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           //ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
-                          USE_SUPG*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) +
-                          ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
+                          ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*USE_SUPG*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) +
+                          ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           // surface tension
-                          ck.NumericalDiffusion(dt*delta*sigma*dV,
+                          ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusion(dt*delta*sigma*dV,
                                                 vel_tgrad_test_i,
                                                 vel_tgrad_test_j);
 
@@ -6193,10 +6202,10 @@ namespace proteus
                           ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                           //
                           //ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
-                          USE_SUPG*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) +
-                          ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
+                          ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*USE_SUPG*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) +
+                          ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                           // surface tension
-                          ck.NumericalDiffusion(dt*delta*sigma*dV,
+                          ((PSEUDO_PENALTY & (1<<4))?0.0:1.0)*ck.NumericalDiffusion(dt*delta*sigma*dV,
                                                 vel_tgrad_test_i,
                                                 vel_tgrad_test_j);
 
