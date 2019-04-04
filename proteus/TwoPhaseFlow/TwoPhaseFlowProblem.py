@@ -183,7 +183,7 @@ class TwoPhaseFlowProblem:
                 assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
                 if nd==3:
                     assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
-            if ls_model == 0:
+            if ls_model == 1:
                 assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
             if ls_model == 0:
                 assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
