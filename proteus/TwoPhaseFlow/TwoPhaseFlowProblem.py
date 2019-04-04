@@ -213,15 +213,15 @@ class TwoPhaseFlowProblem:
         # parameters
         self.Parameters.initializeParameters()
         # mesh
-        if self.Parameters.mesh.outputFiles['poly'] is True:
-            self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['ply'] is True:
-            self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['asymptote'] is True:
-            self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
-            self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
-            self.domain.use_gmsh = True
+        # if self.Parameters.mesh.outputFiles['poly'] is True:
+        #     self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['ply'] is True:
+        #     self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['asymptote'] is True:
+        #     self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
+        #     self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
+        #     self.domain.use_gmsh = True
         # split operator
         self.initializeSO()
 
