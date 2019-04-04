@@ -593,10 +593,7 @@ cdef class RANS3PF:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
-                          numpy.ndarray q_p,
-                          numpy.ndarray q_grad_p,
-                          numpy.ndarray ebqe_p,
-                          numpy.ndarray ebqe_grad_p,
+                          pressure_data,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_hess_trial_ref,
@@ -823,6 +820,10 @@ cdef class RANS3PF:
         cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
         cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
         cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
+        cdef numpy.ndarray q_p         = pressure_data[0]
+        cdef numpy.ndarray q_grad_p    = pressure_data[1]
+        cdef numpy.ndarray ebqe_p      = pressure_data[2]
+        cdef numpy.ndarray ebqe_grad_p = pressure_data[3]
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1073,10 +1074,7 @@ cdef class RANS3PF:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
-                          numpy.ndarray q_p,
-                          numpy.ndarray q_grad_p,
-                          numpy.ndarray ebqe_p,
-                          numpy.ndarray ebqe_grad_p,
+                          pressure_data,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_hess_trial_ref,
@@ -1272,6 +1270,10 @@ cdef class RANS3PF:
         cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
         cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
         cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
+        cdef numpy.ndarray q_p         = pressure_data[0]
+        cdef numpy.ndarray q_grad_p    = pressure_data[1]
+        cdef numpy.ndarray ebqe_p      = pressure_data[2]
+        cdef numpy.ndarray ebqe_grad_p = pressure_data[3]
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -1577,6 +1579,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_grad_p,
                                double * ebqe_p,
                                double * ebqe_grad_p,
+                               double * q_p_old,
+                               double * q_grad_p_old,
+                               double * ebqe_p_old,
+                               double * ebqe_grad_p_old,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_hess_trial_ref,
@@ -1818,6 +1824,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_grad_p,
                                double * ebqe_p,
                                double * ebqe_grad_p,
+                               double * q_p_old,
+                               double * q_grad_p_old,
+                               double * ebqe_p_old,
+                               double * ebqe_grad_p_old,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_hess_trial_ref,
@@ -2375,10 +2385,14 @@ cdef class RANS3PF2D:
         cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
         cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
         cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
-        cdef numpy.ndarray q_p         = pressure_data[0]
-        cdef numpy.ndarray q_grad_p    = pressure_data[1]
-        cdef numpy.ndarray ebqe_p      = pressure_data[2]
-        cdef numpy.ndarray ebqe_grad_p = pressure_data[3]
+        cdef numpy.ndarray q_p             = pressure_data[0]
+        cdef numpy.ndarray q_grad_p        = pressure_data[1]
+        cdef numpy.ndarray ebqe_p          = pressure_data[2]
+        cdef numpy.ndarray ebqe_grad_p     = pressure_data[3]
+        cdef numpy.ndarray q_p_old         = pressure_data[4]
+        cdef numpy.ndarray q_grad_p_old    = pressure_data[5]
+        cdef numpy.ndarray ebqe_p_old      = pressure_data[6]
+        cdef numpy.ndarray ebqe_grad_p_old = pressure_data[7]
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -2396,6 +2410,10 @@ cdef class RANS3PF2D:
                                        < double * > q_grad_p.data,
                                        < double * > ebqe_p.data,
                                        < double * > ebqe_grad_p.data,
+                                       < double * > q_p_old.data,
+                                       < double * > q_grad_p_old.data,
+                                       < double * > ebqe_p_old.data,
+                                       < double * > ebqe_grad_p_old.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_hess_trial_ref.data,
@@ -2826,10 +2844,14 @@ cdef class RANS3PF2D:
         cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
         cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
         cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
-        cdef numpy.ndarray q_p         = pressure_data[0]
-        cdef numpy.ndarray q_grad_p    = pressure_data[1]
-        cdef numpy.ndarray ebqe_p      = pressure_data[2]
-        cdef numpy.ndarray ebqe_grad_p = pressure_data[3]
+        cdef numpy.ndarray q_p             = pressure_data[0]
+        cdef numpy.ndarray q_grad_p        = pressure_data[1]
+        cdef numpy.ndarray ebqe_p          = pressure_data[2]
+        cdef numpy.ndarray ebqe_grad_p     = pressure_data[3]
+        cdef numpy.ndarray q_p_old         = pressure_data[4]
+        cdef numpy.ndarray q_grad_p_old    = pressure_data[5]
+        cdef numpy.ndarray ebqe_p_old      = pressure_data[6]
+        cdef numpy.ndarray ebqe_grad_p_old = pressure_data[7]
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double * > mesh_trial_ref.data,
@@ -2848,6 +2870,10 @@ cdef class RANS3PF2D:
                                         < double * > q_grad_p.data,
                                         < double * > ebqe_p.data,
                                         < double * > ebqe_grad_p.data,
+                                        < double * > q_p_old.data,
+                                        < double * > q_grad_p_old.data,
+                                        < double * > ebqe_p_old.data,
+                                        < double * > ebqe_grad_p_old.data,
                                         < double * > vel_trial_ref.data,
                                         < double * > vel_grad_trial_ref.data,
                                         < double * > vel_hess_trial_ref.data,

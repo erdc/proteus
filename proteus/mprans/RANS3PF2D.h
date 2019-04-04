@@ -12,7 +12,7 @@
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
 #define CUT_CELL_INTEGRATION 0
-#define PSEUDO_PENALTY 0b10111
+#define PSEUDO_PENALTY 0b11111
 double sgn(double val) {
   return double((0.0 < val) - (val < 0.0));
 }
@@ -93,6 +93,10 @@ namespace proteus
                                    double *q_grad_p,
                                    double *ebqe_p,
                                    double *ebqe_grad_p,
+                                   double *q_p_old,
+                                   double *q_grad_p_old,
+                                   double *ebqe_p_old,
+                                   double *ebqe_grad_p_old,
                                    double *vel_trial_ref,
                                    double *vel_grad_trial_ref,
                                    double *vel_hess_trial_ref,
@@ -353,6 +357,10 @@ namespace proteus
                                    double *q_grad_p,
                                    double *ebqe_p,
                                    double *ebqe_grad_p,
+                                   double *q_p_old,
+                                   double *q_grad_p_old,
+                                   double *ebqe_p_old,
+                                   double *ebqe_grad_p_old,
                                    double *vel_trial_ref,
                                    double *vel_grad_trial_ref,
                                    double *vel_hess_trial_ref,
@@ -756,6 +764,7 @@ namespace proteus
                                   const double distance_to_omega_solid,
                                   const double& kappa,
                                   const double porosity,//VRANS specific
+                                  const double grad_pn[nSpace],
                                   const double& p,
                                   const double grad_p[nSpace],
                                   const double grad_u[nSpace],
@@ -1013,15 +1022,15 @@ namespace proteus
 
         //u momentum Hamiltonian (pressure)
 	double aux_pressure = (KILL_PRESSURE_TERM==1 ? 0. : 1.)*(INT_BY_PARTS_PRESSURE==1 ? 0. : 1.);
-        mom_u_ham = ((PSEUDO_PENALTY & (1<<3))?1.0:phi_s_effect) * porosity*grad_p[0]*aux_pressure;
-        dmom_u_ham_grad_p[0]=((PSEUDO_PENALTY & (1<<3))?1.0:phi_s_effect) * porosity*aux_pressure;
+        mom_u_ham = (phi_s_effect * porosity*grad_p[0]+((PSEUDO_PENALTY & (1<<3))?(1-phi_s_effect):0.0)*grad_pn[0])*aux_pressure;
+        dmom_u_ham_grad_p[0]=phi_s_effect * porosity*aux_pressure;
         dmom_u_ham_grad_p[1]=0.0;
         /* dmom_u_ham_grad_p[2]=0.0; */
 
         //v momentum Hamiltonian (pressure)
-        mom_v_ham = ((PSEUDO_PENALTY & (1<<3))?1.0:phi_s_effect) * porosity*grad_p[1]*aux_pressure;
+        mom_v_ham = (phi_s_effect * porosity*grad_p[1]+((PSEUDO_PENALTY & (1<<3))?(1-phi_s_effect):0.0)*grad_pn[1])*aux_pressure;
         dmom_v_ham_grad_p[0]=0.0;
-        dmom_v_ham_grad_p[1]=((PSEUDO_PENALTY & (1<<3))?1.0:phi_s_effect) * porosity*aux_pressure;
+        dmom_v_ham_grad_p[1]=phi_s_effect * porosity*aux_pressure;
         /* dmom_v_ham_grad_p[2]=0.0; */
 
         /* //w momentum Hamiltonian (pressure) */
@@ -2107,6 +2116,10 @@ namespace proteus
                              double* q_grad_p,
                              double* ebqe_p,
                              double* ebqe_grad_p,
+                             double *q_p_old,
+                             double *q_grad_p_old,
+                             double *ebqe_p_old,
+                             double *ebqe_grad_p_old,
                              double* vel_trial_ref,
                              double* vel_grad_trial_ref,
                              double* vel_hess_trial_ref,
@@ -2783,6 +2796,7 @@ namespace proteus
                 register double p=0.0,u=0.0,v=0.0,w=0.0,un=0.0,vn=0.0,wn=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],
+                  pn = 0,grad_pn[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
                   mom_v_acc=0.0,
@@ -2913,6 +2927,7 @@ namespace proteus
                 //get the solution
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
                 p = q_p[eN_k];
+                pn= q_p_old[eN_k];
                 // get solution at quad points
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
@@ -2924,7 +2939,10 @@ namespace proteus
                 //get the solution gradients
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
                 for (int I=0;I<nSpace;I++)
-                  grad_p[I] = q_grad_p[eN_k_nSpace + I];
+                {
+                  grad_p[I] = q_grad_p[eN_k_nSpace+I];
+                  grad_pn[I] = q_grad_p_old[eN_k_nSpace+I];
+                };
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_u);
@@ -3019,6 +3037,7 @@ namespace proteus
                                      //VRANS
                                      porosity,
                                      //
+                                     grad_pn,
                                      p,
                                      grad_p,
                                      grad_u,
@@ -4250,6 +4269,7 @@ namespace proteus
                   grad_u_ext[nSpace],
                   grad_v_ext[nSpace],
                   grad_w_ext[nSpace],
+                  pn=0.0, grad_pn[nSpace],
                   mom_u_acc_ext=0.0,
                   dmom_u_acc_u_ext=0.0,
                   mom_v_acc_ext=0.0,
@@ -4427,12 +4447,16 @@ namespace proteus
                 //solution and gradients
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_ext); */
                 p_ext = ebqe_p[ebNE_kb];
+                pn    = ebqe_p_old[ebNE_kb];
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext); */
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext); */
                 for (int I=0;I<nSpace;I++)
-                  grad_p_ext[I] = ebqe_grad_p[ebNE_kb_nSpace + I];
+                {  
+                  grad_p_ext[I] = ebqe_grad_p[ebNE_kb_nSpace+I];
+                  grad_pn[I] = ebqe_grad_p_old[ebNE_kb_nSpace+I];
+                }
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_w_ext); */
@@ -4489,6 +4513,7 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
+                                     grad_pn,
                                      p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -4583,6 +4608,7 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
+                                     grad_pn,
                                      bc_p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -5162,6 +5188,10 @@ namespace proteus
                              double* q_grad_p,
                              double* ebqe_p,
                              double* ebqe_grad_p,
+                             double *q_p_old,
+                             double *q_grad_p_old,
+                             double *ebqe_p_old,
+                             double *ebqe_grad_p_old,
                              double* vel_trial_ref,
                              double* vel_grad_trial_ref,
                              double* vel_hess_trial_ref,
@@ -5478,6 +5508,7 @@ namespace proteus
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],
+                  pn=0.0,grad_pn[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
                   mom_v_acc=0.0,
@@ -5618,13 +5649,17 @@ namespace proteus
                 //get the solution
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
                 p = q_p[eN_k];
+                pn= q_p_old[eN_k];
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w); */
                 //get the solution gradients
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
                 for (int I=0;I<nSpace;I++)
+                {
                   grad_p[I] = q_grad_p[eN_k_nSpace+I];
+                  grad_pn[I] = q_grad_p_old[eN_k_nSpace+I];
+                }
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
                 ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_u);
@@ -5682,6 +5717,7 @@ namespace proteus
                                      //VRANS
                                      porosity,
                                      //
+                                     grad_pn,
                                      p,
                                      grad_p,
                                      grad_u,
@@ -6574,6 +6610,7 @@ namespace proteus
                   grad_u_ext[nSpace],
                   grad_v_ext[nSpace],
                   grad_w_ext[nSpace],
+                  pn=0.0,grad_pn[nSpace],
                   mom_u_acc_ext=0.0,
                   dmom_u_acc_u_ext=0.0,
                   mom_v_acc_ext=0.0,
@@ -6762,12 +6799,16 @@ namespace proteus
                 //solution and gradients
                 /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_ext); */
                 p_ext = ebqe_p[ebNE_kb];
+                pn = ebqe_p_old[ebNE_kb];
                 ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
                 ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
                 /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext); */
                 /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext); */
                 for (int I=0;I<nSpace;I++)
+                {  
                   grad_p_ext[I] = ebqe_grad_p[ebNE_kb_nSpace+I];
+                  grad_pn[I] = ebqe_grad_p_old[ebNE_kb_nSpace+I];
+                }
                 ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
                 /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_w_ext); */
@@ -6827,6 +6868,7 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
+                                     grad_pn,
                                      p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -6921,6 +6963,7 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
+                                     grad_pn,
                                      bc_p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
