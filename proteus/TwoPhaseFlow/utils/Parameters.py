@@ -1145,6 +1145,7 @@ class ParametersModelRDLS(ParametersModelBase):
         copts.applyRedistancing = True
         copts.backgroundDiffusionFactor = 0.01
         copts.epsFact = 0.33
+        copts.ELLIPTIC_REDISTANCING = 0
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = 0.9
@@ -1185,7 +1186,8 @@ class ParametersModelRDLS(ParametersModelBase):
                                                 nModelId=nModelId,
                                                 rdModelId=rdModelId,
                                                 useMetrics=copts.useMetrics,
-                                                backgroundDiffusionFactor=copts.backgroundDiffusionFactor)
+                                                backgroundDiffusionFactor=copts.backgroundDiffusionFactor,
+                                                ELLIPTIC_REDISTANCING=copts.ELLIPTIC_REDISTANCING)
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['rdls']}
