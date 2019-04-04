@@ -12,7 +12,7 @@
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
 #define CUT_CELL_INTEGRATION 0
-#define PSEUDO_PENALTY 0b11111
+#define PSEUDO_PENALTY 0b011111
 double sgn(double val) {
   return double((0.0 < val) - (val < 0.0));
 }
@@ -898,7 +898,7 @@ namespace proteus
         // mass (volume accumulation)
         //..hardwired
 
-        double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 1e-10;
+        double phi_s_effect = (distance_to_omega_solid > 0.0) ? 1.0 : 0;
         if(USE_SBM>0)
           phi_s_effect = 1.0;
         //u momentum accumulation
@@ -1254,11 +1254,11 @@ namespace proteus
 
             C = (D_s * C_surf + (1.0 - H_s) * C_vol);
             force_x = dV * D_s * (p * fluid_outward_normal[0]
-                                  // -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
                                   // +C_surf*(u-u_s)*rho
                                   );
             force_y = dV * D_s * (p * fluid_outward_normal[1]
-                                  // -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
                                   // +C_surf*(v-v_s)*rho
                                   );
             force_p_x = dV * D_s * p * fluid_outward_normal[0];
@@ -1272,7 +1272,11 @@ namespace proteus
             //always 3D for particle centroids
             r_x = x - center[0];
             r_y = y - center[1];
-
+            if(PSEUDO_PENALTY & (1<<5))//because pseudo-penalty method is the Stokes probelm inside the solid; See parameter C
+            {
+              force_x = dV * (1.0 - H_s) * alphaBDF * (u-u_s);//u_s=0
+              force_y = dV * (1.0 - H_s) * alphaBDF * (v-v_s);//v_s=0
+            }
             if (element_owned)
               {
                 particle_surfaceArea[i] += dV * D_s;
