@@ -1235,7 +1235,7 @@ class NewWave(object):
         self.x0 = x0
         fim = reduceToIntervals(self.fi,self.df)
         self.fim = fim
-        self.wim = 2*math.pi*fim
+        wim = 2*np.pi*fim
         if (spectral_params is None):
             self.Si_Jm = spec_fun(fim,self.fp,self.Hs)
         else:
@@ -1257,7 +1257,7 @@ class NewWave(object):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii]
         if(self.N > 10000):
             logEvent("ERROR! Wavetools.py: Maximum number of frequencies for Random Waves is 10000 ",level=0)
-        self.phi=mapth.pi
+        self.phi=np.pi
         if (crestFocus):
             self.phi = 0.
         
