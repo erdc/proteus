@@ -12,7 +12,8 @@
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
 #define CUT_CELL_INTEGRATION 0
-#define PSEUDO_PENALTY 0b011111
+#define PSEUDO_PENALTY 0b111111
+// #define PSEUDO_PENALTY 0b000000
 double sgn(double val) {
   return double((0.0 < val) - (val < 0.0));
 }
@@ -1174,6 +1175,9 @@ namespace proteus
                                            const double u,
                                            const double v,
                                            const double w,
+                                           const double un,
+                                           const double vn,
+                                           const double wn,
                                            const double uStar,
                                            const double vStar,
                                            const double wStar,
@@ -1274,8 +1278,8 @@ namespace proteus
             r_y = y - center[1];
             if(PSEUDO_PENALTY & (1<<5))//because pseudo-penalty method is the Stokes probelm inside the solid; See parameter C
             {
-              force_x = dV * (1.0 - H_s) * alphaBDF * (u-u_s);//u_s=0
-              force_y = dV * (1.0 - H_s) * alphaBDF * (v-v_s);//v_s=0
+              force_x = dV * (1.0 - H_s) * alphaBDF * (4*u-3*un-u_s);//(u-u_s);//(4*u-3*un-u_s)//u_s=0
+              force_y = dV * (1.0 - H_s) * alphaBDF * (4*v-3*vn-v_s);//(v-v_s);//(4*v-3*vn-v_s)//v_s=0
             }
             if (element_owned)
               {
@@ -3197,6 +3201,9 @@ namespace proteus
                                            u,
                                            v,
                                            w,
+                                           un,
+                                           vn,
+                                           wn,
                                            q_velocity_sge[eN_k_nSpace+0],
                                            q_velocity_sge[eN_k_nSpace+1],
                                            q_velocity_sge[eN_k_nSpace+1],
@@ -5880,6 +5887,9 @@ namespace proteus
                                            u,
                                            v,
                                            w,
+                                           u,//should be un, used in Residual only
+                                           v,//
+                                           w,//
                                            q_velocity_sge[eN_k_nSpace+0],
                                            q_velocity_sge[eN_k_nSpace+1],
                                            q_velocity_sge[eN_k_nSpace+1],
