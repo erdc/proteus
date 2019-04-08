@@ -1,6 +1,7 @@
 from __future__ import division
 from past.utils import old_div
 from builtins import object
+import numpy as np
 from proteus.Profiling import logEvent
 from proteus.MeshTools import MeshOptions
 from proteus.defaults import (Physics_base,
@@ -1144,6 +1145,7 @@ class ParametersModelRDLS(ParametersModelBase):
         copts.applyRedistancing = True
         copts.backgroundDiffusionFactor = 0.01
         copts.epsFact = 0.33
+        copts.ELLIPTIC_REDISTANCING = 0
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = 0.9
@@ -1184,7 +1186,8 @@ class ParametersModelRDLS(ParametersModelBase):
                                                 nModelId=nModelId,
                                                 rdModelId=rdModelId,
                                                 useMetrics=copts.useMetrics,
-                                                backgroundDiffusionFactor=copts.backgroundDiffusionFactor)
+                                                backgroundDiffusionFactor=copts.backgroundDiffusionFactor,
+                                                ELLIPTIC_REDISTANCING=copts.ELLIPTIC_REDISTANCING)
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['rdls']}
@@ -1505,7 +1508,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         # NONLINEAR SOLVER
         self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # NUMERICAL FLUX
-        self.n.numericalFluxType = NumericalFlux.Diffusion_IIPG_exterior
+        self.n.numericalFluxType = NumericalFlux.Stress_IIPG_exterior
         # LINEAR ALGEBRA
         self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
@@ -1525,6 +1528,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         nMediaTypes = len(domain.regionFlags)  # (!) should be region flags
         smTypes = np.zeros((nMediaTypes+1, 2), 'd')
         smFlags = np.zeros((nMediaTypes+1,), 'i')
+        copts = self.p.CoefficientsOptions
         smTypes[:, 0] = copts.E
         smTypes[:, 1] = copts.nu
         # MODEL INDEXING
@@ -1576,6 +1580,8 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
             self.p.diffusiveFluxBoundaryConditions[2] = {}
 
     def _initializeNumerics(self):
+        domain = self._Problem.domain
+        nd = domain.nd
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['velBasis'],
