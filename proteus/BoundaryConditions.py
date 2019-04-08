@@ -87,3 +87,16 @@ class BoundaryCondition:
 
     def setLinearBC(self, a0, a1, i):
         self.uOfXT = lambda x, t: a0+a1*x[i]
+
+    def setLinearRamp(self,t1,value):
+        """
+        function setting a linear ramp from t=0 to t=t1
+
+        Parameters
+        -----------
+        t1: float
+            Ramp end time
+        value: float
+            Variable value
+        """
+        self.uOfXT = lambda x, t: min( t/t1, 1)*value
