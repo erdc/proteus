@@ -63,6 +63,8 @@ int MeshAdaptPUMIDrvr::calculateSizeField(double L_band)
 //Implementation of banded interface, edge intersection algorithm
 //If mesh edge intersects the 0 level-set, then the adjacent edges need to be refined 
 {
+  if(m->findField("interfaceBand"))
+    apf::destroyField(m->findField("interfaceBand"));
   apf::Field* interfaceBand = apf::createLagrangeField(m, "interfaceBand", apf::SCALAR, 1);
   apf::Field *phif = m->findField("phi");
   assert(phif);
@@ -505,7 +507,7 @@ void MeshAdaptPUMIDrvr::isotropicIntersect()
   apf::Field *field = sizeFieldList.front();
   apf::copyData(size_iso,field);
   sizeFieldList.pop();
-  apf::destroyField(field);
+  //apf::destroyField(field);
   while(!sizeFieldList.empty())
   {
     field = sizeFieldList.front();
@@ -517,7 +519,7 @@ void MeshAdaptPUMIDrvr::isotropicIntersect()
       apf::setScalar(size_iso,vert,0,minValue);
     } 
     sizeFieldList.pop();
-    apf::destroyField(field);
+    //apf::destroyField(field);
   }
   gradeMesh();
 }
@@ -1194,7 +1196,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::MeshElement *element;
   apf::MeshEntity *reg;
   //size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
-  apf::destroyField(m->findField("errorSize"));
+  if(m->findField("errorSize"))
+    apf::destroyField(m->findField("errorSize"));
   apf::Field *errorSize = apf::createLagrangeField(m, "errorSize", apf::SCALAR, 1);
 
   if (adapt_type_config == "anisotropic"){
@@ -1264,12 +1267,57 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       else
         h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+3.0)); //coarsening
     else //isotropic
-      h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+    {
+      if(target_error/err_curr <= 1)
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+      else
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd*1.5));
+    }
 
     apf::setScalar(errorSize_reg, reg, 0, h_new);
     apf::destroyMeshElement(element);
   }
   m->end(it);
+
+  //hack to get element ratio
+
+  if(m->findField("sizeRatio"))
+    apf::destroyField(m->findField("sizeRatio"));
+  apf::Field* sizeRatioField = apf::createField(m,"sizeRatio",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
+
+  it = m->begin(nsd);
+  while (reg = m->iterate(it))
+  {
+    //double sizeRatio = pow((err_curr / target_error),2.0/(2.0*(1.0)+nsd));
+    //apf::setScalar(sizeRatioField,reg,0,sizeRatio);
+
+    double h_old;
+    double h_new;
+    element = apf::createMeshElement(m, reg);
+
+    if (m->getDimension() == 2)
+      h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
+    else
+      h_old = apf::computeShortestHeightInTet(m,reg);
+
+    err_curr = apf::getScalar(errField, reg, 0);
+    //h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+      if(target_error/err_curr <= 1)
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+      else
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd*2.0));
+
+    
+    //clamp h_new and then compare against h_old
+    clamp(h_new, hmin, hmax);
+    double size_ratio = h_old/h_new;
+    //std::cout<<"What is size_ratio? "<<size_ratio<<std::endl;
+    apf::setScalar(sizeRatioField,reg,0,size_ratio);
+    apf::destroyMeshElement(element);
+  }
+  m->end(it);
+ 
+
 
   //Transfer size field from elements to vertices through averaging
   it = m->begin(0);

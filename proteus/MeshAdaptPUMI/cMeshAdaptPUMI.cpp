@@ -6,6 +6,7 @@
 #include <apfMDS.h>
 #include <PCU.h>
 #include <apf.h>
+#include<lionPrint.h>
 
 #include <iostream>
 #include <fstream>
@@ -346,6 +347,19 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
     else
       apf::setScalar(errorTriggered,ent,0,-1);
   }//end while
+  m->end(it);
+
+  //modify error field to be the ratio
+  it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+    double h_current = apf::getScalar(currentField,ent,0);
+    double h_needed = apf::getScalar(errorField,ent,0);
+    apf::setScalar(errorField,ent,0,h_current/h_needed*1.0);
+  }//end while
+  m->end(it);
+
+
 
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
@@ -385,7 +399,8 @@ int MeshAdaptPUMIDrvr::willAdapt()
   if(size_field_config == "combined" or size_field_config == "isotropic")
     adaptFlag += willInterfaceAdapt(); 
   if(size_field_config == "combined" or size_field_config == "VMS")
-    adaptFlag += willErrorAdapt();
+    //adaptFlag += willErrorAdapt();
+    willErrorAdapt();
 
   if(adaptFlag > 0)
     adaptFlag = 1;
@@ -586,6 +601,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     }
   }
 
+  lion_set_verbosity(1);
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
   in->shouldRunMidZoltan = true;
@@ -595,12 +611,16 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
+  in->debugFolder = "./debug_testAdapt";
   //in->goodQuality = 0.16;//0.027;
   //double mass_before = getTotalMass();
   
+  //m->writeNative("beforeMesh.smb");
   double t1 = PCU_Time();
   //ma::adapt(in);
-  ma::adaptVerbose(in);
+  std::cout<<"Begin adapt!\n";
+  ma::adaptVerbose(in,false);
+  std::cout<<"End adapt!\n";
   double t2 = PCU_Time();
 
   m->verify();

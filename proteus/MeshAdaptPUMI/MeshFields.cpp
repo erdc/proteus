@@ -140,6 +140,40 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
   return 0;
 }
 
+int MeshAdaptPUMIDrvr::transferElementFieldToProteus(const char* name, double* outArray,
+    int nVar, int nN)
+/**
+ * @brief Convert PUMI fields to something Proteus can understand
+ * 
+ * Copies the PUMI apf field with name into an outArray.
+ *
+ * \param name is the desired name associated with the apf field
+ * \param outArray is the Proteus field that will be output
+ *
+ * The remainder of the parameters might be irrelevant.
+ */
+
+{
+  assert(nN == static_cast<int>(m->count(2)));
+  apf::Field* f = m->findField(name);
+  if (!f)
+    fprintf(stderr, "couldn't find field \"%s\"\n", name);
+  assert(f);
+  assert(apf::countComponents(f) == nVar);
+  apf::NewArray<double> tmp(nVar);
+  apf::MeshEntity* v;
+  apf::MeshIterator* it = m->begin(2);
+  while ((v = m->iterate(it))) {
+    int i = localNumber(v);
+    apf::getComponents(f, v, 0, &tmp[0]);
+    for(int j = 0; j < nVar; j++)
+      outArray[i * nVar + j] = tmp[j];
+  }
+  m->end(it);
+  return 0;
+}
+
+
 /*
 int MeshAdaptPUMIDrvr::transferBCtagsToProteus(int* tagArray,int idx, int* ebN, int*eN_global,double* fluxBC)
 {

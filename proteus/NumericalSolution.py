@@ -892,6 +892,9 @@ class NS_base(object):  # (HasTraits):
 
               #update the eddy-viscosity history
               lm.calculateAuxiliaryQuantitiesAfterStep()
+        
+        #get size gauges again
+        #self.modelList[0].levelModelList[0].u[3].dof[:] = modelListOld[0].levelModelList[0].u[3].dof
 
     def PUMI_reallocate(self,mesh):
         p0 = self.pList[0].ct
@@ -1367,12 +1370,18 @@ class NS_base(object):  # (HasTraits):
               adaptMeshNow=True
               logEvent("Need to Adapt")
 
+            #import pdb; pdb.set_trace()
+            #if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 )):
             scalar=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nNodes_global,1),'d')
             self.pList[0].domain.PUMIMesh.transferFieldToProteus(
                 "errorSize", scalar)
             self.modelList[0].levelModelList[0].u[self.pList[0].domain.nd+1].dof[:] = scalar[:,0]
-	    adaptMeshNow=False
-	    
+            scalar2=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned,1),'d')
+            self.pList[0].domain.PUMIMesh.transferElementFieldToProteus(
+                "sizeRatio", scalar2)
+            self.modelList[0].levelModelList[0].mesh.elementSizeRatio[:] = scalar2[:,0]
+        
+            #adaptMeshNow=False
             #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
             if(adaptMeshNow == False):
                 for m in self.modelList:
@@ -1657,6 +1666,9 @@ class NS_base(object):  # (HasTraits):
                                                                                              m.stepController.dt_model,
                                                                                              m.name))
 
+        import copy
+        #self.modelList[0].levelModelList[0].mesh.elementSizeRatio = copy.deepcopy(self.modelList[0].levelModelList[0].mesh.elementMaterialTypes)
+        self.modelList[0].levelModelList[0].mesh.elementSizeRatio = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
         for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,list(range(len(self.pList)))):
             if not self.opts.hotStart:
                 logEvent("Archiving initial conditions")
@@ -1704,6 +1716,7 @@ class NS_base(object):  # (HasTraits):
                 lm.getResidual(lu,lr)
             logEvent("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
+
         self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
         for m in self.modelList:
             logEvent("Auxiliary variable calculations for model %s" % (m.name,))
@@ -1718,18 +1731,18 @@ class NS_base(object):  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        #if (hasattr(self.pList[0].domain, 'PUMIMesh') and
-        #    self.pList[0].domain.PUMIMesh.adaptMesh() and
-        #    (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
-        #    self.so.useOneMesh and not self.opts.hotStart):
+        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
+            self.pList[0].domain.PUMIMesh.adaptMesh() and
+            (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
+            self.so.useOneMesh and not self.opts.hotStart):
 
-        #    self.PUMI_transferFields()
-        #    logEvent("Initial Adapt before Solve")
-        #    self.PUMI_adaptMesh("interface")
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt before Solve")
+            self.PUMI_adaptMesh("interface")
  
-        #    self.PUMI_transferFields()
-        #    logEvent("Initial Adapt 2 before Solve")
-        #    self.PUMI_adaptMesh("interface")
+            self.PUMI_transferFields()
+            logEvent("Initial Adapt 2 before Solve")
+            self.PUMI_adaptMesh("interface")
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1943,25 +1956,58 @@ class NS_base(object):  # (HasTraits):
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
 
-                if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
-                    self.tCount+=1
-                    for index,model in enumerate(self.modelList):
-                        self.archiveSolution(model,index,self.systemStepController.t_system_last)
+                #if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+                #    self.tCount+=1
+                #    for index,model in enumerate(self.modelList):
+                #        self.archiveSolution(model,index,self.systemStepController.t_system_last)
 
                 #can only handle PUMIDomain's for now
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 import gc; gc.collect()
+
+
+
+                #import pdb; pdb.set_trace()
+                #elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                #                                                           "AttributeType":"Scalar",
+                #                                                           "Center":"Cell"})
+                #elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                #                                        {"Format":ar.dataItemFormat,
+                #                                         "DataType":"Int",
+                #                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+                #elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                #ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
+                import copy
+                self.modelList[0].levelModelList[0].mesh.elementSizeRatio = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+#copy.deepcopy(self.modelList[0].levelModelList[0].mesh.elementMaterialTypes)
+                
                 if(self.PUMI_estimateError()):
                     for model in self.modelList:
                         for av in self.auxiliaryVariables[model.name]:
                             av.calculate()
+                    if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+                        self.tCount+=1
+                        for index,model in enumerate(self.modelList):
+                            self.archiveSolution(model,index,self.systemStepController.t_system_last)
                     self.PUMI_adaptMesh()
+
                 else:
                     for model in self.modelList:
                         for av in self.auxiliaryVariables[model.name]:
                             av.calculate()
+                    if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+                        self.tCount+=1
+                        for index,model in enumerate(self.modelList):
+                            self.archiveSolution(model,index,self.systemStepController.t_system_last)
+
+
+                #if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+                #    self.tCount+=1
+                #    for index,model in enumerate(self.modelList):
+                #        self.archiveSolution(model,index,self.systemStepController.t_system_last)
+
                   
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
@@ -1969,7 +2015,7 @@ class NS_base(object):  # (HasTraits):
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
-
+    
             if systemStepFailed:
                 break
             #

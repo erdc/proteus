@@ -34,6 +34,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int updateMaterialArrays2(Mesh&)
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
+        int transferElementFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*,double,double)
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
@@ -112,6 +113,9 @@ cdef class MeshAdaptPUMI:
     def transferFieldToProteus(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
         outArray = np.ascontiguousarray(outArray)
         return self.thisptr.transferFieldToProteus(name, &outArray[0,0], outArray.shape[1], outArray.shape[0])
+    def transferElementFieldToProteus(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
+        outArray = np.ascontiguousarray(outArray)
+        return self.thisptr.transferElementFieldToProteus(name, &outArray[0,0], outArray.shape[1], outArray.shape[0])
     def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu, np.ndarray[np.double_t,ndim=1,mode="c"] g, double deltaT, double interfaceBandSize):
         rho = np.ascontiguousarray(rho)
         nu = np.ascontiguousarray(nu)

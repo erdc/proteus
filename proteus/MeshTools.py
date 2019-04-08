@@ -720,6 +720,18 @@ class Mesh(object):
         # #cmeshTools.deleteMeshDataStructures(self.cmesh)
         # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
+    def writeMeshXdmf_errorHack(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
+        elementSizeRatio = SubElement(self.arGrid,"Attribute",{"Name":"elementSizeRatio",
+                                                      "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+        elementSizeRatioValues = SubElement(elementSizeRatio,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+        elementSizeRatioValues.text = ar.hdfFilename+":/"+"elementSizeRatio"+"_t"+str(tCount)
+        ar.create_dataset_sync("elementSizeRatio"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementSizeRatio[:self.nElements_owned])
+
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection is not None:
             init = False
@@ -4376,6 +4388,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
 
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0,EB=False):
         Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Triangle",tCount,EB=EB)
+        Mesh.writeMeshXdmf_errorHack(self,ar,name,t,init,meshChanged,"Triangle",tCount,EB=EB)
     def writeMeshEnsight(self,filename,description=None):
         base=1
         #write the casefile
