@@ -46,6 +46,7 @@ namespace proteus
     std::valarray<double> FluxCorrectionMatrix;
     std::valarray<double> TransportMatrix, TransposeTransportMatrix;
     std::valarray<double> psi, eta, global_entropy_residual, boundary_integral;
+    std::valarray<double> maxVel,maxEntRes;
     virtual ~VOF_base(){}
     virtual void calculateResidualElementBased(//element
 					       double dt,
@@ -609,7 +610,8 @@ namespace proteus
 					 double* quantDOFs)
       {
 	double meanEntropy = 0., meanOmega = 0., maxEntropy = -1E10, minEntropy = 1E10;
-	register double maxVel[nElements_global], maxEntRes[nElements_global];
+        maxVel.resize(nElements_global, 0.0);
+        maxEntRes.resize(nElements_global, 0.0);
 	double Ct_sge = 4.0;
 	//
 	//loop over elements to compute volume integrals and load them into element and global residual
@@ -623,9 +625,6 @@ namespace proteus
 	//eN_k_i is the quadrature point index for a trial function
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
-	    // init maxVel and maxEntRes
-	    maxVel[eN] = 0.;
-	    maxEntRes[eN] = 0.;
 	    //declare local storage for element residual and initialize
 	    register double elementResidual_u[nDOF_test_element];
 	    for (int i=0;i<nDOF_test_element;i++)
@@ -1637,7 +1636,8 @@ namespace proteus
 		   int STABILIZATION_TYPE
 		   )
       {
-	Rpos.resize(numDOFs,0.0), Rneg.resize(numDOFs,0.0);
+	Rpos.resize(numDOFs,0.0);
+        Rneg.resize(numDOFs,0.0);
 	FluxCorrectionMatrix.resize(NNZ,0.0);
 	//////////////////
 	// LOOP in DOFs //
@@ -1834,13 +1834,8 @@ namespace proteus
 	// NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
 	// Allocate space for the transport matrices
 	// This is used for first order KUZMIN'S METHOD
-	TransportMatrix.resize(NNZ,0.0), TransposeTransportMatrix.resize(NNZ,0.0);
-	for (int i=0; i<NNZ; i++)
-	  {
-	    TransportMatrix[i] = 0.;
-	    TransposeTransportMatrix[i] = 0.;
-	  }
-
+	TransportMatrix.resize(NNZ,0.0);
+        TransposeTransportMatrix.resize(NNZ,0.0);
 	// compute entropy and init global_entropy_residual and boundary_integral
 	psi.resize(numDOFs,0.0);
 	eta.resize(numDOFs,0.0);

@@ -743,7 +743,7 @@ class PlanarStraightLineGraphDomain(D_base):
         """
         Write the PSLG using the poly format.
         """
-        if not self.polyfile:
+        if True:# if not self.polyfile:
             self.polyfile = fileprefix
             pf = open(fileprefix+'.poly','w')
             #write first line of poly file
@@ -1122,7 +1122,7 @@ class PiecewiseLinearComplexDomain(D_base):
         """
         Write the PLC domain in the poly format.
         """
-        if not self.polyfile:
+        if True:#not self.polyfile:
             self.polyfile = fileprefix
             pf = open(fileprefix+'.poly','w')
             #write first line of poly file
