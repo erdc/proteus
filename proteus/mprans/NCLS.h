@@ -1730,12 +1730,8 @@ namespace proteus
 	  L2_norm_per_node[i] = 0.;
 
 	// Allocate space for the transport matrices
-	TransportMatrix.resize(NNZ,0.0), TransposeTransportMatrix.resize(NNZ,0.0);
-	for (int i=0; i<NNZ; i++)
-	  {
-	    TransportMatrix[i] = 0.;
-	    TransposeTransportMatrix[i] = 0.;
-	  }
+	TransportMatrix.resize(NNZ,0.0);
+        TransposeTransportMatrix.resize(NNZ,0.0);
 
 	//////////////////////////////////////////////
 	// ** LOOP IN CELLS FOR CELL BASED TERMS ** //
@@ -2106,13 +2102,8 @@ namespace proteus
 
 	// Allocate space for the transport matrices
 	// This is used for first order KUZMIN'S METHOD
-	TransportMatrix.resize(NNZ,0.0), TransposeTransportMatrix.resize(NNZ,0.0);
-	for (int i=0; i<NNZ; i++)
-	  {
-	    TransportMatrix[i] = 0.;
-	    TransposeTransportMatrix[i] = 0.;
-	  }
-
+	TransportMatrix.resize(NNZ,0.0);
+        TransposeTransportMatrix.resize(NNZ,0.0);
 	// Allocate and init to zero the Entropy residual vector
 	global_entropy_residual.resize(numDOFs,0.0);
 	if (STABILIZATION_TYPE==1) //EV stab
@@ -2325,10 +2316,14 @@ namespace proteus
 	// COMPUTE g, ETA and others //
 	///////////////////////////////
 	// NOTE: see VOF.h for a different but equivalent implementation of this.
-	gx.resize(numDOFs,0.0), gy.resize(numDOFs,0.0), gz.resize(numDOFs,0.0),
-	  eta.resize(numDOFs,0.0),
-	  alpha_numerator_pos.resize(numDOFs,0.0), alpha_numerator_neg.resize(numDOFs,0.0),
-	  alpha_denominator_pos.resize(numDOFs,0.0), alpha_denominator_neg.resize(numDOFs,0.0);
+	gx.resize(numDOFs,0.0);
+        gy.resize(numDOFs,0.0);
+        gz.resize(numDOFs,0.0);
+        eta.resize(numDOFs,0.0);
+        alpha_numerator_pos.resize(numDOFs,0.0);
+        alpha_numerator_neg.resize(numDOFs,0.0);
+        alpha_denominator_pos.resize(numDOFs,0.0);
+        alpha_denominator_neg.resize(numDOFs,0.0);
 	int ij = 0;
 	for (int i=0; i<numDOFs; i++)
 	  {
@@ -2384,7 +2379,9 @@ namespace proteus
 	//////////////////////////////////////////////////////////
 	// Smoothness indicator is based on the solution.
 	// psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
-	psi.resize(numDOFs,0.0), etaMax.resize(numDOFs,0.0), etaMin.resize(numDOFs,0.0);
+	psi.resize(numDOFs,0.0);
+        etaMax.resize(numDOFs,0.0);
+        etaMin.resize(numDOFs,0.0);
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double xi, yi, zi, SumPos=0., SumNeg=0.;
