@@ -22,7 +22,7 @@ import numpy.testing as npt
 import numpy as np
 from proteus import Comm, Profiling
 from proteus.Profiling import logEvent as log
-from proteus.BoundaryConditions import BC_Base
+from proteus.BoundaryConditions import BC_Base, BoundaryCondition
 from proteus.mprans.BoundaryConditions import BC_RANS
 
 
@@ -72,7 +72,26 @@ class TestBC(unittest.TestCase):
             constants += [constant]
             values += [BC_func(x, t)]
         npt.assert_equal(values, constants)
-
+    def test_linearBC(self):
+        t_list = get_time_array()
+        a0 = 1
+        a = np.ndarray([1,2,3])
+        BC = BoundaryCondition()
+        BC.setLinearBC(a0,a)
+        for t in t_list:
+            x = get_random_x()
+            b = BC.uOfXT(x,t)
+            npt.assert_equal(b, a0+a*x)
+    def test_linearRampBC(self):
+        t_list = get_time_array()
+        t1 = 3.
+        value = 5.
+        BC = BoundaryCondition()
+        BC.setLinearRamp(t1,value)
+        for t in t_list:
+            x = get_random_x()
+            b = BC.uOfXT(x,t)
+            npt.assert_almost_equal(b, min(value, value*t/t1))
     def test_non_material(self):
         BC = create_BC(folder='mprans')
         BC.setNonMaterial()
