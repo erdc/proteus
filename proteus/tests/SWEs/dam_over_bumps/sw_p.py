@@ -58,7 +58,8 @@ else:
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
 bt['back'] = bt['top']
-domain.writePoly("tank2d")
+if opts.structured:
+    domain.writePoly("tank2d")
 
 ################
 ##### MESH #####
@@ -77,10 +78,10 @@ domain.MeshOptions.triangleOptions = triangleOptions
 def bathymetry(X):
     import numpy as np
     x = X[0]
-    y = X[1] 
+    y = X[1]
     bump1 = 1-1./8*np.sqrt((x-30)**2+(y-6)**2)
     bump2 = 1-1./8*np.sqrt((x-30)**2+(y-24)**2)
-    bump3 = 3-3./10*np.sqrt((x-47.5)**2+(y-15)**2)    
+    bump3 = 3-3./10*np.sqrt((x-47.5)**2+(y-15)**2)
     return np.maximum(np.maximum(np.maximum(0.,bump1),bump2),bump3)
 
 ##############################
