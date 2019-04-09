@@ -645,7 +645,8 @@ namespace proteus
 	    abort();
 	}
       //return fmax(fmax(0.,-lambda1), fmax(0,lambda3));
-      return fmax(lambda1, lambda3);
+      return fmax(fabs(lambda1), fabs(lambda3));
+      //return fmax(lambda1, lambda3);
     }
 
     inline
@@ -1873,6 +1874,7 @@ namespace proteus
 
 		  // auxiliary functions to compute fluxes
 		  double aux_h = huj*Cx[ij] + hvj*Cy[ij]; // f1*C = hj*(uj*Cx[ij] + vj*Cy[ij]);
+		  //double aux_h = (hj*uj)*Cx[ij] + (hj*vj)*Cy[ij]; // f1*C = hj*(uj*Cx[ij] + vj*Cy[ij]);
 		  double aux_hu = uj*huj*Cx[ij] + uj*hvj*Cy[ij];
 		  double aux_hv = vj*huj*Cx[ij] + vj*hvj*Cy[ij];
 
@@ -2025,6 +2027,7 @@ namespace proteus
 			{
 			  // h component
 			  hBar_ij = -1./(2*dLij)*((huj-hui)*Cx[ij] + (hvj-hvi)*Cy[ij])+0.5*(hj+hi);
+			  //hBar_ij = -1./(2*dLij)*((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])+0.5*(hj+hi);
 			  hTilde_ij = (dLij-muLij)/(2*dLij)*((hStarji-hj)-(hStarij-hi));
 			  // hu component
 			  huBar_ij = -1./(2*dLij)*((uj*huj-ui*hui)*Cx[ij] +
@@ -2040,6 +2043,61 @@ namespace proteus
 		      huBT[ij] = huBar_ij + huTilde_ij;
 		      hvBT[ij] = hvBar_ij + hvTilde_ij;
 
+		      // CHECKING SOME STUFF // (only to debug)
+		      /*
+		      if (hBT[ij] < 0)
+			{
+			  double aux1 = 2*dLij*(hBar_ij + hTilde_ij) - (-((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])+dLij*(hj+hi)
+									+ (dLij - muLij)*((hStarji-hj)-(hStarij-hi)));
+			  std::cout << "hBT<0: " << hBT[ij] << std::endl;
+			  std::cout << 2*dLij*(hBar_ij + hTilde_ij) << "\t"
+				    << (-((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])+dLij*(hj+hi)
+					+ (dLij - muLij)*((hStarji-hj)-(hStarij-hi)))
+				    << std::endl;
+			  std::cout << aux1 << std::endl;
+
+			  double aux2 = 2*dLij*(hBar_ij + hTilde_ij) - (-((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])
+									+ muLij*(hj+hi) + (dLij-muLij)*(hj+hi)
+									+ (dLij - muLij)*((hStarji-hj)-(hStarij-hi)));
+			  std::cout << 2*dLij*(hBar_ij + hTilde_ij) << "\t"
+				    << (-((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])
+					+ muLij*(hj+hi) + (dLij-muLij)*(hj+hi)
+					+ (dLij - muLij)*((hStarji-hj)-(hStarij-hi)))
+				    << std::endl;
+			  std::cout << aux2 << std::endl;
+
+			  std::cout << "dLij: " << dLij << ", muLij: " << muLij << ", "
+				    << "dLij-muLij: " << dLij - muLij << std::endl;
+			  std::cout << "hStarji + 2*hi - hStarij: " << (hStarji + 2*hi - hStarij) << std::endl;
+
+			  std::cout << "hi, hj: " << hi << ", " << hj << std::endl;
+
+			  std::cout << "... dLij" << std::endl;
+			  maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
+							hi,hui,hvi,
+							hj,huj,hvj,
+							hEps,hEps,true)*cij_norm;
+			  std::cout << "... dLji" << std::endl;
+			  maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
+							hj,huj,hvj,
+							hi,hui,hvi,
+							hEps,hEps,true)*cji_norm;
+
+			  std::cout << "muLowij: " << fmax(0.,-(ui*Cx[ij] + vi*Cy[ij]))
+				    << ", " << fmax(0,(uj*Cx[ij] + vj*Cy[ij])) << std::endl;
+
+
+			  std::cout << fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
+                                                                      hi,hui,hvi,
+                                                                      hj,huj,hvj,
+                                                                      hEps,hEps,false)*cij_norm,
+                                        maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
+                                                                      hj,huj,hvj,
+                                                                      hi,hui,hvi,
+                                                                      hEps,hEps,false)*cji_norm) << std::endl;
+			  abort();
+			}
+		      */
                       ///////////////////////
                       // ENTROPY VISCOSITY //
                       ///////////////////////
