@@ -67,7 +67,7 @@ class NS_base(object):  # (HasTraits):
        }
     """
 
-    def __init__(self,so,pList,nList,sList,opts,simFlagsList=None):
+    def __init__(self,so,pList,nList,sList,opts,simFlagsList=None,TwoPhaseFlow=False):
         from . import Comm
         comm=Comm.get()
         self.comm=comm
@@ -84,6 +84,7 @@ class NS_base(object):  # (HasTraits):
         #: Dictionary of command line arguments
         self.opts=opts
         self.simFlagsList=simFlagsList
+        self.TwoPhaseFlow=TwoPhaseFlow
         self.timeValues={}
         Profiling.memory("Memory used before initializing"+so.name)
         memBase = Profiling.memLast #save current memory usage for later
@@ -91,13 +92,21 @@ class NS_base(object):  # (HasTraits):
             so.useOneArchive=False
         logEvent("Setting Archiver(s)")
 
+        if hasattr(self.so,"fastArchive"):
+            self.fastArchive = self.so.fastArchive
+        else:
+            self.fastArchive = False
+
         if so.useOneArchive:
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
                                         gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart,
                                         useGlobalXMF=(not opts.subdomainArchives),
                                         global_sync=opts.global_sync)
-            self.ar = dict([(i,tmp) for i in range(len(self.pList))])
+            if self.fastArchive==True:
+                self.ar = dict([(0,tmp)])
+            else:
+                self.ar = dict([(i,tmp) for i in range(len(self.pList))])
         elif len(self.pList) == 1:
             self.ar = {0:Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
                                               gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart)} #reuse so.name if possible
@@ -552,6 +561,10 @@ class NS_base(object):  # (HasTraits):
           from scipy import spatial
           meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
           meshVertex2Model= [0]*theMesh.nNodes_owned
+
+          assert theDomain.vertices, "model vertices (domain.vertices) were not specified"
+          assert theDomain.vertexFlags, "model classification (domain.vertexFlags) needs to be specified"
+
           for idx,vertex in enumerate(theDomain.vertices):
             if(pCT.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
               vertex.append(0.0) #need to make a 3D coordinate
@@ -769,32 +782,44 @@ class NS_base(object):  # (HasTraits):
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
 
-        logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
-        if p0.domain.nd == 3:
+        if self.TwoPhaseFlow:
+            nLevels = p0.myTpFlowProblem.general['nLevels']
+            nLayersOfOverlapForParallel = p0.myTpFlowProblem.general['nLayersOfOverlapForParallel']
+            parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+            domain = p0.myTpFlowProblem.domain
+            domain.MeshOptions.setParallelPartitioningType('element')
+        else:
+            nLevels = n0.nLevels
+            nLayersOfOverlapForParallel = n0.nLayersOfOverlapForParallel
+            parallelPartitioningType = n0.parallelPartitioningType
+            domain = p0.domain
+
+        logEvent("Generating %i-level mesh from PUMI mesh" % (nLevels,))
+        if domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
               0,0,0,skipInit=True,
-              nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-              parallelPartitioningType=n0.parallelPartitioningType)
-        if p0.domain.nd == 2:
+              nLayersOfOverlap=nLayersOfOverlapForParallel,
+              parallelPartitioningType=parallelPartitioningType)
+        if domain.nd == 2:
           mlMesh = MeshTools.MultilevelTriangularMesh(
               0,0,0,skipInit=True,
-              nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-              parallelPartitioningType=n0.parallelPartitioningType)
+              nLayersOfOverlap=nLayersOfOverlapForParallel,
+              parallelPartitioningType=parallelPartitioningType)
         if self.comm.size()==1:
             mlMesh.generateFromExistingCoarseMesh(
-                mesh,n0.nLevels,
-                nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-                parallelPartitioningType=n0.parallelPartitioningType)
+                mesh,nLevels,
+                nLayersOfOverlap=nLayersOfOverlapForParallel,
+                parallelPartitioningType=parallelPartitioningType)
         else:
             mlMesh.generatePartitionedMeshFromPUMI(
-                mesh,n0.nLevels,
-                nLayersOfOverlap=n0.nLayersOfOverlapForParallel)
+                mesh,nLevels,
+                nLayersOfOverlap=nLayersOfOverlapForParallel)
         self.mlMesh_nList=[]
         for p in self.pList:
             self.mlMesh_nList.append(mlMesh)
-        if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+        if (domain.PUMIMesh.size_field_config() == "isotropicProteus"):
             mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
-        if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+        if (domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
             mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
             mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
 
@@ -873,11 +898,11 @@ class NS_base(object):  # (HasTraits):
             coef = lm.coefficients
             if coef.vectorComponents is not None:
               vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-              p0.domain.PUMIMesh.transferFieldToProteus(
+              domain.PUMIMesh.transferFieldToProteus(
                      coef.vectorName, vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
-              p0.domain.PUMIMesh.transferFieldToProteus(
+              domain.PUMIMesh.transferFieldToProteus(
                      coef.vectorName+"_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last[:] = vector[:,vci]
@@ -887,10 +912,10 @@ class NS_base(object):  # (HasTraits):
               if coef.vectorComponents is None or \
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                p0.domain.PUMIMesh.transferFieldToProteus(
+                domain.PUMIMesh.transferFieldToProteus(
                     coef.variableNames[ci], scalar)
                 lm.u[ci].dof[:] = scalar[:,0]
-                p0.domain.PUMIMesh.transferFieldToProteus(
+                domain.PUMIMesh.transferFieldToProteus(
                     coef.variableNames[ci]+"_old", scalar)
                 lm.u[ci].dof_last[:] = scalar[:,0]
                 del scalar
@@ -938,7 +963,7 @@ class NS_base(object):  # (HasTraits):
             assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
             logEvent("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
-        p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+        domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
         self.systemStepController.modelList = self.modelList
         self.systemStepController.exitModelStep = {}
         self.systemStepController.controllerList = []
@@ -1051,8 +1076,24 @@ class NS_base(object):  # (HasTraits):
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
 
+        if self.TwoPhaseFlow:
+            domain = p0.myTpFlowProblem.domain
+            rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
+            nu_0 = p0.myTpFlowProblem.physical_parameters['viscosityA']
+            rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
+            nu_1 = p0.myTpFlowProblem.physical_parameters['viscosityB']
+            g = p0.myTpFlowProblem.physical_parameters['gravity']
+            epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
+        else:
+            domain = p0.domain
+            rho_0  = p0.rho_0
+            nu_0   = p0.nu_0
+            rho_1  = p0.rho_1
+            nu_1   = p0.nu_1
+            g      = p0.g
+            epsFact_density = p0.epsFact_density
         logEvent("Copying coordinates to PUMI")
-        p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+        domain.PUMIMesh.transferFieldToPUMI("coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
         logEvent("Copying DOF and parameters to PUMI")
@@ -1064,12 +1105,12 @@ class NS_base(object):  # (HasTraits):
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
 
-              p0.domain.PUMIMesh.transferFieldToPUMI(
-                     coef.vectorName, vector)
+              domain.PUMIMesh.transferFieldToPUMI(
+                  coef.vectorName, vector)
               #Transfer dof_last
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
-              p0.domain.PUMIMesh.transferFieldToPUMI(
+              domain.PUMIMesh.transferFieldToPUMI(
                      coef.vectorName+"_old", vector)
               del vector
             for ci in range(coef.nc):
@@ -1077,12 +1118,12 @@ class NS_base(object):  # (HasTraits):
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                 scalar[:,0] = lm.u[ci].dof[:]
-                p0.domain.PUMIMesh.transferFieldToPUMI(
+                domain.PUMIMesh.transferFieldToPUMI(
                     coef.variableNames[ci], scalar)
 
                 #Transfer dof_last
                 scalar[:,0] = lm.u[ci].dof_last[:]
-                p0.domain.PUMIMesh.transferFieldToPUMI(
+                domain.PUMIMesh.transferFieldToPUMI(
                      coef.variableNames[ci]+"_old", scalar)
                 del scalar
 
@@ -1091,17 +1132,17 @@ class NS_base(object):  # (HasTraits):
         del scalar
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
-        rho = numpy.array([self.pList[0].ct.rho_0,
-                           self.pList[0].ct.rho_1])
-        nu = numpy.array([self.pList[0].ct.nu_0,
-                          self.pList[0].ct.nu_1])
-        g = numpy.asarray(self.pList[0].ct.g)
+        rho = numpy.array([rho_0,
+                           rho_1])
+        nu = numpy.array([nu_0,
+                          nu_1])
+        g = numpy.asarray(g)
         if(hasattr(self,"tn")):
             deltaT = self.tn-self.tn_last
         else:
             deltaT = 0
-        epsFact = p0.epsFact_density
-        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+        epsFact = epsFact_density
+        domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
         del rho, nu, g, epsFact
 
 
@@ -1191,14 +1232,19 @@ class NS_base(object):  # (HasTraits):
 
             #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
-        if (hasattr(p0.domain, 'PUMIMesh') and
-            p0.domain.PUMIMesh.adaptMesh() and
+
+	if self.TwoPhaseFlow:
+	    domain = p0.myTpFlowProblem.domain
+	else:
+	    domain = p0.domain
+        if (hasattr(domain, 'PUMIMesh') and
+            domain.PUMIMesh.adaptMesh() and
             self.so.useOneMesh and
-            self.nSolveSteps%p0.domain.PUMIMesh.numAdaptSteps()==0):
-            if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
-                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_size",
+            self.nSolveSteps%domain.PUMIMesh.numAdaptSteps()==0):
+            if (domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+                domain.PUMIMesh.transferFieldToPUMI("proteus_size",
                                                        self.modelList[0].levelModelList[0].mesh.size_field)
-            if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+            if (domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
                 #Insert a function to define the size_scale/size_frame fields here.
                 #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
                 for i in range(len(self.modelList[0].levelModelList[0].mesh.size_scale)):
@@ -1211,28 +1257,28 @@ class NS_base(object):  # (HasTraits):
                       else:
                         self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 0.0
                 self.modelList[0].levelModelList[0].mesh.size_scale
-                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
-                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
+                domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
+                domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
 
             self.PUMI_transferFields()
 
             logEvent("Estimate Error")
-            sfConfig = p0.domain.PUMIMesh.size_field_config()
+            sfConfig = domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
-              errorTotal= p0.domain.PUMIMesh.get_local_error()
-              if(p0.domain.PUMIMesh.willAdapt()):
+              errorTotal= domain.PUMIMesh.get_local_error()
+              if(domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
             elif(sfConfig=="VMS"):
-              errorTotal = p0.domain.PUMIMesh.get_VMS_error()
-              if(p0.domain.PUMIMesh.willAdapt()):
+              errorTotal = domain.PUMIMesh.get_VMS_error()
+              if(domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
             elif(sfConfig=='meshQuality'):
-              minQual = p0.domain.PUMIMesh.getMinimumQuality()
+              minQual = domain.PUMIMesh.getMinimumQuality()
               if(minQual):
                 logEvent('The quality is %f ' % minQual)
               adaptMeshNow=True
@@ -1271,36 +1317,42 @@ class NS_base(object):  # (HasTraits):
 
         p0 = self.pList[0].ct
         n0 = self.nList[0].ct
-        sfConfig = p0.domain.PUMIMesh.size_field_config()
+
+        if self.TwoPhaseFlow:
+            domain = p0.myTpFlowProblem.domain
+        else:
+            domain = p0.domain
+
+        sfConfig = domain.PUMIMesh.size_field_config()
         logEvent("h-adapt mesh by calling AdaptPUMIMesh")
         if(sfConfig=="pseudo"):
             logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
         else:
-            p0.domain.PUMIMesh.adaptPUMIMesh()
+            domain.PUMIMesh.adaptPUMIMesh()
 
         #code to suggest adapting until error is reduced;
         #not fully baked and can lead to infinite loops of adaptation
         #if(sfConfig=="ERM"):
-        #  p0.domain.PUMIMesh.get_local_error()
-        #  while(p0.domain.PUMIMesh.willAdapt()):
-        #    p0.domain.PUMIMesh.adaptPUMIMesh()
-        #    p0.domain.PUMIMesh.get_local_error()
+        #  domain.PUMIMesh.get_local_error()
+        #  while(domain.PUMIMesh.willAdapt()):
+        #    domain.PUMIMesh.adaptPUMIMesh()
+        #    domain.PUMIMesh.get_local_error()
 
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
         #PUMI conversion #1, they should be merged
         #into a function
-        if p0.domain.nd == 3:
+        if domain.nd == 3:
           mesh = MeshTools.TetrahedralMesh()
         else:
           mesh = MeshTools.TriangularMesh()
 
-        mesh.convertFromPUMI(p0.domain.PUMIMesh,
-                             p0.domain.faceList,
-                             p0.domain.regList,
+        mesh.convertFromPUMI(domain.PUMIMesh,
+                             domain.faceList,
+                             domain.regList,
                              parallel = self.comm.size() > 1,
-                             dim = p0.domain.nd)
+                             dim = domain.nd)
 
         self.PUMI2Proteus(mesh)
       ##chitak end Adapt
@@ -1583,10 +1635,24 @@ class NS_base(object):  # (HasTraits):
         self.nSequenceSteps = 0
         nSequenceStepsLast=self.nSequenceSteps # prevent archiving the same solution twice
         self.nSolveSteps=0
+
+        import time
+        if hasattr(self.so,'measureSpeedOfCode'):
+            measureSpeed = self.so.measureSpeedOfCode
+        else:
+            measureSpeed = False
+        #
+        startToMeasureSpeed = False
+        numTimeSteps=0
+        start=0
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
+            if measureSpeed and startToMeasureSpeed and numTimeSteps==0 and self.comm.isMaster():
+                start = time.time()
+                logEvent("**********... start measuring speed of the code",level=1)
+            #
 #            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
 
             self.opts.save_dof = True
@@ -1733,6 +1799,7 @@ class NS_base(object):  # (HasTraits):
                                                                                                self.systemStepController.dt_system))
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
+                #
                 for model in self.modelList:
                     for av in self.auxiliaryVariables[model.name]:
                         av.calculate()
@@ -1746,6 +1813,64 @@ class NS_base(object):  # (HasTraits):
                 self.nSolveSteps += 1
                 if(self.PUMI_estimateError()):
                     self.PUMI_adaptMesh()
+                #
+                if measureSpeed and startToMeasureSpeed and self.comm.isMaster():
+                    numTimeSteps += 1
+                    logEvent("**********... end of time step. Number of time steps (to measure speed of the code): " + str(numTimeSteps),level=1)
+                if measureSpeed and numTimeSteps==100 and self.comm.isMaster():
+                    end = time.time()
+                    Nproc = self.comm.size()
+                    NDOFs=0
+                    for i,mod in enumerate(self.modelList):
+                        if (i in self.so.modelSpinUpList) == False: #To remove spin up models
+                            NDOFs += mod.par_uList[0].size if mod.par_uList[0] is not None else len(mod.uList[0])
+                    #
+                    with open ("speed_measurement.txt","w") as file:
+                        # write file and log this event
+                        multiple_line_string = """ ******************** Measurements of speed ********************
+                        Num of time steps: {nts:d}
+                        Total time: {t:f}
+                        Num of processors: {Nproc:d}
+                        Total num of DOFs: {NDOFs:d}
+                        Num of DOFs per processor: {aux1:d}
+                        Time per time step, per DOF, per processor: {aux2:.4E} \n""".format(nts=numTimeSteps,
+                                                                                            t=(end-start),
+                                                                                            Nproc=Nproc,
+                                                                                            NDOFs=NDOFs,
+                                                                                            aux1=int(NDOFs/Nproc),
+                                                                                            aux2=(end-start)/numTimeSteps*Nproc/NDOFs)
+                        file.write(multiple_line_string)
+                        logEvent(multiple_line_string,level=4)
+                    #
+                    measureSpeed = False
+                #
+            if measureSpeed and startToMeasureSpeed and self.comm.isMaster():
+                end = time.time()
+                Nproc = self.comm.size()
+                NDOFs=0
+                for i,mod in enumerate(self.modelList):
+                    if (i in self.so.modelSpinUpList) == False:
+                        NDOFs += mod.par_uList[0].size if mod.par_uList[0] is not None else len(mod.uList[0])
+                #
+                with open ("speed_measurement.txt","w") as file:
+                    # write file and log this event
+                    multiple_line_string = """ ******************** Measurements of speed ********************
+                    Num of time steps: {nts:d}
+                    Total time: {t:f}
+                    Num of processors: {Nproc:d}
+                    Total num of DOFs: {NDOFs:d}
+                    Num of DOFs per processor: {aux1:d}
+                    Time per time step, per DOF, per processor: {aux2:.4E} \n""".format(nts=numTimeSteps,
+                               t=(end-start),
+                               Nproc=Nproc,
+                               NDOFs=NDOFs,
+                               aux1=int(NDOFs/Nproc),
+                               aux2=(end-start)/numTimeSteps*Nproc/NDOFs)
+                    file.write(multiple_line_string)
+                    logEvent(multiple_line_string,level=4)
+                #
+                measureSpeed = False
+            #
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP and self.nSequenceSteps > nSequenceStepsLast:
                 nSequenceStepsLast = self.nSequenceSteps
@@ -1763,6 +1888,9 @@ class NS_base(object):  # (HasTraits):
             #self.nSolveSteps += 1
             #if(self.PUMI_estimateError()):
             #  self.PUMI_adaptMesh()
+            if measureSpeed and self.comm.isMaster():
+                startToMeasureSpeed = True
+            #
         logEvent("Finished calculating solution",level=3)
         # compute auxiliary quantities at last time step
         for index,model in enumerate(self.modelList):
@@ -1843,256 +1971,251 @@ class NS_base(object):  # (HasTraits):
 
     ##save model's initial solution values to archive
     def archiveInitialSolution(self,model,index):
-        import xml.etree.ElementTree as ElementTree
-        if self.archiveFlag == ArchiveFlags.UNDEFINED:
-            return
-        logEvent("Writing initial mesh for  model = "+model.name,level=3)
-        logEvent("Writing initial conditions for  model = "+model.name,level=3)
-        if not self.so.useOneArchive or index==0:
-            self.ar[index].domain = ElementTree.SubElement(self.ar[index].tree.getroot(),"Domain")
-        if self.so.useOneArchive:
-            model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
-                                                                   writeVectors=True,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
-                                                                   writeVelocityPostProcessor=self.opts.writeVPP)
-        else:
-            model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
-                                                                   writeVectors=True,meshChanged=True,femSpaceWritten={},
-                                                                   writeVelocityPostProcessor=self.opts.writeVPP)
-        model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
-                                                            self.tnList[0],
-                                                            self.tCount)
-        #could just pull the code and flags out from SimTools rathter than asking it to parse them
-        #uses values in simFlags['storeQuantities']
-        #q dictionary
-        if self.archive_q[index] == True:
-            scalarKeys = model.simTools.getScalarElementStorageKeys(model,self.tnList[0])
-            vectorKeys = model.simTools.getVectorElementStorageKeys(model,self.tnList[0])
-            tensorKeys = model.simTools.getTensorElementStorageKeys(model,self.tnList[0])
-            model.levelModelList[-1].archiveElementQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
-                                                                    scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
-                                                                    initialPhase=True,meshChanged=True)
-        if self.archive_ebq_global[index] == True:
-            #ebq_global dictionary
-            scalarKeys = model.simTools.getScalarElementBoundaryStorageKeys(model,self.tnList[0])
-            vectorKeys = model.simTools.getVectorElementBoundaryStorageKeys(model,self.tnList[0])
-            tensorKeys = model.simTools.getTensorElementBoundaryStorageKeys(model,self.tnList[0])
-            model.levelModelList[-1].archiveElementBoundaryQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
+        if True if self.fastArchive == False else 'clsvof' in model.name:
+            import xml.etree.ElementTree as ElementTree
+            if self.archiveFlag == ArchiveFlags.UNDEFINED:
+                return
+            logEvent("Writing initial mesh for  model = "+model.name,level=3)
+            logEvent("Writing initial conditions for  model = "+model.name,level=3)
+            if not self.so.useOneArchive or index==0:
+                self.ar[index].domain = ElementTree.SubElement(self.ar[index].tree.getroot(),"Domain")
+            if self.so.useOneArchive:
+                model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
+                                                                       writeVectors=True,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
+                                                                       writeVelocityPostProcessor=self.opts.writeVPP)
+            else:
+                model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
+                                                                       writeVectors=True,meshChanged=True,femSpaceWritten={},
+                                                                       writeVelocityPostProcessor=self.opts.writeVPP)
+            model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
+                                                                self.tnList[0],
+                                                                self.tCount)
+            #could just pull the code and flags out from SimTools rathter than asking it to parse them
+            #uses values in simFlags['storeQuantities']
+            #q dictionary
+            if self.archive_q[index] == True:
+                scalarKeys = model.simTools.getScalarElementStorageKeys(model,self.tnList[0])
+                vectorKeys = model.simTools.getVectorElementStorageKeys(model,self.tnList[0])
+                tensorKeys = model.simTools.getTensorElementStorageKeys(model,self.tnList[0])
+                model.levelModelList[-1].archiveElementQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
+                                                                        scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
+                                                                        initialPhase=True,meshChanged=True)
+            if self.archive_ebq_global[index] == True:
+                #ebq_global dictionary
+                scalarKeys = model.simTools.getScalarElementBoundaryStorageKeys(model,self.tnList[0])
+                vectorKeys = model.simTools.getVectorElementBoundaryStorageKeys(model,self.tnList[0])
+                tensorKeys = model.simTools.getTensorElementBoundaryStorageKeys(model,self.tnList[0])
+                model.levelModelList[-1].archiveElementBoundaryQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
                                                                                 scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                 initialPhase=True,meshChanged=True)
-        if self.archive_ebqe[index] == True:
-            #ebqe dictionary
-            scalarKeys = model.simTools.getScalarExteriorElementBoundaryStorageKeys(model,self.tnList[0])
-            vectorKeys = model.simTools.getVectorExteriorElementBoundaryStorageKeys(model,self.tnList[0])
-            tensorKeys = model.simTools.getTensorExteriorElementBoundaryStorageKeys(model,self.tnList[0])
-            model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
-                                                                                    scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
-                                                                                    initialPhase=True,meshChanged=True)
-        try:
-            phi_s = {}
-            phi_s[0] = model.levelModelList[-1].coefficients.phi_s
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   phi_s,
-                                                                   res_name_base='phi_s')
-            logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
-        except:
-            pass
-
-        if 'clsvof' in model.name:
-            vofDOFs = {}
-            vofDOFs[0] = model.levelModelList[-1].vofDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   vofDOFs,
-                                                                   res_name_base='vof')
-            logEvent("Writing initial vof from clsvof at time t="+str(0),level=3)
-
-        #For aux quantity of interest (MQL)
-        try:
-            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
-                quantDOFs = {}
-                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+            if self.archive_ebqe[index] == True:
+                #ebqe dictionary
+                scalarKeys = model.simTools.getScalarExteriorElementBoundaryStorageKeys(model,self.tnList[0])
+                vectorKeys = model.simTools.getVectorExteriorElementBoundaryStorageKeys(model,self.tnList[0])
+                tensorKeys = model.simTools.getTensorExteriorElementBoundaryStorageKeys(model,self.tnList[0])
+                model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
+                                                                                        scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
+                                                                                        initialPhase=True,meshChanged=True)
+            try:
+                phi_s = {}
+                phi_s[0] = model.levelModelList[-1].coefficients.phi_s
                 model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
                                                                        self.tnList[0],
                                                                        self.tCount,
-                                                                       quantDOFs,
-                                                                       res_name_base='quantDOFs_for_'+model.name)
-                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(0),level=3)
-        except:
-            pass
-
-        #Write bathymetry for Shallow water equations (MQL)
-        try:
-            bathymetry = {}
-            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   bathymetry,
-                                                                   res_name_base='bathymetry')
-            logEvent("Writing bathymetry for = "+model.name,level=3)
-        except:
-            pass
-        #write eta=h+bathymetry for SWEs (MQL)
-        try:
-            eta = {}
-            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   eta,
-                                                                   res_name_base='eta')
-            logEvent("Writing bathymetry for = "+model.name,level=3)
-        except:
-            pass
-
-        #for nonlinear POD
-        if self.archive_pod_residuals[index] == True:
-            res_space = {}; res_mass = {}
-            for ci in range(model.levelModelList[-1].coefficients.nc):
-                res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
-                res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space,res_name_base='spatial_residual')
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_mass,res_name_base='mass_residual')
-
-        if not self.opts.cacheArchive:
-            if not self.so.useOneArchive:
-                self.ar[index].sync()
-            else:
-                if index == len(self.ar) - 1:
+                                                                       phi_s,
+                                                                       res_name_base='phi_s')
+                logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            except:
+                pass
+            if 'clsvof' in model.name:
+                vofDOFs = {}
+                vofDOFs[0] = model.levelModelList[-1].vofDOFs
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       vofDOFs,
+                                                                       res_name_base='vof')
+                logEvent("Writing initial vof from clsvof at time t="+str(0),level=3)
+            #For aux quantity of interest (MQL)
+            try:
+                if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                    quantDOFs = {}
+                    quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                    model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                           self.tnList[0],
+                                                                           self.tCount,
+                                                                           quantDOFs,
+                                                                           res_name_base='quantDOFs_for_'+model.name)
+                    logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(0),level=3)
+            except:
+                pass
+            #Write bathymetry for Shallow water equations (MQL)
+            try:
+                bathymetry = {}
+                bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       bathymetry,
+                                                                       res_name_base='bathymetry')
+                logEvent("Writing bathymetry for = "+model.name,level=3)
+            except:
+                pass
+            #write eta=h+bathymetry for SWEs (MQL)
+            try:
+                eta = {}
+                eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       eta,
+                                                                       res_name_base='eta')
+                logEvent("Writing bathymetry for = "+model.name,level=3)
+            except:
+                pass
+            #for nonlinear POD
+            if self.archive_pod_residuals[index] == True:
+                res_space = {}; res_mass = {}
+                for ci in range(model.levelModelList[-1].coefficients.nc):
+                    res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                    model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+                    res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                    model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space,res_name_base='spatial_residual')
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_mass,res_name_base='mass_residual')
+            if not self.opts.cacheArchive:
+                if not self.so.useOneArchive:
                     self.ar[index].sync()
+                else:
+                    if index == len(self.ar) - 1:
+                        self.ar[index].sync()
+
     ##save model's solution values to archive
     def archiveSolution(self,model,index,t=None):
-        if self.archiveFlag == ArchiveFlags.UNDEFINED:
-            return
-        if t is None:
-            t = self.systemStepController.t_system
-
-        logEvent("Writing mesh header for  model = "+model.name+" at time t="+str(t),level=3)
-        logEvent("Writing solution for  model = "+model.name,level=3)
-        if self.so.useOneArchive:
-            if index==0:
-                self.femSpaceWritten={}
-            model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
-                                                                   initialPhase=False,
-                                                                   writeVectors=True,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
-                                                                   writeVelocityPostProcessor=self.opts.writeVPP)
-        else:
-            model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
-                                                                   initialPhase=False,
-                                                                   writeVectors=True,meshChanged=True,femSpaceWritten={},
-                                                                   writeVelocityPostProcessor=self.opts.writeVPP)
-        model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
-                                                            t,
-                                                            self.tCount)
-        #uses values in simFlags['storeQuantities']
-        #q dictionary
-        if self.archive_q[index] == True:
-            scalarKeys = model.simTools.getScalarElementStorageKeys(model,t)
-            vectorKeys = model.simTools.getVectorElementStorageKeys(model,t)
-            tensorKeys = model.simTools.getTensorElementStorageKeys(model,t)
-            model.levelModelList[-1].archiveElementQuadratureValues(self.ar[index],t,self.tCount,
-                                                                    scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
-                                                                    initialPhase=False,meshChanged=True)
-
-        #ebq_global dictionary
-        if self.archive_ebq_global[index] == True:
-            scalarKeys = model.simTools.getScalarElementBoundaryStorageKeys(model,t)
-            vectorKeys = model.simTools.getVectorElementBoundaryStorageKeys(model,t)
-            tensorKeys = model.simTools.getTensorElementBoundaryStorageKeys(model,t)
-            model.levelModelList[-1].archiveElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
-                                                                            scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
-                                                                            initialPhase=False,meshChanged=True)
-        if self.archive_ebqe[index] == True:
-            #ebqe dictionary
-            scalarKeys = model.simTools.getScalarExteriorElementBoundaryStorageKeys(model,t)
-            vectorKeys = model.simTools.getVectorExteriorElementBoundaryStorageKeys(model,t)
-            tensorKeys = model.simTools.getTensorExteriorElementBoundaryStorageKeys(model,t)
-            model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
-                                                                                    scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
-                                                                                    initialPhase=False,meshChanged=True)
-
-        try:
-            phi_s = {}
-            phi_s[0] = model.levelModelList[-1].coefficients.phi_s
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   phi_s,
-                                                                   res_name_base='phi_s')
-            logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
-        except:
-            pass
-
-        if 'clsvof' in model.name:
-            vofDOFs = {}
-            vofDOFs[0] = model.levelModelList[-1].vofDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   vofDOFs,
-                                                                   res_name_base='vof')
-            logEvent("Writing initial vof from clsvof at time t="+str(t),level=3)
-
-        try:
-            if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
-                quantDOFs = {}
-                quantDOFs[0] = model.levelModelList[-1].quantDOFs
+        if True if self.fastArchive == False else 'clsvof' in model.name:
+            if self.archiveFlag == ArchiveFlags.UNDEFINED:
+                return
+            if t is None:
+                t = self.systemStepController.t_system
+            logEvent("Writing mesh header for  model = "+model.name+" at time t="+str(t),level=3)
+            logEvent("Writing solution for  model = "+model.name,level=3)
+            if self.so.useOneArchive:
+                if index==0:
+                    self.femSpaceWritten={}
+                model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
+                                                                       initialPhase=False,
+                                                                       writeVectors=True,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
+                                                                       writeVelocityPostProcessor=self.opts.writeVPP)
+            else:
+                model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
+                                                                       initialPhase=False,
+                                                                       writeVectors=True,meshChanged=True,femSpaceWritten={},
+                                                                       writeVelocityPostProcessor=self.opts.writeVPP)
+            model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
+                                                                t,
+                                                                self.tCount)
+            #uses values in simFlags['storeQuantities']
+            #q dictionary
+            if self.archive_q[index] == True and self.fastArchive==False:
+                scalarKeys = model.simTools.getScalarElementStorageKeys(model,t)
+                vectorKeys = model.simTools.getVectorElementStorageKeys(model,t)
+                tensorKeys = model.simTools.getTensorElementStorageKeys(model,t)
+                model.levelModelList[-1].archiveElementQuadratureValues(self.ar[index],t,self.tCount,
+                                                                        scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
+                                                                        initialPhase=False,meshChanged=True)
+            #ebq_global dictionary
+            if self.archive_ebq_global[index] == True and self.fastArchive==False:
+                scalarKeys = model.simTools.getScalarElementBoundaryStorageKeys(model,t)
+                vectorKeys = model.simTools.getVectorElementBoundaryStorageKeys(model,t)
+                tensorKeys = model.simTools.getTensorElementBoundaryStorageKeys(model,t)
+                model.levelModelList[-1].archiveElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
+                                                                                scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
+                                                                                initialPhase=False,meshChanged=True)
+            if self.archive_ebqe[index] == True and self.fastArchive==False:
+                #ebqe dictionary
+                scalarKeys = model.simTools.getScalarExteriorElementBoundaryStorageKeys(model,t)
+                vectorKeys = model.simTools.getVectorExteriorElementBoundaryStorageKeys(model,t)
+                tensorKeys = model.simTools.getTensorExteriorElementBoundaryStorageKeys(model,t)
+                model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
+                                                                                        scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
+                                                                                        initialPhase=False,meshChanged=True)
+            if self.fastArchive==False:
+                try:
+                    phi_s = {}
+                    phi_s[0] = model.levelModelList[-1].coefficients.phi_s
+                    model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                           self.tnList[0],
+                                                                           self.tCount,
+                                                                           phi_s,
+                                                                           res_name_base='phi_s')
+                    logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
+                except:
+                    pass
+            if 'clsvof' in model.name and self.fastArchive==False:
+                vofDOFs = {}
+                vofDOFs[0] = model.levelModelList[-1].vofDOFs
                 model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
                                                                        self.tnList[0],
                                                                        self.tCount,
-                                                                       quantDOFs,
-                                                                       res_name_base='quantDOFs_for_'+model.name)
-                logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
-        except:
-            pass
+                                                                       vofDOFs,
+                                                                       res_name_base='vof')
+                logEvent("Writing initial vof from clsvof at time t="+str(t),level=3)
+            if self.fastArchive==False:
+                try:
+                    if model.levelModelList[-1].coefficients.outputQuantDOFs==True:
+                        quantDOFs = {}
+                        quantDOFs[0] = model.levelModelList[-1].quantDOFs
+                        model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                               self.tnList[0],
+                                                                               self.tCount,
+                                                                               quantDOFs,
+                                                                               res_name_base='quantDOFs_for_'+model.name)
+                        logEvent("Writing quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+                except:
+                    pass
+            #Write bathymetry for Shallow water equations (MQL)
+            if self.fastArchive==False:
+                try:
+                    bathymetry = {}
+                    bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+                    model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                           self.tnList[0],
+                                                                           self.tCount,
+                                                                           bathymetry,
+                                                                           res_name_base='bathymetry')
+                    logEvent("Writing bathymetry for = "+model.name,level=3)
+                except:
+                    pass
+                #write eta=h+bathymetry for SWEs (MQL)
+                try:
+                    eta = {}
+                    eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+                    model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                           self.tnList[0],
+                                                                           self.tCount,
+                                                                           eta,
+                                                                           res_name_base='eta')
+                    logEvent("Writing bathymetry for = "+model.name,level=3)
+                except:
+                    pass
 
-        #Write bathymetry for Shallow water equations (MQL)
-        try:
-            bathymetry = {}
-            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   bathymetry,
-                                                                   res_name_base='bathymetry')
-            logEvent("Writing bathymetry for = "+model.name,level=3)
-        except:
-            pass
-        #write eta=h+bathymetry for SWEs (MQL)
-        try:
-            eta = {}
-            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   eta,
-                                                                   res_name_base='eta')
-            logEvent("Writing bathymetry for = "+model.name,level=3)
-        except:
-            pass
+            #for nonlinear POD
+            if self.archive_pod_residuals[index] == True and self.fastArchive==False:
+                res_space = {}; res_mass = {}
+                for ci in range(model.levelModelList[-1].coefficients.nc):
+                    res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                    model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+                    res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                    model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
 
-        #for nonlinear POD
-        if self.archive_pod_residuals[index] == True:
-            res_space = {}; res_mass = {}
-            for ci in range(model.levelModelList[-1].coefficients.nc):
-                res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
-                res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_space,res_name_base='spatial_residual')
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_mass,res_name_base='mass_residual')
-
-        if not self.opts.cacheArchive:
-            if not self.so.useOneArchive:
-                self.ar[index].sync()
-            else:
-                if index == len(self.ar) - 1:
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_space,res_name_base='spatial_residual')
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_mass,res_name_base='mass_residual')
+            if not self.opts.cacheArchive:
+                if not self.so.useOneArchive:
                     self.ar[index].sync()
+                else:
+                    if index == len(self.ar) - 1:
+                        self.ar[index].sync()
 
     ## clean up archive
     def closeArchive(self,model,index):

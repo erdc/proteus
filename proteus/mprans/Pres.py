@@ -171,6 +171,7 @@ class Coefficients(TC_base):
                 r = 1
             else:
                 r = old_div(self.fluidModel.timeIntegration.dt, self.fluidModel.timeIntegration.dt_history[0])
+            self.model.p_sharp_dof[:] = self.model.u[0].dof + r * self.pressureIncrementModel.u[0].dof
             self.model.q_p_sharp[:] = self.model.q[('u', 0)] + r * self.pressureIncrementModel.q[('u', 0)]
             self.model.ebqe_p_sharp[:] = self.model.ebqe[('u', 0)] + r * self.pressureIncrementModel.ebqe[('u', 0)]
             self.model.q_grad_p_sharp[:] = self.model.q[('grad(u)', 0)] + r * self.pressureIncrementModel.q[('grad(u)', 0)]
@@ -354,6 +355,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element = sum(self.nDOF_trial_element)
         self.nFreeVDOF_global = sum(self.nFreeDOF_global)
+        self.p_sharp_dof=self.u[0].dof.copy()
         #
         NonlinearEquation.__init__(self, self.nFreeVDOF_global)
         #

@@ -38,9 +38,17 @@ def getDBC_phi(x,flag):
 from math import cos,pi
 
 #the advectiveFlux should be zero on any no-flow  boundaries
+def flux(x,t):
+    U = Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
+    if t < 2.0:
+        return -t*U/2.0
+    else:
+        return -U
+    return -U
+
 def getAdvectiveFlux_qt(x,flag):
     if flag == boundaryTags['left']:
-        return lambda x,t: -Um*x[1]*(fl_H-x[1])/(old_div(fl_H,2.0))**2
+        return flux
     elif flag == boundaryTags['right']:
         return None
     else:
