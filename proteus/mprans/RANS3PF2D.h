@@ -1278,6 +1278,7 @@ namespace proteus
             r_y = y - center[1];
             if(PSEUDO_PENALTY & (1<<5))//because pseudo-penalty method is the Stokes probelm inside the solid; See parameter C
             {
+              H_s = smoothedHeaviside(1e-10, phi_s);
               force_x = dV * (1.0 - H_s) * alphaBDF * ((4*u-un)/3.0-u_s);//(u-u_s);//(4*u-un-3*u_s)//u_s=0
               force_y = dV * (1.0 - H_s) * alphaBDF * ((4*v-vn)/3.0-v_s);//(v-v_s);//(4*v-vn-3*v_s)//v_s=0
             }
@@ -1294,6 +1295,7 @@ namespace proteus
               }
             if(PSEUDO_PENALTY & 1)
             {
+              H_s = smoothedHeaviside(1e-10, phi_s);
               C = (1.0-H_s)*alphaBDF;
             }
             // These should be done inside to make sure the correct velocity of different particles are used
