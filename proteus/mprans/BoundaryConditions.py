@@ -145,7 +145,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.v_advective.setConstantBC(0.)
         self.w_advective.setConstantBC(0.)
         self.u_diffusive.setConstantBC(0.)
-        self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
         self.us_diffusive.setConstantBC(0.)
