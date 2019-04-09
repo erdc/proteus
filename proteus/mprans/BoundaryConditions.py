@@ -260,8 +260,39 @@ class BC_RANS(BoundaryConditions.BC_Base):
         #advective
         self.p_advective.setLinearRamp(ramp, Uin)
         self.pInit_advective.setConstantBC(0.)
-        self.pInc_advective.setLinearRamp(Uin,ramp)
+        self.pInc_advective.setLinearRamp(ramp,Uin)
         # diffusive
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)
+        self.us_diffusive.setConstantBC(0.)
+        self.vs_diffusive.setConstantBC(0.)
+        self.ws_diffusive.setConstantBC(0.)
+    def setConstantOutletPressure(self, p, kk, dd, b_or):
+        """
+        Sets constant pressure in each outlet face for single phase flows
+        """
+        self.reset()
+        self.BC_type = 'constantOutletPressure'
+        # dirichlet
+        self.u_dirichlet.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
+        self.us_dirichlet.setConstantBC(0.)
+        self.vs_dirichlet.setConstantBC(0.)
+        self.ws_dirichlet.setConstantBC(0.)
+        self.p_dirichlet.setConstantBC(p)
+        self.pInit_dirichlet.setConstantBC(p)
+        self.pInc_dirichlet.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(kk)
+        self.dissipation_dirichlet.setConstantBC(dd)  
+           
+        # diffusive
+        if b_or[0] == 1. or b_or[0] == -1.:
+            self.u_diffusive.setConstantBC(0.)
+        if b_or[1] == 1. or b_or[1] == -1.:
+            self.v_diffusive.setConstantBC(0.)
+        if b_or[2] == 1. or b_or[2] == -1.:
+            self.w_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
         self.us_diffusive.setConstantBC(0.)
