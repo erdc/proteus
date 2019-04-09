@@ -1639,9 +1639,12 @@ class NS_base(object):  # (HasTraits):
         import time
         if hasattr(self.so,'measureSpeedOfCode'):
             measureSpeed = self.so.measureSpeedOfCode
+        elif hasattr(n,'measureSpeedOfCode'):
+            measureSpeed = n.measureSpeedOfCode
         else:
             measureSpeed = False
         #
+        append=False
         startToMeasureSpeed = False
         numTimeSteps=0
         start=0
@@ -1825,7 +1828,12 @@ class NS_base(object):  # (HasTraits):
                         if (i in self.so.modelSpinUpList) == False: #To remove spin up models
                             NDOFs += mod.par_uList[0].size if mod.par_uList[0] is not None else len(mod.uList[0])
                     #
-                    with open ("speed_measurement.txt","w") as file:
+                    if append==False:
+                        mode="w"
+                    else:
+                        mode="a"
+                    with open ("speed_measurement.txt",mode) as file:
+                        append=True
                         # write file and log this event
                         multiple_line_string = """ ******************** Measurements of speed ********************
                         Num of time steps: {nts:d}
@@ -1852,7 +1860,12 @@ class NS_base(object):  # (HasTraits):
                     if (i in self.so.modelSpinUpList) == False:
                         NDOFs += mod.par_uList[0].size if mod.par_uList[0] is not None else len(mod.uList[0])
                 #
-                with open ("speed_measurement.txt","w") as file:
+                if append==False:
+                    mode="w"
+                else:
+                    mode="a"
+                with open ("speed_measurement.txt",mode) as file:
+                    append=True
                     # write file and log this event
                     multiple_line_string = """ ******************** Measurements of speed ********************
                     Num of time steps: {nts:d}
@@ -1890,6 +1903,9 @@ class NS_base(object):  # (HasTraits):
             #  self.PUMI_adaptMesh()
             if measureSpeed and self.comm.isMaster():
                 startToMeasureSpeed = True
+            if measureSpeed==False and append==True:
+                measureSpeed=True
+                numTimeSteps=0
             #
         logEvent("Finished calculating solution",level=3)
         # compute auxiliary quantities at last time step
