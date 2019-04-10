@@ -274,7 +274,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.reset()
         self.BC_type = 'constantOutletPressure'
         # dirichlet
-        a1 = -rho*g
+        a1 = rho*g
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
