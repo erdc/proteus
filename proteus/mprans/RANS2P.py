@@ -1665,23 +1665,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.phi_s,
                                       self.coefficients.phisField,
                                       self.coefficients.use_pseudo_penalty)
-        for i in range(self.coefficients.netForces_p.shape[0]):
-            self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
-            for I in range(3):
-                self.coefficients.netForces_p[i, I] = globalSum(self.coefficients.netForces_p[i, I])
-                self.coefficients.netForces_v[i, I] = globalSum(self.coefficients.netForces_v[i, I])
-                self.coefficients.netMoments[i, I] = globalSum(self.coefficients.netMoments[i, I])
-                #cek hack, testing 6DOF motion
-                #self.coefficients.netForces_p[i,I] = 0.0
-                #self.coefficients.netForces_v[i,I] = 0.0
-                #self.coefficients.netMoments[i,I] = 0.0
-                #if I==0:
-                #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi))/4.0
-                #if I==1:
-                #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi) + 125.0*9.81)/4.0
-                #if I==2:
-                #    self.coefficients.netMoments[i,I] = (4.05* math.pi**2 * (math.pi/4.0)*math.cos(self.timeIntegration.t*math.pi))/4.0
-        
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         
