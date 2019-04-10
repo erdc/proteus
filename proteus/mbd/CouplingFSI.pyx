@@ -104,7 +104,8 @@ cdef class ProtChBody:
         self.adams_vel = np.zeros((5, 3))
         self.Aij = np.zeros((6, 6))  # added mass array
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
-        self.setName('rigidbody')
+        self.useIBM = False
+        self.setName(b'rigidbody')
 
     def attachShape(self,
                     shape,
@@ -279,6 +280,15 @@ cdef class ProtChBody:
             self.i_end = i_start+1
         else:
             self.i_end = i_end
+
+    def setIBM(self, useIBM=True):
+        """Sets IBM mode for retrieving fluid forces
+
+        Parameters
+        ----------
+        useIBM: bool
+        """
+        self.useIBM = useIBM
 
     def setWidth2D(self, width):
         """Sets width of 2D body (for forces and moments calculation)
@@ -580,10 +590,10 @@ cdef class ProtChBody:
             pressure forces (x, y, z) as provided by Proteus
         """
         i0, i1 = self.i_start, self.i_end
-        if self.ProtChSystem.model_module == "RANS2P":
-            F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
-        elif self.ProtChSystem.model_module == "RANS3PF":
+        if self.useIBM:
             F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netForces[i0:i1, :]
+        else:
+            F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
         F_t = np.sum(F_p, axis=0)
         return F_t
 
@@ -596,11 +606,11 @@ cdef class ProtChBody:
         F_v: array_like
             shear forces (x, y, z) as provided by Proteus
         """
-        if self.ProtChSystem.model_module == "RANS2P":
+        if self.useIBM:
+            F_v = np.zeros(3)
+        else:
             i0, i1 = self.i_start, self.i_end
             F_v = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
-        elif self.ProtChSystem.model_module == "RANS3PF":
-            F_v = np.zeros(3)
         F_t = np.sum(F_v, axis=0)
         return F_t
 
@@ -614,10 +624,10 @@ cdef class ProtChBody:
             moments (x, y, z) as provided by Proteus
         """
         i0, i1 = self.i_start, self.i_end
-        if self.ProtChSystem.model_module == "RANS2P":
-            M = self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
-        if self.ProtChSystem.model_module == "RANS3PF":
+        if self.useIBM:
             M = self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netMoments[i0:i1, :]
+        else:
+            M = self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
         M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
@@ -1425,11 +1435,6 @@ cdef class ProtChSystem:
         """Attaches Proteus model to auxiliary variable
         """
         c = model.levelModelList[-1].coefficients
-        assert "RANS3PF" in c.__module__ or "RANS2P" in c.__module__, "Wrong model attached to body for FSI: must be RANS2P or RANS3PF, got {model}".format(model=c.__module__)
-        if "RANS3PF" in c.__module__:
-            self.model_module = "RANS3PF"
-        elif "RANS2P" in c.__module__:
-            self.model_module = "RANS2P"
         self.model = model
         return self
 

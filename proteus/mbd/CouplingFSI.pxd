@@ -244,6 +244,7 @@ cdef class ProtChBody:
       np.ndarray h_ang_vel_predict_last  # predicted angular velocity
       np.ndarray Aij  # added mass array
       bool applyAddedMass  # will apply added mass if True (default)
+      bool useIBM
       string hdfFileName
     cdef np.ndarray callPrescribedMotion(self, double t)
 
