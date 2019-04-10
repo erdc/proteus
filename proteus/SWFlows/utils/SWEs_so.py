@@ -16,6 +16,7 @@ for i in range(len(sys.argv)):
         parun_passed = True
     if parun_passed is True and sys.argv[i][-3:] == '.py':
         name = sys.argv[i][:-3]
+        break
     else:
         name = "SWFlow"
 
