@@ -671,8 +671,11 @@ cdef class ProtChBody:
                 # getting added mass matrix
                 self.Aij[:] = 0
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
-                for i in range(self.i_start, self.i_end):
-                    self.Aij += am.Aij[i]
+                if self.useIBM:
+                    self.Aij += am.coefficients.particle_Aij[self.i_start]
+                else:
+                    for i in range(self.i_start, self.i_end):
+                        self.Aij += am.Aij[i]
                 if self.width_2D:
                     self.Aij *= self.width_2D
             # setting added mass
