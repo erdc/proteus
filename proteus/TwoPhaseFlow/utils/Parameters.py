@@ -882,7 +882,7 @@ class ParametersModelKappa(ParametersModelBase):
         self.p.LevelModelType = Kappa.LevelModel
         # NUMERICAL FLUX
         self.n.numericalFluxType = Kappa.NumericalFlux
-        self.n.conservativeFlux  = None
+        self.n.conservativeFlux = None
        # LINEAR ALGEBRA
         self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
@@ -976,11 +976,9 @@ class ParametersModelKappa(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
         # NUMERICAL FLUX
-        seopts=self.n.subgridErrorOptions
+        seopts=self.n.SubgridErrorOptions
         self.n.subgridError = Kappa.SubgridError(coefficients=self.p.coefficients,
-                                                  nd=nd,
-                                                  lag=seopts.lag,
-                                                  hFactor=FESpace['hFactor'])
+                                                  nd=nd)
         scopts = self.n.ShockCapturingOptions
         self.n.shockCapturing = Kappa.ShockCapturing(coefficients=self.p.coefficients,
                                                       nd=nd,
@@ -1065,8 +1063,8 @@ class ParametersModelDissipation(ParametersModelBase):
                                                  V_model=V_model,  # Fluid model
                                                  LS_model=LS_model,
                                                  RD_model=RD_model,
-                                                 dissipation_model=DISS_model,
-                                                 ME_model=6,
+                                                 kappa_model=K_model,
+                                                 ME_model=DISS_model,
                                                  SED_model=None,
                                                  dissipation_model_flag=pparams.useRANS,
                                                  # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
@@ -1074,7 +1072,7 @@ class ParametersModelDissipation(ParametersModelBase):
                                                  c_1=pparams.c_1,
                                                  c_2=pparams.c_2,
                                                  c_e=pparams.c_e,
-                                                 sigma_k=pparams.sigma_k,  # Prandtl Number
+                                                 sigma_e=pparams.sigma_e,  # Prandtl Number
                                                  rho_0=pparams.densityA,
                                                  nu_0=pparams.kinematicViscosityA,
                                                  rho_1=pparams.densityB,
@@ -1120,11 +1118,9 @@ class ParametersModelDissipation(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
         # NUMERICAL FLUX
-        seopts = self.n.subgridErrorOptions
+        seopts = self.n.SubgridErrorOptions
         self.n.subgridError = Dissipation.SubgridError(coefficients=self.p.coefficients,
-                                                 nd=nd,
-                                                 lag=seopts.lag,
-                                                 hFactor=FESpace['hFactor'])
+                                                 nd=nd)
         scopts = self.n.ShockCapturingOptions
         self.n.shockCapturing = Dissipation.ShockCapturing(coefficients=self.p.coefficients,
                                                      nd=nd,
@@ -1904,6 +1900,7 @@ class ParametersPhysical(FreezableClass):
         self.c_2 = 1.92
         self.c_e = 0.07
         self.sigma_k = 1.0
+        self.sigma_e = 1.29
         # freeze attributes
         self._freeze()
 
