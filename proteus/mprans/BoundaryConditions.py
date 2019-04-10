@@ -140,6 +140,10 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.BC_type = 'NonMaterial'
         self.vof_advective.setConstantBC(0.)
         self.vos_advective.setConstantBC(0.)
+        self.p_advective.setConstantBC(0.)
+        self.u_advective.setConstantBC(0.)
+        self.v_advective.setConstantBC(0.)
+        self.w_advective.setConstantBC(0.)
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
