@@ -4,7 +4,7 @@ danbreak 2-D
 from __future__ import division
 from past.utils import old_div
 import numpy as np
-from proteus import (Domain, Context)                     
+from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
 from proteus.mprans.SpatialTools import Tank2D
 from proteus.mprans import SpatialTools as st
@@ -44,8 +44,8 @@ height_gauges2 = LineGauges(gauges=((("phi",),
                             fileName="height2.csv")
 
 pressure_gauges = PointGauges(gauges=((('p',),
-                                      ((3.22, 0.16, 0.0), #P1                                                               
-                                       (3.22, 0.584, 0.0), #P3                                                               
+                                      ((3.22, 0.16, 0.0), #P1
+                                       (3.22, 0.584, 0.0), #P3
                                        (3.22, 0.12, 0.0))),), # This is the one considered in our paper
                                        fileName="pressure.csv")
 
@@ -53,7 +53,7 @@ pressure_gauges = PointGauges(gauges=((('p',),
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
-tank_dim = (3.22,1.8) 
+tank_dim = (3.22,1.8)
 refinement = opts.refinement
 structured=False
 if structured:
@@ -67,7 +67,7 @@ else:
     domain = Domain.PlanarStraightLineGraphDomain()
 
 # ----- TANK ----- #
-tank = Tank2D(domain, tank_dim) 
+tank = Tank2D(domain, tank_dim)
 
 # ----- EXTRA BOUNDARY CONDITIONS ----- #
 tank.BC['y+'].setAtmosphere()
@@ -91,17 +91,18 @@ waterLine_y = 0.6
 waterLine_x = 1.2
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
-        if x[0] < waterLine_x and x[1] < waterLine_y: 
+        if x[0] < waterLine_x and x[1] < waterLine_y:
             return -1.0
-        elif x[0] > waterLine_x or x[1] > waterLine_y: 
+        elif x[0] > waterLine_x or x[1] > waterLine_y:
             return 1.0
         else:
-            return 0.0        
+            return 0.0
 
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
 outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
+outputStepping.systemStepExact = True
 initialConditions = {'pressure': zero(),
                      'pressure_increment': zero(),
                      'vel_u': zero(),
@@ -129,10 +130,8 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 
-auxVariables={'clsvof': [height_gauges1, height_gauges2],
-              'pressure': [pressure_gauges]}
-
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
+                                             ls_model=1,
                                              nd=2,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -144,6 +143,14 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
-                                             auxVariables=auxVariables,
                                              useSuperlu=True)
-myTpFlowProblem.clsvof_parameters['disc_ICs']=True
+myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,-9.8,0.0])
+myTpFlowProblem.useBoundaryConditionsModule = False
+m = myTpFlowProblem.Parameters.Models
+m.clsvof.p.CoefficientsOptions.disc_ICs = True
+m.clsvof.auxiliaryVariables = [height_gauges1, height_gauges2]
+m.pressure.auxiliaryVariables = [pressure_gauges]
+m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
+
+myTpFlowProblem.Parameters.mesh.he = he
+myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
