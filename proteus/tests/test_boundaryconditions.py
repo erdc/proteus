@@ -81,7 +81,7 @@ class TestBC(unittest.TestCase):
         for t in t_list:
             x = get_random_x()
             b = BC.uOfXT(x,t)
-            npt.assert_equal(b, a0+a*x)
+            npt.assert_equal(b, a0+sum(a*x))
     def test_linearRampBC(self):
         t_list = get_time_array()
         t1 = 3.
@@ -297,7 +297,9 @@ class TestBC(unittest.TestCase):
         kk = 1e-3
         dd = 1e-4
         b_or = np.array([0., 1., 0.])
-        BC.setConstantOutletPressure(p, kk,dd,b_or)
+        rho = 1000
+        g = np.array([-9.81,0,0])
+        BC.setConstantOutletPressure(p,rho,g, kk,dd,b_or)
         u_dir, v_dir, w_dir, p_adv, k_dir, d_diff, vof_adv,k_diff = [], [], [], [], [], [], [], []
         us_dir, vs_dir, ws_dir, u_diff, v_diff, w_diff,us_diff, vs_diff, ws_diff, pInc_adv, pInit_adv, vos_adv,pInc_dir = [],[],[],[],[],[],[],[],[],[],[],[],[]
         pInc_diff = []
@@ -332,8 +334,9 @@ class TestBC(unittest.TestCase):
             d_dir = [BC.dissipation_dirichlet.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
             k_diff += [BC.k_diffusive.uOfXT(x, t)]
-            npt.assert_equal(p_dir,[p])
-            npt.assert_equal(pInit_dir,[p])
+            print p_dir
+            npt.assert_almost_equal(p_dir,[p-rho*sum(g*x)])
+            npt.assert_almost_equal(pInit_dir,[p-rho*sum(g*x)])
             npt.assert_equal(k_dir, [kk])
             npt.assert_equal(d_dir, [dd])
         zeros = np.zeros(len(t_list))
