@@ -472,13 +472,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
         self.particle_centroids = np.zeros((self.nParticles, 3), 'd')
         self.particle_signed_distances = np.zeros((self.nParticles,) + self.model.q[('u', 0)].shape, 'd')
-        self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
-        self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape, 'd')
+        self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
+        self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
 
         self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
         self.ebq_global_phi_s = numpy.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
-        self.ebq_global_grad_phi_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
-        self.ebq_particle_velocity_s = numpy.ones_like(self.model.ebq_global[('velocityAverage',0)]) * 1.e10
+        self.ebq_global_grad_phi_s = numpy.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
+        self.ebq_particle_velocity_s = numpy.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
 
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
@@ -742,12 +742,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.barycenters = numpy.zeros((nBoundariesMax, 3), 'd')
         comm = Comm.get()
         if comm.isMaster():
+            self.timeHistory = open(os.path.join(proteus.Profiling.logDir, "timeHistory.txt"), "w")
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir, "wettedAreaHistory.txt"), "w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir, "forceHistory_v.txt"), "w")
             self.momentHistory = open(os.path.join(proteus.Profiling.logDir, "momentHistory.txt"), "w")
             if self.nParticles:
+                self.particle_surfaceAreaHistory = open(os.path.join(proteus.Profiling.logDir, "particle_surfaceAreaHistory.txt"), "w")
                 self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_forceHistory.txt"), "w")
+                self.particle_pforceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_pforceHistory.txt"), "w")
+                self.particle_vforceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_vforceHistory.txt"), "w")
                 self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir, "particle_momentHistory.txt"), "w")
     # initialize so it can run as single phase
 
@@ -1072,7 +1076,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         if self.model.isActiveDOF[dof] < 0.5:
                             self.model.u[ci].dof[ci_g_dof] = vel_at_xyz[ci]
         if self.model.comm.isMaster():
+            self.timeHistory.write("%21.16e\n" % (t,))
+            self.timeHistory.flush()
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+            self.wettedAreaHistory.flush()
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
             self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_v[-1, :]))
@@ -1080,8 +1087,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1, :]))
             self.momentHistory.flush()
             if self.nParticles:
+                self.particle_surfaceAreaHistory.write("%21.16e\n" % tuple(self.particle_surfaceArea[:]))
+                self.particle_surfaceAreaHistory.flush()
                 self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
                 self.particle_forceHistory.flush()
+                self.particle_pforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+self.nParticles, :]))
+                self.particle_pforceHistory.flush()
+                self.particle_vforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+2*self.nParticles, :]))
+                self.particle_vforceHistory.flush()
                 self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
                 self.particle_momentHistory.flush()
 
@@ -2143,8 +2156,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # fill vector rowptr_scalar
         for i in range(1, self.rowptr_1D.size):
             self.rowptr_1D[i]=(self.rowptr_1D[i - 1] +
-                               old_div((self.rowptr[nSpace * (i - 1) + 1] -
-                                        self.rowptr[nSpace * (i - 1)]), nSpace))
+                               (self.rowptr[nSpace * (i - 1) + 1] -
+                                self.rowptr[nSpace * (i - 1)])//nSpace)
         # fill vector colind_cMatrix
         ith_row = 0
         for i in range(len(self.rowptr)-1):  # 0 to total num of DOFs (i.e. num of rows of jacobian)
@@ -2153,7 +2166,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     offset_1D = list(range(self.rowptr_1D[ith_row],
                                            self.rowptr_1D[ith_row + 1]))
                     if (j % nSpace == 0):
-                        self.colind_1D[offset_1D[old_div(j, nSpace)]] = old_div(self.colind[offset], nSpace)
+                        self.colind_1D[offset_1D[j//nSpace]] = self.colind[offset]//nSpace
                 ith_row += 1
 
     def getResidual(self, u, r):
@@ -2230,6 +2243,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
 
+
         try:
             if self.coefficients.use_sbm > 0:
                 self.isActiveDOF[:] = 0.0
@@ -2270,7 +2284,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.isBoundary_1D[:] = 1.0*(self.isBoundary_1D > 0)
             self.quantDOFs[:] = self.isBoundary_1D
         #
-
         self.rans3pf.calculateResidual(
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2317,6 +2330,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.hFactor,
             self.mesh.nElements_global,
             self.mesh.nElements_owned,
+            self.mesh.nElementBoundaries_global,
             self.mesh.nElementBoundaries_owned,
             self.mesh.nNodes_owned,
             self.coefficients.useRBLES,
@@ -2355,7 +2369,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['eddy_viscosity'],
             self.pressureModel.u[0].femSpace.dofMap.l2g,
             self.u[0].femSpace.dofMap.l2g,
-            self.pressureModel.u[0].dof,
+            self.pressureModel.p_sharp_dof,
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
@@ -2526,7 +2540,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numDOFs_1D,
             self.nnz_1D,
             self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
-            old_div(self.csrColumnOffsets[(0, 0)], self.nSpace_global),
+            self.csrColumnOffsets[(0, 0)]//self.nSpace_global,
             self.rowptr_1D,
             self.colind_1D,
             self.isBoundary_1D,
@@ -2538,28 +2552,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         for dim in range(self.nSpace_global):
             self.q[('u', dim)][:] = self.q[('velocity', 0)][:, :, dim]
 
-        for i in range(self.coefficients.netForces_p.shape[0]):
-            self.coefficients.wettedAreas[i] = globalSum(
-                self.coefficients.wettedAreas[i])
-            for I in range(3):
-                self.coefficients.netForces_p[i, I] = globalSum(
-                    self.coefficients.netForces_p[i, I])
-                self.coefficients.netForces_v[i, I] = globalSum(
-                    self.coefficients.netForces_v[i, I])
-                self.coefficients.netMoments[i, I] = globalSum(
-                    self.coefficients.netMoments[i, I])
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        
+        comm.Allreduce(self.coefficients.wettedAreas.copy(),self.coefficients.wettedAreas)
+        comm.Allreduce(self.coefficients.netForces_p.copy(),self.coefficients.netForces_p)
+        comm.Allreduce(self.coefficients.netForces_v.copy(),self.coefficients.netForces_v)
+        comm.Allreduce(self.coefficients.netMoments.copy(),self.coefficients.netMoments)
+        
+        comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
+        comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
+        comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),self.coefficients.particle_surfaceArea)
+        
         for i in range(self.coefficients.nParticles):
-            for I in range(3):
-                self.coefficients.particle_netForces[i, I] = globalSum(
-                    self.coefficients.particle_netForces[i, I])
-                self.coefficients.particle_netForces[i+self.coefficients.nParticles, I] = globalSum(
-                    self.coefficients.particle_netForces[i+self.coefficients.nParticles, I])
-                self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I] = globalSum(
-                    self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I])
-                self.coefficients.particle_netMoments[i, I] = globalSum(
-                    self.coefficients.particle_netMoments[i, I])
-            self.coefficients.particle_surfaceArea[i] = globalSum(
-                self.coefficients.particle_surfaceArea[i])
             logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
             logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
             logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
@@ -2653,6 +2658,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.hFactor,
             self.mesh.nElements_global,
             self.mesh.nElements_owned,
+            self.mesh.nElementBoundaries_global,
             self.mesh.nElementBoundaries_owned,
             self.mesh.nNodes_owned,
             self.coefficients.useRBLES,

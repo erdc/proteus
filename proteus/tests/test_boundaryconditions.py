@@ -22,7 +22,7 @@ import numpy.testing as npt
 import numpy as np
 from proteus import Comm, Profiling
 from proteus.Profiling import logEvent as log
-from proteus.BoundaryConditions import BC_Base
+from proteus.BoundaryConditions import BC_Base, BoundaryCondition
 from proteus.mprans.BoundaryConditions import BC_RANS
 
 
@@ -43,8 +43,8 @@ def get_random_x(start=0., stop=10.):
     x3 = random.uniform(start, stop)
     return np.array([x1, x2, x3])
 
-def get_time_array(start=0, stop=5, steps=100):
-    return np.linspace(0, 5, 100)
+def get_time_array(start=0, stop=5, steps=101):
+    return np.linspace(0, 5, steps)
 
 class PseudoContext(object):
     def __init__(self):
@@ -72,7 +72,26 @@ class TestBC(unittest.TestCase):
             constants += [constant]
             values += [BC_func(x, t)]
         npt.assert_equal(values, constants)
-
+    def test_linearBC(self):
+        t_list = get_time_array()
+        a0 = 1
+        a = np.ndarray([1,2,3])
+        BC = BoundaryCondition()
+        BC.setLinearBC(a0,a)
+        for t in t_list:
+            x = get_random_x()
+            b = BC.uOfXT(x,t)
+            npt.assert_equal(b, a0+a*x)
+    def test_linearRampBC(self):
+        t_list = get_time_array()
+        t1 = 3.
+        value = 5.
+        BC = BoundaryCondition()
+        BC.setLinearRamp(t1,value)
+        for t in t_list:
+            x = get_random_x()
+            b = BC.uOfXT(x,t)
+            npt.assert_almost_equal(b, min(value, value*t/t1))
     def test_non_material(self):
         BC = create_BC(folder='mprans')
         BC.setNonMaterial()
@@ -216,7 +235,137 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(ws_diff, zeros)
         npt.assert_equal(d_diff, zeros)
         # check if other BC are None
-
+    def test_constant_inlet_velocity(self):
+        BC = create_BC(folder='mprans')
+        UU = np.array([0.2,1.,0.1])
+        ramp = 2.5
+        kk = 1e-3
+        dd = 1e-4
+        b_or = np.array([0., 1., 0.])
+        BC.setConstantInletVelocity(UU, ramp, kk,dd,b_or)
+        u_dir, v_dir, w_dir, p_adv, k_dir, d_diff, vof_adv,k_diff = [], [], [], [], [], [], [], []
+        us_dir, vs_dir, ws_dir, us_diff, vs_diff, ws_diff, pInc_adv, pInit_adv, vos_adv = [],[],[],[],[],[],[],[],[]
+        pInc_diff = []
+        t_list = get_time_array()
+        for t in t_list:
+            x = get_random_x()
+            u_dir = [BC.u_dirichlet.uOfXT(x, t)]
+            v_dir = [BC.v_dirichlet.uOfXT(x, t)]
+            w_dir = [BC.w_dirichlet.uOfXT(x, t)]
+            us_dir += [BC.us_dirichlet.uOfXT(x, t)]
+            vs_dir += [BC.vs_dirichlet.uOfXT(x, t)]
+            ws_dir += [BC.ws_dirichlet.uOfXT(x, t)]
+            us_diff += [BC.us_diffusive.uOfXT(x, t)]
+            vs_diff += [BC.vs_diffusive.uOfXT(x, t)]
+            ws_diff += [BC.ws_diffusive.uOfXT(x, t)]
+            p_adv = [BC.p_advective.uOfXT(x, t)]
+            pInc_adv = [BC.pInc_advective.uOfXT(x, t)]
+            pInit_adv += [BC.pInit_advective.uOfXT(x, t)]
+            k_dir = [BC.k_dirichlet.uOfXT(x, t)]
+            d_dir = [BC.dissipation_dirichlet.uOfXT(x, t)]
+            d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
+            npt.assert_almost_equal(u_dir, [min(UU[0],UU[0]*t/ramp)])
+            npt.assert_almost_equal(v_dir, [min(UU[1],UU[1]*t/ramp)])
+            npt.assert_almost_equal(w_dir,[min(t/ramp, 1.)*UU[2]])
+            npt.assert_equal(k_dir, [kk])
+            npt.assert_equal(d_dir, [dd])
+            npt.assert_almost_equal(p_adv, [min(np.dot(UU,b_or),np.dot(UU,b_or)*t/ramp)])
+            npt.assert_almost_equal(pInc_adv, [min(np.dot(UU,b_or),np.dot(UU,b_or)*t/ramp)])
+        zeros = np.zeros(len(t_list))
+        npt.assert_equal(BC.p_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.pInc_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.pInit_dirichlet.uOfXT, None)
+        npt.assert_equal(us_dir, zeros)
+        npt.assert_equal(vs_dir, zeros)
+        npt.assert_equal(ws_dir, zeros)
+        npt.assert_equal(BC.vof_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.vos_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.k_advective.uOfXT, None)
+        npt.assert_equal(BC.dissipation_advective.uOfXT, None)
+        npt.assert_equal(BC.u_diffusive.uOfXT, None)
+        npt.assert_equal(BC.v_diffusive.uOfXT, None)
+        npt.assert_equal(BC.w_diffusive.uOfXT, None)
+        npt.assert_equal(us_diff, zeros)
+        npt.assert_equal(vs_diff, zeros)
+        npt.assert_equal(ws_diff, zeros)
+        npt.assert_equal(k_diff, zeros)
+        npt.assert_equal(d_diff, zeros)
+    def test_constant_outlet_pressure(self):
+        BC = create_BC(folder='mprans')
+        p = 1012.
+        kk = 1e-3
+        dd = 1e-4
+        b_or = np.array([0., 1., 0.])
+        BC.setConstantOutletPressure(p, kk,dd,b_or)
+        u_dir, v_dir, w_dir, p_adv, k_dir, d_diff, vof_adv,k_diff = [], [], [], [], [], [], [], []
+        us_dir, vs_dir, ws_dir, u_diff, v_diff, w_diff,us_diff, vs_diff, ws_diff, pInc_adv, pInit_adv, vos_adv,pInc_dir = [],[],[],[],[],[],[],[],[],[],[],[],[]
+        pInc_diff = []
+        t_list = get_time_array()
+        for t in t_list:
+            x = get_random_x()
+            u_dir += [BC.u_dirichlet.uOfXT(x, t)]
+            v_dir += [BC.v_dirichlet.uOfXT(x, t)]
+            w_dir += [BC.w_dirichlet.uOfXT(x, t)]
+            us_dir += [BC.us_dirichlet.uOfXT(x, t)]
+            vs_dir += [BC.vs_dirichlet.uOfXT(x, t)]
+            ws_dir += [BC.ws_dirichlet.uOfXT(x, t)]
+            if b_or[0] == 1. or b_or[0] == -1.:
+                u_diff += [BC.us_diffusive.uOfXT(x, t)]
+                v_diff = BC.us_diffusive.uOfXT
+                w_diff = BC.us_diffusive.uOfXT
+            if b_or[1] == 1. or b_or[1] == -1.:
+                v_diff += [BC.vs_diffusive.uOfXT(x, t)]
+                u_diff = BC.us_diffusive.uOfXT
+                w_diff = BC.us_diffusive.uOfXT
+            if b_or[2] == 1. or b_or[2] == -1.:
+                w_diff += [BC.ws_diffusive.uOfXT(x, t)]
+                u_diff = BC.us_diffusive.uOfXT
+                v_diff = BC.us_diffusive.uOfXT
+            us_diff += [BC.us_diffusive.uOfXT(x, t)]
+            vs_diff += [BC.vs_diffusive.uOfXT(x, t)]
+            ws_diff += [BC.ws_diffusive.uOfXT(x, t)]
+            p_dir = [BC.p_dirichlet.uOfXT(x,t)]
+            pInc_dir += [BC.pInc_dirichlet.uOfXT(x, t)]
+            pInit_dir = [BC.pInit_dirichlet.uOfXT(x, t)]
+            k_dir = [BC.k_dirichlet.uOfXT(x, t)]
+            d_dir = [BC.dissipation_dirichlet.uOfXT(x, t)]
+            d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
+            npt.assert_equal(p_dir,[p])
+            npt.assert_equal(pInit_dir,[p])
+            npt.assert_equal(k_dir, [kk])
+            npt.assert_equal(d_dir, [dd])
+        zeros = np.zeros(len(t_list))
+        if b_or[0] == 1. or b_or[0] == -1.:
+            npt.assert_equal(u_dir, zeros)
+            npt.assert_equal(BC.v_diffusive.uOfXT, None)
+            npt.assert_equal(BC.w_diffusive.uOfXT, None)
+        if b_or[1] == 1. or b_or[1] == -1.:
+            npt.assert_equal(v_dir, zeros)
+            npt.assert_equal(BC.u_diffusive.uOfXT, None)
+            npt.assert_equal(BC.w_diffusive.uOfXT, None)
+        if b_or[2] == 1. or b_or[2] == -1.:
+            npt.assert_equal(w_dir, zeros)
+            npt.assert_equal(BC.u_diffusive.uOfXT, None)
+            npt.assert_equal(BC.v_diffusive.uOfXT, None)
+        npt.assert_equal(BC.p_advective.uOfXT, None)
+        npt.assert_equal(BC.pInc_advective.uOfXT, None)
+        npt.assert_equal(BC.pInit_advective.uOfXT, None)
+        npt.assert_equal(BC.pInc_diffusive.uOfXT, None)
+        npt.assert_equal(BC.pInit_diffusive.uOfXT, None)
+        npt.assert_equal(us_dir, zeros)
+        npt.assert_equal(vs_dir, zeros)
+        npt.assert_equal(ws_dir, zeros)
+        npt.assert_equal(BC.vof_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.vos_dirichlet.uOfXT, None)
+        npt.assert_equal(BC.k_advective.uOfXT, None)
+        npt.assert_equal(BC.dissipation_advective.uOfXT, None)
+        npt.assert_equal(us_diff, zeros)
+        npt.assert_equal(vs_diff, zeros)
+        npt.assert_equal(ws_diff, zeros)
+        npt.assert_equal(k_diff, zeros)
+        npt.assert_equal(d_diff, zeros)
     def test_open_air(self):
         # BC = create_BC(folder='mprans')
         BC = create_BC(folder='mprans', b_or=np.array([[0., 0., 1.]]), b_i=0)
