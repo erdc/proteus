@@ -37,6 +37,7 @@ sc_uref = 1.
 sc_beta = 1.5
 shockCapturingFactor = 0.5
 minTol = 1e-8
+default_kappa_turbulence = 1e-3
 default_dissipation_turbulence = 1e-3
 
 
@@ -923,8 +924,8 @@ class ParametersModelKappa(ParametersModelBase):
                                                  V_model=V_model, # Fluid model
                                                  LS_model=LS_model,
                                                  RD_model=RD_model,
-                                                 dissipation_model=DISS_model,
-                                                 ME_model=6,
+                                                 dissipation_model=K_model,
+                                                 ME_model=DISS_model,
                                                  SED_model=None,
                                                  dissipation_model_flag=pparams.useRANS,  # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
                                                  c_mu=pparams.cm_u,
@@ -991,6 +992,151 @@ class ParametersModelKappa(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
+
+
+class ParametersModelDissipation(ParametersModelBase):
+    """
+    """
+
+    def __init__(self, Problem):
+        super(ParametersModelDissipation, self).__init__(name='dissipation', index=None,
+                                                   Problem=Problem)
+
+        self.timeOrder = 2
+        self.timeDiscretization = 'be'
+        copts = self.p.CoefficientsOptions
+        copts.closure = None
+        copts.useMetrics = 1.
+        copts.epsFact = epsFact
+        copts.sc_uref = sc_uref
+        copts.sc_beta = sc_beta
+        copts._freeze()
+        scopts = self.n.ShockCapturingOptions
+        scopts.shockCapturingFactor = shockCapturingFactor
+        scopts.lag = True
+        scopts._freeze()
+        seopts = self.n.SubgridErrorOptions
+        seopts.lag = True
+        seopts._freeze()
+
+        # LEVEL MODEL
+        self.p.LevelModelType = Dissipation.LevelModel
+        # NUMERICAL FLUX
+        self.n.numericalFluxType = Dissipation.NumericalFlux
+        self.n.conservativeFlux = None
+        # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.linear_solver_options_prefix = 'dissipation_'
+        self.n.linearSolverConvergenceTest = 'r-true'
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
+        self.n.nonlinearSolverConvergenceTest = 'rits'
+        self.n.levelNonlinearSolverConvergenceTest = 'rits'
+        # TOLERANCES
+        self.n.linTolFac = 0.
+        self.n.tolFac = 0.
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
+        # freeze attributes
+        self._freeze()
+
+    def _initializePhysics(self):
+        mparams = self._Problem.Parameters.Models
+        pparams = self._Problem.Parameters.physical  # physical parameters
+        domain = self._Problem.domain
+        nd = domain.nd
+        # MODEL INDEX
+        VOF_model = mparams.vof.index
+        LS_model = mparams.ncls.index
+        RD_model = mparams.rdls.index
+        MCORR_model = mparams.mcorr.index
+        SED_model = None
+        VOS_model = None
+        CLSVOF_model = mparams.clsvof.index
+        V_model = mparams.rans3p.index
+        PINC_model = mparams.pressureIncrement.index
+        PRESSURE_model = mparams.pressure.index
+        K_model = mparams.kappa.index
+        DISS_model = mparams.dissipation.index
+        # COEFFICIENTS
+        copts = self.p.CoefficientsOptions
+        self.p.coefficients = Dissipation.Coefficients(VOS_model=None,  # Solid model
+                                                 V_model=V_model,  # Fluid model
+                                                 LS_model=LS_model,
+                                                 RD_model=RD_model,
+                                                 dissipation_model=DISS_model,
+                                                 ME_model=6,
+                                                 SED_model=None,
+                                                 dissipation_model_flag=pparams.useRANS,
+                                                 # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
+                                                 c_mu=pparams.cm_u,
+                                                 c_1=pparams.c_1,
+                                                 c_2=pparams.c_2,
+                                                 c_e=pparams.c_e,
+                                                 sigma_k=pparams.sigma_k,  # Prandtl Number
+                                                 rho_0=pparams.densityA,
+                                                 nu_0=pparams.kinematicViscosityA,
+                                                 rho_1=pparams.densityB,
+                                                 nu_1=pparams.kinematicViscosityB,
+                                                 g=pparams.gravity,
+                                                 nd=nd,
+                                                 epsFact=copts.epsFact,
+                                                 useMetrics=copts.useMetrics,
+                                                 sc_uref=copts.sc_uref,
+                                                 sc_beta=copts.sc_beta,
+                                                 default_kappa=default_kappa_turbulence,
+                                                 closure=copts.closure)
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['dissipation']}
+        # BOUNDARY CONDITIONS
+        boundaryConditions = self._Problem.boundaryConditions
+        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+            self.p.dirichletConditions = {0: boundaryConditions['dissipation_DBC']}
+
+            self.p.advectiveFluxBoundaryConditions = {0: boundaryConditions['dissipation_AFBC']}
+
+            self.p.diffusiveFluxBoundaryConditions = {0: {0: boundaryConditions['dissipation_DFBC']}}
+        else:
+            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].dissipation_dirichlet.init_cython()}
+
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].dissipation_advective.init_cython()}
+
+
+    def _initializeNumerics(self):
+        nd = self._Problem.domain.nd
+        # TIME
+        if self.timeDiscretization == 'vbdf':
+            self.n.timeIntegration = TimeIntegration.VBDF
+            self.n.timeOrder = 2
+        elif self.timeDiscretization:  # backward euler
+            self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
+        else:
+            raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(
+                scheme=self.timeDiscretization))
+        self.n.stepController = StepControl.Min_dt_cfl_controller
+        # FINITE ELEMENT SPACES
+        FESpace = self._Problem.FESpace
+        self.n.femSpaces = {0: FESpace['lsBasis']}
+        # NUMERICAL FLUX
+        seopts = self.n.subgridErrorOptions
+        self.n.subgridError = Dissipation.SubgridError(coefficients=self.p.coefficients,
+                                                 nd=nd,
+                                                 lag=seopts.lag,
+                                                 hFactor=FESpace['hFactor'])
+        scopts = self.n.ShockCapturingOptions
+        self.n.shockCapturing = Dissipation.ShockCapturing(coefficients=self.p.coefficients,
+                                                     nd=nd,
+                                                     shockCapturingFactor=scopts.shockCapturingFactor,
+                                                     lag=scopts.lag)
+        # TOLERANCES
+        mesh = self._Problem.Parameters.mesh
+        if self.n.nl_atol_res is None:
+            self.n.nl_atol_res = max(minTol, 0.01 * mesh.he ** 2)
+        if self.n.l_atol_res is None:
+            self.n.l_atol_res = 0.1 * self.n.nl_atol_res
+
 
 class ParametersModelCLSVOF(ParametersModelBase):
     def __init__(self, Problem):
@@ -1754,6 +1900,9 @@ class ParametersPhysical(FreezableClass):
         # Turbulence
         self.useRANS = 0
         self.cm_u = 0.09
+        self.c_1 = 0.126
+        self.c_2 = 1.92
+        self.c_e = 0.07
         self.sigma_k = 1.0
         # freeze attributes
         self._freeze()
