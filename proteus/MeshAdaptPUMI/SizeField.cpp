@@ -1271,7 +1271,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       if(target_error/err_curr <= 1)
         h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
       else
-        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd*1.5));
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
     }
 
     apf::setScalar(errorSize_reg, reg, 0, h_new);
