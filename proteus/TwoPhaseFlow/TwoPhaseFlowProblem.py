@@ -251,7 +251,6 @@ class TwoPhaseFlowProblem:
         # others
         so.needEBQ_GLOBAL = False
         so.needEBQ = False
-        so.measureSpeedOfCode = True
         so.fastArchive = self.fastArchive
         # archiving time
         outputStepping = self.outputStepping

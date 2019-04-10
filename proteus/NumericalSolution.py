@@ -1844,8 +1844,8 @@ class NS_base(object):  # (HasTraits):
                                                                                             t=(end-start),
                                                                                             Nproc=Nproc,
                                                                                             NDOFs=NDOFs,
-                                                                                            aux1=int(NDOFs/Nproc),
-                                                                                            aux2=(end-start)/numTimeSteps*Nproc/NDOFs)
+                                                                                            aux1=int(NDOFs//Nproc),
+                                                                                            aux2=(end-start)/numTimeSteps/(NDOFs//Nproc))
                         file.write(multiple_line_string)
                         logEvent(multiple_line_string,level=4)
                     #
@@ -1876,8 +1876,8 @@ class NS_base(object):  # (HasTraits):
                                t=(end-start),
                                Nproc=Nproc,
                                NDOFs=NDOFs,
-                               aux1=int(NDOFs/Nproc),
-                               aux2=(end-start)/numTimeSteps*Nproc/NDOFs)
+                               aux1=int(NDOFs//Nproc),
+                               aux2=(end-start)/numTimeSteps/(NDOFs//Nproc))
                     file.write(multiple_line_string)
                     logEvent(multiple_line_string,level=4)
                 #
