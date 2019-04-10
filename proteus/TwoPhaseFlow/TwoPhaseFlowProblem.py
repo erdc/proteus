@@ -2,9 +2,12 @@ from __future__ import division
 from past.utils import old_div
 from proteus import FemTools as ft
 from proteus import MeshTools as mt
+from proteus import SplitOperator
+from proteus.Archiver import ArchiveFlags
 from proteus.Profiling import logEvent
 from builtins import object
 from proteus.TwoPhaseFlow.utils import Parameters
+from proteus.defaults import System_base
 
 class TwoPhaseFlowProblem:
     """ TwoPhaseFlowProblem """
@@ -28,8 +31,6 @@ class TwoPhaseFlowProblem:
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
-                 # FORCE FIELD FOR NAVIER STOKES #
-                 forceTerms=None,
                  # AUXILIARY VARIABLES #
                  auxVariables=None,
                  # OTHERS #
@@ -57,11 +58,6 @@ class TwoPhaseFlowProblem:
             # assertion now done in TwoPhaseFlow_so.py
         if boundaryConditions is not None:
             assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
-            # assertion now done in TwoPhaseFlow_so.py
-        self.forceTerms = forceTerms
-        if forceTerms is not None:
-            assert type(forceTerms)==dict, "forceTerms must be a dictionary"
-            assert len(forceTerms) in [2,3], "forceTerms must have two or three components"
 
         # ***** SAVE PARAMETERS ***** #
         self.domain=domain
@@ -72,6 +68,7 @@ class TwoPhaseFlowProblem:
         self.cfl=cfl
         self.outputStepping=outputStepping
         self.outputStepping.setOutputStepping()
+        self.so = System_base()
         self.Parameters.mesh.he = he
         self.Parameters.mesh.nnx = nnx
         self.Parameters.mesh.nny = nny
@@ -186,7 +183,7 @@ class TwoPhaseFlowProblem:
                 assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
                 if nd==3:
                     assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
-            if ls_model == 0:
+            if ls_model == 1:
                 assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
             if ls_model == 0:
                 assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
@@ -216,15 +213,65 @@ class TwoPhaseFlowProblem:
         # parameters
         self.Parameters.initializeParameters()
         # mesh
-        if self.Parameters.mesh.outputFiles['poly'] is True:
-            self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['ply'] is True:
-            self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['asymptote'] is True:
-            self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
-            self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
-            self.domain.use_gmsh = True
+        # if self.Parameters.mesh.outputFiles['poly'] is True:
+        #     self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['ply'] is True:
+        #     self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['asymptote'] is True:
+        #     self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
+        #     self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
+        #     self.domain.use_gmsh = True
+        # split operator
+        self.initializeSO()
+
+    def initializeSO(self):
+        so = self.so
+        params = self.Parameters
+        # list of models
+        so.pnList = [None for i in range(params.nModels)]
+        for i in range(params.nModels):
+            model = params.models_list[i]
+            so.pnList[model.index] = (model.p, model.n)
+        so.systemStepControllerType = SplitOperator.Sequential_MinAdaptiveModelStep
+        if self.outputStepping.dt_fixed:
+            so.dt_system_fixed = self.outputStepping.dt_fixed
+        # rans3p specific options
+        if params.Models.rans3p.index is not None: #rans3p
+            PINIT_model = params.Models.pressureInitial.index
+            assert PINIT_model is not None, 'must set pressureInitial model index when using rans3p'
+            so.modelSpinUpList = [PINIT_model]
+            from proteus.default_so import defaultSystem
+            class Sequential_MinAdaptiveModelStepPS(SplitOperator.Sequential_MinAdaptiveModelStep):
+                def __init__(self,modelList,system=defaultSystem,stepExact=True):
+                    SplitOperator.Sequential_MinAdaptiveModelStep.__init__(self,modelList,system,stepExact)
+                    self.modelList = modelList[:len(so.pnList)-1]
+            #
+            so.systemStepControllerType = Sequential_MinAdaptiveModelStepPS
+        # others
+        so.needEBQ_GLOBAL = False
+        so.needEBQ = False
+        so.measureSpeedOfCode = True
+        so.fastArchive = self.fastArchive
+        # archiving time
+        outputStepping = self.outputStepping
+        tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
+        if len(tnList) > 2 and tnList[1] == tnList[2]:
+            del tnList[1]
+        if outputStepping['dt_output'] is None:
+            if outputStepping['dt_fixed'] > 0:
+                if outputStepping['dt_init'] < outputStepping['dt_fixed']:
+                    tnList = [0., outputStepping['dt_init'], outputStepping['dt_fixed'], outputStepping['final_time']]
+                else:
+                    tnList = [0., outputStepping['dt_fixed'], outputStepping['final_time']]
+            else:
+                tnList = [0., outputStepping['dt_init'], outputStepping['final_time']]
+        so.tnList = tnList
+        so.archiveFlag = ArchiveFlags.EVERY_USER_STEP
+        if self.archiveAllSteps is True:
+            so.archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
+        so.systemStepExact = outputStepping.systemStepExact
+
 
 class OutputStepping:
     """

@@ -114,9 +114,9 @@ cdef extern from "femIntegrals.h":
 										                                                                               int *elementBoundaryElements,
 										                                                                               int *elementBoundaryLocalElementBoundaries,
 										                                                                               int *nFreeDOF_element_r,
-										                                                                               int *nFreeDOF_element_u,
 										                                                                               int *freeLocal_r,
 										                                                                               int *freeGlobal_r,
+										                                                                               int *nFreeDOF_element_u,
 										                                                                               int *freeLocal_u,
 										                                                                               int *freeGlobal_u,
 										                                                                               double *elementBoundaryFluxJacobian_2sided,
@@ -774,9 +774,9 @@ cdef extern from "femIntegrals.h":
                                                                                                                                                  int *elementBoundaryElements,
                                                                                                                                                  int *elementBoundaryLocalElementBoundaries,
                                                                                                                                                  int *nFreeDOF_element_r,
-                                                                                                                                                 int *nFreeDOF_element_u,
                                                                                                                                                  int *freeLocal_r,
                                                                                                                                                  int *freeGlobal_r,
+                                                                                                                                                 int *nFreeDOF_element_u,
                                                                                                                                                  int *freeLocal_u,
                                                                                                                                                  int *freeGlobal_u,
                                                                                                                                                  double *elementBoundaryFluxJacobian,
@@ -798,9 +798,9 @@ cdef extern from "femIntegrals.h":
                                                                                                                                                        int *elementBoundaryElements,
                                                                                                                                                        int *elementBoundaryLocalElementBoundaries,
                                                                                                                                                        int *nFreeDOF_element_r,
-                                                                                                                                                       int *nFreeDOF_element_u,
                                                                                                                                                        int *freeLocal_r,
                                                                                                                                                        int *freeGlobal_r,
+                                                                                                                                                       int *nFreeDOF_element_u,
                                                                                                                                                        int *freeLocal_u,
                                                                                                                                                        int *freeGlobal_u,
                                                                                                                                                        double *elementBoundaryFluxJacobian_eb,
@@ -820,9 +820,9 @@ cdef extern from "femIntegrals.h":
                                                                                                                                                  int *elementBoundaryElements,
                                                                                                                                                  int *elementBoundaryLocalElementBoundaries,
                                                                                                                                                  int *nFreeDOF_element_r,
-                                                                                                                                                 int *nFreeDOF_element_u,
                                                                                                                                                  int *freeLocal_r,
                                                                                                                                                  int *freeGlobal_r,
+                                                                                                                                                 int *nFreeDOF_element_u,
                                                                                                                                                  int *freeLocal_u,
                                                                                                                                                  int *freeGlobal_u,
                                                                                                                                                  double *elementBoundaryFluxJacobian,
@@ -844,9 +844,9 @@ cdef extern from "femIntegrals.h":
                                                                                                                                                        int *elementBoundaryElements,
                                                                                                                                                        int *elementBoundaryLocalElementBoundaries,
                                                                                                                                                        int *nFreeDOF_element_r,
-                                                                                                                                                       int *nFreeDOF_element_u,
                                                                                                                                                        int *freeLocal_r,
                                                                                                                                                        int *freeGlobal_r,
+                                                                                                                                                       int *nFreeDOF_element_u,
                                                                                                                                                        int *freeLocal_u,
                                                                                                                                                        int *freeGlobal_u,
                                                                                                                                                        double *elementBoundaryFluxJacobian_eb,
@@ -1764,9 +1764,9 @@ cdef extern from "femIntegrals.h":
 										                                                                                   int* elementBoundaryElements,
 										                                                                                   int* elementBoundaryLocalElementBoundaries,
 										                                                                                   int* nFreeDOF_element_r,
-										                                                                                   int* nFreeDOF_element_u,
 										                                                                                   int* freeLocal_r,
 										                                                                                   int* freeGlobal_r,
+										                                                                                   int* nFreeDOF_element_u,
 										                                                                                   int* freeLocal_u,
 										                                                                                   int* freeGlobal_u,
 										                                                                                   double* elementBoundaryFluxJacobian_eb,
@@ -1785,9 +1785,9 @@ cdef extern from "femIntegrals.h":
 									                                                                                     int* elementBoundaryElements,
 									                                                                                     int* elementBoundaryLocalElementBoundaries,
 									                                                                                     int* nFreeDOF_element_r,
-									                                                                                     int* nFreeDOF_element_u,
 									                                                                                     int* freeLocal_r,
 									                                                                                     int* freeGlobal_r,
+									                                                                                     int* nFreeDOF_element_u,
 									                                                                                     int* freeLocal_u,
 									                                                                                     int* freeGlobal_u,
 									                                                                                     double* elementBoundaryFluxJacobian,
@@ -1972,9 +1972,9 @@ cdef extern from "femIntegrals.h":
 									                                                                                 int* elementBoundaryElements,
 									                                                                                 int* elementBoundaryLocalElementBoundaries,
 									                                                                                 int* nFreeDOF_element_r,
-									                                                                                 int* nFreeDOF_element_u,
 									                                                                                 int* freeLocal_r,
 									                                                                                 int* freeGlobal_r,
+									                                                                                 int* nFreeDOF_element_u,
 									                                                                                 int* freeLocal_u,
 									                                                                                 int* freeGlobal_u,
 									                                                                                 double sigma,
@@ -1998,9 +1998,9 @@ cdef extern from "femIntegrals.h":
 									                                                                                 int* elementBoundaryElements,
 									                                                                                 int* elementBoundaryLocalElementBoundaries,
 									                                                                                 int* nFreeDOF_element_r,
-									                                                                                 int* nFreeDOF_element_u,
 									                                                                                 int* freeLocal_r,
 									                                                                                 int* freeGlobal_r,
+									                                                                                 int* nFreeDOF_element_u,
 									                                                                                 int* freeLocal_u,
 									                                                                                 int* freeGlobal_u,
 									                                                                                 int* isDOFBoundary,
@@ -2063,9 +2063,9 @@ cdef extern from "femIntegrals.h":
 									                                                                                       int* elementBoundaryElements,
 									                                                                                       int* elementBoundaryLocalElementBoundaries,
 									                                                                                       int* nFreeDOF_element_r,
-									                                                                                       int* nFreeDOF_element_u,
 									                                                                                       int* freeLocal_r,
 									                                                                                       int* freeGlobal_r,
+									                                                                                       int* nFreeDOF_element_u,
 									                                                                                       int* freeLocal_u,
 									                                                                                       int* freeGlobal_u,
 									                                                                                       double sigma,
@@ -2091,9 +2091,9 @@ cdef extern from "femIntegrals.h":
 									                                                                                       int* elementBoundaryElements,
 									                                                                                       int* elementBoundaryLocalElementBoundaries,
 									                                                                                       int* nFreeDOF_element_r,
-									                                                                                       int* nFreeDOF_element_u,
 									                                                                                       int* freeLocal_r,
 									                                                                                       int* freeGlobal_r,
+									                                                                                       int* nFreeDOF_element_u,
 									                                                                                       int* freeLocal_u,
 									                                                                                       int* freeGlobal_u,
 									                                                                                       int* isDOFBoundary,
@@ -2121,9 +2121,9 @@ cdef extern from "femIntegrals.h":
 									                                                                                   int* elementBoundaryElements,
 									                                                                                   int* elementBoundaryLocalElementBoundaries,
 									                                                                                   int* nFreeDOF_element_r,
-									                                                                                   int* nFreeDOF_element_u,
 									                                                                                   int* freeLocal_r,
 									                                                                                   int* freeGlobal_r,
+									                                                                                   int* nFreeDOF_element_u,
 									                                                                                   int* freeLocal_u,
 									                                                                                   int* freeGlobal_u,
 									                                                                                   int* csrRowIndeces_ru,
@@ -2409,7 +2409,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(np.nd
 									   np.ndarray csrColumnOffsets_eb_ru,
 									   np.ndarray elementBoundaryFluxJacobian_2sided,
 									   np.ndarray w_dS,
-									   np.ndarray jac):
+									   jac):
+    cdef np.ndarray rowptr, colind, jac_array
+    (rowptr,colind,jac_array) = jac.getCSRrepresentation()
     cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
     cdef int nElementBoundaries_element = w_dS.shape[1]
     cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
@@ -2431,7 +2433,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(np.nd
 									    <int*> csrColumnOffsets_eb_ru.data,
 									    <double*> elementBoundaryFluxJacobian_2sided.data,
 									    <double*> w_dS.data,
-									    <double*> jac.data)
+									    <double*> jac_array.data)
 def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(int offset_r,
 									     int stride_r,
 									     int offset_u,
@@ -2441,9 +2443,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(int
 									     np.ndarray elementBoundaryElements,
 									     np.ndarray elementBoundaryLocalElementBoundaries,
 									     np.ndarray nFreeDOF_element_r,
-									     np.ndarray nFreeDOF_element_u,
 									     np.ndarray freeLocal_r,
 									     np.ndarray freeGlobal_r,
+									     np.ndarray nFreeDOF_element_u,
 									     np.ndarray freeLocal_u,
 									     np.ndarray freeGlobal_u,
 									     np.ndarray elementBoundaryFluxJacobian_2sided,
@@ -2468,9 +2470,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(int
 									      <int*> elementBoundaryElements.data,
 									      <int*> elementBoundaryLocalElementBoundaries.data,
 									      <int*> nFreeDOF_element_r.data,
-									      <int*> nFreeDOF_element_u.data,
 									      <int*> freeLocal_r.data,
 									      <int*> freeGlobal_r.data,
+									      <int*> nFreeDOF_element_u.data,
 									      <int*> freeLocal_u.data,
 									      <int*> freeGlobal_u.data,
 									      <double*> elementBoundaryFluxJacobian_2sided.data,
@@ -3741,9 +3743,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int offset
                                                                       np.ndarray elementBoundaryElements,
                                                                       np.ndarray elementBoundaryLocalElementBoundaries,
                                                                       np.ndarray nFreeDOF_element_r,
-                                                                      np.ndarray nFreeDOF_element_u,
                                                                       np.ndarray freeLocal_r,
                                                                       np.ndarray freeGlobal_r,
+                                                                      np.ndarray nFreeDOF_element_u,
                                                                       np.ndarray freeLocal_u,
                                                                       np.ndarray freeGlobal_u,
                                                                       np.ndarray elementBoundaryFluxJacobian,
@@ -3768,9 +3770,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int offset
                                                                        <int *>elementBoundaryElements.data,
                                                                        <int *>elementBoundaryLocalElementBoundaries.data,
                                                                        <int *>nFreeDOF_element_r.data,
-                                                                       <int *>nFreeDOF_element_u.data,
                                                                        <int *>freeLocal_r.data,
                                                                        <int *>freeGlobal_r.data,
+                                                                       <int *>nFreeDOF_element_u.data,
                                                                        <int *>freeLocal_u.data,
                                                                        <int *>freeGlobal_u.data,
                                                                        <double*>elementBoundaryFluxJacobian.data,
@@ -3787,9 +3789,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(np.ndar
                                                                          np.ndarray elementBoundaryElements,
                                                                          np.ndarray elementBoundaryLocalElementBoundaries,
                                                                          np.ndarray nFreeDOF_element_r,
-                                                                         np.ndarray nFreeDOF_element_u,
                                                                          np.ndarray freeLocal_r,
                                                                          np.ndarray freeGlobal_r,
+                                                                         np.ndarray nFreeDOF_element_u,
                                                                          np.ndarray freeLocal_u,
                                                                          np.ndarray freeGlobal_u,
                                                                          np.ndarray elementBoundaryFluxJacobian_eb,
@@ -3816,9 +3818,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(np.ndar
                                                                           <int *>elementBoundaryElements.data,
                                                                           <int *>elementBoundaryLocalElementBoundaries.data,
                                                                           <int *>nFreeDOF_element_r.data,
-                                                                          <int *>nFreeDOF_element_u.data,
                                                                           <int *>freeLocal_r.data,
                                                                           <int *>freeGlobal_r.data,
+                                                                          <int *>nFreeDOF_element_u.data,
                                                                           <int *>freeLocal_u.data,
                                                                           <int *>freeGlobal_u.data,
                                                                           <double*>elementBoundaryFluxJacobian_eb.data,
@@ -3833,9 +3835,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int offset
                                                                       np.ndarray elementBoundaryElements,
                                                                       np.ndarray elementBoundaryLocalElementBoundaries,
                                                                       np.ndarray nFreeDOF_element_r,
-                                                                      np.ndarray nFreeDOF_element_u,
                                                                       np.ndarray freeLocal_r,
                                                                       np.ndarray freeGlobal_r,
+                                                                      np.ndarray nFreeDOF_element_u,
                                                                       np.ndarray freeLocal_u,
                                                                       np.ndarray freeGlobal_u,
                                                                       np.ndarray elementBoundaryFluxJacobian,
@@ -3858,9 +3860,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int offset
                                                                            <int *>elementBoundaryElements.data,
                                                                            <int *>elementBoundaryLocalElementBoundaries.data,
                                                                            <int *>nFreeDOF_element_r.data,
-                                                                           <int *>nFreeDOF_element_u.data,
                                                                            <int *>freeLocal_r.data,
                                                                            <int *>freeGlobal_r.data,
+                                                                           <int *>nFreeDOF_element_u.data,
                                                                            <int *>freeLocal_u.data,
                                                                            <int *>freeGlobal_u.data,
                                                                            <double*>elementBoundaryFluxJacobian.data,
@@ -3881,9 +3883,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int offset
 									         <int*> elementBoundaryElements.data,
 									         <int*> elementBoundaryLocalElementBoundaries.data,
 									         <int*> nFreeDOF_element_r.data,
-									         <int*> nFreeDOF_element_u.data,
 									         <int*> freeLocal_r.data,
 									         <int*> freeGlobal_r.data,
+									         <int*> nFreeDOF_element_u.data,
 									         <int*> freeLocal_u.data,
 									         <int*> freeGlobal_u.data,
 									         <double*> elementBoundaryFluxJacobian.data,
@@ -3905,9 +3907,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(np.ndar
                                                                          np.ndarray elementBoundaryElements,
                                                                          np.ndarray elementBoundaryLocalElementBoundaries,
                                                                          np.ndarray nFreeDOF_element_r,
-                                                                         np.ndarray nFreeDOF_element_u,
                                                                          np.ndarray freeLocal_r,
                                                                          np.ndarray freeGlobal_r,
+                                                                         np.ndarray nFreeDOF_element_u,
                                                                          np.ndarray freeLocal_u,
                                                                          np.ndarray freeGlobal_u,
                                                                          np.ndarray elementBoundaryFluxJacobian_eb,
@@ -3930,9 +3932,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(np.ndar
                                                                               <int *>elementBoundaryElements.data,
                                                                               <int *>elementBoundaryLocalElementBoundaries.data,
                                                                               <int *>nFreeDOF_element_r.data,
-                                                                              <int *>nFreeDOF_element_u.data,
                                                                               <int *>freeLocal_r.data,
                                                                               <int *>freeGlobal_r.data,
+                                                                              <int *>nFreeDOF_element_u.data,
                                                                               <int *>freeLocal_u.data,
                                                                               <int *>freeGlobal_u.data,
                                                                               <double*>elementBoundaryFluxJacobian_eb.data,
@@ -3955,9 +3957,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(np.ndar
 									            <int*> elementBoundaryElements.data,
 									            <int*> elementBoundaryLocalElementBoundaries.data,
 									            <int*> nFreeDOF_element_r.data,
-									            <int*> nFreeDOF_element_u.data,
 									            <int*> freeLocal_r.data,
 									            <int*> freeGlobal_r.data,
+									            <int*> nFreeDOF_element_u.data,
 									            <int*> freeLocal_u.data,
 									            <int*> freeGlobal_u.data,
 									            <double*> elementBoundaryFluxJacobian_eb.data,
@@ -3995,7 +3997,9 @@ def updateGlobalJacobianFromElementJacobian_eb_CSR(np.ndarray elementNeighbors,
                                                    np.ndarray csrRowIndeces_ru,
                                                    np.ndarray csrColumnOffsets_eb_ru,
                                                    np.ndarray elementJacobian_eb,
-                                                   np.ndarray globalJacobian):
+                                                   globalJacobian):
+    cdef np.ndarray rowptr, colind, globalJacobian_array
+    (rowptr,colind,globalJacobian_array) = globalJacobian.getCSRrepresentation()
     cdef int nElements_global = elementJacobian_eb.shape[0]
     cdef int nElementBoundaries_element = elementJacobian_eb.shape[1]
     cdef int nDOF_test_element = elementJacobian_eb.shape[2]
@@ -4012,7 +4016,7 @@ def updateGlobalJacobianFromElementJacobian_eb_CSR(np.ndarray elementNeighbors,
                                                     <int *>csrRowIndeces_ru.data,
                                                     <int *>csrColumnOffsets_eb_ru.data,
                                                     <double*>elementJacobian_eb.data,
-                                                    <double*>globalJacobian.data)
+                                                    <double*>globalJacobian_array.data)
 def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(np.ndarray interiorElementBoundaries,
                                                                     np.ndarray elementBoundaryElements,
                                                                     np.ndarray elementBoundaryLocalElementBoundaries,
@@ -4024,7 +4028,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(np.ndarray i
                                                                     np.ndarray csrColumnOffsets_eb_ru,
                                                                     np.ndarray elementBoundaryFluxJacobian,
                                                                     np.ndarray w_dS,
-                                                                    np.ndarray jac):
+                                                                    jac):
+    cdef np.ndarray rowptr, colind, jac_array
+    (rowptr,colind,jac_array) = jac.getCSRrepresentation()
     cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
     cdef int nElementBoundaries_element = w_dS.shape[1]
     cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
@@ -4046,7 +4052,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(np.ndarray i
                                                                      <int *>csrColumnOffsets_eb_ru.data,
                                                                      <double*>elementBoundaryFluxJacobian.data,
                                                                      <double*>w_dS.data,
-                                                                     <double*>jac.data)
+                                                                     <double*>jac_array.data)
 def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(np.ndarray exteriorElementBoundaries,
                                                                     np.ndarray elementBoundaryElements,
                                                                     np.ndarray elementBoundaryLocalElementBoundaries,
@@ -4111,7 +4117,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarra
                                                                        np.ndarray csrColumnOffsets_eb_eNebN_ru,
                                                                        np.ndarray elementBoundaryFluxJacobian_eb,
                                                                        np.ndarray w_dS,
-                                                                       np.ndarray jac):
+                                                                       jac):
+    cdef np.ndarray rowptr, colind, jac_array
+    (rowptr,colind,jac_array) = jac.getCSRrepresentation()
     cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
     cdef int nElementBoundaries_element = w_dS.shape[1]
     cdef int nQuadraturePoints_elementBoundary = w_dS.shape[2]
@@ -4134,7 +4142,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarra
                                                                         <int *>csrColumnOffsets_eb_eNebN_ru.data,
                                                                         <double*>elementBoundaryFluxJacobian_eb.data,
                                                                         <double*>w_dS.data,
-                                                                        <double*>jac.data)
+                                                                        <double*>jac_array.data)
 def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarray elementNeighbors,
                                                                        int nExteriorElementBoundaries_global,
                                                                        int nElementBoundaries_element,
@@ -4152,7 +4160,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarra
                                                                        np.ndarray csrColumnOffsets_eb_eNebN_ru,
                                                                        np.ndarray elementBoundaryFluxJacobian_eb,
                                                                        np.ndarray w_dS,
-                                                                       np.ndarray jac):
+                                                                       jac):
+    cdef np.ndarray rowptr, colind, jac_array
+    (rowptr,colind,jac_array) = jac.getCSRrepresentation()
     if w_dS.ndim > 3:
         cupdateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(<int *>elementNeighbors.data,
                                                                             exteriorElementBoundaries.shape[0],
@@ -4171,7 +4181,7 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarra
                                                                             <int *>csrColumnOffsets_eb_eNebN_ru.data,
                                                                             <double*>elementBoundaryFluxJacobian_eb.data,
                                                                             <double*>w_dS.data,
-                                                                            <double*>jac.data)
+                                                                            <double*>jac_array.data)
     else:
         cupdateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(<int*> elementNeighbors.data,
                                                                                   exteriorElementBoundaries.shape[0],
@@ -4190,7 +4200,7 @@ def updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(np.ndarra
 									          <int*> csrColumnOffsets_eb_eNebN_ru.data,
 									          <double*> elementBoundaryFluxJacobian_eb.data,
 									          <double*> w_dS.data,
-									          <double*> jac.data)
+									          <double*> jac_array.data)
 def calculateWeightedShape(np.ndarray dVR,
                            np.ndarray abs_det_jac,
                            np.ndarray w,
@@ -4492,10 +4502,12 @@ def calculateFlowVelocity(np.ndarray f,
                            <double*>v.data)
 def updateAddJacobian_CSR(int jacIndex,
                           double val,
-                          np.ndarray jac):
+                          jac):
+    cdef np.ndarray rowptr, colind, jac_array
+    (rowptr,colind,jac_array) = jac.getCSRrepresentation()
     cupdateAddJacobian_CSR(jacIndex,
                            val,
-                           <double*>jac.data)
+                           <double*>jac_array.data)
 def zeroJacobian_CSR(int nNonzeros,
                      jac):
     cdef np.ndarray rowptr, colind, jac_array
@@ -6083,9 +6095,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int of
 									  np.ndarray elementBoundaryElements,
 									  np.ndarray elementBoundaryLocalElementBoundaries,
 									  np.ndarray nFreeDOF_element_r,
-									  np.ndarray nFreeDOF_element_u,
 									  np.ndarray freeLocal_r,
 									  np.ndarray freeGlobal_r,
+									  np.ndarray nFreeDOF_element_u,
 									  np.ndarray freeLocal_u,
 									  np.ndarray freeGlobal_u,
 									  double sigma,
@@ -6116,9 +6128,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int of
 									   <int*> elementBoundaryElements.data,
 									   <int*> elementBoundaryLocalElementBoundaries.data,
 									   <int*> nFreeDOF_element_r.data,
-									   <int*> nFreeDOF_element_u.data,
 									   <int*> freeLocal_r.data,
 									   <int*> freeGlobal_r.data,
+									   <int*> nFreeDOF_element_u.data,
 									   <int*> freeLocal_u.data,
 									   <int*> freeGlobal_u.data,
 									   sigma,
@@ -6137,9 +6149,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int of
 									  np.ndarray elementBoundaryElements,
 									  np.ndarray elementBoundaryLocalElementBoundaries,
 									  np.ndarray nFreeDOF_element_r,
-									  np.ndarray nFreeDOF_element_u,
 									  np.ndarray freeLocal_r,
 									  np.ndarray freeGlobal_r,
+									  np.ndarray nFreeDOF_element_u,
 									  np.ndarray freeLocal_u,
 									  np.ndarray freeGlobal_u,
 									  np.ndarray isDOFBoundary,
@@ -6169,9 +6181,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int of
 									   <int*> elementBoundaryElements.data,
 									   <int*> elementBoundaryLocalElementBoundaries.data,
 									   <int*> nFreeDOF_element_r.data,
-									   <int*> nFreeDOF_element_u.data,
 									   <int*> freeLocal_r.data,
 									   <int*> freeGlobal_r.data,
+									   <int*> nFreeDOF_element_u.data,
 									   <int*> freeLocal_u.data,
 									   <int*> freeGlobal_u.data,
 									   <int*> isDOFBoundary.data,
@@ -6263,9 +6275,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(np.
 									     np.ndarray elementBoundaryElements,
 									     np.ndarray elementBoundaryLocalElementBoundaries,
 									     np.ndarray nFreeDOF_element_r,
-									     np.ndarray nFreeDOF_element_u,
 									     np.ndarray freeLocal_r,
 									     np.ndarray freeGlobal_r,
+									     np.ndarray nFreeDOF_element_u,
 									     np.ndarray freeLocal_u,
 									     np.ndarray freeGlobal_u,
 									     double sigma,
@@ -6298,9 +6310,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(np.
 									      <int*> elementBoundaryElements.data,
 									      <int*> elementBoundaryLocalElementBoundaries.data,
 									      <int*> nFreeDOF_element_r.data,
-									      <int*> nFreeDOF_element_u.data,
 									      <int*> freeLocal_r.data,
 									      <int*> freeGlobal_r.data,
+									      <int*> nFreeDOF_element_u.data,
 									      <int*> freeLocal_u.data,
 									      <int*> freeGlobal_u.data,
 									      sigma,
@@ -6321,9 +6333,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(np.
 									     np.ndarray elementBoundaryElements,
 									     np.ndarray elementBoundaryLocalElementBoundaries,
 									     np.ndarray nFreeDOF_element_r,
-									     np.ndarray nFreeDOF_element_u,
 									     np.ndarray freeLocal_r,
 									     np.ndarray freeGlobal_r,
+									     np.ndarray nFreeDOF_element_u,
 									     np.ndarray freeLocal_u,
 									     np.ndarray freeGlobal_u,
 									     np.ndarray isDOFBoundary,
@@ -6355,9 +6367,9 @@ def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(np.
 									      <int*> elementBoundaryElements.data,
 									      <int*> elementBoundaryLocalElementBoundaries.data,
 									      <int*> nFreeDOF_element_r.data,
-									      <int*> nFreeDOF_element_u.data,
 									      <int*> freeLocal_r.data,
 									      <int*> freeGlobal_r.data,
+									      <int*> nFreeDOF_element_u.data,
 									      <int*> freeLocal_u.data,
 									      <int*> freeGlobal_u.data,
 									      <int*> isDOFBoundary.data,
@@ -6379,9 +6391,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.nd
 									   np.ndarray elementBoundaryElements,
 									   np.ndarray elementBoundaryLocalElementBoundaries,
 									   np.ndarray nFreeDOF_element_r,
-									   np.ndarray nFreeDOF_element_u,
 									   np.ndarray freeLocal_r,
 									   np.ndarray freeGlobal_r,
+									   np.ndarray nFreeDOF_element_u,
 									   np.ndarray freeLocal_u,
 									   np.ndarray freeGlobal_u,
 									   np.ndarray csrRowIndeces_ru,
@@ -6392,7 +6404,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.nd
 									   np.ndarray a,
 									   np.ndarray grad_w,
 									   np.ndarray dS,
-									   np.ndarray jac):
+									   jac):
+    cdef np.ndarray rowptr_dummy, colind_dummy, jac_array
+    (rowptr_dummy,colind_dummy,jac_array) = jac.getCSRrepresentation()
     cdef int nInteriorElementBoundaries_global = interiorElementBoundaries.shape[0]
     cdef int nElementBoundaries_element = grad_w.shape[1]
     cdef int nQuadraturePoints_elementBoundary = grad_w.shape[2]
@@ -6416,9 +6430,9 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.nd
 									    <int*> elementBoundaryElements.data,
 									    <int*> elementBoundaryLocalElementBoundaries.data,
 									    <int*> nFreeDOF_element_r.data,
-									    <int*> nFreeDOF_element_u.data,
 									    <int*> freeLocal_r.data,
 									    <int*> freeGlobal_r.data,
+									    <int*> nFreeDOF_element_u.data,
 									    <int*> freeLocal_u.data,
 									    <int*> freeGlobal_u.data,
 									    <int*> csrRowIndeces_ru.data,
@@ -6429,7 +6443,7 @@ def updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.nd
 									    <double*> a.data,
 									    <double*> grad_w.data,
 									    <double*> dS.data,
-									    <double*> jac.data)
+									    <double*> jac_array.data)
 def updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(np.ndarray rowptr,
 									   np.ndarray colind,
 									   int offset_r,
