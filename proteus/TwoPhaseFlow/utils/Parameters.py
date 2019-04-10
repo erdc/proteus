@@ -913,7 +913,12 @@ class ParametersModelKappa(ParametersModelBase):
         SED_model=None
         VOS_model=None
         CLSVOF_model = mparams.clsvof.index
-        V_model = mparams.rans3p.index
+        if(mparams.rans3p.index is not None):
+            V_model = mparams.rans3p.index
+        elif(mparams.rans2p.index is not None):
+            V_model = mparams.rans2p.index
+        else:
+            raise ValueError("Kappa model: RANS2P or RANS3P model has not been defined. Please define either one (but not both)")
         PINC_model = mparams.pressureIncrement.index
         PRESSURE_model = mparams.pressure.index
         K_model = mparams.kappa.index
@@ -1052,7 +1057,12 @@ class ParametersModelDissipation(ParametersModelBase):
         SED_model = None
         VOS_model = None
         CLSVOF_model = mparams.clsvof.index
-        V_model = mparams.rans3p.index
+        if(mparams.rans3p.index is not None):
+            V_model = mparams.rans3p.index
+        elif(mparams.rans2p.index is not None):
+            V_model = mparams.rans2p.index
+        else:
+            raise ValueError("Dissipation model: RANS2P or RANS3P model has not been defined. Please define either one (but not both)")
         PINC_model = mparams.pressureIncrement.index
         PRESSURE_model = mparams.pressure.index
         K_model = mparams.kappa.index
@@ -1100,6 +1110,7 @@ class ParametersModelDissipation(ParametersModelBase):
             self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].dissipation_dirichlet.init_cython()}
 
             self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].dissipation_advective.init_cython()}
+            self.p.diffusiveFluxBoundaryConditions = {0: {0:lambda x, flag: domain.bc[flag].dissipation_diffusive.init_cython()}}
 
 
     def _initializeNumerics(self):
