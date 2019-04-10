@@ -1858,16 +1858,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.LAG_MU_FR,
             self.q['mu_fr_last'],
             self.q['mu_fr'])
-        for i in range(self.coefficients.netForces_p.shape[0]):
-            self.coefficients.wettedAreas[i] = globalSum(
-                self.coefficients.wettedAreas[i])
-            for I in range(3):
-                self.coefficients.netForces_p[i, I] = globalSum(
-                    self.coefficients.netForces_p[i, I])
-                self.coefficients.netForces_v[i, I] = globalSum(
-                    self.coefficients.netForces_v[i, I])
-                self.coefficients.netMoments[i, I] = globalSum(
-                    self.coefficients.netMoments[i, I])
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        
+        comm.Allreduce(self.coefficients.wettedAreas.copy(),self.coefficients.wettedAreas)
+        comm.Allreduce(self.coefficients.netForces_p.copy(),self.coefficients.netForces_p)
+        comm.Allreduce(self.coefficients.netForces_v.copy(),self.coefficients.netForces_v)
+        comm.Allreduce(self.coefficients.netMoments.copy(),self.coefficients.netMoments)
+
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
