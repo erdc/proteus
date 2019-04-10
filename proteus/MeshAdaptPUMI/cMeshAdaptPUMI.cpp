@@ -578,6 +578,14 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   apf::Field* adaptSize;
   apf::Field* adaptFrame;
 
+  if(m->findField("adaptSizeMetric"))
+    apf::destroyField(m->findField("adaptSizeMetric"));
+  if(m->findField("adaptSizeFrame"))
+    apf::destroyField(m->findField("adaptSizeFrame"));
+
+  apf::Field* adaptSizeMetric = apf::createLagrangeField(m,"adaptSizeMetric",apf::VECTOR,1);
+  apf::Field* adaptSizeFrame= apf::createLagrangeField(m,"adaptSizeFrame",apf::MATRIX,1);
+
   /// Adapt the mesh
   ma::Input* in;
   if(size_field_config == "uniform"){
@@ -598,6 +606,19 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       adaptSize  = apf::createFieldOn(m, "adapt_size", apf::SCALAR);
       apf::copyData(adaptSize, size_iso);
       in = ma::configure(m, adaptSize);
+
+      
+      apf::MeshIterator* it = m->begin(0);
+      apf::MeshEntity* ent;
+      while( (ent = m->iterate(it) ) )
+      {
+        double sizeVal = apf::getScalar(adaptSize,ent,0);
+        apf::Vector3 sizeVec(sizeVal,sizeVal,sizeVal);
+        apf::Matrix3x3 sizeFrames(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+        apf::setVector(adaptSizeMetric,ent,0,sizeVec);
+        apf::setMatrix(adaptSizeFrame,ent,0,sizeFrames);
+      }
+      m->end(0);
     }
   }
 
