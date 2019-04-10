@@ -657,7 +657,6 @@ def setup_given_extensions(extensions):
                       'proteus.tests.CLSVOF.with_RANS3PF',
                       'proteus.tests.CLSVOF.pure_level_set',
                       'proteus.TwoPhaseFlow',
-                      'proteus.TwoPhaseFlow.models',
                       'proteus.TwoPhaseFlow.utils',
                       'proteus.tests.TwoPhaseFlow',
                       'proteus.tests.SWEs',
@@ -901,7 +900,8 @@ def setup_given_extensions(extensions):
          ],
           scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                      'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
-                     'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py'],
+                     'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py',
+                     'scripts/runSWEs.py'],
           requires=['numpy']
     )
 

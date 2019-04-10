@@ -230,14 +230,22 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=True)
-myTpFlowProblem.clsvof_parameters['disc_ICs']=False
-myTpFlowProblem.rans3p_parameters['ns_forceStrongDirichlet']=True
-myTpFlowProblem.rans3p_parameters['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
-# Adjust physical parameters
-physical_parameters=myTpFlowProblem.physical_parameters
-physical_parameters['densityA'] = 1800 #1000.0
-physical_parameters['kinematicViscosityA'] = 500.0/physical_parameters['densityA']
-physical_parameters['densityB'] = 1.0
-physical_parameters['kinematicViscosityB'] = 2.0E-5/physical_parameters['densityB']
-physical_parameters['surf_tension_coeff'] = 0.
-physical_parameters['gravity'] = [0.0, -9.8, 0.0]
+myTpFlowProblem.Parameters.physical['densityA'] = 1800.0
+myTpFlowProblem.Parameters.physical['kinematicViscosityA'] = 500.0/myTpFlowProblem.Parameters.physical.densityA
+myTpFlowProblem.Parameters.physical['densityB'] = 1.0
+myTpFlowProblem.Parameters.physical['kinematicViscosityB'] = 2.0E-5/myTpFlowProblem.Parameters.physical.densityB
+myTpFlowProblem.Parameters.physical['surf_tension_coeff'] = 0.
+myTpFlowProblem.Parameters.physical.gravity = np.array([0., -9.8, 0.])
+#myTpFlowProblem.clsvof_parameters['lambdaFact']=1.0
+
+myTpFlowProblem.useBoundaryConditionsModule = False
+m = myTpFlowProblem.Parameters.Models
+m.clsvof.p.CoefficientsOptions.disc_ICs = False
+m.rans3p.p.CoefficientsOptions.forceStrongDirichlet = True
+m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.rans3p.p.CoefficientsOptions.epsFact_density = 3.
+m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
+
+myTpFlowProblem.outputStepping.systemStepExact = True
+
+myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)

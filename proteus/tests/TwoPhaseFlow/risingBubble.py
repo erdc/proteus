@@ -4,8 +4,10 @@ Rising bubble test
 from __future__ import division
 from past.utils import old_div
 import numpy as np
-from proteus import (Domain, Context)                     
+from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
+from proteus.mprans.SpatialTools import Tank2D
+from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 
 # *************************** #
@@ -23,7 +25,7 @@ opts= Context.Options([
 
 assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
 assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
-    
+
 # ****************** #
 # ***** GAUGES ***** #
 # ****************** #
@@ -32,7 +34,7 @@ assert opts.test_case == 1 or opts.test_case==2, "test_case must be 1 or 2"
 # *************************** #
 # ***** DOMAIN AND MESH ***** #
 # ****************** #******* #
-tank_dim = (1.0,2.0) 
+tank_dim = (1.0,2.0)
 refinement = opts.refinement
 structured=True
 if structured:
@@ -67,7 +69,7 @@ else:
                                                   segments=segments,
                                                   segmentFlags=segmentFlags,
                                                   regions=regions,
-                                                  regionFlags=regionFlags)    
+                                                  regionFlags=regionFlags)
     domain.boundaryTags = boundaryTags
     domain.writePoly("mesh")
     domain.writePLY("mesh")
@@ -82,7 +84,7 @@ else:
 class zero(object):
     def uOfXT(self,x,t):
         return 0.
-    
+
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
         xB = 0.5
@@ -111,7 +113,7 @@ def vel_u_DBC(x,flag):
 
 def vel_v_DBC(x,flag):
     if flag==boundaryTags['bottom'] or flag==boundaryTags['top']:
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 # ADVECTIVE FLUX #
 def vel_u_AFBC(x,flag):
@@ -130,7 +132,7 @@ def vel_u_DFBC(x,flag):
 def vel_v_DFBC(x,flag):
     if not (flag==boundaryTags['bottom'] or flag==boundaryTags['top']):
         return lambda x,t: 0.0
-    
+
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
@@ -150,7 +152,7 @@ boundaryConditions = {
     'clsvof_DBC': lambda x, flag: None,
     # ADVECTIVE FLUX BCs #
     'pressure_AFBC': lambda x, flag: lambda x, t: 0.0,
-    'pressure_increment_AFBC': lambda x, flag: lambda x, t: 0.0, 
+    'pressure_increment_AFBC': lambda x, flag: lambda x, t: 0.0,
     'vel_u_AFBC': vel_u_AFBC,
     'vel_v_AFBC': vel_v_AFBC,
     'clsvof_AFBC': lambda x, flag: lambda x, t: 0.0,
@@ -172,11 +174,8 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=True)
-physical_parameters = myTpFlowProblem.physical_parameters
+physical_parameters = myTpFlowProblem.Parameters.physical
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
-myTpFlowProblem.clsvof_parameters['disc_ICs']=True
-myTpFlowProblem.clsvof_parameters['computeMetricsForBubble']=True
-myTpFlowProblem.rans3p_parameters['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
 if opts.test_case==1:
     physical_parameters['densityA'] = 1000.0
     physical_parameters['kinematicViscosityA'] = 10.0/physical_parameters['densityA']
@@ -189,4 +188,13 @@ else: #test_case=2
     physical_parameters['kinematicViscosityA'] = 10.0/physical_parameters['densityA']
     physical_parameters['densityB'] = 1.0
     physical_parameters['kinematicViscosityB'] = 0.1/physical_parameters['densityB']
-    physical_parameters['surf_tension_coeff'] = 1.96    
+    physical_parameters['surf_tension_coeff'] = 1.96
+
+myTpFlowProblem.useBoundaryConditionsModule = False
+m = myTpFlowProblem.Parameters.Models
+m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
+m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.clsvof.p.CoefficientsOptions.disc_ICs = True
+m.clsvof.p.CoefficientsOptions.computeMetricsForBubble = True
+
+myTpFlowProblem.outputStepping.systemStepExact = True

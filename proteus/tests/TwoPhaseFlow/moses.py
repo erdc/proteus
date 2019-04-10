@@ -4,7 +4,7 @@ Rising bubble test
 from __future__ import division
 from past.utils import old_div
 import numpy as np
-from proteus import (Domain, Context)                     
+from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 
@@ -21,7 +21,7 @@ opts= Context.Options([
     ])
 
 assert opts.ns_model==1, "Surface tension is only implemented with rans3p. use ns_model=1"
-    
+
 # ****************** #
 # ***** GAUGES ***** #
 # ****************** #
@@ -95,7 +95,7 @@ facets=[[[0,1,2,3],[8,9,10,11],[16,17,18,19]], # bottom face
         [[3,0,4,7]], # left
         [[4,5,6,7]], # Top
         [[8,9,13,12]], # front box 1
-        [[9,10,14,13]], # right box 1 
+        [[9,10,14,13]], # right box 1
         [[10,11,15,14]], # back box 1
         [[11,8,12,15]],  # left box 1
         [[12,13,14,15]], # top box 1
@@ -103,7 +103,7 @@ facets=[[[0,1,2,3],[8,9,10,11],[16,17,18,19]], # bottom face
         [[17,18,22,21]], #right box 2
         [[18,19,23,22]], #back box 2
         [[19,16,20,23]], #left box 2
-        [[20,21,22,23]]] #top box 2            
+        [[20,21,22,23]]] #top box 2
 facetFlags=[boundaryTags['bottom'],
             boundaryTags['front'],
             boundaryTags['right'],
@@ -130,7 +130,7 @@ domain = Domain.PiecewiseLinearComplexDomain(vertices=vertices,
                                              regions = regions,
                                              regionFlags = regionFlags,
                                              holes=holes)
-#go ahead and add a boundary tags member 
+#go ahead and add a boundary tags member
 domain.MeshOptions.setParallelPartitioningType('node')
 domain.boundaryTags = boundaryTags
 domain.writePoly("mesh")
@@ -144,7 +144,7 @@ domain.MeshOptions.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he
 class zero(object):
     def uOfXT(self,x,t):
         return 0.
-    
+
 class clsvof_init_cond(object):
     def uOfXT(self,x,t):
         waterLine_z = 0.3
@@ -189,7 +189,7 @@ def vel_v_DFBC(x,flag):
 
 def vel_w_DFBC(x,flag):
     #if flag == boundaryTags['top']:
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 ######################
 # PRESSURE INCREMENT #
@@ -204,7 +204,7 @@ def pressure_increment_AFBC(x,flag):
 
 def pressure_increment_DFBC(x,flag):
     if not flag == boundaryTags['top']:
-        return lambda x,t: 0.0    
+        return lambda x,t: 0.0
 
 ############
 # PRESSURE #
@@ -216,7 +216,7 @@ def pressure_DBC(x,flag):
 def pressure_AFBC(x,flag):
     if not flag == boundaryTags['top']:
         return lambda x,t: 0.0
-    
+
 ##########
 # CLSVOF #
 ##########
@@ -269,6 +269,7 @@ forceTerms = {0:forcex,
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
 outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
+outputStepping.systemStepExact = True
 initialConditions = {'pressure': zero(),
                      'pressure_increment': zero(),
                      'vel_u': zero(),
@@ -297,6 +298,7 @@ boundaryConditions = {
     'vel_w_DFBC': vel_w_DFBC,
     'clsvof_DFBC': lambda x, flag: None}
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
+                                             ls_model=1,
                                              nd=3,
                                              cfl=opts.cfl,
                                              outputStepping=outputStepping,
@@ -308,8 +310,14 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
-                                             forceTerms=forceTerms,
                                              useSuperlu=True)
-myTpFlowProblem.physical_parameters['gravity'] = [0.0,0.0,-9.8]
-myTpFlowProblem.clsvof_parameters['disc_ICs']=True
-myTpFlowProblem.rans3p_parameters['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.Parameters.physical['gravity'] = [0.0,0.0,-9.8]
+m = myTpFlowProblem.Parameters.Models
+m.clsvof.p.CoefficientsOptions['disc_ICs']=True
+m.rans3p.p.CoefficientsOptions['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+m.rans3p.p.CoefficientsOptions.forceTerms = forceTerms
+m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
+
+myTpFlowProblem.Parameters.mesh.setParallelPartitioningType('node')
+myTpFlowProblem.Parameters.mesh.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
