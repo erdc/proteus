@@ -13,6 +13,7 @@ Profiling.logLevel=2
 Profiling.verbose=True
 import numpy as np
 import tables
+import pytest
 from . import thelper_cons_ls
 from . import thelper_cons_ls_so
 from . import thelper_vof_p
