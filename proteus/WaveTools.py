@@ -1387,7 +1387,7 @@ class NewWave(object):
         series[:,1] = etaR
 
         return series
-    
+
 class RandomWaves(object):
     """
     This class is used for generating plane random waves using linear reconstruction of components from a
@@ -1451,13 +1451,15 @@ class RandomWaves(object):
         self.fp = old_div(1.,Tp)
         self.bandFactor = bandFactor
         self.N = N
-        self.mwl = mwl
+        self.mwl = mwl        
         fmax = self.bandFactor*self.fp
         fmin = old_div(self.fp,self.bandFactor)
         self.df = old_div((fmax-fmin),float(self.N-1))
         self.fi = np.linspace(fmin,fmax,self.N)
         self.omega = 2.*M_PI*self.fi
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
+        omega_p = 2.*M_PI/Tp
+        self.wavelength = 2.*M_PI/dispersion(omega_p,self.depth,g=self.gAbs)
         if phi is None:
             self.phi = 2.0*M_PI*np.random.random(self.fi.shape[0])
             logEvent('INFO Wavetools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
@@ -2629,7 +2631,7 @@ class RandomWavesFast(object):
                  spectName ,# random words will result in error and return the available spectra
                  spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None,
-                 Lgen = np.array([0., 0. ,0. ]),
+                 Lgen =None,
                  Nwaves = 15,
                  Nfreq = 32,
                  checkAcc = True,
@@ -2651,10 +2653,15 @@ class RandomWavesFast(object):
         self.Tp = Tp
         self.depth = depth
         self.mwl = mwl
+        self.wavelength = RW.wavelength
+        if Lgen is None:
+            self.Lgen = self.wavelength*waveDir
+        else:
+            self.Lgen = Lgen
         cutoff_win = 0.1
         overl = 0.7
         fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
-        self.series = RW.writeEtaSeries(Tstart,Tend,x0,fname,4.*Lgen)
+        self.series = RW.writeEtaSeries(Tstart,Tend,x0,fname,4.*self.Lgen)
         self.cutoff = max(0.2*self.Tp , cutoff_win*Nwaves*Tp)
         duration = (self.series[-1,0]-self.series[0,0])
         self.cutoff  = old_div(self.cutoff, duration)
@@ -2688,7 +2695,7 @@ class RandomWavesFast(object):
                  window_params = {"Nwaves":Nwaves ,"Tm":Tm,"Window":"costap","Overlap":overl,"Cutoff":cutoff_win},
                  arrayData = True,
                  seriesArray = self.series,
-                 Lgen = Lgen,
+                 Lgen = self.Lgen,
             fast=self.fast
                  )
 
@@ -2705,7 +2712,7 @@ class RandomWavesFast(object):
             errors[ii] = abs(self.series[ii,1]-TS.eta(x0,self.series[ii,0]) )
         self.er1 = old_div(max(errors[:]),self.Hs)
         if self.er1 > 0.01 and checkAcc:
-                logEvent("ERROR!: WaveTools.py: Found large errors (>1%) during window reconstruction at RandomWavesFast. Please a) Increase Nfreq, b) Decrease waves per window. You can set checkAcc = False if you want to proceed with these errors")
+                logEvent('ERROR!: WaveTools.py: Found large errors error={s}) during window reconstruction at RandomWavesFast. Please a) Increase Nfreq, b) Decrease waves per window to decrease error < 1%. You can set checkAcc = False if you want to proceed with these errors',level=0)
                 sys.exit(1)
 
         self.eta = TS.eta
@@ -2996,7 +3003,7 @@ class RandomNLWaves(object):
 
 
 
-    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Lgen=np.array([0.,0.,0.])):
+    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False, Lgen=np.zeros(3,)):
         """Writes a timeseries of the free-surface elevation
 
         It also returns the free surface elevation as a time-eta array.
