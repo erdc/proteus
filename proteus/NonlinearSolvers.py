@@ -471,7 +471,7 @@ class Newton(NonlinearSolver):
         self.etaLast = eta
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
-    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None,linear=False):
         r""" Solves the non-linear system :math:`F(u) = b`.
 
         Parameters
@@ -542,7 +542,11 @@ class Newton(NonlinearSolver):
 
             if par_u is not None:
                 par_u.scatter_forward_insert()
-            self.computeResidual(u,r,b)
+            if linear:
+                r[:]=0
+                self.computeRates = False
+            else:
+                self.computeResidual(u,r,b)
             if par_r is not None:
                 #no overlap
                 if not self.par_fullOverlap:
@@ -778,27 +782,15 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         # CALCULATE SOLUTION #
         ######################
         self.F.secondCallCalculateResidual = 0
-        logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
-        self.computeResidual(u,r,b)
-        if self.updateJacobian or self.fullNewton:
-            self.updateJacobian = False
-            self.F.getJacobian(self.J)
-            self.linearSolver.prepare(b=r)
-        self.du[:]=0.0
-        if not self.directSolver:
-            if self.EWtol:
-                self.setLinearSolverTolerance(r)
-        if not self.linearSolverFailed:
-            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-            self.linearSolverFailed = self.linearSolver.failed()
-        u-=self.du
-        logEvent("   End of entropy viscosity solution", level=4)
-
+        logEvent(" Entropy viscosity solution with consistent mass matrix", level=1)
+        Newton.solve(self,u,r,b,par_u,par_r,linear=True)
         ############################
         # FCT STEP ON WATER HEIGHT #
         ############################
-        logEvent("   FCT Step", level=1)
+        logEvent(" FCT Step", level=1)
         self.F.FCTStep()
+        if par_u is not None:
+            par_u.scatter_forward_insert()
 
         # DISTRIBUTE SOLUTION FROM u to u[ci].dof
         self.F.secondCallCalculateResidual = 1
