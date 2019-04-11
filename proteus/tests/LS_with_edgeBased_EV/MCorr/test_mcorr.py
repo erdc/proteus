@@ -13,6 +13,7 @@ Profiling.logLevel=2
 Profiling.verbose=True
 import numpy as np
 import tables
+import pytest
 from . import thelper_cons_ls
 from . import thelper_cons_ls_so
 from . import thelper_vof_p
@@ -90,6 +91,7 @@ class TestMCorr(object):
         expected.close()
         actual.close()
 
+    @pytest.mark.skip(reason="results can't be reproduced reliably")
     def test_edge_based_EV(self):
         thelper_cons_ls.ct.STABILIZATION_TYPE_ncls=1
         thelper_cons_ls.ct.DO_REDISTANCING=True
