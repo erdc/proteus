@@ -1435,12 +1435,12 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
             # self.kspQp_dens.solve(x_tmp,tmp1)
 
         ########################
-        solve_stage = p4pyPETSc.Log.Stage('Np_mult')
-        solve_stage.push()
+#        solve_stage = p4pyPETSc.Log.Stage('Np_mult')
+#        solve_stage.push()
 
         self.Np_rho.mult(tmp1,tmp2)
 
-        solve_stage.pop()
+#        solve_stage.pop()
         ##########################
 
         if self.alpha is True:
@@ -1455,12 +1455,12 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 #        tmp2.assemblyEnd()
 
         #######################
-        solve_stage = p4pyPETSc.Log.Stage('Ap_solve')
-        solve_stage.push()
+#        solve_stage = p4pyPETSc.Log.Stage('Ap_solve')
+#        solve_stage.push()
 
         self.kspAp_rho.solve(tmp2, tmp1)
 
-        solve_stage.pop()
+#        solve_stage.pop()
         #######################
 
         y.axpy(1.,tmp1)

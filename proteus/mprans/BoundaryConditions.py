@@ -1232,7 +1232,7 @@ import sys
 import csv
 import numpy as np
 from mpi4py import MPI
-from scipy import spatial
+#from scipy import spatial
 from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
 from proteus import SpatialTools as st
 from collections import OrderedDict
@@ -1322,25 +1322,25 @@ class WallFunctions(AuxiliaryVariables.AV_base):
     def calculate(self):
         pass
 
-    def getLocalNearestNode(self, coords, kdtree):
-        """
-        Finds nearest node to coordinates (local)
-        Parameters
-        ----------
-        coords: array_like
-            coordinates from which to find nearest node
-        kdtree: scipy.spatial.cKDTree
-            instance of scipy kdtree
-        Returns
-        -------
-        node: int
-            nearest node index
-        distance: float
-            distance to nearest node
-        """
-        # determine local nearest node distance
-        distance, node = kdtree.query(coords)
-        return node, distance
+#     def getLocalNearestNode(self, coords, kdtree):
+#         """
+#         Finds nearest node to coordinates (local)
+#         Parameters
+#         ----------
+#         coords: array_like
+#             coordinates from which to find nearest node
+#         kdtree: scipy.spatial.cKDTree
+#             instance of scipy kdtree
+#         Returns
+#         -------
+#         node: int
+#             nearest node index
+#         distance: float
+#             distance to nearest node
+#         """
+#         # determine local nearest node distance
+#         distance, node = kdtree.query(coords)
+#         return node, distance
 
     def getLocalElement(self, femSpace, coords, node):
         """
@@ -1388,43 +1388,43 @@ class WallFunctions(AuxiliaryVariables.AV_base):
         # no elements found
         return None
 
-    def findElementContainingCoords(self, coords):
-        """
-        Given global coordinates of a point, returns
-        local coordinates and the owner of the point.
+#     def findElementContainingCoords(self, coords):
+#         """
+#         Given global coordinates of a point, returns
+#         local coordinates and the owner of the point.
 
-        Parameters
-        ----------
-        coords: array_like
-            global coordinates to look for
-        Returns
-        -------
-        xi:
-            local coordinates
-        eN: int
-            (local) element number
-        rank: int
-            processor rank containing element
-        """
-        comm = Comm.get().comm.tompi4py()
-        xi = owning_proc = element = rank = None  # initialised as None
-        self.xi, self.element, self.rank = xi, element, rank
-        # get nearest node on each processor
-        # comm.barrier()
-        self.u = self.model.levelModelList[0].u
-        self.femSpace_velocity = self.u[1].femSpace
-        nodes_kdtree = spatial.cKDTree(self.model.levelModelList[0].mesh.nodeArray)
-        nearest_node, nearest_node_distance = self.getLocalNearestNode(coords, nodes_kdtree)
-        # look for element containing coords on each processor (if it exists)
-        local_element = self.getLocalElement(self.femSpace_velocity, coords, nearest_node)
-        if local_element:
-            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
-            rank = comm.rank
-        else:
-            xi = None
-            rank = None
-        #rank = comm.allreduce(rank, op=MPI.MAX)
-        return xi, local_element, rank
+#         Parameters
+#         ----------
+#         coords: array_like
+#             global coordinates to look for
+#         Returns
+#         -------
+#         xi:
+#             local coordinates
+#         eN: int
+#             (local) element number
+#         rank: int
+#             processor rank containing element
+#         """
+#         comm = Comm.get().comm.tompi4py()
+#         xi = owning_proc = element = rank = None  # initialised as None
+#         self.xi, self.element, self.rank = xi, element, rank
+#         # get nearest node on each processor
+#         # comm.barrier()
+#         self.u = self.model.levelModelList[0].u
+#         self.femSpace_velocity = self.u[1].femSpace
+#         nodes_kdtree = spatial.cKDTree(self.model.levelModelList[0].mesh.nodeArray)
+#         nearest_node, nearest_node_distance = self.getLocalNearestNode(coords, nodes_kdtree)
+#         # look for element containing coords on each processor (if it exists)
+#         local_element = self.getLocalElement(self.femSpace_velocity, coords, nearest_node)
+#         if local_element:
+#             xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
+#             rank = comm.rank
+#         else:
+#             xi = None
+#             rank = None
+#         #rank = comm.allreduce(rank, op=MPI.MAX)
+#         return xi, local_element, rank
 
     def getFluidVelocityLocalCoords(self, xi, element, rank):
         """
