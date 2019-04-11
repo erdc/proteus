@@ -90,6 +90,7 @@ class TestMCorr(object):
         expected.close()
         actual.close()
 
+    @pytest.mark.skip(reason="results can't be reproduced reliably")
     def test_edge_based_EV(self):
         thelper_cons_ls.ct.STABILIZATION_TYPE_ncls=1
         thelper_cons_ls.ct.DO_REDISTANCING=True
