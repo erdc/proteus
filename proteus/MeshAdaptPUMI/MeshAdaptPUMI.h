@@ -54,6 +54,7 @@ class MeshAdaptPUMIDrvr{
   //MeshAdapt functions
   int willAdapt();
   int adaptPUMIMesh();
+  int setSphereSizeField();
   int calculateSizeField();
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
@@ -62,6 +63,7 @@ class MeshAdaptPUMIDrvr{
 
   //analytic geometry
   gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
+  void updateSphereCoordinates(double*sphereCenter);
 
   //Quality Check Functions
   double getMinimumQuality();

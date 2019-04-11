@@ -377,7 +377,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     getERMSizeField(total_error);
   }
   else if (size_field_config == "meshQuality"){
-    size_iso = samSz::isoSize(m);
+    //size_iso = samSz::isoSize(m);
+    setSphereSizeField();
   }
   else if (size_field_config == "isotropic")
     calculateSizeField();
@@ -483,7 +484,13 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   //in->shouldRunPostParma = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
-  in->shouldSnap = false;
+  if(size_field_config == "meshQuality")
+  {
+    in->shouldSnap = true;
+    in->shouldTransferParametric=true;
+  }
+  else
+    in->shouldSnap = false;
   //in->goodQuality = 0.16;//0.027;
   //double mass_before = getTotalMass();
   
