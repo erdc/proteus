@@ -1521,7 +1521,7 @@ def _assembleGeometry(domain, BC_class):
                                         child_vols.remove(ind)
                                     merged.remove(f)
                                     child_vols += [merged]
-                        volume += child_vols
+                            volume += child_vols
                     if shape.holes_ind is not None and i in shape.holes_ind:
                         volumes_to_remove += [i]
                 volumes2 = [vol for i, vol in enumerate(volumes) if i not in volumes_to_remove]
