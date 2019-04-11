@@ -486,8 +486,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumIterations = numIter;
   if(size_field_config == "meshQuality")
   {
-    in->shouldSnap = true;
-    in->shouldTransferParametric=true;
+    in->shouldSnap = false;
+    in->shouldTransferParametric=false;
   }
   else
     in->shouldSnap = false;
