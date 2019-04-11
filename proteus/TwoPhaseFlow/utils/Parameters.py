@@ -659,7 +659,7 @@ class ParametersModelPressure(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'pressure_'
         self.n.linearSolverConvergenceTest = 'r-true'
-        # NUMERICAL FLUX 
+        # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.ConstantAdvection_exterior
         # TOLERANCES
         self.n.tolFac = 0.
@@ -715,7 +715,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
     def __init__(self, Problem):
         super(ParametersModelPressureInitial, self).__init__(name='pressureInitial', index=None,
                                                              Problem=Problem)
-        # NUMERICAL FLUX 
+        # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.ConstantAdvection_exterior
         # NON LINEAR SOLVER
         self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
@@ -787,7 +787,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
                                                                Problem=Problem)
         # LEVEL MODEL
         self.p.LevelModelType = PresInc.LevelModel
-        # NUMERICAL FLUX 
+        # NUMERICAL FLUX
         self.n.numericalFluxType = PresInc.NumericalFlux
         # NON LINEAR SOLVER
         self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
@@ -830,7 +830,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_increment_AFBC']}
             self.p.diffusiveFluxBoundaryConditions = {0:{0: BC['pressure_increment_DFBC']}}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].pInt_dirichlet.init_cython()}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].pInc_dirichlet.init_cython()}
             self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].pInc_advective.init_cython()}
             self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.bc[flag].pInc_diffusive.init_cython()}}
         # freeze attributes
@@ -1161,7 +1161,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         copts.eps_tolerance_clsvof = False
         copts.disc_ICs = False
         copts._freeze()
-        # LEVEL MODEL 
+        # LEVEL MODEL
         self.p.LevelModelType = CLSVOF.LevelModel
         # NUMERICAL FLUX
         self.n.numericalFluxType = CLSVOF.NumericalFlux
@@ -1914,4 +1914,3 @@ class ParametersPhysical(FreezableClass):
         self.sigma_e = 1.29
         # freeze attributes
         self._freeze()
-
