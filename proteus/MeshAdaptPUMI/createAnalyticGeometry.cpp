@@ -1,6 +1,7 @@
 #include <createAnalyticGeometry.h>
 #include "MeshAdaptPUMI.h"
 #include <ma.h>
+#include <lionPrint.h>
 
 //routines to create analytic sphere in a 3D box
 
@@ -596,6 +597,7 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
     } //end if
   } //end while
   m->end(it);
+  m->acceptChanges();
 }
 
 gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCenter, double radius)
@@ -608,7 +610,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   xyz_offset[1] = sphereCenter[1];
   xyz_offset[2] = sphereCenter[2];
   
-
+  lion_set_verbosity(1);
 
   //create the analytic model 
   gmi_model* model = gmi_make_analytic();
@@ -620,10 +622,12 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   //add the box
   makeBox(model);
 
-  apf::writeVtkFiles("initialInitial",m);
+  //apf::writeVtkFiles("initialInitial",m);
   setParameterization(model,m);
+  m->verify();
 
-  apf::Field* size_initial = apf::createLagrangeField(m,"size_initial",apf::SCALAR,1);
+  //apf::Field* size_initial = apf::createLagrangeField(m,"size_initial",apf::SCALAR,1);
+  size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* ent;
   while( (ent = m->iterate(it)) )
@@ -631,24 +635,63 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
     apf::Vector3 pt;
     m->getPoint(ent,0,pt);
     if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < sphereRadius*1.5)
-      apf::setScalar(size_initial,ent,0,0.025);
+      apf::setScalar(size_iso,ent,0,hmin);
     else
-      apf::setScalar(size_initial,ent,0,0.1);
+      apf::setScalar(size_iso,ent,0,hmax);
   }
   m->end(it);
 
-/*
-  ma::Input* in = ma::configure(m,size_initial);
+  gradeMesh();
+   
+
+  ma::Input* in = ma::configure(m,size_iso);
   in->maximumIterations = 10;
   in->shouldSnap = true;
   in->shouldTransferParametric = true;
   in->shouldFixShape = true;
   in->debugFolder="./debug_fine";
-  ma::adaptVerbose(in,true);
-  apf::destroyField(size_initial);
+  ma::adaptVerbose(in,false);
   m->verify();
   
-  apf::writeVtkFiles("initialAdapt",m);
-*/
+  //apf::writeVtkFiles("initialAdapt",m);
+  freeField(size_iso);
+
+  size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
+  it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+    apf::Vector3 pt;
+    m->getPoint(ent,0,pt);
+    if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < sphereRadius*1.5)
+      apf::setScalar(size_iso,ent,0,hmin);
+    else
+      apf::setScalar(size_iso,ent,0,hmax);
+  }
+  m->end(it);
+
+  gradeMesh();
+   
+  in = ma::configure(m,size_iso);
+  in->maximumIterations = 10;
+  in->shouldSnap = true;
+  in->shouldTransferParametric = true;
+  in->shouldFixShape = true;
+  in->debugFolder="./debug_fine";
+  ma::adaptVerbose(in,false);
+  m->verify();
+  
+  //apf::writeVtkFiles("initialAdapt2",m);
+  freeField(size_iso);
+
   return model;
 }
+
+
+
+void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
+{
+  xyz_offset[0] = sphereCenter[0];
+  xyz_offset[1] = sphereCenter[1];
+  xyz_offset[2] = sphereCenter[2];
+}
+
