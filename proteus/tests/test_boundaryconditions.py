@@ -334,8 +334,8 @@ class TestBC(unittest.TestCase):
             d_dir = [BC.dissipation_dirichlet.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
             k_diff += [BC.k_diffusive.uOfXT(x, t)]
-            npt.assert_almost_equal(p_dir,[p-rho*sum(g*x)])
-            npt.assert_almost_equal(pInit_dir,[p-rho*sum(g*x)])
+            npt.assert_almost_equal(p_dir,[p+rho*sum(g*x)])
+            npt.assert_almost_equal(pInit_dir,[p+rho*sum(g*x)])
             npt.assert_equal(k_dir, [kk])
             npt.assert_equal(d_dir, [dd])
         zeros = np.zeros(len(t_list))
