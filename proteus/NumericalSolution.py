@@ -1267,12 +1267,7 @@ class NS_base(object):  # (HasTraits):
                 domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
 
             self.PUMI_transferFields()
-            chrono_x = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().x
-            chrono_y = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().y
-            chrono_z = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().z
-    
-            sphereCoords = numpy.array([chrono_x,chrono_y,chrono_z])
-            domain.PUMIMesh.updateSphereCoordinates(sphereCoords);
+
 
             logEvent("Estimate Error")
             sfConfig = domain.PUMIMesh.size_field_config()
@@ -1292,9 +1287,18 @@ class NS_base(object):  # (HasTraits):
             elif(sfConfig=='meshQuality'):
               minQual = domain.PUMIMesh.getMinimumQuality()
               logEvent('The quality is %f ' % (minQual**(1./3.)))
+              #adaptMeshNow=True
               if(minQual**(1./3.)<0.25):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
+              
+              chrono_x = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().x
+              chrono_y = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().y
+              chrono_z = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().z
+    
+              sphereCoords = numpy.array([chrono_x,chrono_y,chrono_z])
+              domain.PUMIMesh.updateSphereCoordinates(sphereCoords)
+              logEvent("Updated the sphere coordinates %f %f %f" % (chrono_x,chrono_y,chrono_z))
             else:
               adaptMeshNow=True
               logEvent("Need to Adapt")
