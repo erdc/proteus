@@ -245,6 +245,7 @@ cdef class ProtChBody:
       np.ndarray Aij  # added mass array
       bool applyAddedMass  # will apply added mass if True (default)
       bool useIBM
+      double radiusIBM
       string hdfFileName
       double Aij_factor
       int[:] boundaryFlags
@@ -297,6 +298,7 @@ cdef class ProtChSystem:
         int tCount
         bool initialised
         bool update_substeps
+        int nBodiesIBM
 
 
 cdef class ProtChMesh:
