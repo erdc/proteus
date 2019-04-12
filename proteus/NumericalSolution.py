@@ -1292,13 +1292,12 @@ class NS_base(object):  # (HasTraits):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
               
-              chrono_x = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().x
-              chrono_y = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().y
-              chrono_z = self.auxiliaryVariables['rans2p'][0].subcomponents[0].ChBody.GetPos().z
-    
-              sphereCoords = numpy.array([chrono_x,chrono_y,chrono_z])
-              domain.PUMIMesh.updateSphereCoordinates(sphereCoords)
-              logEvent("Updated the sphere coordinates %f %f %f" % (chrono_x,chrono_y,chrono_z))
+              if (self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
+                sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
+                domain.PUMIMesh.updateSphereCoordinates(sphereCoords)
+                logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
+              else:
+                sys.exit("Haven't been implemented code yet to cover this behavior.")
             else:
               adaptMeshNow=True
               logEvent("Need to Adapt")
