@@ -492,7 +492,6 @@ void makeSphere(gmi_model* model)
   double faRan[2][2] = {{0,6.28318530718},{0.0,apf::pi}};
 
   gmi_add_analytic(model, 2, sphereFaceID, sphereFace, faPer, faRan, 0);
-  std::cout<<"This is the new offset "<< xyz_offset[2]<<std::endl;
 }
 
 void setParameterization(gmi_model* model,apf::Mesh2* m)
@@ -694,4 +693,5 @@ void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
   xyz_offset[1] = sphereCenter[1];
   xyz_offset[2] = sphereCenter[2];
 }
+
 

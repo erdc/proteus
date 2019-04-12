@@ -786,6 +786,10 @@ cdef class ProtChBody:
             am.barycenters[self.i_start:self.i_end] = pyvec2array(self.ChBody.GetPos())
         self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
 
+        #update the body position
+        pos_copy = chrono.ChVectorD(posx, posy, posz)
+        self.ChBody.SetPos(pos_copy)
+
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
         cdef ch.ChVector h_body_vec
