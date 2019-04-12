@@ -19,7 +19,7 @@ my_chbody.SetPos(...)
 my_chbody.SetRot(...)
 
 # pass the index of the boundaries (or particle index) where forces must be integrated
-my_protchbody.setIndexBoundary(i_start=1, i_end=5)
+my_protchbody.setIndexBoundary([0, 1, 2, 3])
 # alternatively, if you use a Shape instance from proteus.SpatialTools
 # the boundaries indice will be set automatically after calling SpatialTools.assembleDomain()
 my_protchbody.setShape(my_shape)
@@ -622,7 +622,6 @@ cdef class ProtChBody:
         M: array_like
             moments (x, y, z) as provided by Proteus
         """
-        i0, i1 = self.i_start, self.i_end
         M = np.zeros(3)
         for flag in self.boundaryFlags:
             if self.useIBM:
@@ -672,11 +671,11 @@ cdef class ProtChBody:
                 # getting added mass matrix
                 self.Aij[:] = 0
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
-                if self.useIBM:
-                    self.Aij += am.coefficients.particle_Aij[self.i_start]
-                else:
-                    for i in range(self.i_start, self.i_end):
-                        self.Aij += am.Aij[i]
+                for flag in self.boundaryFlags:
+                    if self.useIBM:
+                        self.Aij += am.coefficients.particle_Aij[flag]
+                    else:
+                        self.Aij += am.Aij[flag]
                 if self.width_2D:
                     self.Aij *= self.width_2D
             # setting added mass
@@ -798,7 +797,8 @@ cdef class ProtChBody:
         self.thisptr.pos_last = pos_last
         if self.ProtChSystem.model_addedmass is not None:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
-            am.barycenters[self.i_start:self.i_end] = pyvec2array(self.ChBody.GetPos())
+            for flag in self.boundaryFlags:
+                am.barycenters[flag] = pyvec2array(self.ChBody.GetPos())
         self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
         if self.useIBM and self.ProtChSystem.model is not None:
             chpos = self.ChBody.GetPos()

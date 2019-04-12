@@ -189,8 +189,6 @@ cdef class ProtChBody:
       ProtChSystem ProtChSystem
       object Shape
       int nd
-      int i_start
-      int i_end
       double dt
       double width_2D
       object record_dict
