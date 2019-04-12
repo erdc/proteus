@@ -276,14 +276,18 @@ cdef class ProtChBody:
         """
         self.boundaryFlags = np.array(flags, 'i')
 
-    def setIBM(self, useIBM=True):
+    def setIBM(self, useIBM=True, radiusIBM=0.):
         """Sets IBM mode for retrieving fluid forces
 
         Parameters
         ----------
         useIBM: bool
+            set if IBM should be used
+        radiusIBM: double
+            radius of the particle for IBM
         """
         self.useIBM = useIBM
+        self.radiusIBM = radiusIBM
 
     def setWidth2D(self, width):
         """Sets width of 2D body (for forces and moments calculation)
@@ -796,6 +800,23 @@ cdef class ProtChBody:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
             am.barycenters[self.i_start:self.i_end] = pyvec2array(self.ChBody.GetPos())
         self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
+        if self.useIBM and self.ProtChSystem.model is not None:
+            chpos = self.ChBody.GetPos()
+            chvel = self.ChBody.GetPos_dt()
+            chvel_ang = self.ChBody.GetWvel_loc()
+            c = self.ProtChSystem.model.levelModelList[-1].coefficients
+            for flag in self.boundaryFlags:
+                c.ball_radius[flag] = self.radiusIBM
+                c.ball_center[flag, 0] = chpos.x
+                c.ball_center[flag, 1] = chpos.y
+                c.ball_center[flag, 2] = chpos.z
+                c.ball_velocity[flag, 0] = chvel.x
+                c.ball_velocity[flag, 1] = chvel.y
+                c.ball_velocity[flag, 2] = chvel.z
+                c.ball_angular_velocity[flag, 0] = chvel_ang.x
+                c.ball_angular_velocity[flag, 1] = chvel_ang.y
+                c.ball_angular_velocity[flag, 2] = chvel_ang.z
+
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
@@ -876,6 +897,8 @@ cdef class ProtChBody:
         self.storeValues()
         # set mass matrix with no added mass
         self.setAddedMass(np.zeros((6,6)))
+        if self.useIBM and self.ProtChSystem.model is not None:
+            self.ProtChSystem.nBodiesIBM += 1
         self.thisptr.calculate_init()
         #
 
@@ -1554,6 +1577,7 @@ cdef class ProtChSystem:
                 self.femSpace_pressure = self.u[0].femSpace
                 self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         if not self.initialised:
+            self.nBodiesIBM = 0  # will be incremented by bodies calculate_init()
             Profiling.logEvent("Starting init"+str(self.next_sample))
             self.directory = str(Profiling.logDir)+'/'
             self.thisptr.setDirectory(self.directory)
@@ -1562,6 +1586,23 @@ cdef class ProtChSystem:
             Profiling.logEvent("Setup initial"+str(self.next_sample))
             self.ChSystem.SetupInitial()
             Profiling.logEvent("Finished init"+str(self.next_sample))
+            if self.nBodiesIBM > 0:
+                assert self.model is not None, 'IBM set to be used in bodies but model is not attached. Attach rans model BEFORE calling calculate_init() on chrono system'
+                c = self.model.levelModelList[-1].coefficients
+                # set it only if it was not set manually before
+                if not c.nParticles:
+                    c.nParticles = self.nBodiesIBM
+                else:
+                    assert c.nParticles == self.nBodiesIBM, 'number of RANS particles {nP} != number of IBM bodies {nB}'.format(nP=c.nParticles, nB=self.nBodiesIBM)
+                if c.ball_radius is None:
+                    c.ball_radius = np.zeros(self.nBodiesIBM, 'd')
+                if c.ball_center is None:
+                    c.ball_center = np.zeros((self.nBodiesIBM, 3), 'd')
+                if c.ball_velocity is None:
+                    c.ball_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
+                if c.ball_angular_velocity is None:
+                    c.ball_angular_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
+                c.initializeSDF()
             for s in self.subcomponents:
                 s.poststep()
             self.initialised = True
