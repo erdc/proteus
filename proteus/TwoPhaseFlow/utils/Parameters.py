@@ -57,6 +57,7 @@ class ParametersHolder:
     def initializeParameters(self):
         all_models = [self.Models.rans2p,
                       self.Models.rans3p,
+                      self.Models.vos,
                       self.Models.clsvof,
                       self.Models.vof,
                       self.Models.ncls,
@@ -151,6 +152,7 @@ class ParametersModelsHolder:
     def __init__(self, ProblemInstance=None):
         self._Problem = ProblemInstance
         self.rans2p = ParametersModelRANS2P(Problem=self._Problem)
+        self.vos = ParametersModelVOS(Problem=self._Problem)
         self.vof = ParametersModelVOF(Problem=self._Problem)
         self.ncls = ParametersModelNCLS(Problem=self._Problem)
         self.rdls = ParametersModelRDLS(Problem=self._Problem)
@@ -1143,6 +1145,143 @@ class ParametersModelDissipation(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.01 * mesh.he ** 2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1 * self.n.nl_atol_res
+
+class ParametersModelVOS(ParametersModelBase):
+    """
+    """
+    def __init__(self, Problem):
+        super(ParametersModelVOS, self).__init__(name='vos', index=None,
+                                                 Problem=Problem)
+        copts = self.p.CoefficientsOptions
+        copts.useMetrics = True
+        copts.checkMass = True
+        copts.sc_uref = sc_uref
+        copts.sc_beta = sc_beta
+        copts.epsFact = epsFact
+        copts.set_Params_Func=None
+        copts.vos_function=None
+        copts._freeze()
+        # LEVEL MODEL
+        self.p.LevelModelType = VOS.LevelModel
+        self.p.vos_limiter = 0.6
+        # TIME INTEGRATION
+        self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
+        self.n.stepController  = StepControl.Min_dt_cfl_controller
+        # NUMERICS
+        self.n.ShockCapturingOptions.shockCapturingFactor = shockCapturingFactor
+        self.n.ShockCapturingOptions.lag = True
+        # NUMERICAL FLUX
+        self.n.numericalFluxType = VOS.NumericalFlux
+        # NON LINEAR SOLVER
+        self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
+        # LINEAR ALGEBRA
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.linear_solver_options_prefix = 'vos_'
+        self.n.linearSolverConvergenceTest = 'r-true'
+        # TOLERANCES
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
+        self.n.tolFac = 0.
+        #Stabilisation and limiters
+        self.n.stabilitisation_type=4
+        # freeze attributes
+        self._freeze()
+
+    def _initializePhysics(self):
+        domain = self._Problem.domain
+        nd = domain.nd
+        # MODEL INDEXING
+        mparams = self._Problem.Parameters.Models
+        ME_model = mparams.vos.index
+        assert ME_model is not None, 'vos model index was not set!'
+        if mparams.rans2p.index is not None:
+            V_model = mparams.rans2p.index
+        elif mparams.rans3p.index is not None:
+            V_model = mparams.rans3p.index
+        else:
+            assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOS'
+        LS_model =mparams.ncls.index
+        RD_model =mparams.rdls.index
+        VOF_model=
+        SED_model = mparams.rans3pSed.index
+        # COEFFICIENTS
+        copts = self.p.CoefficientsOptions
+        self.p.coefficients = Coefficients( LS_model=LS_model,
+                                            V_model=V_model,
+                                            RD_model=RD_model,
+                                            ME_model=ME_model,
+                                            VOF_model=V_model,
+                                            SED_model=SED_model,
+                                            checkMass=copts.checkMass,
+                                            epsFact=copts.epsFact,
+                                            useMetrics=copts.useMetrics,
+                                            sc_uref=copts.sc_uref,
+                                            sc_beta=copts.sc_beta,
+                                            set_Params_Func=copts.set_Params_Func,
+                                            movingDomain=self.p.movingDomain,
+                                            vos_function = None,
+                                            forceStrongConditions=copts.forceStrongDirichlet,
+                                            STABILIZATION_TYPE=self.n.stabilization_type,
+                                            ENTROPY_TYPE=self.n.entropy_type,
+                                            LUMPED_MASS_MATRIX=self.n.lumped_mass_matrix,
+                                            FCT=self.n.fct,
+                                            num_fct_iter=self.n.num_fct_iter,
+                                            global_min_u=self.p.vos_min,
+                                            global_max_u=self.p.vos_max,
+                                            cE = opts.n.cE,
+                                            uL=opts.uL,
+                                            uR=opts.uR,
+                                            cK= opts.n.cK,
+                                            outputQuantDOFs=self.p.outputQuantDOFs)
+
+
+                                  )V_model=V_model,
+                                               RD_model=RD_model,
+                                               ME_model=ME_model,
+                                               checkMass=copts.checkMass,
+                                               useMetrics=copts.useMetrics,
+                                               epsFact=copts.epsFact,
+                                               sc_uref=copts.sc_uref,
+                                               sc_beta=copts.sc_beta,
+                                               movingDomain=self.p.movingDomain)
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['vos']}
+        # BOUNDARY CONDITIONS
+        BC = self._Problem.boundaryConditions
+        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+            self.p.dirichletConditions = {0: BC['vos_DBC']}
+            self.p.advectiveFluxBoundaryConditions = {0: BC['vos_AFBC']}
+        else:
+            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].vos_dirichlet.init_cython()}
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].vos_advective.init_cython()}
+        self.p.diffusiveFluxBoundaryConditions = {0: {}}
+
+    def _initializeNumerics(self):
+        domain = self._Problem.domain
+        nd = domain.nd
+        # TIME
+        self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
+        self.n.stepController = StepControl.Min_dt_cfl_controller
+        # FINITE ELEMENT SPACES
+        FESpace = self._Problem.FESpace
+        self.n.femSpaces = {0: FESpace['lsBasis']}
+        # NUMERICAL FLUX
+        self.n.subgridError = VOS.SubgridError(coefficients=self.p.coefficients,
+                                               nd=nd)
+        scopts = self.n.ShockCapturingOptions
+        self.n.shockCapturing = VOS.ShockCapturing(coefficients=self.p.coefficients,
+                                                   nd=nd,
+                                                   shockCapturingFactor=scopts.shockCapturingFactor,
+                                                   lag=scopts.lag)
+        # TOLERANCE
+        mesh = self._Problem.Parameters.mesh
+        if self.n.nl_atol_res is None:
+            self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
+        if self.n.l_atol_res is None:
+            self.n.l_atol_res = 0.001*self.n.nl_atol_res
+
 
 
 class ParametersModelCLSVOF(ParametersModelBase):
