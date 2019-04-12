@@ -304,7 +304,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.eb_adjoint_sigma = 1.
         copts.Closure_0_model = None
         copts.Closure_1_model = None
-        copts.nParticles = 0.
+        copts.nParticles = 0
         copts.particle_epsFact = 3.0
         copts.particle_alpha = 1000.0
         copts.particle_beta = 1000.0
@@ -519,7 +519,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.eb_adjoint_sigma = 1.
         copts.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY = 0
         copts.USE_SUPG = False
-        copts.nParticles = 0.
+        copts.nParticles = 0
         copts.particle_epsFact = 3.0
         copts.particle_alpha = 1000.0
         copts.particle_beta = 1000.0
