@@ -105,6 +105,8 @@ cdef class ProtChBody:
         self.Aij = np.zeros((6, 6))  # added mass array
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
         self.useIBM = False
+        self.Aij_factor = 1.
+        self.boundaryFlags = None
         self.setName(b'rigidbody')
 
     def attachShape(self,
@@ -262,24 +264,17 @@ cdef class ProtChBody:
         deref(deref(self.thisptr.body).GetCollisionModel()).SetEnvelope(envelope)
         deref(deref(self.thisptr.body).GetCollisionModel()).SetSafeMargin(margin)
 
-    def setIndexBoundary(self, i_start, i_end=None):
+    def setBoundaryFlags(self, flags):
         """Sets the flags of the boundaries of the body
         numbers must be gloabal (from domain.segmentFlags or
-        domain.facetFlags) and a range from i_start to i_end.
+        domain.facetFlags).
 
         Parameters
         ----------
-        i_start: int
-            first global flag of body boundaries
-        i_end: int
-            last global flag (+1) of body boundaries. If i_end is None, it will
-            only take as single index i_start
+        flags: array_like
+            list of flags that belong to this body
         """
-        self.i_start = i_start
-        if i_end is None:
-            self.i_end = i_start+1
-        else:
-            self.i_end = i_end
+        self.boundaryFlags = np.array(flags, 'i')
 
     def setIBM(self, useIBM=True):
         """Sets IBM mode for retrieving fluid forces
@@ -589,13 +584,13 @@ cdef class ProtChBody:
         F_p: array_like
             pressure forces (x, y, z) as provided by Proteus
         """
-        i0, i1 = self.i_start, self.i_end
-        if self.useIBM:
-            F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netForces[i0:i1, :]
-        else:
-            F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
-        F_t = np.sum(F_p, axis=0)
-        return F_t
+        F_p = np.zeros(3)
+        for flag in self.boundaryFlags:
+            if self.useIBM:
+                F_p += self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netForces[flag]
+            else:
+                F_p += self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_p[flag]
+        return F_p
 
     def getShearForces(self):
         """Gives shear forces from fluid (Proteus) acting on body
@@ -606,13 +601,13 @@ cdef class ProtChBody:
         F_v: array_like
             shear forces (x, y, z) as provided by Proteus
         """
+        F_v = np.zeros(3)
         if self.useIBM:
-            F_v = np.zeros(3)
+            pass
         else:
-            i0, i1 = self.i_start, self.i_end
-            F_v = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
-        F_t = np.sum(F_v, axis=0)
-        return F_t
+            for flag in self.boundaryFlags:
+                F_v += self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_v[flag]
+        return F_v
 
     def getMoments(self):
         """Gives moments from fluid (Proteus) acting on body
@@ -624,10 +619,12 @@ cdef class ProtChBody:
             moments (x, y, z) as provided by Proteus
         """
         i0, i1 = self.i_start, self.i_end
-        if self.useIBM:
-            M = self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netMoments[i0:i1, :]
-        else:
-            M = self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
+        M = np.zeros(3)
+        for flag in self.boundaryFlags:
+            if self.useIBM:
+                M += self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netMoments[flag]
+            else:
+                M += self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[flag]
         M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
@@ -682,6 +679,7 @@ cdef class ProtChBody:
             if self.applyAddedMass is True:
                 Aij = np.zeros((6,6))
                 Aij[:] = self.Aij[:]
+                Aij *= self.Aij_factor
                 self.setAddedMass(Aij)
             self.setExternalForces()
 
@@ -1285,7 +1283,7 @@ cdef class ProtChBody:
                                  "Topology",
                                  {"Type": Xdmf_ElementTopology,
                                   "NumberOfElements": str(Xdmf_NumberOfElements)})
-        
+
         elements = ET.SubElement(topology,
                                  "DataItem",
                                  {"Format": dataItemFormat,
@@ -1310,7 +1308,7 @@ cdef class ProtChBody:
             f.write(xmlHeader)
             indentXML(tree.getroot())
             tree.write(f)
-        
+
         # dump xml str in h5 file
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
         f = h5py.File(hdfFileName, 'a')

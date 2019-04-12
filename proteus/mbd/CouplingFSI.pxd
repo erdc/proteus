@@ -246,6 +246,8 @@ cdef class ProtChBody:
       bool applyAddedMass  # will apply added mass if True (default)
       bool useIBM
       string hdfFileName
+      double Aij_factor
+      int[:] boundaryFlags
     cdef np.ndarray callPrescribedMotion(self, double t)
 
 
