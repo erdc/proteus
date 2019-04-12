@@ -884,6 +884,11 @@ cdef class ProtChBody:
             self.barycenter0 = pyvec2array(self.ChBody.GetPos())
         self.position_last[:] = pyvec2array(self.ChBody.GetPos())
         self.position[:] = pyvec2array(self.ChBody.GetPos())
+        # check if IBM and set index if not set previously by user
+        if self.useIBM:
+            if self.boundaryFlags is None:
+                self.setBoundaryFlags([self.ProtChSystem.nBodiesIBM])
+            self.ProtChSystem.nBodiesIBM += 1
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
@@ -897,8 +902,6 @@ cdef class ProtChBody:
         self.storeValues()
         # set mass matrix with no added mass
         self.setAddedMass(np.zeros((6,6)))
-        if self.useIBM and self.ProtChSystem.model is not None:
-            self.ProtChSystem.nBodiesIBM += 1
         self.thisptr.calculate_init()
         #
 
@@ -1602,7 +1605,6 @@ cdef class ProtChSystem:
                     c.ball_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
                 if c.ball_angular_velocity is None:
                     c.ball_angular_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
-                c.initializeSDF()
             for s in self.subcomponents:
                 s.poststep()
             self.initialised = True
