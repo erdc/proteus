@@ -115,7 +115,7 @@ cdef class RandomWaves:
     cdef double[10000] tanh_c
     cdef double[10000] phi_c
     cdef public:
-        double mwl,depth,gAbs,Tlag,Hs,Tp,fp,bandFactor,df
+        double mwl,depth,gAbs,Tlag,Hs,Tp,fp,bandFactor,df,wavelength
         int N
         np.ndarray fi,fim,Si_Jm,ki,omega,tanhF,g,waveDir,vDir,kDir,ai
         cdef object phi
