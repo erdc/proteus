@@ -1162,18 +1162,19 @@ class ParametersModelVOS(ParametersModelBase):
         copts.vos_function=None
         copts._freeze()
         # LEVEL MODEL
-        self.p.LevelModelType = VOS.LevelModel
+        self.p.LevelModelType = VOS3P.LevelModel
         self.p.vos_limiter = 0.6
         # TIME INTEGRATION
-        self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
+        self.n.timeIntegration = VOS3P.RKEV
         self.n.stepController  = StepControl.Min_dt_cfl_controller
         # NUMERICS
         self.n.ShockCapturingOptions.shockCapturingFactor = shockCapturingFactor
         self.n.ShockCapturingOptions.lag = True
         # NUMERICAL FLUX
-        self.n.numericalFluxType = VOS.NumericalFlux
+        self.n.numericalFluxType = VOS3P.NumericalFlux
         # NON LINEAR SOLVER
         self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
+        self.n.levelNonlinearSolver = NonlinearSolvers.ExplicitLumpedMassMatrix
         # LINEAR ALGEBRA
         self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
@@ -1203,15 +1204,15 @@ class ParametersModelVOS(ParametersModelBase):
             assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOS'
         LS_model =mparams.ncls.index
         RD_model =mparams.rdls.index
-        VOF_model=
-        SED_model = mparams.rans3pSed.index
+        VOF_model=mparams.vof.index
+        SED_model = None#mparams.rans3pSed.index
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
-        self.p.coefficients = Coefficients( LS_model=LS_model,
+        self.p.coefficients = VOS3P.Coefficients( LS_model=LS_model,
                                             V_model=V_model,
                                             RD_model=RD_model,
                                             ME_model=ME_model,
-                                            VOF_model=V_model,
+                                            VOF_model=VOF_model,
                                             SED_model=SED_model,
                                             checkMass=copts.checkMass,
                                             epsFact=copts.epsFact,
@@ -1236,15 +1237,7 @@ class ParametersModelVOS(ParametersModelBase):
                                             outputQuantDOFs=self.p.outputQuantDOFs)
 
 
-                                  )V_model=V_model,
-                                               RD_model=RD_model,
-                                               ME_model=ME_model,
-                                               checkMass=copts.checkMass,
-                                               useMetrics=copts.useMetrics,
-                                               epsFact=copts.epsFact,
-                                               sc_uref=copts.sc_uref,
-                                               sc_beta=copts.sc_beta,
-                                               movingDomain=self.p.movingDomain)
+
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['vos']}
