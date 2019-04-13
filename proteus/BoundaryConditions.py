@@ -99,7 +99,7 @@ class BoundaryCondition:
 
         """
         
-        self.uOfXT = lambda x, t: a0+a*x
+        self.uOfXT = lambda x, t: a0+sum(a[:]*x[:])
 
     def setLinearRamp(self,t1,value):
         """
