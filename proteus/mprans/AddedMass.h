@@ -511,16 +511,16 @@ namespace proteus
                   Aij[36*eBMT+added_mass_i+6*4] += (rz*px-rx*pz)*dS;
                   Aij[36*eBMT+added_mass_i+6*5] += (rx*py-ry*px)*dS;
                 }
-              //
-              //update the element and global residual storage
-              //
-              for (int i=0;i<nDOF_test_element;i++)
-                {
-                  int eN_i = eN*nDOF_test_element+i;
-                  globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
-                }//i
-            }//ebNE
-        }
+            }//kb
+          //
+          //update the element and global residual storage
+          //
+          for (int i=0;i<nDOF_test_element;i++)
+            {
+              int eN_i = eN*nDOF_test_element+i;
+              globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+            }//i
+        }//ebNE
     }
 
 

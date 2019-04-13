@@ -31,6 +31,7 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition vof_dirichlet
         cdef BoundaryCondition k_dirichlet
         cdef BoundaryCondition dissipation_dirichlet
+        cdef BoundaryCondition pAddedMass_dirichlet
         # advective
         cdef BoundaryCondition p_advective
         cdef BoundaryCondition u_advective
@@ -71,6 +72,10 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition pInc_advective
         cdef BoundaryCondition pInit_diffusive
         cdef BoundaryCondition pInc_diffusive
+        # clsvof
+        cdef BoundaryCondition clsvof_dirichlet
+        cdef BoundaryCondition clsvof_advective
+        cdef BoundaryCondition clsvof_diffusive
 
 
         # functions
