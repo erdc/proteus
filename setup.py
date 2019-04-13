@@ -45,11 +45,14 @@ for arg in sys.argv:
         break
 
 EXTENSIONS_TO_BUILD = [ Extension("MeshAdaptPUMI.MeshAdaptPUMI",
-                                  sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
-                                             'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
-                                             'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
-                                             'proteus/MeshAdaptPUMI/DumpMesh.cpp',
-                                             'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp','proteus/MeshAdaptPUMI/VMS.cpp','proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp'],
+                                  #sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
+                                  #           'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
+                                  #           'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
+                                  #           'proteus/MeshAdaptPUMI/DumpMesh.cpp',
+                                  #           'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp','proteus/MeshAdaptPUMI/VMS.cpp','proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp'],
+                                  ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx'],
+                                  depends=["proteus/MeshAdaptPUMI/MeshAdaptPUMI.h","createAnalyticGeometry.h"],
+
                                   #depends=["proteus/partitioning.h",
                                   #         "proteus/partitioning.cpp",
                                   #         "proteus/cpartitioning.pyx",
