@@ -147,9 +147,9 @@ PROTEUS_SCOREC_LIBS = [
     'gmi',
     'pcu',
     'lion',
-    'zoltan',
-    'parmetis',
-    'metis',
+    #'zoltan',
+    #'parmetis',
+    #'metis',
     'sam',
      ]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
     #'bz2']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
