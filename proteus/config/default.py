@@ -150,8 +150,8 @@ PROTEUS_SCOREC_LIBS = [
     #'zoltan',
     #'parmetis',
     #'metis',
-    'sam',
-     ]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
+    'sam',]+PROTEUS_MPI_LIBS
+     #]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
     #'bz2']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
 
 PROTEUS_SCOREC_EXTRA_LINK_ARGS = []
