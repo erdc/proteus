@@ -66,9 +66,11 @@ EXTENSIONS_TO_BUILD = [ Extension("MeshAdaptPUMI.MeshAdaptPUMI",
                                                 'proteus','proteus/MeshAdaptPUMI']+
                                   PROTEUS_SCOREC_INCLUDE_DIRS,
                                   library_dirs=PROTEUS_SCOREC_LIB_DIRS,
-                                  libraries=PROTEUS_SCOREC_LIBS,
+                                  libraries=PROTEUS_SCOREC_LIBS+['stdc++'],
                                   extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
-                                  extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS),#+PROTEUS_EXTRA_LINK_ARGS),
+                                  extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+ ["-std=c++11"]),#+PROTEUS_EXTRA_LINK_ARGS),
+                        
+
               Extension("mprans.cPres",['proteus/mprans/cPres.pyx'],
                         depends=['proteus/mprans/Pres.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
                         language='c++',
