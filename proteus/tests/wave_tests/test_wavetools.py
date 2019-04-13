@@ -714,7 +714,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
 
 class VerifyRandomWaves(unittest.TestCase):
     def testRandom(self):
-        from proteus.WaveTools import RandomWaves
+        from proteus.WaveTools import RandomWaves,dispersion
         import random
         from proteus.WaveTools import fastcos_test as fcos
         from proteus.WaveTools import coshkzd_test as fcosh
@@ -746,6 +746,8 @@ class VerifyRandomWaves(unittest.TestCase):
                      bandFactor,         #accelerationof gravity
                      spectName# random words will result in error and return the available spectra
                    )
+        wl = 2*np.pi/dispersion(2*np.pi/Tp,depth)
+        self.assertAlmostEqual(wl,a.wavelength)
         x = 103.
         y = 112.
         z =  mwl
