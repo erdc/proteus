@@ -137,20 +137,21 @@ PROTEUS_ZOLTAN_INCLUDE_DIR, PROTEUS_ZOLTAN_LIB_DIR = get_flags('zoltan')
 PROTEUS_SCOREC_INCLUDE_DIRS = [PROTEUS_SCOREC_INCLUDE_DIR, PROTEUS_PETSC_INCLUDE_DIR, PROTEUS_ZOLTAN_INCLUDE_DIR, PROTEUS_PARMETIS_INCLUDE_DIR, PROTEUS_MPI_INCLUDE_DIR, PROTEUS_LAPACK_INCLUDE_DIR, PROTEUS_BLAS_INCLUDE_DIR]
 PROTEUS_SCOREC_LIB_DIRS =     [PROTEUS_SCOREC_LIB_DIR,     PROTEUS_PETSC_LIB_DIR,     PROTEUS_ZOLTAN_LIB_DIR, PROTEUS_PARMETIS_LIB_DIR,     PROTEUS_MPI_LIB_DIR, PROTEUS_LAPACK_LIB_DIR, PROTEUS_BLAS_LIB_DIR]
 PROTEUS_SCOREC_LIBS = [
-    'spr',
-    'ma',
-    'parma',
+    #'spr',
+    #'ma',
+    #'parma',
     #'apf_zoltan',
-    'mds',
-    'apf',
-    'mth',
-    'gmi',
-    'pcu',
+    #'mds',
+    #'apf',
+    #'mth',
+    #'gmi',
+    #'pcu',
     #'lion',
     #'zoltan',
     #'parmetis',
     #'metis',
-    'sam',]+PROTEUS_MPI_LIBS
+    #'sam',
+    ]+PROTEUS_MPI_LIBS
      #]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
     #'bz2']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
 
