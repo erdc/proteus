@@ -142,7 +142,7 @@ PROTEUS_SCOREC_LIBS = [
     #'parma',
     #'apf_zoltan',
     #'mds',
-    #'apf',
+    'apf',
     #'mth',
     #'gmi',
     #'pcu',
