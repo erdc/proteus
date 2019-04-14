@@ -347,6 +347,7 @@ cdef class ProtChMoorings:
       int tCount
       object nodes
       object elements
+      double[:] length
 
 
 cdef class ProtChAddedMass:

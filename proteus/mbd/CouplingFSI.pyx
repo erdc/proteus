@@ -57,6 +57,7 @@ from pychrono import fea as chrono_fea
 # needed for sphinx docs
 __all__ = ['ProtChSystem',
            'ProtChBody',
+           'ProtChMesh',
            'ProtChMoorings',
            'ProtChAddedMass']
 
@@ -1947,6 +1948,7 @@ cdef class ProtChMoorings:
     beam_type: str
         Type of elements (default: "CableANCF").
     """
+
     def __cinit__(self,
                   ProtChSystem system,
                   ProtChMesh mesh,
