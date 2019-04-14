@@ -1893,27 +1893,6 @@ cdef class ProtChSystem:
 
 
 cdef class ProtChMesh:
-<<<<<<< HEAD:proteus/mbd/ChRigidBody.pyx
-    cdef cppMesh * thisptr
-    def __cinit__(self, ProtChSystem system):
-        cdef shared_ptr[ch.ChMesh] mesh = make_shared[ch.ChMesh]()
-        self.thisptr = newMesh(system.thisptr.system, mesh)
-    def setAutomaticGravity(self, bool val):
-        self.thisptr.SetAutomaticGravity(val)
-
-cdef class SurfaceBoxNodesCloud:
-    cdef cppSurfaceBoxNodesCloud * thisptr
-    def __cinit__(self, ProtChSystem system, ProtChMesh mesh, np.ndarray position, np.ndarray dimensions):
-        cdef ch.ChVector[double] pos = ch.ChVector[double](position[0], position[1], position[2])
-        cdef ch.ChVector[double] dim = ch.ChVector[double](dimensions[0], dimensions[1], dimensions[2])
-        self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system,
-                                               mesh.thisptr.mesh,
-                                               pos,
-                                               dim)
-        # self.System.addBody(self)
-    def setNodesSize(self, double size):
-        self.thisptr.setNodesSize(size)
-=======
 
     def __cinit__(self, ProtChSystem system):
         self.ChMeshh = chrono_fea.ChMesh()
@@ -1923,8 +1902,6 @@ cdef class SurfaceBoxNodesCloud:
         self.mesh = pt_to_shp[0]
         system.addProtChMesh(self)
 
-
->>>>>>> f776852fc83dd70fddc969607e0f89df1b1cb0b5:proteus/mbd/CouplingFSI.pyx
 
 # def linkMoorings(System system, Moorings mooringA, int nodeA_ind, Moorings mooringB, int nodeB_ind):
 #     """
@@ -1970,48 +1947,6 @@ cdef class ProtChMoorings:
     beam_type: str
         Type of elements (default: "CableANCF").
     """
-<<<<<<< HEAD:proteus/mbd/ChRigidBody.pyx
-    cdef cppMultiSegmentedCable * thisptr
-    cdef public:
-      # vector[pyfea.ChNodeFEAxyzD] nodes
-      # vector[pyfea.ChElementCableANCF] elems
-      # vector[ProtChCable] cables
-      str record_file
-      object model
-      ProtChSystem ProtChSystem
-      object Mesh
-      int nd
-      object nodes_function
-      object nodes_function_tangent
-      object fluid_velocity_function
-      ProtChBody body_front
-      ProtChBody body_back
-      bool front_body
-      bool back_body
-      bool nodes_built
-      bool external_forces_from_ns
-      bool external_forces_manual
-      np.ndarray fluid_density_array
-      np.ndarray fluid_velocity_array
-      np.ndarray fluid_velocity_array_previous
-      np.ndarray fluid_acceleration_array
-      string name
-      string beam_type
-      int nodes_nb # number of nodes
-      np.ndarray nb_elems
-      double[:] _record_etas
-      object _record_names
-      object _record_etas_names
-      bool initialized
-      int[:] nearest_node_array
-      int[:] containing_element_array
-      int[:] owning_rank
-      string hdfFileName
-      double[:] tCount_value
-      double[:] length
-=======
-
->>>>>>> f776852fc83dd70fddc969607e0f89df1b1cb0b5:proteus/mbd/CouplingFSI.pyx
     def __cinit__(self,
                   ProtChSystem system,
                   ProtChMesh mesh,

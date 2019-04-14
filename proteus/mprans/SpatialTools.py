@@ -1329,13 +1329,7 @@ class TankWithObstacles2D(Tank2D):
         the first obstacle starts on.  Default is False.
     coords: array_like, optional
         Coordinates of the centroid of the shape.
-<<<<<<< HEAD
-    from_0: bool, optional
-        If True (default), the tank extends from the origin to positive x, y, z
-    hole: bool, optional
-=======
     hole: Optional[bool]
->>>>>>> f776852fc83dd70fddc969607e0f89df1b1cb0b5
         If True (default), the obstacle of the tank is just an open hole at the
         bottom of the tank. If False, a segment at the bottom of the obstacle is
         created to close the hole.
