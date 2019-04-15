@@ -130,9 +130,8 @@ cdef class MeshAdaptPUMI:
     #    return self.thisptr.transferBCsToProteus()
     def adaptPUMIMesh(self,inputString=""):
         return self.thisptr.adaptPUMIMesh(inputString)
-    def dumpMesh(self, cmesh):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.dumpMesh(cmesh_ptr.mesh)
+    def dumpMesh(self, cmeshTools.CMesh cmesh):
+        return self.thisptr.dumpMesh(cmesh.mesh)
     def getERMSizeField(self, err_total):
         return self.thisptr.getERMSizeField(err_total);
     def getMPvalue(self,field_val,val_0,val_1):
