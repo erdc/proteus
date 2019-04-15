@@ -58,6 +58,28 @@ static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::Mes
   }
 }
 
+int MeshAdaptPUMIDrvr::setSphereSizeField()
+{
+  freeField(size_iso);
+  size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+
+  apf::MeshIterator *it = m->begin(0);
+  apf::MeshEntity* ent;
+  while ((ent = m->iterate(it)))
+  {
+    int modelTag = m->getModelTag(m->toModel(ent));
+    //std::cout<<"This is the model tag "<<modelTag<<std::endl;
+    double sizeDesired;
+    if(modelTag==123)
+        sizeDesired=hmin;
+    else
+        sizeDesired=hmax;
+    apf::setScalar(size_iso,ent,0,sizeDesired);
+  }
+  m->end(it);
+  gradeMesh();
+}
+
 
 int MeshAdaptPUMIDrvr::calculateSizeField()
 //Implementation of banded interface, edge intersection algorithm

@@ -152,6 +152,28 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   return 0;
 }
 
+int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile,double* boxDim,double* sphereCenter, double radius)
+{
+  //assume analytic 
+  comm_size = PCU_Comm_Peers();
+  comm_rank = PCU_Comm_Self();
+  m = apf::loadMdsMesh(".null", meshFile);
+  m->verify();
+
+  //create analytic geometry 
+  gmi_model* testModel = createSphereInBox(boxDim,sphereCenter,radius);
+  m->verify();
+
+
+/*
+  apf::writeVtkFiles("afterAnalytic",m);
+  std::cout<<"test Model "<<testModel<<" mesh model "<<m->getModel()<<std::endl;
+  std::abort();
+*/
+  return 0;
+}
+
+
 
 int MeshAdaptPUMIDrvr::getSimmetrixBC()
 /**
@@ -355,7 +377,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     getERMSizeField(total_error);
   }
   else if (size_field_config == "meshQuality"){
-    size_iso = samSz::isoSize(m);
+    //size_iso = samSz::isoSize(m);
+    setSphereSizeField();
   }
   else if (size_field_config == "isotropic")
     calculateSizeField();
@@ -461,7 +484,13 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   //in->shouldRunPostParma = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
-  in->shouldSnap = false;
+  if(size_field_config == "meshQuality")
+  {
+    in->shouldSnap = true;
+    in->shouldTransferParametric=true;
+  }
+  else
+    in->shouldSnap = false;
   //in->goodQuality = 0.16;//0.027;
   //double mass_before = getTotalMass();
   
