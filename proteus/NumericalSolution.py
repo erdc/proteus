@@ -381,7 +381,7 @@ class NS_base(object):  # (HasTraits):
                 else:
                   mesh = MeshTools.TriangularMesh()
                 logEvent("Converting PUMI mesh to Proteus")
-                mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
+                mesh.convertFromPUMI(p.domain,p.domain.PUMIMesh, p.domain.faceList,
                     p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
                 if p.domain.nd == 3:
@@ -779,8 +779,8 @@ class NS_base(object):  # (HasTraits):
     def PUMI2Proteus(self,mesh):
         #p0 = self.pList[0] #This can probably be cleaned up somehow
         #n0 = self.nList[0]
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         if self.TwoPhaseFlow:
             nLevels = p0.myTpFlowProblem.general['nLevels']
@@ -1007,6 +1007,12 @@ class NS_base(object):  # (HasTraits):
         #Mimic the solver stagger with a new loop to repopulate the nodal fields with u^{n} solution. This is necessary because NS relies on the u^{n-1} field for VOF/LS
 
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1})
+        rans2p_idx = None
+        for idx,model in enumerate(self.modelList):
+            if(model.name  == 'rans2p'):
+                rans2p_idx = idx
+        if(rans2p_idx is None):
+            sys.exit("Needs rans2p")
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
@@ -1031,9 +1037,9 @@ class NS_base(object):  # (HasTraits):
                     lm.timeIntegration.dt = lm.timeIntegration.dtLast
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+                if(modelListOld[rans2p_idx].levelModelList[0].stabilization.lag and modelListOld[rans2p_idx].levelModelList[0].stabilization.nSteps > modelListOld[rans2p_idx].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[rans2p_idx].levelModelList[0].stabilization.nSteps = self.modelList[rans2p_idx].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[rans2p_idx].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
@@ -1050,9 +1056,9 @@ class NS_base(object):  # (HasTraits):
                 lm.timeIntegration.dt = lm.dt_store
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+                if(modelListOld[rans2p_idx].levelModelList[0].stabilization.lag and modelListOld[rans2p_idx].levelModelList[0].stabilization.nSteps > modelListOld[rans2p_idx].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[rans2p_idx].levelModelList[0].stabilization.nSteps = self.modelList[rans2p_idx].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[rans2p_idx].levelModelList[0].stabilization.updateSubgridErrorHistory()
         ###
 
         ###Shock capturing
@@ -1073,15 +1079,15 @@ class NS_base(object):  # (HasTraits):
                     self.systemStepController.t_system_last+1.0e-6)
 
     def PUMI_transferFields(self):
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
             rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
-            nu_0 = p0.myTpFlowProblem.physical_parameters['viscosityA']
+            nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
             rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
-            nu_1 = p0.myTpFlowProblem.physical_parameters['viscosityB']
+            nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
             g = p0.myTpFlowProblem.physical_parameters['gravity']
             epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
         else:
@@ -1262,6 +1268,7 @@ class NS_base(object):  # (HasTraits):
 
             self.PUMI_transferFields()
 
+
             logEvent("Estimate Error")
             sfConfig = domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
@@ -1279,10 +1286,18 @@ class NS_base(object):  # (HasTraits):
               logEvent("Need to Adapt")
             elif(sfConfig=='meshQuality'):
               minQual = domain.PUMIMesh.getMinimumQuality()
-              if(minQual):
-                logEvent('The quality is %f ' % minQual)
-              adaptMeshNow=True
-              logEvent("Need to Adapt")
+              logEvent('The quality is %f ' % (minQual**(1./3.)))
+              #adaptMeshNow=True
+              if(minQual**(1./3.)<0.25):
+                adaptMeshNow=True
+                logEvent("Need to Adapt")
+              
+              if (self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
+                sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
+                domain.PUMIMesh.updateSphereCoordinates(sphereCoords)
+                logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
+              else:
+                sys.exit("Haven't been implemented code yet to cover this behavior.")
             else:
               adaptMeshNow=True
               logEvent("Need to Adapt")
@@ -1315,8 +1330,8 @@ class NS_base(object):  # (HasTraits):
         #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
         #    #    diff_flux)
 
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]#.ct
+        n0 = self.nList[0]#.ct
 
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
@@ -1348,7 +1363,8 @@ class NS_base(object):  # (HasTraits):
         else:
           mesh = MeshTools.TriangularMesh()
 
-        mesh.convertFromPUMI(domain.PUMIMesh,
+        mesh.convertFromPUMI(domain,
+                             domain.PUMIMesh,
                              domain.faceList,
                              domain.regList,
                              parallel = self.comm.size() > 1,
