@@ -382,7 +382,7 @@ class NS_base(object):  # (HasTraits):
                 else:
                   mesh = MeshTools.TriangularMesh()
                 logEvent("Converting PUMI mesh to Proteus")
-                mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
+                mesh.convertFromPUMI(p.domain,p.domain.PUMIMesh, p.domain.faceList,
                     p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
                 if p.domain.nd == 3:
@@ -904,9 +904,8 @@ class NS_base(object):  # (HasTraits):
               lm.calculateAuxiliaryQuantitiesAfterStep()
 
     def PUMI_reallocate(self,mesh):
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
-
+        p0 = self.pList[0]
+        n0 = self.nList[0]
         if self.TwoPhaseFlow:
             nLevels = p0.myTpFlowProblem.general['nLevels']
             nLayersOfOverlapForParallel = p0.myTpFlowProblem.general['nLayersOfOverlapForParallel']
@@ -958,8 +957,8 @@ class NS_base(object):  # (HasTraits):
     def PUMI2Proteus(self):
         #p0 = self.pList[0] #This can probably be cleaned up somehow
         #n0 = self.nList[0]
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         modelListOld = self.modelListOld
         logEvent("Attach auxiliary variables to new models")
@@ -1130,6 +1129,7 @@ class NS_base(object):  # (HasTraits):
             if model.levelModelList[-1].timeIntegration.isAdaptive:
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
+
         #this sets the timeIntegration time, which might be unnecessary for restart 
         if(self.opts.hotStart):
           self.systemStepController.stepSequence=[(self.systemStepController.t_system,m) for m in self.systemStepController.modelList]
@@ -1154,7 +1154,7 @@ class NS_base(object):  # (HasTraits):
             #      self.systemStepController.t_system)
   
             #This logic won't account for if final step doesn't match frequency or if adapt isn't being called
-            if((self.PUMIcheckpointer.frequency>0) and ( (p0.domain.PUMIMesh.nAdapt()!=0) and (p0.domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency==0 ) or self.systemStepController.t_system_last==self.tnList[-1])):
+            if((self.PUMIcheckpointer.frequency>0) and ( (domain.PUMIMesh.nAdapt()!=0) and (domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency==0 ) or self.systemStepController.t_system_last==self.tnList[-1])):
 
               self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
 
@@ -1166,15 +1166,15 @@ class NS_base(object):  # (HasTraits):
         self.comm.barrier()
 
     def PUMI_transferFields(self):
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
             rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
-            nu_0 = p0.myTpFlowProblem.physical_parameters['viscosityA']
+            nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
             rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
-            nu_1 = p0.myTpFlowProblem.physical_parameters['viscosityB']
+            nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
             g = p0.myTpFlowProblem.physical_parameters['gravity']
             epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
         else:
@@ -1387,6 +1387,7 @@ class NS_base(object):  # (HasTraits):
 
             self.PUMI_transferFields()
 
+
             logEvent("Estimate Error")
             sfConfig = domain.PUMIMesh.size_field_config()
             if(sfConfig=="ERM"):
@@ -1409,10 +1410,18 @@ class NS_base(object):  # (HasTraits):
                   logEvent('numSolveSteps %f ' % self.nSolveSteps)
             elif(sfConfig=='meshQuality'):
               minQual = domain.PUMIMesh.getMinimumQuality()
-              if(minQual):
-                logEvent('The quality is %f ' % minQual)
-              adaptMeshNow=True
-              logEvent("Need to Adapt")
+              logEvent('The quality is %f ' % (minQual**(1./3.)))
+              #adaptMeshNow=True
+              if(minQual**(1./3.)<0.25):
+                adaptMeshNow=True
+                logEvent("Need to Adapt")
+              
+              if (self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
+                sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
+                domain.PUMIMesh.updateSphereCoordinates(sphereCoords)
+                logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
+              else:
+                sys.exit("Haven't been implemented code yet to cover this behavior.")
             else:
               adaptMeshNow=True
               logEvent("Need to Adapt")
@@ -1451,8 +1460,8 @@ class NS_base(object):  # (HasTraits):
         #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
         #    #    diff_flux)
 
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]#.ct
+        n0 = self.nList[0]#.ct
 
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
@@ -1485,7 +1494,8 @@ class NS_base(object):  # (HasTraits):
         else:
           mesh = MeshTools.TriangularMesh()
 
-        mesh.convertFromPUMI(domain.PUMIMesh,
+        mesh.convertFromPUMI(domain,
+                             domain.PUMIMesh,
                              domain.faceList,
                              domain.regList,
                              parallel = self.comm.size() > 1,
