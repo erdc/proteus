@@ -37,8 +37,8 @@ class TestRichards(object):
         
     def teardown_method(self,method):
         filenames = []
-        for aux_name in self.aux_names:
-            filenames.extend([aux_name+'.'+ext for ext in ['h5','xmf']])
+        #for aux_name in self.aux_names:
+        #    filenames.extend([aux_name+'.'+ext for ext in ['h5','xmf']])
         filenames.append('proteus.log')
         for f in filenames:
             if os.path.exists(f):

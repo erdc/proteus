@@ -6,6 +6,7 @@ from proteus import Domain
 from proteus.mprans import SpatialTools as st
 from proteus.mbd import CouplingFSI as fsi
 import pychrono as chrono
+from proteus.TwoPhaseFlow import TwoPhaseFlowProblem as tpf
 
 rho_0 = 1000.
 nu_0 = 1.004e-6
@@ -57,170 +58,99 @@ body.ChBody.SetBodyFixed(True)  # fixing body
 # OTHER PARAMS
 st.assembleDomain(domain)
 
-max_flag = max(domain.vertexFlags+domain.segmentFlags+domain.facetFlags)
-flags_rigidbody = np.zeros(max_flag+1, dtype='int32')
-for key in rect.boundaryTags_global:
-    flags_rigidbody[rect.boundaryTags_global[key]] = 1
 
+#  ___       _ _   _       _    ____                _ _ _   _
+# |_ _|_ __ (_) |_(_) __ _| |  / ___|___  _ __   __| (_) |_(_) ___  _ __  ___
+#  | || '_ \| | __| |/ _` | | | |   / _ \| '_ \ / _` | | __| |/ _ \| '_ \/ __|
+#  | || | | | | |_| | (_| | | | |__| (_) | | | | (_| | | |_| | (_) | | | \__ \
+# |___|_| |_|_|\__|_|\__,_|_|  \____\___/|_| |_|\__,_|_|\__|_|\___/|_| |_|___/
+# Initial Conditions
 
-from proteus.ctransportCoefficients import smoothedHeaviside
-from proteus.ctransportCoefficients import smoothedHeaviside_integral
-from proteus.default_n import *
-
-addedMass = True
-movingDomain=True
-checkMass=False
-applyCorrection=True
-applyRedistancing=True
-freezeLevelSet=True
-
-#----------------------------------------------------
-# Time stepping and velocity
-#----------------------------------------------------
-weak_bc_penalty_constant = old_div(10.,nu_0)
-dt_init = 0.001
-dt_fixed = 0.001
-T = 0.002
-nDTout = 1
-timeIntegration = "backwardEuler"
-runCFL = 0.4
-nsave = 0
-
-#----------------------------------------------------
-
-#  Discretization -- input options
-useOldPETSc=False
-useSuperlu = not True
-spaceOrder = 1
-useHex     = False
-useRBLES   = 0.0
-useMetrics = 1.0
-useVF = 1.0
-useOnlyVF = False
-useRANS = 0.
-            # 1 -- K-Epsilon
-            # 2 -- K-Omega, 1998
-            # 3 -- K-Omega, 1988
-# Input checks
-if spaceOrder not in [1,2]:
-    print("INVALID: spaceOrder" + spaceOrder)
-    sys.exit()
-
-if useRBLES not in [0.0, 1.0]:
-    print("INVALID: useRBLES" + useRBLES)
-    sys.exit()
-
-if useMetrics not in [0.0, 1.0]:
-    print("INVALID: useMetrics")
-    sys.exit()
-
-#  Discretization
 nd = domain.nd
-if spaceOrder == 1:
-    hFactor=1.0
-    if useHex:
-	 basis=C0_AffineLinearOnCubeWithNodalBasis
-         elementQuadrature = CubeGaussQuadrature(nd,3)
-         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,3)
-    else:
-    	 basis=C0_AffineLinearOnSimplexWithNodalBasis
-         elementQuadrature = SimplexGaussQuadrature(nd,3)
-         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
-         #elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
-elif spaceOrder == 2:
-    hFactor=0.5
-    if useHex:
-	basis=C0_AffineLagrangeOnCubeWithNodalBasis
-        elementQuadrature = CubeGaussQuadrature(nd,4)
-        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)
-    else:
-	basis=C0_AffineQuadraticOnSimplexWithNodalBasis
-        elementQuadrature = SimplexGaussQuadrature(nd,4)
-        elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
+
+class PerturbedSurface_p:
+    def uOfXT(self, x, t):
+        p_L = 0.0
+        phi = x[nd-1] - tank_dim[nd-1]
+        return p_L-g[nd-1]*(rho_0*phi)
+
+class AtRest:
+    def __init__(self):
+        pass
+    def uOfXT(self,x,t):
+        return 0.0
 
 
-ns_forceStrongDirichlet = False
-backgroundDiffusionFactor = 0.01
-sc = 0.5
-sc_beta = 1.5
-if useMetrics:
-    ns_shockCapturingFactor  = sc
-    ns_lag_shockCapturing = True
-    ns_lag_subgridError = True
-    ls_shockCapturingFactor  = sc
-    ls_lag_shockCapturing = True
-    ls_sc_uref  = 1.0
-    ls_sc_beta  = sc_beta
-    vof_shockCapturingFactor = sc
-    vof_lag_shockCapturing = True
-    vof_sc_uref = 1.0
-    vof_sc_beta = sc_beta
-    rd_shockCapturingFactor  =sc
-    rd_lag_shockCapturing = False
-    epsFact_density    = 3.
-    epsFact_viscosity  = epsFact_curvature  = epsFact_vof = epsFact_consrv_heaviside = epsFact_consrv_dirac = epsFact_density
-    epsFact_redistance = 0.33
-    epsFact_consrv_diffusion = 10.
-    redist_Newton = True#False
-    kappa_shockCapturingFactor = sc
-    kappa_lag_shockCapturing = False#True
-    kappa_sc_uref = 1.0
-    kappa_sc_beta = sc_beta
-    dissipation_shockCapturingFactor = sc
-    dissipation_lag_shockCapturing = False#True
-    dissipation_sc_uref = 1.0
-    dissipation_sc_beta = sc_beta
-else:
-    ns_shockCapturingFactor  = 0.9
-    ns_lag_shockCapturing = True
-    ns_lag_subgridError = True
-    ls_shockCapturingFactor  = 0.9
-    ls_lag_shockCapturing = True
-    ls_sc_uref  = 1.0
-    ls_sc_beta  = 1.0
-    vof_shockCapturingFactor = 0.9
-    vof_lag_shockCapturing = True
-    vof_sc_uref  = 1.0
-    vof_sc_beta  = 1.0
-    rd_shockCapturingFactor  = 0.9
-    rd_lag_shockCapturing = False
-    epsFact_density    = 1.5
-    epsFact_viscosity  = epsFact_curvature  = epsFact_vof = epsFact_consrv_heaviside = epsFact_consrv_dirac = epsFact_density
-    epsFact_redistance = 0.33
-    epsFact_consrv_diffusion = 10.0
-    redist_Newton = False#True
-    kappa_shockCapturingFactor = 0.9
-    kappa_lag_shockCapturing = True#False
-    kappa_sc_uref  = 1.0
-    kappa_sc_beta  = 1.0
-    dissipation_shockCapturingFactor = 0.9
-    dissipation_lag_shockCapturing = True#False
-    dissipation_sc_uref  = 1.0
-    dissipation_sc_beta  = 1.0
 
-tolfac = 0.001
-ns_nl_atol_res = max(1.0e-6,tolfac*he**2)
-vof_nl_atol_res = max(1.0e-6,tolfac*he**2)
-ls_nl_atol_res = max(1.0e-6,tolfac*he**2)
-mcorr_nl_atol_res = max(1.0e-6,0.1*tolfac*he**2)
-rd_nl_atol_res = max(1.0e-6,tolfac*he)
-kappa_nl_atol_res = max(1.0e-6,tolfac*he**2)
-dissipation_nl_atol_res = max(1.0e-6,tolfac*he**2)
-mesh_nl_atol_res = max(1.0e-6,tolfac*he**2)
-am_nl_atol_res = max(1.0e-6,tolfac*he**2)
-
-#turbulence
-ns_closure=0 #1-classic smagorinsky, 2-dynamic smagorinsky, 3 -- k-epsilon, 4 -- k-omega
-
-if useRANS == 1:
-    ns_closure = 3
-elif useRANS >= 2:
-    ns_closure == 4
+# instanciating the classes for *_p.py files
+initialConditions = {'pressure': PerturbedSurface_p(),
+                     'vel_u': AtRest(),
+                     'vel_v': AtRest(),
+                     'vel_w': AtRest()}
+#  _   _                           _
+# | \ | |_   _ _ __ ___   ___ _ __(_) ___ ___
+# |  \| | | | | '_ ` _ \ / _ \ '__| |/ __/ __|
+# | |\  | |_| | | | | | |  __/ |  | | (__\__ \
+# |_| \_|\__,_|_| |_| |_|\___|_|  |_|\___|___/
+# Numerics
 
 
-def twpflowPressure_init(x, t):
-    p_L = 0.0
-    phi_L = tank_dim[nd-1] - water_level
-    phi = x[nd-1] - water_level
-    return p_L -g[nd-1]*(rho_0*(phi_L - phi)+(rho_1 -rho_0)*(smoothedHeaviside_integral(epsFact_consrv_heaviside*he,phi_L)
-                                                         -smoothedHeaviside_integral(epsFact_consrv_heaviside*he,phi)))
+outputStepping = tpf.OutputStepping(
+    final_time=0.002,
+    dt_init=0.001,
+    dt_output=0.001,
+    nDTout=None,
+    dt_fixed=0.001,
+)
+
+myTpFlowProblem = tpf.TwoPhaseFlowProblem(
+    ns_model=None,
+    ls_model=None,
+    nd=domain.nd,
+    cfl=0.4,
+    outputStepping=outputStepping,
+    structured=False,
+    he=he,
+    nnx=None,
+    nny=None,
+    nnz=None,
+    domain=domain,
+    initialConditions=initialConditions,
+    boundaryConditions=None, # set with SpatialTools,
+    useSuperlu=False,
+)
+myTpFlowProblem.movingDomain = False
+
+params = myTpFlowProblem.Parameters
+
+# PHYSICAL PARAMETERS
+params.physical.densityA = rho_0  # water
+params.physical.densityB = rho_1  # air
+params.physical.kinematicViscosityA = nu_0  # water
+params.physical.kinematicViscosityB = nu_1  # air
+params.physical.surf_tension_coeff = sigma_01
+
+# MODEL PARAMETERS
+m = params.Models
+m.rans2p.index = 0
+m.addedMass.index = 1
+
+# auxiliary variables
+m.rans2p.auxiliaryVariables += [system]
+m.addedMass.auxiliaryVariables += [system.ProtChAddedMass]
+
+flags_rigidbody = np.zeros(20)
+for key in rect.boundaryTags_global:
+    flags_rigidbody[rect.boundaryTags_global[key]] = 1.
+
+max_flag = 0
+max_flag = max(domain.vertexFlags)
+max_flag = max(domain.segmentFlags+[max_flag])
+max_flag = max(domain.facetFlags+[max_flag])
+flags_rigidbody = np.zeros(max_flag+1, dtype='int32')
+for s in system.subcomponents:
+    if type(s) is fsi.ProtChBody:
+        for flag in s.boundaryFlags:
+            flags_rigidbody[flag] = 1
+m.addedMass.p.CoefficientsOptions.flags_rigidbody = flags_rigidbody
+
