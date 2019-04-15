@@ -1357,10 +1357,11 @@ class NS_base(object):  # (HasTraits):
             #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
 
-	      if self.TwoPhaseFlow:
-	        domain = p0.myTpFlowProblem.domain
-	      else:
+        if self.TwoPhaseFlow:
+            domain = p0.myTpFlowProblem.domain
+        else:
 	        domain = p0.domain
+
         if (hasattr(domain, 'PUMIMesh') and
             domain.PUMIMesh.adaptMesh() and
             self.so.useOneMesh): #and
