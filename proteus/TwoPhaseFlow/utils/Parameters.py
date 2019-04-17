@@ -1552,8 +1552,8 @@ class ParametersModelRDLS(ParametersModelBase):
         self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
         self.n.tolFac = 0.
-        self.n.maxNonlinearIts = 25
-        self.n.maxLineSearches = 25
+        self.n.maxNonlinearIts = 50
+        self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
 
