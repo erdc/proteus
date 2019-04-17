@@ -1301,12 +1301,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       h_old = apf::computeShortestHeightInTet(m,reg);
 
     err_curr = apf::getScalar(errField, reg, 0);
-    //h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
-      if(target_error/err_curr <= 1)
-        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
-      else
-        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd*2.0));
-
+    h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
     
     //clamp h_new and then compare against h_old
     clamp(h_new, hmin, hmax);
