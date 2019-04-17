@@ -2,6 +2,7 @@ from __future__ import division
 from past.utils import old_div
 from builtins import object
 import numpy as np
+from petsc4py import PETSc
 from proteus.Profiling import logEvent
 from proteus.MeshTools import MeshOptions
 from proteus.defaults import (Physics_base,
@@ -90,6 +91,7 @@ class ParametersHolder:
             if model['index'] is not None:
                 model.initializePhysics()
                 model.initializeNumerics()
+                model.initializePETScOptions()
                 self.nModels += 1
                 self.models_list += [model]
                 logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
@@ -97,11 +99,11 @@ class ParametersHolder:
                 logEvent('{name} PHYSICS'.format(name=model.name))
                 logEvent('-----')
                 logEvent('COEFFICIENTS OPTIONS')
-                for key, value in model.p.CoefficientsOptions.__dict__.items():
+                for key, value in sorted(model.p.CoefficientsOptions.__dict__.items()):
                     if key[0] != '_':  # do not print hidden attributes
                         logEvent('{key}: {value}'. format(key=key, value=value))
                 logEvent('END OF COEFFICIENTS OPTIONS')
-                for key, value in model.p.__dict__.items():
+                for key, value in sorted(model.p.__dict__.items()):
                     if key[0] != '_':  # do not print hidden attributes
                         if key in p_base.__dict__.keys():
                             if value != p_base.__dict__[key]:
@@ -113,7 +115,7 @@ class ParametersHolder:
                 logEvent('-----')
                 logEvent('{name} NUMERICS'.format(name=model.name))
                 logEvent('-----')
-                for key, value in model.n.__dict__.items():
+                for key, value in sorted(model.n.__dict__.items()):
                     if key[0] != '_':  # do not print hidden attributes
                         if key in n_base.__dict__.keys():
                             if value != n_base.__dict__[key]:
@@ -125,24 +127,11 @@ class ParametersHolder:
                 logEvent('----------')
 
         logEvent('-----')
+        logEvent('PETSc OPTIONS')
+        petsc_info = PETSc.Options().getAll()
+        for key, val in sorted(petsc_info.items()):
+            logEvent(str(key)+': '+str(val))
         logEvent('-----')
-        logEvent('-----')
-        logEvent('-----')
-        logEvent('-----')
-        n = Numerics_base()
-        p = Physics_base()
-        for i in range(len(all_models)):
-            model = all_models[i]
-            if model['index'] is not None:
-                logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
-                logEvent('-----')
-                for key, value in p.__dict__.items():
-                    if key[0] != '_' and value != model.p.__dict__[key]:  # do not print hidden attributes
-                        logEvent('{key}: {value}'. format(key=key, value=model.p[key]))
-                logEvent('-----n')
-                for key, value in n.__dict__.items():
-                    if key[0] != '_' and value != model.n.__dict__[key]:  # do not print hidden attributes
-                        logEvent('{key}: {value}'. format(key=key, value=model.n[key]))
 
 
 class ParametersModelsHolder:
@@ -206,6 +195,7 @@ class ParametersModelBase(FreezableClass):
         self.index = index
         self.auxiliaryVariables = []
         self._Problem = Problem
+        self.OptDB = PETSc.Options()
         self.p = Physics_base(nd=self._Problem.domain.nd)
         self.p.myTpFlowProblem = self._Problem
         self.p.name = name
@@ -281,6 +271,12 @@ class ParametersModelBase(FreezableClass):
 
     def _initializeNumerics(self):
         # to overwrite for each models
+        pass
+
+    def initializePETScOptions(self):
+        self._initializePETScOptions()
+
+    def _initializePETScOptions(self):
         pass
 
 
@@ -491,6 +487,19 @@ class ParametersModelRANS2P(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.01*self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+        self.OptDB.setValue(prefix+'pc_type', 'asm')
+        self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
+        self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
+        self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+        self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
+        self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_package', 'superlu')
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
 
 
 class ParametersModelRANS3PF(ParametersModelBase):
@@ -1397,6 +1406,15 @@ class ParametersModelVOF(ParametersModelBase):
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
+
 
 class ParametersModelNCLS(ParametersModelBase):
     """
@@ -1491,6 +1509,14 @@ class ParametersModelNCLS(ParametersModelBase):
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelRDLS(ParametersModelBase):
     """
@@ -1577,6 +1603,19 @@ class ParametersModelRDLS(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.1*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+        self.OptDB.setValue(prefix+'pc_type', 'asm')
+        self.OptDB.setValue(prefix+'pc_pc_asm_type', 'basic')
+        self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
+        self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
+        self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_type', 'superlu')
+        self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
+        self.OptDB.setValue(prefix+'max_it', 2000)
 
 class ParametersModelMCorr(ParametersModelBase):
     """
@@ -1669,6 +1708,12 @@ class ParametersModelMCorr(ParametersModelBase):
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelAddedMass(ParametersModelBase):
     """
@@ -1747,6 +1792,13 @@ class ParametersModelAddedMass(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
     """
@@ -1844,6 +1896,15 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'ksp_constant_null_space', 1)
+        self.OptDB.setValue(prefix+'pc_factor_shift_type', 'NONZERO')
+        self.OptDB.setValue(prefix+'pc_factor_shift_amount', 1e-10)
+        # self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 
 class ParametersModelMoveMeshElastic(ParametersModelBase):
@@ -1949,6 +2010,17 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'asm')
+        self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
+        self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
+        self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_package', 'superlu')
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
 
 
 class ParametersPhysical(FreezableClass):
