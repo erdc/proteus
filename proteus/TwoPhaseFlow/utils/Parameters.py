@@ -91,7 +91,8 @@ class ParametersHolder:
             if model['index'] is not None:
                 model.initializePhysics()
                 model.initializeNumerics()
-                model.initializePETScOptions()
+                if not self._Problem.usePETScOptionsFileExternal:
+                    model.initializePETScOptions()
                 self.nModels += 1
                 self.models_list += [model]
                 logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
