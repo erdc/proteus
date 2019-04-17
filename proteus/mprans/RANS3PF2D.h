@@ -4498,11 +4498,7 @@ namespace proteus
                 }
                 else
                 {
-                  for (int i = 0; i < nParticles; i++)
-                  {
-                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_global * nQuadraturePoints_elementBoundary + ebNE_kb];
-                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
-                  }
+                  distance_to_omega_solid = ebq_global_phi_solid[ebN*nQuadraturePoints_elementBoundary+kb];
                 }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
@@ -4999,10 +4995,6 @@ namespace proteus
                 /*                                   penalty,//ebqe_penalty_ext[ebNE_kb], */
                 /*                                   flux_mom_ww_diff_ext); */
                 flux[ebN*nQuadraturePoints_elementBoundary+kb] = flux_mass_ext;
-                /* std::cout<<"external u,v,u_n " */
-                /*             <<ebqe_velocity[ebNE_kb_nSpace+0]<<'\t' */
-                /*             <<ebqe_velocity[ebNE_kb_nSpace+1]<<'\t' */
-                /*             <<flux[ebN*nQuadraturePoints_elementBoundary+kb]<<std::endl; */
                 //
                 //integrate the net force and moment on flagged boundaries
                 //
@@ -6856,11 +6848,7 @@ namespace proteus
                 }
                 else
                 {
-                  for (int i = 0; i < nParticles; i++)
-                  {
-                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_global * nQuadraturePoints_elementBoundary + ebNE_kb];
-                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
-                  }
+                  distance_to_omega_solid = ebq_global_phi_solid[ebN*nQuadraturePoints_elementBoundary+kb];
                 }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
