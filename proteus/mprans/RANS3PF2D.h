@@ -4453,11 +4453,7 @@ namespace proteus
                 }
                 else
                 {
-                  for (int i = 0; i < nParticles; i++)
-                  {
-                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_global * nQuadraturePoints_elementBoundary + ebNE_kb];
-                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
-                  }
+                  distance_to_omega_solid = ebq_global_phi_solid[ebN*nQuadraturePoints_elementBoundary+kb];
                 }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
@@ -6790,11 +6786,7 @@ namespace proteus
                 }
                 else
                 {
-                  for (int i = 0; i < nParticles; i++)
-                  {
-                    double distance_to_i_th_solid = ebq_global_phi_solid[i * nElementBoundaries_global * nQuadraturePoints_elementBoundary + ebNE_kb];
-                    distance_to_omega_solid = (distance_to_i_th_solid < distance_to_omega_solid)?distance_to_i_th_solid:distance_to_omega_solid;
-                  }
+                  distance_to_omega_solid = ebq_global_phi_solid[ebN*nQuadraturePoints_elementBoundary+kb];
                 }
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
                 evaluateCoefficients(eps_rho,
