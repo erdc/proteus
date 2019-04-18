@@ -91,8 +91,7 @@ class ParametersHolder:
             if model['index'] is not None:
                 model.initializePhysics()
                 model.initializeNumerics()
-                if not self._Problem.usePETScOptionsFileExternal:
-                    model.initializePETScOptions()
+                model.initializePETScOptions()
                 self.nModels += 1
                 self.models_list += [model]
                 logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
@@ -275,7 +274,23 @@ class ParametersModelBase(FreezableClass):
         pass
 
     def initializePETScOptions(self):
-        self._initializePETScOptions()
+        if not self._Problem.usePETScOptionsFileExternal:
+            # use default options if no file
+            self._initializePETScOptions()
+        else:
+            # check if file contains options for model
+            # use default options for model if no options in file
+            prefix = self.n.linear_solver_options_prefix
+            petsc_options = PETSc.Options().getAll()
+            initialize = True
+            i = 0
+            for key in petsc_options.keys():
+                i += 1
+                if prefix == key[:len(prefix)]:
+                    initialize = False
+                    break
+            if initialize:
+                self._initializePETScOptions()
 
     def _initializePETScOptions(self):
         pass
