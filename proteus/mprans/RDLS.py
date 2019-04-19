@@ -1078,6 +1078,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             old_div(self.coefficients.alpha,self.elementDiameter.min()))
 
 
+
         # FREEZE INTERFACE #
         if self.coefficients.freeze_interface_within_elliptic_redist==True:
             for gi in range(len(self.u[0].dof)):
