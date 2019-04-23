@@ -507,18 +507,18 @@ class ParametersModelRANS2P(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        self.OptDB.setValue(prefix+'ksp_type', 'gmres')
-        self.OptDB.setValue(prefix+'pc_type', 'asm')
-        self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
-        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
-        self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
-        self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
-        self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
-        self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_package', 'superlu')
-        self.OptDB.setValue(prefix+'ksp_knoll', 1)
-        self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
-        if 1 == 0:
-        # This will be replaced with an appropriate conditional statement
+        if self.n.linearSmoother == LinearSolvers.SimpleNavierStokes3D:
+            self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+            self.OptDB.setValue(prefix+'pc_type', 'asm')
+            self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
+            self.OptDB.setValue(prefix+'ksp_max_it', 2000)
+            self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
+            self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+            self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
+            self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_package', 'superlu')
+            self.OptDB.setValue(prefix+'ksp_knoll', 1)
+            self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
+        elif self.n.linearSmoother == LinearSolvers.NavierStokes_TwoPhasePCD:
             # Options for PCD
             # Global KSP options
             self.OptDB.setValue(prefix+'ksp_type', 'fgmres')
@@ -531,20 +531,20 @@ class ParametersModelRANS2P(ParametersModelBase):
             # Velocity block options
             self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_type', 'gmres')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_gmres_modifiedgramschmidt', 1)
-            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_atol', 1e-2)
-            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_rtol', 1e-2)
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_atol', 1e-5)
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_rtol', 1e-5)
             self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_pc_side', 'right')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_type', 'hypre')
-            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomberamg')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomeramg')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type', 'HMIS')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_type', 'hypre')
-            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomberamg')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomeramg')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type', 'HMIS')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_type', 'hypre')
-            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomberamg')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomeramg')
             self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type', 'HMIS')
             #PCD Schur Complement options
             self.OptDB.setValue(prefix+'fieldsplit_pressure_ksp_type', 'preonly')
@@ -561,7 +561,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type', 'boomeramg')
             self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold', 0.5)
             self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type', 'ext+i-cc')
-            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', HMIS)
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', 'HMIS')
             self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl', 2)
 
 class ParametersModelRANS3PF(ParametersModelBase):
