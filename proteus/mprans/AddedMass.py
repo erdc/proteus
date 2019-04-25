@@ -698,6 +698,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.added_mass_i,
             self.barycenters,
             self.flags_rigidbody)
+        # sum of residual should be zero
+        # but it is sometimes not exactly zero with certain meshes in parallel
+        # hack
+        r[0] -= np.sum(r[:self.mesh.nNodes_owned])
+        # end hack
         for k in range(self.Aij.shape[0]):
             for j in range(self.Aij.shape[2]):
                 self.Aij[k,j,self.added_mass_i] = globalSum(
