@@ -732,6 +732,53 @@ class Mesh(object):
         elementSizeRatioValues.text = ar.hdfFilename+":/"+"elementSizeRatio"+"_t"+str(tCount)
         ar.create_dataset_sync("elementSizeRatio"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementSizeRatio[:self.nElements_owned])
 
+        errorTrigger = SubElement(self.arGrid,"Attribute",{"Name":"errorTriggered",
+                                                      "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+        errorTriggerValues = SubElement(errorTrigger,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+        errorTriggerValues.text = ar.hdfFilename+":/"+"errorTriggered"+"_t"+str(tCount)
+        ar.create_dataset_sync("errorTriggered"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.errorTriggered[:self.nElements_owned])
+
+        #
+        errorRate = SubElement(self.arGrid,"Attribute",{"Name":"errorRate",
+                                                      "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+        errorRateValues = SubElement(errorRate,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+        errorRateValues.text = ar.hdfFilename+":/"+"errorRate"+"_t"+str(tCount)
+        ar.create_dataset_sync("errorRate"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.errorRate[:self.nElements_owned])
+
+        #
+        elementMaterial = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterial",
+                                                      "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+        elementMaterialValues = SubElement(elementMaterial,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+        elementMaterialValues.text = ar.hdfFilename+":/"+"elementMaterial"+"_t"+str(tCount)
+        ar.create_dataset_sync("elementMaterial"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterial[:self.nElements_owned])
+
+        #
+        elementError = SubElement(self.arGrid,"Attribute",{"Name":"elementError",
+                                                      "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+        elementErrorValues = SubElement(elementError,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+        elementErrorValues.text = ar.hdfFilename+":/"+"elementError"+"_t"+str(tCount)
+        ar.create_dataset_sync("elementError"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementError[:self.nElements_owned])
+
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection is not None:
             init = False
