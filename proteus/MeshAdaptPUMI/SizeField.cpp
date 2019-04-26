@@ -1320,8 +1320,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   {
     //averageToEntity(errorSize_reg, errorSize, v);
     //volumeAverageToEntity(errorSize_reg, errorSize, v);
-    errorAverageToEntity(errorSize_reg, errorSize,errField, v);
-    //minToEntity(errorSize_reg, errorSize, v);
+    //errorAverageToEntity(errorSize_reg, errorSize,errField, v);
+    minToEntity(errorSize_reg, errorSize, v);
   }
   m->end(it);
 
