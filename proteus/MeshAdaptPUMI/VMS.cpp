@@ -47,6 +47,7 @@ inline void getProps(double*rho,double*nu,double deltaT)
   rho_1 = rho[1];
   nu_1 = nu[1];
   dt_err = deltaT;
+  std::cout<<"THis is delta T right now! "<<deltaT<<" and rho and nu "<<rho[0]<<" "<<nu[0]<<std::endl;
   return;
 }
 
@@ -270,7 +271,12 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     for(int i=0; i<nsd; i++)
       qpt[i] = 1./(nsd+1.0);
 
-    double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
+    //double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
+    //double density = getMPvalue(apf::getScalar(vof_elem,qpt),998.2,1.205);
+    //std::cout<<" double check density "<<rho[localNumber(ent)]<<" "<<density<<std::endl;
+    double density = rho[localNumber(ent)];
+    std::cout<<"rho "<<density<<" localNumber "<<localNumber(ent)<<std::endl;
+    //std::abort();
     Inputs info;
     info.element = element;
     info.pres_elem = pres_elem;
@@ -308,6 +314,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
       apf::Vector3 tempResidual = (tempConv + grad_pres/density);
       double tempVal = tempResidual.getLength();
 */
+    info.visc_val = nu[localNumber(ent)];
     apf::Vector3 tempResidual = getResidual(qpt,info);
     double tempVal = tempResidual.getLength();
     apf::getJacobian(element,qpt,J);
@@ -320,6 +327,26 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
 
     double nu_err = get_nu_err(info);
     double VMSerrH1 = nu_err*tempVal*sqrt(apf::measure(m,ent));
+    if(localNumber(ent) == 504 && nAdapt == 31)
+    {
+        std::cout<<"What is the residual "<<tempResidual<<" Jacobian "<<J<<" gij "<<gij<< " density "<<density<<" nu "<< info.visc_val<<std::endl;
+        std::cout<<"vel "<<info.vel_vect<<" grad_vel "<<info.grad_vel<<" grad pres "<<info.grad_pres<<std::endl;
+        std::cout<<"What is the area of triangle? "<<apf::measure(m,ent)<<" dt_err "<<dt_err<<std::endl;
+        std::cout<<"nu err "<<nu_err<<std::endl;
+        apf::Vector3 vel_vect_old;
+        apf::getVector(info.velo_elem_old,qpt,vel_vect_old);
+
+        std::cout<<"vel_vect_old "<< vel_vect_old<<std::endl;
+        apf::Adjacent adjVerts;
+        m->getAdjacent(ent,0,adjVerts);
+        apf::Vector3 pt_coord;
+        for(int i =0; i<3; i++)
+        {
+            m->getPoint(adjVerts[i],0,pt_coord);
+            std::cout<<"coordinates "<<pt_coord<<std::endl;
+        }
+        
+    }
     //std::cout<<std::scientific<<std::setprecision(15)<<"H1 error for element "<<count<<" nu_err "<<nu_err<<" error "<<VMSerrH1<<std::endl;
     apf::setScalar(vmsErrH1,ent,0,VMSerrH1);
 
@@ -363,7 +390,7 @@ double get_nu_err(struct Inputs info){
 apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
     apf::Vector3 grad_pres;
     apf::getGrad(info.pres_elem,qpt,grad_pres);
-    double visc_val = apf::getScalar(info.visc_elem,qpt);
+    //double visc_val = apf::getScalar(info.visc_elem,qpt);
     apf::Vector3 vel_vect;
     apf::getVector(info.velo_elem,qpt,vel_vect);
     apf::Vector3 vel_vect_old;
@@ -383,13 +410,14 @@ apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
       tempConv[i] = tempConv[i] - info.g[i]; //body force contribution
     }
     apf::Vector3 tempResidual = (tempConv + grad_pres/info.density);
+    std::cout<<"density "<<info.density<<std::endl;
     //acceleration term
     tempResidual = tempResidual + (vel_vect-vel_vect_old)/dt_err;
-    //std::cout<<"What is the acceleration contribution? "<<(vel_vect-vel_vect_old)/dt_err<<std::endl;
+    //std::cout<<"What is the acceleration contribution? "<<(vel_vect-vel_vect_old)/dt_err<<" vel_vect_old "<< vel_vect_old<<std::endl;
 
     info.vel_vect = vel_vect;
     info.grad_vel = grad_vel;
-    info.visc_val = visc_val;
+    //info.visc_val = visc_val;
     info.grad_pres = grad_pres;
 
   return tempResidual;

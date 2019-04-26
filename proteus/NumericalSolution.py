@@ -1147,12 +1147,47 @@ class NS_base(object):  # (HasTraits):
 
 
     def PUMI_transferFields(self):
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         logEvent("Copying coordinates to PUMI")
         p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
+
+        #I want to compute the density and viscosity arrays here
+        #arrays are length = number of elements and will correspond to density at center of element
+        rho_transfer = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
+        nu_transfer = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
+        #get quadrature points at element centroid and evaluate at shape functions
+        from proteus import Quadrature
+        transferQpt = Quadrature.SimplexGaussQuadrature(p0.domain.nd,1)
+        qpt_centroid = numpy.asarray([transferQpt.points[0]])
+        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,p0.domain.nd)
+        materialSpace.getBasisValuesRef(qpt_centroid)
+        
+        #obtain the level-set or vof value at each element centroid
+        #pass through heaviside function to get material property
+        from proteus.ctransportCoefficients import smoothedHeaviside
+        
+        IEN = self.modelList[2].levelModelList[0].u[0].femSpace.dofMap.l2g
+        for (eID, dofs) in enumerate(IEN):
+            phi_val = 0.0
+            for idx in range(len(dofs)):
+                phi_val += materialSpace.psi[0][idx]*self.modelList[2].levelModelList[0].u[0].dof[dofs[idx]]
+            #rho_transfer[eID] = phi_val
+            
+            #heaviside
+            h_phi=0.0;
+            for idx in range(len(dofs)):
+                h_phi += (materialSpace.psi[0][idx])*(self.modelList[2].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
+            eps_rho = p0.epsFact_density*h_phi
+            smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
+
+            rho_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.rho_0 + smoothed_phi_val*self.pList[0].ct.rho_1
+            nu_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.nu_0 + smoothed_phi_val*self.pList[0].ct.nu_1
+
+        self.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+        self.modelList[0].levelModelList[0].mesh.elementMaterial[:] = nu_transfer[:]
 
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
@@ -1163,7 +1198,7 @@ class NS_base(object):  # (HasTraits):
                 lm.u_store = copy.deepcopy(lm.u)
         self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
         self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
-
+    
         logEvent("Copying DOF and parameters to PUMI")
         for m in self.modelList:
           for lm in m.levelModelList:
@@ -1222,10 +1257,16 @@ class NS_base(object):  # (HasTraits):
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
             deltaT = self.systemStepController.dt_system 
+            T_current = self.systemStepController.t_system
         else:
-            deltaT = 0
+            deltaT = 0.0
+            T_current = 0.0
         epsFact = p0.epsFact_density 
-        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+
+        # I want to put in here two arrays of densities are viscosities....
+        
+        #p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,T_current,epsFact)
+        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,T_current,epsFact)
         del rho, nu, g, epsFact
 
 
@@ -1370,16 +1411,30 @@ class NS_base(object):  # (HasTraits):
               adaptMeshNow=True
               logEvent("Need to Adapt")
 
-            #import pdb; pdb.set_trace()
-            #if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 )):
-            scalar=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nNodes_global,1),'d')
-            self.pList[0].domain.PUMIMesh.transferFieldToProteus(
-                "errorSize", scalar)
-            self.modelList[0].levelModelList[0].u[self.pList[0].domain.nd+1].dof[:] = scalar[:,0]
+            #scalar=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nNodes_global,1),'d')
+            #self.pList[0].domain.PUMIMesh.transferFieldToProteus(
+                #"errorSize", scalar)
+
+            scalar=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned,1),'d')
+            self.pList[0].domain.PUMIMesh.transferElementFieldToProteus(
+                "errorTriggered", scalar)
+            self.modelList[0].levelModelList[0].mesh.errorTriggered[:] = scalar[:,0]
+            #self.modelList[0].levelModelList[0].u[self.pList[0].domain.nd+1].dof[:] = scalar[:,0]
             scalar2=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned,1),'d')
             self.pList[0].domain.PUMIMesh.transferElementFieldToProteus(
                 "sizeRatio", scalar2)
             self.modelList[0].levelModelList[0].mesh.elementSizeRatio[:] = scalar2[:,0]
+
+            scalar3=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned,1),'d')
+            self.pList[0].domain.PUMIMesh.transferElementFieldToProteus(
+                "errorRate", scalar3)
+            self.modelList[0].levelModelList[0].mesh.errorRate[:] = scalar3[:,0]
+
+            scalar4=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned,1),'d')
+            self.pList[0].domain.PUMIMesh.transferElementFieldToProteus(
+                "VMSH1", scalar4)
+            self.modelList[0].levelModelList[0].mesh.elementError[:] = scalar4[:,0]
+
         
             #adaptMeshNow=False
             #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
@@ -1669,6 +1724,11 @@ class NS_base(object):  # (HasTraits):
         import copy
         #self.modelList[0].levelModelList[0].mesh.elementSizeRatio = copy.deepcopy(self.modelList[0].levelModelList[0].mesh.elementMaterialTypes)
         self.modelList[0].levelModelList[0].mesh.elementSizeRatio = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+        self.modelList[0].levelModelList[0].mesh.errorTriggered = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+        self.modelList[0].levelModelList[0].mesh.errorRate = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+        self.modelList[0].levelModelList[0].mesh.elementError = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+        self.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+
         for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,list(range(len(self.pList)))):
             if not self.opts.hotStart:
                 logEvent("Archiving initial conditions")
@@ -1967,22 +2027,15 @@ class NS_base(object):  # (HasTraits):
                 self.nSolveSteps += 1
                 import gc; gc.collect()
 
-
-
-                #import pdb; pdb.set_trace()
-                #elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
-                #                                                           "AttributeType":"Scalar",
-                #                                                           "Center":"Cell"})
-                #elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
-                #                                        {"Format":ar.dataItemFormat,
-                #                                         "DataType":"Int",
-                #                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
-                #elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
-                #ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
                 import copy
                 self.modelList[0].levelModelList[0].mesh.elementSizeRatio = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                self.modelList[0].levelModelList[0].mesh.errorTriggered = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                self.modelList[0].levelModelList[0].mesh.errorRate = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                self.modelList[0].levelModelList[0].mesh.elementError = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                self.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
 #copy.deepcopy(self.modelList[0].levelModelList[0].mesh.elementMaterialTypes)
                 
+                import pdb; pdb.set_trace()
                 if(self.PUMI_estimateError()):
                     for model in self.modelList:
                         for av in self.auxiliaryVariables[model.name]:

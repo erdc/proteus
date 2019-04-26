@@ -15,6 +15,9 @@
 #include <sam.h>
 #include <samSz.h>
 
+#include <apfShape.h>
+extern double dt_err;
+
 #ifdef PROTEUS_USE_SIMMETRIX
 //PROTEUS_USE_SIMMETRIX is a compiler macro that indicates whether Simmetrix libraries are used
 //This is defined in proteus/config/default.py and is contingent on the existence of a SIM_INCLUDE_DIR path
@@ -67,6 +70,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   vmsErrH1 = 0;
   errRho_reg = 0;
   errRel_reg = 0;
+  error_reference = 0;
   gmi_register_mesh();
   gmi_register_null();
   approximation_order = 2;
@@ -99,6 +103,7 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(vmsErrH1);
   freeField(errRho_reg);
   freeField(errRel_reg);
+  freeField(error_reference);
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
@@ -360,10 +365,9 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
   m->end(it);
 
 
-
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
-  assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
+  //assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
 
   if(assertFlag>0)
   {
@@ -392,6 +396,112 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
 }
 
 
+int MeshAdaptPUMIDrvr::willErrorAdapt_reference() 
+{
+  int adaptFlag=0;
+  int assertFlag;
+
+  getERMSizeField(total_error);
+  sizeFieldList.pop(); //remove this size field from the queue
+
+  std::cout<<"Flag 1\n";
+  if(m->findField("errorTriggered"))
+    apf::destroyField(m->findField("errorTriggered"));
+  //apf::Field *errorTriggered = apf::createLagrangeField(m, "errorTriggered", apf::SCALAR, 1);
+  apf::Field* errorTriggered = apf::createField(m,"errorTriggered",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
+ 
+  std::cout<<"Flag 2\n";
+
+  apf::Field* error_current = m->findField("VMSH1");
+  apf::Field* error_reference=NULL;
+
+  if(m->findField("errorRate"))
+    apf::destroyField(m->findField("errorRate"));
+  //apf::Field *errorTriggered = apf::createLagrangeField(m, "errorTriggered", apf::SCALAR, 1);
+  apf::Field* errorRateField = apf::createField(m,"errorRate",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
+
+
+  if(!m->findField("error_reference"))
+  {  
+    T_reference = T_current;
+    //error_reference  = apf::createFieldOn(m, "error_reference", apf::SCALAR); 
+    error_reference = apf::createField(m,"error_reference",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+    apf::copyData(error_reference,error_current);
+    logEvent("SUCCESSFULLY COPIED!",4);
+
+
+    //need to set the error trigger field to 0
+    apf::MeshEntity* ent;
+    apf::MeshIterator* it = m->begin(m->getDimension());
+    while( (ent = m->iterate(it) ) )
+    {
+        apf::setScalar(errorTriggered,ent,0,-1.0);
+        apf::setScalar(errorRateField,ent,0,0.0);
+    }
+    m->end(it);
+    logEvent("SET ERROR TRIGGERED!",4);
+
+    return 0;
+  }
+  else
+  {
+    error_reference = m->findField("error_reference");
+  }
+
+//Need to make as inputs
+  double dt_step = dt_err; //global variable imported from VMS
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it = m->begin(m->getDimension());
+     
+
+  while( (ent = m->iterate(it) ) )
+  {   
+    double err_local_current = apf::getScalar(error_current,ent,0);
+    double err_local_ref = apf::getScalar(error_reference,ent,0);
+    double errorRate = (err_local_current-err_local_ref)/(T_current-T_reference);
+    std::cout<<"error "<<err_local_current<<" err_local_ref "<<err_local_ref<<" T_current "<<T_current<<" reference "<<T_reference<<std::endl;
+    apf::setScalar(errorRateField,ent,0,errorRate*dt_step);
+    double err_predict = errorRate*dt_step + err_local_current;
+    double sizeRatio_local = apf::getScalar(m->findField("sizeRatio"),ent,0);
+    //if(errorRate > 0 && (err_predict > target_error) && T_current > 0.05 )
+    //if(errorRate > 0 && (err_predict > target_error) && T_current > 0.05 && sizeRatio_local>2.0)
+    if(errorRate > 0 && (err_predict > target_error) && sizeRatio_local>2.0)
+    //if(errorRate > 0 && (err_local_current > target_error*2.0))
+    {
+        adaptFlag = 1;
+        logEvent("Need to error based adapt!!!",4);
+        std::cout<<"What is time? "<<T_current<<" reference? "<<T_reference<<" err_local_current "<<err_local_current<<" err_local_ref "<<err_local_ref<<std::endl;
+        std::cout<<"Local number "<<localNumber(ent)<<std::endl;
+        std::cout<<"error rate "<<errorRate<<std::endl;
+        std::cout<<"size ratio local "<<sizeRatio_local<<std::endl;
+        std::cout<<"this is adapt number "<<nAdapt<<std::endl;
+        apf::setScalar(errorTriggered,ent,0,1.0);
+        //break;
+    }
+    else
+        apf::setScalar(errorTriggered,ent,0,-1.0);
+
+    //set the reference field for the next step
+    //apf::setScalar(error_reference,ent,0,err_local_current);
+    //T_reference = T_current;
+    //set the error field with a predictive value
+/*
+    if(errorRate > 0)
+    {
+        double err_predict_long = errorRate*dt_step*numAdaptSteps + err_local_current;
+        apf::setScalar(error_current,ent,0,err_predict_long);
+    }
+*/
+  }
+  m->end(it);
+
+  assertFlag = adaptFlag;
+  PCU_Add_Ints(&assertFlag,1);
+
+  return assertFlag;
+}
+
+
 int MeshAdaptPUMIDrvr::willAdapt() 
 //Master function that calls other adapt-trigger functions
 {
@@ -399,11 +509,19 @@ int MeshAdaptPUMIDrvr::willAdapt()
   if(size_field_config == "combined" or size_field_config == "isotropic")
     adaptFlag += willInterfaceAdapt(); 
   if(size_field_config == "combined" or size_field_config == "VMS")
-    //adaptFlag += willErrorAdapt();
-    willErrorAdapt();
+  {
+    willErrorAdapt_reference();
+    //adaptFlag += willErrorAdapt_reference();
+    //willErrorAdapt();
+  }
 
   if(adaptFlag > 0)
     adaptFlag = 1;
+
+    //allocated in transfer fields... this is not a good way of doing things, but don't know how to pass a numpy array without having to allocate memory just yet
+    free(rho);
+    free(nu);
+
   return adaptFlag;
 }
 
@@ -463,7 +581,7 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
 
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
-  assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
+  //assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
 
   apf::destroyField(currentField);
   apf::destroyField(interfaceField);
@@ -683,6 +801,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 
   if(logging_config=="debugRestart")
     m->writeNative("DEBUG_restart.smb");
+
+  //freeField(error_reference);
+  apf::destroyField(m->findField("error_reference"));
 
   return 0;
 }
