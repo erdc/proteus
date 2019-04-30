@@ -13,6 +13,7 @@ import inspect
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 
+from importlib import reload
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
