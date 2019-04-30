@@ -98,15 +98,15 @@ class TestBDM2Reference1(object):
         self.bdm2_obj.q[('velocity',0)] = np.ones_like(self.bdm2_obj.q[('velocity',0)])
 
         self.bdm2_obj.buildBDM2rhs(self.bdm2_obj.BDMprojectionMat_element,
-                              self.bdm2_obj.BDMprojectionMatPivots_element,
-                              self.bdm2_obj.vt.ebq[('w*dS_u',0)],
-                              self.bdm2_obj.vt.ebq['n'],
-                              self.bdm2_obj.weightedInteriorTestGradients,
-                              self.bdm2_obj.weightedInteriorDivFreeElement,
-                              self.bdm2_obj.ebq[('velocity',0)],
-                              self.bdm2_obj.q[('velocity',0)],
-                              self.bdm2_obj.q[('velocity_dofs',0)],
-                              self.bdm2_obj.edgeFlags)
+                                   self.bdm2_obj.BDMprojectionMatPivots_element,
+                                   self.bdm2_obj.vt.ebq[('w*dS_u',0)],
+                                   self.bdm2_obj.vt.ebq['n'],
+                                   self.bdm2_obj.weightedInteriorTestGradients,
+                                   self.bdm2_obj.weightedInteriorDivFreeElement,
+                                   self.bdm2_obj.ebq[('velocity',0)],
+                                   self.bdm2_obj.q[('velocity',0)],
+                                   self.bdm2_obj.q[('velocity_dofs',0)],
+                                   self.bdm2_obj.edgeFlags)
 
         test_rhs = self.bdm2_obj.q[('velocity_dofs',0)]
         comparison_rhs = np.array([ 3.33333333e-01,  3.33333333e-01,  1.33333333e+00,
@@ -120,11 +120,12 @@ class TestBDM2Reference1(object):
         rel_path_2 = "comparison_files/bdm_func_values.npy"
         bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
         bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
-        
+
         self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values.copy()
         self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
+
         self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
-        
+
         assert np.allclose(self.bdm2_obj.q[('velocity',0)],bdm_values)
 
     def test_BDM2_reference_triangle_full_not_in_space(self):
