@@ -271,21 +271,23 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_diffusive.setConstantBC(0.)
         self.vs_diffusive.setConstantBC(0.)
         self.ws_diffusive.setConstantBC(0.)
-    def setConstantOutletPressure(self, p, kk, dd, b_or):
+    def setConstantOutletPressure(self, p, rho, g ,kk, dd, b_or):
         """
         Sets constant pressure in each outlet face for single phase flows
         """
         self.reset()
         self.BC_type = 'constantOutletPressure'
         # dirichlet
+        a1 = rho*g
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
         self.us_dirichlet.setConstantBC(0.)
         self.vs_dirichlet.setConstantBC(0.)
         self.ws_dirichlet.setConstantBC(0.)
-        self.p_dirichlet.setConstantBC(p)
-        self.pInit_dirichlet.setConstantBC(p)
+
+        self.p_dirichlet.setLinearBC(p,a1)
+        self.pInit_dirichlet.setLinearBC(p, a1)
         self.pInc_dirichlet.setConstantBC(0.)
         self.k_dirichlet.setConstantBC(kk)
         self.dissipation_dirichlet.setConstantBC(dd)  
