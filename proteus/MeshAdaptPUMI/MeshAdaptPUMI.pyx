@@ -15,10 +15,13 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
         MeshAdaptPUMIDrvr(double, double, double, int, int, int, char*, char*,char*,double,double,int,double,double)
         int numIter, numAdaptSteps
+        int nAdapt
         string size_field_config, adapt_type_config
         int adaptMesh
         int isReconstructed
         int loadModelAndMesh(char *, char*)
+        int loadMeshForAnalytic(char *,double*, double*, double)
+        void updateSphereCoordinates(double*)
         int getSimmetrixBC()
         int reconstructFromProteus(Mesh&,Mesh&,int)
         int reconstructFromProteus2(Mesh&,int*,int*)
@@ -33,9 +36,10 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
-        int adaptPUMIMesh()
+        int adaptPUMIMesh(char*)
         int dumpMesh(Mesh&)
         int willAdapt()
+        int willInterfaceAdapt()
         int getERMSizeField(double)
         double getMinimumQuality()
         double getTotalMass()
@@ -43,6 +47,8 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         void get_local_error(double) 
         void get_VMS_error(double) 
         void writeMesh(char* )
+        void cleanMesh()
+        void set_nAdapt(int)
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -65,10 +71,22 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.adaptMesh
     def numAdaptSteps(self):
         return self.thisptr.numAdaptSteps
+    def nAdapt(self):
+        return self.thisptr.nAdapt
+    def set_nAdapt(self,numberAdapt):
+        return self.thisptr.set_nAdapt(numberAdapt)
     def isReconstructed(self):
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
+    def loadMeshForAnalytic(self, meshName, np.ndarray[np.double_t,ndim=1,mode="c"] boxDim, np.ndarray[np.double_t,ndim=1,mode="c"] sphereCenter, double sphereRadius):
+        boxDim = np.ascontiguousarray(boxDim)
+        sphereCenter = np.ascontiguousarray(sphereCenter)
+        sphereRadius = np.ascontiguousarray(sphereRadius)
+        return self.thisptr.loadMeshForAnalytic(meshName,&boxDim[0],&sphereCenter[0],sphereRadius)
+    def updateSphereCoordinates(self,np.ndarray[np.double_t,ndim=1,mode="c"] sphereCenter):
+        sphereCenter = np.ascontiguousarray(sphereCenter)
+        return self.thisptr.updateSphereCoordinates(&sphereCenter[0])
     def reconstructFromProteus(self,cmeshTools.CMesh cmesh,cmeshTools.CMesh global_cmesh,hasModel=0):
         return self.thisptr.reconstructFromProteus(cmesh.mesh,global_cmesh.mesh,hasModel)
     def reconstructFromProteus2(self,cmeshTools.CMesh cmesh,np.ndarray[int,ndim=1,mode="c"] isModelVert,
@@ -120,8 +138,8 @@ cdef class MeshAdaptPUMI:
     #    return self.thisptr.transferBCtagsToProteus(&tagArray[0,0],idx,&ebN[0],&eN_global[0,0],&fluxBC[0,0])
     #def transferBCsToProteus(self):
     #    return self.thisptr.transferBCsToProteus()
-    def adaptPUMIMesh(self):
-        return self.thisptr.adaptPUMIMesh()
+    def adaptPUMIMesh(self,inputString=""):
+        return self.thisptr.adaptPUMIMesh(inputString)
     def dumpMesh(self, cmeshTools.CMesh cmesh):
         return self.thisptr.dumpMesh(cmesh.mesh)
     def getERMSizeField(self, err_total):
@@ -130,6 +148,8 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.getMPvalue(field_val,val_0,val_1)
     def willAdapt(self):
         return self.thisptr.willAdapt()
+    def willInterfaceAdapt(self):
+        return self.thisptr.willInterfaceAdapt()
     def get_local_error(self):
         errTotal=0.0;
         self.thisptr.get_local_error(errTotal)
@@ -142,3 +162,5 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.getMinimumQuality()
     def writeMesh(self,meshName):
         return self.thisptr.writeMesh(meshName)
+    def cleanMesh(self):
+        return self.thisptr.cleanMesh()

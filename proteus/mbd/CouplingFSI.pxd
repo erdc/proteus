@@ -189,8 +189,6 @@ cdef class ProtChBody:
       ProtChSystem ProtChSystem
       object Shape
       int nd
-      int i_start
-      int i_end
       double dt
       double width_2D
       object record_dict
@@ -244,7 +242,11 @@ cdef class ProtChBody:
       np.ndarray h_ang_vel_predict_last  # predicted angular velocity
       np.ndarray Aij  # added mass array
       bool applyAddedMass  # will apply added mass if True (default)
+      bool useIBM
+      double radiusIBM
       string hdfFileName
+      double Aij_factor
+      int[:] boundaryFlags
     cdef np.ndarray callPrescribedMotion(self, double t)
 
 
@@ -294,6 +296,7 @@ cdef class ProtChSystem:
         int tCount
         bool initialised
         bool update_substeps
+        int nBodiesIBM
 
 
 cdef class ProtChMesh:
