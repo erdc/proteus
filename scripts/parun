@@ -368,6 +368,7 @@ if opts.SWEs:
         else:
             sList = so.sList
 elif opts.TwoPhaseFlow:
+
     path_utils = proteus.__path__[0]+"/TwoPhaseFlow/utils/"
     so_name = "TwoPhaseFlow_so.py"
     if opts.fileName != "":
@@ -390,6 +391,8 @@ elif opts.TwoPhaseFlow:
             prob.useSuperlu=False
         else:
             prob.useSuperlu=True
+    if len(petsc_argv) > 1:  # then petsc.options external file was used
+        prob.usePETScOptionsFileExternal = True
     prob.initializeAll()
     so = prob.so
     so.name = name

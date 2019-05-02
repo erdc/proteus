@@ -40,6 +40,11 @@ class TestTwoPhaseFlow(object):
                   "-f damBreak.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1'")
         self.compare_vs_saved_files("damBreak")
 
+    def test_damBreak_solver_options(self):
+        os.system("parun --TwoPhaseFlow --path " + self.path + " "
+                  "-f damBreak_solver_options.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.05'")
+        self.compare_vs_saved_files("damBreak_solver_options")
+
 #    @pytest.mark.skip(reason="long test")
     def test_TwoDimBucklingFlow(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "

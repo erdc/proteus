@@ -1317,7 +1317,9 @@ def _assembleGeometry(domain, BC_class):
     domain.boundaryTags = {}
     domain.reversed_boundaryTags = {}
     # BC at flag 0
-    domain.bc = [BC_class(nd=domain.nd)]
+    bc0 = BC_class(nd=domain.nd)
+    domain.BCbyFlag[0] = bc0
+    domain.bc = [bc0]
     # domain.bc[0].setNonMaterial()
     # barycenter at flag 0
     domain.barycenters = np.array([[0., 0., 0.]])

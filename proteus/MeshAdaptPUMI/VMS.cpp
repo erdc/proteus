@@ -50,7 +50,24 @@ inline void getProps(double*rho,double*nu,double deltaT)
   return;
 }
 
-void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error) 
+apf::Matrix3x3 getKJ(int nsd)
+{
+//Jacobian correction matrix for proper metric tensor
+    if(nsd==2)
+    {
+        apf::Matrix3x3 KJtemp(1.0,0.5,0.0,0.5,1.0,0.0,0.0,0.0,1.0); //Jacobian correction matrix for proper metric tensor
+        return KJtemp;
+    }
+    else
+    {
+        double c1 = pow(2,1./3.); //1.259921049894873e+00;
+        double c2 = c1/2.0; //6.299605249474365e-01;
+        apf::Matrix3x3 KJtemp(c1,c2,c2,c2,c1,c2,c2,c2,c1);
+        return KJtemp;
+    }
+}
+
+void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out) 
 {
   if(PCU_Comm_Self()==0)
     std::cout<<"The beginning of the VMS\n";
@@ -103,8 +120,9 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
   apf::Element* visc_elem, *pres_elem,*velo_elem,*vof_elem,*velo_elem_old;
   apf::Matrix3x3 J; //actual Jacobian matrix
   apf::Matrix3x3 invJ; //inverse of Jacobian
-  apf::Matrix3x3 KJ(1.0,0.5,0.0,0.5,1.0,0.0,0.0,0.0,1.0); //Jacobian correction matrix for proper metric tensor
+  apf::Matrix3x3 KJ = getKJ(nsd);
   apf::Matrix3x3 gij; //actual Jacobian matrix
+
 
   //apf::DynamicMatrix invJ_copy;
   //apf::NewArray <apf::DynamicVector> shdrv;
@@ -322,6 +340,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error)
     if(PCU_Comm_Self()==0)
       std::cout<<std::scientific<<std::setprecision(15)<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
     total_error = sqrt(VMSerrTotalH1);
+    total_error_out = sqrt(VMSerrTotalH1);
     apf::destroyField(vmsErr);
     apf::destroyField(visc);
 } //end function
