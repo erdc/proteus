@@ -301,7 +301,9 @@ namespace proteus
 				   double* hBT,
 				   double* huBT,
 				   double* hvBT,
-                                   int lstage
+                                   int lstage,
+				   // For viscosity
+				   double viscosity
                                    )=0;
     virtual void calculateMassMatrix(//element
                                      double* mesh_trial_ref,
@@ -411,7 +413,13 @@ namespace proteus
                                      int* csrColumnOffsets_eb_hv_h,
                                      int* csrColumnOffsets_eb_hv_hu,
                                      int* csrColumnOffsets_eb_hv_hv,
-                                     double dt)=0;
+                                     double dt,
+				     // for viscosity
+				     double viscosity,
+				     double hEps,
+				     double* h_dof_old,
+				     double* hu_dof_old,
+				     double* hv_dof_old)=0;
   virtual void calculateLumpedMassMatrix(//element
                                          double* mesh_trial_ref,
                                          double* mesh_grad_trial_ref,
@@ -1654,7 +1662,9 @@ namespace proteus
 			   double* hBT,
 			   double* huBT,
 			   double* hvBT,
-                           int lstage)
+                           int lstage,
+			   // for viscosity
+			   double viscosity)
     {
       //FOR FRICTION//
       double n2 = std::pow(mannings,2.);
@@ -1695,9 +1705,12 @@ namespace proteus
                 eN_nDOF_trial_element = eN*nDOF_trial_element;
               register double
                 h=0.0,hu=0.0,hv=0.0, // solution at current time
+		grad_h_old[nSpace], grad_hu[nSpace], grad_hv[nSpace],
                 h_old=0.0,hu_old=0.0,hv_old=0.0, // solution at lstage
                 jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
                 h_test_dV[nDOF_trial_element],
+		h_grad_trial[nDOF_trial_element*nSpace],
+		vel_grad_trial[nDOF_trial_element*nSpace], vel_grad_test_dV[nDOF_test_element*nSpace],
                 dV,x,y,xt,yt;
               //get jacobian, etc for mapping reference element
               ck.calculateMapping_element(eN,
@@ -1712,6 +1725,12 @@ namespace proteus
                                           x,y);
               //get the physical integration weight
               dV = fabs(jacDet)*dV_ref[k];
+	      ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				  jacInv,
+				  h_grad_trial);
+	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				  jacInv,
+				  vel_grad_trial);
               //get the solution at current time
               ck.valFromDOF(h_dof,
 			    &h_l2g[eN_nDOF_trial_element],
@@ -1738,6 +1757,19 @@ namespace proteus
 			    &vel_l2g[eN_nDOF_trial_element],
 			    &vel_trial_ref[k*nDOF_trial_element],
 			    hv_old);
+	      //get the solution gradients at quad points
+	      ck.gradFromDOF(h_dof_old,
+			     &h_l2g[eN_nDOF_trial_element],
+			     h_grad_trial,
+			     grad_h_old);
+	      ck.gradFromDOF(hu_dof,
+			     &vel_l2g[eN_nDOF_trial_element],
+			     vel_grad_trial,
+			     grad_hu);
+	      ck.gradFromDOF(hv_dof,
+			     &vel_l2g[eN_nDOF_trial_element],
+			     vel_grad_trial,
+			     grad_hv);
               // calculate cell based CFL to keep a reference
               calculateCFL(elementDiameter[eN],
                            g,
@@ -1748,8 +1780,11 @@ namespace proteus
                            q_cfl[eN_k]);
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
-                h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
-
+		{
+		  h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
+		  for (int I=0;I<nSpace;I++)
+		    vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;
+		}
               // SAVE VELOCITY // at quadrature points for other models to use
               q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
               q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
@@ -1757,12 +1792,29 @@ namespace proteus
               hunp1_at_quad_point[eN_k] = hu;
               hvnp1_at_quad_point[eN_k] = hv;
 
+	      double one_over_hReg = 2*h_old/(h_old*h_old+std::pow(fmax(h_old,hEps),2)); //hEps
+	      double u_old = one_over_hReg * hu_old;
+	      double v_old = one_over_hReg * hv_old;
+
               for(int i=0;i<nDOF_test_element;i++)
                 {
+		  register int i_nSpace=i*nSpace;
                   // compute time derivative part of global residual. NOTE: no lumping
                   elementResidual_h[i]  += (h  - h_old)*h_test_dV[i];
-                  elementResidual_hu[i] += (hu - hu_old)*h_test_dV[i];
-                  elementResidual_hv[i] += (hv - hv_old)*h_test_dV[i];
+                  elementResidual_hu[i] +=
+		    (hu - hu_old)*h_test_dV[i] + viscosity*one_over_hReg*(ck.NumericalDiffusion(1.0,
+												grad_hu,
+												&vel_grad_test_dV[i_nSpace])
+									  - u_old * ck.NumericalDiffusion(1.0,
+												      grad_h_old,
+												      &vel_grad_test_dV[i_nSpace]));
+                  elementResidual_hv[i] +=
+		    (hv - hv_old)*h_test_dV[i] + viscosity*one_over_hReg*(ck.NumericalDiffusion(1.0,
+												grad_hv,
+												&vel_grad_test_dV[i_nSpace])
+									  - v_old * ck.NumericalDiffusion(1.0,
+													  grad_h_old,
+													  &vel_grad_test_dV[i_nSpace]));
                 }
             }
           // distribute
@@ -2340,7 +2392,13 @@ namespace proteus
                              int* csrColumnOffsets_eb_hv_h,
                              int* csrColumnOffsets_eb_hv_hu,
                              int* csrColumnOffsets_eb_hv_hv,
-                             double dt)
+                             double dt,
+			     // for viscosity
+			     double viscosity,
+			     double hEps,
+			     double* h_dof_old,
+			     double* hu_dof_old,
+			     double* hv_dof_old)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -2366,12 +2424,14 @@ namespace proteus
 
               //declare local storage
               register double
+		h_old,
                 jac[nSpace*nSpace],
                 jacDet,
                 jacInv[nSpace*nSpace],
                 dV,
                 h_test_dV[nDOF_test_element],
                 vel_test_dV[nDOF_test_element],
+		vel_grad_trial[nDOF_trial_element*nSpace], vel_grad_test_dV[nDOF_test_element*nSpace],
                 x,y,xt,yt;
               //get jacobian, etc for mapping reference element
               ck.calculateMapping_element(eN,
@@ -2386,12 +2446,24 @@ namespace proteus
                                           x,y);
               //get the physical integration weight
               dV = fabs(jacDet)*dV_ref[k];
+	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				  jacInv,
+				  vel_grad_trial);
+	      // get the solution at the lstage
+	      ck.valFromDOF(h_dof_old,
+			    &h_l2g[eN_nDOF_trial_element],
+			    &h_trial_ref[k*nDOF_trial_element],
+			    h_old);
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 {
                   h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
                   vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element+j]*dV;
+		  for (int I=0;I<nSpace;I++)
+		    vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;
                 }
+
+	      double one_over_hReg = 2*h_old/(h_old*h_old+std::pow(fmax(h_old,hEps),2)); //hEps
               for(int i=0;i<nDOF_test_element;i++)
                 {
                   register int i_nSpace = i*nSpace;
@@ -2399,8 +2471,16 @@ namespace proteus
                     {
                       register int j_nSpace = j*nSpace;
                       elementJacobian_h_h[i][j] += h_trial_ref[k*nDOF_trial_element+j]*h_test_dV[i];
-                      elementJacobian_hu_hu[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
-                      elementJacobian_hv_hv[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
+                      elementJacobian_hu_hu[i][j] +=
+			vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i]
+			+ viscosity*one_over_hReg*ck.NumericalDiffusionJacobian(1.0,
+										&vel_grad_trial[j_nSpace],
+										&vel_grad_test_dV[i_nSpace]);
+                      elementJacobian_hv_hv[i][j] +=
+			vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i]
+			+ viscosity*one_over_hReg*ck.NumericalDiffusionJacobian(1.0,
+										&vel_grad_trial[j_nSpace],
+										&vel_grad_test_dV[i_nSpace]);
                     }//j
                 }//i
             }//k

@@ -211,7 +211,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                double * hBT,
                                double * huBT,
                                double * hvBT,
-                               int lstage)
+                               int lstage,
+                               double viscosity)
         void calculateMassMatrix(double * mesh_trial_ref,
                                  double * mesh_grad_trial_ref,
                                  double * mesh_dof,
@@ -317,7 +318,12 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                  int * csrColumnOffsets_eb_v_h,
                                  int * csrColumnOffsets_eb_v_u,
                                  int * csrColumnOffsets_eb_v_v,
-                                 double dt)
+                                 double dt,
+                                 double viscosity,
+                                 double hEps,
+                                 double * h_dof_old,
+                                 double * hu_dof_old,
+                                 double * hv_dof_old)
         void calculateLumpedMassMatrix(double * mesh_trial_ref,
                                        double * mesh_grad_trial_ref,
                                        double * mesh_dof,
@@ -737,7 +743,8 @@ cdef class cSW2DCV_base:
                           numpy.ndarray hBT,
                           numpy.ndarray huBT,
                           numpy.ndarray hvBT,
-                          int lstage):
+                          int lstage,
+                          double viscosity):
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -866,7 +873,8 @@ cdef class cSW2DCV_base:
                                        < double * > hBT.data,
                                        < double * > huBT.data,
                                        < double * > hvBT.data,
-                                       lstage)
+                                       lstage,
+                                       viscosity)
     def calculateMassMatrix(self,
                             numpy.ndarray mesh_trial_ref,
                             numpy.ndarray mesh_grad_trial_ref,
@@ -973,7 +981,12 @@ cdef class cSW2DCV_base:
                             numpy.ndarray csrColumnOffsets_eb_v_h,
                             numpy.ndarray csrColumnOffsets_eb_v_u,
                             numpy.ndarray csrColumnOffsets_eb_v_v,
-                            double dt):
+                            double dt,
+                            double viscosity,
+                            double hEps,
+                            numpy.ndarray h_dof_old,
+                            numpy.ndarray hu_dof_old,
+                            numpy.ndarray hv_dof_old):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateMassMatrix(< double*> mesh_trial_ref.data,
@@ -1081,8 +1094,12 @@ cdef class cSW2DCV_base:
                                           < int * > csrColumnOffsets_eb_v_h.data,
                                           < int * > csrColumnOffsets_eb_v_u.data,
                                           < int * > csrColumnOffsets_eb_v_v.data,
-                                          dt)
-
+                                          dt,
+                                         viscosity,
+                                         hEps,
+                                         < double * > h_dof_old.data,
+                                         < double * > hu_dof_old.data,
+                                         < double * > hv_dof_old.data)
     def calculateLumpedMassMatrix(self,
                                   numpy.ndarray mesh_trial_ref,
                                   numpy.ndarray mesh_grad_trial_ref,

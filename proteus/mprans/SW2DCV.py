@@ -240,6 +240,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(self,
                  bathymetry,
+                 viscosity=0.0,
                  nu=1.004e-6,
                  g=9.8,
                  nd=2,
@@ -254,6 +255,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  mannings=0.,
                  forceStrongConditions=True,
                  constrainedDOFs=None):
+        self.viscosity=viscosity
         self.forceStrongConditions=forceStrongConditions
         self.constrainedDOFs=constrainedDOFs
         self.bathymetry = bathymetry
@@ -1293,7 +1295,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hBT,
             self.huBT,
             self.hvBT,
-            self.timeIntegration.lstage)
+            self.timeIntegration.lstage,
+            # for viscosity
+            self.coefficients.viscosity)
 
         self.COMPUTE_NORMALS = 0
         if self.forceStrongConditions:
@@ -1418,7 +1422,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 0)],
             self.csrColumnOffsets_eb[(2, 1)],
             self.csrColumnOffsets_eb[(2, 2)],
-            self.timeIntegration.dt)
+            self.timeIntegration.dt,
+            # for viscosity
+            self.coefficients.viscosity,
+            self.hEps,
+            self.h_dof_old,
+            self.hu_dof_old,
+            self.hv_dof_old)
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
