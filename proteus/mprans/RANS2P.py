@@ -709,6 +709,28 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
+
+        #calculating kinetic energy
+        self.model.q['speed']=self.model.q['speed']*0.0; 
+        for i in range(0,self.model.nSpace_global):
+            self.model.q['speed'] += numpy.multiply(self.model.q[('velocity',0)][:,:,i],self.model.q[('velocity',0)][:,:,i]) 
+        self.model.q['KE'] = 0.5*numpy.multiply(self.model.q['rho'],self.model.q['speed'])
+        KE = Norms.scalarDomainIntegral(self.model.q['dV'],
+                                        self.model.q['KE'],
+                                        self.model.mesh.nElements_owned)
+        logEvent("Pre-step NS, Kinetic Energy = %.15e" % (KE), level=0)
+        #import pdb; pdb.set_trace()
+        #self.model.q['PE'] = numpy.multiply(self.model.q['x'],self.model.coefficients.g)
+        #self.model.q['PE'] = numpy.sum(self.model.q['PE'],2)
+        #self.model.q['PE'] = numpy.abs(numpy.multiply(self.model.q['PE'],self.model.q['rho']))
+        #PE = Norms.scalarDomainIntegral(self.model.q['dV'],
+        #                                self.model.q['PE'],
+        #                                self.model.mesh.nElements_owned)
+
+        #logEvent("Pre-step NS, Potential Energy = %12.5e" % (PE), level=0)
+        #logEvent("Pre-step NS, Total Energy = %12.5e" % (PE+KE), level=0)
+
+        #pass
         if self.nParticles > 0 and self.use_ball_as_particle == 0:
             self.phi_s[:] = 1e10
             self.phisField[:] = 1e10
@@ -737,6 +759,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
                             self.ebq_particle_velocity_s[ebN,kb,:] = vel(self.model.ebq_global['x'][ebN,kb])
+
         # if self.comm.isMaster():
         # print "wettedAreas"
         # print self.wettedAreas[:]
@@ -748,6 +771,24 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
+        self.model.q['speed']=self.model.q['speed']*0.0; 
+        for i in range(0,self.model.nSpace_global):
+            self.model.q['speed'] += numpy.multiply(self.model.q[('velocity',0)][:,:,i],self.model.q[('velocity',0)][:,:,i]) 
+        self.model.q['KE'] = 0.5*numpy.multiply(self.model.q['rho'],self.model.q['speed'])
+        KE = Norms.scalarDomainIntegral(self.model.q['dV'],
+                                        self.model.q['KE'],
+                                        self.model.mesh.nElements_owned)
+        logEvent("Post-step NS, Kinetic Energy = %.15e" % (KE), level=0)
+        #import pdb; pdb.set_trace()
+        #self.model.q['PE'] = numpy.multiply(self.model.q['x'],self.model.coefficients.g)
+        #self.model.q['PE'] = numpy.sum(self.model.q['PE'],2)
+        #self.model.q['PE'] = numpy.abs(numpy.multiply(self.model.q['PE'],self.model.q['rho']))
+        #PE = Norms.scalarDomainIntegral(self.model.q['dV'],
+        #                                self.model.q['PE'],
+        #                                self.model.mesh.nElements_owned)
+
+        #logEvent("Post-step NS, Potential Energy = %12.5e" % (PE), level=0)
+        #logEvent("Post-step NS, Total Energy = %12.5e" % (PE+KE), level=0)
         if self.comm.isMaster():
             logEvent("wettedAreas\n"+
                      repr(self.wettedAreas[:]) +
@@ -987,6 +1028,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('m', 1)] = self.q[('u', 1)]
         self.q[('m', 2)] = self.q[('u', 2)]
         self.q[('m', 3)] = self.q[('u', 3)]
+        self.q['KE'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['PE'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['speed'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['rho'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 2)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')

@@ -19,7 +19,7 @@ my_chbody.SetPos(...)
 my_chbody.SetRot(...)
 
 # pass the index of the boundaries (or particle index) where forces must be integrated
-my_protchbody.setIndexBoundary(i_start=1, i_end=5)
+my_protchbody.setIndexBoundary([0, 1, 2, 3])
 # alternatively, if you use a Shape instance from proteus.SpatialTools
 # the boundaries indice will be set automatically after calling SpatialTools.assembleDomain()
 my_protchbody.setShape(my_shape)
@@ -104,6 +104,9 @@ cdef class ProtChBody:
         self.adams_vel = np.zeros((5, 3))
         self.Aij = np.zeros((6, 6))  # added mass array
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
+        self.useIBM = False
+        self.Aij_factor = 1.
+        self.boundaryFlags = None
         self.setName(b'rigidbody')
 
     def attachShape(self,
@@ -261,24 +264,30 @@ cdef class ProtChBody:
         deref(deref(self.thisptr.body).GetCollisionModel()).SetEnvelope(envelope)
         deref(deref(self.thisptr.body).GetCollisionModel()).SetSafeMargin(margin)
 
-    def setIndexBoundary(self, i_start, i_end=None):
+    def setBoundaryFlags(self, flags):
         """Sets the flags of the boundaries of the body
         numbers must be gloabal (from domain.segmentFlags or
-        domain.facetFlags) and a range from i_start to i_end.
+        domain.facetFlags).
 
         Parameters
         ----------
-        i_start: int
-            first global flag of body boundaries
-        i_end: int
-            last global flag (+1) of body boundaries. If i_end is None, it will
-            only take as single index i_start
+        flags: array_like
+            list of flags that belong to this body
         """
-        self.i_start = i_start
-        if i_end is None:
-            self.i_end = i_start+1
-        else:
-            self.i_end = i_end
+        self.boundaryFlags = np.array(flags, 'i')
+
+    def setIBM(self, useIBM=True, radiusIBM=0.):
+        """Sets IBM mode for retrieving fluid forces
+
+        Parameters
+        ----------
+        useIBM: bool
+            set if IBM should be used
+        radiusIBM: double
+            radius of the particle for IBM
+        """
+        self.useIBM = useIBM
+        self.radiusIBM = radiusIBM
 
     def setWidth2D(self, width):
         """Sets width of 2D body (for forces and moments calculation)
@@ -579,13 +588,13 @@ cdef class ProtChBody:
         F_p: array_like
             pressure forces (x, y, z) as provided by Proteus
         """
-        i0, i1 = self.i_start, self.i_end
-        if self.ProtChSystem.model_module == "RANS2P":
-            F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
-        elif self.ProtChSystem.model_module == "RANS3PF":
-            F_p = self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netForces[i0:i1, :]
-        F_t = np.sum(F_p, axis=0)
-        return F_t
+        F_p = np.zeros(3)
+        for flag in self.boundaryFlags:
+            if self.useIBM:
+                F_p += self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netForces[flag]
+            else:
+                F_p += self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_p[flag]
+        return F_p
 
     def getShearForces(self):
         """Gives shear forces from fluid (Proteus) acting on body
@@ -596,13 +605,13 @@ cdef class ProtChBody:
         F_v: array_like
             shear forces (x, y, z) as provided by Proteus
         """
-        if self.ProtChSystem.model_module == "RANS2P":
-            i0, i1 = self.i_start, self.i_end
-            F_v = self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
-        elif self.ProtChSystem.model_module == "RANS3PF":
-            F_v = np.zeros(3)
-        F_t = np.sum(F_v, axis=0)
-        return F_t
+        F_v = np.zeros(3)
+        if self.useIBM:
+            pass
+        else:
+            for flag in self.boundaryFlags:
+                F_v += self.ProtChSystem.model.levelModelList[-1].coefficients.netForces_v[flag]
+        return F_v
 
     def getMoments(self):
         """Gives moments from fluid (Proteus) acting on body
@@ -613,11 +622,12 @@ cdef class ProtChBody:
         M: array_like
             moments (x, y, z) as provided by Proteus
         """
-        i0, i1 = self.i_start, self.i_end
-        if self.ProtChSystem.model_module == "RANS2P":
-            M = self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
-        if self.ProtChSystem.model_module == "RANS3PF":
-            M = self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netMoments[i0:i1, :]
+        M = np.zeros(3)
+        for flag in self.boundaryFlags:
+            if self.useIBM:
+                M += self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netMoments[flag]
+            else:
+                M += self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[flag]
         M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
@@ -661,14 +671,18 @@ cdef class ProtChBody:
                 # getting added mass matrix
                 self.Aij[:] = 0
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
-                for i in range(self.i_start, self.i_end):
-                    self.Aij += am.Aij[i]
+                for flag in self.boundaryFlags:
+                    if self.useIBM:
+                        self.Aij += am.coefficients.particle_Aij[flag]
+                    else:
+                        self.Aij += am.Aij[flag]
                 if self.width_2D:
                     self.Aij *= self.width_2D
             # setting added mass
             if self.applyAddedMass is True:
                 Aij = np.zeros((6,6))
                 Aij[:] = self.Aij[:]
+                Aij *= self.Aij_factor
                 self.setAddedMass(Aij)
             self.setExternalForces()
 
@@ -783,8 +797,26 @@ cdef class ProtChBody:
         self.thisptr.pos_last = pos_last
         if self.ProtChSystem.model_addedmass is not None:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
-            am.barycenters[self.i_start:self.i_end] = pyvec2array(self.ChBody.GetPos())
+            for flag in self.boundaryFlags:
+                am.barycenters[flag] = pyvec2array(self.ChBody.GetPos())
         self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
+        if self.useIBM and self.ProtChSystem.model is not None:
+            chpos = self.ChBody.GetPos()
+            chvel = self.ChBody.GetPos_dt()
+            chvel_ang = self.ChBody.GetWvel_loc()
+            c = self.ProtChSystem.model.levelModelList[-1].coefficients
+            for flag in self.boundaryFlags:
+                c.ball_radius[flag] = self.radiusIBM
+                c.ball_center[flag, 0] = chpos.x
+                c.ball_center[flag, 1] = chpos.y
+                c.ball_center[flag, 2] = chpos.z
+                c.ball_velocity[flag, 0] = chvel.x
+                c.ball_velocity[flag, 1] = chvel.y
+                c.ball_velocity[flag, 2] = chvel.z
+                c.ball_angular_velocity[flag, 0] = chvel_ang.x
+                c.ball_angular_velocity[flag, 1] = chvel_ang.y
+                c.ball_angular_velocity[flag, 2] = chvel_ang.z
+
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
@@ -852,6 +884,11 @@ cdef class ProtChBody:
             self.barycenter0 = pyvec2array(self.ChBody.GetPos())
         self.position_last[:] = pyvec2array(self.ChBody.GetPos())
         self.position[:] = pyvec2array(self.ChBody.GetPos())
+        # check if IBM and set index if not set previously by user
+        if self.useIBM:
+            if self.boundaryFlags is None:
+                self.setBoundaryFlags([self.ProtChSystem.nBodiesIBM])
+            self.ProtChSystem.nBodiesIBM += 1
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
@@ -1272,7 +1309,7 @@ cdef class ProtChBody:
                                  "Topology",
                                  {"Type": Xdmf_ElementTopology,
                                   "NumberOfElements": str(Xdmf_NumberOfElements)})
-        
+
         elements = ET.SubElement(topology,
                                  "DataItem",
                                  {"Format": dataItemFormat,
@@ -1297,7 +1334,7 @@ cdef class ProtChBody:
             f.write(bytes(xmlHeader,"utf-8"))
             indentXML(tree.getroot())
             tree.write(f)
-        
+
         # dump xml str in h5 file
         hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
         f = h5py.File(hdfFileName, 'a')
@@ -1425,11 +1462,6 @@ cdef class ProtChSystem:
         """Attaches Proteus model to auxiliary variable
         """
         c = model.levelModelList[-1].coefficients
-        assert "RANS3PF" in c.__module__ or "RANS2P" in c.__module__, "Wrong model attached to body for FSI: must be RANS2P or RANS3PF, got {model}".format(model=c.__module__)
-        if "RANS3PF" in c.__module__:
-            self.model_module = "RANS3PF"
-        elif "RANS2P" in c.__module__:
-            self.model_module = "RANS2P"
         self.model = model
         return self
 
@@ -1548,6 +1580,7 @@ cdef class ProtChSystem:
                 self.femSpace_pressure = self.u[0].femSpace
                 self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         if not self.initialised:
+            self.nBodiesIBM = 0  # will be incremented by bodies calculate_init()
             Profiling.logEvent("Starting init"+str(self.next_sample))
             self.directory = bytes(Profiling.logDir+str("/"),'utf-8')
             self.thisptr.setDirectory(self.directory)
@@ -1556,6 +1589,22 @@ cdef class ProtChSystem:
             Profiling.logEvent("Setup initial"+str(self.next_sample))
             self.ChSystem.SetupInitial()
             Profiling.logEvent("Finished init"+str(self.next_sample))
+            if self.nBodiesIBM > 0:
+                assert self.model is not None, 'IBM set to be used in bodies but model is not attached. Attach rans model BEFORE calling calculate_init() on chrono system'
+                c = self.model.levelModelList[-1].coefficients
+                # set it only if it was not set manually before
+                if not c.nParticles:
+                    c.nParticles = self.nBodiesIBM
+                else:
+                    assert c.nParticles == self.nBodiesIBM, 'number of RANS particles {nP} != number of IBM bodies {nB}'.format(nP=c.nParticles, nB=self.nBodiesIBM)
+                if c.ball_radius is None:
+                    c.ball_radius = np.zeros(self.nBodiesIBM, 'd')
+                if c.ball_center is None:
+                    c.ball_center = np.zeros((self.nBodiesIBM, 3), 'd')
+                if c.ball_velocity is None:
+                    c.ball_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
+                if c.ball_angular_velocity is None:
+                    c.ball_angular_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
             for s in self.subcomponents:
                 s.poststep()
             self.initialised = True
