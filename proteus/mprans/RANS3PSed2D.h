@@ -3571,14 +3571,20 @@ namespace proteus
                                      dmom_w_ham_grad_p,          
                                      dmom_w_ham_grad_w);          
 
-        // Want to insert entropy density production rate here
+        // Want to insert entropy density production rate here (..?)
 				// (es betahat (v^w-v^s)-(betahat*nut/sigma grad(es))) \vdot (v^w - v^s)
-				// es 		: solid volume fractions
+				// es 		  : solid volume fractions          vos
+        // grad(es) : gradient of es                  grad_vos
 				// betahat	: drag coefficient
-				// v^a		: macroscale velocity of phase a
-				// nut		: turbulent viscosity
-				// p^w		: macroscale pressure of fluid
-				// sigma	: schmidt number
+				// v^a		  : macroscale velocity of phase a  u,v
+				// nut		  : turbulent viscosity
+				// p^w		  : macroscale pressure of fluid    p
+				// sigma	  : schmidt number
+        //
+        // Questions:
+        // 1. Should all these variables have the index wrt k? (e.g.: u[k])
+        //    1a. How do the grad_vos indicies work? 
+        // 2. Should entropy production be declared in local storage (starting ~line 3313)?
 
         //VRANS
                 mass_source = q_mass_source[eN_k];
