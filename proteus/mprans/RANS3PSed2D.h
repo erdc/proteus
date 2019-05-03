@@ -3570,7 +3570,17 @@ namespace proteus
                                      mom_w_ham,
                                      dmom_w_ham_grad_p,          
                                      dmom_w_ham_grad_w);          
-                //VRANS
+
+        // Want to insert entropy density production rate here
+				// (es betahat (v^w-v^s)-(betahat*nut/sigma grad(es))) \vdot (v^w - v^s)
+				// es 		: solid volume fractions
+				// betahat	: drag coefficient
+				// v^a		: macroscale velocity of phase a
+				// nut		: turbulent viscosity
+				// p^w		: macroscale pressure of fluid
+				// sigma	: schmidt number
+
+        //VRANS
                 mass_source = q_mass_source[eN_k];
                 for (int I=0;I<nSpace;I++)
                   {
