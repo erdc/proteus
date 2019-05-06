@@ -1853,7 +1853,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         if self.n.nl_atol_res is None:
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = self.n.nl_atol_res
+            self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
