@@ -64,7 +64,7 @@ namespace equivalent_polynomials
     _D   = 0.0;
     unsigned int iDOF    = 0;
     register double x_pow_i=1.0;
-    for(int i=0; i < nP+1; i++)
+    for(int i=0; i < nP+1; i++, iDOF++)
       {
         register double psi=x_pow_i;
         _H   += C_H[iDOF]*psi;
@@ -85,7 +85,7 @@ namespace equivalent_polynomials
     for(int i=0; i < nP+1; i++)
       {
         register double y_pow_j=1.0;
-        for(int j=0; j < nP+1-i; j++)
+        for(int j=0; j < nP+1-i; j++, iDOF++)
           {
             register double psi=x_pow_i*y_pow_j;
             _H   += C_H[iDOF]*psi;
@@ -189,9 +189,7 @@ namespace equivalent_polynomials
       {
         Jt_dphi_dx[I] = 0.0;
         for(int J=0; J < nSpace; J++)
-          {
-            Jt_dphi_dx[I] += Jac[J*nSpace + I]*level_set_normal[J];
-          }
+          Jt_dphi_dx[I] += Jac[J*nSpace + I]*level_set_normal[J];
       }
     for (int i=0; i < nDOF; i++)
       {
@@ -203,7 +201,9 @@ namespace equivalent_polynomials
             C_H[i]   += Ainv[i*nDOF + j]*b_H[j];
             C_ImH[i] += Ainv[i*nDOF + j]*b_ImH[j];
             for (int I=0; I < nSpace; I++)
-              C_D[i]   -= Ainv[i*nDOF + j]*b_dH[j*nSpace+I]/Jt_dphi_dx[I];
+              {
+                C_D[i]   -= Ainv[i*nDOF + j]*b_dH[j*nSpace+I]/Jt_dphi_dx[I];
+              }
           }
       }
   }
@@ -305,14 +305,18 @@ namespace equivalent_polynomials
           return 1;
         else
           {
-            root_node = p_i;
-            inside_out = true;
+            if (nSpace > 1)
+              {
+                root_node = p_i;
+                inside_out = true;
+              }
+            else
+              root_node = n_i;
           }
       }
     else if(ncount == 1)
       {
         root_node = n_i;
-        inside_out = false;
       }
     else
       {
@@ -331,7 +335,7 @@ namespace equivalent_polynomials
     for(int i=0; i < nN; i++)
       {
         phi[i] = phi_dof[permutation[i]];
-        for(int I=0; I < nSpace; I++)
+        for(int I=0; I < 3; I++)
           {
             nodes[i*3 + I] = phi_nodes[permutation[i]*3 + I];//nodes always 3D
           }
@@ -348,7 +352,7 @@ namespace equivalent_polynomials
         for(int i=0; i < nN; i++)
           {
             phi[i] = phi_dof[permutation[i]];
-            for(int I=0; I < nSpace; I++)
+            for(int I=0; I < 3; I++)
               {
                 nodes[i*3 + I] = phi_nodes[permutation[i]*3 + I];//nodes always 3D
               }
@@ -373,7 +377,7 @@ namespace equivalent_polynomials
             X_0[i] = 0.5 - 0.5*(phi[i+1] + phi[0])/(phi[i+1]-phi[0]);
             assert(X_0[i] <=1.0);
             assert(X_0[i] >=0.0);
-            for (int I=0; I < nSpace; I++)
+            for (int I=0; I < 3; I++)
               {
                 phys_nodes_cut[i*3 + I] = (1-X_0[i])*nodes[I] + X_0[i]*nodes[(i+1)*3+I];
               }
@@ -382,7 +386,7 @@ namespace equivalent_polynomials
           {
             assert(phi[i+1] == 0.0);
             X_0[i] = 1.0;
-            for (int I=0; I < nSpace; I++)
+            for (int I=0; I < 3; I++)
               {
                 phys_nodes_cut[i*3 + I] = nodes[(i+1)*3+I];
               }
