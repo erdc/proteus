@@ -115,8 +115,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
   nsd = m->getDimension();
 
   //***** Get Solution Fields First *****//
-  //apf::Field* voff = m->findField("vof");
-  //assert(voff);
+  apf::Field* voff = m->findField("vof");
+  assert(voff);
   apf::Field* velf = m->findField("velocity");
   assert(velf);
   apf::Field* pref = m->findField("p");
@@ -135,7 +135,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
   if(PCU_Comm_Self()==0)
     std::cout<<"Got the solution fields\n";
   //***** Compute the viscosity field *****//
-  //apf::Field* visc = getViscosityField(voff);
+  apf::Field* visc = getViscosityField(voff);
   if(PCU_Comm_Self()==0)
     std::cout<<"Got viscosity fields \n";
   freeField(vmsErrH1);
@@ -185,8 +185,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     pres_elem = apf::createElement(pref,element);
     velo_elem = apf::createElement(velf,element);
     velo_elem_old = apf::createElement(velf_old,element);
-    //visc_elem = apf::createElement(visc,element);
-    //vof_elem = apf::createElement(voff,element);
+    visc_elem = apf::createElement(visc,element);
+    vof_elem = apf::createElement(voff,element);
     
     double strongResidualTauL2;
     double tau_m;
@@ -250,7 +250,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
       double pressure = apf::getScalar(pres_elem,qpt);
       apf::Vector3 grad_pres;
       apf::getGrad(pres_elem,qpt,grad_pres);
-      double visc_val = 0.0;//apf::getScalar(visc_elem,qpt);
+      double visc_val = apf::getScalar(visc_elem,qpt);
       apf::Vector3 vel_vect;
       apf::getVector(velo_elem,qpt,vel_vect);
       apf::Matrix3x3 grad_vel;
@@ -288,8 +288,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
           tempConv[i] = tempConv[i] + vel_vect[j]*grad_vel[i][j];
         }
       }
-      //double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
-      double density = rho[localNumber(ent)];
+      double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       apf::Vector3 tempResidual = (tempConv + grad_pres/density);
       double tempVal = tempResidual.getLength();
       strongResidualTauL2 = tau_m*tau_m*tempVal*tempVal*weight*Jdet;
@@ -323,9 +322,9 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     Inputs info;
     info.element = element;
     info.pres_elem = pres_elem;
-    //info.visc_elem = visc_elem;
+    info.visc_elem = visc_elem;
     info.velo_elem = velo_elem;
-    //info.vof_elem = vof_elem;
+    info.vof_elem = vof_elem;
     info.velo_elem_old = velo_elem_old;
     info.KJ = KJ;
     info.nsd = nsd;
@@ -422,11 +421,11 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     VMSerrTotalL2 = VMSerrTotalL2+VMSerrL2*VMSerrL2;
     VMSerrTotalH1 = VMSerrTotalH1+VMSerrH1*VMSerrH1;
 
-    //apf::destroyElement(visc_elem);
+    apf::destroyElement(visc_elem);
     apf::destroyElement(pres_elem);
     apf::destroyElement(velo_elem);
     apf::destroyElement(velo_elem_old);
-    //apf::destroyElement(vof_elem);
+    apf::destroyElement(vof_elem);
     apf::destroyMeshElement(element);
     count++;
   } //end loop over elements
@@ -438,7 +437,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     total_error = sqrt(VMSerrTotalH1);
     total_error_out = sqrt(VMSerrTotalH1);
     apf::destroyField(vmsErr);
-    //apf::destroyField(visc);
+    apf::destroyField(visc);
 
     getTotalLinearMomentum();
     apf::writeVtkFiles("CurrentErrorComputation",m);

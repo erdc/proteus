@@ -717,8 +717,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   while( (ent_invert = m->iterate(it_invert) ) )
   {
     apf::setScalar(size_iso_invert,ent_invert,0,1.0/apf::getScalar(size_iso,ent_invert,0));
-    //double vofVal = apf::getScalar(m->findField("vof"),ent_invert,0);
-    double vofVal=0.0;
+    double vofVal = apf::getScalar(m->findField("vof"),ent_invert,0);
     apf::setScalar(density,ent_invert,0,getMPvalue(vofVal,998.2,1.205));
     //hack size field
 /*
@@ -1130,9 +1129,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 
   }
 */
-  std::cout<<"Right here\n";
-  //free(rho);
-  //free(nu);
+  free(rho);
+  free(nu);
   return 0;
 }
 
