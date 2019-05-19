@@ -499,6 +499,8 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
 void MeshAdaptPUMIDrvr::isotropicIntersect()
 {
   freeField(size_iso);
+  if(m->findField("proteus_size"))
+    apf::destroyField(m->findField("proteus_size"));
   size_iso = apf::createFieldOn(m, "proteus_size", apf::SCALAR);
 
   apf::MeshEntity *vert;

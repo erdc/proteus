@@ -67,10 +67,14 @@ class MeshAdaptPUMIDrvr{
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
   int gradeMesh();
+  int setSphereSizeField();
+  int loadMeshForAnalytic(const char* meshFile,double* boxDim,double* sphereCenter, double radius);
+  gmi_model* createSphereInBox(int boxDim,apf::Vector3 sphereCenter,double radius);
 
   //Quality Check Functions
   double getMinimumQuality();
   double getTotalMass();
+  double getTotalLinearMomentum();
 
   //Functions that help facilitate computations
   double getMPvalue(double field_val,double val_0, double val_1); //get the multiphase value of physical properties
@@ -150,9 +154,12 @@ class MeshAdaptPUMIDrvr{
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
   apf::Field* vmsErrH1; //error field for VMS
+  apf::Field* nuErr; //error field for VMS
+  apf::Field* strongResidual; //error field for VMS
   apf::Field* errRho_reg; //error-density field from ERM
   apf::Field* errRel_reg; //relative error field from ERM
   apf::Field* error_reference;
+  apf::Field* error_reference_instantaneous;
   /* this field stores isotropic size */
   apf::Field* size_iso;
   /* these fields store anisotropic size and metric tensor */
@@ -185,6 +192,7 @@ class MeshAdaptPUMIDrvr{
   int target_element_count; //How many elements in the mesh are desired?
   double domainVolume; //Volume of the domain
   double THRESHOLD; //threshold of error before adapt
+  void getSolutionCorrection(apf::Mesh*m);
 };
 
 

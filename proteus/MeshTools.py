@@ -779,6 +779,32 @@ class Mesh(object):
         elementErrorValues.text = ar.hdfFilename+":/"+"elementError"+"_t"+str(tCount)
         ar.create_dataset_sync("elementError"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementError[:self.nElements_owned])
 
+        strongResidual = SubElement(self.arGrid,"Attribute",{"Name":"strongResidual",
+                                                      "AttributeType":"Vector",
+                                                                           "Center":"Cell"})
+        strongResidualValues = SubElement(strongResidual,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i %i" % (self.globalMesh.nElements_global,3)})
+        strongResidualValues.text = ar.hdfFilename+":/"+"strongResidual"+"_t"+str(tCount)
+
+        residualVector = numpy.column_stack((self.strongResidual[0],self.strongResidual[1],self.strongResidual[2]))
+        ar.create_dataset_sync("strongResidual"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=residualVector[:self.nElements_owned])
+
+        nu_err = SubElement(self.arGrid,"Attribute",{"Name":"nu_err",
+                                                      "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+        nu_errValues = SubElement(nu_err,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+        nu_errValues.text = ar.hdfFilename+":/"+"nu_err"+"_t"+str(tCount)
+        ar.create_dataset_sync("nu_err"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.nu_err[:self.nElements_owned])
+
+
+
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection is not None:
             init = False

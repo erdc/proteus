@@ -150,7 +150,9 @@ PROTEUS_SCOREC_LIBS = [
     'zoltan',
     'parmetis',
     'metis',
-    'sam']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+['bz2']#+['ptscotch','scotch','bz2']
+    'sam',
+    'apf_omega_h',
+    'omega_h']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+['bz2','z']#+['ptscotch','scotch','bz2']
 
 PROTEUS_SCOREC_EXTRA_LINK_ARGS = []
 PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = ['-g','-DMESH_INFO']

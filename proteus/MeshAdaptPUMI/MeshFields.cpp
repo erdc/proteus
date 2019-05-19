@@ -129,6 +129,7 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
   nsd = m->getDimension();
   //rho = &(rho_p[0]);
   //nu=&(nu_p[0]);
+
   rho = (double*) calloc(m->count(m->getDimension()),sizeof(double));
   nu = (double*) calloc(m->count(m->getDimension()),sizeof(double));
   for(int eID = 0; eID<m->count(m->getDimension()); eID++)
