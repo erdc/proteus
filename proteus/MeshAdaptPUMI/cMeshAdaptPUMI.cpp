@@ -873,7 +873,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->debugFolder = "./debug_testAdapt";
-  //in->goodQuality = 0.16;//0.027;
+  in->goodQuality = 0.064;//0.027;
   //double mass_before = getTotalMass();
   
   //m->writeNative("beforeMesh.smb");
@@ -881,12 +881,14 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   //ma::adapt(in);
   std::cout<<"Begin adapt!\n";
 
+/*
   if(nAdapt == 4)
   {
     //std::abort();
     ma::adaptSwap(in,edgeForSwap_target);
   }
   else 
+*/
     ma::adaptVerbose(in,false);
 
 
@@ -1067,7 +1069,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   }  
 */
 
-
 /*
   if(nAdapt==6)
   {
@@ -1166,6 +1167,7 @@ void MeshAdaptPUMIDrvr::getSolutionCorrection(apf::Mesh* m)
     apf::NewArray <apf::DynamicVector> shdrv;
   
     apf::Field* velf = m->findField("velocity");
+    //apf::Field* velf = m->findField("velocity_old");
 
     int nsd = m->getDimension();
     apf::MeshIterator* iter = m->begin(nsd); //loop over elements

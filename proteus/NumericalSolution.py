@@ -829,19 +829,19 @@ class NS_base(object):  # (HasTraits):
         #shock capturing depends on m_tmp or m_last (if lagged). m_tmp is modified by mass-correction and is pushed into m_last during updateTimeHistory().
         #This leads to a situation where m_last comes from the mass-corrected solutions so post-step is needed to get this behavior.
         #If adapt is called after the first time-step, then skip the post-step for the old solution
-        #if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ) 
-        #  or self.opts.hotStart):
+        if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ) 
+          or self.opts.hotStart):
 
-        #    for idx in [3,4]:
-        #        model = self.modelList[idx]
-        #        self.preStep(model)
-        #        self.setWeakDirichletConditions(model)
-        #        model.stepController.setInitialGuess(model.uList,model.rList)
-        #        solverFailed = model.solver.solveMultilevel(uList=model.uList,
-        #                                            rList=model.rList,
-        #                                            par_uList=model.par_uList,
-        #                                            par_rList=model.par_rList)
-        #        self.postStep(model)
+            for idx in [3,4]:
+                model = self.modelList[idx]
+                self.preStep(model)
+                self.setWeakDirichletConditions(model)
+                model.stepController.setInitialGuess(model.uList,model.rList)
+                solverFailed = model.solver.solveMultilevel(uList=model.uList,
+                                                    rList=model.rList,
+                                                    par_uList=model.par_uList,
+                                                    par_rList=model.par_rList)
+                self.postStep(model)
 
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -870,17 +870,17 @@ class NS_base(object):  # (HasTraits):
                     self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
         ###need to re-distance and mass correct
-        #if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12) or self.opts.hotStart  ):
-        #    for idx in [3,4]:
-        #        model = self.modelList[idx]
-        #        self.preStep(model)
-        #        self.setWeakDirichletConditions(model)
-        #        model.stepController.setInitialGuess(model.uList,model.rList)
-        #        solverFailed = model.solver.solveMultilevel(uList=model.uList,
-        #                                                    rList=model.rList,
-        #                                                    par_uList=model.par_uList,
-        #                                                    par_rList=model.par_rList)
-        #        self.postStep(model)
+        if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12) or self.opts.hotStart  ):
+            for idx in [3,4]:
+                model = self.modelList[idx]
+                self.preStep(model)
+                self.setWeakDirichletConditions(model)
+                model.stepController.setInitialGuess(model.uList,model.rList)
+                solverFailed = model.solver.solveMultilevel(uList=model.uList,
+                                                            rList=model.rList,
+                                                            par_uList=model.par_uList,
+                                                            par_rList=model.par_rList)
+                self.postStep(model)
 
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -918,7 +918,7 @@ class NS_base(object):  # (HasTraits):
                     else:
                         lm.u[ci].dof[:] = lm.u[ci].dof_last_last
                 lm.setFreeDOF(lu)
-
+                lm.getResidual(lu,lr)
                 if(hasattr(lm.timeIntegration,"dtLast") and lm.timeIntegration.dtLast is not None):
                     lm.timeIntegration.dt = lm.timeIntegration.dtLast
                 m.stepController.setInitialGuess(m.uList,m.rList)
@@ -1184,6 +1184,7 @@ class NS_base(object):  # (HasTraits):
                 self.PUMI_redoVelocity(modelListOld)
                 self.PUMI_transferFields()
                 p0.domain.PUMIMesh.writeMesh("REDOVelocity_after")
+                self.PUMI_recomputeStructures(modelListOld)
 
 
             #This logic won't account for if final step doesn't match frequency or if adapt isn't being called
@@ -1223,20 +1224,19 @@ class NS_base(object):  # (HasTraits):
         #pass through heaviside function to get material property
         from proteus.ctransportCoefficients import smoothedHeaviside
         
-        modelIdx = 0 #was 2 before
-        IEN = self.modelList[modelIdx].levelModelList[0].u[0].femSpace.dofMap.l2g
+        IEN = self.modelList[2].levelModelList[0].u[0].femSpace.dofMap.l2g
         for (eID, dofs) in enumerate(IEN):
             phi_val = 0.0
             for idx in range(len(dofs)):
-                phi_val += materialSpace.psi[0][idx]*self.modelList[modelIdx].levelModelList[0].u[0].dof[dofs[idx]]
+                phi_val += materialSpace.psi[0][idx]*self.modelList[2].levelModelList[0].u[0].dof[dofs[idx]]
             #rho_transfer[eID] = phi_val
             
             #heaviside
             h_phi=0.0;
             for idx in range(len(dofs)):
-                h_phi += (materialSpace.psi[0][idx])*(self.modelList[modelIdx].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
+                h_phi += (materialSpace.psi[0][idx])*(self.modelList[2].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
             eps_rho = p0.ct.epsFact_density*h_phi
-            smoothed_phi_val = 0.0#smoothedHeaviside(eps_rho,phi_val)
+            smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
 
             rho_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.rho_0 + smoothed_phi_val*self.pList[0].ct.rho_1
             nu_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.nu_0 + smoothed_phi_val*self.pList[0].ct.nu_1
@@ -1251,9 +1251,8 @@ class NS_base(object):  # (HasTraits):
         for m in self.modelList:
             for lm in m.levelModelList:
                 lm.u_store = copy.deepcopy(lm.u)
-        if(len(self.modelList) > 1):
-            self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
-            self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
+        self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
+        self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
     
         logEvent("Copying DOF and parameters to PUMI")
         for m in self.modelList:
@@ -1312,7 +1311,8 @@ class NS_base(object):  # (HasTraits):
         if(hasattr(self,"tn")):
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
-            deltaT = self.systemStepController.dt_system 
+            deltaT = self.modelList[0].levelModelList[0].timeIntegration.dtLast
+            #deltaT = self.systemStepController.dt_system 
             T_current = self.systemStepController.t_system
         else:
             deltaT = 0.0
@@ -1449,8 +1449,6 @@ class NS_base(object):  # (HasTraits):
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
-              if(self.nSolveSteps % p0.domain.PUMIMesh.numAdaptSteps()==0):
-                adaptMeshNow=True
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
@@ -1616,20 +1614,19 @@ class NS_base(object):  # (HasTraits):
 
         from proteus.ctransportCoefficients import smoothedHeaviside
         
-        modelIdx = 0 #was 2 before
-        IEN = self.modelList[modelIdx].levelModelList[0].u[0].femSpace.dofMap.l2g
+        IEN = self.modelList[2].levelModelList[0].u[0].femSpace.dofMap.l2g
         for (eID, dofs) in enumerate(IEN):
             phi_val = 0.0
             for idx in range(len(dofs)):
-                phi_val += materialSpace.psi[0][idx]*self.modelList[modelIdx].levelModelList[0].u[0].dof[dofs[idx]]
+                phi_val += materialSpace.psi[0][idx]*self.modelList[2].levelModelList[0].u[0].dof[dofs[idx]]
             #rho_transfer[eID] = phi_val
             
             #heaviside
             h_phi=0.0;
             for idx in range(len(dofs)):
-                h_phi += (materialSpace.psi[0][idx])*(self.modelList[modelIdx].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
+                h_phi += (materialSpace.psi[0][idx])*(self.modelList[2].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
             eps_rho = p0.epsFact_density*h_phi
-            smoothed_phi_val = 0.0#smoothedHeaviside(eps_rho,phi_val)
+            smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
 
             rho_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.rho_0 + smoothed_phi_val*self.pList[0].ct.rho_1
             nu_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.nu_0 + smoothed_phi_val*self.pList[0].ct.nu_1
@@ -1637,7 +1634,8 @@ class NS_base(object):  # (HasTraits):
         if(hasattr(self,"tn")):
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
-            deltaT = self.systemStepController.dt_system 
+            #deltaT = self.systemStepController.dt_system 
+            deltaT = self.modelList[0].levelModelList[0].timeIntegration.dtLast
             T_current = self.systemStepController.t_system
         else:
             deltaT = 0.0
@@ -2176,14 +2174,6 @@ class NS_base(object):  # (HasTraits):
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
 
-                #if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
-                #    self.tCount+=1
-                #    for index,model in enumerate(self.modelList):
-                #        self.archiveSolution(model,index,self.systemStepController.t_system_last)
-
-                #can only handle PUMIDomain's for now
-                #if(self.tn < 0.05):
-                #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 import gc; gc.collect()
 
@@ -2224,9 +2214,6 @@ class NS_base(object):  # (HasTraits):
                             self.archiveSolution(model, index, self.systemStepController.t_system_last+2.0e-7)
 
                 else:
-                    if(self.pList[0].domain.PUMIMesh.nAdapt() == 6):
-                        import sys; sys.exit();
-
                     for model in self.modelList:
                         for av in self.auxiliaryVariables[model.name]:
                             av.calculate()
@@ -2235,6 +2222,15 @@ class NS_base(object):  # (HasTraits):
                         for index,model in enumerate(self.modelList):
                             self.archiveSolution(model,index,self.systemStepController.t_system_last)
 
+
+                #if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+                #    self.tCount+=1
+                #    for index,model in enumerate(self.modelList):
+                #        self.archiveSolution(model,index,self.systemStepController.t_system_last)
+
+                #can only handle PUMIDomain's for now
+                #if(self.tn < 0.05):
+                #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
 
                 #if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
                 #    self.tCount+=1
