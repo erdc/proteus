@@ -844,6 +844,7 @@ namespace proteus
                                                double gradC_z)
       {
         double rhoFluid, muFluid,nuFluid,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+        double entropyProduction;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
         nuFluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rhoFluid  = rho_0*(1.0-H_mu)+rho_1*H_mu;
@@ -886,6 +887,20 @@ namespace proteus
         /*      dmom_w_source[0] = 0.0;
                 dmom_w_source[1] = 0.0;
                 dmom_w_source[2] = new_beta;*/
+        
+        // Want to insert entropy density production rate here (..?)
+				// (es betahat (v^w-v^s)-(betahat*nut/sigma grad(es))) \vdot (v^w - v^s)
+				// es 		  : solid volume fractions          vos
+        // grad(es) : gradient of es                  gradC_x,y,z
+				// betahat	: drag coefficient                new_beta
+				// v^a		  : macroscale velocity of phase a  u,v,w,u_f,v_f,w_f
+				// nut		  : turbulent viscosity             nu_t
+				// p^w		  : macroscale pressure of fluid    p
+				// sigma	  : schmidt number                  closure.sigmaC_
+        //
+        // entropyProduction = (vos * new_beta) * (u-u_f)*(u-u_f) - (new_beta * nu_t - p)*gradC_x/closure.sigmaC_*(u-u_f);
+        // entropyProduction += (vos * new_beta) * (v-v_f)*(v-v_f) - (new_beta * nu_t - p)*gradC_y/closure.sigmaC_*(v-v_f);
+        // entropyProduction += (vos * new_beta) * (w-w_f)*(w-w_f) - (new_beta * nu_t - p)*gradC_z/closure.sigmaC_*(w-w_f);
       }
 
 
@@ -3570,21 +3585,6 @@ namespace proteus
                                      mom_w_ham,
                                      dmom_w_ham_grad_p,          
                                      dmom_w_ham_grad_w);          
-
-        // Want to insert entropy density production rate here (..?)
-				// (es betahat (v^w-v^s)-(betahat*nut/sigma grad(es))) \vdot (v^w - v^s)
-				// es 		  : solid volume fractions          vos
-        // grad(es) : gradient of es                  grad_vos
-				// betahat	: drag coefficient
-				// v^a		  : macroscale velocity of phase a  u,v
-				// nut		  : turbulent viscosity
-				// p^w		  : macroscale pressure of fluid    p
-				// sigma	  : schmidt number
-        //
-        // Questions:
-        // 1. Should all these variables have the index wrt k? (e.g.: u[k])
-        //    1a. How do the grad_vos indicies work? 
-        // 2. Should entropy production be declared in local storage (starting ~line 3313)?
 
         //VRANS
                 mass_source = q_mass_source[eN_k];
