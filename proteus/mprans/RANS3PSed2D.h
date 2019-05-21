@@ -841,10 +841,11 @@ namespace proteus
                                                double dmom_w_source[nSpace],
                                                double gradC_x,
                                                double gradC_y,
-                                               double gradC_z)
+                                               double gradC_z,
+                                               double p,
+                                               double& entropyProduction)
       {
         double rhoFluid, muFluid,nuFluid,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
-        double entropyProduction;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
         nuFluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rhoFluid  = rho_0*(1.0-H_mu)+rho_1*H_mu;
@@ -889,7 +890,7 @@ namespace proteus
                 dmom_w_source[2] = new_beta;*/
         
         // Want to insert entropy density production rate here (..?)
-				// (es betahat (v^w-v^s)-(betahat*nut/sigma grad(es))) \vdot (v^w - v^s)
+				// (es betahat (v^w-v^s)-(betahat*nut/sigma - p^w)* grad(es)) \vdot (v^w - v^s)
 				// es 		  : solid volume fractions          vos
         // grad(es) : gradient of es                  gradC_x,y,z
 				// betahat	: drag coefficient                new_beta
@@ -898,9 +899,10 @@ namespace proteus
 				// p^w		  : macroscale pressure of fluid    p
 				// sigma	  : schmidt number                  closure.sigmaC_
         //
-        // entropyProduction = (vos * new_beta) * (u-u_f)*(u-u_f) - (new_beta * nu_t - p)*gradC_x/closure.sigmaC_*(u-u_f);
-        // entropyProduction += (vos * new_beta) * (v-v_f)*(v-v_f) - (new_beta * nu_t - p)*gradC_y/closure.sigmaC_*(v-v_f);
-        // entropyProduction += (vos * new_beta) * (w-w_f)*(w-w_f) - (new_beta * nu_t - p)*gradC_z/closure.sigmaC_*(w-w_f);
+        // The pressure term wasn't originally in this function, but has been set to pass it in now (5/21/19).
+         entropyProduction = (vos * new_beta) * (u-u_f)*(u-u_f) - (new_beta * nu_t - p)*gradC_x/closure.sigmaC_*(u-u_f);
+         entropyProduction += (vos * new_beta) * (v-v_f)*(v-v_f) - (new_beta * nu_t - p)*gradC_y/closure.sigmaC_*(v-v_f);
+         entropyProduction += (vos * new_beta) * (w-w_f)*(w-w_f) - (new_beta * nu_t - p)*gradC_z/closure.sigmaC_*(w-w_f);
       }
 
 
@@ -1785,6 +1787,7 @@ namespace proteus
                   p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
                   p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
                   dV,x,y,z,xt,yt,zt,
+                  entropyProduction=0.0,
                   //
                   vos,
                   //meanGrainSize,
@@ -2001,7 +2004,9 @@ namespace proteus
                                                   dmom_w_source,
                                                   q_grad_vos[eN_k_nSpace+0],
                                                   q_grad_vos[eN_k_nSpace+1],
-                                                  q_grad_vos[eN_k_nSpace+1]);
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  p,
+                                                  entropyProduction);
 
 		updateFrictionalPressure(vos,
                                          grad_vos,
@@ -3418,6 +3423,7 @@ namespace proteus
                   p_test_dV[nDOF_test_element],vel_test_dV[nDOF_test_element],
                   p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
                   x,y,z,xt,yt,zt,
+                  entropyProduction=0.0,
                   //VRANS
                   vos,
                   //meanGrainSize,
@@ -3632,7 +3638,9 @@ namespace proteus
                                                   dmom_w_source,
                                                   q_grad_vos[eN_k_nSpace+0],
                                                   q_grad_vos[eN_k_nSpace+1],
-                                                  q_grad_vos[eN_k_nSpace+1]);
+                                                  q_grad_vos[eN_k_nSpace+1],
+                                                  p,
+                                                  entropyProduction);
 
                 double mu_fr_tmp=0.0;
 		updateFrictionalPressure(vos,
