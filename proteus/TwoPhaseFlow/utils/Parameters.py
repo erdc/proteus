@@ -550,10 +550,10 @@ class ParametersModelRANS2P(ParametersModelBase):
             self.OptDB.setValue(prefix+'fieldsplit_pressure_ksp_type', 'preonly')
             self.OptDB.setValue('innerTPPCDsolver_Qp_visc_ksp_type', 'preonly')
             self.OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_type', 'lu')
-            self.OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_fact0r_mat_solver_type', 'superlu_dist')
+            self.OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type', 'superlu_dist')
             self.OptDB.setValue('innerTPPCDsolver_Qp_dens_ksp_type', 'preonly')
             self.OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_type', 'lu')
-            self.OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_fact0r_mat_solver_type', 'superlu_dist')
+            self.OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type', 'superlu_dist')
             self.OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_type', 'richardson')
             self.OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_max_it', 1)
             #self.OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space',1)
@@ -963,7 +963,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_increment_AFBC']}
             self.p.diffusiveFluxBoundaryConditions = {0:{0: BC['pressure_increment_DFBC']}}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].pInt_dirichlet.uOfXT}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].pInc_dirichlet.uOfXT}
             self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].pInc_advective.uOfXT}
             self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.BCbyFlag[flag].pInc_diffusive.uOfXT}}
         # freeze attributes
@@ -1853,7 +1853,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         if self.n.nl_atol_res is None:
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = self.n.nl_atol_res
+            self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
