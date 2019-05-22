@@ -2,8 +2,13 @@ from __future__ import print_function
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .ls_vortex_2d_p import *
-from .vortex2D import *
+try:
+    from .ls_vortex_2d_p import *
+    from .vortex2D import *
+except:
+    from ls_vortex_2d_p import *
+    from vortex2D import *
+    
 nd = 2
 
 if timeIntegration_ls == "be":

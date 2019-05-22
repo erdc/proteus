@@ -5,6 +5,7 @@
 #include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include "equivalent_polynomials.h"
 #include PROTEUS_LAPACK_H
 
 namespace proteus
@@ -20,6 +21,7 @@ namespace proteus
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
                                    int* mesh_l2g,
+                                   double* x_ref,
                                    double* dV_ref,
                                    double* u_trial_ref,
                                    double* u_grad_trial_ref,
@@ -46,6 +48,7 @@ namespace proteus
                                    double* elementDiameter,
                                    double* nodeDiametersArray,
                                    double* u_dof,
+                                   double* phi_dof,
                                    double* q_phi,
                                    double* q_normal_phi,
                                    double* ebqe_phi,
@@ -68,6 +71,7 @@ namespace proteus
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
                                    int* mesh_l2g,
+                                   double* x_ref,
                                    double* dV_ref,
                                    double* u_trial_ref,
                                    double* u_grad_trial_ref,
@@ -93,6 +97,7 @@ namespace proteus
                                    double* elementDiameter,
                                    double* nodeDiametersArray,
                                    double* u_dof,
+                                   double* phi_dof,
                                    double* q_phi,
                                    double* q_normal_phi,
                                    double* q_H,
@@ -254,6 +259,7 @@ namespace proteus
 			       double* mesh_grad_trial_ref,
 			       double* mesh_dof,
 			       int* mesh_l2g,
+                               double* x_ref,
 			       double* dV_ref,
 			       double* u_trial_ref,
 			       double* u_grad_trial_ref,
@@ -279,6 +285,7 @@ namespace proteus
 			       double* elementDiameter,
 			       double* nodeDiametersArray,
 			       double* u_dof,
+			       double* phi_dof,
 			       double* q_phi,
 			       double* q_normal_phi,
 			       double* ebqe_phi,
@@ -302,6 +309,7 @@ namespace proteus
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
                                    int* mesh_l2g,
+                                   double* x_ref,
                                    double* dV_ref,
                                    double* u_trial_ref,
                                    double* u_grad_trial_ref,
@@ -456,6 +464,8 @@ namespace proteus
     {
     public:
       CompKernelType ck;
+      equivalent_polynomials::Simplex<nSpace,1,nQuadraturePoints_element> eqp;
+      equivalent_polynomials::Simplex<nSpace,1,nDOF_trial_element> eqp_nodes;
     MCorr():ck()
 	{}
       inline double smoothedHeaviside(double eps, double phi)
@@ -511,8 +521,8 @@ namespace proteus
 				  double& r,
 				  double& dr)
       {
-	r = porosity*(smoothedHeaviside(epsHeaviside,phi+u) - H);
-	dr = porosity*smoothedDirac(epsDirac,phi+u);
+	r = porosity*(eqp.H - H);
+	dr = porosity*eqp.D;
       }
 
       inline void calculateElementResidual(//element
@@ -587,6 +597,7 @@ namespace proteus
 	      u_grad_test_dV[nDOF_test_element*nSpace],
 	      dV,x,y,z,
 	      G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+            eqp.set_quad(k);
 	    //
 	    //compute solution and gradients at quadrature points
 	    //
@@ -686,6 +697,7 @@ namespace proteus
 			     double* mesh_grad_trial_ref,
 			     double* mesh_dof,
 			     int* mesh_l2g,
+                             double* x_ref,
 			     double* dV_ref,
 			     double* u_trial_ref,
 			     double* u_grad_trial_ref,
@@ -712,6 +724,7 @@ namespace proteus
 			     double* elementDiameter,
 			     double* nodeDiametersArray,
 			     double* u_dof,
+			     double* phi_dof,
 			     double* q_phi,
 			     double* q_normal_phi,
 			     double* ebqe_phi,
@@ -743,12 +756,21 @@ namespace proteus
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
 	    //declare local storage for element residual and initialize
-	    register double elementResidual_u[nDOF_test_element],element_u[nDOF_trial_element];
+	    register double elementResidual_u[nDOF_test_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element];
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
 		element_u[i] = u_dof[u_l2g[eN_i]];
+		element_phi[i] = phi_dof[u_l2g[eN_i]] + element_u[i];
 	      }//i
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            eqp.calculate(element_phi, element_nodes, x_ref);
 	    calculateElementResidual(mesh_trial_ref,
 				     mesh_grad_trial_ref,
 				     mesh_dof,
@@ -950,7 +972,7 @@ namespace proteus
 	    int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
 	      eN_k_nSpace = eN_k*nSpace;
 	    //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
-
+            eqp.set_quad(k);
 	    //declare local storage
 	    register double u=0.0,
 	      grad_u[nSpace],
@@ -1050,6 +1072,7 @@ namespace proteus
 			     double* mesh_grad_trial_ref,
 			     double* mesh_dof,
 			     int* mesh_l2g,
+			     double* x_ref,
 			     double* dV_ref,
 			     double* u_trial_ref,
 			     double* u_grad_trial_ref,
@@ -1074,6 +1097,7 @@ namespace proteus
 			     int* u_l2g,
                              double* elementDiameter,
 			     double* nodeDiametersArray,
+			     double* phi_dof,
 			     double* u_dof,
 			     // double* u_trial,
 			     // double* u_grad_trial,
@@ -1091,12 +1115,21 @@ namespace proteus
 	//
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
-	    register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element];
+	    register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element];
 	    for (int j=0;j<nDOF_trial_element;j++)
 	      {
 		register int eN_j = eN*nDOF_trial_element+j;
 		element_u[j] = u_dof[u_l2g[eN_j]];
+		element_phi[j] = phi_dof[u_l2g[eN_j]] + element_u[j];
 	      }
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            eqp.calculate(element_phi, element_nodes, x_ref);
 	    calculateElementJacobian(mesh_trial_ref,
 				     mesh_grad_trial_ref,
 				     mesh_dof,
@@ -1811,6 +1844,7 @@ namespace proteus
 			 double* mesh_grad_trial_ref,
 			 double* mesh_dof,
 			 int* mesh_l2g,
+                         double* x_ref,
 			 double* dV_ref,
 			 double* u_trial_ref,
 			 double* u_grad_trial_ref,
@@ -1836,6 +1870,7 @@ namespace proteus
 			 double* elementDiameter,
 			 double* nodeDiametersArray,
 			 double* u_dof,
+			 double* phi_dof,
 			 double* q_phi,
 			 double* q_normal_phi,
 			 double* ebqe_phi,
@@ -1860,6 +1895,21 @@ namespace proteus
 	  {
 	    double epsHeaviside;
 	    //loop over quadrature points and compute integrands
+	    //declare local storage for element residual and initialize
+	    register double element_phi[nDOF_trial_element];
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
+		element_phi[i] = phi_dof[u_l2g[eN_i]];
+	      }//i
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            eqp.calculate(element_phi, element_nodes, x_ref);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
@@ -1875,6 +1925,7 @@ namespace proteus
 		  //u_grad_test_dV[nDOF_test_element*nSpace],
 		  dV,x,y,z,
 		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+                eqp.set_quad(k);
 		//
 		//compute solution and gradients at quadrature points
 		//
@@ -1906,7 +1957,7 @@ namespace proteus
 		/*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		*globalMass += smoothedHeaviside(epsHeaviside,q_phi[eN_k])*dV;
+		*globalMass += eqp.H*dV;
 	      }//k
 	  }//elements
       }
@@ -1916,6 +1967,7 @@ namespace proteus
 			     double* mesh_grad_trial_ref,
 			     double* mesh_dof,
 			     int* mesh_l2g,
+			     double* x_ref,
 			     double* dV_ref,
 			     double* u_trial_ref,
 			     double* u_grad_trial_ref,
@@ -1964,6 +2016,22 @@ namespace proteus
 	  {
 	    double epsHeaviside;
 	    //loop over quadrature points and compute integrands
+	    //declare local storage for element residual and initialize
+	    register double element_phi[nDOF_trial_element];
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
+		element_phi[i] = phi_dof[phi_l2g[eN_i]];
+	      }//i
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            eqp.calculate(element_phi, element_nodes, x_ref);
+            eqp_nodes.calculate(element_phi, element_nodes, element_nodes);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
@@ -1982,6 +2050,7 @@ namespace proteus
 		//
 		//compute solution and gradients at quadrature points
 		//
+                eqp.set_quad(k);
 		ck.calculateMapping_element(eN,
 					    k,
 					    mesh_dof,
@@ -2012,15 +2081,16 @@ namespace proteus
 
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		q_H[eN_k] = q_porosity[eN_k]*smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
+		q_H[eN_k] = q_porosity[eN_k]*eqp.H;
 	      }//k
 	    // distribute rhs for mass correction
 	    for (int i=0;i<nDOF_trial_element;i++)
 	      {
+                eqp_nodes.set_quad(i);
 		int eN_i = eN*nDOF_trial_element + i;
 		int gi = phi_l2g[eN_i];
 		epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
-		H_dof [gi] = smoothedHeaviside(epsHeaviside,phi_dof[gi]);//cek hack, only works if H and phi in same FEM space, but we can fix by passing in H_l2g
+		H_dof [gi] = eqp_nodes.H;
 	      }
 	  }//elements
       }
