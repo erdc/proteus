@@ -645,7 +645,7 @@ namespace proteus
 	    abort();
 	}
       //return fmax(fmax(0.,-lambda1), fmax(0,lambda3));
-      return fmax(lambda1, lambda3);
+      return fmax(fabs(lambda1), fabs(lambda3));
     }
 
     inline
