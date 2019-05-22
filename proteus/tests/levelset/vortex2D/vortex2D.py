@@ -5,7 +5,7 @@ from past.utils import old_div
 parallel = False
 linearSmoother = None
 #compute mass balance statistics or not
-checkMass=False#True
+checkMass=True
 #number of space dimensions
 nd=2
 #time integration, not relevant if using BDF with cfl timestepping
@@ -42,7 +42,7 @@ hk = 0.2
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=1
+lRefinement=3
 #tag simulation name to level of refinement
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*10+1
@@ -73,7 +73,7 @@ onlyVOF=False#True
 #eps
 epsFactHeaviside=epsFactDirac=epsFact_vof=1.5*hk
 epsFactRedistance=0.33
-epsFactDiffusion=10.0
+epsFactDiffusion=100.0
 #
 if useMetrics:
     shockCapturingFactor_vof=0.5

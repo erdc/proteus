@@ -3,7 +3,10 @@ from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
-from .vortex2D import *
+try:
+    from .vortex2D import *
+except:
+    from vortex2D import *
 from proteus.mprans import VOF
 name=soname+"_vof"
 

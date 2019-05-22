@@ -3,8 +3,12 @@ from __future__ import division
 from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
-from .redist_vortex_2d_p import *
-from .vortex2D import *
+try:
+    from .redist_vortex_2d_p import *
+    from .vortex2D import *
+except:
+    from redist_vortex_2d_p import *
+    from vortex2D import *
 
 if redist_Newton:
     timeIntegration = NoIntegration
