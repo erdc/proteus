@@ -954,7 +954,7 @@ class NS_base(object):  # (HasTraits):
         #logEvent("Attach auxiliary variables to new models")
 
 
-    def PUMI2Proteus(self):
+    def PUMI2Proteus(self,domain):
         #p0 = self.pList[0] #This can probably be cleaned up somehow
         #n0 = self.nList[0]
         p0 = self.pList[0]
@@ -1041,7 +1041,7 @@ class NS_base(object):  # (HasTraits):
                      coef.vectorName+"_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last[:] = vector[:,vci]
-              p0.domain.PUMIMesh.transferFieldToProteus(
+              domain.PUMIMesh.transferFieldToProteus(
                      coef.vectorName+"_old_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last_last[:] = vector[:,vci]
@@ -1057,7 +1057,7 @@ class NS_base(object):  # (HasTraits):
                 domain.PUMIMesh.transferFieldToProteus(
                     coef.variableNames[ci]+"_old", scalar)
                 lm.u[ci].dof_last[:] = scalar[:,0]
-                p0.domain.PUMIMesh.transferFieldToProteus(
+                domain.PUMIMesh.transferFieldToProteus(
                     coef.variableNames[ci]+"_old_old", scalar)
                 lm.u[ci].dof_last_last[:] = scalar[:,0]
 
@@ -1502,7 +1502,7 @@ class NS_base(object):  # (HasTraits):
                              dim = domain.nd)
   
         self.PUMI_reallocate(mesh)
-        self.PUMI2Proteus()
+        self.PUMI2Proteus(domain)
       ##chitak end Adapt
 
     ## compute the solution
@@ -1527,7 +1527,7 @@ class NS_base(object):  # (HasTraits):
         self.PUMIcheckpointer.DecodeModel(self.pList[0].domain.checkpointInfo)
       
       self.PUMI_reallocate(mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
-      self.PUMI2Proteus()
+      self.PUMI2Proteus(self.pList[0].domain)
 
     def calculateSolution(self,runName):
         """ Cacluate the PDEs numerical solution.
