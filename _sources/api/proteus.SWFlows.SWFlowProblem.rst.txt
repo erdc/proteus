@@ -1,0 +1,7 @@
+proteus.SWFlows.SWFlowProblem module
+====================================
+
+.. automodule:: proteus.SWFlows.SWFlowProblem
+    :members:
+    :undoc-members:
+    :show-inheritance:

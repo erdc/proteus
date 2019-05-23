@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>proteus.mprans.MoveMeshMonitor module &#8212; Proteus 1.6.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="proteus.mprans.NCLS module" href="proteus.mprans.NCLS.html" />
+    <link rel="prev" title="proteus.mprans.MoveMesh module" href="proteus.mprans.MoveMesh.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.mprans.MoveMeshMonitor module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.mprans.MoveMesh.html" title="Previous Chapter: proteus.mprans.MoveMesh module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.mpran...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.mprans.NCLS.html" title="Next Chapter: proteus.mprans.NCLS module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.mpran... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.mprans.MoveMeshMonitor">
+<span id="proteus-mprans-movemeshmonitor-module"></span><h1>proteus.mprans.MoveMeshMonitor module<a class="headerlink" href="#module-proteus.mprans.MoveMeshMonitor" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients">
+<em class="property">class </em><code class="descclassname">proteus.mprans.MoveMeshMonitor.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>func</em>, <em>he_min</em>, <em>he_max</em>, <em>ME_MODEL</em>, <em>LS_MODEL=None</em>, <em>nd=2</em>, <em>fixedNodeMaterialTypes=None</em>, <em>fixedElementMaterialTypes=None</em>, <em>noNodeVelocityNodeMaterialTypes=None</em>, <em>nSmoothOut=0</em>, <em>nSmoothIn=0</em>, <em>epsFact_density=0</em>, <em>epsTimeStep=1.0</em>, <em>ntimes_solved=1</em>, <em>grading=1.1</em>, <em>grading_type=0</em>, <em>resetNodeVelocityArray=True</em>, <em>scale_with_nd=False</em>, <em>do_firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.PoissonEquationCoefficients" title="proteus.TransportCoefficients.PoissonEquationCoefficients"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.PoissonEquationCoefficients</span></code></a></p>
+<p>Coefficients for deforming the mesh according to an area function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>func</strong> (<em>function</em>) – function of x defining element area</li>
+<li><strong>he_min</strong> (<em>double</em>) – minimum characteristic element size</li>
+<li><strong>he_max</strong> (<em>double</em>) – maximum characteristic element size</li>
+<li><strong>ME_MODEL</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – index of this model</li>
+<li><strong>LS_MODEL</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – index of LS model for retrieving phi values and refine around free
+surface</li>
+<li><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of dimensions</li>
+<li><strong>fixedNodeMaterialTypes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>[</em><em>:</em><em>]</em>) – array of length of all domain node material types, with indexes
+corresponding to the material type set as: 0 -&gt; not fixed, 1 -&gt; fixed.
+e.g. if nodes of material type 3 should be fixed:
+fixedNodeMaterialTypes[3]=1   (!) must be integers</li>
+<li><strong>fixedElementMaterialTypes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>[</em><em>:</em><em>]</em>) – array of length of all domain element material types, with indexes
+corresponding to the material type set as: 0 -&gt; not fixed, 1 -&gt; fixed.
+all nodes that have at least one element with fixed material type around
+them will be fixed</li>
+<li><strong>noNodeVelocityNodeMaterialTypes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>[</em><em>:</em><em>]</em>) – array of length of all domain node material types, with indexes
+corresponding to the material type set as: 0 -&gt; not fixed, 1 -&gt; fixed.
+e.g. if nodes of material type 3 should not have a node velocity:
+fixedNodeMaterialTypes[3]=1   (!) must be integers</li>
+<li><strong>nSmoothOut</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of smoothing steps after finishing pseudo time stepping</li>
+<li><strong>nSmoothIn</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of smoothing steps after finishing pseudo time stepping</li>
+<li><strong>epsFact_density</strong> (<em>double</em>) – epsFact*he_min where refinement is the same</li>
+<li><strong>epsTimeStep</strong> (<em>double</em>) – pseudo time step size (0 &lt; epsTimeStep &lt;= 1)</li>
+<li><strong>grading</strong> (<em>double</em>) – <p>grading of mesh with distance function. 1.-&gt; no grading, 1.1-&gt;10% increase
+(!) if using grading, func must be a distance function</p>
+<blockquote>
+<div>otherwise func is an area function</div></blockquote>
+</li>
+<li><strong>grading_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – type of grading:
+0 -&gt; no grading
+1 -&gt; hyperbolic
+2 -&gt; log</li>
+<li><strong>resetNodeVelocityArray</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – reset nodeVelocityArray to zero during prestep if true, otherwise adds
+up velocity to the existing node velocity. Can be used as False if this
+model is used in conjunction with another moving mesh model.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.initializeMesh">
+<code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object access to the mesh for any mesh-dependent information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object access to other models in a loosely coupled split operator formulation (e.g. a transport equation for concentration might get velocity from a flow equation)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.preStep">
+<code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object an opportunity to modify itself before the time step.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.postStep">
+<code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the TC object an opportunity to modify itself after the time step.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.uOfX">
+<code class="descname">uOfX</code><span class="sig-paren">(</span><em>x</em>, <em>eN=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.uOfX" title="Permalink to this definition">¶</a></dt>
+<dd><p>reaction term</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.dist_search">
+<code class="descname">dist_search</code><span class="sig-paren">(</span><em>x</em>, <em>node</em>, <em>eN=-1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.dist_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>search element containing containing coords x starting with a guessed
+nearest node</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> (<em>array_like</em>) – coordinates</li>
+<li><strong>node</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – first guess of the nearest node</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.evaluateFunAtX">
+<code class="descname">evaluateFunAtX</code><span class="sig-paren">(</span><em>x</em>, <em>ls_phi=None</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.evaluateFunAtX" title="Permalink to this definition">¶</a></dt>
+<dd><p>reaction term</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.evaluateFunAtNodes">
+<code class="descname">evaluateFunAtNodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.evaluateFunAtNodes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.evaluateFunAtQuadraturePoints">
+<code class="descname">evaluateFunAtQuadraturePoints</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.evaluateFunAtQuadraturePoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.getGradientValue">
+<code class="descname">getGradientValue</code><span class="sig-paren">(</span><em>eN</em>, <em>xi</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.getGradientValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.getAreaValue">
+<code class="descname">getAreaValue</code><span class="sig-paren">(</span><em>eN</em>, <em>xi</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.getAreaValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.MoveMeshMonitor.Coefficients.getLevelSetValue">
+<code class="descname">getLevelSetValue</code><span class="sig-paren">(</span><em>eN</em>, <em>xi</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.Coefficients.getLevelSetValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.mprans.MoveMeshMonitor.calculate_areas">
+<code class="descclassname">proteus.mprans.MoveMeshMonitor.</code><code class="descname">calculate_areas</code><span class="sig-paren">(</span><em>x</em>, <em>detJ</em>, <em>weights</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.calculate_areas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.mprans.MoveMeshMonitor.calculate_area">
+<code class="descclassname">proteus.mprans.MoveMeshMonitor.</code><code class="descname">calculate_area</code><span class="sig-paren">(</span><em>x</em>, <em>detJ</em>, <em>weights</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/MoveMeshMonitor.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.MoveMeshMonitor.calculate_area" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

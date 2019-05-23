@@ -1,0 +1,7 @@
+proteus.SWFlows.utils.SWEs\_so module
+=====================================
+
+.. automodule:: proteus.SWFlows.utils.SWEs_so
+    :members:
+    :undoc-members:
+    :show-inheritance:

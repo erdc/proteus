@@ -1,0 +1,7 @@
+proteus.mbd.CouplingFSI module
+==============================
+
+.. automodule:: proteus.mbd.CouplingFSI
+    :members:
+    :undoc-members:
+    :show-inheritance:

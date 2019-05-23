@@ -1,0 +1,7 @@
+proteus.cfemIntegrals module
+============================
+
+.. automodule:: proteus.cfemIntegrals
+    :members:
+    :undoc-members:
+    :show-inheritance:

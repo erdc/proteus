@@ -1,0 +1,7 @@
+proteus.mprans.MeshSmoothing module
+===================================
+
+.. automodule:: proteus.mprans.MeshSmoothing
+    :members:
+    :undoc-members:
+    :show-inheritance:
