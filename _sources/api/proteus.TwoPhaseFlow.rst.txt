@@ -19,5 +19,4 @@ Submodules
 .. toctree::
 
    proteus.TwoPhaseFlow.TwoPhaseFlowProblem
-   proteus.TwoPhaseFlow.TwoPhaseFlowProblem_backup
 
