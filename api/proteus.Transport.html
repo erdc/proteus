@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.Transport module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.Transport module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -131,8 +132,18 @@
 \[m_t^i + \nabla \cdot (f^i - \sum_k a^{ik} \nabla \phi^k) + H^i(\nabla  u) + r^i = 0 \quad i=0,\ldots,nc-1\]</div>
 <p>The solution is the vector of components <span class="math notranslate nohighlight">\(u=u_0,\ldots,u_{nc-1}\)</span>, and
 the nonlinear coefficients are <span class="math notranslate nohighlight">\(m^i,f^i,a^{ik},\phi^k, H^i\)</span> and <span class="math notranslate nohighlight">\(r^i\)</span>.</p>
-<div class="graphviz"><object data="../_images/inheritance-377c21b04fa21b68e397e34406916a6011359fe7.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.Transport</p></object></div>
+digraph inheritancefc727d2e48 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;MultilevelTransport&quot; [URL=&quot;../api/proteus.Transport.html#proteus.Transport.MultilevelTransport&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Nonlinear ADR on a multilevel mesh&quot;];
+  &quot;newobject&quot; -&gt; &quot;MultilevelTransport&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NonlinearEquation&quot; [URL=&quot;../proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NonlinearEquation&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for nonlinear equations.&quot;];
+  &quot;newobject&quot; -&gt; &quot;NonlinearEquation&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;OneLevelTransport&quot; [URL=&quot;../api/proteus.Transport.html#proteus.Transport.OneLevelTransport&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for finite element discretizations of multicomponent&quot;];
+  &quot;NonlinearEquation&quot; -&gt; &quot;OneLevelTransport&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;StorageSet&quot; [URL=&quot;../api/proteus.Transport.html#proteus.Transport.StorageSet&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.Transport.StorageSet">
 <em class="property">class </em><code class="descclassname">proteus.Transport.</code><code class="descname">StorageSet</code><span class="sig-paren">(</span><em>initializer=[]</em>, <em>shape=(0</em>, <em>)</em>, <em>storageType='d'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.StorageSet" title="Permalink to this definition">¶</a></dt>
@@ -577,11 +588,12 @@ of physics based preconditione</p>
 
 <dl class="class">
 <dt id="proteus.Transport.MultilevelTransport">
-<em class="property">class </em><code class="descclassname">proteus.Transport.</code><code class="descname">MultilevelTransport</code><span class="sig-paren">(</span><em>problem</em>, <em>numerics</em>, <em>mlMesh</em>, <em>OneLevelTransportType=&lt;class proteus.Transport.OneLevelTransport&gt;</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport" title="Permalink to this definition">¶</a></dt>
-<dd><p>Nonlinear ADR on a multilevel mesh</p>
+<em class="property">class </em><code class="descclassname">proteus.Transport.</code><code class="descname">MultilevelTransport</code><span class="sig-paren">(</span><em>problem</em>, <em>numerics</em>, <em>mlMesh</em>, <em>OneLevelTransportType=&lt;class 'proteus.Transport.OneLevelTransport'&gt;</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Nonlinear ADR on a multilevel mesh</p>
 <dl class="method">
 <dt id="proteus.Transport.MultilevelTransport.initialize">
-<code class="descname">initialize</code><span class="sig-paren">(</span><em>nd</em>, <em>mlMesh</em>, <em>TrialSpaceTypeDict</em>, <em>TestSpaceTypeDict</em>, <em>matType</em>, <em>dirichletConditionsSetterDict</em>, <em>coefficients</em>, <em>quadratureDict</em>, <em>elementBoundaryQuadratureDict</em>, <em>fluxBoundaryConditionsDict='noFlow'</em>, <em>advectiveFluxBoundaryConditionsSetterDict={}</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict={}</em>, <em>stressFluxBoundaryConditionsSetterDict={}</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFlux=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=&lt;class proteus.TimeIntegration.BackwardEuler&gt;</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>weakDirichletConditions=None</em>, <em>options=None</em>, <em>useSparseDiffusion=True</em>, <em>movingDomain=False</em>, <em>PhiSpaceTypeDict=None</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>nd</em>, <em>mlMesh</em>, <em>TrialSpaceTypeDict</em>, <em>TestSpaceTypeDict</em>, <em>matType</em>, <em>dirichletConditionsSetterDict</em>, <em>coefficients</em>, <em>quadratureDict</em>, <em>elementBoundaryQuadratureDict</em>, <em>fluxBoundaryConditionsDict='noFlow'</em>, <em>advectiveFluxBoundaryConditionsSetterDict={}</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict={}</em>, <em>stressFluxBoundaryConditionsSetterDict={}</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFlux=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=&lt;class 'proteus.TimeIntegration.BackwardEuler'&gt;</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>weakDirichletConditions=None</em>, <em>options=None</em>, <em>useSparseDiffusion=True</em>, <em>movingDomain=False</em>, <em>PhiSpaceTypeDict=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -628,7 +640,7 @@ possess save methods, otherwise, do nothing.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

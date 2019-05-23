@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.LinearAlgebraTools module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.LinearAlgebraTools module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -130,8 +131,42 @@
 <p>Vectors are just numpy arrays, as are dense matrices. Sparse matrices
 are CSR matrices. Parallel vector and matrix are built on top of those
 representations using PETSc.</p>
-<div class="graphviz"><object data="../_images/inheritance-de2e17bb86345331a94caa78bdd9b9f298be7503.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.LinearAlgebraTools</p></object></div>
+digraph inheritanceb0b43b8140 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;InvOperatorShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.InvOperatorShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A base class for inverse operator shells&quot;];
+  &quot;OperatorShell&quot; -&gt; &quot;InvOperatorShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LSCInv_shell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.LSCInv_shell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Shell class for the LSC Inverse Preconditioner&quot;];
+  &quot;InvOperatorShell&quot; -&gt; &quot;LSCInv_shell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Mat&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Object&quot; -&gt; &quot;Mat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MatrixInvShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.MatrixInvShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A PETSc shell class for a inverse operator.&quot;];
+  &quot;InvOperatorShell&quot; -&gt; &quot;MatrixInvShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MatrixShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.MatrixShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A shell class for a matrix.&quot;];
+  &quot;ProductOperatorShell&quot; -&gt; &quot;MatrixShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Object&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;OperatorShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.OperatorShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A base class for operator shells&quot;];
+  &quot;newobject&quot; -&gt; &quot;OperatorShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ParInfo_petsc4py&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParInfo_petsc4py&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;ARB - this class is experimental.  My idea is to store the&quot;];
+  &quot;newobject&quot; -&gt; &quot;ParInfo_petsc4py&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ParMat_petsc4py&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParMat_petsc4py&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Parallel matrix based on petsc4py's wrappers for PETSc.&quot;];
+  &quot;Mat&quot; -&gt; &quot;ParMat_petsc4py&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ParVec_petsc4py&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Parallel vector using petsc4py's wrappers for PETSc&quot;];
+  &quot;Vec&quot; -&gt; &quot;ParVec_petsc4py&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ProductOperatorShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ProductOperatorShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A base class for shell operators that apply multiplcation.&quot;];
+  &quot;OperatorShell&quot; -&gt; &quot;ProductOperatorShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SpInv_shell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.SpInv_shell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Shell class for the SIMPLE preconditioner which applies the&quot;];
+  &quot;InvOperatorShell&quot; -&gt; &quot;SpInv_shell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SparseMatShell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.SparseMatShell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Build a parallel matrix shell from CSR data structures.&quot;];
+  &quot;newobject&quot; -&gt; &quot;SparseMatShell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;TwoPhase_PCDInv_shell&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Shell class for the two-phase PCD preconditioner.  The&quot;];
+  &quot;InvOperatorShell&quot; -&gt; &quot;TwoPhase_PCDInv_shell&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Vec&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Object&quot; -&gt; &quot;Vec&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;WeightedNorm&quot; [URL=&quot;../api/proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.WeightedNorm&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Compute the weighted norm for time step control (not currently parallel)&quot;];
+  &quot;newobject&quot; -&gt; &quot;WeightedNorm&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc_load_matrix">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">petsc_load_matrix</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_matrix" title="Permalink to this definition">¶</a></dt>
@@ -444,22 +479,6 @@ It would be rare for this routine to be useful for most applications.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="proteus.LinearAlgebraTools.ParVec">
-<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParVec</code><span class="sig-paren">(</span><em>array</em>, <em>blockSize</em>, <em>n</em>, <em>N</em>, <em>nghosts=None</em>, <em>subdomain2global=None</em>, <em>blockVecType='simple'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec" title="Permalink to this definition">¶</a></dt>
-<dd><p>A parallel vector built on top of daetk’s wrappers for petsc</p>
-<dl class="method">
-<dt id="proteus.LinearAlgebraTools.ParVec.scatter_forward_insert">
-<code class="descname">scatter_forward_insert</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec.scatter_forward_insert" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.LinearAlgebraTools.ParVec.scatter_reverse_add">
-<code class="descname">scatter_reverse_add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec.scatter_reverse_add" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParVec_petsc4py">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParVec_petsc4py</code><span class="sig-paren">(</span><em>array=None</em>, <em>bs=None</em>, <em>n=None</em>, <em>N=None</em>, <em>nghosts=None</em>, <em>subdomain2global=None</em>, <em>blockVecType='simple'</em>, <em>ghosts=None</em>, <em>proteus2petsc_subdomain=None</em>, <em>petsc2proteus_subdomain=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">petsc4py.PETSc.Vec</span></code></p>
@@ -510,7 +529,8 @@ ordering to the proteus unknown ordering</li>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParInfo_petsc4py">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParInfo_petsc4py</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParInfo_petsc4py" title="Permalink to this definition">¶</a></dt>
-<dd><p>ARB - this class is experimental.  My idea is to store the
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>ARB - this class is experimental.  My idea is to store the
 information need to constructor parallel vectors and matrices
 here as static class values.  Then ParVec and ParMat can
 use these values to create parallel objects later.</p>
@@ -643,7 +663,8 @@ constructor matrix.</p>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.SparseMatShell">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SparseMatShell</code><span class="sig-paren">(</span><em>ghosted_csr_mat</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build a parallel matrix shell from CSR data structures.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Build a parallel matrix shell from CSR data structures.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -667,7 +688,8 @@ constructor matrix.</p>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.OperatorShell">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">OperatorShell</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell" title="Permalink to this definition">¶</a></dt>
-<dd><p>A base class for operator shells</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A base class for operator shells</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.OperatorShell.create">
 <code class="descname">create</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell.create" title="Permalink to this definition">¶</a></dt>
@@ -876,7 +898,7 @@ is used to approximate the Schur complement.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.SpInv_shell">
-<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SpInv_shell</code><span class="sig-paren">(</span><em>A00</em>, <em>A11</em>, <em>A01</em>, <em>A10</em>, <em>constNullSpace=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SpInv_shell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SpInv_shell</code><span class="sig-paren">(</span><em>A00</em>, <em>A11</em>, <em>A01</em>, <em>A10</em>, <em>constNullSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SpInv_shell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>Shell class for the SIMPLE preconditioner which applies the
 following action:</p>
@@ -1142,7 +1164,8 @@ weight vector h.</p>
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.WeightedNorm">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">WeightedNorm</code><span class="sig-paren">(</span><em>shape</em>, <em>atol</em>, <em>rtol</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the weighted norm for time step control (not currently parallel)</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Compute the weighted norm for time step control (not currently parallel)</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.WeightedNorm.setWeight">
 <code class="descname">setWeight</code><span class="sig-paren">(</span><em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm.setWeight" title="Permalink to this definition">¶</a></dt>
@@ -1170,7 +1193,7 @@ weight vector h.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

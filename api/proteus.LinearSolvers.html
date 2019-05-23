@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.LinearSolvers module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.LinearSolvers module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,91 @@
   <div class="section" id="module-proteus.LinearSolvers">
 <span id="proteus-linearsolvers-module"></span><h1>proteus.LinearSolvers module<a class="headerlink" href="#module-proteus.LinearSolvers" title="Permalink to this headline">¶</a></h1>
 <p>A hierarchy of classes for linear algebraic system solvers.</p>
-<div class="graphviz"><object data="../_images/inheritance-cb18ef9ee55d4feb4920ec06195fb96ef809bac6.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.LinearSolvers</p></object></div>
+digraph inheritance478a470905 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;BlockedDofOrderType&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.BlockedDofOrderType&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Manages the DOF for blocked velocity and pressure ordering.&quot;];
+  &quot;DofOrderInfo&quot; -&gt; &quot;BlockedDofOrderType&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ChebyshevSemiIteration&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.ChebyshevSemiIteration&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Class for implementing the ChebyshevSemiIteration.&quot;];
+  &quot;LinearSolver&quot; -&gt; &quot;ChebyshevSemiIteration&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ConstantNullSpace&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.ConstantNullSpace&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SolverNullSpace&quot; -&gt; &quot;ConstantNullSpace&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DofOrderInfo&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.DofOrderInfo&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for managing DOF ordering information&quot;];
+  &quot;newobject&quot; -&gt; &quot;DofOrderInfo&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;GaussSeidel&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.GaussSeidel&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Damped Gauss-Seidel.&quot;];
+  &quot;LinearSolver&quot; -&gt; &quot;GaussSeidel&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;InterlacedDofOrderType&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.InterlacedDofOrderType&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Manages the DOF for interlaced velocity and pressure ordering.&quot;];
+  &quot;DofOrderInfo&quot; -&gt; &quot;InterlacedDofOrderType&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Jacobi&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.Jacobi&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Damped Jacobi iteration.&quot;];
+  &quot;LinearSolver&quot; -&gt; &quot;Jacobi&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;KSP_Preconditioner&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.KSP_Preconditioner&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for PETSc KSP precondtioners.&quot;];
+  &quot;newobject&quot; -&gt; &quot;KSP_Preconditioner&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;KSP_petsc4py&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.KSP_petsc4py&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class that interfaces Proteus with PETSc KSP.&quot;];
+  &quot;LinearSolver&quot; -&gt; &quot;KSP_petsc4py&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LU&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.LU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A wrapper for pysparse's wrapper for superlu.&quot;];
+  &quot;LinearSolver&quot; -&gt; &quot;LU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LinearSolver&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.LinearSolver&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for linear solvers.&quot;];
+  &quot;newobject&quot; -&gt; &quot;LinearSolver&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MGM&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.MGM&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic multigrid W cycle.&quot;];
+  &quot;MultilevelLinearSolver&quot; -&gt; &quot;MGM&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ModelInfo&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.ModelInfo&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This class stores the model information needed to initialize a&quot;];
+  &quot;newobject&quot; -&gt; &quot;ModelInfo&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelLinearSolver&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.MultilevelLinearSolver&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic multilevel solver.&quot;];
+  &quot;newobject&quot; -&gt; &quot;MultilevelLinearSolver&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NI&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NI&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic nested iteration solver.&quot;];
+  &quot;MultilevelLinearSolver&quot; -&gt; &quot;NI&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokes2D&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokes2D&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;NavierStokesSchur&quot; -&gt; &quot;NavierStokes2D&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokes3D&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokes3D&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;NavierStokesSchur&quot; -&gt; &quot;NavierStokes3D&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesConstantPressure&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokesConstantPressure&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SolverNullSpace&quot; -&gt; &quot;NavierStokesConstantPressure&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesPressureCorrection&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokesPressureCorrection&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;NavierStokesPressureCorrection&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesSchur&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokesSchur&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Schur complement preconditioners for Navier-Stokes problems.&quot;];
+  &quot;SchurPrecon&quot; -&gt; &quot;NavierStokesSchur&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesSchur&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokesSchur&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Schur complement preconditioners for Navier-Stokes problems.&quot;];
+  &quot;SchurPrecon&quot; -&gt; &quot;NavierStokesSchur&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokes_TwoPhasePCD&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.NavierStokes_TwoPhasePCD&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Two-phase PCD Schur complement approximation class.&quot;];
+  &quot;NavierStokesSchur&quot; -&gt; &quot;NavierStokes_TwoPhasePCD&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;OperatorConstructor&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.OperatorConstructor&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for operator constructors.&quot;];
+  &quot;newobject&quot; -&gt; &quot;OperatorConstructor&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;OperatorConstructor_oneLevel&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.OperatorConstructor_oneLevel&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for building common discrete operators from one-level&quot;];
+  &quot;OperatorConstructor&quot; -&gt; &quot;OperatorConstructor_oneLevel&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;OperatorConstructor_rans2p&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.OperatorConstructor_rans2p&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for building common discrete rans2p operators.&quot;];
+  &quot;OperatorConstructor&quot; -&gt; &quot;OperatorConstructor_rans2p&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SchurOperatorConstructor&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.SchurOperatorConstructor&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Generate matrices for use in Schur complement preconditioner operators.&quot;];
+  &quot;newobject&quot; -&gt; &quot;SchurOperatorConstructor&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SchurPrecon&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.SchurPrecon&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for PETSc Schur complement preconditioners.&quot;];
+  &quot;KSP_Preconditioner&quot; -&gt; &quot;SchurPrecon&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Schur_LSC&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.Schur_LSC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The Least-Squares Communtator preconditioner for saddle&quot;];
+  &quot;SchurPrecon&quot; -&gt; &quot;Schur_LSC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Schur_Qp&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.Schur_Qp&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A Navier-Stokes (or Stokes) preconditioner which uses the&quot;];
+  &quot;SchurPrecon&quot; -&gt; &quot;Schur_Qp&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Schur_Sp&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.Schur_Sp&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Implements the SIMPLE Schur complement approximation proposed&quot;];
+  &quot;NavierStokesSchur&quot; -&gt; &quot;Schur_Sp&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SimpleDarcyFC&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.SimpleDarcyFC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;SimpleDarcyFC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SolverNullSpace&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.SolverNullSpace&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;SolverNullSpace&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;StarBILU&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.StarBILU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Alternating Schwarz Method on 'blocks' consisting of consectutive rows in system for things like dg ...&quot;];
+  &quot;LinearSolver&quot; -&gt; &quot;StarBILU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;StarILU&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.StarILU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Alternating Schwarz Method on node stars.&quot;];
+  &quot;LinearSolver&quot; -&gt; &quot;StarILU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;StorageSet&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.StorageSet&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;TwoLevel&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.TwoLevel&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic two-level multiplicative Schwarz solver.&quot;];
+  &quot;LinearSolver&quot; -&gt; &quot;TwoLevel&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+  &quot;petsc_ASM&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.petsc_ASM&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;ASM PETSc preconditioner class.&quot;];
+  &quot;KSP_Preconditioner&quot; -&gt; &quot;petsc_ASM&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;petsc_LU&quot; [URL=&quot;../api/proteus.LinearSolvers.html#proteus.LinearSolvers.petsc_LU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;LU PETSc preconditioner class.&quot;];
+  &quot;KSP_Preconditioner&quot; -&gt; &quot;petsc_LU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}
 <dl class="class">
 <dt id="proteus.LinearSolvers.LinearSolver">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">LinearSolver</code><span class="sig-paren">(</span><em>L</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>The base class for linear solvers.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>The base class for linear solvers.</p>
 <dl class="docutils">
 <dt>L <span class="classifier-delimiter">:</span> <span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></span></dt>
 <dd>This is the system matrix.</dd>
@@ -216,7 +296,7 @@
 <p>A wrapper for pysparse’s wrapper for superlu.</p>
 <dl class="method">
 <dt id="proteus.LinearSolvers.LU.prepare">
-<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LU.prepare" title="Permalink to this definition">¶</a></dt>
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LU.prepare" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -232,34 +312,8 @@
 </dd></dl>
 
 <dl class="class">
-<dt id="proteus.LinearSolvers.PETSc">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">PETSc</code><span class="sig-paren">(</span><em>L</em>, <em>par_L</em>, <em>prefix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
-<dl class="method">
-<dt id="proteus.LinearSolvers.PETSc.prepare">
-<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc.prepare" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.LinearSolvers.PETSc.solve">
-<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc.solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.LinearSolvers.PETSc.useTrueResidualTest">
-<code class="descname">useTrueResidualTest</code><span class="sig-paren">(</span><em>par_u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc.useTrueResidualTest" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.LinearSolvers.PETSc.printPerformance">
-<code class="descname">printPerformance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc.printPerformance" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="proteus.LinearSolvers.KSP_petsc4py">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">KSP_petsc4py</code><span class="sig-paren">(</span><em>L</em>, <em>par_L</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=False</em>, <em>prefix=None</em>, <em>Preconditioner=None</em>, <em>connectionList=None</em>, <em>linearSolverLocalBlockSize=1</em>, <em>bdyNullSpace=False</em>, <em>preconditionerOptions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">KSP_petsc4py</code><span class="sig-paren">(</span><em>L</em>, <em>par_L</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=False</em>, <em>prefix=None</em>, <em>Preconditioner=None</em>, <em>connectionList=None</em>, <em>linearSolverLocalBlockSize=1</em>, <em>preconditionerOptions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
 <p>A class that interfaces Proteus with PETSc KSP.</p>
 <p>Initialize a petsc4py KSP object.</p>
@@ -281,7 +335,6 @@
 <li><strong>Preconditioner</strong> – </li>
 <li><strong>connectionList</strong> – </li>
 <li><strong>linearSolverLocalBlockSize</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – </li>
-<li><strong>bdyNullSpace</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </li>
 <li><strong>preconditionerOptions</strong> (<em>tuple</em>) – A list of optional preconditioner settings.</li>
 </ul>
 </td>
@@ -296,7 +349,7 @@
 
 <dl class="method">
 <dt id="proteus.LinearSolvers.KSP_petsc4py.prepare">
-<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py.prepare" title="Permalink to this definition">¶</a></dt>
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py.prepare" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -325,7 +378,8 @@
 <dl class="class">
 <dt id="proteus.LinearSolvers.SchurOperatorConstructor">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">SchurOperatorConstructor</code><span class="sig-paren">(</span><em>linear_smoother</em>, <em>pde_type='general_saddle_point'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SchurOperatorConstructor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate matrices for use in Schur complement preconditioner operators.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Generate matrices for use in Schur complement preconditioner operators.</p>
 <p>Initialize a Schur Operator constructor.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -564,7 +618,8 @@ matrix (False).</li>
 <dl class="class">
 <dt id="proteus.LinearSolvers.KSP_Preconditioner">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">KSP_Preconditioner</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_Preconditioner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for PETSCc KSP precondtioners.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Base class for PETSc KSP precondtioners.</p>
 <dl class="method">
 <dt id="proteus.LinearSolvers.KSP_Preconditioner.setup">
 <code class="descname">setup</code><span class="sig-paren">(</span><em>global_ksp=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_Preconditioner.setup" title="Permalink to this definition">¶</a></dt>
@@ -594,7 +649,7 @@ objects.</p>
 </table>
 <dl class="method">
 <dt id="proteus.LinearSolvers.petsc_ASM.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.petsc_ASM.setUp" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.petsc_ASM.setUp" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -622,7 +677,7 @@ iterative will converge in a single step.</p>
 </table>
 <dl class="method">
 <dt id="proteus.LinearSolvers.petsc_LU.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.petsc_LU.setUp" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.petsc_LU.setUp" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -630,7 +685,7 @@ iterative will converge in a single step.</p>
 <dl class="class">
 <dt id="proteus.LinearSolvers.DofOrderInfo">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">DofOrderInfo</code><span class="sig-paren">(</span><em>dof_order_type</em>, <em>model_info='no model info set'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.DofOrderInfo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
 <p>Base class for managing DOF ordering information</p>
 <p>Parameters
 dof_order_type : str</p>
@@ -786,8 +841,8 @@ components.</td>
 
 <dl class="class">
 <dt id="proteus.LinearSolvers.ModelInfo">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">ModelInfo</code><span class="sig-paren">(</span><em>dof_order_type</em>, <em>num_components</em>, <em>L_range=None</em>, <em>neqns=None</em>, <em>n_DOF_pressure=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.ModelInfo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">ModelInfo</code><span class="sig-paren">(</span><em>dof_order_type</em>, <em>num_components</em>, <em>L_range=None</em>, <em>neqns=None</em>, <em>n_DOF_pressure=None</em>, <em>bdy_null_space=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.ModelInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
 <p>This class stores the model information needed to initialize a
 Schur preconditioner class.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -800,6 +855,8 @@ Schur preconditioner class.</p>
 ‘interlaced’)</li>
 <li><strong>n_DOF_pressure</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of pressure degrees of freedom (required for blocked
 dof_order_type)</li>
+<li><strong>bdy_null_space</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates whether boundary condition creates a global null
+space</li>
 </ul>
 </td>
 </tr>
@@ -834,7 +891,7 @@ dof_order_type)</li>
 
 <dl class="class">
 <dt id="proteus.LinearSolvers.SchurPrecon">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">SchurPrecon</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>bdyNullSpace=False</em>, <em>solver_info=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SchurPrecon" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">SchurPrecon</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>solver_info=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SchurPrecon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.KSP_Preconditioner" title="proteus.LinearSolvers.KSP_Preconditioner"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.KSP_Preconditioner</span></code></a></p>
 <p>Base class for PETSc Schur complement preconditioners.</p>
 <p>Initializes the Schur complement preconditioner for use with PETSc.</p>
@@ -847,7 +904,6 @@ pressure and velocity unknowns for a general saddle point problem.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>L</strong> (<em>provides the definition of the problem.</em>) – </li>
 <li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Prefix identifier for command line PETSc options.</li>
-<li><strong>bdyNullSpace</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Flag indicating whether boundary creates nullspace.</li>
 <li><strong>solver_info</strong> (<a class="reference internal" href="#proteus.LinearSolvers.ModelInfo" title="proteus.LinearSolvers.ModelInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelInfo</span></code></a>) – </li>
 </ul>
 </td>
@@ -871,7 +927,7 @@ pressure and velocity unknowns for a general saddle point problem.</p>
 
 <dl class="method">
 <dt id="proteus.LinearSolvers.SchurPrecon.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SchurPrecon.setUp" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SchurPrecon.setUp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set up the NavierStokesSchur preconditioner.</p>
 <p>Nothing needs to be done here for a generic NSE preconditioner.
 Preconditioner arguments can be set with PETSc command line.</p>
@@ -881,8 +937,8 @@ Preconditioner arguments can be set with PETSc command line.</p>
 
 <dl class="class">
 <dt id="proteus.LinearSolvers.Schur_Sp">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">Schur_Sp</code><span class="sig-paren">(</span><em>L</em>, <em>prefix</em>, <em>bdyNullSpace=False</em>, <em>solver_info=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_Sp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.SchurPrecon" title="proteus.LinearSolvers.SchurPrecon"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.SchurPrecon</span></code></a></p>
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">Schur_Sp</code><span class="sig-paren">(</span><em>L</em>, <em>prefix</em>, <em>velocity_block_preconditioner=False</em>, <em>solver_info=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_Sp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.NavierStokesSchur" title="proteus.LinearSolvers.NavierStokesSchur"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.NavierStokesSchur</span></code></a></p>
 <p>Implements the SIMPLE Schur complement approximation proposed
 in 2009 by Rehman, Vuik and Segal.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -891,9 +947,7 @@ in 2009 by Rehman, Vuik and Segal.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>L</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">p4pyPETSc.Mat</span></code>) – </li>
-<li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – </li>
-<li><strong>bdyNullSpace</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates the models boundary conditions create a global
-null space. (see Notes)</li>
+<li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Specifies PETSc preconditioner prefix for setting options</li>
 </ul>
 </td>
 </tr>
@@ -907,21 +961,19 @@ the component pieces.  For small problems this is okay,
 but for large problems this process may not scale well and often
 a pure Laplace operator will prove a more effective choice of
 preconditioner.</p>
-<p>The <cite>bdyNullSpace</cite> parameter indicates if the model has a
-global null space because the saddle point problem uses pure
-Dirichlet boundary conditions.  When the global saddle point
-system model has a null space, it is necessary apply a constant
-null space to this operator.</p>
 <dl class="method">
 <dt id="proteus.LinearSolvers.Schur_Sp.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_Sp.setUp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_Sp.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up the NavierStokesSchur preconditioner.</p>
+<p>Nothing needs to be done here for a generic NSE preconditioner.
+Preconditioner arguments can be set with PETSc command line.</p>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearSolvers.Schur_Qp">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">Schur_Qp</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_Qp" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">Schur_Qp</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_Qp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.SchurPrecon" title="proteus.LinearSolvers.SchurPrecon"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.SchurPrecon</span></code></a></p>
 <p>A Navier-Stokes (or Stokes) preconditioner which uses the
 viscosity scaled pressure mass matrix.</p>
@@ -930,13 +982,17 @@ viscosity scaled pressure mass matrix.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>L</strong> (<em>petsc4py matrix</em>) – Defines the problem’s operator.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>L</strong> (<em>petsc4py matrix</em>) – Defines the problem’s operator.</li>
+<li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Specifies PETSc preconditioner prefix for setting options</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
 <dt id="proteus.LinearSolvers.Schur_Qp.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_Qp.setUp" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_Qp.setUp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attaches the pressure mass matrix to PETSc KSP preconditioner.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -952,17 +1008,33 @@ viscosity scaled pressure mass matrix.</p>
 
 <dl class="class">
 <dt id="proteus.LinearSolvers.NavierStokesSchur">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokesSchur</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>bdyNullSpace=False</em>, <em>velocity_block_preconditioner=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesSchur" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokesSchur</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>velocity_block_preconditioner=True</em>, <em>solver_info=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesSchur" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.SchurPrecon" title="proteus.LinearSolvers.SchurPrecon"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.SchurPrecon</span></code></a></p>
 <p>Schur complement preconditioners for Navier-Stokes problems.</p>
 <p>This class is derived from SchurPrecond and serves as the base
 class for all NavierStokes preconditioners which use the Schur complement
 method.</p>
+<p>Initializes a base class for Navier-Stokes Schur complement
+preconditioners.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>L</strong> (<em>petsc4py matrix</em>) – Defines the problem’s operator</li>
+<li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Specifies PETSc preconditioner prefix for setting options</li>
+<li><strong>velocity_block_preconditioner</strong> (<em>Bool</em>) – Indicates whether the velocity block should be solved as
+a block preconditioner</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearSolvers.NavierStokes_TwoPhasePCD">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokes_TwoPhasePCD</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>bdyNullSpace=False</em>, <em>density_scaling=True</em>, <em>numerical_viscosity=True</em>, <em>lumped=True</em>, <em>num_chebyshev_its=0</em>, <em>laplace_null_space=True</em>, <em>velocity_block_preconditioner=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes_TwoPhasePCD" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokes_TwoPhasePCD</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>density_scaling=True</em>, <em>numerical_viscosity=True</em>, <em>lumped=True</em>, <em>num_chebyshev_its=0</em>, <em>laplace_null_space=True</em>, <em>velocity_block_preconditioner=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes_TwoPhasePCD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.NavierStokesSchur" title="proteus.LinearSolvers.NavierStokesSchur"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.NavierStokesSchur</span></code></a></p>
 <p>Two-phase PCD Schur complement approximation class.
 Details of this operator are in the forthcoming paper
@@ -995,7 +1067,6 @@ is used and a direct solver is not applied.</li>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>L</strong> (<em>petsc4py Matrix</em>) – Defines the problem’s operator.</li>
 <li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – String allowing PETSc4py options.</li>
-<li><strong>bdyNullSpace</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates whether there is a global null space.</li>
 <li><strong>density_scaling</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates whether mass and advection terms should be
 scaled with the density (True) or 1 (False).</li>
 <li><strong>numerical_viscosity</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates whether the viscosity used to calculate
@@ -1018,21 +1089,40 @@ velocity solve.</li>
 </table>
 <dl class="method">
 <dt id="proteus.LinearSolvers.NavierStokes_TwoPhasePCD.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes_TwoPhasePCD.setUp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes_TwoPhasePCD.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up the NavierStokesSchur preconditioner.</p>
+<p>Nothing needs to be done here for a generic NSE preconditioner.
+Preconditioner arguments can be set with PETSc command line.</p>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearSolvers.Schur_LSC">
-<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">Schur_LSC</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_LSC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">Schur_LSC</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_LSC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.SchurPrecon" title="proteus.LinearSolvers.SchurPrecon"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.SchurPrecon</span></code></a></p>
 <p>The Least-Squares Communtator preconditioner for saddle
 point problems.</p>
+<p>Initializes the pressure mass matrix class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>L</strong> (<em>petsc4py matrix</em>) – Defines the problem’s operator.</li>
+<li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Specifies PETSc preconditioner prefix for setting options</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="proteus.LinearSolvers.Schur_LSC.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_LSC.setUp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Schur_LSC.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up the NavierStokesSchur preconditioner.</p>
+<p>Nothing needs to be done here for a generic NSE preconditioner.
+Preconditioner arguments can be set with PETSc command line.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -1040,10 +1130,29 @@ point problems.</p>
 <dt id="proteus.LinearSolvers.NavierStokes3D">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokes3D</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>velocity_block_preconditioner=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes3D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.NavierStokesSchur" title="proteus.LinearSolvers.NavierStokesSchur"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.NavierStokesSchur</span></code></a></p>
+<p>Initializes a base class for Navier-Stokes Schur complement
+preconditioners.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>L</strong> (<em>petsc4py matrix</em>) – Defines the problem’s operator</li>
+<li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Specifies PETSc preconditioner prefix for setting options</li>
+<li><strong>velocity_block_preconditioner</strong> (<em>Bool</em>) – Indicates whether the velocity block should be solved as
+a block preconditioner</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="proteus.LinearSolvers.NavierStokes3D.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes3D.setUp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes3D.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up the NavierStokesSchur preconditioner.</p>
+<p>Nothing needs to be done here for a generic NSE preconditioner.
+Preconditioner arguments can be set with PETSc command line.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -1057,10 +1166,29 @@ point problems.</p>
 <dt id="proteus.LinearSolvers.NavierStokes2D">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokes2D</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em>, <em>velocity_block_preconditioner=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.NavierStokesSchur" title="proteus.LinearSolvers.NavierStokesSchur"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.NavierStokesSchur</span></code></a></p>
+<p>Initializes a base class for Navier-Stokes Schur complement
+preconditioners.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>L</strong> (<em>petsc4py matrix</em>) – Defines the problem’s operator</li>
+<li><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Specifies PETSc preconditioner prefix for setting options</li>
+<li><strong>velocity_block_preconditioner</strong> (<em>Bool</em>) – Indicates whether the velocity block should be solved as
+a block preconditioner</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="proteus.LinearSolvers.NavierStokes2D.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes2D.setUp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokes2D.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up the NavierStokesSchur preconditioner.</p>
+<p>Nothing needs to be done here for a generic NSE preconditioner.
+Preconditioner arguments can be set with PETSc command line.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -1073,9 +1201,10 @@ point problems.</p>
 <dl class="class">
 <dt id="proteus.LinearSolvers.NavierStokesPressureCorrection">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokesPressureCorrection</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesPressureCorrection" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="method">
 <dt id="proteus.LinearSolvers.NavierStokesPressureCorrection.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesPressureCorrection.setUp" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesPressureCorrection.setUp" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1083,9 +1212,10 @@ point problems.</p>
 <dl class="class">
 <dt id="proteus.LinearSolvers.SimpleDarcyFC">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">SimpleDarcyFC</code><span class="sig-paren">(</span><em>L</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleDarcyFC" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="method">
 <dt id="proteus.LinearSolvers.SimpleDarcyFC.setUp">
-<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleDarcyFC.setUp" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>global_ksp=None</em>, <em>newton_its=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleDarcyFC.setUp" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1107,7 +1237,7 @@ point problems.</p>
 
 <dl class="attribute">
 <dt id="proteus.LinearSolvers.Jacobi.csmoothers">
-<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Jacobi.csmoothers" title="Permalink to this definition">¶</a></dt>
+<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/tridelat/PROTEUS/proteus4/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Jacobi.csmoothers" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1129,7 +1259,7 @@ point problems.</p>
 
 <dl class="attribute">
 <dt id="proteus.LinearSolvers.GaussSeidel.csmoothers">
-<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.GaussSeidel.csmoothers" title="Permalink to this definition">¶</a></dt>
+<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/tridelat/PROTEUS/proteus4/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.GaussSeidel.csmoothers" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1151,7 +1281,7 @@ point problems.</p>
 
 <dl class="attribute">
 <dt id="proteus.LinearSolvers.StarILU.csmoothers">
-<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarILU.csmoothers" title="Permalink to this definition">¶</a></dt>
+<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/tridelat/PROTEUS/proteus4/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarILU.csmoothers" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1173,7 +1303,7 @@ point problems.</p>
 
 <dl class="attribute">
 <dt id="proteus.LinearSolvers.StarBILU.csmoothers">
-<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarBILU.csmoothers" title="Permalink to this definition">¶</a></dt>
+<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/tridelat/PROTEUS/proteus4/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarBILU.csmoothers" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1198,7 +1328,8 @@ point problems.</p>
 <dl class="class">
 <dt id="proteus.LinearSolvers.MultilevelLinearSolver">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">MultilevelLinearSolver</code><span class="sig-paren">(</span><em>levelLinearSolverList</em>, <em>computeRates=False</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.MultilevelLinearSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>A generic multilevel solver.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A generic multilevel solver.</p>
 <dl class="method">
 <dt id="proteus.LinearSolvers.MultilevelLinearSolver.info">
 <code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.MultilevelLinearSolver.info" title="Permalink to this definition">¶</a></dt>
@@ -1267,7 +1398,7 @@ point problems.</p>
 
 <dl class="function">
 <dt id="proteus.LinearSolvers.multilevelLinearSolverChooser">
-<code class="descclassname">proteus.LinearSolvers.</code><code class="descname">multilevelLinearSolverChooser</code><span class="sig-paren">(</span><em>linearOperatorList</em>, <em>par_linearOperatorList</em>, <em>multilevelLinearSolverType=&lt;class proteus.LinearSolvers.NI&gt;</em>, <em>relativeToleranceList=None</em>, <em>absoluteTolerance=1e-08</em>, <em>solverConvergenceTest='r'</em>, <em>solverMaxIts=500</em>, <em>printSolverInfo=False</em>, <em>computeSolverRates=False</em>, <em>levelLinearSolverType=&lt;class proteus.LinearSolvers.MGM&gt;</em>, <em>printLevelSolverInfo=False</em>, <em>computeLevelSolverRates=False</em>, <em>smootherType=&lt;class proteus.LinearSolvers.Jacobi&gt;</em>, <em>prolongList=None</em>, <em>restrictList=None</em>, <em>connectivityListList=None</em>, <em>cycles=3</em>, <em>preSmooths=3</em>, <em>postSmooths=3</em>, <em>printSmootherInfo=False</em>, <em>computeSmootherRates=False</em>, <em>smootherConvergenceTest='its'</em>, <em>relaxationFactor=None</em>, <em>computeEigenvalues=False</em>, <em>parallelUsesFullOverlap=True</em>, <em>par_duList=None</em>, <em>solver_options_prefix=None</em>, <em>linearSolverLocalBlockSize=1</em>, <em>linearSmootherOptions=()</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.multilevelLinearSolverChooser" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">proteus.LinearSolvers.</code><code class="descname">multilevelLinearSolverChooser</code><span class="sig-paren">(</span><em>linearOperatorList</em>, <em>par_linearOperatorList</em>, <em>multilevelLinearSolverType=&lt;class 'proteus.LinearSolvers.NI'&gt;</em>, <em>relativeToleranceList=None</em>, <em>absoluteTolerance=1e-08</em>, <em>solverConvergenceTest='r'</em>, <em>solverMaxIts=500</em>, <em>printSolverInfo=False</em>, <em>computeSolverRates=False</em>, <em>levelLinearSolverType=&lt;class 'proteus.LinearSolvers.MGM'&gt;</em>, <em>printLevelSolverInfo=False</em>, <em>computeLevelSolverRates=False</em>, <em>smootherType=&lt;class 'proteus.LinearSolvers.Jacobi'&gt;</em>, <em>prolongList=None</em>, <em>restrictList=None</em>, <em>connectivityListList=None</em>, <em>cycles=3</em>, <em>preSmooths=3</em>, <em>postSmooths=3</em>, <em>printSmootherInfo=False</em>, <em>computeSmootherRates=False</em>, <em>smootherConvergenceTest='its'</em>, <em>relaxationFactor=None</em>, <em>computeEigenvalues=False</em>, <em>parallelUsesFullOverlap=True</em>, <em>par_duList=None</em>, <em>solver_options_prefix=None</em>, <em>linearSolverLocalBlockSize=1</em>, <em>linearSmootherOptions=()</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.multilevelLinearSolverChooser" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
@@ -1284,7 +1415,8 @@ point problems.</p>
 <dl class="class">
 <dt id="proteus.LinearSolvers.OperatorConstructor">
 <em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">OperatorConstructor</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.OperatorConstructor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for operator constructors.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Base class for operator constructors.</p>
 <dl class="method">
 <dt id="proteus.LinearSolvers.OperatorConstructor.attachMassOperator">
 <code class="descname">attachMassOperator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.OperatorConstructor.attachMassOperator" title="Permalink to this definition">¶</a></dt>
@@ -1502,6 +1634,95 @@ solution will be returned in the vector too.</li>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="proteus.LinearSolvers.SolverNullSpace">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">SolverNullSpace</code><span class="sig-paren">(</span><em>proteus_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SolverNullSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="staticmethod">
+<dt id="proteus.LinearSolvers.SolverNullSpace.get_name">
+<em class="property">static </em><code class="descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SolverNullSpace.get_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="proteus.LinearSolvers.SolverNullSpace.apply_to_schur_block">
+<em class="property">static </em><code class="descname">apply_to_schur_block</code><span class="sig-paren">(</span><em>global_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SolverNullSpace.apply_to_schur_block" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.SolverNullSpace.get_global_ksp">
+<code class="descname">get_global_ksp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SolverNullSpace.get_global_ksp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.SolverNullSpace.apply_ns">
+<code class="descname">apply_ns</code><span class="sig-paren">(</span><em>par_b</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SolverNullSpace.apply_ns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.LinearSolvers.NoNullSpace">
+<code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NoNullSpace</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NoNullSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#proteus.LinearSolvers.SolverNullSpace" title="proteus.LinearSolvers.SolverNullSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.SolverNullSpace</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.NavierStokesConstantPressure">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokesConstantPressure</code><span class="sig-paren">(</span><em>proteus_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesConstantPressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.SolverNullSpace" title="proteus.LinearSolvers.SolverNullSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.SolverNullSpace</span></code></a></p>
+<dl class="staticmethod">
+<dt id="proteus.LinearSolvers.NavierStokesConstantPressure.get_name">
+<em class="property">static </em><code class="descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesConstantPressure.get_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="proteus.LinearSolvers.NavierStokesConstantPressure.apply_to_schur_block">
+<em class="property">static </em><code class="descname">apply_to_schur_block</code><span class="sig-paren">(</span><em>global_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesConstantPressure.apply_to_schur_block" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.NavierStokesConstantPressure.apply_ns">
+<code class="descname">apply_ns</code><span class="sig-paren">(</span><em>par_b</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesConstantPressure.apply_ns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the global null space created from a pure Neumann boundary
+problem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>par_b</strong> (<a href="#id1"><span class="problematic" id="id2">:vec:`petsc4py_vec`</span></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.ConstantNullSpace">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">ConstantNullSpace</code><span class="sig-paren">(</span><em>proteus_ksp</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.ConstantNullSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.SolverNullSpace" title="proteus.LinearSolvers.SolverNullSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearSolvers.SolverNullSpace</span></code></a></p>
+<dl class="staticmethod">
+<dt id="proteus.LinearSolvers.ConstantNullSpace.get_name">
+<em class="property">static </em><code class="descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.ConstantNullSpace.get_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.ConstantNullSpace.apply_ns">
+<code class="descname">apply_ns</code><span class="sig-paren">(</span><em>par_b</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.ConstantNullSpace.apply_ns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the global null space created from a pure Neumann boundary
+problem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>par_b</strong> (<a href="#id3"><span class="problematic" id="id4">:vec:`petsc4py_vec`</span></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -1517,7 +1738,7 @@ solution will be returned in the vector too.</li>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

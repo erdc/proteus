@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.SubgridError module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.SubgridError module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,62 @@
   <div class="section" id="module-proteus.SubgridError">
 <span id="proteus-subgriderror-module"></span><h1>proteus.SubgridError module<a class="headerlink" href="#module-proteus.SubgridError" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for subgrid error estimation methods (multiscale methods)</p>
-<div class="graphviz"><object data="../_images/inheritance-14603556ef6d7fb98160673b085b58c51706c646.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.SubgridError</p></object></div>
+digraph inheritancee01062b6ab {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Should be basic Hauke Sangalli approach but computes terms at interpolation points&quot;];
+  &quot;AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS&quot; -&gt; &quot;AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Should be basic Hauke Sangalli approach but computes terms at interpolation points&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;AdvectionDiffusionReactionTransientSubscales_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;track subgrid scales in time with Backward Euler&quot;];
+  &quot;AdvectionDiffusionReaction_ASGS&quot; -&gt; &quot;AdvectionDiffusionReactionTransientSubscales_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;AdvectionDiffusionReaction_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.AdvectionDiffusionReaction_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;AdvectionDiffusionReaction_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;AdvectionLag_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.AdvectionLag_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;AdvectionLag_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Advection_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.Advection_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;Advection_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DarcyFC_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.DarcyFC_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;basic stablization for TwophaseDarcy_fc, no advection term&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;DarcyFC_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;FFDarcyFC_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.FFDarcyFC_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;basic stablization for TwophaseDarcy_fc_ff, only 'mixture' equation has advection term&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;FFDarcyFC_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;HamiltonJacobiDiffusionReaction_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;HamiltonJacobiDiffusionReaction_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;HamiltonJacobi_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.HamiltonJacobi_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;HamiltonJacobi_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;HamiltonJacobi_ASGS_opt&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.HamiltonJacobi_ASGS_opt&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;HamiltonJacobi_ASGS_opt&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesASGS_velocity_pressure&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.NavierStokesASGS_velocity_pressure&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;NavierStokesASGS_velocity_pressure&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesASGS_velocity_pressure_opt&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;NavierStokesASGS_velocity_pressure_opt&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesASGS_velocity_pressure_optV2&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;NavierStokesASGS_velocity_pressure_optV2&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesTransientSubScalesASGS_velocity_pressure&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;NavierStokesASGS_velocity_pressure&quot; -&gt; &quot;NavierStokesTransientSubScalesASGS_velocity_pressure&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NavierStokesWithBodyForceASGS_velocity_pressure&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;NavierStokesASGS_velocity_pressure&quot; -&gt; &quot;NavierStokesWithBodyForceASGS_velocity_pressure&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SGE_base&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.SGE_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;SGE_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ShallowWater_CFL&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.ShallowWater_CFL&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;ShallowWater_CFL&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SkewStabilization_1&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.SkewStabilization_1&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;SkewStabilization_1&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;StokesASGS_velocity&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.StokesASGS_velocity&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;StokesASGS_velocity&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;StokesASGS_velocity_pressure&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.StokesASGS_velocity_pressure&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;StokesASGS_velocity_pressure&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;StokesStabilization_1&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.StokesStabilization_1&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;StokesStabilization_1&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;TwophaseStokes_LS_FC_ASGS&quot; [URL=&quot;../api/proteus.SubgridError.html#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SGE_base&quot; -&gt; &quot;TwophaseStokes_LS_FC_ASGS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.SubgridError.SGE_base">
 <em class="property">class </em><code class="descclassname">proteus.SubgridError.</code><code class="descname">SGE_base</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>lag=False</em>, <em>trackSubScales=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="method">
 <dt id="proteus.SubgridError.SGE_base.initializeElementQuadrature">
 <code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -493,7 +544,8 @@ phi_w = psi_w, phi_n = psi_w + psi_c</p>
 <dl class="class">
 <dt id="proteus.SubgridError.SkewStabilization_1">
 <em class="property">class </em><code class="descclassname">proteus.SubgridError.</code><code class="descname">SkewStabilization_1</code><span class="sig-paren">(</span><em>mesh</em>, <em>nc</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SkewStabilization_1" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="method">
 <dt id="proteus.SubgridError.SkewStabilization_1.calculateSubgridError">
 <code class="descname">calculateSubgridError</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SkewStabilization_1.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -616,7 +668,14 @@ And SubScales are tracked in time</p>
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridErrorInterpolants">
 <code class="descname">calculateSubgridErrorInterpolants</code><span class="sig-paren">(</span><em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridErrorInterpolants" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>should interpolate strong residual. One problem is that
+strong residual is discontinuous when grad(u) terms are nonzero
+so standard C0 projection
+won’t necessarily be what we expect locally on each element
+for C0, P1 and linear problem with constant coefficients
+computing gradient locally should be just the same as
+ignoring gradient terms altogether</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridError">
@@ -686,7 +745,7 @@ delta m^{n}/delta t^{n+1}</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

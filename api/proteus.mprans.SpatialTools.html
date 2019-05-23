@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.mprans.SpatialTools module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.mprans.SpatialTools module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -324,7 +325,7 @@ The objects has to be defined with WallFunction class.</p>
 
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.Tank3D">
-<em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">Tank3D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>coords=None</em>, <em>from_0=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">Tank3D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>coords=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.ShapeRANS" title="proteus.mprans.SpatialTools.ShapeRANS"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.ShapeRANS</span></code></a></p>
 <p>Class to create a 3D tank (cuboidal shape).</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -336,7 +337,6 @@ The objects has to be defined with WallFunction class.</p>
 boundary conditions of the shape.</li>
 <li><strong>dim</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Dimensions of the cuboid.</li>
 <li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
-<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – If True (default), the tank extends from the origin to postive x, y, z</li>
 </ul>
 </td>
 </tr>
@@ -432,7 +432,7 @@ generation zones).
 
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.Tank2D">
-<em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">Tank2D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim</em>, <em>coords=None</em>, <em>from_0=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">Tank2D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim</em>, <em>coords=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.ShapeRANS" title="proteus.mprans.SpatialTools.ShapeRANS"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.ShapeRANS</span></code></a></p>
 <p>Class to create a 2D tank (rectangular shape).</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -444,7 +444,6 @@ generation zones).
 boundary conditions of the shape.</li>
 <li><strong>dim</strong> (<em>array_like</em>) – Dimensions of the tank (excluding sponge layers).</li>
 <li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
-<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – If True (default), the tank extends from the origin to positive x, y, z</li>
 </ul>
 </td>
 </tr>
@@ -549,7 +548,7 @@ generation zones).
 
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.TankWithObstacles2D">
-<em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">TankWithObstacles2D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim=(0.0</em>, <em>0.0)</em>, <em>obstacles=None</em>, <em>special_boundaries=None</em>, <em>full_circle=False</em>, <em>coords=None</em>, <em>from_0=True</em>, <em>hole=True</em>, <em>obstacle_regions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.SpatialTools.</code><code class="descname">TankWithObstacles2D</code><span class="sig-paren">(</span><em>domain</em>, <em>dim=(0.0</em>, <em>0.0)</em>, <em>obstacles=None</em>, <em>special_boundaries=None</em>, <em>full_circle=False</em>, <em>coords=None</em>, <em>hole=True</em>, <em>obstacle_regions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.Tank2D" title="proteus.mprans.SpatialTools.Tank2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.Tank2D</span></code></a></p>
 <p>Class to create a 2D rectangular tank with obstacles built out of any wall.</p>
 <p>An obstacle is defined by a contiguous list of points which start and end
@@ -587,7 +586,6 @@ will be assigned the same boundary tag.</li>
 <li><strong>full_circle</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – A boolean tag to check if the final obstacle ends on the same edge that
 the first obstacle starts on.  Default is False.</li>
 <li><strong>coords</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Coordinates of the centroid of the shape.</li>
-<li><strong>from_0</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – If True (default), the tank extends from the origin to positive x, y, z</li>
 <li><strong>hole</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – If True (default), the obstacle of the tank is just an open hole at the
 bottom of the tank. If False, a segment at the bottom of the obstacle is
 created to close the hole.</li>
@@ -703,7 +701,7 @@ boundary conditions of the shape.</td>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.LatexReport module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.LatexReport module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,8 +128,13 @@
   <div class="section" id="module-proteus.LatexReport">
 <span id="proteus-latexreport-module"></span><h1>proteus.LatexReport module<a class="headerlink" href="#module-proteus.LatexReport" title="Permalink to this headline">¶</a></h1>
 <p>Class and script for generating a report from simulation data.</p>
-<div class="graphviz"><object data="../_images/inheritance-4da20814bb18434b525ef4eb6be7658a9fca52bc.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.LatexReport</p></object></div>
+digraph inheritance3a94314196 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;LatexResultsSummary&quot; [URL=&quot;../api/proteus.LatexReport.html#proteus.LatexReport.LatexResultsSummary&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;simple steps for taking simulation results and generating Latex&quot;];
+  &quot;newobject&quot; -&gt; &quot;LatexResultsSummary&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="function">
 <dt id="proteus.LatexReport.openLatexReport">
 <code class="descclassname">proteus.LatexReport.</code><code class="descname">openLatexReport</code><span class="sig-paren">(</span><em>filename</em>, <em>reportname</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.openLatexReport" title="Permalink to this definition">¶</a></dt>
@@ -142,7 +148,8 @@
 <dl class="class">
 <dt id="proteus.LatexReport.LatexResultsSummary">
 <em class="property">class </em><code class="descclassname">proteus.LatexReport.</code><code class="descname">LatexResultsSummary</code><span class="sig-paren">(</span><em>resFileName</em>, <em>repFileName</em>, <em>repName=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary" title="Permalink to this definition">¶</a></dt>
-<dd><p>simple steps for taking simulation results and generating Latex
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>simple steps for taking simulation results and generating Latex
 Table of results</p>
 <dl class="method">
 <dt id="proteus.LatexReport.LatexResultsSummary.open">
@@ -165,8 +172,8 @@ given by relativeErrorEps</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="proteus.LatexReport.LatexResultsSummary.cPickle">
-<code class="descname">cPickle</code><em class="property"> = &lt;module 'cPickle' from '/home/cekees/proteus/linux2/lib/python2.7/lib-dynload/cPickle.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.cPickle" title="Permalink to this definition">¶</a></dt>
+<dt id="proteus.LatexReport.LatexResultsSummary.pickle">
+<code class="descname">pickle</code><em class="property"> = &lt;module 'pickle' from '/home/tridelat/PROTEUS/proteus4/linux2/lib/python2.7/pickle.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.pickle" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -186,7 +193,7 @@ given by relativeErrorEps</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

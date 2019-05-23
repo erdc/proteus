@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.AuxiliaryVariables module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.AuxiliaryVariables module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,40 @@
   <div class="section" id="module-proteus.AuxiliaryVariables">
 <span id="proteus-auxiliaryvariables-module"></span><h1>proteus.AuxiliaryVariables module<a class="headerlink" href="#module-proteus.AuxiliaryVariables" title="Permalink to this headline">¶</a></h1>
 <p>Classes for calculating auxiliary variables based on the numerical solution.</p>
-<div class="graphviz"><object data="../_images/inheritance-8500c40a7a8a699610104a19507b155aa624f512.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.AuxiliaryVariables</p></object></div>
+digraph inheritance65a8d20231 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;AV_base&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.AV_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;AV_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;BoundaryForce&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.BoundaryForce&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AV_base&quot; -&gt; &quot;BoundaryForce&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;BoundaryPressure&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.BoundaryPressure&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AV_base&quot; -&gt; &quot;BoundaryPressure&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ConservationHistoryLS&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.ConservationHistoryLS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A simple class for storing the time history of things related conservation in non-conservative level set methods&quot;];
+  &quot;AV_base&quot; -&gt; &quot;ConservationHistoryLS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ConservationHistoryMC&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.ConservationHistoryMC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A simple class for storing the time history of things related conservation in conservative level set methods&quot;];
+  &quot;AV_base&quot; -&gt; &quot;ConservationHistoryMC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;GatherDOF&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.GatherDOF&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AV_base&quot; -&gt; &quot;GatherDOF&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MassOverRegion&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.MassOverRegion&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AV_base&quot; -&gt; &quot;MassOverRegion&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PT123velocityGenerator&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.PT123velocityGenerator&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;write out the velocity field from a model for PT123 to use in tracking as a&quot;];
+  &quot;AV_base&quot; -&gt; &quot;PT123velocityGenerator&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PressureProfile&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.PressureProfile&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AV_base&quot; -&gt; &quot;PressureProfile&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;RecirculationLength&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.RecirculationLength&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AV_base&quot; -&gt; &quot;RecirculationLength&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;VelocityAverage&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.VelocityAverage&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AV_base&quot; -&gt; &quot;VelocityAverage&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;VelocityNormOverRegion&quot; [URL=&quot;../api/proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.VelocityNormOverRegion&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AV_base&quot; -&gt; &quot;VelocityNormOverRegion&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.AuxiliaryVariables.AV_base">
 <em class="property">class </em><code class="descclassname">proteus.AuxiliaryVariables.</code><code class="descname">AV_base</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AuxiliaryVariables.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AuxiliaryVariables.AV_base" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="method">
 <dt id="proteus.AuxiliaryVariables.AV_base.attachModel">
 <code class="descname">attachModel</code><span class="sig-paren">(</span><em>model</em>, <em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AuxiliaryVariables.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AuxiliaryVariables.AV_base.attachModel" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -370,8 +399,7 @@ standalone application</p>
 <dl class="method">
 <dt id="proteus.AuxiliaryVariables.PT123velocityGenerator.getElementRT0velocityValues">
 <code class="descname">getElementRT0velocityValues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AuxiliaryVariables.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AuxiliaryVariables.PT123velocityGenerator.getElementRT0velocityValues" title="Permalink to this definition">¶</a></dt>
-<dd><p>calculate P1nc flux values at points defined on elements</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -390,7 +418,7 @@ standalone application</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

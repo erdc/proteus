@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.WaveTools module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.WaveTools module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -22,7 +23,7 @@
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="proteus.default_n module" href="proteus.default_n.html" />
+    <link rel="next" title="proteus.cSubsurfaceTransportCoefficients module" href="proteus.cSubsurfaceTransportCoefficients.html" />
     <link rel="prev" title="proteus.Viewers module" href="proteus.Viewers.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -94,7 +95,7 @@
     </a>
   </li>
   <li>
-    <a href="proteus.default_n.html" title="Next Chapter: proteus.default_n module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.defau... &raquo;</span>
+    <a href="proteus.cSubsurfaceTransportCoefficients.html" title="Next Chapter: proteus.cSubsurfaceTransportCoefficients module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.cSubs... &raquo;</span>
     </a>
   </li>
               
@@ -134,7 +135,8 @@ generation sources, and validation solutions for numerical wave codes.</p>
 <dl class="class">
 <dt id="proteus.WaveTools.SteadyCurrent">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">SteadyCurrent</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SteadyCurrent" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class is used for generating a steady current</p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class is used for generating a steady current</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -212,6 +214,11 @@ generation sources, and validation solutions for numerical wave codes.</p>
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="proteus.WaveTools.SolitaryWave.c">
+<code class="descname">c</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SolitaryWave.c" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="proteus.WaveTools.SolitaryWave.eta">
 <code class="descname">eta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.SolitaryWave.eta" title="Permalink to this definition">¶</a></dt>
@@ -356,6 +363,219 @@ autoFentonOpts = {‘mode’: ‘Period’,</p>
 <dt id="proteus.WaveTools.MonochromaticWaves.wavelength">
 <code class="descname">wavelength</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.MonochromaticWaves.wavelength" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.WaveTools.NewWave">
+<em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">NewWave</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class is used for generating the NewWave theory (see Tromans et al. 1991)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Tp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Peak wave period</li>
+<li><strong>Hs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significant wave height</li>
+<li><strong>mwl</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Still water level</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Water depth</li>
+<li><strong>waveDir</strong> (<em>numpy.ndarray</em>) – Wave direction vector</li>
+<li><strong>g</strong> (<em>Numpy array</em>) – Gravitational acceleration vector</li>
+<li><strong>N</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of frequency components</li>
+<li><strong>bandFactor</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)</li>
+<li><strong>spectName</strong> (<em>string</em>) – Name of spectral distribution</li>
+<li><strong>spectral_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of arguments specific to the spectral distribution
+Example for JONSWAP = {“gamma”: 3.3, “TMA”:True,”depth”: depth}
+TMA=True activates the TMA modification, which in turn needs the depth as a parameter</li>
+<li><strong>crestFocus</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch to determine if crest focused or trough focused. By</li>
+<li><strong>x0</strong> (<em>numpy array</em>) – Position of focused crest / trough</li>
+<li><strong>Nmax</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Normalisation factor to get the 1/N wave event at the NewWave series</li>
+<li><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Switch for optimised functions</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.Hs">
+<code class="descname">Hs</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.Hs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.N">
+<code class="descname">N</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.N" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.Si_Jm">
+<code class="descname">Si_Jm</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.Si_Jm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.Tlag">
+<code class="descname">Tlag</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.Tlag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.Tp">
+<code class="descname">Tp</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.Tp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.ai">
+<code class="descname">ai</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.ai" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.bandFactor">
+<code class="descname">bandFactor</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.bandFactor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.depth">
+<code class="descname">depth</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.depth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.df">
+<code class="descname">df</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.df" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.WaveTools.NewWave.eta">
+<code class="descname">eta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.eta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates free surface elevation (RandomWaves class)
+:param x: Position vector
+:type x: numpy.ndarray
+:param t: Time variable
+:type t: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Free-surface elevation as a float</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.fi">
+<code class="descname">fi</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.fi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.fim">
+<code class="descname">fim</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.fim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.fp">
+<code class="descname">fp</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.fp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.g">
+<code class="descname">g</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.g" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.gAbs">
+<code class="descname">gAbs</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.gAbs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.kDir">
+<code class="descname">kDir</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.kDir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.ki">
+<code class="descname">ki</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.ki" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.mwl">
+<code class="descname">mwl</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.mwl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.omega">
+<code class="descname">omega</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.omega" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.phi">
+<code class="descname">phi</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.phi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.tanhF">
+<code class="descname">tanhF</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.tanhF" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.WaveTools.NewWave.u">
+<code class="descname">u</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates wave velocity vector (RandomWaves class)
+:param x: Position vector
+:type x: numpy.ndarray
+:param t: Time variable
+:type t: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Velocity vector as 1D array</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.vDir">
+<code class="descname">vDir</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.vDir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.NewWave.waveDir">
+<code class="descname">waveDir</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.waveDir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.WaveTools.NewWave.writeEtaSeries">
+<code class="descname">writeEtaSeries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.NewWave.writeEtaSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a timeseries of the free-surface elevation</p>
+<p>It also returns the free surface elevation as a time-eta array.
+If Lgen !=[0.,0.,0.,] then Tstart is modified to account for the
+wave transformation at the most remote point of the relaxation zone.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>Tstart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Start time</li>
+<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – End time</li>
+<li><strong>x0</strong> (<em>numpy.ndarray</em>) – Position vector of the time series</li>
+<li><strong>fname</strong> (<em>string</em>) – Filename for timeseries file</li>
+<li><strong>Lgen</strong> (<em>Optional</em><em>[</em><em>numpy.ndarray</em><em>]</em>) – Length vector of relaxation zone</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2D numpy array Nx2 containing free-surface elevation in time.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -537,6 +757,11 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <dl class="attribute">
 <dt id="proteus.WaveTools.RandomWaves.waveDir">
 <code class="descname">waveDir</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.RandomWaves.waveDir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.WaveTools.RandomWaves.wavelength">
+<code class="descname">wavelength</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.RandomWaves.wavelength" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -897,7 +1122,8 @@ e.g.  window_params = {“Nwaves”:15, “Tm”: Tp/1.1, “Window”:”costap
 <dl class="class">
 <dt id="proteus.WaveTools.RandomWavesFast">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">RandomWavesFast</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.RandomWavesFast" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class is used for generating plane random waves in an optimised manner
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class is used for generating plane random waves in an optimised manner
 using linear reconstruction of components from a wave spectrum</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1174,7 +1400,8 @@ wave transformation at the most remote point of the relaxation zone.</p>
 <dl class="class">
 <dt id="proteus.WaveTools.RandomNLWavesFast">
 <em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">RandomNLWavesFast</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.RandomNLWavesFast" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class is used for generating plane random waves with 2ns order correction in an optimised manner
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class is used for generating plane random waves with 2ns order correction in an optimised manner
 using linear reconstruction of components from a wave spectrum</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1242,6 +1469,61 @@ TMA=True activates the TMA modification, which in turn needs the depth as a para
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Velocity vector as 1D array</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.WaveTools.CombineWaves">
+<em class="property">class </em><code class="descclassname">proteus.WaveTools.</code><code class="descname">CombineWaves</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.CombineWaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class is used for combining multiple waveTools classes, thus allowing for the generation of complex wave conditions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>waveList</strong> (<em>list</em>) – List of wave classes</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="proteus.WaveTools.CombineWaves.eta">
+<code class="descname">eta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.CombineWaves.eta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates free surface elevation (combineWaves class)
+:param x: Position vector
+:type x: numpy.ndarray
+:param t: Time variable
+:type t: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Free-surface elevation as a float</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.WaveTools.CombineWaves.u">
+<code class="descname">u</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/WaveTools.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.WaveTools.CombineWaves.u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates wave particle velocity (combineWaves class)
+:param x: Position vector
+:type x: numpy.ndarray
+:param t: Time variable
+:type t: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Velocity as 1D numpy array</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy array</td>
 </tr>
 </tbody>
 </table>
@@ -1952,7 +2234,7 @@ of a time series with constant sampling.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

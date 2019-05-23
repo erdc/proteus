@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.elastoplastic.ElastoPlastic module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.elastoplastic.ElastoPlastic module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -133,7 +134,8 @@
 <dl class="method">
 <dt id="proteus.elastoplastic.ElastoPlastic.Coefficients.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/elastoplastic/ElastoPlastic.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.elastoplastic.ElastoPlastic.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to other models in a loosely coupled split operator formulation (e.g. a transport equation for concentration might get velocity from a flow equation)</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.elastoplastic.ElastoPlastic.Coefficients.initializeElementQuadrature">
@@ -150,22 +152,26 @@
 <dl class="method">
 <dt id="proteus.elastoplastic.ElastoPlastic.Coefficients.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/elastoplastic/ElastoPlastic.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.elastoplastic.ElastoPlastic.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the mesh for any mesh-dependent information.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.elastoplastic.ElastoPlastic.Coefficients.postStep">
 <code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/elastoplastic/ElastoPlastic.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.elastoplastic.ElastoPlastic.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object an opportunity to modify itself after the time step.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.elastoplastic.ElastoPlastic.Coefficients.preStep">
 <code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/elastoplastic/ElastoPlastic.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.elastoplastic.ElastoPlastic.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object an opportunity to modify itself before the time step.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.elastoplastic.ElastoPlastic.Coefficients.evaluate">
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/elastoplastic/ElastoPlastic.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.elastoplastic.ElastoPlastic.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -245,7 +251,7 @@ and the shape information at the quadrature points on global element boundaries.
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

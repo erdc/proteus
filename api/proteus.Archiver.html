@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.Archiver module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.Archiver module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,8 +128,17 @@
   <div class="section" id="module-proteus.Archiver">
 <span id="proteus-archiver-module"></span><h1>proteus.Archiver module<a class="headerlink" href="#module-proteus.Archiver" title="Permalink to this headline">¶</a></h1>
 <p>Classes for archiving numerical solution data</p>
-<div class="graphviz"><object data="../_images/inheritance-3815d266e0a073fb267f1a6dee22cc2de544c30b.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.Archiver</p></object></div>
+digraph inheritance611a085bc2 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;AR_base&quot; [URL=&quot;../api/proteus.Archiver.html#proteus.Archiver.AR_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;AR_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ArchiveFlags&quot; [URL=&quot;../api/proteus.Archiver.html#proteus.Archiver.ArchiveFlags&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;ArchiveFlags&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;XdmfWriter&quot; [URL=&quot;../api/proteus.Archiver.html#proteus.Archiver.XdmfWriter&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;collect functionality for writing data to Xdmf format&quot;];
+  &quot;newobject&quot; -&gt; &quot;XdmfWriter&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="function">
 <dt id="proteus.Archiver.indentXML">
 <code class="descclassname">proteus.Archiver.</code><code class="descname">indentXML</code><span class="sig-paren">(</span><em>elem</em>, <em>level=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.indentXML" title="Permalink to this definition">¶</a></dt>
@@ -137,7 +147,8 @@
 <dl class="class">
 <dt id="proteus.Archiver.ArchiveFlags">
 <em class="property">class </em><code class="descclassname">proteus.Archiver.</code><code class="descname">ArchiveFlags</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="attribute">
 <dt id="proteus.Archiver.ArchiveFlags.EVERY_MODEL_STEP">
 <code class="descname">EVERY_MODEL_STEP</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.EVERY_MODEL_STEP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -162,7 +173,8 @@
 <dl class="class">
 <dt id="proteus.Archiver.AR_base">
 <em class="property">class </em><code class="descclassname">proteus.Archiver.</code><code class="descname">AR_base</code><span class="sig-paren">(</span><em>dataDir</em>, <em>filename</em>, <em>useTextArchive=False</em>, <em>gatherAtClose=True</em>, <em>useGlobalXMF=True</em>, <em>hotStart=False</em>, <em>readOnly=False</em>, <em>global_sync=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="method">
 <dt id="proteus.Archiver.AR_base.gatherAndWriteTimes">
 <code class="descname">gatherAndWriteTimes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.gatherAndWriteTimes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pull all the time steps into the global tree and write</p>
@@ -214,7 +226,8 @@
 <dl class="class">
 <dt id="proteus.Archiver.XdmfWriter">
 <em class="property">class </em><code class="descclassname">proteus.Archiver.</code><code class="descname">XdmfWriter</code><span class="sig-paren">(</span><em>shareSingleGrid=True</em>, <em>arGridCollection=None</em>, <em>arGrid=None</em>, <em>arTime=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter" title="Permalink to this definition">¶</a></dt>
-<dd><p>collect functionality for writing data to Xdmf format</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>collect functionality for writing data to Xdmf format</p>
 <p>Writer is supposed to keep track of grid collection (temporal collection)</p>
 <p>as well as current grid under grid collection where data belong,
 since data are associated with a grid of specific type
@@ -473,7 +486,7 @@ need to check on way to save dofs as well</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

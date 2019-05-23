@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.Domain module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.Domain module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,40 @@
   <div class="section" id="module-proteus.Domain">
 <span id="proteus-domain-module"></span><h1>proteus.Domain module<a class="headerlink" href="#module-proteus.Domain" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy and tools for building domains of PDE’s.</p>
-<div class="graphviz"><object data="../_images/inheritance-653cc3b70e5b7c84142c51fac19a6966e1c283e9.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.Domain</p></object></div>
+digraph inheritancecb50c7d34c {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;D_base&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.D_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for domains&quot;];
+  &quot;newobject&quot; -&gt; &quot;D_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;GMSH_3D_Domain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.GMSH_3D_Domain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A domain described by a gmsh .geo file&quot;];
+  &quot;D_base&quot; -&gt; &quot;GMSH_3D_Domain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;InterpolatedBathymetryDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.InterpolatedBathymetryDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;2D domains with an attached bathymetry data set.&quot;];
+  &quot;PlanarStraightLineGraphDomain&quot; -&gt; &quot;InterpolatedBathymetryDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Mesh2DMDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.Mesh2DMDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;2D domains from ADH mesh files&quot;];
+  &quot;D_base&quot; -&gt; &quot;Mesh2DMDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Mesh3DMDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.Mesh3DMDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains from ADH mesh files&quot;];
+  &quot;D_base&quot; -&gt; &quot;Mesh3DMDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MeshHexDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.MeshHexDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains from Hex mesh files&quot;];
+  &quot;D_base&quot; -&gt; &quot;MeshHexDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MeshTetgenDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.MeshTetgenDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains from tetgen mesh files&quot;];
+  &quot;D_base&quot; -&gt; &quot;MeshTetgenDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PUMIDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.PUMIDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3d domains from PUMI mesh files&quot;];
+  &quot;D_base&quot; -&gt; &quot;PUMIDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PiecewiseLinearComplexDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.PiecewiseLinearComplexDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains desribed by closed surfaces made up of general polygonal facets.&quot;];
+  &quot;D_base&quot; -&gt; &quot;PiecewiseLinearComplexDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlanarStraightLineGraphDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.PlanarStraightLineGraphDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;2D domains described by planar straight line graphs.&quot;];
+  &quot;D_base&quot; -&gt; &quot;PlanarStraightLineGraphDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;RectangularDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.RectangularDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Rectangular domains in 1,2, or 3D specified by the lower left hand corner and dimensions.&quot;];
+  &quot;D_base&quot; -&gt; &quot;RectangularDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;TriangulatedSurfaceDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.TriangulatedSurfaceDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains described by closed surfaces made up of triangular facets.&quot;];
+  &quot;D_base&quot; -&gt; &quot;TriangulatedSurfaceDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.Domain.D_base">
 <em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">D_base</code><span class="sig-paren">(</span><em>nd</em>, <em>name='defaultDomain'</em>, <em>units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>The base class for domains</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>The base class for domains</p>
 <p>Set dimensions (nd), name string, and units string</p>
 <dl class="method">
 <dt id="proteus.Domain.D_base.isOnLine">
@@ -224,7 +253,8 @@ flags from .geo file.</p>
 <dl class="method">
 <dt id="proteus.Domain.RectangularDomain.writeXdmf">
 <code class="descname">writeXdmf</code><span class="sig-paren">(</span><em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain.writeXdmf" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Store the domain in an Xdmf file.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -384,6 +414,11 @@ Meshes are generated by locally refining the PSLG until the interpolation error 
 <p>3d domains from PUMI mesh files</p>
 <p>faceList – defines face classification in simmetrix  mesh
 PUMIMesh – the MeshAdapt object</p>
+<dl class="method">
+<dt id="proteus.Domain.PUMIDomain.writePoly">
+<code class="descname">writePoly</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PUMIDomain.writePoly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -425,7 +460,8 @@ PUMIMesh – the MeshAdapt object</p>
 <dl class="method">
 <dt id="proteus.Domain.PiecewiseLinearComplexDomain.writeXdmf">
 <code class="descname">writeXdmf</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writeXdmf" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Store the domain in an Xdmf file.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -449,7 +485,7 @@ PUMIMesh – the MeshAdapt object</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

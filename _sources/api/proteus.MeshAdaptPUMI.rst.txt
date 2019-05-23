@@ -11,5 +11,6 @@ Submodules
 
 .. toctree::
 
+   proteus.MeshAdaptPUMI.Checkpoint
    proteus.MeshAdaptPUMI.MeshAdaptPUMI
 

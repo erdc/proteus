@@ -11,6 +11,5 @@ Submodules
 
 .. toctree::
 
-   proteus.mbd.ChRigidBody
-   proteus.mbd.pyChronoCore
+   proteus.mbd.CouplingFSI
 

@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.mprans.BodyDynamics module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.mprans.BodyDynamics module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -328,7 +329,10 @@ If Forward_Euler, forward euler scheme is applied.</td>
 <dl class="method">
 <dt id="proteus.mprans.BodyDynamics.RigidBody.imposeSinusoidalMotion">
 <code class="descname">imposeSinusoidalMotion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BodyDynamics.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BodyDynamics.RigidBody.imposeSinusoidalMotion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Motion is imposed rather than calculated.</p>
+<dd><dl class="docutils">
+<dt>Motion is imposed rather than calculated.</dt>
+<dd>Parameters</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -630,7 +634,7 @@ value: list of length 2: [variable name, index within variable]</p>
 
 <dl class="method">
 <dt id="proteus.mprans.BodyDynamics.PaddleBody.inputMotion">
-<code class="descname">inputMotion</code><span class="sig-paren">(</span><em>InputMotion=False, pivot=None, At=[0.0, 0.0, 0], Tt=[0.0, 0.0, 0], Ar=[0.0, 0.0, 0], Tr=[0.0, 0.0, 0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BodyDynamics.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BodyDynamics.PaddleBody.inputMotion" title="Permalink to this definition">¶</a></dt>
+<code class="descname">inputMotion</code><span class="sig-paren">(</span><em>InputMotion=False, pivot=None, At=[0.0, 0.0, 0], Tt=[0.0, 0.0, 0], Ar=[0.0, 0.0, 0], Tr=[0.0, 0.0, 0], rampStart=0, rampEnd=0, Tend=1000000.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BodyDynamics.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BodyDynamics.PaddleBody.inputMotion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets motion as an input. It’s imposed rather than calculated.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -643,6 +647,9 @@ value: list of length 2: [variable name, index within variable]</p>
 <li><strong>Tt</strong> (<em>list</em>) – Period of translational motion</li>
 <li><strong>Ar</strong> (<em>list</em>) – Amplitude of rotational motion</li>
 <li><strong>Tr</strong> (<em>list</em>) – Period of rotational motion</li>
+<li><strong>rampStart</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Time for ramping waves at the beginning</li>
+<li><strong>rampStart</strong> – Time for ramping waves at end</li>
+<li><strong>Tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – End time of paddle operation (needed for rampEnd)</li>
 </ul>
 </td>
 </tr>
@@ -652,8 +659,14 @@ value: list of length 2: [variable name, index within variable]</p>
 
 <dl class="method">
 <dt id="proteus.mprans.BodyDynamics.PaddleBody.imposeSinusoidalMotion">
-<code class="descname">imposeSinusoidalMotion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BodyDynamics.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BodyDynamics.PaddleBody.imposeSinusoidalMotion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Motion is imposed rather than calculated.</p>
+<code class="descname">imposeSinusoidalMotion</code><span class="sig-paren">(</span><em>tt=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BodyDynamics.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BodyDynamics.PaddleBody.imposeSinusoidalMotion" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Motion is imposed rather than calculated.</dt>
+<dd></dd>
+<dt>tt: None or float</dt>
+<dd>tt should be None for other than testing purposes. If not None,
+time is externally set.</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -709,7 +722,7 @@ value: list of length 2: [variable name, index within variable]</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

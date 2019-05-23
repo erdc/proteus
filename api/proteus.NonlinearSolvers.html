@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.NonlinearSolvers module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.NonlinearSolvers module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,66 @@
   <div class="section" id="module-proteus.NonlinearSolvers">
 <span id="proteus-nonlinearsolvers-module"></span><h1>proteus.NonlinearSolvers module<a class="headerlink" href="#module-proteus.NonlinearSolvers" title="Permalink to this headline">¶</a></h1>
 <p>A hierarchy of classes for nonlinear algebraic system solvers.</p>
-<div class="graphviz"><object data="../_images/inheritance-416dc41d145ebe597c2b3ec0b42bd10a73b54f66.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.NonlinearSolvers</p></object></div>
+digraph inheritance0624bf74da {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;AddedMassNewton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.AddedMassNewton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;Newton&quot; -&gt; &quot;AddedMassNewton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;CLSVOFNewton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.CLSVOFNewton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;Newton&quot; -&gt; &quot;CLSVOFNewton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ExplicitConsistentMassMatrixForVOF&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.ExplicitConsistentMassMatrixForVOF&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This is a fake solver meant to be used with optimized code&quot;];
+  &quot;Newton&quot; -&gt; &quot;ExplicitConsistentMassMatrixForVOF&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ExplicitConsistentMassMatrixShallowWaterEquationsSolver&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.ExplicitConsistentMassMatrixShallowWaterEquationsSolver&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This is a fake solver meant to be used with optimized code&quot;];
+  &quot;Newton&quot; -&gt; &quot;ExplicitConsistentMassMatrixShallowWaterEquationsSolver&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ExplicitConsistentMassMatrixWithRedistancing&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.ExplicitConsistentMassMatrixWithRedistancing&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This is a fake solver meant to be used with optimized code&quot;];
+  &quot;Newton&quot; -&gt; &quot;ExplicitConsistentMassMatrixWithRedistancing&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ExplicitLumpedMassMatrix&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.ExplicitLumpedMassMatrix&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This is a fake solver meant to be used with optimized code&quot;];
+  &quot;Newton&quot; -&gt; &quot;ExplicitLumpedMassMatrix&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ExplicitLumpedMassMatrixShallowWaterEquationsSolver&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.ExplicitLumpedMassMatrixShallowWaterEquationsSolver&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This is a fake solver meant to be used with optimized code&quot;];
+  &quot;Newton&quot; -&gt; &quot;ExplicitLumpedMassMatrixShallowWaterEquationsSolver&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;FAS&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.FAS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic nonlinear multigrid W cycle using the Full Approximation Scheme (FAS).&quot;];
+  &quot;newobject&quot; -&gt; &quot;FAS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;FasTwoLevel&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.FasTwoLevel&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic nonlinear two-level solver based on the full approximation scheme. (FAS).&quot;];
+  &quot;NonlinearSolver&quot; -&gt; &quot;FasTwoLevel&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MoveMeshMonitorNewton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.MoveMeshMonitorNewton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;Newton&quot; -&gt; &quot;MoveMeshMonitorNewton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelNonlinearSolver&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.MultilevelNonlinearSolver&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A generic multilevel solver.&quot;];
+  &quot;newobject&quot; -&gt; &quot;MultilevelNonlinearSolver&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NLGaussSeidel&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NLGaussSeidel&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Nonlinear Gauss-Seidel.&quot;];
+  &quot;NonlinearSolver&quot; -&gt; &quot;NLGaussSeidel&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NLJacobi&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NLJacobi&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Nonlinear Jacobi iteration.&quot;];
+  &quot;NonlinearSolver&quot; -&gt; &quot;NLJacobi&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NLNI&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NLNI&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Nonlinear nested iteration.&quot;];
+  &quot;MultilevelNonlinearSolver&quot; -&gt; &quot;NLNI&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NLStarILU&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NLStarILU&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Nonlinear alternating Schwarz on node stars.&quot;];
+  &quot;NonlinearSolver&quot; -&gt; &quot;NLStarILU&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Newton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.Newton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A simple iterative solver that is Newton's method&quot;];
+  &quot;NonlinearSolver&quot; -&gt; &quot;Newton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NewtonNS&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NewtonNS&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A simple iterative solver that is Newton's method&quot;];
+  &quot;NonlinearSolver&quot; -&gt; &quot;NewtonNS&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NewtonWithL2ProjectionForMassCorrection&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NewtonWithL2ProjectionForMassCorrection&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This is a fake solver meant to be used with optimized code&quot;];
+  &quot;Newton&quot; -&gt; &quot;NewtonWithL2ProjectionForMassCorrection&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NonlinearEquation&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NonlinearEquation&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for nonlinear equations.&quot;];
+  &quot;newobject&quot; -&gt; &quot;NonlinearEquation&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NonlinearSolver&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NonlinearSolver&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for nonlinear solvers.&quot;];
+  &quot;newobject&quot; -&gt; &quot;NonlinearSolver&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;POD_DEIM_Newton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.POD_DEIM_Newton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Newton's method on the reduced order system based on POD&quot;];
+  &quot;Newton&quot; -&gt; &quot;POD_DEIM_Newton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;POD_Newton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.POD_Newton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Newton's method on the reduced order system based on POD&quot;];
+  &quot;Newton&quot; -&gt; &quot;POD_Newton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PicardNewton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.PicardNewton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;Newton&quot; -&gt; &quot;PicardNewton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SSPRKNewton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.SSPRKNewton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Version of Newton for SSPRK so doesn't refactor unnecessarily&quot;];
+  &quot;Newton&quot; -&gt; &quot;SSPRKNewton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;TwoStageNewton&quot; [URL=&quot;../api/proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.TwoStageNewton&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Solves a 2 Stage problem via Newton's solve&quot;];
+  &quot;Newton&quot; -&gt; &quot;TwoStageNewton&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.NonlinearSolvers.NonlinearEquation">
 <em class="property">class </em><code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">NonlinearEquation</code><span class="sig-paren">(</span><em>dim=0</em>, <em>dim_proc=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.NonlinearEquation" title="Permalink to this definition">¶</a></dt>
-<dd><p>The base class for nonlinear equations.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>The base class for nonlinear equations.</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.NonlinearEquation.getResidual">
 <code class="descname">getResidual</code><span class="sig-paren">(</span><em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.NonlinearEquation.getResidual" title="Permalink to this definition">¶</a></dt>
@@ -154,7 +209,8 @@
 <dl class="class">
 <dt id="proteus.NonlinearSolvers.NonlinearSolver">
 <em class="property">class </em><code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">NonlinearSolver</code><span class="sig-paren">(</span><em>F</em>, <em>J=None</em>, <em>du=None</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=True</em>, <em>unorm=None</em>, <em>tol_du=0.33</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.NonlinearSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>The base class for nonlinear solvers.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>The base class for nonlinear solvers.</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.NonlinearSolver.norm">
 <code class="descname">norm</code><span class="sig-paren">(</span><em>u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.NonlinearSolver.norm" title="Permalink to this definition">¶</a></dt>
@@ -261,7 +317,7 @@ assigned a smaller relative reduction up to a minimum of
 
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.Newton.solve">
-<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.Newton.solve" title="Permalink to this definition">¶</a></dt>
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em>, <em>linear=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.Newton.solve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -289,7 +345,50 @@ assigned a smaller relative reduction up to a minimum of
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.AddedMassNewton.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.AddedMassNewton.solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>u</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Solution vector.</li>
+<li><strong>r</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+<li><strong>b</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (ARB - not sure this is always true)) – Right hand side vector</li>
+<li><strong>par_u</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel solution vector.</li>
+<li><strong>par_r</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NonlinearSolvers.MoveMeshMonitorNewton">
+<em class="property">class </em><code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">MoveMeshMonitorNewton</code><span class="sig-paren">(</span><em>linearSolver</em>, <em>F</em>, <em>J=None</em>, <em>du=None</em>, <em>par_du=None</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=True</em>, <em>fullNewton=True</em>, <em>directSolver=False</em>, <em>EWtol=True</em>, <em>maxLSits=100</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MoveMeshMonitorNewton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NonlinearSolvers.Newton" title="proteus.NonlinearSolvers.Newton"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.NonlinearSolvers.Newton</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NonlinearSolvers.MoveMeshMonitorNewton.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MoveMeshMonitorNewton.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>u</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Solution vector.</li>
+<li><strong>r</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+<li><strong>b</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (ARB - not sure this is always true)) – Right hand side vector</li>
+<li><strong>par_u</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel solution vector.</li>
+<li><strong>par_r</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -316,7 +415,23 @@ if you give it the right Jacobian</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.ExplicitLumpedMassMatrixShallowWaterEquationsSolver.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.ExplicitLumpedMassMatrixShallowWaterEquationsSolver.solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>u</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Solution vector.</li>
+<li><strong>r</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+<li><strong>b</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (ARB - not sure this is always true)) – Right hand side vector</li>
+<li><strong>par_u</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel solution vector.</li>
+<li><strong>par_r</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -330,7 +445,23 @@ if you give it the right Jacobian</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.ExplicitConsistentMassMatrixShallowWaterEquationsSolver.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.ExplicitConsistentMassMatrixShallowWaterEquationsSolver.solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>u</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Solution vector.</li>
+<li><strong>r</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+<li><strong>b</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (ARB - not sure this is always true)) – Right hand side vector</li>
+<li><strong>par_u</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel solution vector.</li>
+<li><strong>par_r</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -345,6 +476,27 @@ if you give it the right Jacobian</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.ExplicitLumpedMassMatrix.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.ExplicitLumpedMassMatrix.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>u</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Solution vector.</li>
+<li><strong>r</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+<li><strong>b</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (ARB - not sure this is always true)) – Right hand side vector</li>
+<li><strong>par_u</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel solution vector.</li>
+<li><strong>par_r</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NonlinearSolvers.ExplicitLumpedMassMatrix.no_solve">
+<code class="descname">no_solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.ExplicitLumpedMassMatrix.no_solve" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -360,7 +512,23 @@ if you give it the right Jacobian</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.ExplicitConsistentMassMatrixWithRedistancing.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.ExplicitConsistentMassMatrixWithRedistancing.solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>u</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Solution vector.</li>
+<li><strong>r</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+<li><strong>b</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (ARB - not sure this is always true)) – Right hand side vector</li>
+<li><strong>par_u</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel solution vector.</li>
+<li><strong>par_r</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -375,7 +543,23 @@ if you give it the right Jacobian</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.ExplicitConsistentMassMatrixForVOF.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.ExplicitConsistentMassMatrixForVOF.solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>u</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Solution vector.</li>
+<li><strong>r</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+<li><strong>b</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (ARB - not sure this is always true)) – Right hand side vector</li>
+<li><strong>par_u</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel solution vector.</li>
+<li><strong>par_r</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -413,8 +597,44 @@ r – F(u) - b</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="proteus.NonlinearSolvers.CLSVOFNewton.project_disc_ICs">
+<code class="descname">project_disc_ICs</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.CLSVOFNewton.project_disc_ICs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NonlinearSolvers.CLSVOFNewton.redistance_disc_ICs">
+<code class="descname">redistance_disc_ICs</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em>, <em>max_num_iters=100</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.CLSVOFNewton.redistance_disc_ICs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NonlinearSolvers.CLSVOFNewton.spinup_for_disc_ICs">
+<code class="descname">spinup_for_disc_ICs</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.CLSVOFNewton.spinup_for_disc_ICs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="proteus.NonlinearSolvers.CLSVOFNewton.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.CLSVOFNewton.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the non-linear system <span class="math notranslate nohighlight">\(F(u) = b\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>u</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Solution vector.</li>
+<li><strong>r</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+<li><strong>b</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (ARB - not sure this is always true)) – Right hand side vector</li>
+<li><strong>par_u</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel solution vector.</li>
+<li><strong>par_r</strong> (<a class="reference internal" href="proteus.LinearAlgebraTools.html#proteus.LinearAlgebraTools.ParVec_petsc4py" title="proteus.LinearAlgebraTools.ParVec_petsc4py"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ParVec_petsc4py</span></code></a>) – Parallel residual vector, <span class="math notranslate nohighlight">\(r = b - F(u)\)</span></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NonlinearSolvers.CLSVOFNewton.solveOldMethod">
+<code class="descname">solveOldMethod</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.CLSVOFNewton.solveOldMethod" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -448,7 +668,7 @@ r – F(u) - b</p>
 
 <dl class="attribute">
 <dt id="proteus.NonlinearSolvers.POD_Newton.deim_utils">
-<code class="descname">deim_utils</code><em class="property"> = &lt;module 'proteus.deim_utils' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/deim_utils.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.POD_Newton.deim_utils" title="Permalink to this definition">¶</a></dt>
+<code class="descname">deim_utils</code><em class="property"> = &lt;module 'proteus.deim_utils' from '/home/tridelat/PROTEUS/proteus4/proteus/deim_utils.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.POD_Newton.deim_utils" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -639,7 +859,8 @@ r – F(u) - b</p>
 <dl class="class">
 <dt id="proteus.NonlinearSolvers.FAS">
 <em class="property">class </em><code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">FAS</code><span class="sig-paren">(</span><em>prolongList</em>, <em>restrictList</em>, <em>restrictSumList</em>, <em>FList</em>, <em>preSmootherList</em>, <em>postSmootherList</em>, <em>coarseSolver</em>, <em>mgItsList=[]</em>, <em>printInfo=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.FAS" title="Permalink to this definition">¶</a></dt>
-<dd><p>A generic nonlinear multigrid W cycle using the Full Approximation Scheme (FAS).</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A generic nonlinear multigrid W cycle using the Full Approximation Scheme (FAS).</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.FAS.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.FAS.solve" title="Permalink to this definition">¶</a></dt>
@@ -650,7 +871,8 @@ r – F(u) - b</p>
 <dl class="class">
 <dt id="proteus.NonlinearSolvers.MultilevelNonlinearSolver">
 <em class="property">class </em><code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">MultilevelNonlinearSolver</code><span class="sig-paren">(</span><em>fList</em>, <em>levelNonlinearSolverList</em>, <em>computeRates=False</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MultilevelNonlinearSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>A generic multilevel solver.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A generic multilevel solver.</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.MultilevelNonlinearSolver.solveMultilevel">
 <code class="descname">solveMultilevel</code><span class="sig-paren">(</span><em>uList</em>, <em>rList</em>, <em>bList=None</em>, <em>par_uList=None</em>, <em>par_rList=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MultilevelNonlinearSolver.solveMultilevel" title="Permalink to this definition">¶</a></dt>
@@ -664,62 +886,6 @@ r – F(u) - b</p>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.MultilevelNonlinearSolver.info">
 <code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MultilevelNonlinearSolver.info" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="proteus.NonlinearSolvers.EikonalSolver">
-<em class="property">class </em><code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">EikonalSolver</code><span class="sig-paren">(</span><em>levelSolverType</em>, <em>F</em>, <em>relativeTolerance=0.0</em>, <em>absoluteTolerance=1e-08</em>, <em>maxSolverIts=100</em>, <em>frontTolerance=0.0001</em>, <em>frontInitType='magnitudeOnly'</em>, <em>bandTolerance=-0.01</em>, <em>eikonalVariable=0</em>, <em>localReconstruction=None</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.EikonalSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simple wrapper for special purpose Eikonal equation solvers on a single level.
-Current types allowed:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FMMEikonalSolver</span>
-<span class="n">FSWEikonalSolver</span>
-</pre></div>
-</div>
-<dl class="method">
-<dt id="proteus.NonlinearSolvers.EikonalSolver.solve">
-<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r</em>, <em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.EikonalSolver.solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.NonlinearSolvers.EikonalSolver.info">
-<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.EikonalSolver.info" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.NonlinearSolvers.EikonalSolver.convertToC0P1Rep">
-<code class="descname">convertToC0P1Rep</code><span class="sig-paren">(</span><em>dofin</em>, <em>dofout</em>, <em>interpType='min'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.EikonalSolver.convertToC0P1Rep" title="Permalink to this definition">¶</a></dt>
-<dd><p>allow input FEM space to be something besides C0P1 and then convert to expected
-representation here</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.NonlinearSolvers.EikonalSolver.convertFromC0P1Rep">
-<code class="descname">convertFromC0P1Rep</code><span class="sig-paren">(</span><em>dofin</em>, <em>dofout</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.EikonalSolver.convertFromC0P1Rep" title="Permalink to this definition">¶</a></dt>
-<dd><p>allow output FEM space to be something besides C0P1 and convert from C0P1 to expected
-representation here</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="proteus.NonlinearSolvers.MultilevelEikonalSolver">
-<em class="property">class </em><code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">MultilevelEikonalSolver</code><span class="sig-paren">(</span><em>levelSolverList</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MultilevelEikonalSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attempt a wrapper for multilevel Eikonal equation solves with restricted interface</p>
-<dl class="method">
-<dt id="proteus.NonlinearSolvers.MultilevelEikonalSolver.solveMultilevel">
-<code class="descname">solveMultilevel</code><span class="sig-paren">(</span><em>uList</em>, <em>rList</em>, <em>bList=None</em>, <em>par_uList=None</em>, <em>par_rList=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MultilevelEikonalSolver.solveMultilevel" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.NonlinearSolvers.MultilevelEikonalSolver.updateJacobian">
-<code class="descname">updateJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MultilevelEikonalSolver.updateJacobian" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.NonlinearSolvers.MultilevelEikonalSolver.info">
-<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.MultilevelEikonalSolver.info" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -758,7 +924,7 @@ representation here</p>
 
 <dl class="function">
 <dt id="proteus.NonlinearSolvers.multilevelNonlinearSolverChooser">
-<code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">multilevelNonlinearSolverChooser</code><span class="sig-paren">(</span><em>nonlinearOperatorList</em>, <em>jacobianList</em>, <em>par_jacobianList</em>, <em>duList=None</em>, <em>par_duList=None</em>, <em>relativeToleranceList=None</em>, <em>absoluteTolerance=1e-08</em>, <em>multilevelNonlinearSolverType=&lt;class proteus.NonlinearSolvers.NLNI&gt;</em>, <em>computeSolverRates=False</em>, <em>printSolverInfo=False</em>, <em>linearSolverList=None</em>, <em>linearDirectSolverFlag=False</em>, <em>solverFullNewtonFlag=True</em>, <em>maxSolverIts=500</em>, <em>solverConvergenceTest='r'</em>, <em>levelNonlinearSolverType=&lt;class proteus.NonlinearSolvers.Newton&gt;</em>, <em>levelSolverFullNewtonFlag=True</em>, <em>levelSolverConvergenceTest='r'</em>, <em>computeLevelSolverRates=False</em>, <em>printLevelSolverInfo=False</em>, <em>relaxationFactor=None</em>, <em>connectionListList=None</em>, <em>smootherType='Jacobi'</em>, <em>prolong_bcList=None</em>, <em>restrict_bcList=None</em>, <em>restrict_bcSumList=None</em>, <em>prolongList=None</em>, <em>restrictList=None</em>, <em>restrictionRowSumList=None</em>, <em>preSmooths=3</em>, <em>postSmooths=3</em>, <em>cycles=3</em>, <em>smootherConvergenceTest='its'</em>, <em>computeSmootherRates=False</em>, <em>printSmootherInfo=False</em>, <em>smootherFullNewtonFlag=True</em>, <em>computeCoarseSolverRates=False</em>, <em>printCoarseSolverInfo=False</em>, <em>EWtol=True</em>, <em>maxLSits=100</em>, <em>parallelUsesFullOverlap=True</em>, <em>nonlinearSolverNorm=&lt;function l2Norm&gt;</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.multilevelNonlinearSolverChooser" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">multilevelNonlinearSolverChooser</code><span class="sig-paren">(</span><em>nonlinearOperatorList</em>, <em>jacobianList</em>, <em>par_jacobianList</em>, <em>duList=None</em>, <em>par_duList=None</em>, <em>relativeToleranceList=None</em>, <em>absoluteTolerance=1e-08</em>, <em>multilevelNonlinearSolverType=&lt;class 'proteus.NonlinearSolvers.NLNI'&gt;</em>, <em>computeSolverRates=False</em>, <em>printSolverInfo=False</em>, <em>linearSolverList=None</em>, <em>linearDirectSolverFlag=False</em>, <em>solverFullNewtonFlag=True</em>, <em>maxSolverIts=500</em>, <em>solverConvergenceTest='r'</em>, <em>levelNonlinearSolverType=&lt;class 'proteus.NonlinearSolvers.Newton'&gt;</em>, <em>levelSolverFullNewtonFlag=True</em>, <em>levelSolverConvergenceTest='r'</em>, <em>computeLevelSolverRates=False</em>, <em>printLevelSolverInfo=False</em>, <em>relaxationFactor=None</em>, <em>connectionListList=None</em>, <em>smootherType='Jacobi'</em>, <em>prolong_bcList=None</em>, <em>restrict_bcList=None</em>, <em>restrict_bcSumList=None</em>, <em>prolongList=None</em>, <em>restrictList=None</em>, <em>restrictionRowSumList=None</em>, <em>preSmooths=3</em>, <em>postSmooths=3</em>, <em>cycles=3</em>, <em>smootherConvergenceTest='its'</em>, <em>computeSmootherRates=False</em>, <em>printSmootherInfo=False</em>, <em>smootherFullNewtonFlag=True</em>, <em>computeCoarseSolverRates=False</em>, <em>printCoarseSolverInfo=False</em>, <em>EWtol=True</em>, <em>maxLSits=100</em>, <em>parallelUsesFullOverlap=True</em>, <em>nonlinearSolverNorm=&lt;function l2Norm&gt;</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.multilevelNonlinearSolverChooser" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -776,7 +942,7 @@ representation here</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

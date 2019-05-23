@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.FemTools module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.FemTools module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,154 @@
   <div class="section" id="module-proteus.FemTools">
 <span id="proteus-femtools-module"></span><h1>proteus.FemTools module<a class="headerlink" href="#module-proteus.FemTools" title="Permalink to this headline">¶</a></h1>
 <p>Class hierarchies for constructing and working with finite element spaces</p>
-<div class="graphviz"><object data="../_images/inheritance-7a90a6f81509f34e000eaaedd34f35163d052f02.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.FemTools</p></object></div>
+digraph inheritancefebbebd6b5 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;AffineMaps&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.AffineMaps&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;ParametricMaps&quot; -&gt; &quot;AffineMaps&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;BernsteinOnCube&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.BernsteinOnCube&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Bernstein polynomials on the unit nd-cube&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;BernsteinOnCube&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;BernsteinOnSimplex&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.BernsteinOnSimplex&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Quadratic Bernstein polynomials on the unit nd-simplex.&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;BernsteinOnSimplex&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineBernsteinOnCube&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_AffineBernsteinOnCube&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Bernstein CG space.&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;C0_AffineBernsteinOnCube&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineBernsteinOnSimplex&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_AffineBernsteinOnSimplex&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A quadratic C0 space with Bernstein basis.&quot;];
+  &quot;C0_AffineQuadraticOnSimplexWithNodalBasis&quot; -&gt; &quot;C0_AffineBernsteinOnSimplex&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineLagrangeOnCubeWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_AffineLagrangeOnCubeWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The standard linear CG space.&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;C0_AffineLagrangeOnCubeWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineLinearOnCubeWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The standard linear CG space.&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;C0_AffineLinearOnCubeWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineLinearOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The standard linear CG space.&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;C0_AffineLinearOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineP1BubbleOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_AffineP1BubbleOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;C0P1 enriched with bubble functions&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;C0_AffineP1BubbleOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineP1P0BubbleOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_AffineP1P0BubbleOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;TODO set output to take advantage of nodal information&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;C0_AffineP1P0BubbleOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineQuadraticOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A quadratic C0 space with the nodal basis.&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;C0_AffineQuadraticOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_BernsteinOnCube&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_BernsteinOnCube&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The standard linear CG space.&quot;];
+  &quot;C0_AffineLinearOnSimplexWithNodalBasis&quot; -&gt; &quot;C0_BernsteinOnCube&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_LagrangeOnCubeWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_LagrangeOnCubeWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The standard linear CG space.&quot;];
+  &quot;C0_AffineLinearOnSimplexWithNodalBasis&quot; -&gt; &quot;C0_LagrangeOnCubeWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_LinearOnCubeWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.C0_LinearOnCubeWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The standard linear CG space.&quot;];
+  &quot;C0_AffineLinearOnSimplexWithNodalBasis&quot; -&gt; &quot;C0_LinearOnCubeWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;CrouzeixRaviartWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.CrouzeixRaviartWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Crouzeix-Raviart element implemented as a Lagrange type element. That is, the&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;CrouzeixRaviartWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;CubeNodalInterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.CubeNodalInterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;NodalInterpolationConditions&quot; -&gt; &quot;CubeNodalInterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineLinearOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineLinearOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A linear DG space with the nodal basis.&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;DG_AffineLinearOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineP0_OnSimplexWithMonomialBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineP0_OnSimplexWithMonomialBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; -&gt; &quot;DG_AffineP0_OnSimplexWithMonomialBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineP1_OnSimplexWithMonomialBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineP1_OnSimplexWithMonomialBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; -&gt; &quot;DG_AffineP1_OnSimplexWithMonomialBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineP2_OnSimplexWithMonomialBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineP2_OnSimplexWithMonomialBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; -&gt; &quot;DG_AffineP2_OnSimplexWithMonomialBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineP3_OnSimplexWithMonomialBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineP3_OnSimplexWithMonomialBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; -&gt; &quot;DG_AffineP3_OnSimplexWithMonomialBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineP4_OnSimplexWithMonomialBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineP4_OnSimplexWithMonomialBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; -&gt; &quot;DG_AffineP4_OnSimplexWithMonomialBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineP5_OnSimplexWithMonomialBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineP5_OnSimplexWithMonomialBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; -&gt; &quot;DG_AffineP5_OnSimplexWithMonomialBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineP6_OnSimplexWithMonomialBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineP6_OnSimplexWithMonomialBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; -&gt; &quot;DG_AffineP6_OnSimplexWithMonomialBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;DG_AffinePolynomialsOnSimplexWithMonomialBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_AffineQuadraticOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_AffineQuadraticOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A quadratic DG space with the nodal basis.&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;DG_AffineQuadraticOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DG_Constants&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DG_Constants&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The constant DG space&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;DG_Constants&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DOFBoundaryConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DOFBoundaryConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for generating the set of DOF that are replaced by&quot;];
+  &quot;newobject&quot; -&gt; &quot;DOFBoundaryConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DOFBoundaryConditions_alt&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DOFBoundaryConditions_alt&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for generating the set of DOF that are replaced by&quot;];
+  &quot;newobject&quot; -&gt; &quot;DOFBoundaryConditions_alt&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DOFMap&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DOFMap&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for integer mappings between local degrees of freedom&quot;];
+  &quot;newobject&quot; -&gt; &quot;DOFMap&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DiscontinuousGalerkinDOFMap&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.DiscontinuousGalerkinDOFMap&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A DOF map to use with discontinuous Galerkin spaces, which have&quot;];
+  &quot;DOFMap&quot; -&gt; &quot;DiscontinuousGalerkinDOFMap&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ElementBoundaryDOFMap&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.ElementBoundaryDOFMap&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The mapping that associates a local degree of freedom number&quot;];
+  &quot;DOFMap&quot; -&gt; &quot;ElementBoundaryDOFMap&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ElementMaps&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.ElementMaps&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for a set of real number vector fields that map a reference&quot;];
+  &quot;newobject&quot; -&gt; &quot;ElementMaps&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;FaceBarycenterInterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.FaceBarycenterInterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Obtains the DOF from the function values at the barycenter of faces&quot;];
+  &quot;InterpolationConditions&quot; -&gt; &quot;FaceBarycenterInterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;FiniteElementFunction&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.FiniteElementFunction&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A member of a finite element space of scalar functions.&quot;];
+  &quot;newobject&quot; -&gt; &quot;FiniteElementFunction&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;FluxBoundaryConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.FluxBoundaryConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Generating class for the fluxBoundaryConditions dictionaries.&quot;];
+  &quot;newobject&quot; -&gt; &quot;FluxBoundaryConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;FluxBoundaryConditionsGlobalElementBoundaries&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.FluxBoundaryConditionsGlobalElementBoundaries&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;mwf original version that sets indeces based on all element boundaries&quot;];
+  &quot;newobject&quot; -&gt; &quot;FluxBoundaryConditionsGlobalElementBoundaries&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;InterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.InterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for generalized interpolation conditions&quot;];
+  &quot;newobject&quot; -&gt; &quot;InterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LagrangeCubeOrderN&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;C0_AffineLagrangeOnCubeWithNodalBasis&quot; -&gt; &quot;LagrangeCubeOrderN&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LagrangeOnCubeWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.LagrangeOnCubeWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Lagrange polynomials on the unit nd-cube with the nodal basis.&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;LagrangeOnCubeWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LinearOnCubeWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.LinearOnCubeWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;First order polynomials on the unit nd-cube with the nodal basis.&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;LinearOnCubeWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LinearOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.LinearOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;First order polynomials on the unit nd-simplex with the nodal basis.&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;LinearOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LocalFunctionSpace&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.LocalFunctionSpace&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for low-dimensional spaces of functions&quot;];
+  &quot;newobject&quot; -&gt; &quot;LocalFunctionSpace&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MonomialInterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.MonomialInterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;InterpolationConditions&quot; -&gt; &quot;MonomialInterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Monomials&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.Monomials&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;Monomials&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelProjectionOperators&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.MultilevelProjectionOperators&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class that takes a hierarchical (multiLevel) mesh and generates&quot;];
+  &quot;newobject&quot; -&gt; &quot;MultilevelProjectionOperators&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NC_AffineLinearOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.NC_AffineLinearOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Space of functions that are P^1 on elements and continuous at&quot;];
+  &quot;ParametricFiniteElementSpace&quot; -&gt; &quot;NC_AffineLinearOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NodalDOFMap&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.NodalDOFMap&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The mapping that associates a local degree of freedom number&quot;];
+  &quot;DOFMap&quot; -&gt; &quot;NodalDOFMap&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NodalInterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.NodalInterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Obtains the DOF from the function values at the nodes&quot;];
+  &quot;InterpolationConditions&quot; -&gt; &quot;NodalInterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;P1BubbleDOFMap&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.P1BubbleDOFMap&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;DOF mapping for Lagrange P1 + bubble finite element functions on&quot;];
+  &quot;DOFMap&quot; -&gt; &quot;P1BubbleDOFMap&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;P1BubbleInterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.P1BubbleInterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Interpolation conditions for space P1 enriched with bubbles&quot;];
+  &quot;InterpolationConditions&quot; -&gt; &quot;P1BubbleInterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;P1BubblesWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.P1BubblesWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;First order polynomials on the unit nd-simplex with the nodal basis + bubble&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;P1BubblesWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;P1P0BubbleInterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.P1P0BubbleInterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;InterpolationConditions&quot; -&gt; &quot;P1P0BubbleInterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;P1P0BubblesWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.P1P0BubblesWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;First order polynomials on the unit nd-simplex with the nodal basis + dg bubble&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;P1P0BubblesWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ParametricFiniteElementSpace&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.ParametricFiniteElementSpace&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Base class for spaces of functions defined by a set of finite&quot;];
+  &quot;newobject&quot; -&gt; &quot;ParametricFiniteElementSpace&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ParametricMaps&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.ParametricMaps&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class that calculates the element maps using the&quot;];
+  &quot;ElementMaps&quot; -&gt; &quot;ParametricMaps&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;QuadraticLagrangeCubeDOFMap&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.QuadraticLagrangeCubeDOFMap&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;DOF mapping for quadratic lagrange finite element functions on&quot;];
+  &quot;DOFMap&quot; -&gt; &quot;QuadraticLagrangeCubeDOFMap&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;QuadraticLagrangeCubeNodalInterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.QuadraticLagrangeCubeNodalInterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Obtains the DOF from the function values at vertices and&quot;];
+  &quot;InterpolationConditions&quot; -&gt; &quot;QuadraticLagrangeCubeNodalInterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;QuadraticLagrangeDOFMap&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.QuadraticLagrangeDOFMap&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;DOF mapping for quadratic lagrange finite element functions on&quot;];
+  &quot;DOFMap&quot; -&gt; &quot;QuadraticLagrangeDOFMap&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;QuadraticLagrangeNodalInterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.QuadraticLagrangeNodalInterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Obtains the DOF from the function values at vertices and&quot;];
+  &quot;InterpolationConditions&quot; -&gt; &quot;QuadraticLagrangeNodalInterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;QuadraticOnSimplexWithNodalBasis&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.QuadraticOnSimplexWithNodalBasis&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Quadratic polynomials on the unit nd-simplex with the nodal basis.&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;QuadraticOnSimplexWithNodalBasis&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ReferenceCube&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.ReferenceCube&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The unit cube in :math:`R^n, n&lt;=3`&quot;];
+  &quot;ReferenceElement&quot; -&gt; &quot;ReferenceCube&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ReferenceElement&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.ReferenceElement&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A base class for simple domains on which&quot;];
+  &quot;newobject&quot; -&gt; &quot;ReferenceElement&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ReferenceFiniteElement&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.ReferenceFiniteElement&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The geometric element, local function space, and interpolation&quot;];
+  &quot;newobject&quot; -&gt; &quot;ReferenceFiniteElement&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ReferenceSimplex&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.ReferenceSimplex&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The unit simplex in :math:`R^n, n&lt;=3`&quot;];
+  &quot;ReferenceElement&quot; -&gt; &quot;ReferenceSimplex&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;StressBoundaryConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.StressBoundaryConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for generating the list of element boundaries&quot;];
+  &quot;newobject&quot; -&gt; &quot;StressBoundaryConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+  &quot;p0&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.p0&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;LocalFunctionSpace&quot; -&gt; &quot;p0&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;p0DOFMap&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.p0DOFMap&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;DOFMap&quot; -&gt; &quot;p0DOFMap&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;p0InterpolationConditions&quot; [URL=&quot;../api/proteus.FemTools.html#proteus.FemTools.p0InterpolationConditions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;InterpolationConditions&quot; -&gt; &quot;p0InterpolationConditions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}
 <dl class="class">
 <dt id="proteus.FemTools.ReferenceElement">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ReferenceElement</code><span class="sig-paren">(</span><em>dim=0</em>, <em>nNodes=0</em>, <em>nElementBoundaries=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceElement" title="Permalink to this definition">¶</a></dt>
-<dd><p>A base class for simple domains on which
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A base class for simple domains on which
 local function spaces will be built</p>
 <dl class="method">
 <dt id="proteus.FemTools.ReferenceElement.onElement">
@@ -168,7 +311,8 @@ local function spaces will be built</p>
 <dl class="class">
 <dt id="proteus.FemTools.LocalFunctionSpace">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">LocalFunctionSpace</code><span class="sig-paren">(</span><em>dim=0</em>, <em>referenceElement=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.LocalFunctionSpace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for low-dimensional spaces of functions
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Base class for low-dimensional spaces of functions
 on a reference element.</p>
 <p>For example, linear functions on a reference triangle</p>
 <dl class="method">
@@ -435,7 +579,8 @@ the nodes. The last shape function is the bubble, b</p>
 <dl class="class">
 <dt id="proteus.FemTools.InterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">InterpolationConditions</code><span class="sig-paren">(</span><em>dim=0</em>, <em>referenceElement=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.InterpolationConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for generalized interpolation conditions
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Base class for generalized interpolation conditions
 for function spaces.</p>
 <p>For example, a function’s values at a set of points
 that is large enough to uniquely specify an element
@@ -624,7 +769,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.p0InterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0InterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/tridelat/PROTEUS/proteus4/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0InterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -645,7 +790,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.MonomialInterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MonomialInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/tridelat/PROTEUS/proteus4/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MonomialInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -683,7 +828,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/tridelat/PROTEUS/proteus4/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -691,7 +836,8 @@ can just use functionals interface</p>
 <dl class="class">
 <dt id="proteus.FemTools.ReferenceFiniteElement">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ReferenceFiniteElement</code><span class="sig-paren">(</span><em>localFunctionSpace</em>, <em>interpolationConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceFiniteElement" title="Permalink to this definition">¶</a></dt>
-<dd><p>The geometric element, local function space, and interpolation
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>The geometric element, local function space, and interpolation
 conditions.</p>
 <p>I distinguish between the “elements” (patches) of the mesh and
 the “finite elements” which also include information about the
@@ -702,7 +848,8 @@ theory where a finite element is a triple: (T,PI,SIGMA)</p>
 <dl class="class">
 <dt id="proteus.FemTools.DOFMap">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DOFMap</code><span class="sig-paren">(</span><em>nDOF=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DOFMap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for integer mappings between local degrees of freedom
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Base class for integer mappings between local degrees of freedom
 and global degrees of freedom.</p>
 <dl class="method">
 <dt id="proteus.FemTools.DOFMap.updateAfterParallelPartitioning">
@@ -817,7 +964,8 @@ TODO: implement for parallel</p>
 <dl class="class">
 <dt id="proteus.FemTools.ElementMaps">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ElementMaps</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ElementMaps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for a set of real number vector fields that map a reference
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Base class for a set of real number vector fields that map a reference
 element into the physical domain.</p>
 <dl class="method">
 <dt id="proteus.FemTools.ElementMaps.getBasisValuesRef">
@@ -942,47 +1090,69 @@ for which the nodes are the local DOF.</p>
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getBasisValuesRef">
 <code class="descname">getBasisValuesRef</code><span class="sig-paren">(</span><em>xiArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getBasisValuesRef" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the basis of the map at a set of points, xiArray,
+given on the reference element. Store in member array self.psi</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getValues">
 <code class="descname">getValues</code><span class="sig-paren">(</span><em>xiArray</em>, <em>xArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getValues" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the set of nElements maps at a set of points, xiArray,
+given on the reference element.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getBasisGradientValuesRef">
 <code class="descname">getBasisGradientValuesRef</code><span class="sig-paren">(</span><em>xiArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getBasisGradientValuesRef" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the basis gradients of the map at a set of points, xiArray.
+Store in member self.grad_psi</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getJacobianValues">
 <code class="descname">getJacobianValues</code><span class="sig-paren">(</span><em>xiArray</em>, <em>jacobianArray</em>, <em>jacobianInverseArray</em>, <em>jacobianDeterminantArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getJacobianValues" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the jacobian, jacobian determinant, and inverse jacobian
+of the set of nElements maps at a set of points, xiArray.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getBasisValuesTraceRef">
 <code class="descname">getBasisValuesTraceRef</code><span class="sig-paren">(</span><em>xiArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getBasisValuesTraceRef" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the basis of the maps at a set of points, xiArray, on
+the boundaries of the reference element. Store in member
+self.psi_trace</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getValuesTrace">
 <code class="descname">getValuesTrace</code><span class="sig-paren">(</span><em>xiArray</em>, <em>xArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getValuesTrace" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the nElements x nElementBoundaries_element maps
+at a set of points, xiArray, on the element boundary
+reference element.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getBasisGradientValuesTraceRef">
 <code class="descname">getBasisGradientValuesTraceRef</code><span class="sig-paren">(</span><em>xiArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getBasisGradientValuesTraceRef" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the basis gradients of the map at a set of points,
+xiArray, on the reference element boundaries.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getJacobianValuesTrace">
 <code class="descname">getJacobianValuesTrace</code><span class="sig-paren">(</span><em>xiArray</em>, <em>jacobianInverseArray</em>, <em>metricTensorArray</em>, <em>metricTensorDeterminantSqrtArray</em>, <em>unitNormalArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getJacobianValuesTrace" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the metric tensor, square root of the determinant of
+the metric tensor, and the unit normal at the
+nElements x nElementBoundaries_element element boundaries.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getJacobianValuesTrace_movingDomain">
 <code class="descname">getJacobianValuesTrace_movingDomain</code><span class="sig-paren">(</span><em>xiArray</em>, <em>xt</em>, <em>jacobianInverseArray</em>, <em>metricTensorArray</em>, <em>metricTensorDeterminantSqrtArray</em>, <em>unitNormalArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricMaps.getJacobianValuesTrace_movingDomain" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the metric tensor, square root of the determinant of
+the metric tensor, and the unit normal at the
+nElements x nElementBoundaries_element element boundaries.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.ParametricMaps.getPermutations">
@@ -1016,12 +1186,17 @@ for which the nodes are the local DOF.</p>
 <dl class="method">
 <dt id="proteus.FemTools.AffineMaps.getInverseValues">
 <code class="descname">getInverseValues</code><span class="sig-paren">(</span><em>inverseJacobian</em>, <em>xArray</em>, <em>xiArray</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.AffineMaps.getInverseValues" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the set of nElements inverse maps at a set of points, xArray,
+given on the physical elements. Return the value of the inverse map.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.AffineMaps.getInverseValue">
 <code class="descname">getInverseValue</code><span class="sig-paren">(</span><em>eN</em>, <em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.AffineMaps.getInverseValue" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the element inverse map at a point, x,
+given in physical coorindates. Return the value of the inverse map, xi, in reference coordinates.</p>
+<p>Note: The mapped point may not lie on the reference  element</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.AffineMaps.getInverseValuesTrace">
@@ -1038,7 +1213,8 @@ for which the nodes are the local DOF.</p>
 <dl class="class">
 <dt id="proteus.FemTools.ParametricFiniteElementSpace">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ParametricFiniteElementSpace</code><span class="sig-paren">(</span><em>referenceFiniteElement</em>, <em>elementMaps</em>, <em>dofMap</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ParametricFiniteElementSpace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for spaces of functions defined by a set of finite
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Base class for spaces of functions defined by a set of finite
 elements that are each related to the same reference finite element.</p>
 <p>dim – global dimension of the space
 mesh – a Mesh object, which is a partition of the domain
@@ -1351,6 +1527,12 @@ a linear affine mapping. The nodal basis is used on the reference simplex.</p>
 <dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LagrangeCubeOrderN</span></code></p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="proteus.FemTools.C0_AffineQuadraticOnCubeWithNodalBasis">
+<code class="descclassname">proteus.FemTools.</code><code class="descname">C0_AffineQuadraticOnCubeWithNodalBasis</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineQuadraticOnCubeWithNodalBasis" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.LagrangeCubeOrderN</span></code></p>
+</dd></dl>
+
 <dl class="class">
 <dt id="proteus.FemTools.C0_BernsteinOnCube">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_BernsteinOnCube</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em>, <em>order=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_BernsteinOnCube" title="Permalink to this definition">¶</a></dt>
@@ -1464,7 +1646,8 @@ tries to use basis values at interpolation points if in u</p>
 <dl class="method">
 <dt id="proteus.FemTools.DG_AffineP0_OnSimplexWithMonomialBasis.writeFunctionXdmf">
 <code class="descname">writeFunctionXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DG_AffineP0_OnSimplexWithMonomialBasis.writeFunctionXdmf" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>not much choice except to get u values at interpolation points?</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.DG_AffineP0_OnSimplexWithMonomialBasis.writeVectorFunctionXdmf">
@@ -1957,8 +2140,9 @@ tries to use basis values at interpolation points if in u</p>
 
 <dl class="class">
 <dt id="proteus.FemTools.FiniteElementFunction">
-<em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">FiniteElementFunction</code><span class="sig-paren">(</span><em>finiteElementSpace</em>, <em>dof=None</em>, <em>dim_dof=1</em>, <em>name='no_name'</em>, <em>isVector=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>A member of a finite element space of scalar functions.</p>
+<em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">FiniteElementFunction</code><span class="sig-paren">(</span><em>finiteElementSpace</em>, <em>dof=None</em>, <em>dof_last=None</em>, <em>dof_last_last=None</em>, <em>dim_dof=1</em>, <em>name='no_name'</em>, <em>isVector=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A member of a finite element space of scalar functions.</p>
 <p>This class manages the calculation of function, gradient, tensor,
 and trace values associated with a finite element function.
 Typically, this function will be a scalar function  (For example,
@@ -2031,6 +2215,11 @@ use C-routines.</p>
 <code class="descname">par_dof</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.par_dof" title="Permalink to this definition">¶</a></dt>
 <dd><p>for parallel FiniteElementFunciton capability</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="proteus.FemTools.FiniteElementFunction.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FiniteElementFunction.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.FemTools.FiniteElementFunction.projectFromInterpolationConditions">
@@ -2132,7 +2321,8 @@ use C-routines.</p>
 <dl class="class">
 <dt id="proteus.FemTools.DOFBoundaryConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DOFBoundaryConditions</code><span class="sig-paren">(</span><em>femSpace</em>, <em>getPointwiseBoundaryConditions=None</em>, <em>weakDirichletConditions=False</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>allowNodalMaterialBoundaryTypes=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DOFBoundaryConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class for generating the set of DOF that are replaced by
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A class for generating the set of DOF that are replaced by
 Dirichlet conditions and the values that are to be assigned to
 those DOF. For now I will ignore the ability to specify
 different boundary conditions for interpolatory DOF that correspond
@@ -2160,7 +2350,8 @@ initially, only weak bc’s will allow this functionality though</dd>
 <dl class="class">
 <dt id="proteus.FemTools.DOFBoundaryConditions_alt">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">DOFBoundaryConditions_alt</code><span class="sig-paren">(</span><em>femSpace</em>, <em>getPointwiseBoundaryConditions=None</em>, <em>weakDirichletConditions=False</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>allowNodalMaterialBoundaryTypes=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.DOFBoundaryConditions_alt" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class for generating the set of DOF that are replaced by
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A class for generating the set of DOF that are replaced by
 Dirichlet conditions and the values that are to be assigned to
 those DOF. For now I will ignore the ability to specify
 different boundary conditions for interpolatory DOF that correspond
@@ -2188,7 +2379,7 @@ initially, only weak bc’s will allow this functionality though</dd>
 <dl class="class">
 <dt id="proteus.FemTools.FluxBoundaryConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">FluxBoundaryConditions</code><span class="sig-paren">(</span><em>mesh</em>, <em>nElementBoundaryQuadraturePoints_elementBoundary</em>, <em>x</em>, <em>getAdvectiveFluxBoundaryConditions=None</em>, <em>getDiffusiveFluxBoundaryConditions={}</em>, <em>getStressFluxBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FluxBoundaryConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
 <p>Generating class for the fluxBoundaryConditions dictionaries.</p>
 <p>This class manages the generation of the advective, stress and
 diffusive fluxBoundaryCondition dictionaries.  These dictionaries
@@ -2216,7 +2407,8 @@ quadrature point number.</p>
 <dl class="class">
 <dt id="proteus.FemTools.FluxBoundaryConditionsGlobalElementBoundaries">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">FluxBoundaryConditionsGlobalElementBoundaries</code><span class="sig-paren">(</span><em>mesh</em>, <em>nElementBoundaryQuadraturePoints_elementBoundary</em>, <em>x</em>, <em>getAdvectiveFluxBoundaryConditions=None</em>, <em>getDiffusiveFluxBoundaryConditions={}</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.FluxBoundaryConditionsGlobalElementBoundaries" title="Permalink to this definition">¶</a></dt>
-<dd><p>mwf original version that sets indeces based on all element boundaries
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>mwf original version that sets indeces based on all element boundaries
 A class for generating the list of element boundaries
 where values are specified.</p>
 </dd></dl>
@@ -2224,14 +2416,16 @@ where values are specified.</p>
 <dl class="class">
 <dt id="proteus.FemTools.StressBoundaryConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">StressBoundaryConditions</code><span class="sig-paren">(</span><em>mesh</em>, <em>nElementBoundaryQuadraturePoints_elementBoundary</em>, <em>x</em>, <em>getStressTraceBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.StressBoundaryConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class for generating the list of element boundaries
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A class for generating the list of element boundaries
 where values are specified.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.FemTools.MultilevelProjectionOperators">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">MultilevelProjectionOperators</code><span class="sig-paren">(</span><em>multilevelMesh</em>, <em>femSpaceDictList</em>, <em>offsetListList</em>, <em>strideListList</em>, <em>dofBoundaryConditionsDictList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MultilevelProjectionOperators" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class that takes a hierarchical (multiLevel) mesh and generates
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A class that takes a hierarchical (multiLevel) mesh and generates
 the interpolation and restriction operators.</p>
 <p>restrictList/prolongList – projection and restriction at only the free nodes
 restrict_bcList/prolong_bcList – includes dirichlet boundaries as well</p>
@@ -2276,7 +2470,7 @@ injection, which is simply the transpose of the projection matrix.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

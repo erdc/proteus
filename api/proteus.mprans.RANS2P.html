@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.mprans.RANS2P module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.mprans.RANS2P module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -209,7 +210,7 @@
 
 <dl class="class">
 <dt id="proteus.mprans.RANS2P.Coefficients">
-<em class="property">class </em><code class="descclassname">proteus.mprans.RANS2P.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>epsFact=1.5, sigma=72.8, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, 0.0, -9.8], nd=3, ME_model=0, CLSVOF_model=None, LS_model=None, VF_model=None, KN_model=None, Closure_0_model=None, Closure_1_model=None, epsFact_density=None, stokes=False, sd=True, movingDomain=False, useVF=0.0, useRBLES=0.0, useMetrics=0.0, useConstant_he=False, dragAlpha=0.0, dragBeta=0.0, setParamsFunc=None, dragAlphaTypes=None, dragBetaTypes=None, porosityTypes=None, killNonlinearDrag=False, waveFlag=None, waveHeight=0.01, waveCelerity=1.0, waveFrequency=1.0, waveNumber=2.0, waterDepth=0.5, Omega_s=[[0.45, 0.55], [0.2, 0.4], [0.0, 1.0]], epsFact_source=1.0, epsFact_solid=None, eb_adjoint_sigma=1.0, eb_penalty_constant=10.0, forceStrongDirichlet=False, turbulenceClosureModel=0, smagorinskyConstant=0.1, barycenters=None, NONCONSERVATIVE_FORM=0.0, MOMENTUM_SGE=1.0, PRESSURE_SGE=1.0, VELOCITY_SGE=1.0, PRESSURE_PROJECTION_STABILIZATION=0.0, phaseFunction=None, LAG_LES=1.0, use_ball_as_particle=1, ball_center=None, ball_radius=None, ball_velocity=None, ball_angular_velocity=None, nParticles=0, particle_epsFact=3.0, particle_alpha=1000.0, particle_beta=1000.0, particle_penalty_constant=1000.0, particle_nitsche=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS2P.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>epsFact=1.5, sigma=72.8, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, 0.0, -9.8], nd=3, ME_model=0, CLSVOF_model=None, LS_model=None, VF_model=None, KN_model=None, Closure_0_model=None, Closure_1_model=None, epsFact_density=None, stokes=False, sd=True, movingDomain=False, useVF=0.0, useRBLES=0.0, useMetrics=0.0, useConstant_he=False, dragAlpha=0.0, dragBeta=0.0, setParamsFunc=None, dragAlphaTypes=None, dragBetaTypes=None, porosityTypes=None, killNonlinearDrag=False, epsFact_solid=None, eb_adjoint_sigma=1.0, eb_penalty_constant=10.0, forceStrongDirichlet=False, turbulenceClosureModel=0, smagorinskyConstant=0.1, barycenters=None, NONCONSERVATIVE_FORM=0.0, MOMENTUM_SGE=1.0, PRESSURE_SGE=1.0, VELOCITY_SGE=1.0, PRESSURE_PROJECTION_STABILIZATION=0.0, phaseFunction=None, LAG_LES=1.0, use_ball_as_particle=1, ball_center=None, ball_radius=None, ball_velocity=None, ball_angular_velocity=None, ball_center_acceleration=None, ball_angular_acceleration=None, ball_density=None, particle_velocities=None, particle_centroids=None, particle_sdfList=[], particle_velocityList=[], nParticles=0, particle_epsFact=3.0, particle_alpha=1000.0, particle_beta=1000.0, particle_penalty_constant=1000.0, particle_nitsche=1.0, nullSpace='NoNullSpace'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <p>The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function</p>
 <p class="rubric">Notes</p>
@@ -222,27 +223,32 @@ results than the full SGE approach.</p>
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to other models in a loosely coupled split operator formulation (e.g. a transport equation for concentration might get velocity from a flow equation)</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the mesh for any mesh-dependent information.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.initializeElementQuadrature">
 <code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the element quadrature storage</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.initializeElementBoundaryQuadrature">
 <code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the element boundary quadrature storage</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
 <code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the exterior element boundary quadrature storage</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.updateToMovingDomain">
@@ -250,60 +256,48 @@ results than the full SGE approach.</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="proteus.mprans.RANS2P.Coefficients.evaluateForcingTerms">
-<code class="descname">evaluateForcingTerms</code><span class="sig-paren">(</span><em>t</em>, <em>c</em>, <em>mesh=None</em>, <em>mesh_trial_ref=None</em>, <em>mesh_l2g=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.evaluateForcingTerms" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.evaluate">
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.preStep">
 <code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object an opportunity to modify itself before the time step.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.postStep">
 <code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object an opportunity to modify itself after the time step.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate">
 <code class="descname">TwophaseNavierStokes_ST_LS_SO_2D_Evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate the coefficients  of the 2D Navier-Stokes equations with surface  tension</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd">
 <code class="descname">TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate the coefficients  of the 2D Navier-Stokes equations with surface  tension</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate">
 <code class="descname">TwophaseNavierStokes_ST_LS_SO_3D_Evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate the coefficients  of the 3D Navier-Stokes equations with surface  tension</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P.Coefficients.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd">
 <code class="descname">TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate the coefficients  of the 3D Navier-Stokes equations with surface  tension</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.RANS2P.Coefficients.calculateWaveFunction3d_ref">
-<code class="descname">calculateWaveFunction3d_ref</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.Coefficients.calculateWaveFunction3d_ref" title="Permalink to this definition">¶</a></dt>
-<dd><p>generate continuity source term for driving waves following Liu etal</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.mprans.RANS2P.LevelModel">
-<em class="property">class </em><code class="descclassname">proteus.mprans.RANS2P.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDictDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='RANS2P'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.LevelModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS2P.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDictDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='RANS2P'</em>, <em>reuse_trial_and_test_quadrature=False</em>, <em>sd=True</em>, <em>movingDomain=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P.LevelModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
 <dl class="attribute">
 <dt id="proteus.mprans.RANS2P.LevelModel.nCalls">
@@ -399,7 +393,7 @@ and the shape information at the quadrature points on global element boundaries.
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

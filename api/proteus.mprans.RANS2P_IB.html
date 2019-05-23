@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.mprans.RANS2P_IB module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.mprans.RANS2P_IB module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -128,32 +129,37 @@
 <span id="proteus-mprans-rans2p-ib-module"></span><h1>proteus.mprans.RANS2P_IB module<a class="headerlink" href="#module-proteus.mprans.RANS2P_IB" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="proteus.mprans.RANS2P_IB.Coefficients">
-<em class="property">class </em><code class="descclassname">proteus.mprans.RANS2P_IB.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>epsFact=1.5, sigma=72.8, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, 0.0, -9.8], nd=3, LS_model=None, VF_model=None, KN_model=None, Closure_0_model=None, Closure_1_model=None, epsFact_density=None, stokes=False, sd=True, movingDomain=False, useVF=0.0, useRBLES=0.0, useMetrics=0.0, useConstant_he=False, dragAlpha=0.01, dragBeta=0.0, setParamsFunc=None, dragAlphaTypes=None, dragBetaTypes=None, porosityTypes=None, killNonlinearDrag=False, waveFlag=None, waveHeight=0.01, waveCelerity=1.0, waveFrequency=1.0, waveNumber=2.0, waterDepth=0.5, Omega_s=[[0.45, 0.55], [0.2, 0.4], [0.0, 1.0]], epsFact_source=1.0, epsFact_solid=None, eb_adjoint_sigma=1.0, eb_penalty_constant=10.0, forceStrongDirichlet=False, turbulenceClosureModel=0, smagorinskyConstant=0.1, barycenters=None, beamLocation=[], beamLength=[], beamRadius=[], EI=[], GJ=[], nBeamElements=4, beam_quadOrder=3, beamFilename='Beams', beam_useSparse=False, beam_Cd=1.2, beam_nlTol=1e-05, beamRigid=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS2P_IB.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>epsFact=1.5, sigma=72.8, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, 0.0, -9.8], nd=3, LS_model=None, VF_model=None, KN_model=None, Closure_0_model=None, Closure_1_model=None, epsFact_density=None, stokes=False, sd=True, movingDomain=False, useVF=0.0, useRBLES=0.0, useMetrics=0.0, useConstant_he=False, dragAlpha=0.01, dragBeta=0.0, setParamsFunc=None, dragAlphaTypes=None, dragBetaTypes=None, porosityTypes=None, killNonlinearDrag=False, epsFact_source=1.0, epsFact_solid=None, eb_adjoint_sigma=1.0, eb_penalty_constant=10.0, forceStrongDirichlet=False, turbulenceClosureModel=0, smagorinskyConstant=0.1, barycenters=None, beamLocation=[], beamLength=[], beamRadius=[], EI=[], GJ=[], nBeamElements=4, beam_quadOrder=3, beamFilename='Beams', beam_useSparse=False, beam_Cd=1.2, beam_nlTol=1e-05, beamRigid=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.mprans.RANS2P.html#proteus.mprans.RANS2P.Coefficients" title="proteus.mprans.RANS2P.Coefficients"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.RANS2P.Coefficients</span></code></a></p>
 <dl class="method">
 <dt id="proteus.mprans.RANS2P_IB.Coefficients.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to other models in a loosely coupled split operator formulation (e.g. a transport equation for concentration might get velocity from a flow equation)</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P_IB.Coefficients.initializeElementQuadrature">
 <code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the element quadrature storage</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P_IB.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
 <code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the exterior element boundary quadrature storage</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P_IB.Coefficients.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the mesh for any mesh-dependent information.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P_IB.Coefficients.postStep">
 <code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object an opportunity to modify itself after the time step.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.RANS2P_IB.Coefficients.delta_h">
@@ -219,7 +225,7 @@
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

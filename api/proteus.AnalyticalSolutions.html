@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.AnalyticalSolutions module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.AnalyticalSolutions module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,68 @@
   <div class="section" id="module-proteus.AnalyticalSolutions">
 <span id="proteus-analyticalsolutions-module"></span><h1>proteus.AnalyticalSolutions module<a class="headerlink" href="#module-proteus.AnalyticalSolutions" title="Permalink to this headline">¶</a></h1>
 <p>Classes representing analytical solutions of differential and partial differential equations.</p>
-<div class="graphviz"><object data="../_images/inheritance-76446f3a9ac3c1dbb6329b77eadac90fc3a3d416.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.AnalyticalSolutions</p></object></div>
+digraph inheritance3ba27a0141 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;AS_base&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.AS_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for general analytical solutions, u(x,y,z,t)&quot;];
+  &quot;newobject&quot; -&gt; &quot;AS_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Buckley_Leverett_RiemannSoln&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.Buckley_Leverett_RiemannSoln&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;AS_base&quot; -&gt; &quot;Buckley_Leverett_RiemannSoln&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;DAE_base&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.DAE_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for differential-algebraic equation solutions&quot;];
+  &quot;AS_base&quot; -&gt; &quot;DAE_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LinearADR_Decay_DiracIC&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution of&quot;];
+  &quot;LinearAD_DiracIC&quot; -&gt; &quot;LinearADR_Decay_DiracIC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LinearADR_Sine&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.LinearADR_Sine&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;An exact solution and source term for&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;LinearADR_Sine&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LinearAD_DiracIC&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.LinearAD_DiracIC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution of&quot;];
+  &quot;AS_base&quot; -&gt; &quot;LinearAD_DiracIC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;LinearAD_SteadyState&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.LinearAD_SteadyState&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The solution of the steady linear advection-diffusion equation&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;LinearAD_SteadyState&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NonlinearADR_Decay_DiracIC&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.NonlinearADR_Decay_DiracIC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The approximate analytical solution of&quot;];
+  &quot;LinearADR_Decay_DiracIC&quot; -&gt; &quot;NonlinearADR_Decay_DiracIC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NonlinearAD_SteadyState&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.NonlinearAD_SteadyState&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The solution of a steady nonlinear advection-diffusion equation&quot;];
+  &quot;LinearAD_SteadyState&quot; -&gt; &quot;NonlinearAD_SteadyState&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NonlinearDAE&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.NonlinearDAE&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution of the simple nonlinear DAE&quot;];
+  &quot;DAE_base&quot; -&gt; &quot;NonlinearDAE&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlaneBase&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlaneBase&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the u component of  velocity in plane Poiseuille Flow&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;PlaneBase&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlaneCouetteFlow_p&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlaneCouetteFlow_p&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the v component of  velocity in plane Couette Flow&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;PlaneCouetteFlow_p&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlaneCouetteFlow_u&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlaneCouetteFlow_u&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the u component of  velocity in plane Couette Flow&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;PlaneCouetteFlow_u&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlaneCouetteFlow_v&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlaneCouetteFlow_v&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the v component of  velocity in plane Couette Flow&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;PlaneCouetteFlow_v&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlanePoiseuilleFlow_p&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_p&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the v component of  velocity in plane Poiseuille Flow&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;PlanePoiseuilleFlow_p&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlanePoiseuilleFlow_p2&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_p2&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the v component of  velocity in plane Poiseuille Flow&quot;];
+  &quot;PlaneBase&quot; -&gt; &quot;PlanePoiseuilleFlow_p2&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlanePoiseuilleFlow_u&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;PlanePoiseuilleFlow_u&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlanePoiseuilleFlow_u2&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u2&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the u component of  velocity in plane Poiseuille Flow&quot;];
+  &quot;PlaneBase&quot; -&gt; &quot;PlanePoiseuilleFlow_u2&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlanePoiseuilleFlow_v&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_v&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the v component of  velocity in plane Poiseuille Flow&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;PlanePoiseuilleFlow_v&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlanePoiseuilleFlow_v2&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_v2&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the v component of  velocity in plane Poiseuille Flow&quot;];
+  &quot;PlaneBase&quot; -&gt; &quot;PlanePoiseuilleFlow_v2&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PlanePoiseuilleFlow_w2&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_w2&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the v component of  velocity in plane Poiseuille Flow&quot;];
+  &quot;PlaneBase&quot; -&gt; &quot;PlanePoiseuilleFlow_w2&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PoissonsEquation&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.PoissonsEquation&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Manufactured solution of Poisson's equation&quot;];
+  &quot;SteadyState&quot; -&gt; &quot;PoissonsEquation&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SteadyState&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.SteadyState&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Based class for steady-state solutions u(x)&quot;];
+  &quot;AS_base&quot; -&gt; &quot;SteadyState&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;VortexDecay_p&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.VortexDecay_p&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the u component of  velocity in the vortex  decay problem&quot;];
+  &quot;AS_base&quot; -&gt; &quot;VortexDecay_p&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;VortexDecay_u&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.VortexDecay_u&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the u component of  velocity in the vortex  decay problem&quot;];
+  &quot;AS_base&quot; -&gt; &quot;VortexDecay_u&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;VortexDecay_v&quot; [URL=&quot;../api/proteus.AnalyticalSolutions.html#proteus.AnalyticalSolutions.VortexDecay_v&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The exact solution for the u component of  velocity in the vortex  decay problem&quot;];
+  &quot;AS_base&quot; -&gt; &quot;VortexDecay_v&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.AnalyticalSolutions.AS_base">
 <em class="property">class </em><code class="descclassname">proteus.AnalyticalSolutions.</code><code class="descname">AS_base</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.AS_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>The base class for general analytical solutions, u(x,y,z,t)</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>The base class for general analytical solutions, u(x,y,z,t)</p>
 <p>For basic error calculations only the <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base.uOfXT" title="proteus.AnalyticalSolutions.AS_base.uOfXT"><code class="xref py py-func docutils literal notranslate"><span class="pre">uOfXT()</span></code></a> member need be
 overridden. The vectorized member functions such as
 <a class="reference internal" href="#proteus.AnalyticalSolutions.AS_base.getUOfXT" title="proteus.AnalyticalSolutions.AS_base.getUOfXT"><code class="xref py py-func docutils literal notranslate"><span class="pre">getUOfXT()</span></code></a> are provided for future optimizations but are
@@ -238,7 +295,8 @@ implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.DAE_base.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>X</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.DAE_base.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.DAE_base.uOfT">
@@ -279,7 +337,8 @@ implemented in <a class="reference internal" href="#proteus.AnalyticalSolutions.
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.SteadyState.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>X</em>, <em>T=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.SteadyState.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -340,27 +399,32 @@ r(u,x) &amp;=&amp; - ((\mathbf{a} \mathbf{\omega}) \cdot \mathbf{\omega}) u \\
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Sine.rOfUX">
 <code class="descname">rOfUX</code><span class="sig-paren">(</span><em>u</em>, <em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Sine.rOfUX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the reaction term for the (manufactured) solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Sine.drOfUX">
 <code class="descname">drOfUX</code><span class="sig-paren">(</span><em>u</em>, <em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Sine.drOfUX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the derivative of the reaction term for the (manufactured) solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Sine.advectiveFluxOfX">
 <code class="descname">advectiveFluxOfX</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Sine.advectiveFluxOfX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the advective flux at a 3D point, X</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Sine.diffusiveFluxOfX">
 <code class="descname">diffusiveFluxOfX</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Sine.diffusiveFluxOfX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the diffusive flux at a 3D point, X</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Sine.totalFluxOfX">
 <code class="descname">totalFluxOfX</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Sine.totalFluxOfX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the total flux at a 3D point, X</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -386,12 +450,14 @@ f &amp;=&amp; -K\{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ \\
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PoissonsEquation.rOfUX">
 <code class="descname">rOfUX</code><span class="sig-paren">(</span><em>u</em>, <em>X</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PoissonsEquation.rOfUX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the reaction term for the (manufactured) solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PoissonsEquation.drOfUX">
 <code class="descname">drOfUX</code><span class="sig-paren">(</span><em>u</em>, <em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PoissonsEquation.drOfUX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the derivative of the reaction term for the (manufactured) solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -409,12 +475,14 @@ f &amp;=&amp; -K\{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ \\
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearAD_DiracIC.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearAD_DiracIC.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearAD_DiracIC.duOfXT">
 <code class="descname">duOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearAD_DiracIC.duOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the gradient of the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearAD_DiracIC.advectiveFluxOfXT">
@@ -445,7 +513,8 @@ returns the fluxes (by inheritance).</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.LinearADR_Decay_DiracIC.rOfUXT">
@@ -471,7 +540,8 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.NonlinearADR_Decay_DiracIC.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.NonlinearADR_Decay_DiracIC.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.NonlinearADR_Decay_DiracIC.rOfUXT">
@@ -498,8 +568,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlaneCouetteFlow_u.PlaneCouetteFlow_u">
 <code class="descname">PlaneCouetteFlow_u</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlaneCouetteFlow_u.PlaneCouetteFlow_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>need to add doc</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -539,8 +608,7 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u.PlanePoiseuilleFlow_u">
 <code class="descname">PlanePoiseuilleFlow_u</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.PlanePoiseuilleFlow_u.PlanePoiseuilleFlow_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>need to add doc</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -575,7 +643,8 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.Buckley_Leverett_RiemannSoln.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.Buckley_Leverett_RiemannSoln.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.Buckley_Leverett_RiemannSoln.uOfX">
@@ -668,7 +737,8 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_u.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.VortexDecay_u.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -680,7 +750,8 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_v.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.VortexDecay_v.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -692,7 +763,8 @@ Also returns the fluxes (by inheritance).</p>
 <dl class="method">
 <dt id="proteus.AnalyticalSolutions.VortexDecay_p.uOfXT">
 <code class="descname">uOfXT</code><span class="sig-paren">(</span><em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/AnalyticalSolutions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.AnalyticalSolutions.VortexDecay_p.uOfXT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the solution at a 3D point, X, and a time, T</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -711,7 +783,7 @@ Also returns the fluxes (by inheritance).</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

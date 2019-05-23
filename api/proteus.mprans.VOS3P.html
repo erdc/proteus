@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.mprans.VOS3P module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.mprans.VOS3P module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -166,48 +167,121 @@
 
 <dl class="class">
 <dt id="proteus.mprans.VOS3P.NumericalFlux">
-<em class="property">class </em><code class="descclassname">proteus.mprans.VOS3P.</code><code class="descname">NumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.NumericalFlux" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.VOS3P.</code><code class="descname">NumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.NumericalFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.NumericalFlux.html#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
+<dt id="proteus.mprans.VOS3P.RKEV">
+<em class="property">class </em><code class="descclassname">proteus.mprans.VOS3P.</code><code class="descname">RKEV</code><span class="sig-paren">(</span><em>transport</em>, <em>timeOrder=1</em>, <em>runCFL=0.1</em>, <em>integrateInterpolationPoints=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TimeIntegration.html#proteus.TimeIntegration.SSP" title="proteus.TimeIntegration.SSP"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TimeIntegration.SSP</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.setCoefficients">
+<code class="descname">setCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.setCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>beta are all 1’s here
+mwf not used right now</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Need to switch to use coefficients</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push necessary information into time history arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>assumes successful step has been taken</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.generateSubsteps">
+<code class="descname">generateSubsteps</code><span class="sig-paren">(</span><em>tList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.generateSubsteps" title="Permalink to this definition">¶</a></dt>
+<dd><p>create list of substeps over time values given in tList. These correspond to stages</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.resetOrder">
+<code class="descname">resetOrder</code><span class="sig-paren">(</span><em>order</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.resetOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>initialize data structures for stage updges</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.RKEV.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.VOS3P.RKEV.TimeIntegration">
+<code class="descname">TimeIntegration</code><em class="property"> = &lt;module 'proteus.TimeIntegration' from '/home/tridelat/PROTEUS/proteus4/proteus/TimeIntegration.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.RKEV.TimeIntegration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="proteus.mprans.VOS3P.Coefficients">
-<em class="property">class </em><code class="descclassname">proteus.mprans.VOS3P.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>LS_model=None</em>, <em>V_model=0</em>, <em>RD_model=None</em>, <em>ME_model=1</em>, <em>VOF_model=2</em>, <em>SED_model=4</em>, <em>EikonalSolverFlag=0</em>, <em>checkMass=True</em>, <em>epsFact=0.0</em>, <em>useMetrics=0.0</em>, <em>sc_uref=1.0</em>, <em>sc_beta=1.0</em>, <em>setParamsFunc=None</em>, <em>movingDomain=False</em>, <em>vos_function=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.VOS3P.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>LS_model=None</em>, <em>V_model=0</em>, <em>RD_model=None</em>, <em>ME_model=1</em>, <em>VOF_model=2</em>, <em>SED_model=4</em>, <em>checkMass=True</em>, <em>epsFact=0.0</em>, <em>useMetrics=0.0</em>, <em>sc_uref=1.0</em>, <em>sc_beta=1.0</em>, <em>setParamsFunc=None</em>, <em>movingDomain=False</em>, <em>vos_function=None</em>, <em>forceStrongConditions=0</em>, <em>STABILIZATION_TYPE=0</em>, <em>ENTROPY_TYPE=2</em>, <em>LUMPED_MASS_MATRIX=False</em>, <em>FCT=True</em>, <em>num_fct_iter=1</em>, <em>global_min_u=0.0</em>, <em>global_max_u=0.75</em>, <em>cE=1.0</em>, <em>uL=0.0</em>, <em>uR=1.0</em>, <em>cK=0.0</em>, <em>outputQuantDOFs=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the mesh for any mesh-dependent information.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to other models in a loosely coupled split operator formulation (e.g. a transport equation for concentration might get velocity from a flow equation)</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.initializeElementQuadrature">
 <code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the element quadrature storage</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.initializeElementBoundaryQuadrature">
 <code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the element boundary quadrature storage</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
 <code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object access to the exterior element boundary quadrature storage</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.preStep">
 <code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object an opportunity to modify itself before the time step.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.postStep">
 <code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Give the TC object an opportunity to modify itself after the time step.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.updateToMovingDomain">
@@ -217,190 +291,43 @@
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.evaluate">
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="proteus.mprans.VOS3P.Coefficients.EikonalSolver">
-<em class="property">class </em><code class="descname">EikonalSolver</code><span class="sig-paren">(</span><em>levelSolverType</em>, <em>F</em>, <em>relativeTolerance=0.0</em>, <em>absoluteTolerance=1e-08</em>, <em>maxSolverIts=100</em>, <em>frontTolerance=0.0001</em>, <em>frontInitType='magnitudeOnly'</em>, <em>bandTolerance=-0.01</em>, <em>eikonalVariable=0</em>, <em>localReconstruction=None</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.EikonalSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simple wrapper for special purpose Eikonal equation solvers on a single level.
-Current types allowed:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FMMEikonalSolver</span>
-<span class="n">FSWEikonalSolver</span>
-</pre></div>
-</div>
-<dl class="method">
-<dt id="proteus.mprans.VOS3P.Coefficients.EikonalSolver.convertFromC0P1Rep">
-<code class="descname">convertFromC0P1Rep</code><span class="sig-paren">(</span><em>dofin</em>, <em>dofout</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.EikonalSolver.convertFromC0P1Rep" title="Permalink to this definition">¶</a></dt>
-<dd><p>allow output FEM space to be something besides C0P1 and convert from C0P1 to expected
-representation here</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.VOS3P.Coefficients.EikonalSolver.convertToC0P1Rep">
-<code class="descname">convertToC0P1Rep</code><span class="sig-paren">(</span><em>dofin</em>, <em>dofout</em>, <em>interpType='min'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.EikonalSolver.convertToC0P1Rep" title="Permalink to this definition">¶</a></dt>
-<dd><p>allow input FEM space to be something besides C0P1 and then convert to expected
-representation here</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.VOS3P.Coefficients.EikonalSolver.info">
-<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.EikonalSolver.info" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.VOS3P.Coefficients.EikonalSolver.solve">
-<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r</em>, <em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.EikonalSolver.solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="proteus.mprans.VOS3P.Coefficients.FMMEikonalSolver">
-<em class="property">class </em><code class="descname">FMMEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.FMMEikonalSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Encapsulate naive implementation of Fast Marching Methods on
-unstructured grids for</p>
-<blockquote>
-<div><div class="math notranslate nohighlight">
-\[\|\grad T\| = 1/F\]</div>
-<p><span class="math notranslate nohighlight">\(T = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma\)</span></p>
-<p>1d local solver is standard upwind approximation</p>
-<p>2d local solver variations: acute triangulations version 1 or
-version 2 from Qian Zhang etal 07 obtuse triangulation not
-implemented</p>
-<p>3d local solver varitions: not fully checked</p>
-<p>For now, the input should be non-negative!</p>
-</div></blockquote>
-<dl class="attribute">
-<dt id="proteus.mprans.VOS3P.Coefficients.FMMEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.VOS3P.Coefficients.FMMEikonalSolver.solve">
-<code class="descname">solve</code><span class="sig-paren">(</span><em>phi0</em>, <em>T</em>, <em>nodalSpeeds=None</em>, <em>zeroTol=0.0001</em>, <em>trialTol=0.1</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.FMMEikonalSolver.solve" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Test first order fast marching method algorithm for eikonal equation</p>
-<p>|grad T | = 1, phi(</p>
-</div></blockquote>
-<p>ec x) = 0, x in Gamma</p>
-<blockquote>
-<div><p>assuming phi_0 describes initial location of interface Gamma and
-has reasonable values (absolute values) for T close to Gamma. Here
-T can be interpreted as the travel time from Gamma.</p>
-<p>Right now assumes global node numbers &lt;–&gt; global dofs but this can be
-fixed easily
-Input</p>
-<p>phi0: dof array from P1 C0 FiniteElementFunction holding initial condition</p>
-<p>T   : dof array from P1 C0 FiniteElementFunction for solution</p>
-<p>Output
-T(</p>
-</div></blockquote>
-<p>ec x_n)    : travel time from initial front to node (
-ec x_n)</p>
-<blockquote>
-<div><p>Internal data structures</p>
-<dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd><dl class="first last docutils">
-<dt>-1 –&gt; Far</dt>
-<dd>0 –&gt; Trial
-1 –&gt; Known</dd>
-</dl>
-</dd>
-</dl>
-<p>Trial : nodal points adjacent to front tuples (index,val) stored in heap</p>
-<dl class="docutils">
-<dt>TODO</dt>
-<dd>have return flag</dd>
-</dl>
-</div></blockquote>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="proteus.mprans.VOS3P.Coefficients.FSWEikonalSolver">
-<em class="property">class </em><code class="descname">FSWEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>iterAtol=1e-08</em>, <em>iterRtol=0.0</em>, <em>maxIts=100</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>refPoints=None</em>, <em>orderApprox=1</em>, <em>LARGE=1.234e+28</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.FSWEikonalSolver" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
-<dd>for</dd>
-</dl>
-<div class="math notranslate nohighlight">
-\[\|\grad T\| = 1/F\]</div>
-<p><span class="math notranslate nohighlight">\(T = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma\)</span></p>
-<p>1d local solver is standard upwind approximation</p>
-<p>2d local solver variations: acute triangulations version 1 or
-version 2 from Qian Zhang etal 07 obtuse triangulation not
-implemented</p>
-<p>3d local solver variations: not fully checked</p>
-<p>For now, the input should be non-negative!</p>
-<dl class="attribute">
-<dt id="proteus.mprans.VOS3P.Coefficients.FSWEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.VOS3P.Coefficients.FSWEikonalSolver.solve">
-<code class="descname">solve</code><span class="sig-paren">(</span><em>phi0</em>, <em>T</em>, <em>nodalSpeeds=None</em>, <em>zeroTol=0.0001</em>, <em>trialTol=0.1</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.FSWEikonalSolver.solve" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Test first order fast sweeping method algorithm for eikonal equation</p>
-<p>|grad T | = 1, phi(</p>
-</div></blockquote>
-<p>ec x) = 0, x in Gamma</p>
-<blockquote>
-<div><p>assuming phi_0 describes initial location of interface Gamma and
-has reasonable values (absolute values) for T close to Gamma. Here
-T can be interpreted as the travel time from Gamma.</p>
-<p>Right now assumes global node numbers &lt;–&gt; global dofs but this can be
-fixed easily
-Input</p>
-<p>phi0: dof array holding P1 C0 FiniteElementFunction holding initial condition</p>
-<p>T   : dof array holding P1 C0 FiniteElementFunction for solution</p>
-<p>Output
-T(</p>
-</div></blockquote>
-<p>ec x_n)    : travel time from initial front to node (
-ec x_n)</p>
-<blockquote>
-<div><p>Internal data structures</p>
-<dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd>0 –&gt; Not Known (Trial)
-1 –&gt; Known</dd>
-</dl>
-<p>Order  : ordering of points in domain using l_p metric from fixed reference points</p>
-</div></blockquote>
-</dd></dl>
-
+<dd><p>Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.VOFCoefficientsEvaluate">
 <code class="descname">VOFCoefficientsEvaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.VOFCoefficientsEvaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate the coefficients of the conservative level set advection equation</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.VolumeAveragedVOFCoefficientsEvaluate">
 <code class="descname">VolumeAveragedVOFCoefficientsEvaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.VolumeAveragedVOFCoefficientsEvaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate the coefficients of the conservative level set advection equation with variable porosity</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.Coefficients.copyExteriorElementBoundaryValuesFromElementBoundaryValues">
 <code class="descname">copyExteriorElementBoundaryValuesFromElementBoundaryValues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.Coefficients.copyExteriorElementBoundaryValuesFromElementBoundaryValues" title="Permalink to this definition">¶</a></dt>
-<dd><p>copy quantity in element boundary quadrature array to one that lives only on exterior element boundaries</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.mprans.VOS3P.LevelModel">
-<em class="property">class </em><code class="descclassname">proteus.mprans.VOS3P.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='defaultName'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.mprans.VOS3P.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='defaultName'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>nullSpace='NoNullSpace'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
 <dl class="attribute">
 <dt id="proteus.mprans.VOS3P.LevelModel.nCalls">
 <code class="descname">nCalls</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel.nCalls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.LevelModel.FCTStep">
+<code class="descname">FCTStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel.FCTStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.VOS3P.LevelModel.kth_FCT_step">
+<code class="descname">kth_FCT_step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel.kth_FCT_step" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -409,14 +336,21 @@ ec x_n)</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="proteus.mprans.VOS3P.LevelModel.updateVelocityFieldAsFunction">
+<code class="descname">updateVelocityFieldAsFunction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel.updateVelocityFieldAsFunction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="proteus.mprans.VOS3P.LevelModel.calculateElementResidual">
 <code class="descname">calculateElementResidual</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel.calculateElementResidual" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate all the element residuals</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.LevelModel.getResidual">
 <code class="descname">getResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel.getResidual" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the element residuals and add in to the global residual</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.LevelModel.getJacobian">
@@ -434,7 +368,10 @@ and the shape information at the quadrature points.</p>
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.LevelModel.calculateElementBoundaryQuadrature">
 <code class="descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/VOS3P.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.VOS3P.LevelModel.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points on element boundaries.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.VOS3P.LevelModel.calculateExteriorElementBoundaryQuadrature">
@@ -481,7 +418,7 @@ and the shape information at the quadrature points on global element boundaries.
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

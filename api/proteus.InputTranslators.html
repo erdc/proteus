@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.InputTranslators module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.InputTranslators module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,24 +128,36 @@
   <div class="section" id="module-proteus.InputTranslators">
 <span id="proteus-inputtranslators-module"></span><h1>proteus.InputTranslators module<a class="headerlink" href="#module-proteus.InputTranslators" title="Permalink to this headline">¶</a></h1>
 <p>Classes for taking input in other formats</p>
-<div class="graphviz"><object data="../_images/inheritance-ece1fd969bfd53069619d22ec5dd93ea1ebb5968.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.InputTranslators</p></object></div>
+digraph inheritance9c6fc40c46 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;ADH_metfile&quot; [URL=&quot;../api/proteus.InputTranslators.html#proteus.InputTranslators.ADH_metfile&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;read an ADH met file for boundary conditions etc&quot;];
+  &quot;newobject&quot; -&gt; &quot;ADH_metfile&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;GF&quot; [URL=&quot;../api/proteus.InputTranslators.html#proteus.InputTranslators.GF&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Read a file from the vessel database an set up in a domain.&quot;];
+  &quot;newobject&quot; -&gt; &quot;GF&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Ipars&quot; [URL=&quot;../api/proteus.InputTranslators.html#proteus.InputTranslators.Ipars&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Extract as much as possible from and IPARS input file&quot;];
+  &quot;newobject&quot; -&gt; &quot;Ipars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.InputTranslators.GF">
 <em class="property">class </em><code class="descclassname">proteus.InputTranslators.</code><code class="descname">GF</code><span class="sig-paren">(</span><em>gfFile</em>, <em>boundingBox=False</em>, <em>thin_rtol=0.1</em>, <em>sN_restrict=-1</em>, <em>insertHoles=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/InputTranslators.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.InputTranslators.GF" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read a file from the vessel database an set up in a domain.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Read a file from the vessel database an set up in a domain.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.InputTranslators.Ipars">
 <em class="property">class </em><code class="descclassname">proteus.InputTranslators.</code><code class="descname">Ipars</code><span class="sig-paren">(</span><em>iparsFile</em>, <em>layered=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/InputTranslators.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.InputTranslators.Ipars" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract as much as possible from and IPARS input file</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Extract as much as possible from and IPARS input file</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.InputTranslators.ADH_metfile">
 <em class="property">class </em><code class="descclassname">proteus.InputTranslators.</code><code class="descname">ADH_metfile</code><span class="sig-paren">(</span><em>fileprefix</em>, <em>directory='.'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/InputTranslators.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.InputTranslators.ADH_metfile" title="Permalink to this definition">¶</a></dt>
-<dd><p>read an ADH met file for boundary conditions etc</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>read an ADH met file for boundary conditions etc</p>
 <dl class="attribute">
 <dt id="proteus.InputTranslators.ADH_metfile.allowed_time_units">
 <code class="descname">allowed_time_units</code><em class="property"> = ['day', 'hour', 'sec']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/InputTranslators.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.InputTranslators.ADH_metfile.allowed_time_units" title="Permalink to this definition">¶</a></dt>
@@ -159,8 +172,7 @@
 <dl class="method">
 <dt id="proteus.InputTranslators.ADH_metfile.piecewiseLinearTableLookup">
 <code class="descname">piecewiseLinearTableLookup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/InputTranslators.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.InputTranslators.ADH_metfile.piecewiseLinearTableLookup" title="Permalink to this definition">¶</a></dt>
-<dd><p>linear table lookup routine for scalar values</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -179,7 +191,7 @@
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

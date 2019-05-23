@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.StepControl module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.StepControl module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,44 @@
   <div class="section" id="module-proteus.StepControl">
 <span id="proteus-stepcontrol-module"></span><h1>proteus.StepControl module<a class="headerlink" href="#module-proteus.StepControl" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for methods of controlling the step size</p>
-<div class="graphviz"><object data="../_images/inheritance-28773282a97b7ce047c58f22a2fbaa048020f821.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.StepControl</p></object></div>
+digraph inheritance56adf9a4e7 {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;FLCBDF_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.FLCBDF_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SC_base&quot; -&gt; &quot;FLCBDF_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;FLCBDF_controller_sys&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.FLCBDF_controller_sys&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;FLCBDF_controller&quot; -&gt; &quot;FLCBDF_controller_sys&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;GustafssonFullNewton_dt_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.GustafssonFullNewton_dt_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Try version of basic Gustafsson and Soederlind 97 time step selection strategy&quot;];
+  &quot;SC_base&quot; -&gt; &quot;GustafssonFullNewton_dt_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;HeuristicNL_dt_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.HeuristicNL_dt_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Classical Heuristic step controller that picks time step based on threshholds in nonlinear&quot;];
+  &quot;SC_base&quot; -&gt; &quot;HeuristicNL_dt_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Min_dt_RKcontroller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.Min_dt_RKcontroller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SC_base&quot; -&gt; &quot;Min_dt_RKcontroller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Min_dt_cfl_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.Min_dt_cfl_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;Min_dt_controller&quot; -&gt; &quot;Min_dt_cfl_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Min_dt_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.Min_dt_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SC_base&quot; -&gt; &quot;Min_dt_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Min_dt_controller_FCT&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.Min_dt_controller_FCT&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;controller try and implement a piece of FCT methodology where first step is&quot;];
+  &quot;Min_dt_controller&quot; -&gt; &quot;Min_dt_controller_FCT&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Newton_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.Newton_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Same as SC_base but since there is no dt we have not  way to retry&quot;];
+  &quot;SC_base&quot; -&gt; &quot;Newton_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Osher_PsiTC_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.Osher_PsiTC_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SC_base&quot; -&gt; &quot;Osher_PsiTC_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Osher_PsiTC_controller2&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.Osher_PsiTC_controller2&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SC_base&quot; -&gt; &quot;Osher_PsiTC_controller2&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Osher_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.Osher_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SC_base&quot; -&gt; &quot;Osher_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PsiTCtte_controller&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.PsiTCtte_controller&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;SC_base&quot; -&gt; &quot;PsiTCtte_controller&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;SC_base&quot; [URL=&quot;../api/proteus.StepControl.html#proteus.StepControl.SC_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A simple fixed time stepping controller with no error/stability&quot;];
+  &quot;newobject&quot; -&gt; &quot;SC_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.StepControl.SC_base">
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">SC_base</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.SC_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>A simple fixed time stepping controller with no error/stability
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A simple fixed time stepping controller with no error/stability
 control and reduction by 1/2 in case of solver failures.</p>
 <dl class="method">
 <dt id="proteus.StepControl.SC_base.setInitialGuess">
@@ -344,22 +377,6 @@ called before updating t_model –&gt; t_model_last etc</p>
 <dl class="method">
 <dt id="proteus.StepControl.Osher_PsiTC_controller2.choose_dt_model">
 <code class="descname">choose_dt_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_PsiTC_controller2.choose_dt_model" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="proteus.StepControl.Osher_FMM_controller">
-<em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">Osher_FMM_controller</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em>, <em>maxOsherSteps=4</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_FMM_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#proteus.StepControl.Osher_controller" title="proteus.StepControl.Osher_controller"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.StepControl.Osher_controller</span></code></a></p>
-<dl class="docutils">
-<dt>TODO</dt>
-<dd>setup so that can configure from options,
-test with Fast Sweeping</dd>
-</dl>
-<dl class="method">
-<dt id="proteus.StepControl.Osher_FMM_controller.updateSubstep">
-<code class="descname">updateSubstep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.Osher_FMM_controller.updateSubstep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -730,7 +747,7 @@ use finest level to pick for now</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

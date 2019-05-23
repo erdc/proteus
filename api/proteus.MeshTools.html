@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.MeshTools module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.MeshTools module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,18 +128,90 @@
   <div class="section" id="module-proteus.MeshTools">
 <span id="proteus-meshtools-module"></span><h1>proteus.MeshTools module<a class="headerlink" href="#module-proteus.MeshTools" title="Permalink to this headline">¶</a></h1>
 <p>Tools for creating and manipulating 1,2, and 3D meshes.</p>
-<div class="graphviz"><object data="../_images/inheritance-0bd1de87b6427724f07662697f1ae824700c8df7.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.MeshTools</p></object></div>
+digraph inheritanced9289a834f {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;Edge&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Edge&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;Element&quot; -&gt; &quot;Edge&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;EdgeGrid&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.EdgeGrid&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A 1D regular grid on an interval&quot;];
+  &quot;Mesh&quot; -&gt; &quot;EdgeGrid&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;EdgeMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.EdgeMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A mesh of edges&quot;];
+  &quot;Mesh&quot; -&gt; &quot;EdgeMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Element&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Element&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;An numbered polytope in R^n&quot;];
+  &quot;newobject&quot; -&gt; &quot;Element&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;HexahedralMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.HexahedralMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A mesh of hexahedra.&quot;];
+  &quot;Mesh&quot; -&gt; &quot;HexahedralMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Hexahedron&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Hexahedron&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A 3D hexahedral element&quot;];
+  &quot;Polyhedron&quot; -&gt; &quot;Hexahedron&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;InterpolatedBathymetryMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.InterpolatedBathymetryMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A triangular mesh that interpolates bathymetry from a point cloud&quot;];
+  &quot;MultilevelTriangularMesh&quot; -&gt; &quot;InterpolatedBathymetryMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Mesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Mesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A partition of a domain in R^n into elements.&quot;];
+  &quot;newobject&quot; -&gt; &quot;Mesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Mesh2DM&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Mesh2DM&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A triangular mesh based on an ADH 3dm file&quot;];
+  &quot;Mesh&quot; -&gt; &quot;Mesh2DM&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Mesh3DM&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Mesh3DM&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A Mesh for reading in tetrahedral meshes in the .3dm format&quot;];
+  &quot;Mesh&quot; -&gt; &quot;Mesh3DM&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MeshOptions&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MeshOptions&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Mesh options for the domain&quot;];
+  &quot;newobject&quot; -&gt; &quot;MeshOptions&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MeshParallelPartitioningTypes&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MeshParallelPartitioningTypes&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;fake an enum for parallel partitioning options&quot;];
+  &quot;newobject&quot; -&gt; &quot;MeshParallelPartitioningTypes&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelEdgeMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelEdgeMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A hierarchical multilevel mesh of intervals (edges)&quot;];
+  &quot;MultilevelMesh&quot; -&gt; &quot;MultilevelEdgeMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelHexahedralMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelHexahedralMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A hierarchical multilevel mesh with hexahedral cells&quot;];
+  &quot;MultilevelMesh&quot; -&gt; &quot;MultilevelHexahedralMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A hierchical multilevel mesh&quot;];
+  &quot;Mesh&quot; -&gt; &quot;MultilevelMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelNURBSMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelNURBSMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;MultilevelMesh&quot; -&gt; &quot;MultilevelNURBSMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelQuadrilateralMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelQuadrilateralMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A heirarchical multilevel mesh of quadrilaterals&quot;];
+  &quot;MultilevelMesh&quot; -&gt; &quot;MultilevelQuadrilateralMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelRectangularGrid&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelRectangularGrid&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A hierarchical multilevel grid&quot;];
+  &quot;MultilevelMesh&quot; -&gt; &quot;MultilevelRectangularGrid&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelSimplicialMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelSimplicialMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A wrapper for all the simplicial hierarchical meshes in 1,2, and 3D&quot;];
+  &quot;MultilevelMesh&quot; -&gt; &quot;MultilevelSimplicialMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelTetrahedralMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelTetrahedralMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A hierarchical multilevel mesh with tetrahedral cells&quot;];
+  &quot;MultilevelMesh&quot; -&gt; &quot;MultilevelTetrahedralMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;MultilevelTriangularMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.MultilevelTriangularMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A hierarchical  multilevel mesh of triangular cells&quot;];
+  &quot;MultilevelMesh&quot; -&gt; &quot;MultilevelTriangularMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;NURBSMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.NURBSMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A mesh consisting of NURBS.&quot;];
+  &quot;HexahedralMesh&quot; -&gt; &quot;NURBSMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Node&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Node&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A numbered point in 3D Euclidean space&quot;];
+  &quot;newobject&quot; -&gt; &quot;Node&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;PointMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.PointMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;0D mesh&quot;];
+  &quot;Mesh&quot; -&gt; &quot;PointMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Polygon&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Polygon&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;An abstract 2D element--a closed set of Edges connecting a set of Nodes.&quot;];
+  &quot;Element&quot; -&gt; &quot;Polygon&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Polyhedron&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Polyhedron&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;An abstract 3D Element--a closed set of Polygons connecting a set&quot;];
+  &quot;Element&quot; -&gt; &quot;Polyhedron&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Quadrilateral&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Quadrilateral&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A 2D quadrilateral element&quot;];
+  &quot;Polygon&quot; -&gt; &quot;Quadrilateral&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;QuadrilateralGrid&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.QuadrilateralGrid&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A 2D regular grid of quadrilateral cells&quot;];
+  &quot;Mesh&quot; -&gt; &quot;QuadrilateralGrid&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;QuadrilateralMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.QuadrilateralMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A mesh of quads&quot;];
+  &quot;Mesh&quot; -&gt; &quot;QuadrilateralMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;RectangularGrid&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.RectangularGrid&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A regular partition into rectangles.&quot;];
+  &quot;Mesh&quot; -&gt; &quot;RectangularGrid&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;TetrahedralMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.TetrahedralMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A mesh of tetrahedra.&quot;];
+  &quot;Mesh&quot; -&gt; &quot;TetrahedralMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Tetrahedron&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Tetrahedron&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A 3D tetrahedral element&quot;];
+  &quot;Polyhedron&quot; -&gt; &quot;Tetrahedron&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;Triangle&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.Triangle&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A 2D triangular element&quot;];
+  &quot;Polygon&quot; -&gt; &quot;Triangle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;TriangularMesh&quot; [URL=&quot;../api/proteus.MeshTools.html#proteus.MeshTools.TriangularMesh&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A mesh of triangles&quot;];
+  &quot;Mesh&quot; -&gt; &quot;TriangularMesh&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.MeshTools.Node">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>nodeNumber=0</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node" title="Permalink to this definition">¶</a></dt>
-<dd><p>A numbered point in 3D Euclidean space</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A numbered point in 3D Euclidean space</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.RandomWaves.N" title="proteus.WaveTools.RandomWaves.N"><strong>N</strong></a> – node number</li>
+<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.NewWave.N" title="proteus.WaveTools.NewWave.N"><strong>N</strong></a> – node number</li>
 <li><strong>p</strong> – Euclidean coordinates</li>
 </ul>
 </td>
@@ -180,14 +253,15 @@ the node coordinates.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Element">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Element</code><span class="sig-paren">(</span><em>elementNumber=0</em>, <em>nodes=[]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Element" title="Permalink to this definition">¶</a></dt>
-<dd><p>An numbered polytope in R^n</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>An numbered polytope in R^n</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.RandomWaves.N" title="proteus.WaveTools.RandomWaves.N"><strong>N</strong></a> – element number</li>
-<li><strong>nodes</strong> – sorted tuple of nodes defining the polytope</li>
+<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.NewWave.N" title="proteus.WaveTools.NewWave.N"><strong>N</strong></a> – element number</li>
+<li><a class="reference internal" href="proteus.mbd.CouplingFSI.html#proteus.mbd.CouplingFSI.ProtChMoorings.nodes" title="proteus.mbd.CouplingFSI.ProtChMoorings.nodes"><strong>nodes</strong></a> – sorted tuple of nodes defining the polytope</li>
 </ul>
 </td>
 </tr>
@@ -325,7 +399,8 @@ of Edges.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.MeshParallelPartitioningTypes">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MeshParallelPartitioningTypes</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MeshParallelPartitioningTypes" title="Permalink to this definition">¶</a></dt>
-<dd><p>fake an enum for parallel partitioning options</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>fake an enum for parallel partitioning options</p>
 <dl class="attribute">
 <dt id="proteus.MeshTools.MeshParallelPartitioningTypes.element">
 <code class="descname">element</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MeshParallelPartitioningTypes.element" title="Permalink to this definition">¶</a></dt>
@@ -341,7 +416,8 @@ of Edges.</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Mesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Mesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>A partition of a domain in R^n into elements.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A partition of a domain in R^n into elements.</p>
 <p>This is the base class for meshes. Contains routines for
 plotting the edges of the mesh in Matlab</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -495,7 +571,7 @@ row 4 = triangle subdomain number</div></blockquote>
 
 <dl class="method">
 <dt id="proteus.MeshTools.Mesh.convertFromPUMI">
-<code class="descname">convertFromPUMI</code><span class="sig-paren">(</span><em>PUMIMesh</em>, <em>faceList</em>, <em>regList</em>, <em>parallel=False</em>, <em>dim=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh.convertFromPUMI" title="Permalink to this definition">¶</a></dt>
+<code class="descname">convertFromPUMI</code><span class="sig-paren">(</span><em>domain</em>, <em>PUMIMesh</em>, <em>faceList</em>, <em>regList</em>, <em>parallel=False</em>, <em>dim=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh.convertFromPUMI" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -847,7 +923,7 @@ the edges and nodes from the boundary triangles.</p>
 
 <dl class="method">
 <dt id="proteus.MeshTools.TetrahedralMesh.generateFromTetgenFiles">
-<code class="descname">generateFromTetgenFiles</code><span class="sig-paren">(</span><em>filebase</em>, <em>base</em>, <em>skipGeometricInit=True</em>, <em>parallel=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TetrahedralMesh.generateFromTetgenFiles" title="Permalink to this definition">¶</a></dt>
+<code class="descname">generateFromTetgenFiles</code><span class="sig-paren">(</span><em>filebase</em>, <em>base</em>, <em>skipGeometricInit=False</em>, <em>parallel=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TetrahedralMesh.generateFromTetgenFiles" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1304,6 +1380,11 @@ function does not call C functions.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.generateQuadrilateralMeshFromRectangularGrid">
+<code class="descname">generateQuadrilateralMeshFromRectangularGrid</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>Lx</em>, <em>Ly</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.generateQuadrilateralMeshFromRectangularGrid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="proteus.MeshTools.QuadrilateralMesh.generateFromQuadFileIFISS">
 <code class="descname">generateFromQuadFileIFISS</code><span class="sig-paren">(</span><em>meshfile</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.generateFromQuadFileIFISS" title="Permalink to this definition">¶</a></dt>
 <dd><p>WIP - read a matlab.mat file containing IFISS vertices
@@ -1426,14 +1507,14 @@ to run using C.  Implementing this will require some work to the mesh.cpp module
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh.cmeshTools">
-<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/tridelat/PROTEUS/proteus4/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelQuadrilateralMesh">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelQuadrilateralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em>, <em>triangleFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelQuadrilateralMesh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelQuadrilateralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em>, <em>triangleFlag=0</em>, <em>useC=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelQuadrilateralMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A heirarchical multilevel mesh of quadrilaterals
 WIP</p>
@@ -1610,7 +1691,7 @@ lexicographic ordering.</p>
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.MultilevelEdgeMesh.cmeshTools">
-<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.5.1-py2.7-linux-x86_64.egg/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/tridelat/PROTEUS/proteus4/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1794,6 +1875,25 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 </dd></dl>
 
 <dl class="function">
+<dt id="proteus.MeshTools.runTriangle">
+<code class="descclassname">proteus.MeshTools.</code><code class="descname">runTriangle</code><span class="sig-paren">(</span><em>polyfile</em>, <em>baseFlags='Yp'</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.runTriangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate tetgen files from a polyfile.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>polyfile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Filename with appropriate data for tengen.</li>
+<li><strong>baseFlags</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Standard Tetgen options for generation</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="proteus.MeshTools.runTetgen">
 <code class="descclassname">proteus.MeshTools.</code><code class="descname">runTetgen</code><span class="sig-paren">(</span><em>polyfile</em>, <em>baseFlags='Yp'</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.runTetgen" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate tetgen files from a polyfile.</p>
@@ -1806,6 +1906,30 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 <li><strong>baseFlags</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Standard Tetgen options for generation</li>
 <li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – </li>
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.MeshTools.genMeshWithTriangle">
+<code class="descclassname">proteus.MeshTools.</code><code class="descname">genMeshWithTriangle</code><span class="sig-paren">(</span><em>polyfile</em>, <em>nbase=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.genMeshWithTriangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a mesh from a set of triangle files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>polyfile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Filename base for triangle files</li>
+<li><strong>nbase</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mesh</strong> – Simplex mesh</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#proteus.MeshTools.TriangularMesh" title="proteus.MeshTools.TriangularMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.MeshTools.TriangularMesh</span></code></a></p>
 </td>
 </tr>
 </tbody>
@@ -1838,13 +1962,14 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 
 <dl class="class">
 <dt id="proteus.MeshTools.MeshOptions">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MeshOptions</code><span class="sig-paren">(</span><em>domain</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MeshOptions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mesh options for the domain</p>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MeshOptions</code><span class="sig-paren">(</span><em>nd=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MeshOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Mesh options for the domain</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>domain</strong> (<em>proteus.Domain</em>) – </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nd</strong> (<em>2 for 2D</em><em>, </em><em>3 for 3D</em>) – </td>
 </tr>
 </tbody>
 </table>
@@ -1882,7 +2007,7 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 
 <dl class="method">
 <dt id="proteus.MeshTools.MeshOptions.setTriangleOptions">
-<code class="descname">setTriangleOptions</code><span class="sig-paren">(</span><em>triangle_options=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MeshOptions.setTriangleOptions" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setTriangleOptions</code><span class="sig-paren">(</span><em>triangleOptions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MeshOptions.setTriangleOptions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the trangle options</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1968,7 +2093,7 @@ default for 2D: he**2/2; default for 3D: he**3/6</td>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

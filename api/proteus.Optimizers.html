@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.Optimizers module &#8212; Proteus 1.5.1 documentation</title>
+    <title>proteus.Optimizers module &#8212; Proteus 1.6.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -44,7 +45,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.6.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -127,12 +128,22 @@
   <div class="section" id="module-proteus.Optimizers">
 <span id="proteus-optimizers-module"></span><h1>proteus.Optimizers module<a class="headerlink" href="#module-proteus.Optimizers" title="Permalink to this headline">¶</a></h1>
 <p>Class hierarchies for working with minimization problems</p>
-<div class="graphviz"><object data="../_images/inheritance-3b68e506f524d99149f6b744b6253fa9f0fdb814.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of proteus.Optimizers</p></object></div>
+digraph inheritancef0f7c8435a {
+rankdir=LR;
+size=&quot;8.0, 12.0&quot;;
+  &quot;MinAlgo_base&quot; [URL=&quot;../api/proteus.Optimizers.html#proteus.Optimizers.MinAlgo_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This is the base class for the minimization algorthms class,&quot;];
+  &quot;newobject&quot; -&gt; &quot;MinAlgo_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;ObjectiveFunction_base&quot; [URL=&quot;../api/proteus.Optimizers.html#proteus.Optimizers.ObjectiveFunction_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
+  &quot;newobject&quot; -&gt; &quot;ObjectiveFunction_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;fminbound&quot; [URL=&quot;../api/proteus.Optimizers.html#proteus.Optimizers.fminbound&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;This is a function that uses a golden ratio routine for finding&quot;];
+  &quot;MinAlgo_base&quot; -&gt; &quot;fminbound&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
+}
 <dl class="class">
 <dt id="proteus.Optimizers.ObjectiveFunction_base">
 <em class="property">class </em><code class="descclassname">proteus.Optimizers.</code><code class="descname">ObjectiveFunction_base</code><span class="sig-paren">(</span><em>LHS_x</em>, <em>RHS_x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Optimizers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Optimizers.ObjectiveFunction_base" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="method">
 <dt id="proteus.Optimizers.ObjectiveFunction_base.getResidual">
 <code class="descname">getResidual</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Optimizers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Optimizers.ObjectiveFunction_base.getResidual" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -142,7 +153,8 @@
 <dl class="class">
 <dt id="proteus.Optimizers.MinAlgo_base">
 <em class="property">class </em><code class="descclassname">proteus.Optimizers.</code><code class="descname">MinAlgo_base</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Optimizers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Optimizers.MinAlgo_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the base class for the minimization algorthms class,
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>This is the base class for the minimization algorthms class,
 and can be used to find the min of a 1-D function.</p>
 <p>members:</p>
 </dd></dl>
@@ -178,7 +190,7 @@ some good initial guess. Note there is also an endpoint hack.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

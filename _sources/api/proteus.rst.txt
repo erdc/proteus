@@ -12,6 +12,8 @@ Subpackages
 .. toctree::
 
     proteus.MeshAdaptPUMI
+    proteus.SWFlows
+    proteus.TwoPhaseFlow
     proteus.elastoplastic
     proteus.fenton
     proteus.mbd
@@ -65,22 +67,34 @@ Submodules
    proteus.Transport
    proteus.TransportCoefficients
    proteus.TriangleFileUtils
-   proteus.TriangleTools
-   proteus.TriangleUtils
    proteus.TwophaseDarcyCoefficients
-   proteus.UnstructuredFMMandFSWsolvers
    proteus.Viewers
    proteus.WaveTools
+   proteus.cSubsurfaceTransportCoefficients
+   proteus.cTwophaseDarcyCoefficients
+   proteus.canalyticalSolutions
+   proteus.cfemIntegrals
+   proteus.clapack
+   proteus.cmeshTools
+   proteus.cnumericalFlux
+   proteus.cpartitioning
+   proteus.cpostprocessing
+   proteus.cpskRelations
+   proteus.cshockCapturing
+   proteus.csmoothers
+   proteus.csparsity
+   proteus.csubgridError
+   proteus.ctimeIntegration
+   proteus.ctransportCoefficients
    proteus.default_n
    proteus.default_p
    proteus.default_s
    proteus.default_so
    proteus.defaults
    proteus.deim_utils
-   proteus.genca
+   proteus.flcbdfWrappers
    proteus.iproteus
    proteus.subsurfaceTransportFunctions
-   proteus.testStuff
+   proteus.superluWrappers
    proteus.version
-   proteus.waveFunctions
 
