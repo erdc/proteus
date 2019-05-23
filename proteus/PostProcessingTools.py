@@ -3049,6 +3049,7 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
         """
 #         TODO
 #           Include off diagonal potentials
+        #import pdb; pdb.set_trace()
         self.q[('velocity',ci)].fill(0.0)
         if self.vt.q.has_key(('a',ci,ci)):
             assert self.vt.q.has_key(('grad(phi)',ci))
@@ -3109,6 +3110,8 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
             cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
                                                              self.vt.ebqe[('f',ci)],
                                                              self.ebqe[('velocity'),ci])
+        #import pdb; pdb.set_trace()
+
     def evaluateElementVelocityField(self,x,ci):
         """
         evaluate velocity field assuming velocity_dofs already calculated
@@ -3585,8 +3588,8 @@ class AggregateVelocityPostProcessor:
                  'dg-bdm':VPP_DG_BDM,        #dg scheme,  Brezzi Douglas Marini linear velocity repres
                  'pwl-ib-fix-0':VPP_LOW_K_IB_PWL_RT0} #hack to enforce zero flux manually around low perm regions
     def __init__(self,postProcessingTypes=None,transport=None):
-     #   import pdb
-     #   pdb.set_trace()
+        #import pdb
+        #pdb.set_trace()
         self.postProcessingTypes = postProcessingTypes
         self.vpp_algorithms = []
         self.vt = transport

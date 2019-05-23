@@ -109,10 +109,7 @@ cdef extern from "TIM.h" namespace "proteus":
                                double* dL_minus_dC,
                                double* min_u_bc,
                                double* max_u_bc,
-                               double* quantDOFs,
-                               # TCAT Dilute Parameters for Entropy
-                               double poro,
-                               double* p_dof)
+                               double* quantDOFs)
         void calculateResidual_entropy_viscosity(double dt,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -202,10 +199,7 @@ cdef extern from "TIM.h" namespace "proteus":
                                double* dL_minus_dC,
                                double* min_u_bc,
                                double* max_u_bc,
-                               double* quantDOFs,
-                               # TCAT Dilute Parameters for Entropy
-                               double poro,
-                               double* p_dof)
+                               double* quantDOFs)
         void calculateJacobian(double dt,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -457,10 +451,7 @@ cdef class cTIM_base:
                          numpy.ndarray dt_times_dH_minus_dL,
                          numpy.ndarray min_u_bc,
                          numpy.ndarray max_u_bc,
-                         numpy.ndarray quantDOFs,
-                         # TCAT Dilute Parameters for Entropy
-                         double poro,
-                         numpy.ndarray p_dof):
+                         numpy.ndarray quantDOFs):
        self.thisptr.calculateResidual(dt,
                                        <double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -550,10 +541,7 @@ cdef class cTIM_base:
                                        <double*> dt_times_dH_minus_dL.data,
                                        <double*> min_u_bc.data,
                                        <double*> max_u_bc.data,
-                                       <double*> quantDOFs.data,
-                                        # TCAT Dilute Parameters for Entropy
-                                        poro,
-                                        <double*> p_dof.data)
+                                       <double*> quantDOFs.data)
    def calculateResidual_entropy_viscosity(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
@@ -643,10 +631,7 @@ cdef class cTIM_base:
                          numpy.ndarray dt_times_dH_minus_dL,
                          numpy.ndarray min_u_bc,
                          numpy.ndarray max_u_bc,
-                         numpy.ndarray quantDOFs,
-                         # TCAT Dilute Parameters for Entropy
-                         double poro,
-                         numpy.ndarray p_dof):
+                         numpy.ndarray quantDOFs):
        self.thisptr.calculateResidual_entropy_viscosity(dt,
                                        <double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -736,10 +721,7 @@ cdef class cTIM_base:
                                        <double*> dt_times_dH_minus_dL.data,
                                        <double*> min_u_bc.data,
                                        <double*> max_u_bc.data,
-                                       <double*> quantDOFs.data,
-                                        # TCAT Dilute Parameters for Entropy
-                                        poro,
-                                        <double*> p_dof.data)
+                                       <double*> quantDOFs.data)
    def calculateJacobian(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,

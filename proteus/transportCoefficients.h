@@ -86,6 +86,7 @@ extern void VOFCoefficientsEvaluate(int nPoints,
                              double* dm,
                              double* f,
                              double* df);
+
 extern void redistanceLevelSetSandFCoefficientsEvaluate(int nSimplex, 
 						 int nPointsPerSimplex,
 						 int nSpace,

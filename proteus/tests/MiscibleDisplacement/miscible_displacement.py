@@ -81,6 +81,7 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
 
     def initializeElementQuadrature(self,t,cq):
         #call parent classes function, then initialize quadrature point for concentration and viscosity values
+        import pdb; pdb.set_trace()
         STC.SinglePhaseDarcyCoefficients.initializeElementQuadrature(self,t,cq)
         self.q_c = np.zeros(cq[('u',0)].shape,'d')
         self.q_mu = np.zeros(cq[('u',0)].shape,'d')

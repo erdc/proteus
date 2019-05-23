@@ -86,7 +86,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         maxCFL = 1.0e-6 #TIM HACK
         #import pdb; pdb.set_trace()
         maxCFL = max(maxCFL,globalMax(self.cfl.max()))
-        self.dt = self.runCFL/maxCFL  #TIM HACK
+        self.dt = self.runCFL*maxCFL  #TIM HACK
         #import pdb; pdb.set_trace()
         #print self.dt,self.runCFL,globalMax(self.cfl.max())
         if self.dtLast is None:
@@ -897,7 +897,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
 
-    def FCTStep(self):
+    def FCTStep(self,rowptr,colind, MassMatrix):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         limited_solution = numpy.zeros(self.u[0].dof.shape)
 
@@ -1292,9 +1292,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.mom_Model.u[0].dof,
             self.entropy)
 
-        if self.timeIntegration.t in self.coefficients.tnList:
-        	fileEnt = 'entropy_results/entropy.csv.'+str(int(self.timeIntegration.t))
-        	np.savetxt(fileEnt, np.column_stack((self.mesh.nodeArray[:,0], self.entropy*0.0, self.entropy*0.0, self.entropy)) , delimiter = ',' )
+        #print self.timeIntegration.t,self.coefficients.tnList[2],self.timeIntegration.t - self.coefficients.tnList[2]
+        #if ( np.abs(self.timeIntegration.t - self.coefficients.tnList[2]) < 1.):
+        #    exit(0)
+        #if self.timeIntegration.t in self.coefficients.tnList:
+        #	fileEnt = 'entropy_results/entropy.csv.'+str(int(self.timeIntegration.t))
+        #	np.savetxt(fileEnt, np.column_stack((self.mesh.nodeArray[:,0], self.coefficients.adv_Model.u[0].dof, self.entropy*0.0, self.entropy)) , delimiter = ',' )
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -1546,23 +1549,23 @@ class MyCoefficients(Coefficients):
 		self.diff = diff
 		self.alpha_L = alpha_L
 		self.tnList = tnList
-		self.entropy = None 
+		self.entropy = None
 
 	def attachModels(self,modelList):
 		self.mom_Model = modelList[self.mom_ModelId]
 		self.adv_Model = modelList[self.adv_ModelId]
-		self.diff_Model = modelList[self.diff_ModelId]  
+		self.diff_Model = modelList[self.diff_ModelId]
 		self.q_v = np.zeros(self.adv_Model.q[('grad(u)',0)].shape,'d')
 		self.ebqe_v = np.zeros(self.adv_Model.ebqe[('grad(u)',0)].shape,'d')
 		self.ebqe_phi = np.zeros(self.adv_Model.ebqe[('u',0)].shape,'d')
 		if self.mom_Model.q.has_key(('velocity',0)):
-			self.q_v = self.mom_Model.q[('velocity',0)]
-			self.ebqe_v = self.mom_Model.ebqe[('velocity',0)]
+			self.q_v = self.mom_Model.q[('velocity',0)]/self.poro/0.9971
+			self.ebqe_v = self.mom_Model.ebqe[('velocity',0)]/self.poro/0.9971
 		#else:
 		#	self.q_v = self.mom_Model.q[('f',0)]/self.poro
 		#	self.ebqe_v = self.mom_Model.ebqe[('f',0)]/self.poro
 		elif self.mom_Model.ebq.has_key(('velocity',0)):
-			self.ebq_v = self.mom_Model.ebq[('velocity',0)]
+			self.ebq_v = self.mom_Model.ebq[('velocity',0)]/self.poro/0.9971
 		#else:
 		#	if self.mom_Model.ebq.has_key(('f',0)):
 		#		self.ebq_v = self.mom_Model.ebq[('f',0)]/self.poro
@@ -1586,5 +1589,3 @@ class MyCoefficients(Coefficients):
 
 	def postStep(self,t,firstStep=False):
 		self.adv_Model.q['dV_last'][:] = self.adv_Model.q['dV']
-
-

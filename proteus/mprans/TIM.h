@@ -4,7 +4,7 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
-#include "gw_transport/TCAT_ND.h"
+//#include "dilutetransport/TCAT_ND.h"
 
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define IS_BETAij_ONE 0
@@ -144,10 +144,7 @@ namespace proteus
                                    double* min_u_bc,
                                    double* max_u_bc,
                                    // AUX QUANTITIES OF INTEREST
-                                   double* quantDOFs,
-                                   // TCAT Dilute Parameters for Entropy
-                                   double poro,
-								   double* p_dof)=0;
+                                   double* quantDOFs)=0;
     virtual void calculateResidual_entropy_viscosity(//element
                                                      double dt,
                                                      double* mesh_trial_ref,
@@ -247,10 +244,7 @@ namespace proteus
                                                      double* min_u_bc,
                                                      double* max_u_bc,
                                                      // AUX QUANTITIES OF INTEREST
-                                                     double* quantDOFs,
-                                                     // TCAT Dilute Parameters for Entropy
-                                                     double poro,
-                                                     double* p_dof)=0;
+                                                     double* quantDOFs)=0;
     virtual void calculateJacobian(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -760,10 +754,7 @@ namespace proteus
                            double* min_u_bc,
                            double* max_u_bc,
                            // AUX QUANTITIES OF INTEREST
-                           double* quantDOFs,
-                           // TCAT Dilute Parameters for Entropy
-                           double poro,
-                           double* p_dof)
+                           double* quantDOFs)
     {
       double Ct_sge = 4.0;
       //
@@ -1258,10 +1249,7 @@ namespace proteus
                                              double* min_u_bc,
                                              double* max_u_bc,
                                              // AUX QUANTITIES OF INTEREST
-                                             double* quantDOFs,
-                                  			 // TCAT Dilute Parameters for Entropy
-                                			 double poro,
-                                			 double* p_dof)
+                                             double* quantDOFs)
     {
       // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
       // Allocate space for the transport matrices
@@ -1273,31 +1261,6 @@ namespace proteus
           TransposeTransportMatrix[i] = 0.;
         }
 	
-
-     // Load in TCAT Entropy Variables into Struct
-     struct TCAT_var TCAT_v;
-	 TCAT_v.poro = poro;
-	 TCAT_v.perm = 5.04e-6;
-	 TCAT_v.diff = 2.23e-5;
-	 TCAT_v.alpha_L = 1.545653e-01;
-     
-
-     // Get Gradients at DOF using lumped L2 Projection 
-	 int ijT = 0;
-     register double grad_w_TCAT[numDOFs], grad_p_TCAT[numDOFs];
-	 for (int i=0; i<numDOFs; i++){
-		grad_w_TCAT[i] = 0.0;
-		grad_p_TCAT[i] = 0.0;
-		double mi = ML[i];
-		for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++){ // First loop in j (sparsity pattern)
-        	int j = csrColumnOffsets_DofLoops[offset];
-			grad_w_TCAT[i] = grad_w_TCAT[i] + Cx[ijT]*u_dof_old[j];
-			grad_p_TCAT[i] = grad_p_TCAT[i] + Cx[ijT]*p_dof[j];
-            ijT+=1; 
-        }
-		grad_w_TCAT[i] = grad_w_TCAT[i]/mi; 
-		grad_p_TCAT[i] = grad_p_TCAT[i]/mi; 
-	  }
 
 
       // compute entropy and init global_entropy_residual and boundary_integral
@@ -1313,9 +1276,6 @@ namespace proteus
               }
               else if(ENTROPY_TYPE == 2){
                  eta[i] = ENTROPY_LOG(porosity_times_solni,uL,uR);
-              }
-              else if(ENTROPY_TYPE == 3){
-                 eta[i] = ENTROPY_TCAT(porosity_times_solni,grad_w_TCAT[i],grad_p_TCAT[i],TCAT_v);
               }
               global_entropy_residual[i]=0.;
             }
@@ -1359,7 +1319,7 @@ namespace proteus
                 // for entropy residual
                 aux_entropy_residual=0., DENTROPY_un, DENTROPY_uni,
                 //for mass matrix contributions
-                u=0.0, un=0.0, grad_un[nSpace], porosity_times_velocity[nSpace], grad_p[nSpace],
+                u=0.0, un=0.0, grad_un[nSpace], porosity_times_velocity[nSpace],
                 u_test_dV[nDOF_trial_element],
                 u_grad_trial[nDOF_trial_element*nSpace],
                 u_grad_test_dV[nDOF_test_element*nSpace],
@@ -1393,7 +1353,6 @@ namespace proteus
               //get the solution gradients at tn for entropy viscosity
               ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
               ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
-			  ck.gradFromDOF(p_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_p);
 
               //precalculate test function products with integration weights for mass matrix terms
               for (int j=0;j<nDOF_trial_element;j++)
@@ -1438,9 +1397,6 @@ namespace proteus
 					else if (ENTROPY_TYPE==2){
 						DENTROPY_un = DENTROPY_LOG(porosity*un,uL,uR);
 					}
-					else if (ENTROPY_TYPE==3){ //printf("vel %e \n",velocity[0]);
-						DENTROPY_un = DENTROPY_TCAT(porosity*un,grad_un[0],grad_p[0],TCAT_v);
-					}
                 }
               //////////////
               // ith-LOOP //
@@ -1458,9 +1414,6 @@ namespace proteus
 					  }
 					  else if (ENTROPY_TYPE==2){
 						DENTROPY_uni = DENTROPY_LOG(porosity_times_uni,uL,uR);
-					  }
-					  else if (ENTROPY_TYPE==3){
-						DENTROPY_uni = DENTROPY_TCAT(porosity_times_uni,grad_w_TCAT[eN_i],grad_p_TCAT[eN_i],TCAT_v);
 					  }
                       element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
                     }

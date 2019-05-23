@@ -81,6 +81,7 @@ class SO_base:
         self.its=0
         self.t_system_last = t0
         self.dt_system = self.dt_system_fixed
+        print self.t_system_last,self.dt_system
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
         logEvent("Initializing time step on system %s to dt = %12.5e" %

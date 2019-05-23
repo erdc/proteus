@@ -68,7 +68,7 @@ class Transport_Dilute_Dispersion(LinearVADR_ConstantCoefficients):
  		copyInstructions = {'reset_uList':True}
  		return copyInstructions
 
-	def evaluate(self,t,c): 
+	def evaluate(self,t,c):
 		#import pdb; pdb.set_trace()
 		if self.q_vel.shape == c[('df',0,0)].shape:
 			velocity = self.q_vel
@@ -89,7 +89,7 @@ class Transport_Dilute_Dispersion(LinearVADR_ConstantCoefficients):
                                     c[('df',0,0)],
                                     c[('a',0,0)],
                                     c[('da',0,0,0)],
-                                    velocity)
+                                    velocity/0.9971)
 
 
 class Porous_Media_Flow(TC_base):
@@ -122,7 +122,7 @@ class Porous_Media_Flow(TC_base):
 		self.grav = grav
 		self.L = L
 		self.variableNames=['pressure']
-        
+
 	def attachModels(self,modelList):
 		self.mom_Model = modelList[self.mom_ModelId]
 		if (self.adv_ModelId is not None):
@@ -135,18 +135,18 @@ class Porous_Media_Flow(TC_base):
 		if self.diff_Model.ebq.has_key(('u',0)):
 			self.ebq_c = self.diff_Model.ebq[('u',0)]
 		if self.diff_Model.ebq_global.has_key(('u',0)):
-			self.ebq_global_c = self.diff_Model.ebq_global[('u',0)] 
+			self.ebq_global_c = self.diff_Model.ebq_global[('u',0)]
 
 	def initializeElementQuadrature(self,t,cq):
 		self.q_c = np.zeros(cq[('u',0)].shape,'d')
 
 	def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
-		self.cip_c = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1]),'d') 
+		self.cip_c = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1]),'d')
 
 	def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-		ebq_shape = cebq['x'].shape[:-1];         
+		ebq_shape = cebq['x'].shape[:-1];
 		ebq_global_shape = cebq_global['x'].shape[:-1]
-		self.ebq_c = np.zeros(ebq_shape,'d');  
+		self.ebq_c = np.zeros(ebq_shape,'d');
 		self.ebq_global_c = np.zeros(ebq_global_shape,'d')
 
 
@@ -233,7 +233,7 @@ class Transport_Dilute(LinearVADR_ConstantCoefficients):
 		self.ebqe_vel = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
 
 
-	def evaluate(self,t,c): 
+	def evaluate(self,t,c):
 		#import pdb; pdb.set_trace()
 		if self.q_vel.shape == c[('df',0,0)].shape:
 			velocity = self.q_vel
@@ -254,7 +254,7 @@ class Transport_Dilute(LinearVADR_ConstantCoefficients):
                                     c[('df',0,0)],
                                     c[('a',0,0)],
                                     c[('da',0,0,0)],
-                                    velocity)
+                                    velocity/0.9971)
 
 
 
@@ -328,7 +328,7 @@ class Transport_Advection(LinearVADR_ConstantCoefficients):
 	#	#import pdb; pdb.set_trace()
 	#	print self.adv_Model.u[0].dof#pass#self.adv_Model.q['dV_last'][:] = self.adv_Model.q['dV']
 
-	def evaluate(self,t,c): 
+	def evaluate(self,t,c):
 		#import pdb; pdb.set_trace()
 		if self.q_vel.shape == c[('df',0,0)].shape:
 			velocity = self.q_vel
@@ -350,12 +350,3 @@ class Transport_Advection(LinearVADR_ConstantCoefficients):
                                     c[('a',0,0)],
                                     c[('da',0,0,0)],
                                     velocity)
-
-
-
-
-
-
-
-
-

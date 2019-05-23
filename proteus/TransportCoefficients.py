@@ -385,6 +385,7 @@ class LinearVADR_ConstantCoefficients(TC_base):
         self.C = C
         self.rFunc=rFunc
     def evaluate(self,t,c):
+        #import pdb; pdb.set_trace()
         for  i  in range(self.nc):
             self.linearADR_ConstantCoefficientsEvaluate(self.M[i],
                                                         self.A[i],

@@ -328,6 +328,7 @@ class BackwardEuler_cfl(BackwardEuler):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
                 #print "mac cfl component ci",maxCFL,ci
+        #print globalMax(self.cfl[ci].max()),self.runCFL/maxCFL
         self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
@@ -680,6 +681,7 @@ class ForwardEuler(TI_base):
                 self.shockCapturingIsImplicit[ci] = False
         self.cfl = {}
         for ci in range(self.nc):
+            print transport
             if transport.q.has_key(('cfl',ci)):
                 self.cfl[ci] = transport.q[('cfl',ci)]
         self.isAdaptive=True

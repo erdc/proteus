@@ -1237,6 +1237,7 @@ class NS_base:  # (HasTraits):
                     lm.estimate_mt()
                     #post-process velocity
                     lm.calculateAuxiliaryQuantitiesAfterStep()
+                #import pdb; pdb.set_trace()
                 logEvent("Spin-Up Choosing initial time step for model "+p.name)
                 m.stepController.initialize_dt_model(self.tnList[0],self.tnList[1])
                 #mwf what if user wants spin-up to be over (t_0,t_1)?
@@ -1298,6 +1299,7 @@ class NS_base:  # (HasTraits):
                 lm.estimate_mt()
                 #
             logEvent("Choosing initial time step for model "+p.name)
+            #import pdb; pdb.set_trace()
             m.stepController.initialize_dt_model(self.tnList[0],self.tnList[1])
             #recalculate  with all terms ready
             for lm,lu,lr in zip(m.levelModelList,
@@ -1388,11 +1390,11 @@ class NS_base:  # (HasTraits):
                                 logEvent("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
 
                                 model.stepController.setInitialGuess(model.uList,model.rList)
-
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
+                                #print model.uList
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
                                     raw_input("Hit any key to continue")
@@ -1510,6 +1512,7 @@ class NS_base:  # (HasTraits):
     #try to make preStep and postStep just manipulate "current values" and let the step controllers manage the history setting
     ##intermodel transfer before a solution step
     def preStep(self,model):
+        #import pdb; pdb.set_trace()
         for level,levelModel in enumerate(model.levelModelList):
             preCopy = levelModel.coefficients.preStep(model.stepController.t_model,firstStep=self.firstStep)
             if (preCopy is not None and preCopy.has_key(('copy_uList')) and preCopy['copy_uList'] == True):
@@ -1526,6 +1529,7 @@ class NS_base:  # (HasTraits):
 
     ##intermodel transfer after a step
     def postStep(self,model):
+        #import pdb; pdb.set_trace()
         for level,levelModel in enumerate(model.levelModelList):
             postCopy = levelModel.coefficients.postStep(model.stepController.t_model,firstStep=self.firstStep)
             if postCopy is not None and postCopy.has_key(('copy_uList')) and postCopy['copy_uList'] == True:

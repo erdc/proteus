@@ -1547,7 +1547,6 @@ class OneLevelTransport(NonlinearEquation):
         self.comm=comm
         if comm.size() > 1:
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
-
         if numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions:
             interleave_DOF=True
             for nDOF_trial_element_ci in self.nDOF_trial_element:
@@ -1591,7 +1590,6 @@ class OneLevelTransport(NonlinearEquation):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
-#        import pdb ; pdb.set_trace()
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
@@ -1726,6 +1724,7 @@ class OneLevelTransport(NonlinearEquation):
                             self.velocityPostProcessor.updateConservationJacobian[ci]=True
                     except:
                         pass
+            #import pdb; pdb.set_trace()
             self.velocityPostProcessor.postprocess(verbose=0)
 #         if self.movingDomain:
 #             for ci in range(self.nc):
@@ -2530,7 +2529,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                     self.elementResidual[ci])
                     if self.numericalFlux.hasInterior:
                         self.ebq_global[('totalFlux',ci)] += self.ebq_global[('advectiveFlux',ci)]
-                    self.ebqe[('totalFlux',ci)]       += self.ebqe[('advectiveFlux',ci)]
+                    self.ebqe[('totalFlux',ci)]       += self.ebqe[('advectiveFlux',ci)]; #print ci,self.ebqe[('advectiveFlux',ci)]
             for ci in self.coefficients.diffusion.keys():
                 if (self.numericalFlux.diffusiveNumericalFlux.has_key(ci) and
                     self.numericalFlux.diffusiveNumericalFlux[ci]) == True:
@@ -2550,7 +2549,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                         self.elementResidual[ci])
                         if self.numericalFlux.hasInterior:
                             self.ebq_global[('totalFlux',ci)] += self.ebq_global[('diffusiveFlux',ck,ci)]
-                        self.ebqe[('totalFlux',ci)]       += self.ebqe[('diffusiveFlux',ck,ci)]
+                        self.ebqe[('totalFlux',ci)]       += self.ebqe[('diffusiveFlux',ck,ci)]; #print ci,self.ebqe[('diffusiveFlux',ck,ci)]
                         if self.numericalFlux.includeBoundaryAdjoint:
                             if self.sd:
                                 if self.numericalFlux.hasInterior:
@@ -2674,6 +2673,7 @@ class OneLevelTransport(NonlinearEquation):
             #outflow <=> zero diffusion, upwind advection
             #mixedflow <=> you set, otherwise calculated as free
             #setflow <=
+            #import pdb; pdb.set_trace()
             for ci,flag in self.fluxBoundaryConditions.iteritems():
                 #put in total flux here as well?
                 self.ebqe[('totalFlux',ci)].fill(0.0)
@@ -2694,7 +2694,7 @@ class OneLevelTransport(NonlinearEquation):
                     flag == 'setFlow'):
                     if  self.coefficients.diffusion.has_key(ci):
                         for ck in self.coefficients.diffusion[ci]:
-                            #
+                            #import pdb; pdb.set_trace()
                             cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
                                                                             self.mesh.elementBoundaryElementsArray,
                                                                             self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2992,6 +2992,7 @@ class OneLevelTransport(NonlinearEquation):
 
     def calculateCoefficients(self):
         #cek could put logic her for element/internal eb/external eb
+        #import pdb; pdb.set_trace()
         self.calculateElementCoefficients()
         if self.needEBQ:
             self.calculateElementBoundaryCoefficients()
@@ -3190,6 +3191,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #get u,grad(u), and grad(u)Xgrad(w) at the quadrature points
         #
+        
         for cj in range(self.nc):
             self.u[cj].getValues(self.q[('v',cj)],
                                  self.q[('u',cj)])
@@ -3379,6 +3381,7 @@ class OneLevelTransport(NonlinearEquation):
 
         if self.shockCapturing is not None:
             self.shockCapturing.calculateNumericalDiffusion(self.q)
+
     def calculateElementBoundaryCoefficients(self):
         """
         Calculate the nonlinear coefficients at the element boundary quadrature points
@@ -3488,7 +3491,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                      self.ebq[('f',ci)],
                                                                                      self.ebq[('velocity',ci)])
-                    #
+                    #import pdb; pdb.set_trace()
                     #cek can we get rid fo this flag if we're always doing it
                     includeShockCapturingVelocity = True
                     if self.shockCapturing is not None and includeShockCapturingVelocity:

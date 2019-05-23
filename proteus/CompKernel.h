@@ -2734,6 +2734,10 @@ public:
 };
 
 
+
+
+
+
 //specialization for 1D
 template<int NDOF_MESH_TRIAL_ELEMENT>
 class CompKernelSpaceMapping<1,NDOF_MESH_TRIAL_ELEMENT>
@@ -3113,9 +3117,9 @@ public:
   {
     for(int I=0;I<1;I++)
       grad[I] = 0.0;
-    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
       for(int I=0;I<1;I++)
-	grad[I] += dof[l2g_element[j]]*grad_trial[j*1+I];
+	grad[I] += dof[l2g_element[j]]*grad_trial[j+I];
   }
 
   inline void hessFromDOF(const double* dof,const int* l2g_element,const double* hess_trial,double* hess)

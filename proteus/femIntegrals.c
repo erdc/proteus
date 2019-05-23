@@ -6993,7 +6993,7 @@ void calculateFiniteElementFunctionValues(int nElements_global,
   for (eN=0;eN<nElements_global;eN++)
     for  (k=0;k<nQuadraturePoints_element;k++)
       for (j=0;j<nDOF_trial_element;j++)
-        for (t=0;t<nComponents;t++)
+        for (t=0;t<nComponents;t++){
           u[eN*nQuadraturePoints_element*nComponents+
             k*nComponents+
             t] 
@@ -7005,6 +7005,10 @@ void calculateFiniteElementFunctionValues(int nElements_global,
             v[eN*nQuadraturePoints_element*nDOF_trial_element+
               k*nDOF_trial_element+
               j];
+
+
+}
+
 }
 
 /**
@@ -7699,6 +7703,7 @@ void calculateDimensionlessNumbersADR_sd(int nElements_global,
                      k];
           cfl1 = Vlin/h;
           cfl2 = Alin/(h*h);
+
 	  if (computeDiffusiveTimeStepLimit)
 	    cfl[eN*nQuadraturePoints_element + 
                 k] = cfl2;
@@ -7888,7 +7893,10 @@ void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBound
                 *
                 grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                          left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                         k*nSpace+colind[m]];     
+                         k*nSpace+colind[m]]; 
+
+
+    
               velocity[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
@@ -7901,6 +7909,9 @@ void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBound
                 grad_phi[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                          right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                          k*nSpace+colind[m]];
+
+
+
             }
     }
 }

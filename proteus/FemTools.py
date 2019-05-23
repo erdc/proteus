@@ -6023,6 +6023,7 @@ class FiniteElementFunction:
     def getValues(self,
                   v,
                   u):
+
         n_xi = v.shape[1]
         if self.useC==True:
             cfemIntegrals.calculateFiniteElementFunctionValues(self.femSpace.dofMap.l2g,

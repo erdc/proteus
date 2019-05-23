@@ -63,7 +63,8 @@ class RKEV(proteus.TimeIntegration.SSP):
         # About the cfl
         assert transport.coefficients.STABILIZATION_TYPE>0,"SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
-        self.cfl = transport.edge_based_cfl
+        #self.cfl = transport.edge_based_cfl
+        self.cfl = transport.q[('cfl',0)]
         # Stuff particular for SSP
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
@@ -82,11 +83,15 @@ class RKEV(proteus.TimeIntegration.SSP):
     #def set_dt(self, DTSET):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
-        maxCFL = 1.0e-0 #TIM HACK
+        maxCFL = 1.0e-6 #TIM HACK
+        #import pdb; pdb.set_trace()
         maxCFL = max(maxCFL,globalMax(self.cfl.max()))
         self.dt = self.runCFL/maxCFL  #TIM HACK
+        #print self.dt,self.runCFL,globalMax(self.cfl[0].max())
         if self.dtLast is None:
             self.dtLast = self.dt
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
 
@@ -181,7 +186,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         """
         assumes successful step has been taken
         """
-
         self.t = self.tLast + self.dt
         for ci in range(self.nc):
             self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
@@ -1281,10 +1285,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dt_times_dC_minus_dL,
             self.min_u_bc,
             self.max_u_bc,
-            self.quantDOFs,
-            # TCAT Dilute Parameters for Entropy
-            self.coefficients.poro,
-            self.coefficients.mom_Model.u[0].dof)
+            self.quantDOFs)
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():

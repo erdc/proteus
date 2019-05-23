@@ -8,10 +8,13 @@ struct TCAT_var
 	double perm;
 	double diff;
 	double alpha_L;
+	double beta1;
+	double beta2;
 };
 
 double den(double x);
 double d_den(double x);
+double den_root(double x);
 double visc(double x);
 double mole_frac(double x, struct TCAT_var TCAT_v);
 double d_mole_frac(double x, struct TCAT_var TCAT_v);

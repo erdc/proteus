@@ -275,7 +275,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  poro = 1.0,
                  perm = 1.0,
                  diff = 1.0,
-                 alpha_L = 1.0):
+                 alpha_L = 1.0,
+                 beta1 = 0.0,
+                 beta2 = 0.0):
 
         self.useMetrics = useMetrics
         self.variableNames=['tim']
@@ -329,6 +331,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.perm = perm
         self.diff = diff
         self.alpha_L = alpha_L
+        self.beta1 = beta1
+        self.beta2 = beta2
         self.entropy = None
 
     def initializeMesh(self,mesh):
@@ -462,45 +466,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #in a moving domain simulation the velocity coming in is already for the moving domain
         pass
 
-    def evaluate(self,t,c):
-        if c[('f',0)].shape == self.q_v.shape:
-            v = self.q_v
-            phi = self.q_phi
-            porosity  = self.q_porosity
-        elif c[('f',0)].shape == self.ebqe_v.shape:
-            v = self.ebqe_v
-            phi = self.ebqe_phi
-            porosity  = self.ebq_porosity
-        elif ((self.ebq_v is not None and self.ebq_phi is not None) and c[('f',0)].shape == self.ebq_v.shape):
-            v = self.ebq_v
-            phi = self.ebq_phi
-            porosity  = self.ebq_porosity
-        else:
-            v=None
-            phi=None
-            porosity=None
-        if v is not None:
-            # self.EVNonDiluteTransportCoefficientsEvaluate(self.eps,
-            #                              v,
-            #                              phi,
-            #                              c[('u',0)],
-            #                              c[('m',0)],
-            #                              c[('dm',0,0)],
-            #                              c[('f',0)],
-            #                              c[('df',0,0)])
-            self.VolumeAveragedVOFCoefficientsEvaluate(self.eps,
-                                                       v,
-                                                       phi,
-                                                       porosity,
-                                                       c[('u',0)],
-                                                       c[('m',0)],
-                                                       c[('dm',0,0)],
-                                                       c[('f',0)],
-                                                       c[('df',0,0)])
-        # if self.checkMass:
-        #     logEvent("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
-        #                                                                        self.model.q[('m',0)],
-        #                                                                        self.model.mesh.nElements_owned),),level=2)
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
@@ -785,7 +750,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # mql. Some ASSERTS to restrict the combination of the methods
         if self.coefficients.STABILIZATION_TYPE>0:
             assert self.timeIntegration.isSSP==True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within EVNonDiluteTransport model"
-            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver==ExplicitLumpedMassMatrix or options.levelNonlinearSolver==ExplicitConsistentMassMatrixForVOF)
+            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver==ExplicitLumpedMassMatrix or options.levelNonlinearSolver==ExplicitConsistentMassMatrixForVOF )
             assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixForVOF"
         if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver==ExplicitLumpedMassMatrix:
             assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
@@ -885,7 +850,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
             self.dirichletConditionsForceDOF = DOFBoundaryConditions(self.u[0].femSpace,dofBoundaryConditionsSetterDict[0],weakDirichletConditions=False)
 
-
         if self.movingDomain:
             self.MOVING_DOMAIN=1.0
         else:
@@ -897,10 +861,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
 
-    def FCTStep(self):
-        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+    def FCTStep(self,rowptr,colind, MassMatrix):
+        #rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        #import pdb; pdb.set_trace()
+        MassMatrix = MassMatrix/self.timeIntegration.dt
         limited_solution = numpy.zeros(self.u[0].dof.shape)
-
         self.evnondilutetransport.FCTStep(
                          self.nnz, #number of non zero entries
                          len(rowptr)-1, #number of DOFs
@@ -946,6 +911,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateElementResidual(self):
         if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
+
+    def den(self,u):
+         a0 = 0.9971
+         a1 = 0.83898
+         a2 = 0.48132
+         a3 = 0.86154
+         d = a0 + a1*u + a2*u*u + a3*u*u*u;
+         return d
+
+    def d_den(self,u):
+         a0 = 0.9971
+         a1 = 0.83898
+         a2 = 0.48132
+         a3 = 0.86154
+         d = a1 + 2.*a2*u + 3.*a3*u*u;
+         return d
 
     def getResidual(self,u,r):
         import pdb
@@ -1053,9 +1034,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
-            #np.testing.assert_almost_equal(self.ML.sum(),
-            #                               self.mesh.volume,
-            #                               err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
+
+
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
                 self.cterm[d] = np.zeros((self.mesh.nElements_global,
@@ -1175,10 +1155,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             degree_polynomial = self.u[0].femSpace.order
         except:
             pass
-
-        #import pdb; pdb.set_trace()
-        #print "ADV",self.q[('grad(u)',0)]
-
         if (self.coefficients.STABILIZATION_TYPE == 0): #SUPG
             self.calculateResidual = self.evnondilutetransport.calculateResidual
             self.calculateJacobian = self.evnondilutetransport.calculateJacobian
@@ -1284,17 +1260,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.min_u_bc,
             self.max_u_bc,
             self.quantDOFs,
-            # TCAT Dilute Parameters for Entropy
+            # TCAT NonDilute Parameters for Entropy
             self.coefficients.poro,
             self.coefficients.perm,
             self.coefficients.diff,
             self.coefficients.alpha_L,
+            self.coefficients.beta1,
+            self.coefficients.beta2,
             self.coefficients.mom_Model.u[0].dof,
-            self.entropy)
+            self.entropy,
+            self.coefficients.diff_Model.u[0].dof)
 
-        if self.timeIntegration.t in self.coefficients.tnList:
-        	fileEnt = 'entropy_results/entropy.csv.'+str(int(self.timeIntegration.t))
-        	np.savetxt(fileEnt, np.column_stack((self.mesh.nodeArray[:,0], self.entropy*0.0, self.entropy*0.0, self.entropy)) , delimiter = ',' )
+
+    #    if ( np.abs(self.timeIntegration.t - self.coefficients.tnList[2]) < 1.):
+    #        exit(0)
+
+    #    if self.timeIntegration.t in self.coefficients.tnList:
+    #    	fileEnt = 'entropy_results/entropy.csv.'+str(int(self.timeIntegration.t))
+    #    	np.savetxt(fileEnt, np.column_stack((self.mesh.nodeArray[:,0], self.coefficients.adv_Model.u[0].dof, self.entropy*0.0, self.entropy)) , delimiter = ',' )
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -1474,7 +1457,7 @@ class MyCoefficients(Coefficients):
                  # FOR ENTROPY VISCOSITY
                  cE=1.0,
                  uL=0.0,
-                 uR=1.0,
+                 uR=0.2,
                  # FOR ARTIFICIAL COMPRESSION
                  cK=1.0,
                  # OUTPUT quantDOFs
@@ -1486,14 +1469,16 @@ class MyCoefficients(Coefficients):
                  perm = 1.0e-6,
                  diff = 1.0,
                  alpha_L = 1.0,
+                 beta1 = 0.0,
+                 beta2 = 0.0,
                  tnList = None
                  ):
-
+		self.q={}; self.ebqe={}; self.ebq ={}; self.ebq_global = {}; self.phi_ip = {}
 		self.useMetrics = useMetrics
-		self.variableNames=['tim']
+		self.variableNames=['u_ev']
 		nc=1
-		mass={0:{0:'linear'}}
-		advection={0:{0:'linear'}}
+		mass={0:{0:'nonlinear'}}
+		advection={0:{0:'nonlinear'}}
 		hamiltonian={}
 		diffusion={}
 		potential={}
@@ -1545,46 +1530,61 @@ class MyCoefficients(Coefficients):
 		self.perm = perm
 		self.diff = diff
 		self.alpha_L = alpha_L
+		self.beta1 = beta1
+		self.beta2 = beta2
 		self.tnList = tnList
-		self.entropy = None 
+		self.entropy = None
 
 	def attachModels(self,modelList):
-		self.mom_Model = modelList[self.mom_ModelId]
+		if (self.mom_ModelId is not None):
+			self.mom_Model = modelList[self.mom_ModelId]
 		self.adv_Model = modelList[self.adv_ModelId]
-		self.diff_Model = modelList[self.diff_ModelId]  
+		if (self.diff_ModelId is not None):
+			self.diff_Model = modelList[self.diff_ModelId]
 		self.q_v = np.zeros(self.adv_Model.q[('grad(u)',0)].shape,'d')
 		self.ebqe_v = np.zeros(self.adv_Model.ebqe[('grad(u)',0)].shape,'d')
 		self.ebqe_phi = np.zeros(self.adv_Model.ebqe[('u',0)].shape,'d')
+		#import pdb; pdb.set_trace()
 		if self.mom_Model.q.has_key(('velocity',0)):
 			self.q_v = self.mom_Model.q[('velocity',0)]
 			self.ebqe_v = self.mom_Model.ebqe[('velocity',0)]
-		#else:
-		#	self.q_v = self.mom_Model.q[('f',0)]/self.poro
-		#	self.ebqe_v = self.mom_Model.ebqe[('f',0)]/self.poro
 		elif self.mom_Model.ebq.has_key(('velocity',0)):
 			self.ebq_v = self.mom_Model.ebq[('velocity',0)]
-		#else:
-		#	if self.mom_Model.ebq.has_key(('f',0)):
-		#		self.ebq_v = self.mom_Model.ebq[('f',0)]/self.poro
 
 	def preStep(self,t,firstStep=False):
-# 		#import pdb; pdb.set_trace()
-# 		#print "Advection!!!!"
- 		self.adv_Model.u_dof_old[:] = self.diff_Model.u[0].dof
-# 		#self.adv_Model.timeIntegration.m_last = self.diff_Model.timeIntegration.m_last
-# 		#self.adv_Model.calculateCoefficients()
-# 		#self.adv_Model.calculateElementResidual()
-# 		#self.adv_Model.timeIntegration.updateTimeHistory(resetFromDOF=True)
-# 		#self.adv_Model.timeIntegration.resetTimeHistory(resetFromDOF=True)
-# 		#self.adv_Model.updateTimeHistory(t,resetFromDOF=True)
-#        # COMPUTE NEW VELOCITY (if given by user) #
- 		#if self.adv_Model.hasVelocityFieldAsFunction:
- 		#	self.adv_Model.updateVelocityFieldAsFunction()
-# 		#copyInstructions = {'copy_uList':True,'uList_model':self.adv_ModelId}
-# 		#copyInstructions = {'reset_uList':True}
-# 		#return copyInstructions
+# 		self.adv_Model.u_dof_old[:] = np.copy(self.adv_Model.u[0].dof)
+ 		self.adv_Model.u_dof_old[:] = np.copy(self.diff_Model.u[0].dof)
+
+
 
 	def postStep(self,t,firstStep=False):
 		self.adv_Model.q['dV_last'][:] = self.adv_Model.q['dV']
 
+		#for i in range(0,len(self.adv_Model.u[0].dof)):
+		#	self.adv_Model.u[0].dof[i] = self.root(self.adv_Model.u[0].dof[i])
+		self.q_mf_old = np.zeros_like(self.adv_Model.q[('u',0)])
+		self.q_mf_old = np.copy(self.adv_Model.q[('u',0)])
 
+		self.phi_ip = np.zeros_like(self.diff_Model.phi_ip[('u',0)])
+		self.cip_mf_old = np.zeros_like(self.diff_Model.phi_ip[('u',0)])
+		self.adv_Model.phi[0].dof = np.copy(self.adv_Model.u[0].dof)
+		self.adv_Model.phi[0].getValues(self.diff_Model.phi_ip[('v',0)],self.phi_ip)
+		self.cip_mf_old = np.copy(self.phi_ip)
+
+		self.ebqe = np.zeros_like(self.diff_Model.ebqe[('u',0)])
+		self.ebqe_mf_old = np.zeros_like(self.diff_Model.ebqe[('u',0)])
+		self.adv_Model.u[0].getValuesGlobalExteriorTrace(self.diff_Model.ebqe[('v',0)],self.ebqe)
+		self.ebqe_mf_old = np.copy(self.ebqe)
+
+		if self.diff_Model.ebq.has_key(('u',0)):
+			self.ebq = np.zeros_like(self.diff_Model.ebq[('u',0)])
+			self.ebq_mf_old = np.zeros_like(self.diff_Model.ebq[('u',0)])
+			self.adv_Model.u[0].getValuesTrace(self.diff_Model.ebq[('v',0)],self.ebq)
+			self.ebq_mf_old = np.copy(self.ebq)
+
+		if self.diff_Model.ebq_global.has_key(('u',0)):
+			import pdb; pdb.set_trace()
+			self.ebq_global = np.zeros_like(self.diff_Model.ebq_global[('u',0)])
+			self.ebq_global_mf_old = np.zeros_like(self.diff_Model.ebq_global[('u',0)])
+			self.adv_Model.u[0].getValuesTrace(self.diff_Model.ebq_global[('v',0)],self.ebq_global)
+			self.ebq_global_mf_old = np.copy(self.ebq_global)
