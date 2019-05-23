@@ -21,7 +21,7 @@ RUN cd proteus && make jupyter
 
 USER root
 
-RUN jupyter kernelspec install-self
+RUN ipython kernel install
 
 USER $NB_USER
 
