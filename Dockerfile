@@ -1,4 +1,4 @@
-FROM erdc/stack_base:latest
+FROM erdc/stack_base:python3
 
 MAINTAINER Proteus Project <proteus@googlegroups.com>
 
@@ -14,8 +14,8 @@ ENV F90 mpif90
 
 RUN cd proteus && git pull && make develop
 
-ENV PATH /home/$NB_USER/proteus/linux2/bin:$PATH
-ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux2/lib:$LD_LIBRARY_PATH
+ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
+ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
 RUN cd proteus && make jupyter
 
