@@ -36,7 +36,7 @@ from proteus import (StepControl,
 epsFact = 1.5
 sc_uref = 1.
 sc_beta = 1.5
-shockCapturingFactor = 0.5
+shockCapturingFactor = 0.9
 minTol = 1e-8
 default_kappa_turbulence = 1e-3
 default_dissipation_turbulence = 1e-3
@@ -1853,7 +1853,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         if self.n.nl_atol_res is None:
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = self.n.nl_atol_res
+            self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
