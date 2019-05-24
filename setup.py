@@ -239,6 +239,7 @@ EXTENSIONS_TO_BUILD = [
               Extension("equivalent_polynomials",['proteus/equivalent_polynomials.pyx'],
                         depends=['proteus/equivalent_polynomials.pxd',
                                  'proteus/equivalent_polynomials.h',
+                                 'proteus/equivalent_polynomials_utils.h',
                                  'proteus/equivalent_polynomials_coefficients.h'],
                         language='c++',
                         extra_compile_args=PROTEUS_OPT,
