@@ -44,13 +44,13 @@ namespace equivalent_polynomials
     inline double* get_H(){return _H;};
     inline double* get_ImH(){return _ImH;};
     inline double* get_D(){return _D;};
+    bool inside_out;
   private:
     static const unsigned int nN=nSpace+1;
     unsigned int root_node, permutation[nN];
     double phi[nN], nodes[nN*3];
     double Jac[nSpace*nSpace], inv_Jac[nSpace*nSpace];
-    double level_set_normal[nSpace], X_0[nSpace], phys_nodes_cut[nSpace*3];
-    bool inside_out;
+    double level_set_normal[nSpace], X_0[nSpace], phys_nodes_cut[(nN-1)*3];
     static const unsigned int nDOF=((nSpace-1)/2)*(nSpace-2)*(nP+1)*(nP+2)*(nP+3)/6 + (nSpace-1)*(3-nSpace)*(nP+1)*(nP+2)/2 + (2-nSpace)*((3-nSpace)/2)*(nP+1);
     double Ainv[nDOF*nDOF];
     double C_H[nDOF], C_ImH[nDOF], C_D[nDOF];
@@ -165,7 +165,9 @@ namespace equivalent_polynomials
       }
     for(int i=0; i < nN - 1; i++)
       for(int I=0; I < nSpace; I++)
-        Jac[I*nSpace+i] = nodes[(1+i)*3 + I] - nodes[I];
+        {
+          Jac[I*nSpace+i] = nodes[(1+i)*3 + I] - nodes[I];
+        }
     double det_Jac = det<nSpace>(Jac);
     if(det_Jac < 0.0)
       {
@@ -185,6 +187,8 @@ namespace equivalent_polynomials
             Jac[I*nSpace+i] = nodes[(1+i)*3 + I] - nodes[I];
         det_Jac = det<nSpace>(Jac);
         assert(det_Jac > 0);
+        if (nSpace == 1)
+          inside_out = true;
       }
     inv<nSpace>(Jac, inv_Jac);
     return 0;
@@ -202,7 +206,7 @@ namespace equivalent_polynomials
             assert(X_0[i] >=0.0);
             for (int I=0; I < 3; I++)
               {
-                phys_nodes_cut[i*3 + I] = (1-X_0[i])*nodes[I] + X_0[i]*nodes[(i+1)*3+I];
+                phys_nodes_cut[i*3 + I] = (1-X_0[i])*nodes[I] + X_0[i]*nodes[(1+i)*3 + I];
               }
           }
         else
@@ -211,7 +215,7 @@ namespace equivalent_polynomials
             X_0[i] = 1.0;
             for (int I=0; I < 3; I++)
               {
-                phys_nodes_cut[i*3 + I] = nodes[(i+1)*3+I];
+                phys_nodes_cut[i*3 + I] = nodes[(1+i)*3 + I];
               }
           }
       }
@@ -248,7 +252,7 @@ namespace equivalent_polynomials
     double Jac_0[nSpace*nSpace];
     for(int i=0; i < nN - 1; i++)
       for(int I=0; I < nSpace; I++)
-        Jac_0[i*nSpace+I] = phi_nodes[(1+i)*3 + I] - phi_nodes[I];
+        Jac_0[I*nSpace+i] = phi_nodes[(1+i)*3 + I] - phi_nodes[I];
     for(int q=0; q < nQ; q++)
       {
         //Due to the permutation, the quadrature points on the reference may be rotated
@@ -267,7 +271,9 @@ namespace equivalent_polynomials
           {
             xi[I] = 0.0;
             for (int J=0; J < nSpace; J++)
-              xi[I] += inv_Jac[I*nSpace + J]*x[J];
+              {
+                xi[I] += inv_Jac[I*nSpace + J]*x[J];
+              }
           }
         if (nSpace == 1)
           _calculate_polynomial_1D<nP>(xi,C_H,C_ImH,C_D,_H[q],_ImH[q],_D[q]);
