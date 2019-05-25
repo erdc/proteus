@@ -34,6 +34,7 @@ cdef class Simplex:
     cdef int nP
     cdef int nQ
     cdef int q
+    cdef bool inside_out
     cdef np.ndarray _H
     cdef np.ndarray _ImH
     cdef np.ndarray _D
@@ -50,54 +51,69 @@ cdef class Simplex:
             self._H = np.asarray(<double[:self.nQ]>s11.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s11.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s11.get_D())
+            self.inside_out = s11.inside_out
         elif (self.nSpace,self.nP) == (1,2):
             s12.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data))
             self._H = np.asarray(<double[:self.nQ]>s12.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s12.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s12.get_D())
+            self.inside_out = s12.inside_out
         elif (self.nSpace,self.nP) == (1,3):
             s13.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data))
             self._H = np.asarray(<double[:self.nQ]>s13.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s13.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s13.get_D())
+            self.inside_out = s13.inside_out
         elif (self.nSpace,self.nP) == (2,1):
             s21.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data))
             self._H = np.asarray(<double[:self.nQ]>s21.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s21.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s21.get_D())
+            self.inside_out = s21.inside_out
         elif (self.nSpace,self.nP) == (2,2):
             s22.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data))
             self._H = np.asarray(<double[:self.nQ]>s22.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s22.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s22.get_D())
+            self.inside_out = s22.inside_out
         elif (self.nSpace,self.nP) == (2,3):
             s23.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data))
             self._H = np.asarray(<double[:self.nQ]>s23.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s23.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s23.get_D())
+            self.inside_out = s23.inside_out
         if (self.nSpace,self.nP) == (3,1):
             s31.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data))
             self._H = np.asarray(<double[:self.nQ]>s31.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s31.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s31.get_D())
+            self.inside_out = s31.inside_out
         elif (self.nSpace,self.nP) == (3,2):
             s32.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data))
             self._H = np.asarray(<double[:self.nQ]>s32.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s32.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s32.get_D())
+            self.inside_out = s32.inside_out
         elif (self.nSpace,self.nP) == (3,3):
             s33.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data))
             self._H = np.asarray(<double[:self.nQ]>s33.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>s33.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>s33.get_D())
+            self.inside_out = s33.inside_out
     def set_quad(self, int q):
         self.q=q
     @property
     def H(self):
-        return self._H[self.q]
+        if self.inside_out:
+            return self._ImH[self.q]
+        else:
+            return self._H[self.q]
     @property
     def ImH(self):
-        return self._ImH[self.q]
+        if self.inside_out:
+            return self._H[self.q]
+        else:
+            return self._ImH[self.q]
     @property
     def D(self):
         return self._D[self.q]
