@@ -14,7 +14,9 @@ def test_1D():
             gf = eqp.Simplex(nSpace=1, nP=nP, nQ=len(quad.points))
             for phi in phiList:
                 for e in elements:
-                    dV = abs(e[1]-e[0])
+                    print(e,phi)
+                    dV = e[1]-e[0]
+                    assert(dV > 0)
                     if phi[0]*phi[1] < 0.0:
                         theta = -phi[0]/(phi[1] - phi[0])
                         x_0 = (1-theta)*e[0] + theta*e[1]
@@ -54,7 +56,7 @@ def test_1D():
                             
                     gf.calculate(np.array(phi),
                                  np.array([[e[0],0.,0.],
-                                           [e[1],0.,0.]]).transpose(),
+                                           [e[1],0.,0.]]),
                                  np.array(quad.points))
                     int_H=0.0
                     int_ImH=0.0
@@ -136,7 +138,7 @@ def test_2D():
                     gf.calculate(np.array(phi),
                                  np.array([[e[0,0],e[0,1],0.],
                                            [e[1,0],e[1,1],0.],
-                                           [e[2,0],e[2,1],0.]]).transpose(),
+                                           [e[2,0],e[2,1],0.]]),
                                  np.array(quad.points))
                     int_H=0.0
                     int_ImH=0.0
@@ -152,28 +154,32 @@ def test_2D():
 
 def test_3D():
     from proteus.Quadrature import GaussTetrahedron
-    polyOrders = [1,2,3]
+    polyOrders = [2]#1,2,3]
     quadOrderMax = 8
     elements = [
-        np.array([[0.,0.,0.],
-                  [0.,0.,1.],
-                  [0.,1.,0.],
-                  [1.,0.,0.]])
-    ]
-    phiList  = [[-1.,-1.,-1.,-1.],
-                [1.,1.,1.,1.],
-                [-1.,1.,1.,1.],
-                [0.,1.,1.,1.],
-                [1.,0.,0.,0.]]
+           np.array([[0.,0.,0.],
+                     [0.,0.,1.],
+                     [0.,1.,0.],
+                     [1.,0.,0.]]),
+        #np.array([[312.90104741, 109.12205319,  82.38957441],
+        #          [371.40050898, 837.09283397, 117.87194133],
+        #          [666.41881358, 107.49166421, 419.82032267],
+        #          [659.82702468, 583.95327591, 217.72111178]])
+        ]
+    #phiList  = [[-348.3143481,   -10.31124012,   -2.73674249,    9.52267983]]
+    phiList = [[-1.,-1.,-1.,-1.],
+            [1.,1.,1.,1.],
+            [-1.,1.,1.,1.],
+            [0.,1.,1.,1.],
+            [1.,0.,0.,0.]]
     for nP in polyOrders:
         #cek hack: start at nP+1 because I think 2nd order tet rule is single precisionx
         #therefore np==2 and q0 == 2 fails unless tol is reduced below
-        for qO in range(nP+1,quadOrderMax):
+        for qO in [4]:#range(nP+1,quadOrderMax):
             quad = GaussTetrahedron(order=qO)
             gf = eqp.Simplex(nSpace=3, nP=nP, nQ=len(quad.points))
             for phi in phiList:
                 for e in elements:
-                    print(nP, qO, e,phi)
                     b_0 = e[3,:] - e[0,:]
                     b_1 = e[2,:] - e[0,:]
                     b_2 = e[1,:] - e[0,:]
@@ -226,7 +232,7 @@ def test_3D():
                             int_D_exact = 1.0
                             
                     gf.calculate(np.array(phi),
-                                 e.transpose(),
+                                 e,
                                  np.array(quad.points))
                     int_H=0.0
                     int_ImH=0.0

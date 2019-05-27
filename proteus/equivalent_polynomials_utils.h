@@ -17,7 +17,7 @@ namespace equivalent_polynomials
   {
     const unsigned int nSpace(2);
     double level_set_tangent[2];
-    for(int I=0; I < nSpace; I++)
+    for(unsigned int I=0; I < nSpace; I++)
       {
         level_set_tangent[I] = phys_nodes_cut[3+I] - phys_nodes_cut[I];//nodes always 3D
       }
@@ -25,7 +25,7 @@ namespace equivalent_polynomials
     level_set_normal[1] = - level_set_tangent[0];
     double norm = std::sqrt(level_set_normal[0]*level_set_normal[0] +
                             level_set_normal[1]*level_set_normal[1]);
-    for(int I=0; I < nSpace; I++)
+    for(unsigned int I=0; I < nSpace; I++)
       level_set_normal[I] /=  norm;
   }
 
@@ -34,7 +34,7 @@ namespace equivalent_polynomials
   {
     const unsigned int nSpace(3);
     double level_set_tangent_a[3], level_set_tangent_b[3];
-    for(int I=0; I < nSpace; I++)
+    for(unsigned int I=0; I < nSpace; I++)
       {
         level_set_tangent_a[I] = phys_nodes_cut[3+I] - phys_nodes_cut[I];
         level_set_tangent_b[I] = phys_nodes_cut[6+I] - phys_nodes_cut[I];
@@ -48,7 +48,7 @@ namespace equivalent_polynomials
     double norm = std::sqrt(level_set_normal[0]*level_set_normal[0] +
                             level_set_normal[1]*level_set_normal[1] +
                             level_set_normal[2]*level_set_normal[2]);
-    for(int I=0; I < nSpace; I++)
+    for(unsigned int I=0; I < nSpace; I++)
       level_set_normal[I] /=  norm;
   }
 
@@ -60,7 +60,7 @@ namespace equivalent_polynomials
     _D   = 0.0;
     unsigned int iDOF    = 0;
     register double x_pow_i=1.0;
-    for(int i=0; i < nP+1; i++, iDOF++)
+    for(unsigned int i=0; i < nP+1; i++, iDOF++)
       {
         register double psi=x_pow_i;
         _H   += C_H[iDOF]*psi;
@@ -78,10 +78,10 @@ namespace equivalent_polynomials
     _D   = 0.0;
     unsigned int iDOF    = 0;
     register double x_pow_i=1.0;
-    for(int i=0; i < nP+1; i++)
+    for(unsigned int i=0; i < nP+1; i++)
       {
         register double y_pow_j=1.0;
-        for(int j=0; j < nP+1-i; j++, iDOF++)
+        for(unsigned int j=0; j < nP+1-i; j++, iDOF++)
           {
             register double psi=x_pow_i*y_pow_j;
             _H   += C_H[iDOF]*psi;
@@ -101,13 +101,13 @@ namespace equivalent_polynomials
     _D   = 0.0;
     unsigned int iDOF    = 0;
     register double x_pow_i=1.0;
-    for(int i=0; i < nP+1; i++)
+    for(unsigned int i=0; i < nP+1; i++)
       {
         register double y_pow_j=1.0;
-        for(int j=0; j < nP+1-i; j++)
+        for(unsigned int j=0; j < nP+1-i; j++)
           {
             register double x_pow_i_y_pow_j=x_pow_i*y_pow_j, z_pow_k=1.0;
-            for(int k=0; k < nP+1-i-j; k++, iDOF++)
+            for(unsigned int k=0; k < nP+1-i-j; k++, iDOF++)
               {
                 register double psi=x_pow_i_y_pow_j*z_pow_k;
                 _H   += C_H[iDOF]*psi;
