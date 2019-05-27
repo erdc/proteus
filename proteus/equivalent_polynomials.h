@@ -67,22 +67,22 @@ namespace equivalent_polynomials
     _calculate_b<nSpace,nP>(X_0, b_H, b_ImH, b_dH);
 
     register double Jt_dphi_dx[nSpace];
-    for (int I=0; I < nSpace; I++)
+    for (unsigned int I=0; I < nSpace; I++)
       {
         Jt_dphi_dx[I] = 0.0;
-        for(int J=0; J < nSpace; J++)
+        for(unsigned int J=0; J < nSpace; J++)
           Jt_dphi_dx[I] += Jac[J*nSpace + I]*level_set_normal[J];
       }
-    for (int i=0; i < nDOF; i++)
+    for (unsigned int i=0; i < nDOF; i++)
       {
         C_H[i] = 0.0;
         C_ImH[i] = 0.0;
         C_D[i] = 0.0;
-        for (int j=0; j < nDOF; j++)
+        for (unsigned int j=0; j < nDOF; j++)
           {
             C_H[i]   += Ainv[i*nDOF + j]*b_H[j];
             C_ImH[i] += Ainv[i*nDOF + j]*b_ImH[j];
-            for (int I=0; I < nSpace; I++)
+            for (unsigned  int I=0; I < nSpace; I++)
               {
                 C_D[i]   -= Ainv[i*nDOF + j]*b_dH[j*nSpace+I]/Jt_dphi_dx[I];
               }
@@ -96,7 +96,7 @@ namespace equivalent_polynomials
     int p_i, pcount=0, n_i, ncount=0, z_i, zcount=0;
     root_node=0;
     inside_out=false;
-    for (int i=0; i < nN; i++)
+    for (unsigned int i=0; i < nN; i++)
       {
         if(phi_dof[i] > 0.0)
           {
@@ -134,7 +134,9 @@ namespace equivalent_polynomials
                 inside_out = true;
               }
             else
-              root_node = n_i;
+              {
+                root_node = n_i;
+              }
           }
       }
     else if(ncount == 1)
@@ -151,20 +153,20 @@ namespace equivalent_polynomials
         else
           assert(false);
       }
-    for(int i=0; i < nN; i++)
+    for(unsigned int i=0; i < nN; i++)
       {
         permutation[i] = (root_node+i)%nN;
       }
-    for(int i=0; i < nN; i++)
+    for(unsigned int i=0; i < nN; i++)
       {
         phi[i] = phi_dof[permutation[i]];
-        for(int I=0; I < 3; I++)
+        for(unsigned int I=0; I < 3; I++)
           {
             nodes[i*3 + I] = phi_nodes[permutation[i]*3 + I];//nodes always 3D
           }
       }
-    for(int i=0; i < nN - 1; i++)
-      for(int I=0; I < nSpace; I++)
+    for(unsigned int i=0; i < nN - 1; i++)
+      for(unsigned int I=0; I < nSpace; I++)
         {
           Jac[I*nSpace+i] = nodes[(1+i)*3 + I] - nodes[I];
         }
@@ -174,16 +176,16 @@ namespace equivalent_polynomials
         double tmp = permutation[nN-1];
         permutation[nN-1] = permutation[nN-2];
         permutation[nN-2] = tmp;
-        for(int i=0; i < nN; i++)
+        for(unsigned int i=0; i < nN; i++)
           {
             phi[i] = phi_dof[permutation[i]];
-            for(int I=0; I < 3; I++)
+            for(unsigned int I=0; I < 3; I++)
               {
                 nodes[i*3 + I] = phi_nodes[permutation[i]*3 + I];//nodes always 3D
               }
           }
-        for(int i=0; i < nN-1; i++)
-          for(int I=0; I < nSpace; I++)
+        for(unsigned int i=0; i < nN-1; i++)
+          for(unsigned int I=0; I < nSpace; I++)
             Jac[I*nSpace+i] = nodes[(1+i)*3 + I] - nodes[I];
         det_Jac = det<nSpace>(Jac);
         assert(det_Jac > 0);
@@ -197,14 +199,14 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ>
   inline void Simplex<nSpace,nP,nQ>::_calculate_cuts()
   {
-    for (int i=0; i < nN-1;i++)
+    for (unsigned int i=0; i < nN-1;i++)
       {
         if(phi[i+1]*phi[0] < 0.0)
           {
             X_0[i] = 0.5 - 0.5*(phi[i+1] + phi[0])/(phi[i+1]-phi[0]);
             assert(X_0[i] <=1.0);
             assert(X_0[i] >=0.0);
-            for (int I=0; I < 3; I++)
+            for (unsigned int I=0; I < 3; I++)
               {
                 phys_nodes_cut[i*3 + I] = (1-X_0[i])*nodes[I] + X_0[i]*nodes[(1+i)*3 + I];
               }
@@ -213,7 +215,7 @@ namespace equivalent_polynomials
           {
             assert(phi[i+1] == 0.0);
             X_0[i] = 1.0;
-            for (int I=0; I < 3; I++)
+            for (unsigned int I=0; I < 3; I++)
               {
                 phys_nodes_cut[i*3 + I] = nodes[(1+i)*3 + I];
               }
@@ -227,7 +229,7 @@ namespace equivalent_polynomials
     int icase = _calculate_permutation(phi_dof, phi_nodes);//permuation, Jac,inv_Jac...
     if(icase == 1)
       {
-        for (int q=0; q < nQ; q++)
+        for (unsigned int q=0; q < nQ; q++)
           {
             _H[q] = 1.0;
             _ImH[q] = 0.0;
@@ -237,7 +239,7 @@ namespace equivalent_polynomials
       }
     else if(icase == -1)
       {
-        for (int q=0; q < nQ; q++)
+        for (unsigned int q=0; q < nQ; q++)
           {
             _H[q] = 0.0;
             _ImH[q] = 1.0;
@@ -250,29 +252,30 @@ namespace equivalent_polynomials
     _calculate_C();//coefficients of equiv poly
     //compute the default affine map based on phi_nodes[0]
     double Jac_0[nSpace*nSpace];
-    for(int i=0; i < nN - 1; i++)
-      for(int I=0; I < nSpace; I++)
+    for(unsigned int i=0; i < nN - 1; i++)
+      for(unsigned int I=0; I < nSpace; I++)
         Jac_0[I*nSpace+i] = phi_nodes[(1+i)*3 + I] - phi_nodes[I];
-    for(int q=0; q < nQ; q++)
+    for(unsigned int q=0; q < nQ; q++)
       {
         //Due to the permutation, the quadrature points on the reference may be rotated
         //map reference to physical simplex, then back to permuted reference
         register double x[nSpace], xi[nSpace];
-        for (int I=0; I < nSpace; I++)
+        //to physical coordinates
+        for (unsigned int I=0; I < nSpace; I++)
           {
-            x[I]=0.0;
-            for (int J=0; J < nSpace;J++)
+            x[I]=phi_nodes[I];
+            for (unsigned int J=0; J < nSpace;J++)
               {
                 x[I] += Jac_0[I*nSpace + J]*xi_r[q*3 + J];
               }
-            x[I] += phi_nodes[I] - nodes[I];//translate back to reference about nodes[0]
           }
-        for (int I=0; I < nSpace; I++)
+        //back to reference coordinates on possibly permuted 
+        for (unsigned int I=0; I < nSpace; I++)
           {
             xi[I] = 0.0;
-            for (int J=0; J < nSpace; J++)
+            for (unsigned int J=0; J < nSpace; J++)
               {
-                xi[I] += inv_Jac[I*nSpace + J]*x[J];
+                xi[I] += inv_Jac[I*nSpace + J]*(x[J] - nodes[J]);
               }
           }
         if (nSpace == 1)

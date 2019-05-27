@@ -537,7 +537,10 @@ EXTENSIONS_TO_BUILD = [
                         extra_compile_args=PROTEUS_OPT,
                         include_dirs=[numpy.get_include(), 'proteus']),
               Extension("mprans.cMCorr",["proteus/mprans/cMCorr.pyx"],
-                        depends=["proteus/mprans/MCorr.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+                        depends=["proteus/mprans/MCorr.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"] + [
+                            "proteus/mprans/equivalent_polynomials.h",
+                            "proteus/mprans/equivalent_polynomials_utils.h",
+                            "protues/mprans/equivalent_polynomials_coefficients.h"],
                         define_macros=[('PROTEUS_LAPACK_H',PROTEUS_LAPACK_H),
                                        ('PROTEUS_LAPACK_INTEGER',PROTEUS_LAPACK_INTEGER),
                                        ('PROTEUS_BLAS_H',PROTEUS_BLAS_H)],language="c++",
