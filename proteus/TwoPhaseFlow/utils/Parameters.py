@@ -36,7 +36,7 @@ from proteus import (StepControl,
 epsFact = 1.5
 sc_uref = 1.
 sc_beta = 1.5
-shockCapturingFactor = 0.9
+shockCapturingFactor = 0.5
 minTol = 1e-8
 default_kappa_turbulence = 1e-3
 default_dissipation_turbulence = 1e-3
