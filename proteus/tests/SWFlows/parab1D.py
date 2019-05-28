@@ -17,9 +17,8 @@ import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 # *************************** #
 opts= Context.Options([
     ('sw_model',0,"sw_model = {0,1} for {SWEs,DSWEs}"),
-    ('refinement',3,"Refinement level"),
-    ("final_time",1000.0,"Final time for simulation"),
-    ("dt_output",100.0,"Time interval to output solution"),
+    ("final_time",100.0,"Final time for simulation"),
+    ("dt_output",10.0,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction")
     ])
 
@@ -27,7 +26,7 @@ opts= Context.Options([
 # DOMAIN AND MESH #
 ###################
 L=(8000.0,800.0)
-refinement = opts.refinement
+refinement = 2
 domain = RectangularDomain(L=L,x=[0,0,0])
 
 # CREATE REFINEMENT #

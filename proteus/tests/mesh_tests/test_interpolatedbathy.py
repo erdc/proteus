@@ -17,7 +17,7 @@ import pytest
 @pytest.mark.Domain
 class TestInterpolatedBathy(object):
     """ Runs a set of tests for Interpolated Bathymetry"""
-
+    
     @classmethod
     def setup_class(cls):
         pass
@@ -143,7 +143,7 @@ class TestInterpolatedBathy(object):
         mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
         archive.sync(); archive.close()
         self.aux_names.append(outfile)
-
+        
     def test_L1_interp(self):
         domain = self.setupStepGauss()
         mesh = InterpolatedBathymetryMesh(domain,
@@ -161,7 +161,7 @@ class TestInterpolatedBathy(object):
         mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
         archive.sync(); archive.close()
         self.aux_names.append(outfile)
-
+        
     def test_L2_interp(self):
         domain = self.setupStepGauss()
         mesh = InterpolatedBathymetryMesh(domain,

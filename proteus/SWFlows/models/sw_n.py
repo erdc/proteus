@@ -42,6 +42,7 @@ stepController = Min_dt_controller
 # ******************************************* #
 elementQuadrature = FESpace['elementQuadrature']
 elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
+femSpaces = {0: FESpace['basis']}
 femSpaces = {0: FESpace['basis'],
              1: FESpace['basis'],
              2: FESpace['basis']}
@@ -59,6 +60,9 @@ else:
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
+try_supg_stabilization = True
+subgridError = None
+shockCapturing = None
 numericalFluxType = SW2DCV.NumericalFlux
 
 # ************************************ #

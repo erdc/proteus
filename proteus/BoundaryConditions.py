@@ -79,11 +79,37 @@ class BoundaryCondition:
 
         Parameters
         ----------
-        value :
+        value : float
+                Constant value
 
         """
         self.uOfXT = lambda x, t: value
 
 
-    def setLinearBC(self, a0, a1, i):
-        self.uOfXT = lambda x, t: a0+a1*x[i]
+    def setLinearBC(self, a0, a):
+        """
+        function returning value=a0+ax*x+ay*y+az*z
+
+        Parameters
+        ----------
+        a0 : float
+             constant
+        a: numpy.ndarray
+            ax,ay,az
+
+        """
+        
+        self.uOfXT = lambda x, t: a0+sum(a[:]*x[:])
+
+    def setLinearRamp(self,t1,value):
+        """
+        function setting a linear ramp from t=0 to t=t1
+
+        Parameters
+        -----------
+        t1: float
+            Ramp end time
+        value: float
+            Variable value
+        """
+        self.uOfXT = lambda x, t: min( t/t1, 1)*value
