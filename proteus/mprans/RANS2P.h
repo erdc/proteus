@@ -77,7 +77,7 @@ namespace proteus
                                    double C_b,
                                    //VRANS
                                    const double* eps_solid,
-                                   const double* phi_solid,
+                                         double* phi_solid,
                                    const double* q_velocity_solid,
                                    const double* q_porosity,
                                    const double* q_dragAlpha,
@@ -99,6 +99,10 @@ namespace proteus
                                    double* u_dof,
                                    double* v_dof,
                                    double* w_dof,
+                                   double *p_old,
+                                   double *u_old_dof,
+                                   double *v_old_dof,
+                                   double *w_old_dof,
                                    double* g,
                                    const double useVF,
                                    double* q_rho,
@@ -189,6 +193,16 @@ namespace proteus
                                    double* ball_radius,
                                    double* ball_velocity,
                                    double* ball_angular_velocity,
+                                   double* ball_center_acceleration,
+                                   double* ball_angular_acceleration,
+                                   double* ball_density,
+                                   double* particle_signed_distances,
+                                   double* particle_signed_distance_normals,
+                                   double* particle_velocities,
+                                   double* particle_centroids,
+                                   double* ebq_global_phi_s,
+                                   double* ebq_global_grad_phi_s,
+                                   double* ebq_particle_velocity_s,
                                    int     nParticles,
                                    double *particle_netForces,
                                    double *particle_netMoments,
@@ -198,7 +212,10 @@ namespace proteus
                                    double particle_epsFact,
                                    double particle_alpha,
                                    double particle_beta,
-                                   double particle_penalty_constant)=0;
+                                   double particle_penalty_constant,
+                                   double* phi_solid_nodes,
+                                   double* distance_to_solids,
+                                   const int use_pseudo_penalty)=0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -273,7 +290,11 @@ namespace proteus
                                    int* p_l2g,
                                    int* vel_l2g,
                                    double* p_dof, double* u_dof, double* v_dof, double* w_dof,
-                                   double* g,
+                                   double *p_old,
+                                   double *u_old_dof,
+                                   double *v_old_dof,
+                                   double *w_old_dof,
+                                   double *g,
                                    const double useVF,
                                    double* vf,
                                    double* phi,
@@ -372,13 +393,26 @@ namespace proteus
                                    double* ball_radius,
                                    double* ball_velocity,
                                    double* ball_angular_velocity,
+                                   double* ball_center_acceleration,
+                                   double* ball_angular_acceleration,
+                                   double* ball_density,
+                                   double* particle_signed_distances,
+                                   double* particle_signed_distance_normals,
+                                   double* particle_velocities,
+                                   double* particle_centroids,
+                                   double* ebq_global_phi_s,
+                                   double* ebq_global_grad_phi_s,
+                                   double* ebq_particle_velocity_s,
+                                   double* phi_solid_nodes,
+                                   double* distance_to_solids,
                                    int nParticles,
                                    int nElements_owned,
                                    double particle_nitsche,
                                    double particle_epsFact,
                                    double particle_alpha,
                                    double particle_beta,
-                                   double particle_penalty_constant)=0;
+                                   double particle_penalty_constant,
+                                   const int use_pseudo_penalty)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           int* exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -607,6 +641,16 @@ namespace proteus
                                   const double n[nSpace],
                                   const double& kappa,
                                   const double porosity,//VRANS specific
+                                  const double phi_solid,
+                                  const double p_old,
+                                  const double u_old,
+                                  const double v_old,
+                                  const double w_old,
+                                  const double grad_p_old[nSpace],
+                                  const double grad_u_old[nSpace],
+                                  const double grad_v_old[nSpace],
+                                  const double grad_w_old[nSpace],
+                                  const int use_pseudo_penalty,
                                   const double& p,
                                   const double grad_p[nSpace],
                                   const double grad_u[nSpace],
@@ -680,7 +724,7 @@ namespace proteus
         d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
         d_mu = (1.0-useVF)*smoothedDirac(eps_mu,phi);
-
+        const int in_fluid = (phi_solid>0.0)?1:0;
         //calculate eddy viscosity
         switch (turbulenceClosureModel)
           {
@@ -1119,21 +1163,40 @@ namespace proteus
           vz = ball_velocity[3*I + 2] + angular_cross_position[2];
 
       }
+      void get_acceleration_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
+                                    const double* ball_velocity, const double* ball_angular_velocity,
+                                    const double* ball_center_acceleration, const double* ball_angular_acceleration,
+                                    int I,
+                                    const double x, const double y, const double z,
+                                    double& ax, double& ay, double& az)
+      {
+#ifdef USE_CYLINDER_AS_PARTICLE
+          double position[3]={x-ball_center[3*I + 0],y-ball_center[3*I + 1],0.0};
+#else
+          double position[3]={x-ball_center[3*I + 0],y-ball_center[3*I + 1],z-ball_center[3*I + 2]};
+#endif
+          double angular_cross_position[3];
+          get_cross_product(&ball_angular_velocity[3*I + 0],position,angular_cross_position);
+          //YY-incomplete
+      }
       inline void updateSolidParticleTerms(const double NONCONSERVATIVE_FORM,
                                            bool element_owned,
                                            const double particle_nitsche,
                                            const double dV,
                                            const int nParticles,
                                            const int sd_offset,
-//                                           double *particle_signed_distances,
-//                                           double *particle_signed_distance_normals,
-//                                           double *particle_velocities,
-//                                           double *particle_centroids,
+                                           double *particle_signed_distances,
+                                           double *particle_signed_distance_normals,
+                                           double *particle_velocities,
+                                           double *particle_centroids,
                                            const int use_ball_as_particle,
                                            const double* ball_center,
                                            const double* ball_radius,
                                            const double* ball_velocity,
                                            const double* ball_angular_velocity,
+                                           const double* ball_center_acceleration,
+                                           const double* ball_angular_acceleration,
+                                           const double* ball_density,
                                            const double porosity, //VRANS specific
                                            const double penalty,
                                            const double alpha,
@@ -1194,7 +1257,8 @@ namespace proteus
                                            double &dmass_ham_w,
                                            double *particle_netForces,
                                            double *particle_netMoments,
-                                           double *particle_surfaceArea)
+                                           double *particle_surfaceArea,
+                                           const int use_pseudo_penalty)
     {
         double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s;
         double force_x, force_y, force_z, r_x, r_y, r_z, force_p_x, force_p_y, force_p_z, force_stress_x, force_stress_y, force_stress_z;
@@ -1223,15 +1287,16 @@ namespace proteus
             }
             else
             {
-//                phi_s = particle_signed_distances[i * sd_offset];
-//                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * nSpace + 0];
-//                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * nSpace + 1];
-//                vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
-//                vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
-//                center[0] = particle_centroids[3*i+0];
-//                center[1] = particle_centroids[3*i+1];
-                std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!YY: use_ball_as_particle should be 1"<<std::endl;
-
+                phi_s = particle_signed_distances[i * sd_offset];
+                phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * 3 + 0];
+                phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * 3 + 1];
+                phi_s_normal[2] = particle_signed_distance_normals[i * sd_offset * 3 + 2];
+                vel[0] = particle_velocities[i * sd_offset * 3 + 0];
+                vel[1] = particle_velocities[i * sd_offset * 3 + 1];
+                vel[2] = particle_velocities[i * sd_offset * 3 + 2];
+                center[0] = particle_centroids[3*i+0];
+                center[1] = particle_centroids[3*i+1];
+                center[2] = particle_centroids[3*i+2];
             }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
@@ -1985,10 +2050,10 @@ namespace proteus
                                                        const double& bc_flux_vmom,
                                                        const double& bc_flux_wmom,
                                                        const double& p,
-						       const double& u,
-						       const double& v,
-						       const double& w,
-						       const double& dmom_u_acc_u,
+                                                       const double& u,
+                                                       const double& v,
+                                                       const double& w,
+                                                       const double& dmom_u_acc_u,
                                                        const double f_mass[nSpace],
                                                        const double f_umom[nSpace],
                                                        const double f_vmom[nSpace],
@@ -2421,7 +2486,7 @@ namespace proteus
                              double C_b,
                              //VRANS
                              const double* eps_solid,
-                             const double* phi_solid,
+                             double* phi_solid,
                              const double* q_velocity_solid,
                              const double* q_porosity,
                              const double* q_dragAlpha,
@@ -2444,6 +2509,10 @@ namespace proteus
                              double* u_dof,
                              double* v_dof,
                              double* w_dof,
+                             double* p_old_dof,
+                             double* u_old_dof,
+                             double* v_old_dof,
+                             double* w_old_dof,
                              double* g,
                              const double useVF,
                              double* q_rho,
@@ -2534,6 +2603,16 @@ namespace proteus
                              double* ball_radius,
                              double* ball_velocity,
                              double* ball_angular_velocity,
+                             double* ball_center_acceleration,
+                             double* ball_angular_acceleration,
+                             double* ball_density,
+                             double* particle_signed_distances,
+                             double* particle_signed_distance_normals,
+                             double* particle_velocities,
+                             double* particle_centroids,
+                             double* ebq_global_phi_s,
+                             double* ebq_global_grad_phi_s,
+                             double* ebq_particle_velocity_s,
                              int nParticles,
                              double *particle_netForces,
                              double *particle_netMoments,
@@ -2543,7 +2622,10 @@ namespace proteus
                              double particle_epsFact,
                              double particle_alpha,
                              double particle_beta,
-                             double particle_penalty_constant)
+                             double particle_penalty_constant,
+                             double *phi_solid_nodes,
+                             double* distance_to_solids,
+                             const int use_pseudo_penalty)
       {
         logEvent("Entered mprans calculateResidual",6);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
@@ -2579,6 +2661,16 @@ namespace proteus
                 elementResidual_v[i]=0.0;
                 elementResidual_w[i]=0.0;
               }//i
+            //Use for plotting result
+            if(use_ball_as_particle==1)
+            {
+                for (int I=0;I<nDOF_mesh_trial_element;I++)
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                                phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
+            }
             //
             //loop over quadrature points and compute integrands
             //
@@ -2592,6 +2684,8 @@ namespace proteus
                   eN_nDOF_v_trial_element = eN*nDOF_v_trial_element;
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
+                  p_old=0.0,u_old=0.0,v_old=0.0,w_old=0.0,
+                  grad_p_old[nSpace],grad_u_old[nSpace],grad_v_old[nSpace],grad_w_old[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
                   mom_v_acc=0.0,
@@ -2731,11 +2825,19 @@ namespace proteus
                 ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],u);
                 ck_v.valFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],v);
                 ck_v.valFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],w);
+                ck.valFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p_old);
+                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],u_old);
+                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],v_old);
+                ck_v.valFromDOF(w_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],w_old);
                 //get the solution gradients
                 ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p);
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v);
                 ck_v.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_w);
+                ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p_old);
+                ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u_old);
+                ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v_old);
+                ck_v.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_w_old);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_test_element;j++)
                   {
@@ -2777,6 +2879,14 @@ namespace proteus
                 q_x[eN_k_3d+0]=x;
                 q_x[eN_k_3d+1]=y;
                 q_x[eN_k_3d+2]=z;
+                if (use_ball_as_particle == 1)
+                {
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance_to_solids[eN_k]);
+                }else{
+                  //distance_to_solids is given in Prestep
+                }
+                if (nParticles > 0)
+                    phi_solid[eN_k] = distance_to_solids[eN_k];
                 //
                 //calculate pde coefficients at quadrature points
                 //
@@ -2799,6 +2909,16 @@ namespace proteus
                                      kappa_phi[eN_k],
                                      //VRANS
                                      porosity,
+                                     phi_solid[eN_k],//distance to solid
+                                     p_old,
+                                     u_old,
+                                     v_old,
+                                     w_old,
+                                     grad_p_old,
+                                     grad_u_old,
+                                     grad_v_old,
+                                     grad_w_old,
+                                     use_pseudo_penalty,
                                      //
                                      p,
                                      grad_p,
@@ -2912,15 +3032,18 @@ namespace proteus
                                             dV,
                                             nParticles,
                                             nQuadraturePoints_global,
-//                                            &particle_signed_distances[eN_k],
-//                                            &particle_signed_distance_normals[eN_k_nSpace],
-//                                            particle_velocities,
-//                                            particle_centroids,
+                                            &particle_signed_distances[eN_k],
+                                            &particle_signed_distance_normals[eN_k_3d],
+                                            &particle_velocities[eN_k_3d],
+                                            particle_centroids,
                                             use_ball_as_particle,
                                             ball_center,
                                             ball_radius,
                                             ball_velocity,
                                             ball_angular_velocity,
+                                            ball_center_acceleration,
+                                            ball_angular_acceleration,
+                                            ball_density,
                                             porosity,
                                             particle_penalty_constant/h_phi,//penalty,
                                             particle_alpha,
@@ -2981,7 +3104,8 @@ namespace proteus
                                             dmass_ham_w,
                                             &particle_netForces[0],
                                             &particle_netMoments[0],
-                                            &particle_surfaceArea[0]);
+                                            &particle_surfaceArea[0],
+                                            use_pseudo_penalty);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3104,6 +3228,23 @@ namespace proteus
                        dmom_w_acc_w,
                        mom_w_acc_t,
                        dmom_w_acc_w_t);
+                if(use_pseudo_penalty > 0 && phi_solid[eN_k]<0.0)//Do not have to change Jacobian
+                {
+                  double distance,vx,vy,vz;
+                  int index_ball = get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance);
+                  get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,ball_velocity,ball_angular_velocity,index_ball,x,y,z,vx,vy,vz);
+                  mom_u_acc_t = alphaBDF*(mom_u_acc - vx);
+                  mom_v_acc_t = alphaBDF*(mom_v_acc - vy);
+                  mom_w_acc_t = alphaBDF*(mom_w_acc - vz);
+                }else if(use_pseudo_penalty == -1 && phi_solid[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
+                {
+                  mom_u_acc_t = 0.0;
+                  mom_v_acc_t = 0.0;
+                  mom_w_acc_t = 0.0;
+                  dmom_u_acc_u= 0.0;
+                  dmom_v_acc_v= 0.0;
+                  dmom_w_acc_w= 0.0;
+                }
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
                     mom_u_acc_t *= dmom_u_acc_u;
@@ -3390,6 +3531,8 @@ namespace proteus
                   grad_u_ext[nSpace],
                   grad_v_ext[nSpace],
                   grad_w_ext[nSpace],
+                  p_old=0.0,u_old=0.0,v_old=0.0,w_old=0.0,
+                  grad_p_old[nSpace],grad_u_old[nSpace],grad_v_old[nSpace],grad_w_old[nSpace],
                   mom_u_acc_ext=0.0,
                   dmom_u_acc_u_ext=0.0,
                   mom_v_acc_ext=0.0,
@@ -3586,10 +3729,18 @@ namespace proteus
                 ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],u_ext);
                 ck_v.valFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],v_ext);
                 ck_v.valFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],w_ext);
+                ck.valFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_old);
+                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],u_old);
+                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],v_old);
+                ck_v.valFromDOF(w_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],w_old);
                 ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext);
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_ext);
                 ck_v.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_w_ext);
+                ck.gradFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_old);
+                ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_old);
+                ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_old);
+                ck_v.gradFromDOF(w_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_w_old);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_test_element;j++)
                   {
@@ -3613,6 +3764,12 @@ namespace proteus
                 //
                 double bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
                 double rho;
+                if (use_ball_as_particle == 1)
+                {
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,x_ext,y_ext,z_ext,ebq_global_phi_s[ebNE_kb]);
+                }else{
+                    //ebq_global_phi_s[ebNE_kb] is computed in Prestep
+                }
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -3633,6 +3790,16 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
+                                     ebq_global_phi_s[ebNE_kb],
+                                     p_old,
+                                     u_old,
+                                     v_old,
+                                     w_old,
+                                     grad_p_old,
+                                     grad_u_old,
+                                     grad_v_old,
+                                     grad_w_old,
+                                     use_pseudo_penalty,
                                      p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -3720,6 +3887,16 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
+                                     ebq_global_phi_s[ebNE_kb],
+                                     p_old,
+                                     u_old,
+                                     v_old,
+                                     w_old,
+                                     grad_p_old,
+                                     grad_u_old,
+                                     grad_v_old,
+                                     grad_w_old,
+                                     use_pseudo_penalty,
                                      bc_p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -4382,6 +4559,10 @@ namespace proteus
                              int* p_l2g,
                              int* vel_l2g,
                              double* p_dof, double* u_dof, double* v_dof, double* w_dof,
+                             double* p_old_dof,
+                             double* u_old_dof,
+                             double* v_old_dof,
+                             double* w_old_dof,
                              double* g,
                              const double useVF,
                              double* vf,
@@ -4481,13 +4662,26 @@ namespace proteus
                              double* ball_radius,
                              double* ball_velocity,
                              double* ball_angular_velocity,
+                             double* ball_center_acceleration,
+                             double* ball_angular_acceleration,
+                             double* ball_density,
+                             double* particle_signed_distances,
+                             double* particle_signed_distance_normals,
+                             double* particle_velocities,
+                             double* particle_centroids,
+                             double* ebq_global_phi_s,
+                             double* ebq_global_grad_phi_s,
+                             double* ebq_particle_velocity_s,
+                             double* phi_solid_nodes,
+                             double* distance_to_solids,
                              int nParticles,
                              int nElements_owned,
                              double particle_nitsche,
                              double particle_epsFact,
                              double particle_alpha,
                              double particle_beta,
-                             double particle_penalty_constant)
+                             double particle_penalty_constant,
+                             const int use_pseudo_penalty)
       {
           const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
           std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
@@ -4546,12 +4740,15 @@ namespace proteus
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
                   eN_k_nSpace = eN_k*nSpace,
+                  eN_k_3d = eN_k*3,
                   eN_nDOF_trial_element = eN*nDOF_trial_element, //index to a vector at a quadrature point
                   eN_nDOF_v_trial_element = eN*nDOF_v_trial_element; //index to a vector at a quadrature point
 
                 //declare local storage
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
+                  p_old=0.0,u_old=0.0,v_old=0.0,w_old=0.0,
+                  grad_p_old[nSpace],grad_u_old[nSpace],grad_v_old[nSpace],grad_w_old[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
                   mom_v_acc=0.0,
@@ -4704,11 +4901,19 @@ namespace proteus
                 ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],u);
                 ck_v.valFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],v);
                 ck_v.valFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],w);
+                ck.valFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p_old);
+                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],u_old);
+                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],v_old);
+                ck_v.valFromDOF(w_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],w_old);
                 //get the solution gradients
                 ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p);
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v);
                 ck_v.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_w);
+                ck.gradFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p_old);
+                ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u_old);
+                ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v_old);
+                ck_v.gradFromDOF(w_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_w_old);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_test_element;j++)
                   {
@@ -4766,6 +4971,16 @@ namespace proteus
                                      //VRANS
                                      porosity,
                                      //
+                                     phi_solid[eN_k],//updated in get residual
+                                     p_old,
+                                     u_old,
+                                     v_old,
+                                     w_old,
+                                     grad_p_old,
+                                     grad_u_old,
+                                     grad_v_old,
+                                     grad_w_old,
+                                     use_pseudo_penalty,
                                      p,
                                      grad_p,
                                      grad_u,
@@ -4878,15 +5093,18 @@ namespace proteus
                                             dV,
                                             nParticles,
                                             nQuadraturePoints_global,
-//                                            &particle_signed_distances[eN_k],
-//                                            &particle_signed_distance_normals[eN_k_nSpace],
-//                                            particle_velocities,
-//                                            particle_centroids,
+                                            &particle_signed_distances[eN_k],
+                                            &particle_signed_distance_normals[eN_k_3d],
+                                            &particle_velocities[eN_k_3d],
+                                            particle_centroids,
                                             use_ball_as_particle,
                                             ball_center,
                                             ball_radius,
                                             ball_velocity,
                                             ball_angular_velocity,
+                                            ball_center_acceleration,
+                                            ball_angular_acceleration,
+                                            ball_density,
                                             porosity,
                                             particle_penalty_constant/h_phi,//penalty,
                                             particle_alpha,
@@ -4947,7 +5165,8 @@ namespace proteus
                                             dmass_ham_w,
                                             &particle_netForces[0],
                                             &particle_netMoments[0],
-                                            &particle_surfaceArea[0]);
+                                            &particle_surfaceArea[0],
+                                            use_pseudo_penalty);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -5058,6 +5277,15 @@ namespace proteus
                        dmom_w_acc_w,
                        mom_w_acc_t,
                        dmom_w_acc_w_t);
+                if(use_pseudo_penalty == -1 && phi_solid[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
+                {
+                  mom_u_acc_t = 0.0;
+                  mom_v_acc_t = 0.0;
+                  mom_w_acc_t = 0.0;
+                  dmom_u_acc_u = 0.0;
+                  dmom_v_acc_v = 0.0;
+                  dmom_w_acc_w = 0.0;
+                }
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
                     mom_u_acc_t *= dmom_u_acc_u;
@@ -5470,6 +5698,8 @@ namespace proteus
                   grad_u_ext[nSpace],
                   grad_v_ext[nSpace],
                   grad_w_ext[nSpace],
+                  p_old=0.0,u_old=0.0,v_old=0.0,w_old=0.0,
+                  grad_p_old[nSpace],grad_u_old[nSpace],grad_v_old[nSpace],grad_w_old[nSpace],
                   mom_u_acc_ext=0.0,
                   dmom_u_acc_u_ext=0.0,
                   mom_v_acc_ext=0.0,
@@ -5677,10 +5907,18 @@ namespace proteus
                 ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],u_ext);
                 ck_v.valFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],v_ext);
                 ck_v.valFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],w_ext);
+                ck.valFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_old);
+                ck_v.valFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],u_old);
+                ck_v.valFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],v_old);
+                ck_v.valFromDOF(w_old_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_v_test_element],w_old);
                 ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext);
                 ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_ext);
                 ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_ext);
                 ck_v.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_w_ext);
+                ck.gradFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_old);
+                ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_old);
+                ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_old);
+                ck_v.gradFromDOF(w_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_w_old);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_test_element;j++)
                   {
@@ -5708,6 +5946,12 @@ namespace proteus
                 //
                 double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now
                 double rho;
+                if (use_ball_as_particle == 1)
+                {
+                    get_distance_to_ball(nParticles, ball_center, ball_radius,x_ext,y_ext,z_ext,ebq_global_phi_s[ebNE_kb]);
+                }else{
+                    //distance_to_solids is updated in PreStep
+                }
                 evaluateCoefficients(NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
@@ -5728,6 +5972,16 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
+                                     ebq_global_phi_s[ebNE_kb],
+                                     p_old,
+                                     u_old,
+                                     v_old,
+                                     w_old,
+                                     grad_p_old,
+                                     grad_u_old,
+                                     grad_v_old,
+                                     grad_w_old,
+                                     use_pseudo_penalty,
                                      p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -5815,6 +6069,16 @@ namespace proteus
                                      //VRANS
                                      porosity_ext,
                                      //
+                                     ebq_global_phi_s[ebNE_kb],
+                                     p_old,
+                                     u_old,
+                                     v_old,
+                                     w_old,
+                                     grad_p_old,
+                                     grad_u_old,
+                                     grad_v_old,
+                                     grad_w_old,
+                                     use_pseudo_penalty,
                                      bc_p_ext,
                                      grad_p_ext,
                                      grad_u_ext,

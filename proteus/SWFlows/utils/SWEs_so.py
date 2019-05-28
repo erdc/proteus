@@ -9,13 +9,16 @@ from proteus import Context
 import sys
 
 # (!) not the greatest for getting the file name but it works
-#name = str(sys.argv[0][:-3])
-name = "SWFlow"
+name = str(sys.argv[0][:-3])
+parun_passed = False
 for i in range(len(sys.argv)):
-    if '-f' in sys.argv[i]:
-        assert sys.argv[i+1][-3:], "fileName must end with .py"
-        name = sys.argv[i+1][:-3]
+    if 'parun' in sys.argv[i]:
+        parun_passed = True
+    if parun_passed is True and sys.argv[i][-3:] == '.py':
+        name = sys.argv[i][:-3]
         break
+    else:
+        name = "SWFlow"
 
 # ***************************** #
 # ********** CONTEXT ********** #
@@ -35,9 +38,11 @@ outputStepping = ct.mySWFlowProblem.outputStepping
 if sw_model==0: #SWEs
     pnList = [("sw_p", "sw_n")]
 else:
-    pnList = [("dsw_p", "dsw_n")]
+    raise("Not implemented!")
+    #pnList = [("dsw_p", "dsw_n")]
 
 # **************************** #
 # ********** tnList ********** #
 # **************************** #
 tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
+

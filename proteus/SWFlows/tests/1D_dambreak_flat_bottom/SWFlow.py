@@ -3,13 +3,14 @@ from builtins import object
 from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
+from proteus.mprans import SW2D
 from proteus.mprans import SW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
-import proteus.SWFlows.SWFlowProblem as SWFlowProblem
+import proteus.SWFlows.SWFlowProblem as SWFlowProblem 
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -73,12 +74,12 @@ class dam_break_problem_starting_at_t1(object):
             return hl
         elif (xA < x <= xB):
             return 4/9./g*(math.sqrt(g*hl)-old_div((x-xc),2.))**2
-        else:
+        else: 
             return 0.
 
 class velX_starting_at_t1(object):
     def __init__(self):
-        pass
+        pass 
     def uOfXT(self,X,t):
         import math
         x = X[0]
@@ -88,7 +89,7 @@ class velX_starting_at_t1(object):
             return 0.
         elif (xA < x <= xB):
             return 2/3.*(x-xc+math.sqrt(g*hl))
-        else:
+        else: 
             return 0.
 
 class momX_starting_at_t1(object):
@@ -103,63 +104,6 @@ class Zero(object):
     def uOfXT(self,x,t):
         return 0.0
 
-###############################
-##### BOUNDARY CONDITIONS #####
-###############################
-def h_DBC(X,flag):
-    if X[0]==0:
-        return lambda X,t: dam_break_problem_starting_at_t1().uOfXT(X,t)
-
-def momX_DBC(X,flag):
-    if X[0]==0:
-        return lambda X,t: momX_starting_at_t1().uOfXT(X,t)
-
-##########################
-##### EXACT SOLUTION #####
-##########################
-class exact_h_starting_at_t0(object):
-    def __init__(self,hl,xc,g):
-        self.hl = hl
-        self.xc = xc
-        self.g = g
-    def uOfXT(self,X,t):
-        import math
-        x = X[0]
-        xA = self.xc-t*math.sqrt(self.g*self.hl)
-        xB = self.xc+2*t*math.sqrt(self.g*self.hl)
-        if (0 <= x and x <= xA):
-            return hl
-        elif (xA < x <= xB):
-            return 4/9./self.g*(math.sqrt(g*self.hl)-(x-self.xc)/2./t)**2
-        else:
-            return 0.
-
-class exact_h_starting_at_t1(object):
-    def __init__(self,hl,xc,g):
-        self.hl = hl
-        self.xc = xc
-        self.g = g
-    def uOfXT(self,X,t):
-        import math
-        x = X[0]
-        xA = self.xc-(t+1)*math.sqrt(self.g*self.hl)
-        xB = self.xc+2*(t+1)*math.sqrt(self.g*self.hl)
-        if (0 <= x and x <= xA):
-            return hl
-        elif (xA < x <= xB):
-            return 4/9./self.g*(math.sqrt(g*self.hl)-(x-self.xc)/2./(t+1))**2
-        else:
-            return 0.
-
-if opts.start_at_t0:
-    analyticalSolution = {0:exact_h_starting_at_t0(hl=hl,xc=xc,g=g),
-                          1:Zero(),
-                          2:Zero()}
-else:
-    analyticalSolution = {0:exact_h_starting_at_t1(hl=hl,xc=xc,g=g),
-                          1:Zero(),
-                          2:Zero()}
-
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
@@ -173,8 +117,8 @@ else:
                          'x_mom': momX_starting_at_t1(),
                          'y_mom': Zero()}
 #
-boundaryConditions = {'water_height': h_DBC,
-                      'x_mom': momX_DBC,
+boundaryConditions = {'water_height': lambda x,flag: None,
+                      'x_mom': lambda x,flag: None,
                       'y_mom': lambda x,flag: lambda x,t: 0.0}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
                                               cfl=0.33,
@@ -186,5 +130,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              bathymetry=bathymetry,
-                                              analyticalSolution=analyticalSolution)
+                                              bathymetry=bathymetry)

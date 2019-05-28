@@ -5,6 +5,7 @@ from builtins import range
 import os
 from proteus.iproteus import *
 import unittest
+import numpy as np
 import numpy.testing as npt
 from importlib import import_module
 from petsc4py import PETSc
@@ -45,23 +46,21 @@ class TestAddedMass3D(unittest.TestCase):
 
     def test_AddedMass_3D(self):
         from proteus import defaults
-        so = defaults.load_system('addedmass3D_so', modulepath)
+        from . import addedmass3D as am3D
+        am3D.myTpFlowProblem.initializeAll()
+        so = am3D.myTpFlowProblem.so
+        so.name = 'addedMass3D'
         pList = []
         nList = []
         for (pModule,nModule) in so.pnList:
-            log("Loading p module = "+pModule)
-            pList.append(proteus.defaults.load_physics(pModule, modulepath))
-            if pList[-1].name == None:
-                pList[-1].name = pModule
-            log("Loading n module = "+nModule)
-            nList.append(proteus.defaults.load_numerics(nModule, modulepath))
-        so.name = "addedmass3D"
+            pList.append(pModule)
+            nList.append(nModule)
         if so.sList == []:
             for i in range(len(so.pnList)):
                 s = default_s
                 so.sList.append(s)
-        Profiling.logLevel=7
-        Profiling.verbose=True
+        Profiling.logLevel = 7
+        Profiling.verbose = True
         # PETSc solver configuration
         OptDB = PETSc.Options()
         dirloc = os.path.dirname(os.path.realpath(__file__))
@@ -84,9 +83,11 @@ class TestAddedMass3D(unittest.TestCase):
                     i=i+1
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         ns.calculateSolution('addedmass3D')
-        Aij = ns.so.ct.body.Aij
-        npt.assert_almost_equal(Aij[0,0], 284.27506488228266,decimal=5)
-        npt.assert_almost_equal(Aij[1,1], 281.1899393312541,decimal=5)
+        Aij = am3D.body.Aij
+
+        # np.savetxt('Aij_sol3D.csv', Aij, delimiter=',')
+        Aij_sol = np.genfromtxt(os.path.join(modulepath, 'Aij_sol3D.csv'), delimiter=',')
+        npt.assert_almost_equal(Aij, Aij_sol, decimal=5)
         self.teardown_method(self)
 
 if __name__ == "__main__":
