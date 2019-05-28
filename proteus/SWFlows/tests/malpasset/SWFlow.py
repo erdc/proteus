@@ -3,6 +3,7 @@ from builtins import object
 from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
+from proteus.mprans import SW2D
 from proteus.mprans import SW2DCV
 from proteus.Domain import RectangularDomain
 from proteus.Domain import Mesh2DMDomain

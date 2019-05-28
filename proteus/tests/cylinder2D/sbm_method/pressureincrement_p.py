@@ -3,7 +3,10 @@ from builtins import object
 from math import *
 from proteus import *
 from proteus.default_p import *
-from .cylinder import *
+try:
+    from .cylinder import *
+except:
+    from cylinder import *
 
 
 #domain = ctx.domain
@@ -23,7 +26,7 @@ coefficients=PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*rho_1,
                                  modelIndex=PINC_model,
                                  fluidModelIndex=V_model)
 
-#LevelModelType = PresInc.LevelModel
+LevelModelType = PresInc.LevelModel
 
 #pressure increment should be zero on any pressure dirichlet boundaries
 def getDBC_phi(x,flag):

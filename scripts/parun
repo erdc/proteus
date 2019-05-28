@@ -196,16 +196,43 @@ parser.add_option("--setupOnly",
                   dest="setupOnly",
                   action="store_true",
                   help="Don't actually compute a solution, just initialize the Numerical Solution")
-parser.add_option("--SWFlows",
+parser.add_option("--SWEs",
                   default=False,
-                  dest="SWFlows",
+                  dest="SWEs",
                   action="store_true",
-                  help="To consider SWFlows applications")
+                  help="To consider SWEs applications")
+parser.add_option("--TwoPhaseFlow",
+                  default=False,
+                  dest="TwoPhaseFlow",
+                  action="store_true",
+                  help="To consider TwoPhaseFlow applications")
+parser.add_option("--TpFlowParallel",
+                  default=False,
+                  dest="TpFlowParallel",
+                  action="store_true",
+                  help="To run TwoPhaseFlow problems in parallel")
+parser.add_option("--pumi",
+                  default=False,
+                  dest="pumi",
+                  action="store_true",
+                  help="Run with adaptivity")
+parser.add_option("--pumiStage",
+                  help="Stage during PUMI work flow",
+                  action="store",
+                  type="int",
+                  dest="pumiStage",
+                  default=1)
 parser.add_option("-f","--fileName",
                   help="Name of setup file",
                   action="store",
                   type="string",
                   dest="fileName",
+                  default="")
+parser.add_option("--path",
+                  help="Path where TwoPhaseFlow problem is stored",
+                  action="store",
+                  type="string",
+                  dest="pathMyTpFlowProblem",
                   default="")
 
 (opts,args) = parser.parse_args()
@@ -276,10 +303,9 @@ if opts.dataDir != '':
     Profiling.logDir = opts.dataDir
 # Initialise datafile
 Profiling.procID=comm.rank()
-
 if opts.logLevel > 0:
     if len(args)==0:
-        assert opts.SWFlows, "Pass arguments to parun or run with --SWFlows -f fileName.py"
+        assert opts.TwoPhaseFlow, "Pass arguments to parun or run with --TwoPhaseFlow -f fileName.py"
         assert opts.fileName, "Pass setup problem as -f fileName.py"
         Profiling.openLog(opts.fileName+".log",opts.logLevel,logLocation=logDir)
     elif len(args[0].split(' ')) == 1:
@@ -310,25 +336,105 @@ elif opts.contextOptionsFile != None:
 pList = []
 nList = []
 sList = []
-if len(args) < 1 and not opts.SWFlows:
+if len(args) < 1 and not opts.TwoPhaseFlow:
     raise RuntimeError("No input file specified")
 log("Importing input modules")
 
-if opts.SWFlows:
+if opts.SWEs:
     path_models = proteus.__path__[0]+"/SWFlows/models/"
     path_utils = proteus.__path__[0]+"/SWFlows/utils/"
-    so_name = "SWEs_so.py"
+    log(path_models)
+    log(path_utils)
+    if args[0][-3:] == '.py':
+        so_name = "SWEs_so.py"
+        log("Loading module = {so_name}; with case file = {case_name}".format(so_name=so_name,
+                                                                              case_name=args[0]))
+        log(so_name[:-3])
+        log(path_utils)
+        so = proteus.defaults.load_system(so_name[:-3],path=path_utils)
+        for (pModule,nModule) in so.pnList:
+            log("Loading p module = "+pModule)
+            #pList.append(__import__(pModule))
+            pList.append(proteus.defaults.load_physics(pModule,path=path_models))
+            if pList[-1].name == None:
+                pList[-1].name = pModule
+            log("Loading n module = "+nModule)
+            #nList.append(__import__(nModule))
+            nList.append(proteus.defaults.load_numerics(nModule,path=path_models))
+        #
+        if so.sList == []:
+            for i in range(len(so.pnList)):
+                s = default_s
+                sList.append(s)
+        else:
+            sList = so.sList
+elif opts.TwoPhaseFlow:
+
+    path_utils = proteus.__path__[0]+"/TwoPhaseFlow/utils/"
+    so_name = "TwoPhaseFlow_so.py"
     if opts.fileName != "":
         log("Loading module = {so_name}; with case file = {case_name}".format(so_name=so_name,
                                                                               case_name=opts.fileName))
-    so = proteus.defaults.load_system(so_name[:-3],path=path_utils)
+    else:
+        log("Loading so module = "+so_name)
+    #
+    from proteus import Context
+    if opts.pathMyTpFlowProblem is not None:
+        sys.path.append(opts.pathMyTpFlowProblem)
+    name = opts.fileName[:-3]
+    case = __import__(name)
+    Context.setFromModule(case)
+    ct = Context.get()
+    prob = ct.myTpFlowProblem
+    # useSuperlu ? #
+    if prob.useSuperlu is None: #if useSuperlu is None, then I decide
+        if opts.TpFlowParallel:
+            prob.useSuperlu=False
+        else:
+            prob.useSuperlu=True
+    if len(petsc_argv) > 1:  # then petsc.options external file was used
+        prob.usePETScOptionsFileExternal = True
+    prob.initializeAll()
+    so = prob.so
+    so.name = name
+    #################
+    # PUMI WORKFLOW #
+    #################
+    # create mesh #
+    if opts.pumi:
+        from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+        if opts.pumiStage == 1:
+            prob.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI()
+        else:
+            prob.domain = Domain.PUMIDomain(dim=prob.nd)
+            he = prob.he #*float(spaceOrder)
+            adaptMeshFlag = 1
+            adaptMesh_nSteps = 5
+            adaptMesh_numIter = 3
+            hmax = he*12.0;
+            hmin = he/4.0;
+            hPhi = he
+            prob.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax,
+                                                             hmin=hmin,
+                                                             hPhi = hPhi,
+                                                             adaptMesh=adaptMeshFlag,
+                                                             numIter=adaptMesh_numIter,
+                                                             numAdaptSteps=adaptMesh_nSteps,
+                                                             sfConfig="isotropic",
+                                                             logType="on",
+                                                             reconstructedFlag=2)
+            #read the geometry and mesh
+            parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+            prob.domain.MeshOptions.setParallelPartitioningType('element')
+            prob.domain.PUMIMesh.loadModelAndMesh("Reconstructed.dmg","splitMesh/splitMesh.smb")
+    # END OF PUMI WORKFLOW #
     for (pModule,nModule) in so.pnList:
-        log("Loading p module = "+pModule)
-        pList.append(proteus.defaults.load_physics(pModule,path=path_models))
+        log("Loading p module = "+pModule.name)
+        pList.append(pModule)
         if pList[-1].name == None:
             pList[-1].name = pModule
-        log("Loading n module = "+nModule)
-        nList.append(proteus.defaults.load_numerics(nModule,path=path_models))
+        log("Loading n module = "+nModule.name)
+        nList.append(nModule)
     #
     if so.sList == []:
         for i in range(len(so.pnList)):
@@ -394,7 +500,6 @@ else:
 if sList[0].logAllProcesses or opts.logAllProcesses:
     Profiling.logAllProcesses = True
 Profiling.flushBuffer=sList[0].flushBuffer
-
 if opts.batchFileName != "":
     log("Attaching input stream to batch file = "+opts.batchFileName)
     inputStream = open(opts.batchFileName,'r')
@@ -508,7 +613,7 @@ while running:
         runName = so.name + str(runNumber)
         dispatch = Profiling.Dispatcher(comm, opts.profile)
         ns = dispatch(NumericalSolution.NS_base,
-                      (so, pList, nList, sList, opts, simFlagsList),
+                      (so, pList, nList, sList, opts, simFlagsList,opts.TwoPhaseFlow),
                       {},
                       runName + '_init_prof')
 
