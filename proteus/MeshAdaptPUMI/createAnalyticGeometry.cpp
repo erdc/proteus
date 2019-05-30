@@ -689,6 +689,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
 
 
 void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
+//void MeshAdaptPUMIDrvr::updateSphereCoordinates()
 {
   xyz_offset[0] = sphereCenter[0];
   xyz_offset[1] = sphereCenter[1];

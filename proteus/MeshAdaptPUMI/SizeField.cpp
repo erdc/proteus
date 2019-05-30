@@ -58,6 +58,7 @@ static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::Mes
   }
 }
 
+//int MeshAdaptPUMIDrvr::setSphereSizeField(double* xyz_offset)
 int MeshAdaptPUMIDrvr::setSphereSizeField()
 {
   freeField(size_iso);
@@ -65,11 +66,13 @@ int MeshAdaptPUMIDrvr::setSphereSizeField()
 
   apf::MeshIterator *it = m->begin(0);
   apf::MeshEntity* ent;
+//  std::cout<<"xyz_offset is" <<xyz_offset<<std::endl;
   while ((ent = m->iterate(it)))
   {
     int modelTag = m->getModelTag(m->toModel(ent));
     //std::cout<<"This is the model tag "<<modelTag<<std::endl;
-    double sizeDesired;
+    
+	double sizeDesired;
     if(modelTag==123)
         sizeDesired=hmin;
     else

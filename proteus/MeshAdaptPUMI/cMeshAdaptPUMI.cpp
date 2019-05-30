@@ -378,7 +378,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   else if (size_field_config == "meshQuality"){
     //size_iso = samSz::isoSize(m);
-    setSphereSizeField();
+    //setSphereSizeField(xyz_offset);
+	setSphereSizeField();
   }
   else if (size_field_config == "isotropic")
     calculateSizeField();
