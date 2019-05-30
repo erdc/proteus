@@ -900,9 +900,12 @@ namespace proteus
 				// sigma	  : schmidt number                  closure.sigmaC_
         //
         // The pressure term wasn't originally in this function, but has been set to pass it in now (5/21/19).
-         entropyProduction = (vos * new_beta) * (u_f-u)*(u_f-u) - (new_beta * nu_t - p)*gradC_x/closure.sigmaC_*(u_f-u);
-         entropyProduction += (vos * new_beta) * (v_f-v)*(v_f-v) - (new_beta * nu_t - p)*gradC_y/closure.sigmaC_*(v_f-v);
-         entropyProduction += (vos * new_beta) * (w_f-w)*(w_f-w) - (new_beta * nu_t - p)*gradC_z/closure.sigmaC_*(w_f-w);
+        
+         entropyProduction = (vos * new_beta) * (u_f-u)*(u_f-u) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_x*(u_f-u);
+         entropyProduction += (vos * new_beta) * (v_f-v)*(v_f-v) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_y*(v_f-v);
+         entropyProduction += (vos * new_beta) * (w_f-w)*(w_f-w) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_z*(w_f-w);
+      if(entropyProduction<0)
+        {std::cout<<"The second law of thermodynamics has just been violated!"<<std::endl;}
       }
 
 
