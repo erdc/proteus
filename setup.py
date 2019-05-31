@@ -44,7 +44,7 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
-EXTENSIONS_TO_BUILD = [ 
+EXTENSIONS_TO_BUILD = [
 #                                  Extension("MeshAdaptPUMI.MeshAdaptPUMI",
 #                                  sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
 #                                             'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
@@ -619,7 +619,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.5.1.dev0',
+          version='1.6.0.dev0',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',

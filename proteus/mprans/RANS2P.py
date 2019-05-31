@@ -1444,13 +1444,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('force', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
-        if options is not None:
-            try:
-                self.chrono_model = options.chrono_model
-            except AttributeError:
-                logEvent('WARNING: did not find chrono model')
-                pass
-
     def getResidual(self, u, r):
         """
         Calculate the element residuals and add in to the global residual
