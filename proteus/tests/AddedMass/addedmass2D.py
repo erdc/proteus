@@ -143,6 +143,6 @@ max_flag = max(domain.facetFlags+[max_flag])
 flags_rigidbody = np.zeros(max_flag+1, dtype='int32')
 for s in system.subcomponents:
     if type(s) is fsi.ProtChBody:
-        for i in range(s.i_start, s.i_end):
-            flags_rigidbody[i] = 1
+        for flag in body.boundaryFlags:
+            flags_rigidbody[flag] = 1
 m.addedMass.p.CoefficientsOptions.flags_rigidbody = flags_rigidbody

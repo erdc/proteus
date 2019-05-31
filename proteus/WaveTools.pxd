@@ -71,7 +71,7 @@ cdef class  MonochromaticWaves:
     cdef void uLinear(self, double* U, double* x, double t)
     cdef void uFenton(self, double* U, double* x, double t)
 
-cdef class RandomWaves:
+cdef class NewWave:
     cdef bool fast
     cdef double* waveDir_
     cdef double* vDir_
@@ -91,6 +91,31 @@ cdef class RandomWaves:
     cdef double[10000] phi_c
     cdef public:
         double mwl,depth,gAbs,Tlag,Hs,Tp,fp,bandFactor,df
+        int N
+        np.ndarray fi,fim,Si_Jm,ki,omega,tanhF,g,waveDir,vDir,kDir,ai
+        cdef object phi
+    cdef double _cpp_eta(self , double* x, double t)
+    cdef void _cpp_u(self, double *U, double* x, double t)
+cdef class RandomWaves:
+    cdef bool fast
+    cdef double* waveDir_
+    cdef double* vDir_
+    cdef double* tanh_
+    cdef double* ai_
+    cdef double* phi_
+    cdef double* omega_
+    cdef double* kDir_
+    cdef double* ki_
+    cdef double[3] waveDir_c
+    cdef double[3] vDir_c
+    cdef double[30000] kDir_c
+    cdef double[10000] omega_c
+    cdef double[10000] ki_c
+    cdef double[10000] ai_c
+    cdef double[10000] tanh_c
+    cdef double[10000] phi_c
+    cdef public:
+        double mwl,depth,gAbs,Tlag,Hs,Tp,fp,bandFactor,df,wavelength
         int N
         np.ndarray fi,fim,Si_Jm,ki,omega,tanhF,g,waveDir,vDir,kDir,ai
         cdef object phi

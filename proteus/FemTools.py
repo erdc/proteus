@@ -6536,7 +6536,7 @@ class FiniteElementFunction(object):
     underlying basis functions that comes from `femSpace`'s
     ParametricFiniteElementSpace object
     """
-    def __init__(self,finiteElementSpace,dof=None,dim_dof=1,name="no_name",isVector=False):
+    def __init__(self,finiteElementSpace,dof=None,dof_last=None,dof_last_last=None,dim_dof=1,name="no_name",isVector=False):
         #: Name assigned to the FiniteElementFunction instance
         self.name=name
         #: boolean variable identifying whether the
@@ -6556,12 +6556,16 @@ class FiniteElementFunction(object):
             #: numpy array of degree-of-freedom values used to
             #: calculate the finite element function.
             self.dof=dof
-            self.dof_last=dof.copy()
+            self.dof_last=dof_last
+            self.dof_last_last=dof_last_last
         else:
             self.dof = numpy.zeros((self.femSpace.dim*dim_dof),
                                      'd')
             self.dof_last = numpy.zeros((self.femSpace.dim*dim_dof),
                                      'd')
+            self.dof_last_last = numpy.zeros((self.femSpace.dim*dim_dof),
+                                     'd')
+
         #: boolean variable indentifying whether calculations should
         #: use C-routines.
         self.useC=True

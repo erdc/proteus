@@ -138,6 +138,7 @@ class TwoPhaseFlowProblem:
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
         self.fastArchive = fastArchive
+        self.usePETScOptionsFileExternal = False
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
@@ -251,7 +252,7 @@ class TwoPhaseFlowProblem:
         # others
         so.needEBQ_GLOBAL = False
         so.needEBQ = False
-        so.measureSpeedOfCode = True
+        so.measureSpeedOfCode = False
         so.fastArchive = self.fastArchive
         # archiving time
         outputStepping = self.outputStepping
@@ -374,7 +375,6 @@ default_rans2p_parameters = {'useMetrics': 1.0,
                              'ns_forceStrongDirichlet': False,
                              'weak_bc_penalty_constant': 1.0E6,
                              'useRBLES': 0.0,
-                             'useRANS': 0.0,
                              'ns_closure': 0,
                              'useVF': 1.0,
                              'ns_shockCapturingFactor': 0.25,
