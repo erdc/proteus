@@ -44,28 +44,29 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
-EXTENSIONS_TO_BUILD = [# Extension("MeshAdaptPUMI.MeshAdaptPUMI",
-                       #           sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
-                       #                      'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
-                       #                      'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
-                       #                      'proteus/MeshAdaptPUMI/DumpMesh.cpp',
-                       #                      'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp','proteus/MeshAdaptPUMI/VMS.cpp'],
-                       #           depends=["proteus/partitioning.h",
-                       #                    "proteus/partitioning.cpp",
-                       #                    "proteus/cpartitioning.pyx",
-                       #                    "proteus/cmeshTools.pxd",
-                       #                    "proteus/mesh.h",
-                       #                    'proteus/mesh.cpp',
-                       #                    'proteus/meshio.cpp'],
-                       #           define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
-                       #           language='c++',
-                       #           include_dirs=[numpy.get_include(),'include',
-                       #                         'proteus']+
-                       #           PROTEUS_SCOREC_INCLUDE_DIRS,
-                       #           library_dirs=PROTEUS_SCOREC_LIB_DIRS,
-                       #           libraries=PROTEUS_SCOREC_LIBS,
-                       #           extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
-                       #           extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
+EXTENSIONS_TO_BUILD = [
+#                                  Extension("MeshAdaptPUMI.MeshAdaptPUMI",
+#                                  sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
+#                                             'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
+#                                             'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
+#                                             'proteus/MeshAdaptPUMI/DumpMesh.cpp',
+#                                             'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp','proteus/MeshAdaptPUMI/VMS.cpp','proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp'],
+#                                  depends=["proteus/partitioning.h",
+#                                           "proteus/partitioning.cpp",
+#                                           "proteus/cpartitioning.pyx",
+#                                           "proteus/cmeshTools.pxd",
+#                                           "proteus/mesh.h",
+#                                           'proteus/mesh.cpp',
+#                                           'proteus/meshio.cpp'],
+#                                  define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
+#                                  language='c++',
+#                                  include_dirs=[numpy.get_include(),'include',
+#                                                'proteus','proteus/MeshAdaptPUMI']+
+#                                  PROTEUS_SCOREC_INCLUDE_DIRS,
+#                                  library_dirs=PROTEUS_SCOREC_LIB_DIRS,
+#                                  libraries=PROTEUS_SCOREC_LIBS,
+#                                  extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
+#                                  extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS),#+PROTEUS_EXTRA_LINK_ARGS),
               Extension("mprans.cPres",['proteus/mprans/cPres.pyx'],
                         depends=['proteus/mprans/Pres.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
                         language='c++',
@@ -607,7 +608,7 @@ EXTENSIONS_TO_BUILD = [# Extension("MeshAdaptPUMI.MeshAdaptPUMI",
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.5.1.dev0',
+          version='1.6.0.dev0',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
@@ -900,7 +901,10 @@ def setup_given_extensions(extensions):
          ],
           scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                      'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
-                     'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py'],
+
+                     'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py','scripts/clearh5.py',
+                     'scripts/runSWEs.py'],
+
           requires=['numpy']
     )
 

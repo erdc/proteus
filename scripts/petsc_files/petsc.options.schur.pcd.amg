@@ -1,0 +1,81 @@
+# THIS IS A SAMPLE PETSC OPTIONS FILE FOR A NSE SCHUR COMPLEMENT
+# SOLVER WITH THE TWO-PHASE PCD METHOD THAT USES AMG
+
+# NOTE - THIS IS NOT A BLACK BOX PRECONDITIONER, THESE SETTINGS
+# MAY REQUIRE SOME MODIFICATIONS TO BE EFFECTIVE FOR ANY GIVEN
+# PROBLEM
+
+# set petsc ksp object and preconditioner
+-log_view
+-rans2p_ksp_type fgmres
+-rans2p_ksp_gmres_restart 500
+-rans2p_ksp_atol 1e-20
+-rans2p_ksp_rtol 1e-6
+-rans2p_ksp_gmres_modifiedgramschmidt
+-rans2p_ksp_pc_side right
+
+# pc options
+-rans2p_pc_fieldsplit_type schur 
+-rans2p_pc_fieldsplit_schur_fact_type upper
+-rans2p_pc_fieldsplit_schur_precondition user
+
+# direct solver for velocity block - ksp options
+-rans2p_fieldsplit_velocity_ksp_type gmres
+-rans2p_fieldsplit_velocity_ksp_pc_side right
+-rans2p_fieldsplit_velocity_ksp_gmres_modifiedgramschmidt
+#-rans2p_fieldsplit_velocity_ksp_view
+-rans2p_fieldsplit_velocity_ksp_atol 1e-3
+-rans2p_fieldsplit_velocity_ksp_rtol 1e-3
+
+#-rans2p_fieldsplit_velocity_fieldsplit_u_ksp_monitor_true_residual
+-rans2p_fieldsplit_velocity_fieldsplit_u_ksp_type preonly
+#-rans2p_fieldsplit_velocity_fieldsplit_u_ksp_type gmres
+#-rans2p_fieldsplit_velocity_fieldsplit_u_ksp_gmres_modifiedgramschimdt
+#-rans2p_fieldsplit_velocity_fieldsplit_u_pc_type lu
+#-rans2p_fieldsplit_velocity_fieldsplit_u_pc_factor_mat_solver_type superlu_dist
+-rans2p_fieldsplit_velocity_fieldsplit_u_pc_type hypre
+-rans2p_fieldsplit_velocity_fieldsplit_u_pc_hypre_type boomeramg
+-rans2p_fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type HMIS
+
+#-rans2p_fieldsplit_velocity_fieldsplit_v_ksp_monitor_true_residual
+-rans2p_fieldsplit_velocity_fieldsplit_v_ksp_type preonly
+#-rans2p_fieldsplit_velocity_fieldsplit_v_ksp_type gmres
+#-rans2p_fieldsplit_velocity_fieldsplit_v_ksp_gmres_modifiedgramschimdt
+#-rans2p_fieldsplit_velocity_fieldsplit_v_pc_type lu
+#-rans2p_fieldsplit_velocity_fieldsplit_v_pc_factor_mat_solver_type superlu_dist
+-rans2p_fieldsplit_velocity_fieldsplit_v_pc_type hypre
+-rans2p_fieldsplit_velocity_fieldsplit_v_pc_hypre_type boomeramg
+-rans2p_fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type HMIS
+
+#-rans2p_fieldsplit_velocity_fieldsplit_w_ksp_monitor_true_residual
+-rans2p_fieldsplit_velocity_fieldsplit_w_ksp_type preonly
+#-rans2p_fieldsplit_velocity_fieldsplit_w_ksp_type gmres
+#-rans2p_fieldsplit_velocity_fieldsplit_w_ksp_gmres_modifiedgramschimdt
+#-rans2p_fieldsplit_velocity_fieldsplit_w_pc_type lu
+#-rans2p_fieldsplit_velocity_fieldsplit_w_pc_factor_mat_solver_type superlu_dist
+-rans2p_fieldsplit_velocity_fieldsplit_w_pc_type hypre
+-rans2p_fieldsplit_velocity_fieldsplit_w_pc_hypre_type boomeramg
+-rans2p_fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type HMIS
+
+# pressure block options
+-rans2p_fieldsplit_pressure_ksp_type preonly
+
+-innerTPPCDsolver_Qp_visc_ksp_type preonly
+-innerTPPCDsolver_Qp_visc_pc_type lu
+-innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type superlu_dist
+
+-innerTPPCDsolver_Qp_dens_ksp_type preonly
+-innerTPPCDsolver_Qp_dens_pc_type lu
+-innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type superlu_dist
+
+-innerTPPCDsolver_Ap_rho_ksp_type richardson
+-innerTPPCDsolver_Ap_rho_ksp_max_it 1
+# CAREFUL WITH THE FOLLOWING SETTING, MAY NOT BE APPROPRIATE FOR
+# INFLOW-OUTFLOW PROBLEMS
+-innerTPPCDsolver_Ap_rho_ksp_constant_null_space
+-innerTPPCDsolver_Ap_rho_pc_type hypre
+-innerTPPCDsolver_Ap_rho_pc_hypre_type boomeramg
+-innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold 0.5
+-innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type ext+i-cc
+-innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type HMIS
+-innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl 2
