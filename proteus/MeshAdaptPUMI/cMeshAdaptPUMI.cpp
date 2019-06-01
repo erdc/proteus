@@ -415,35 +415,29 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
   getERMSizeField(total_error);
   sizeFieldList.pop(); //remove this size field from the queue
 
-  std::cout<<"Flag 1\n";
+  //if(m->findField("errorTriggered"))
+  //  apf::destroyField(m->findField("errorTriggered"));
+  apf::Field* errorTriggered;
   if(m->findField("errorTriggered"))
-    apf::destroyField(m->findField("errorTriggered"));
-  //apf::Field *errorTriggered = apf::createLagrangeField(m, "errorTriggered", apf::SCALAR, 1);
-  apf::Field* errorTriggered = apf::createField(m,"errorTriggered",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
+    errorTriggered = m->findField("errorTriggered");
+  else
+    errorTriggered = apf::createField(m,"errorTriggered",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
  
-  std::cout<<"Flag 2\n";
-
   apf::Field* error_current = m->findField("VMSH1");
   apf::Field* error_reference=NULL;
 
+
   if(m->findField("errorRate"))
     apf::destroyField(m->findField("errorRate"));
-  //apf::Field *errorTriggered = apf::createLagrangeField(m, "errorTriggered", apf::SCALAR, 1);
   apf::Field* errorRateField = apf::createField(m,"errorRate",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
 
+  //need to set the error trigger field to 0
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it;
 
-  if(!m->findField("error_reference"))
-  {  
-    T_reference = T_current;
-    //error_reference  = apf::createFieldOn(m, "error_reference", apf::SCALAR); 
-    error_reference = apf::createField(m,"error_reference",apf::SCALAR,apf::getVoronoiShape(nsd,1));
-    apf::copyData(error_reference,error_current);
-    logEvent("SUCCESSFULLY COPIED!",4);
-
-
-    //need to set the error trigger field to 0
-    apf::MeshEntity* ent;
-    apf::MeshIterator* it = m->begin(m->getDimension());
+  if(nTriggers == 0)
+  {
+    it = m->begin(m->getDimension());
     while( (ent = m->iterate(it) ) )
     {
         apf::setScalar(errorTriggered,ent,0,-1.0);
@@ -451,6 +445,16 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
     }
     m->end(it);
     logEvent("SET ERROR TRIGGERED!",4);
+  }
+
+
+  //set the error reference field to be the current error field for next time otherwise, retrieve the error_reference field
+  if(!m->findField("error_reference"))
+  {  
+    T_reference = T_current;
+    error_reference = apf::createField(m,"error_reference",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+    apf::copyData(error_reference,error_current);
+    logEvent("SUCCESSFULLY COPIED!",4);
 
     return 0;
   }
@@ -459,58 +463,74 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
     error_reference = m->findField("error_reference");
   }
 
-//Need to make as inputs
   double dt_step = dt_err; //global variable imported from VMS
-  apf::MeshEntity* ent;
-  apf::MeshIterator* it = m->begin(m->getDimension());
-     
+
+  it = m->begin(m->getDimension());
 
   while( (ent = m->iterate(it) ) )
   {   
     double err_local_current = apf::getScalar(error_current,ent,0);
     double err_local_ref = apf::getScalar(error_reference,ent,0);
     double errorRate = (err_local_current-err_local_ref)/(T_current-T_reference);
-    //std::cout<<"error "<<err_local_current<<" err_local_ref "<<err_local_ref<<" T_current "<<T_current<<" reference "<<T_reference<<std::endl;
-    apf::setScalar(errorRateField,ent,0,errorRate*dt_step);
+    apf::setScalar(errorRateField,ent,0,errorRate);
     double err_predict = errorRate*dt_step + err_local_current;
     double sizeRatio_local = apf::getScalar(m->findField("sizeRatio"),ent,0);
-    //if(errorRate > 0 && (err_predict > target_error) && T_current > 0.05 )
-    //if(errorRate > 0 && (err_predict > target_error) && T_current > 0.05 && sizeRatio_local>2.0)
-    if(errorRate > 0 && (err_predict > target_error) && sizeRatio_local>2.0 && nTriggers>0)
-    //if(errorRate > 0 && (err_local_current > target_error*2.0))
+    //if(errorRate > 0 && (err_predict > target_error) && sizeRatio_local>2.0 && nTriggers>=5)
+    if(errorRate > 0 && sizeRatio_local>2.0)
     {
-        adaptFlag = 1;
-        logEvent("Need to error based adapt!!!",4);
-/*
-        std::cout<<"What is time? "<<T_current<<" reference? "<<T_reference<<" err_local_current "<<err_local_current<<" err_local_ref "<<err_local_ref<<std::endl;
-        std::cout<<"Local number "<<localNumber(ent)<<std::endl;
-        std::cout<<"error rate "<<errorRate<<std::endl;
-        std::cout<<"size ratio local "<<sizeRatio_local<<std::endl;
-        std::cout<<"this is adapt number "<<nAdapt<<std::endl;
-*/
-        apf::setScalar(errorTriggered,ent,0,1.0);
-        //break;
+        if(apf::getScalar(errorTriggered,ent,0))
+        {
+            adaptFlag = 1;
+            apf::setScalar(errorTriggered,ent,0,2.0);
+        }
+        else
+            apf::setScalar(errorTriggered,ent,0,1.0);
     }
     else
         apf::setScalar(errorTriggered,ent,0,-1.0);
-
-    //set the reference field for the next step
-    //apf::setScalar(error_reference,ent,0,err_local_current);
-    //T_reference = T_current;
-    //set the error field with a predictive value
-/*
-    if(errorRate > 0)
-    {
-        double err_predict_long = errorRate*dt_step*numAdaptSteps + err_local_current;
-        apf::setScalar(error_current,ent,0,err_predict_long);
-    }
-*/
   }
   m->end(it);
 
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
   nTriggers++;
+
+  //if adapt, modify the error field to be predictive
+  //otherwise, store the current error field to be the next reference field
+  if(assertFlag > 0)
+  {
+    logEvent("Need to error based adapt!!!",4);
+/*
+    it = m->begin(m->getDimension());
+    while( (ent = m->iterate(it) ) )
+    {   
+        double err_local_current = apf::getScalar(error_current,ent,0);
+        double err_local_ref = apf::getScalar(error_reference,ent,0);
+        double errorRate = (err_local_current-err_local_ref)/(T_current-T_reference);
+    
+        //double err_predict = errorRate*dt_step*numAdaptSteps + err_local_current;
+        double err_predict = errorRate*dt_step*5 + err_local_current;
+        if(err_predict > err_local_current)
+        {
+            apf::setScalar(error_current,ent,0,err_predict);
+        }
+    }
+    m->end(it);
+*/
+  }
+  else
+  {
+    it = m->begin(m->getDimension());
+    while( (ent = m->iterate(it) ) )
+    {   
+        double err_local_current = apf::getScalar(error_current,ent,0);
+        //set the reference field for the next step
+        apf::setScalar(error_reference,ent,0,err_local_current);
+    }
+
+  }
+  
+  T_reference = T_current;
 
   return assertFlag;
 }
@@ -524,8 +544,9 @@ int MeshAdaptPUMIDrvr::willAdapt()
     adaptFlag += willInterfaceAdapt(); 
   if(size_field_config == "combined" or size_field_config == "VMS")
   {
-    willErrorAdapt_reference();
+    //willErrorAdapt_reference();
     //adaptFlag += willErrorAdapt_reference();
+    willErrorAdapt_reference();
     //willErrorAdapt();
   }
 
@@ -873,7 +894,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->debugFolder = "./debug_testAdapt";
-  in->goodQuality = 0.064;//0.027;
+  //in->goodQuality = 0.064;//0.027;
   //double mass_before = getTotalMass();
   
   //m->writeNative("beforeMesh.smb");
@@ -1024,6 +1045,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 
   //freeField(error_reference);
   apf::destroyField(m->findField("error_reference"));
+  apf::destroyField(m->findField("errorTriggered"));
   nTriggers=0;
 
 
@@ -1069,12 +1091,71 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   }  
 */
 
+
+//momentum correction via solution transfer
+/*
+  numberLocally();
+  if(nAdapt == 5)
+  {
+    apf::MeshIterator* it_correct = m->begin(0);
+    apf::MeshEntity* ent;
+    while( (ent = m->iterate(it_correct)))
+    {
+        apf::Vector3 velocity_modify(0.0,0.0,0.0);
+        apf::Vector3 velocity_current;
+        apf::getVector(m->findField("velocity"),ent,0,velocity_current);
+   
+        if(localNumber(ent) == 223) 
+        {
+           velocity_modify[0] = 0.0;
+           velocity_modify[1] = -0.0027673;
+        }
+        else if(localNumber(ent) == 1520)
+        {
+           velocity_modify[0]  = 0.0;
+           velocity_modify[1] = 0.0069181;
+        }
+        else if(localNumber(ent) == 1902)
+        {
+           velocity_modify[0]  = 0.0;
+           velocity_modify[1] =-0.0027673;
+        }
+        else if(localNumber(ent) == 2148)
+        {
+           velocity_modify[0]  = 0.0;
+           velocity_modify[1] = -0.012453;
+        }
+
+        velocity_current = velocity_current + velocity_modify;
+        apf::setVector(m->findField("velocity"),ent,0,velocity_current);
+
+    }
+
+  }  
+*/
+
 /*
   if(nAdapt==6)
   {
     numberLocally();
     getSolutionCorrection(m);
     //std::abort();
+  }
+*/
+/*
+  if(nAdapt == 5)
+  {
+    numberLocally();
+    apf::MeshIterator * patchIter = m->begin(0);
+    apf::MeshEntity* ent;
+    while( (ent = m->iterate(patchIter) ) )
+    {
+        if(localNumber(ent) == 1520)
+        {
+            getPatchRelaxation(ent);
+        }
+    }
+    m->end(patchIter);
   }
 */
 /*
@@ -1636,6 +1717,385 @@ void MeshAdaptPUMIDrvr::getSolutionCorrection(apf::Mesh* m)
 
     apf::writeVtkFiles("Debug_afterCorrection",m);
 }
+
+void MeshAdaptPUMIDrvr::getPatchRelaxation(apf::MeshEntity* vert)
+{
+//This code is to test how we might be able to correct the velocities or orthogonlize the error to the new mesh/function space
+//We try to accomplish this by solving a BVP over the patch of elements around a vertex where all other vertices other than the vertex of interest are DBCs. 
+//The problem is based on the NSE which is linearized by the current solution.
+
+    //Start computing element quantities
+    int numqpt; //number of quadrature points
+    const int nshl= 3; //number of local shape functions
+    int elem_type; //what type of topology
+    double weight; //value container for the weight at each qpt
+    double Jdet;
+    int int_order = 2; //because integrand is 2nd order polynomial
+  
+    apf::FieldShape* update_shape = apf::getLagrange(1);
+    apf::EntityShape* elem_shape;
+    apf::Vector3 qpt; //container for quadrature points
+    apf::MeshElement* element;
+    apf::Element* velo_elem;
+    apf::Element* velo_old_elem;
+    apf::Element* pres_elem;
+    apf::Matrix3x3 J; //actual Jacobian matrix
+    apf::Matrix3x3 invJ; //inverse of Jacobian
+    apf::NewArray <double> shpval; //array to store shape function values at quadrature points
+    apf::NewArray <apf::Vector3> shgval; //array to store shape function values at quadrature points
+    apf::NewArray <apf::DynamicVector> shgval_copy;
+
+    apf::DynamicMatrix invJ_copy;
+    apf::NewArray <apf::DynamicVector> shdrv;
+  
+    apf::Field* velf = m->findField("velocity");
+    apf::Field* velf_old = m->findField("velocity_old");
+    apf::Field* pref = m->findField("p");
+
+
+    int nsd = m->getDimension();
+
+    //Get Patch of Elements
+    apf::Adjacent vertexPatch;
+    apf::Adjacent vertex2vertex;
+    m->getAdjacent(vert,nsd,vertexPatch);
+    apf::getBridgeAdjacent (m, vert, 1, 0, vertex2vertex);
+    
+    //LHS Matrix Initialization
+    int ndofs = vertex2vertex.getSize()+1;
+    Mat K; //matrix size depends on nshl, which may vary from element to element
+    MatCreate(PETSC_COMM_SELF,&K);
+    MatSetSizes(K,ndofs,ndofs,ndofs,ndofs);
+    MatSetFromOptions(K);
+    MatSetUp(K);
+
+    //RHS Vector Initialization
+    Vec F;
+    VecCreate(PETSC_COMM_SELF,&F);
+    VecSetSizes(F,ndofs,ndofs);
+    VecSetUp(F);
+
+
+    //get Vertex numbering; assume vert is always labelled first as 0
+    std::map<int,int> vertexNumbering;
+    vertexNumbering.insert( std::pair<int,int>(localNumber(vert),0));
+    int idx = 1;
+    for(int i=0; i<vertex2vertex.getSize();i++)
+    {
+        vertexNumbering.insert( std::pair<int,int>(localNumber(vertex2vertex[i]),idx));
+        idx++;
+    }
+
+    //get IEN array;     
+    std::map<int,int> IEN;
+    idx =0;
+    for(int i=0; i<vertexPatch.getSize();i++)
+    {
+        IEN.insert( std::pair<int,int>(localNumber(vertexPatch[i]),idx));
+        idx++;
+    }
+ 
+    std::cout<<"size of vertex numbering "<<vertexNumbering.size()<<std::endl;;
+    std::cout<<"size of IEN "<<IEN.size()<<std::endl;
+    
+    std::cout<<"check vertex numbering "<<vertexNumbering[223]<<" "<<vertexNumbering[1520]<<" "<<vertexNumbering[1902]<<std::endl;
+    std::cout<<"check IEN value "<<IEN[2783]<<" "<<IEN[6554]<<" "<<IEN[3376]<<std::endl;
+
+    //create element matrix for LHS construction and zero out
+    apf::Matrix<nshl,nshl> elementMatLHS;
+    apf::Vector<nshl> elementRHS;
+ 
+    apf::MeshEntity* ent;
+    for(int z = 0; z<vertexPatch.getSize();z++)
+    //loop through all elements
+    { 
+        ent = vertexPatch[z];
+        //reset values
+        for(int i=0;i<nshl;i++)
+        {
+            for(int j=0;j<nshl;j++)
+                elementMatLHS[i][j]=0.0;
+            elementRHS[i] = 0.0;
+        }
+
+
+        elem_type = m->getType(ent);
+        if(!(elem_type != 4 || elem_type != 2)){ //2|TRI, 4|TET
+            std::cout<<"Not a Tri or Tet present"<<std::endl;
+            exit(0); 
+        }
+        element = apf::createMeshElement(m,ent);
+        velo_elem = apf::createElement(velf,element);
+        velo_old_elem = apf::createElement(velf_old,element);
+        pres_elem = apf::createElement(pref,element);
+  
+        numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
+        shpval.allocate(nshl);   
+        shdrv.allocate(nshl);
+        shgval.allocate(nshl);
+        shgval_copy.allocate(nshl);
+
+        //loop through all qpts
+        for(int k=0;k<numqpt;k++)
+        {
+            apf::getIntPoint(element,int_order,k,qpt); //get a quadrature point and store in qpt
+            apf::getJacobian(element,qpt,J); //evaluate the Jacobian at the quadrature point
+            J = apf::transpose(J); //Is PUMI still defined in this way?
+            if(nsd==2)
+                J[2][2] = 1.0; //this is necessary to avoid singular matrix
+            invJ = invert(J);
+            Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
+            weight = apf::getIntWeight(element,int_order,k);
+            invJ_copy = apf::fromMatrix(invJ);
+
+            //first get the shape function values
+            elem_shape = update_shape->getEntityShape(elem_type);
+            elem_shape->getValues(NULL,NULL,qpt,shpval);
+            elem_shape->getLocalGradients(NULL,NULL,qpt,shgval); 
+
+            for(int i =0;i<nshl;i++){ //get the true derivative and copy only the edge modes for use
+                shgval_copy[i] = apf::fromVector(shgval[i]);
+                apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
+            }
+
+
+            apf::Vector3 velocity;
+            apf::getVector(velo_elem,qpt,velocity);
+
+            apf::Vector3 velocity_old;
+            apf::getVector(velo_old_elem,qpt,velocity_old);
+
+            //LHS computations
+            for(int i=0;i<nshl;i++)
+            {
+                
+                for(int j=0;j<nshl;j++)
+                {
+                    //time derivative contribution
+            
+                    double time_contribution = shpval[i]*shpval[j]/delta_T; 
+                    
+                    //convective term
+                    double temp_conv = 0.0;
+                    for(int space_dim = 0; space_dim<nsd;space_dim++)
+                    {
+                        temp_conv += velocity[space_dim]*shdrv[j][space_dim];
+                    }
+                    double convective_contribution = temp_conv*shpval[i];
+                
+                    //diffusive term
+                    //needs viscosity term
+                    double viscosity= 1.500e-5; //hardcoded for now
+                    double temp = 0.0;
+                    for(int space_dim = 0; space_dim<nsd;space_dim++ )
+                        temp += shdrv[i][space_dim]*shdrv[j][space_dim]*viscosity;
+                    elementMatLHS[i][j] += (time_contribution+convective_contribution+temp ) *weight*Jdet;
+                }
+            }
+
+            //obtain needed values for RHS
+
+            apf::Matrix3x3 vel_grad;
+            apf::getVectorGrad(velo_elem,qpt,vel_grad);
+            double div_vel = 0.0;
+            for(int i=0;i<nsd;i++)
+            {
+                div_vel += vel_grad[i][i];
+            }
+            //double pressure = apf::getScalar(pres_elem,qpt);
+            apf::Vector3 grad_pres;
+            apf::getGrad(pres_elem,qpt,grad_pres);
+            double density = 1.205;
+            
+
+            for(int i=0;i<nshl;i++)
+            {
+                elementRHS[i] += div_vel*shpval[i]*weight*Jdet;
+            }
+    
+        } // end quadrature loop
+
+        //transfer element matrix information to global LHS matrix
+        apf::Adjacent adj_verts;
+        m->getAdjacent(ent,0,adj_verts);
+
+        PetscScalar LHS[nshl][nshl];
+        int idx[nshl]; //indices for PETSc Mat insertion
+        for(int i=0; i<nshl;i++)
+        {
+            idx[i] = vertexNumbering[localNumber(adj_verts[i])];
+            std::cout<<"shape functions local number "<<idx[i]<<std::endl;
+            for(int j=0;j<nshl;j++)
+            {
+                LHS[i][j] = elementMatLHS[i][j];
+            }
+        }
+        PetscScalar RHS[nshl];
+        for (int i=0; i<nshl; i++)
+        {
+            RHS[i] = elementRHS[i];
+        }
+
+        //this seems wrong but I don't know how else to specify the idx array as the rows and column indices do refer to the same degrees of freedom
+        MatSetValues(K,nshl,idx,nshl,idx,LHS[0],ADD_VALUES);
+        VecSetValues(F,nshl,idx,&(RHS[0]),ADD_VALUES);
+    
+        apf::destroyElement(pres_elem);
+        apf::destroyElement(velo_elem);
+        apf::destroyElement(velo_old_elem);
+        apf::destroyMeshElement(element);
+
+    } //end loop around patch
+
+    MatAssemblyBegin(K,MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(K,MAT_FINAL_ASSEMBLY);
+ 
+    std::cout<<"Look at LHS "<<std::endl;
+    MatView(K,PETSC_VIEWER_STDOUT_SELF);
+
+
+    VecAssemblyBegin(F);
+    VecAssemblyEnd(F); 
+   
+//
+/*
+
+    //get boundary dofs and zero out
+    PetscInt nrows = 0;
+    PetscInt* rows;
+    iter = m->begin(0);
+    while(ent = m->iterate(iter))
+    {
+        apf::ModelEntity* geomEnt = m->toModel(ent);
+        if(m->getModelType(geomEnt) < m->getDimension())
+        {
+            apf::Adjacent vert_adjFace;
+            m->getAdjacent(ent,m->getDimension()-1,vert_adjFace);
+            apf::MeshEntity* face;
+            for(int i =0; i<vert_adjFace.getSize();i++)
+            {
+                face=vert_adjFace[i];
+                geomEnt = m->toModel(face);
+
+                //IF mesh face is classified on boundary
+                if(m->getModelType(geomEnt) == m->getDimension()-1)
+                {
+                    if(m->getModelTag(geomEnt) == 4) 
+                    {       
+                        //get local number store somewhere  
+                        nrows++;
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+    m->end(iter);
+    PetscMalloc1(nrows,&rows);
+
+    PetscScalar zeroVals[nrows];
+
+    iter = m->begin(0);
+    int rowidx = 0;
+    Vec solVals;
+    VecCreate(PETSC_COMM_SELF,&solVals);
+    VecSetSizes(solVals,nrows,nrows);
+    VecSetUp(solVals);
+    PetscScalar solVal = 0.0;
+    PetscInt oneVal = 1;
+  
+    while(ent = m->iterate(iter))
+    {
+        apf::ModelEntity* geomEnt = m->toModel(ent);
+        if(m->getModelType(geomEnt) < m->getDimension())
+        {
+            apf::Adjacent vert_adjFace;
+            m->getAdjacent(ent,m->getDimension()-1,vert_adjFace);
+            apf::MeshEntity* face;
+            for(int i =0; i<vert_adjFace.getSize();i++)
+            {
+                face=vert_adjFace[i];
+                geomEnt = m->toModel(face);
+
+                //IF mesh face is classified on boundary
+                if(m->getModelType(geomEnt) == m->getDimension()-1)
+                {
+                    if(m->getModelTag(geomEnt) == 4) 
+                    {       
+                        //get local number store somewhere  
+                        std::cout<<"localnumber "<<localNumber(ent)<<std::endl;
+                        rows[rowidx] = localNumber(ent);    
+                        zeroVals[rowidx]=0.0;
+                        rowidx++;
+                        break;
+                    }
+
+                }
+            }
+        }
+
+    }
+
+    MatZeroRowsColumns(K, nrows,rows,1.0,NULL,NULL);
+    VecSetValues(F,nrows,rows,zeroVals,INSERT_VALUES);
+    VecAssemblyBegin(F);
+    VecAssemblyEnd(F);
+    
+    std::cout<<"Look at LHS "<<std::endl;
+    MatView(K,PETSC_VIEWER_STDOUT_SELF);
+    std::cout<<"Look at RHS "<<std::endl;
+    VecView(F,PETSC_VIEWER_STDOUT_SELF);
+
+    PetscBool flg;
+    MatIsSymmetric(K,0.0,&flg);
+    std::cout<<"Is matrix symmetric "<<flg<<std::endl;
+        
+    PetscFree(rows);
+
+    Vec coef;
+    VecCreate(PETSC_COMM_SELF,&coef);
+    VecSetSizes(coef,ndofs,ndofs);
+    VecSetUp(coef);
+    
+    KSP ksp; //initialize solver context
+    KSPCreate(PETSC_COMM_SELF,&ksp);
+    KSPSetOperators(ksp,K,K);
+    KSPSetType(ksp,KSPPREONLY);
+    PC pc;
+    KSPGetPC(ksp,&pc);
+    PCSetType(pc,PCLU);
+    KSPSetFromOptions(ksp);
+
+    KSPSolve(ksp,F,coef);
+    
+    KSPDestroy(&ksp); //destroy ksp
+
+
+    VecView(coef,PETSC_VIEWER_STDOUT_SELF);
+    PetscScalar *array; 
+    VecGetArray(coef,&array);
+    apf::Field* correctionField = apf::createLagrangeField(m, "velocity_correction", apf::SCALAR, 1);
+
+    iter = m->begin(0);
+    while(ent = m->iterate(iter))
+    {
+        int dofIdx = localNumber(ent);
+        apf::setScalar(correctionField,ent,0,array[dofIdx]);
+    }
+    m->end(iter);
+    VecRestoreArray(coef,&array);
+*/
+
+    MatDestroy(&K); //destroy the matrix
+    VecDestroy(&F); //destroy vector
+    //VecDestroy(&coef); //destroy vector
+
+
+}
+
+
+
 
 double MeshAdaptPUMIDrvr::getMinimumQuality()
 /**

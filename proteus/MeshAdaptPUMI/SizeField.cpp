@@ -548,7 +548,7 @@ void MeshAdaptPUMIDrvr::averageToEntity(apf::Field *ef, apf::Field *vf,
   return;
 }
 
-void minToEntity(apf::Field* ef, apf::Field* vf,
+void MeshAdaptPUMIDrvr::minToEntity(apf::Field* ef, apf::Field* vf,
     apf::MeshEntity* ent)
 {
   apf::Mesh* m = apf::getMesh(ef);
@@ -1250,7 +1250,9 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     element = apf::createMeshElement(m, reg);
 
     if (m->getDimension() == 2)
-      h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
+      //h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
+      //h_old = apf::computeShortestHeightInTri(m,reg);
+      h_old = apf::computeLargestHeightInTri(m,reg);
     else
       //h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
       h_old = apf::computeShortestHeightInTet(m,reg);
@@ -1274,6 +1276,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
         h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
       else
         h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+        //h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd+1.0)); //extra 1.0 to slow down coarsening
     }
 
     apf::setScalar(errorSize_reg, reg, 0, h_new);
@@ -1298,7 +1301,9 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     element = apf::createMeshElement(m, reg);
 
     if (m->getDimension() == 2)
-      h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
+      //h_old = apf::computeShortestHeightInTri(m,reg);
+      h_old = apf::computeLargestHeightInTri(m,reg);
+      //h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
     else
       h_old = apf::computeShortestHeightInTet(m,reg);
 
@@ -1317,6 +1322,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
 
   //Transfer size field from elements to vertices through averaging
+  PCU_Comm_Begin();
   it = m->begin(0);
   while ((v = m->iterate(it)))
   {
@@ -1324,9 +1330,34 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //volumeAverageToEntity(errorSize_reg, errorSize, v);
     //errorAverageToEntity(errorSize_reg, errorSize,errField, v);
     minToEntity(errorSize_reg, errorSize, v);
+    if(!m->isOwned(v))
+    {
+        apf::Copies remotes;
+        m->getRemotes(v,remotes);
+        int owningPart=m->getOwner(v);
+        PCU_COMM_PACK(owningPart, remotes[owningPart]);
+        double currentSize = apf::getScalar(errorSize,v,0);
+        PCU_COMM_PACK(owningPart,currentSize);
+    }
+
   }
   m->end(it);
+  PCU_Comm_Send();
+  while(PCU_Comm_Receive())
+  {
+    apf::MeshEntity* receivedEnt;
+    double receivedSize;
+    PCU_COMM_UNPACK(receivedEnt);
+    PCU_COMM_UNPACK(receivedSize);
 
+    double currentSize = apf::getScalar(errorSize,receivedEnt,0);
+
+    if(receivedSize<currentSize)
+    {
+        apf::setScalar(errorSize,receivedEnt,0,receivedSize);
+    }
+
+  }
 
   //Get the anisotropic size frame
   if (adapt_type_config == "anisotropic")

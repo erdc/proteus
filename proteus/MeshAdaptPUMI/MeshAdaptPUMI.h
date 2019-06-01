@@ -186,6 +186,8 @@ class MeshAdaptPUMIDrvr{
       apf::MeshEntity* ent);
   void volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
+  static void minToEntity(apf::Field* ef, apf::Field* vf,
+      apf::MeshEntity* ent);
 
   bool has_gBC; //boolean for having global boundary conditions
   double target_error; //computed from get_local_error()
@@ -193,6 +195,7 @@ class MeshAdaptPUMIDrvr{
   double domainVolume; //Volume of the domain
   double THRESHOLD; //threshold of error before adapt
   void getSolutionCorrection(apf::Mesh*m);
+  void getPatchRelaxation(apf::MeshEntity *vert);
 };
 
 

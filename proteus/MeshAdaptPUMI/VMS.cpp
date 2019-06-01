@@ -143,6 +143,9 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
   apf::Field* vmsErr = apf::createField(m,"VMSL2",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   //vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   vmsErrH1 = apf::createField(m,"VMSH1",apf::SCALAR,apf::getVoronoiShape(nsd,1));
+  if(m->findField("VMSH1_noTime"))
+    apf::destroyField(m->findField("VMSH1_noTime"));
+  apf::Field* vmsErrH1_noTime = apf::createField(m,"VMSH1_noTime",apf::SCALAR,apf::getVoronoiShape(nsd,1));
   if(m->findField("nu_err"))
     apf::destroyField(m->findField("nu_err"));
   nuErr  = apf::createField(m,"nu_err",apf::SCALAR,apf::getVoronoiShape(nsd,1));
@@ -358,7 +361,9 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
 */
     info.visc_val = nu[localNumber(ent)];
     apf::Vector3 tempResidual = getResidual(qpt,info);
+    apf::Vector3 tempResidual_noTime = getResidual_debug(qpt,info);
     double tempVal = tempResidual.getLength();
+/*
     if(nAdapt == 4 && (localNumber(ent) == 800 || localNumber(ent)==490))
     {
         std::cout<<nAdapt<<" element number "<<localNumber(ent)<<std::endl;
@@ -369,6 +374,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
         std::cout<<nAdapt<<" element number "<<localNumber(ent)<<std::endl;
         getResidual_debug(qpt,info);
     }
+*/
     apf::getJacobian(element,qpt,J);
     if(nsd==2)
       J[2][2] = 1.0; //this is necessary to avoid singular matrix
@@ -379,6 +385,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
 
     double nu_err = get_nu_err(info);
     double VMSerrH1 = nu_err*tempVal*sqrt(apf::measure(m,ent));
+    double VMSerrH1_noTime = nu_err*tempResidual_noTime.getLength() *sqrt(apf::measure(m,ent));
     apf::setScalar(nuErr,ent,0,nu_err);
     apf::setVector(strongResidual,ent,0,tempResidual);
 
@@ -417,6 +424,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     }
     //std::cout<<std::scientific<<std::setprecision(15)<<"H1 error for element "<<count<<" nu_err "<<nu_err<<" error "<<VMSerrH1<<std::endl;
     apf::setScalar(vmsErrH1,ent,0,VMSerrH1);
+    apf::setScalar(vmsErrH1_noTime,ent,0,VMSerrH1_noTime);
 
     VMSerrTotalL2 = VMSerrTotalL2+VMSerrL2*VMSerrL2;
     VMSerrTotalH1 = VMSerrTotalH1+VMSerrH1*VMSerrH1;
@@ -520,7 +528,7 @@ apf::Vector3 getResidual_debug(apf::Vector3 qpt,struct Inputs &info){
     }
     apf::Vector3 tempResidual = (tempConv + grad_pres/info.density);
     //acceleration term
-    tempResidual = tempResidual + (vel_vect-vel_vect_old)/dt_err;
+    //tempResidual = tempResidual + (vel_vect-vel_vect_old)/dt_err;
     std::cout<<"What is the acceleration contribution? "<<(vel_vect-vel_vect_old)/dt_err<<" vel_vect_old "<< vel_vect_old<<std::endl;
     std::cout<<"grad pres "<<grad_pres/info.density<<std::endl;
     std::cout<<"gravity "<<info.g<<std::endl;

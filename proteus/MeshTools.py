@@ -803,6 +803,28 @@ class Mesh(object):
         nu_errValues.text = ar.hdfFilename+":/"+"nu_err"+"_t"+str(tCount)
         ar.create_dataset_sync("nu_err"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.nu_err[:self.nElements_owned])
 
+        errRef = SubElement(self.arGrid,"Attribute",{"Name":"errRef",
+                                                      "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+        errRefValues = SubElement(errRef,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+        errRefValues.text = ar.hdfFilename+":/"+"errRef"+"_t"+str(tCount)
+        ar.create_dataset_sync("errRef"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.errRef[:self.nElements_owned])
+
+        error_noTime = SubElement(self.arGrid,"Attribute",{"Name":"error_noTime",
+                                                      "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+        error_noTime_Values = SubElement(error_noTime,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Float",
+                                                         "Precision":"8",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+        error_noTime_Values.text = ar.hdfFilename+":/"+"error_noTime"+"_t"+str(tCount)
+        ar.create_dataset_sync("error_noTime"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.error_noTime[:self.nElements_owned])
+
 
 
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):

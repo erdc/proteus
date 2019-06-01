@@ -1176,15 +1176,25 @@ class NS_base(object):  # (HasTraits):
         if(abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12  or
           (abs(self.systemStepController.t_system_last - self.tnList[0]) < 1e-12 and self.opts.hotStart)):
             self.PUMI_recomputeStructures(modelListOld)
-            if(p0.domain.PUMIMesh.nAdapt()==6):
-                logEvent("Redoing that velocity",4)
+            #if(p0.domain.PUMIMesh.nAdapt()==6):
+            #    logEvent("Redoing that velocity",4)
 
-                self.PUMI_transferFields()
-                p0.domain.PUMIMesh.writeMesh("REDOVelocity_before")
-                self.PUMI_redoVelocity(modelListOld)
-                self.PUMI_transferFields()
-                p0.domain.PUMIMesh.writeMesh("REDOVelocity_after")
-                self.PUMI_recomputeStructures(modelListOld)
+            #    self.PUMI_transferFields()
+            #    p0.domain.PUMIMesh.writeMesh("REDOVelocity_before")
+            #    self.PUMI_redoVelocity(modelListOld)
+            #    self.PUMI_transferFields()
+            #    p0.domain.PUMIMesh.writeMesh("REDOVelocity_after")
+            #    self.PUMI_recomputeStructures(modelListOld)
+
+            logEvent("Redoing that velocity",4)
+
+            self.PUMI_transferFields()
+            p0.domain.PUMIMesh.writeMesh("REDOVelocity_before")
+            self.PUMI_redoVelocity(modelListOld)
+            self.PUMI_transferFields()
+            p0.domain.PUMIMesh.writeMesh("REDOVelocity_after")
+            self.PUMI_recomputeStructures(modelListOld)
+
 
 
             #This logic won't account for if final step doesn't match frequency or if adapt isn't being called
@@ -1312,8 +1322,9 @@ class NS_base(object):  # (HasTraits):
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
             deltaT = self.modelList[0].levelModelList[0].timeIntegration.dtLast
+            T_current = self.systemStepController.t_system_last
             #deltaT = self.systemStepController.dt_system 
-            T_current = self.systemStepController.t_system
+            #T_current = self.systemStepController.t_system
         else:
             deltaT = 0.0
             T_current = 0.0
@@ -1449,6 +1460,14 @@ class NS_base(object):  # (HasTraits):
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
+              if(self.nSolveSteps <= 5):
+                adaptMeshNow=False
+              #hack for single edge swap quickly and that's it for that
+              #if(p0.domain.PUMIMesh.nAdapt()==4):
+              #  adaptMeshNow=True
+              #if(p0.domain.PUMIMesh.nAdapt()>4):
+              #  adaptMeshNow=False
+              ###
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
@@ -1505,6 +1524,15 @@ class NS_base(object):  # (HasTraits):
                 "nu_err", scalar5)
             self.modelList[0].levelModelList[0].mesh.nu_err[:] = scalar5[:,0]
 
+            scalar6=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned,1),'d')
+            self.pList[0].domain.PUMIMesh.transferElementFieldToProteus(
+                "error_reference", scalar6)
+            self.modelList[0].levelModelList[0].mesh.errRef[:] = scalar6[:,0]
+
+            scalar7=numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned,1),'d')
+            self.pList[0].domain.PUMIMesh.transferElementFieldToProteus(
+                "VMSH1_noTime", scalar7)
+            self.modelList[0].levelModelList[0].mesh.error_noTime[:] = scalar7[:,0]
 
 
         
@@ -1589,11 +1617,13 @@ class NS_base(object):  # (HasTraits):
             #for idx in range(3):
             self.modelList[0].levelModelList[0].mesh.strongResidual = numpy.zeros((3,self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
             self.modelList[0].levelModelList[0].mesh.nu_err = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+            self.modelList[0].levelModelList[0].mesh.errRef = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+            self.modelList[0].levelModelList[0].mesh.error_noTime = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
 
-            if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
-                self.tCount+=1
-                for index,model in enumerate(self.modelList):
-                    self.archiveSolution(model, index, self.systemStepController.t_system_last+1.0e-7)
+            #if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+            #    self.tCount+=1
+            #    for index,model in enumerate(self.modelList):
+            #        self.archiveSolution(model, index, self.systemStepController.t_system_last+1.0e-7)
 
         self.PUMI_reallocate(mesh)
         self.PUMI2Proteus()
@@ -1636,7 +1666,8 @@ class NS_base(object):  # (HasTraits):
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
             #deltaT = self.systemStepController.dt_system 
             deltaT = self.modelList[0].levelModelList[0].timeIntegration.dtLast
-            T_current = self.systemStepController.t_system
+            #T_current = self.systemStepController.t_system
+            T_current = self.systemStepController.t_system_last
         else:
             deltaT = 0.0
             T_current = 0.0
@@ -1876,6 +1907,8 @@ class NS_base(object):  # (HasTraits):
         #for idx in range(3):
         self.modelList[0].levelModelList[0].mesh.strongResidual = numpy.zeros((3,self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
         self.modelList[0].levelModelList[0].mesh.nu_err = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+        self.modelList[0].levelModelList[0].mesh.errRef = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+        self.modelList[0].levelModelList[0].mesh.error_noTime = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
 
 
         for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,list(range(len(self.pList)))):
@@ -2186,6 +2219,8 @@ class NS_base(object):  # (HasTraits):
                 #for idx in range(3):
                 self.modelList[0].levelModelList[0].mesh.strongResidual = numpy.zeros((3,self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
                 self.modelList[0].levelModelList[0].mesh.nu_err = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                self.modelList[0].levelModelList[0].mesh.errRef = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                self.modelList[0].levelModelList[0].mesh.error_noTime = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
 
 #copy.deepcopy(self.modelList[0].levelModelList[0].mesh.elementMaterialTypes)
                 
@@ -2199,19 +2234,19 @@ class NS_base(object):  # (HasTraits):
                             self.archiveSolution(model,index,self.systemStepController.t_system_last)
                     self.PUMI_adaptMesh()
 
-                    self.modelList[0].levelModelList[0].mesh.elementSizeRatio = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
-                    self.modelList[0].levelModelList[0].mesh.errorTriggered = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
-                    self.modelList[0].levelModelList[0].mesh.errorRate = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
-                    self.modelList[0].levelModelList[0].mesh.elementError = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
-                    self.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
-                    #for idx in range(3):
-                    self.modelList[0].levelModelList[0].mesh.strongResidual = numpy.zeros((3,self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
-                    self.modelList[0].levelModelList[0].mesh.nu_err = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                    #self.modelList[0].levelModelList[0].mesh.elementSizeRatio = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                    #self.modelList[0].levelModelList[0].mesh.errorTriggered = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                    #self.modelList[0].levelModelList[0].mesh.errorRate = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                    #self.modelList[0].levelModelList[0].mesh.elementError = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                    #self.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                    ##for idx in range(3):
+                    #self.modelList[0].levelModelList[0].mesh.strongResidual = numpy.zeros((3,self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+                    #self.modelList[0].levelModelList[0].mesh.nu_err = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
 
-                    if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
-                        self.tCount+=1
-                        for index,model in enumerate(self.modelList):
-                            self.archiveSolution(model, index, self.systemStepController.t_system_last+2.0e-7)
+                    #if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+                    #    self.tCount+=1
+                    #    for index,model in enumerate(self.modelList):
+                    #        self.archiveSolution(model, index, self.systemStepController.t_system_last+2.0e-7)
 
                 else:
                     for model in self.modelList:
