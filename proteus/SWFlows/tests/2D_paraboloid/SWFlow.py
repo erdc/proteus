@@ -5,12 +5,13 @@ from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2D
 from proteus.mprans import SW2DCV
+from proteus.mprans import GN_SW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
-import proteus.SWFlows.SWFlowProblem as SWFlowProblem 
+import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -49,9 +50,9 @@ mannings = k
 
 def bathymetry_function(X):
     x = X[0]
-    y = X[1] 
+    y = X[1]
     r2 = (x-old_div(L[0],2.))**2+(y-old_div(L[1],2.))**2
-    return h0*r2/a/a    
+    return h0*r2/a/a
 
 ##############################
 ##### INITIAL CONDITIONS #####
@@ -62,17 +63,17 @@ def eta_function(X,t):
 
     coeff1 = old_div(-B,g)
     coeff2 = -B**2/2./g
-    
+
     eta_part1 = coeff1*np.exp(-k*t/2.)*(k/2.*np.sin(s*t)+s*np.cos(s*t))*(x-old_div(L[0],2.));
     eta_part2 = coeff1*np.exp(-k*t/2.)*(k/2.*np.cos(s*t)-s*np.sin(s*t))*(y-old_div(L[1],2.));
     eta_part3 = coeff2*np.exp(-k*t);
-    
+
     return h0 + eta_part1 + eta_part2 + eta_part3
 
 class water_height_at_t0(object):
     def uOfXT(self,X,t):
         return max(eta_function(X,0)-bathymetry_function(X),0)
-    
+
 class x_mom(object):
     def uOfXT(self,X,t):
         return 0.
@@ -81,7 +82,7 @@ class y_mom(object):
     def uOfXT(self,X,t):
         h = water_height_at_t0().uOfXT(X,t)
         v = B
-        return h*v    
+        return h*v
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -93,7 +94,7 @@ initialConditions = {'water_height': water_height_at_t0(),
 boundaryConditions = {'water_height': lambda x,flag: None,
                       'x_mom': lambda x,flag: None,
                       'y_mom': lambda x,flag: None}
-mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
+mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=0.33,
                                               outputStepping=outputStepping,
                                               structured=True,
