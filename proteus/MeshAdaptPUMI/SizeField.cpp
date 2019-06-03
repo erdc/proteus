@@ -11,7 +11,8 @@
 #include <PCU.h>
 #include <samElementCount.h>
 #include <queue>
-#include <algorithm> 
+#include <algorithm>
+#include "createAnalyticGeometry.h"
 
 static void SmoothField(apf::Field *f);
 void gradeAnisoMesh(apf::Mesh* m,double gradingFactor);
@@ -58,7 +59,6 @@ static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::Mes
   }
 }
 
-//int MeshAdaptPUMIDrvr::setSphereSizeField(double* xyz_offset)
 int MeshAdaptPUMIDrvr::setSphereSizeField()
 {
   freeField(size_iso);
@@ -66,15 +66,23 @@ int MeshAdaptPUMIDrvr::setSphereSizeField()
 
   apf::MeshIterator *it = m->begin(0);
   apf::MeshEntity* ent;
-//  std::cout<<"xyz_offset is" <<xyz_offset<<std::endl;
+  
   while ((ent = m->iterate(it)))
   {
     int modelTag = m->getModelTag(m->toModel(ent));
     //std::cout<<"This is the model tag "<<modelTag<<std::endl;
-    
+    apf::Vector3 pt;
+	m->getPoint(ent,0,pt);
+	 
+	double radius=sphereRadius_ssf;  
 	double sizeDesired;
-    if(modelTag==123)
+	double distance;
+	distance = sqrt((pt[0]-xyz_offset_ssf[0])*(pt[0]-xyz_offset_ssf[0])+(pt[1]-xyz_offset_ssf[1])*(pt[1]-xyz_offset_ssf[1])+(pt[2]-xyz_offset_ssf[2])*(pt[2]-xyz_offset_ssf[2]));
+    std::cout<<"The distance between this vertex and the sphere center is "<<distance<<std::endl;
+	if(distance<=radius){
+	//if(modelTag==123){
         sizeDesired=hmin;
+	  std::cout<<"minimum set for this point "<<std::endl;}
     else
         sizeDesired=hmax;
     apf::setScalar(size_iso,ent,0,sizeDesired);

@@ -54,7 +54,6 @@ class MeshAdaptPUMIDrvr{
   //MeshAdapt functions
   int willAdapt();
   int adaptPUMIMesh();
-//  int setSphereSizeField(double* xyz_offset);
   int setSphereSizeField();
   int calculateSizeField();
   int calculateAnisoSizeField();
@@ -64,9 +63,7 @@ class MeshAdaptPUMIDrvr{
 
   //analytic geometry
   gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
-  void updateSphereCoordinates(double*sphereCenter);
-//  void updateSphereCoordinates();
-
+  void updateSphereCoordinates(double*sphereCenter);	
 	
   //Quality Check Functions
   double getMinimumQuality();
@@ -88,7 +85,6 @@ class MeshAdaptPUMIDrvr{
   int numAdaptSteps; //Number adaptivity
   double N_interface_band; //number of elements in half-band around interface
   double gradingFactor;
- // double xyz_offset[3];
 	
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic
@@ -135,7 +131,8 @@ class MeshAdaptPUMIDrvr{
   apf::Mesh2* m;
   int comm_size, comm_rank;
   
-  double xyz_offset[3];	// For getting the falling sphere coordinates
+  double xyz_offset_ssf[3];	// For getting sphere coordinates for setSphereSizeField
+  double sphereRadius_ssf;  // For getting the radius for setSphereSizeField
   double rho[2], nu[2];
   double g[3];
   double delta_T;
@@ -169,11 +166,11 @@ class MeshAdaptPUMIDrvr{
   void volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
 
-  bool has_gBC; //boolean for having global boundary conditions
-  double target_error; //computed from get_local_error()
+  bool has_gBC; 			//boolean for having global boundary conditions
+  double target_error; 		//computed from get_local_error()
   int target_element_count; //How many elements in the mesh are desired?
-  double domainVolume; //Volume of the domain
-  double THRESHOLD; //threshold of error before adapt
+  double domainVolume; 		//Volume of the domain
+  double THRESHOLD; 		//threshold of error before adapt
 };
 
 

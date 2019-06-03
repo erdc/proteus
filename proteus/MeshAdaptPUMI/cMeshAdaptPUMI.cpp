@@ -154,6 +154,7 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
 
 int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile,double* boxDim,double* sphereCenter, double radius)
 {
+  sphereRadius_ssf=radius;
   //assume analytic 
   comm_size = PCU_Comm_Peers();
   comm_rank = PCU_Comm_Self();
@@ -378,7 +379,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   else if (size_field_config == "meshQuality"){
     //size_iso = samSz::isoSize(m);
-    //setSphereSizeField(xyz_offset);
 	setSphereSizeField();
   }
   else if (size_field_config == "isotropic")
