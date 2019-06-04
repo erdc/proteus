@@ -17,6 +17,7 @@ RUN cd proteus && git pull && make develop
 ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
 ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
+RUN cd proteus && PATH=/usr/bin/path:$PATH ./linux/bin/pip install matplotlib
 RUN cd proteus && make jupyter
 
 USER root
