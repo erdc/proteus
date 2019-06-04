@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import print_function
+from builtins import input
 import proteus
 from proteus.MeshTools import *
 
@@ -43,7 +45,7 @@ def readMesh():
                       dest="viewGnuplot",
                       default=False)
     (opts, args) = parser.parse_args()
-    print args
+    print(args)
     if len(args)==1:
         meshFilename = args[0]
     else:
@@ -61,7 +63,7 @@ def readMesh():
     elif firstWords[0] == 'MESH2D':
         mesh = Mesh2DM(meshFilename)
     else:
-        print firstWords[0]
+        print(firstWords[0])
     #print mesh.meshInfo()
     if opts.boundaryMesh:
         mesh.buildTriangleArrays()
@@ -90,4 +92,4 @@ if __name__ == '__main__':
 #      p.sort_stats('cumulative').print_stats(20)
 #      p.sort_stats('time').print_stats(20)
     readMesh()
-    raw_input('Please press return to continue... \n')
+    input('Please press return to continue... \n')

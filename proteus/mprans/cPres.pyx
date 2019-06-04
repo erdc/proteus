@@ -1,3 +1,4 @@
+# A type of -*- python -*- file
 import numpy
 cimport numpy
 
@@ -79,12 +80,12 @@ cdef class Pres:
                   int nQuadraturePoints_elementBoundaryIn,
                   int CompKernelFlag):
         self.thisptr = newPres(nSpaceIn,
-                                  nQuadraturePoints_elementIn,
-                                  nDOF_mesh_trial_elementIn,
-                                  nDOF_trial_elementIn,
-                                  nDOF_test_elementIn,
-                                  nQuadraturePoints_elementBoundaryIn,
-                                  CompKernelFlag)
+                               nQuadraturePoints_elementIn,
+                               nDOF_mesh_trial_elementIn,
+                               nDOF_trial_elementIn,
+                               nDOF_test_elementIn,
+                               nQuadraturePoints_elementBoundaryIn,
+                               CompKernelFlag)
 
     def __dealloc__(self):
         del self.thisptr
@@ -126,7 +127,7 @@ cdef class Pres:
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray):
-        self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
+        self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                         < double * > mesh_grad_trial_ref.data,
                                         < double * > mesh_dof.data,
                                         < int * > mesh_l2g.data,
@@ -162,6 +163,7 @@ cdef class Pres:
                                         < int * > exteriorElementBoundariesArray.data,
                                         < int * > elementBoundaryElementsArray.data,
                                         < int * > elementBoundaryLocalElementBoundariesArray.data)
+
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -187,25 +189,25 @@ cdef class Pres:
                           globalJacobian):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
-        self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
-                                       < double * > mesh_grad_trial_ref.data,
-                                       < double * > mesh_dof.data,
-                                       < int * > mesh_l2g.data,
-                                       < double * > dV_ref.data,
-                                       < double * > u_trial_ref.data,
-                                       < double * > u_grad_trial_ref.data,
-                                       < double * > u_test_ref.data,
-                                       < double * > u_grad_test_ref.data,
-                                       < double * > mesh_trial_trace_ref.data,
-                                       < double * > mesh_grad_trial_trace_ref.data,
-                                       < double * > dS_ref.data,
-                                       < double * > u_trial_trace_ref.data,
-                                       < double * > u_grad_trial_trace_ref.data,
-                                       < double * > u_test_trace_ref.data,
-                                       < double * > u_grad_test_trace_ref.data,
-                                       < double * > normal_ref.data,
-                                       < double * > boundaryJac_ref.data,
-                                       nElements_global,
-                                       < int * > csrRowIndeces_u_u.data,
-                                       < int * > csrColumnOffsets_u_u.data,
-                                       < double * > globalJacobian_a.data)
+        self.thisptr.calculateJacobian(< double*> mesh_trial_ref.data,
+                                        < double * > mesh_grad_trial_ref.data,
+                                        < double * > mesh_dof.data,
+                                        < int * > mesh_l2g.data,
+                                        < double * > dV_ref.data,
+                                        < double * > u_trial_ref.data,
+                                        < double * > u_grad_trial_ref.data,
+                                        < double * > u_test_ref.data,
+                                        < double * > u_grad_test_ref.data,
+                                        < double * > mesh_trial_trace_ref.data,
+                                        < double * > mesh_grad_trial_trace_ref.data,
+                                        < double * > dS_ref.data,
+                                        < double * > u_trial_trace_ref.data,
+                                        < double * > u_grad_trial_trace_ref.data,
+                                        < double * > u_test_trace_ref.data,
+                                        < double * > u_grad_test_trace_ref.data,
+                                        < double * > normal_ref.data,
+                                        < double * > boundaryJac_ref.data,
+                                        nElements_global,
+                                        < int * > csrRowIndeces_u_u.data,
+                                        < int * > csrColumnOffsets_u_u.data,
+                                        < double * > globalJacobian_a.data)

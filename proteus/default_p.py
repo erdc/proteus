@@ -1,14 +1,11 @@
 """
 The default values for problem definition modules
-
-.. todo::
-
-  Clean up default_p.py
 """
-from MeshTools import *
-from FemTools import *
-from TransportCoefficients import *
-from Transport import *
+from __future__ import absolute_import
+from .MeshTools import *
+from .FemTools import *
+from .TransportCoefficients import *
+from .Transport import *
 
 name = None
 """The name of the model
@@ -55,6 +52,9 @@ The object should be of type :class:`proteus.TransportCoefficients.TC_base`"""
 
 dirichletConditions = {}
 """Dictionary of Dirichlet conditions for each component"""
+
+boundaryCreatesNullSpace = False
+"""Indicates Dirichlet boundary conditions create global null space. """
 
 periodicDirichletConditions = None
 """Dictionary of periodic boundary conditions for each component"""

@@ -4,7 +4,10 @@ Module for controlling MPI
 .. inheritance-diagram:: proteus.Comm
    :parts: 1
 """
+from __future__ import absolute_import
 
+from builtins import range
+from builtins import object
 import ctypes
 import sys
 
@@ -13,7 +16,7 @@ from .Profiling import logEvent
 
 
 # Special workaround for broken MPI on certain Cray systems
-import config
+from . import config
 mpi_preload_libs=[]
 for lib in config.PROTEUS_PRELOAD_LIBS:
     mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL))
@@ -39,6 +42,7 @@ def init():
                     OptDB.setValue(name,value)
         if not OptDB.hasName("options_left"):
             OptDB.setValue("options_left",False)
+    petsc4py.PETSc.Log.Stage('proteus').push()
     new_comm = Comm()
     if not comm:
         comm = new_comm
@@ -50,7 +54,7 @@ def get():
         return init()
     return comm
 
-class Comm():
+class Comm(object):
     """Proteus wrapper around PETSc/MPI communicators
 
     This is a very simple class that provides compatibility with older Proteus comm objects.
@@ -59,7 +63,7 @@ class Comm():
     def __init__(self):
         from petsc4py import PETSc
         self.comm = PETSc.COMM_WORLD
-
+        self.mpi4py_comm = PETSc.COMM_WORLD.tompi4py()
     def isInitialized(self):
         return True
 
@@ -100,3 +104,30 @@ class Comm():
         for i in range(self.comm.size - self.comm.rank - 1):
             self.comm.Barrier()
         return
+
+    def globalSum(self, value):
+        from mpi4py import MPI
+        rvalue = self.mpi4py_comm.allreduce(sendobj = value,
+                                            op = MPI.SUM)
+        return rvalue
+    
+    def globalMax(self, value):
+        from mpi4py import MPI
+        rvalue = self.mpi4py_comm.allreduce(sendobj = value,
+                                            op = MPI.MAX)
+        return rvalue
+
+    def globalMin(self, value):
+        from mpi4py import MPI
+        rvalue = self.mpi4py_comm.allreduce(sendobj = value,
+                                            op = MPI.MIN)
+        return rvalue
+    
+def globalSum(value):
+    return comm.globalSum(value)
+
+def globalMax(value):
+    return comm.globalMax(value)
+
+def globalMin(value):
+    return comm.globalMin(value)

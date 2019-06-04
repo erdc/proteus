@@ -1,3 +1,4 @@
+from builtins import range
 from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
@@ -5,6 +6,7 @@ from proteus import default_s,default_so
 import numpy
 reload(p)
 reload(n)
+
 import proteus as pr
 
 p.nd = 2

@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import division
+from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -33,15 +36,15 @@ useRANS = 0 # 0 -- None
 gatherAtClose=True
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    print("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    print("INVALID: useMetrics")
     sys.exit()
 
 #  Discretization
@@ -69,7 +72,7 @@ elif spaceOrder == 2:
 
 # Domain and mesh
 L = (0.1,0.2,0.05)
-he = L[0]/float(4*Refinement-1)
+he = old_div(L[0],float(4*Refinement-1))
 #he*=0.5
 #he = L[0]/40.0
 #he*=0.5#128
@@ -128,7 +131,7 @@ T=1.0
 dt_fixed = 0.2
 dt_init = min(0.1*dt_fixed,0.001)
 runCFL=0.33
-nDTout = int(round(T/dt_fixed))
+nDTout = int(round(old_div(T,dt_fixed)))
 
 # Numerical parameters
 ns_forceStrongDirichlet = False
@@ -209,7 +212,7 @@ g = [0.0,0.0,0]
 # Initial condition
 waterLine_x = 2*L[0]
 waterLine_y = 2*L[1]
-waterLine_z = L[2]/2.0
+waterLine_z = old_div(L[2],2.0)
 
 def signedDistance(x):
     phi_x = x[0]-waterLine_x

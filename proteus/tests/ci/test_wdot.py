@@ -1,3 +1,6 @@
+from __future__ import print_function
+from pytest import approx
+
 def test_wdot():
     """
     test_wdot
@@ -16,9 +19,9 @@ def test_wdot():
     t2 = wDot(x, y, h)
     test = npt.assert_almost_equal
     test.description = 'test_wdot'
-    yield test, t1, t2
+    assert t1 == approx(t2)
 
 if __name__ == '__main__':
     for test, v1, v2 in test_wdot():
-        print test.description
+        print(test.description)
         test(v1,v2)

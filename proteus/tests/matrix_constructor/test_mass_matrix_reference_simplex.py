@@ -10,11 +10,13 @@ import os
 import sys
 import inspect
 import numpy
+import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 import mass_matrix_reference_C0P1_2D as mm_2d_C0P1
 import mass_matrix_reference_TH_2D as mm_2d_TH
 
+@pytest.mark.LinearSolvers
 class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Verify construction of 2D Mass Matrix using transport coefficients """
 
@@ -64,6 +66,7 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
         mm = self.mass_matrix_object.modelList[0].levelModelList[0]
         op_constructor = LinearSolvers.OperatorConstructor_oneLevel(mm)
         op_constructor.attachMassOperator()
+        op_constructor.updateMassOperator()
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.MassOperator)
         rel_path = "comparison_files/mass_reference_c0p1_2D.txt"
         comparison_mat = numpy.loadtxt(os.path.join(self.scriptdir,rel_path))
@@ -87,7 +90,6 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.mass_matrix_object.modelList[0].levelModelList[0].getMassJacobian(self.Asys)
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-#        import pdb ; pdb.set_trace()
         rel_path = "comparison_files/mass_reference_TH_2D.npy"
         comparison_mat = numpy.load(os.path.join(self.scriptdir,rel_path))
         assert numpy.allclose(mass_mat,comparison_mat)

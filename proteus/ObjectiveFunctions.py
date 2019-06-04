@@ -5,7 +5,11 @@ A module of objective functions
 .. inheritance-diagram:: proteus.ObjectiveFunctions
    :parts: 1
 """
-from Optimizers import ObjectiveFunction_base
+from __future__ import absolute_import
+from __future__ import division
+from builtins import object
+from past.utils import old_div
+from .Optimizers import ObjectiveFunction_base
 #John Chrispell, Summer 07
 import math
 import numpy
@@ -29,14 +33,14 @@ class SimpelFunc3(ObjectiveFunction_base):
     def __init__(self,LHS_x,RHS_x):
         ObjectiveFunction_base.__init__(self,LHS_x,RHS_x)
     def getResidual(self,x):
-        return ((x**2.0)/(x**2.0+0.5*((1.0-x)**2.0)))
+        return (old_div((x**2.0),(x**2.0+0.5*((1.0-x)**2.0))))
 
 # BuckleyLeverett Function with the choice of alpha=1/2
-class BuckleyLeverett:
+class BuckleyLeverett(object):
     def __init__(self,alpha):
         self.alpha=alpha
     def getFlux(self,s):
-        return ((s**2.0)/(s**2.0+self.alpha*((1.0-s)**2.0)))
+        return (old_div((s**2.0),(s**2.0+self.alpha*((1.0-s)**2.0))))
 
 # A function used to find solution for the nonconvex scalar
 # Riemann problem with arbitrary data LHS_s, and RHS_s.
@@ -44,7 +48,7 @@ class OsherFunc(ObjectiveFunction_base):
     def __init__(self,LHS_s,RHS_s,fFunc,t,x):
         ObjectiveFunction_base.__init__(self,LHS_s,RHS_s)
         self.fFunc = fFunc
-        self.xi = x/t
+        self.xi = old_div(x,t)
         if(LHS_s < RHS_s):
             self.getResidual = self.Argmin
         else:
@@ -60,7 +64,7 @@ class OsherFunc(ObjectiveFunction_base):
 class OsherFuncCoef(ObjectiveFunction_base):
     def __init__(self,LHS_s,RHS_s,fFunc,t,x,useShallowCopy=True):
         ObjectiveFunction_base.__init__(self,LHS_s,RHS_s)
-        self.xi = x/t
+        self.xi = old_div(x,t)
         self.t = t
         self.x = x
         # The next bit is a one dimensional dictionary for the coefficents

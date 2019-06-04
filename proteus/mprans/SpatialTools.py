@@ -21,7 +21,12 @@ shape2.BC.left.setNoSlip()
 
 st.assembleDomain(domain)
 """
+from __future__ import division
 
+#from builtins import str
+from builtins import str
+from builtins import range
+from past.utils import old_div
 from math import cos, sin, sqrt, atan2, acos, asin
 from itertools import compress
 import csv
@@ -94,6 +99,10 @@ class ShapeRANS(Shape):
                 self.auxiliaryVariables[key] = auxvar
                 if self.holes is None:
                     self.holes = np.array([self.barycenter[:self.nd]])
+            elif key == 'WallFunction':
+                self.auxiliaryVariables[key] = auxvar
+            elif key == 'kWallFunction':
+                self.auxiliaryVariables[key] = auxvar
             elif key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
             elif str(key).startswith('Gauge_'):
@@ -160,7 +169,6 @@ class ShapeRANS(Shape):
         self._attachAuxiliaryVariable('Gauge_' + model_key,
                                       gauge=new_gauges)
 
-
     def setTank(self):
         """
         Sets tank boundary conditions (for moving domain).
@@ -168,6 +176,31 @@ class ShapeRANS(Shape):
         for boundcond in self.BC_list:
             boundcond.setTank()
 
+    def setTurbulentWall(self, wall):
+        """
+        Sets a turbulent wall as an object to be attacched to auxiliaryVariable.
+        The objects has to be defined with WallFunction class.
+
+        Parameters
+        ----------
+        wall: list of WallFunction class object
+        """
+
+        auxvar = wall
+        self._attachAuxiliaryVariable('WallFunction', auxvar)
+
+    def setTurbulentKWall(self, kWall):
+        """
+        Sets a turbulent wall as an object to be attacched to auxiliaryVariable.
+        The objects has to be defined with WallFunction class.
+
+        Parameters
+        ----------
+        kWall: list of WallFunction class object for kappa
+        """
+
+        auxvar = kWall
+        self._attachAuxiliaryVariable('kWallFunction', auxvar)
 
     def setAbsorptionZones(self, flags, epsFact_solid, center, orientation,
                            dragAlpha, dragBeta=0.,
@@ -220,7 +253,7 @@ class ShapeRANS(Shape):
 
     def setGenerationZones(self, flags, epsFact_solid, center, orientation,
                            waves, dragAlpha,
-                           wind_speed=(0., 0., 0.),dragBeta=0.,
+                           wind_speed=(0., 0., 0.), dragBeta=0.,
                            porosity=1., smoothing=0.):
         """
         Sets a region (given the local flag) to a generation zone
@@ -234,7 +267,7 @@ class ShapeRANS(Shape):
         center: array_like
             Coordinates of the center of the absorption zone.
         orientation: array_like
-            Orientation vector pointing TOWARDS incoming waves.
+            Orientation vector pointing ACCORDING WITH the direction of generated waves.
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
         dragAlpha: Optional[float]
@@ -286,9 +319,9 @@ class ShapeRANS(Shape):
         dragAlpha: float
             Darcy-type coefficient
         dragBeta: float
-            Forchheimer-type coefficient 
+            Forchheimer-type coefficient
         porosity: float
-            Porosity 
+            Porosity
         """
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
@@ -314,6 +347,7 @@ class ShapeRANS(Shape):
 # ADDING FUNCTIONALITY TO SHAPE FROM proteus.SpatialTools
 # -----------------------------------------------------------------------------
 
+
 # reassigning base/super class to access all functions from ShapeRANS and Shape
 Rectangle.__bases__ = (ShapeRANS,)
 Cuboid.__bases__ = (ShapeRANS,)
@@ -321,9 +355,10 @@ Sphere.__bases__ = (ShapeRANS,)
 Cylinder.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
 ShapeSTL.__bases__ = (ShapeRANS,)
-Circle.__bases__ = (ShapeRANS,)  
+Circle.__bases__ = (ShapeRANS,)
 
 # adding extra functionality to predefined shapes
+
 
 def _CuboidsetInertiaTensor(self):
     """
@@ -331,11 +366,13 @@ def _CuboidsetInertiaTensor(self):
     (!) should not be used manually
     """
     L, W, H = self.dim
-    self.It = [[(W**2.+H**2.)/12., 0, 0],
-               [0, (L**2.+H**2.)/12., 0],
-               [0, 0, (W**2.+L**2.)/12.]]
+    self.It = [[old_div((W**2. + H**2.), 12.), 0, 0],
+               [0, old_div((L**2. + H**2.), 12.), 0],
+               [0, 0, old_div((W**2. + L**2.), 12.)]]
+
 
 Cuboid._setInertiaTensor = _CuboidsetInertiaTensor
+
 
 def _RectanglesetInertiaTensor(self):
     """
@@ -343,7 +380,8 @@ def _RectanglesetInertiaTensor(self):
     (!) should not be used manually
     """
     L, H = self.dim
-    self.It = (L**2+H**2)/12
+    self.It = old_div((L**2 + H**2), 12)
+
 
 Rectangle._setInertiaTensor = _RectanglesetInertiaTensor
 
@@ -365,18 +403,16 @@ class Tank3D(ShapeRANS):
         Dimensions of the cuboid.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
-        If True (default), the tank extends from the origin to postive x, y, z
     """
     count = 0
 
-    def __init__(self, domain, dim=(0., 0., 0.), coords=None, from_0=True):
+    def __init__(self, domain, dim=(0., 0., 0.), coords=None):
         super(Tank3D, self).__init__(domain, nd=3)
         self.__class__.count += 1
-        self.name = "tank3d" + str(self.__class__.count)
-        self.from_0 = from_0
+        self.name = "tank3d" + repr(self.__class__.count)
         if coords is None:
-            self.coords = np.array(dim)/2.
+            self.coords = old_div(np.array(dim), 2.)
+            self.from_0 = True
         else:
             self.coords = coords
             self.from_0 = False
@@ -387,7 +423,8 @@ class Tank3D(ShapeRANS):
                              'x+': 4,
                              'y-': 5,
                              'z+': 6,
-                             'sponge': 7}
+                             'sponge': 7,
+                             'wall': 8}
         self.b_or = np.array([[0.,  0., -1.],
                               [-1., 0.,  0.],
                               [0.,  1.,  0.],
@@ -406,14 +443,16 @@ class Tank3D(ShapeRANS):
                                        b_or=self.b_or, b_i=4),
                    'z+': self.BC_class(shape=self, name='z+',
                                        b_or=self.b_or, b_i=5),
-                   'sponge': self.BC_class(shape=self, name='sponge')}
+                   'sponge': self.BC_class(shape=self, name='sponge'),
+                   'wall': self.BC_class(shape=self, name='wall')}
         self.BC_list = [self.BC['z-'],
                         self.BC['x-'],
                         self.BC['y+'],
                         self.BC['x+'],
                         self.BC['y+'],
                         self.BC['z+'],
-                        self.BC['sponge']]
+                        self.BC['sponge'],
+                        self.BC['wall']]
         # self.BC = BCContainer(self.BC_dict)
         for i in range(6):
             self.BC_list[i].setTank()
@@ -447,7 +486,6 @@ class Tank3D(ShapeRANS):
     def setDimensions(self, dim):
         """
         Set dimension of the tank
-
         Parameters
         ----------
         dim: array_like
@@ -456,13 +494,13 @@ class Tank3D(ShapeRANS):
         L, W, H = dim
         self.dim = dim
         if self.from_0 is True:
-            x, y, z = L/2., W/2., H/2.
+            x, y, z = old_div(L, 2.), old_div(W, 2.), old_div(H, 2.)
         else:
             x, y, z = self.coords
         self.coords = [x, y, z]
-        x0, x1 = x-0.5*L, x+0.5*L
-        y0, y1 = y-0.5*W, y+0.5*W
-        z0, z1 = z-0.5*H, z+0.5*H
+        x0, x1 = x - 0.5 * L, x + 0.5 * L
+        y0, y1 = y - 0.5 * W, y + 0.5 * W
+        z0, z1 = z - 0.5 * H, z + 0.5 * H
         # ---------------------------------------------
         # first add all vecors, facets, regions at the bottom
         # ---------------------------------------------
@@ -471,161 +509,269 @@ class Tank3D(ShapeRANS):
         x_n = self.spongeLayers['x-'] or 0.
         y_p = self.spongeLayers['y+'] or 0.
         y_n = self.spongeLayers['y-'] or 0.
-        vertices = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0]]
-        vertexFlags = [bt['z-'], bt['z-'], bt['z-'], bt['z-']]
-        segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
-        segmentFlags = [bt['z-'], bt['z-'], bt['z-'], bt['z-']]
-        facets = [[[0, 1, 2, 3]]]
-        volumes = [[[0]]]
-        facetFlags = [bt['z-']]
-        regions = [[(x0+x1)/2., (y0+y1)/2., (z0+z1)/2.]]
+        vertices = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
+                    [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]]
+        vertexFlags = [bt['z-'], bt['z-'], bt['z-'], bt['z-'],
+                       bt['z+'], bt['z+'], bt['z+'], bt['z+']]
+        facets = [[[0, 1, 2, 3]], [[4, 5, 6, 7]]]
+        segments = []
+        segmentFlags = []
+        volumes = [[[0, 1]]]
+        facetFlags = [bt['z-'], bt['z+']]
+        regions = [[old_div((x0 + x1), 2.), old_div((y0 + y1), 2.), old_div((z0 + z1), 2.)]]
         regionFlags = [1]
         self.regionIndice = {'tank': 0}
-        v_i = 4  # index of next vector to add
+        v_i = 8  # index of next vector to add
         r_i = 1  # index of next region to add
+        f_i = len(facets)
         nb_sponge = 0  # number of sponge layers defined
 
+        ymin = y0 - y_n
+        ymax = y1 + y_p
+        xmin = x0 - x_n
+        xmax = x1 + x_p
+        corners = False
+        # y-
         if y_n:
-            vertices += [[x0, y0-y_n, z0], [x1, y0-y_n, z0]]
-            segments += [[0, v_i], [v_i, v_i+1], [v_i+1, 1]]
-            facets += [[[0, 1, v_i+1, v_i]]]
-            regions += [[(x0+x1)/2., (y0+(y0-y_n))/2., (z0+z1)/2.]]
+            v0 = v_i
+            v1 = v_i + 2
+            v2 = v_i + 1
+            v3 = v_i + 3
+            if corners:
+                vertices += [[x0, ymin, z0], [x0, ymin, z1],
+                             [x1, ymin, z0], [x1, ymin, z1]]
+            else:
+                vertices += [[xmin, ymin, z0], [xmin, ymin, z1],
+                             [xmax, ymin, z0], [xmax, ymin, z1]]
+            vertexFlags += [bt['z-'], bt['z+'],
+                            bt['z-'], bt['z+']]
+            facets += [[[v0, v1, v3, v2]]]
+            facetFlags += [bt['y-']]
+            volumes[0][0] += [f_i]
+            regions += [[old_div((x0 + x1), 2.), old_div((y0 + (ymin)), 2.), old_div((z0 + z1), 2.)]]
             self.regionIndice['y-'] = r_i
-            regionFlags += [r_i+1]
-            v_i += 2  # 2 vertices were added
-            r_i += 1  # 1 region was added
-            nb_sponge += 1
-        if y_p:
-            vertices += [[x0, y1+y_p, z0], [x1, y1+y_p, z0]]
-            segments += [[3, v_i], [v_i, v_i+1], [v_i+1, 2]]
-            facets += [[[3, 2, v_i+1, v_i]]]
-            regions += [[(x0+x1)/2., (y1+(y1+y_p))/2., (z0+z1)/2.]]
-            self.regionIndice['y+'] = r_i
-            regionFlags += [r_i+1]
-            v_i += 2
-            r_i += 1
-            nb_sponge += 1
-        if x_p:
-            vertices += [[x1+x_p, y0, z0], [x1+x_p, y1, z0]]
-            segments += [[1, v_i], [v_i, v_i+1], [v_i+1, 2]]
-            facets += [[[1, 2, v_i+1, v_i]]]
-            regions += [[(x1+(x1+x_p))/2., (y0+y1)/2., (z0+z1)/2.]]
-            self.regionIndice['x+'] = r_i
-            regionFlags += [r_i+1]
-            v_i += 2
-            r_i += 1
-            nb_sponge += 1
-        if x_n:
-            vertices += [[x0-x_n, y0, z0], [x0-x_n, y1, z0]]
-            segments += [[0, v_i], [v_i, v_i+1], [v_i+1, 3]]
-            facets += [[[0, 3, v_i+1, v_i]]]
-            regions += [[(x0+(x0-x_n))/2., (y0+y1)/2., (z0+z1)/2.]]
-            self.regionIndice['x-'] = r_i
-            regionFlags += [r_i+1]
-            v_i += 2
-            r_i += 1
-            nb_sponge += 1
-        # all flags as bottom flags
-        for i in range(nb_sponge):
-            vertexFlags += [bt['z-'], bt['z-']]
-            segmentFlags += [bt['z-'], bt['z-'], bt['z-']]
-            facetFlags += [bt['z-']]
-            volumes += [[[len(facetFlags)-1]]]
-        # ---------------------------------------------
-        # Then add the rest of the vectors (top) by symmetry
-        # ---------------------------------------------
-        # copying list of bottom segments to get top and side segments
-        segments_bottom = segments[:]
-        # getting top
-        vertexFlags += [bt['z+'] for i in range(len(vertices))]
-        segmentFlags += [bt['z+'] for i in range(len(segments))]
-        facetFlags += [bt['z+'] for i in range(len(facets))]
-        vertices_top = np.array(vertices)
-        vertices_top[:, 2] = z1
-        vertices += vertices_top.tolist()
-        segments_top = np.array(segments)
-        segments_top += v_i
-        segments += segments_top.tolist()
-        facets_top = np.array(facets)
-        facets_top += v_i
-        for vol in volumes:
-            vol[0] += [vol[0][0]+len(facetFlags)/2]
-        facets += facets_top.tolist()
-        # getting sides
-        for s in segments_bottom:  # for vertical facets
-            facets += [[[s[0], s[1], s[1]+v_i, s[0]+v_i]]]
-            if vertices[s[0]][0] == vertices[s[1]][0] == x0:
-                if y_n > 0 and (vertices[s[0]][1] == y0-y_n or vertices[s[1]][1] == y0-y_n):
-                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
-                elif y_p > 0 and (vertices[s[0]][1] == y1+y_p or vertices[s[1]][1] == y1+y_p):
-                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
-                else:
-                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
-                if x_n > 0:
-                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
-                    facetFlags += [bt['sponge']]
-                else:
-                    facetFlags += [bt['x-']]
-            elif vertices[s[0]][0] == vertices[s[1]][0] == x0-x_n and x_n > 0:
-                volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
+            regionFlags += [r_i + 1]
+            facets += [[[0, 1, v1, v0]],
+                       [[4, 5, v3, v2]],
+                       [[0, 1, 5, 4]],
+                       [[0, v0, v2, 4]],
+                       [[1, v1, v3, 5]]]
+            facetFlags += [bt['z-'],
+                           bt['z+'],
+                           bt['sponge']]
+            if x_n > 0:
+                facetFlags += [bt['wall']]
+            else:
                 facetFlags += [bt['x-']]
-            elif vertices[s[0]][0] == vertices[s[1]][0] == x1:
-                if y_n > 0 and (vertices[s[0]][1] == y0-y_n or vertices[s[1]][1] == y0-y_n):
-                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
-                elif y_p > 0 and (vertices[s[0]][1] == y1+y_p or vertices[s[1]][1] == y1+y_p):
-                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
-                else:
-                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
-                if x_p > 0:
-                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
-                    facetFlags += [bt['sponge']]
-                else:
-                    facetFlags += [bt['x+']]
-            elif vertices[s[0]][0] == vertices[s[1]][0] == x1+x_p and x_p > 0:
-                volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
+            if x_p > 0:
+                facetFlags += [bt['wall']]
+            else:
                 facetFlags += [bt['x+']]
-            if vertices[s[0]][1] == vertices[s[1]][1] == y0:
-                if x_n > 0 and (vertices[s[0]][0] == x0-x_n or vertices[s[1]][0] == x0-x_n):
-                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
-                elif x_p > 0 and (vertices[s[0]][0] == x1+x_p or vertices[s[1]][0] == x1+x_p):
-                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
-                else:
-                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+            volumes[0][0][-1] = f_i + 3  # add to volume
+            r_i += 1
+            nb_sponge += 1
+            volumes += [[[len(facets) - i - 1 for i in range(6)]]]
+            x_n_facet_i = len(facets) - 2
+        else:
+            facets += [[[0, 1, 5, 4]]]
+            facetFlags += [bt['y-']]
+            volumes[0][0] += [f_i]
+        v_i = len(vertices)
+        f_i = len(facets)
+        # x+
+        if x_p:
+            if corners:
+                vertices += [[xmax, y0, z0], [xmax, y0, z1],
+                             [xmax, y1, z0], [xmax, y1, z1]]
+                v0 = v_i
+                v1 = v_i + 2
+                v2 = v_i + 1
+                v3 = v_i + 3
+                vertexFlags += [bt['z-'], bt['z+'],
+                                bt['z-'], bt['z+']]
+            else:
+                v0 = v_i - 2
+                v1 = v_i
+                v2 = v_i - 1
+                v3 = v_i + 1
+                if not y_n:
+                    vertices += [[xmax, ymin, z0], [xmax, ymin, z1]]
+                    vertexFlags += [bt['z-'], bt['z+']]
+                    v0 = v_i
+                    v1 = v_i + 2
+                    v2 = v_i + 1
+                    v3 = v_i + 3
+                vertices += [[xmax, ymax, z0], [xmax, ymax, z1]]
+                vertexFlags += [bt['z-'], bt['z+']]
+            facets += [[[v0, v1, v3, v2]]]
+            facetFlags += [bt['x+']]
+            volumes[0][0] += [f_i]
+            regions += [[old_div((x1 + (xmax)), 2.), old_div((y0 + y1), 2.), old_div((z0 + z1), 2.)]]
+            self.regionIndice['x+'] = r_i
+            regionFlags += [r_i + 1]
+            facets += [[[1, 2, v1, v0]],
+                       [[5, 6, v3, v2]],
+                       [[1, 2, 6, 5]]]
+            facetFlags += [bt['z-'],
+                           bt['z+'],
+                           bt['sponge']]
+            if corners or not y_n:
+                facets += [[[1, v0, v2, 5]]]
                 if y_n > 0:
-                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
-                    facetFlags += [bt['sponge']]
+                    facetFlags += [bt['wall']]
                 else:
                     facetFlags += [bt['y-']]
-            elif vertices[s[0]][1] == vertices[s[1]][1] == y0-y_n and y_n > 0:
-                volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
-                facetFlags += [bt['y-']]
-            elif vertices[s[0]][1] == vertices[s[1]][1] == y1:
-                if x_n > 0 and (vertices[s[0]][0] == x0-x_n or vertices[s[1]][0] == x0-x_n):
-                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
-                elif x_p > 0 and (vertices[s[0]][0] == x1+x_p or vertices[s[1]][0] == x1+x_p):
-                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
-                else:
-                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
-                if y_p > 0:
-                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
-                    facetFlags += [bt['sponge']]
-                else:
-                    facetFlags += [bt['y+']]
-            elif vertices[s[0]][1] == vertices[s[1]][1] == y1+y_p and y_p > 0:
-                volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
-        # vertical segments
-        for i in range(v_i):
-            segments += [[i, i+v_i]]
-            if vertices[i][0] == vertices[i+v_i][0] == x0-x_n:
-                segmentFlags += [bt['x-']]
-            elif vertices[i][0] == vertices[i+v_i][0] == x1+x_p:
-                segmentFlags += [bt['x+']]
-            elif vertices[i][1] == vertices[i+v_i][1] == y0-x_n:
-                segmentFlags += [bt['y-']]
-            elif vertices[i][1] == vertices[i+v_i][1] == y1+x_p:
-                segmentFlags += [bt['y+']]
+            facets += [[[2, v1, v3, 6]]]
+            if y_p > 0:
+                facetFlags += [bt['wall']]
             else:
-                segmentFlags += [bt['sponge']]
+                facetFlags += [bt['y+']]
+            volumes[0][0][-1] = f_i + 3  # add to volume
+            r_i += 1
+            nb_sponge += 1
+            volumes += [[[len(facets) - i - 1 for i in range(6)]]]
+        else:
+            facets += [[[1, 2, 6, 5]]]
+            facetFlags += [bt['x+']]
+            volumes[0][0] += [f_i]
+        v_i = len(vertices)
+        f_i = len(facets)
+        # y+
+        if y_p:
+            if corners:
+                vertices += [[x1, ymax, z0], [x1, ymax, z1],
+                             [x0, ymax, z0], [x0, ymax, z1]]
+                v0 = v_i
+                v1 = v_i + 2
+                v2 = v_i + 1
+                v3 = v_i + 3
+                vertexFlags += [bt['z-'], bt['z+'],
+                                bt['z-'], bt['z+']]
+            else:
+                v0 = v_i - 2
+                v1 = v_i
+                v2 = v_i - 1
+                v3 = v_i + 1
+                if not x_p:
+                    vertices += [[xmax, ymax, z0], [xmax, ymax, z1]]
+                    vertexFlags += [bt['z-'], bt['z+']]
+                    v0 = v_i
+                    v1 = v_i + 2
+                    v2 = v_i + 1
+                    v3 = v_i + 3
+                vertices += [[xmin, ymax, z0], [xmin, ymax, z1]]
+                vertexFlags += [bt['z-'], bt['z+']]
+            facets += [[[v0, v1, v3, v2]]]
+            volumes[0][0] += [f_i]
+            facetFlags += [bt['y+']]
+            regions += [[old_div((x0 + x1), 2.), old_div((y1 + (ymax)), 2.), old_div((z0 + z1), 2.)]]
+            self.regionIndice['y+'] = r_i
+            regionFlags += [r_i + 1]
+            facets += [[[2, 3, v1, v0]],
+                       [[6, 7, v3, v2]],
+                       [[2, 3, 7, 6]]]
+            facetFlags += [bt['z-'],
+                           bt['z+'],
+                           bt['sponge']]
+            if corners or not x_p:
+                facets += [[[2, v0, v2, 6]]]
+                if x_p > 0:
+                    facetFlags += [bt['wall']]
+                else:
+                    facetFlags += [bt['x+']]
+            facets += [[[3, v1, v3, 7]]]
+            if x_n > 0:
+                facetFlags += [bt['wall']]
+            else:
+                facetFlags += [bt['x-']]
+            volumes[0][0][-1] = f_i + 3
+            r_i += 1
+            nb_sponge += 1
+            volumes += [[[len(facets) - i - 1 for i in range(6)]]]
+        else:
+            facets += [[[3, 2, 6, 7]]]
+            facetFlags += [bt['y+']]
+            volumes[0][0] += [f_i]
+        v_i = len(vertices)
+        f_i = len(facets)
+        # x-
+        if x_n:
+            volumes[0][0] += [f_i]
+            if corners:
+                vertices += [[xmin, y0, z0], [xmin, y0, z1],
+                             [xmin, y1, z0], [xmin, y1, z1]]
+                v0 = v_i
+                v1 = v_i + 2
+                v2 = v_i + 1
+                v3 = v_i + 3
+                vertexFlags += [bt['z-'], bt['z+'],
+                                bt['z-'], bt['z+']]
+            else:
+                if not y_p:
+                    vertices += [[xmin, ymax, z0], [xmin, ymax, z1]]
+                    v0 = v_i - 2
+                    v1 = v_i
+                    v2 = v_i - 1
+                    v3 = v_i + 1
+                    vertexFlags += [bt['z-'], bt['z+']]
+                if not y_n:
+                    vertices += [[xmin, ymin, z0], [xmin, ymin, z1]]
+                    if not y_p:
+                        v0 = v_i + 2
+                        v1 = v_i
+                        v2 = v_i + 3
+                        v3 = v_i + 1
+                    else:
+                        v0 = v_i
+                        v1 = v_i - 2
+                        v2 = v_i + 1
+                        v3 = v_i - 1
+                    vertexFlags += [bt['z-'], bt['z+']]
+                else:
+                    v1 = v_i - 2
+                    v0 = 8
+                    v3 = v_i - 1
+                    v2 = 9
+                    if not y_p:
+                        v1 = v_i
+                        v3 = v_i + 1
+            facets += [[[v0, v1, v3, v2]]]
+            facetFlags += [bt['x-']]
+            regions += [[old_div((x0 + (xmin)), 2.), old_div((y0 + y1), 2.), old_div((z0 + z1), 2.)]]
+            self.regionIndice['x-'] = r_i
+            regionFlags += [r_i + 1]
+            facets += [[[0, 3, v1, v0]],
+                       [[4, 7, v3, v2]],
+                       [[0, 3, 7, 4]]]
+            facetFlags += [bt['z-'],
+                           bt['z+'],
+                           bt['sponge']]
+            volumes[0][0][-1] = f_i + 3
+            if corners or not y_n or not y_p:
+                if corners or not y_n:
+                    facets += [[[0, v0, v2, 4]]]
+                    if y_n > 0:
+                        facetFlags += [bt['wall']]
+                    else:
+                        facetFlags += [bt['y-']]
+                if corners or not y_p:
+                    facets += [[[3, v1, v3, 7]]]
+                    if y_p > 0:
+                        facetFlags += [bt['wall']]
+                    else:
+                        facetFlags += [bt['y+']]
+            r_i += 1
+            nb_sponge += 1
+            if corners or not y_n:
+                volumes += [[[len(facets) - i - 1 for i in range(6)]]]
+            else:
+                volumes += [[[len(facets) - i - 1 for i in range(5)] + [x_n_facet_i]]]
+        else:
+            facets += [[[0, 3, 7, 4]]]
+            facetFlags += [bt['x-']]
+            volumes[0][0] += [f_i]
+        v_i = len(vertices)
+        f_i = len(facets)
         self.vertices = np.array(vertices)
         self.vertices = np.dot(self.vertices, self.coords_system)
         self.vertexFlags = np.array(vertexFlags)
@@ -637,10 +783,9 @@ class Tank3D(ShapeRANS):
         self.regionFlags = np.array(regionFlags)
         self.volumes = volumes
 
-
-    def setAbsorptionZones(self, dragAlpha,allSponge=False,
+    def setAbsorptionZones(self, dragAlpha, allSponge=False,
                            y_n=False, y_p=False,
-                           x_n=False, x_p=False, 
+                           x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-, y+, y-) to absorption zones
@@ -671,28 +816,28 @@ class Tank3D(ShapeRANS):
         waves = None
         wind_speed = np.array([0., 0., 0.])
         sl = self.spongeLayers
-        for key, value in self.abs_zones.iteritems():
+        for key, value in list(self.abs_zones.items()):
             if value is True:
                 self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
-                epsFact_solid = self.spongeLayers[key]/2.
+                epsFact_solid = old_div(self.spongeLayers[key], 2.)
                 center = np.array(self.coords)
-                zeros_to_append = 3-len(center)
+                zeros_to_append = 3 - len(center)
                 if zeros_to_append:
                     for i in range(zeros_to_append):
                         center = np.append(center, [0])
                 if key == 'x-':
-                    center[0] += -0.5*self.dim[0]-0.5*sl['x-']
+                    center[0] += -0.5 * self.dim[0] - 0.5 * sl['x-']
                     orientation = np.array([1., 0., 0.])
                 elif key == 'x+':
-                    center[0] += +0.5*self.dim[0]+0.5*sl['x+']
+                    center[0] += +0.5 * self.dim[0] + 0.5 * sl['x+']
                     orientation = np.array([-1., 0., 0.])
                 elif key == 'y-':
-                    center[1] += -0.5*self.dim[1]-0.5*sl['y-']
+                    center[1] += -0.5 * self.dim[1] - 0.5 * sl['y-']
                     orientation = np.array([0., 1., 0.])
                 elif key == 'y+':
-                    center[1] += +0.5*self.dim[1]+0.5*sl['y+']
+                    center[1] += +0.5 * self.dim[1] + 0.5 * sl['y+']
                     orientation = np.array([0., -1., 0.])
                 self.zones[flag] = bc.RelaxationZone(shape=self,
                                                      zone_type='absorption',
@@ -706,7 +851,7 @@ class Tank3D(ShapeRANS):
                                                      porosity=porosity)
 
     def setGenerationZones(self,  dragAlpha, smoothing, waves=None,
-                           wind_speed=(0. ,0., 0.), allSponge=False, y_n=False,
+                           wind_speed=(0., 0., 0.), allSponge=False, y_n=False,
                            y_p=False, x_n=False, x_p=False, dragBeta=0.,
                            porosity=1.):
         """
@@ -744,37 +889,37 @@ class Tank3D(ShapeRANS):
         waves = waves
         wind_speed = np.array(wind_speed)
         sl = self.spongeLayers
-        for key, value in self.abs_zones.iteritems():
+        for key, value in list(self.abs_zones.items()):
             if value is True:
                 self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
-                epsFact_solid = self.spongeLayers[key]/2.
+                epsFact_solid = old_div(self.spongeLayers[key], 2.)
                 center = np.array(self.coords)
-                zeros_to_append = 3-len(center)
+                zeros_to_append = 3 - len(center)
                 if zeros_to_append:
                     for i in range(zeros_to_append):
                         center = np.append(center, [0])
                 if key == 'x-':
-                    center[0] += -0.5*self.dim[0]-sl['x-']/2.
+                    center[0] += -0.5 * self.dim[0] - old_div(sl['x-'], 2.)
                     orientation = np.array([1., 0., 0.])
                     self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed,
                                                                    smoothing=smoothing)
                 elif key == 'x+':
-                    center[0] += +0.5*self.dim[0]+sl['x+']/2.
+                    center[0] += +0.5 * self.dim[0] + old_div(sl['x+'], 2.)
                     orientation = np.array([-1., 0., 0.])
                     self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed,
                                                                    smoothing=smoothing)
                 elif key == 'y-':
-                    center[1] += -0.5*self.dim[1]-sl['y-']/2.
+                    center[1] += -0.5 * self.dim[1] - old_div(sl['y-'], 2.)
                     orientation = np.array([0., 1., 0.])
                     self.BC['y-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed,
                                                                    smoothing=smoothing)
                 elif key == 'y+':
-                    center[1] += +0.5*self.dim[1]+sl['y+']/2.
+                    center[1] += +0.5 * self.dim[1] + old_div(sl['y+'], 2.)
                     orientation = np.array([0., -1., 0.])
                     self.BC['y+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed,
@@ -805,23 +950,27 @@ class Tank2D(ShapeRANS):
         Dimensions of the tank (excluding sponge layers).
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
-        If True (default), the tank extends from the origin to positive x, y, z
     """
     count = 0
 
-    def __init__(self, domain, dim, coords=None, from_0=True):
+    def __init__(self, domain, dim, coords=None):
         super(Tank2D, self).__init__(domain, nd=2)
+        if coords is None:
+            self.coords = old_div(np.array(dim), 2.)
+            self.from_0 = True
+        else:
+            self.coords = coords
+            self.from_0 = False
+        self.dim = dim
         self._nameSelf()
         self._setupBCs()
         self.spongeLayers = {'x-': None,
                              'x+': None}
-        self._findEdges(dim, coords, from_0)
         self.constructShape()
 
     def _nameSelf(self):
         self.__class__.count += 1
-        self.name = "tank2D" + str(self.__class__.count)
+        self.name = "tank2D" + repr(self.__class__.count)
 
     def _setupBCs(self):
         self.boundaryTags = {'y-': 1, 'x+': 2, 'y+': 3, 'x-': 4, 'sponge': 5}
@@ -863,39 +1012,33 @@ class Tank2D(ShapeRANS):
             in the frame.  This can be generated with tank2DFrame or subclass
             specific methods.
         """
+        self._findEdges(self.dim)
         vertices, vertexFlags = self._constructVertices()
         segments, segmentFlags = self._constructSegments(vertices, vertexFlags)
         regions, regionFlags = self._constructRegions(vertices, vertexFlags,
                                                       segments, segmentFlags)
         facets, facetFlags = self._constructFacets()
 
-        self.vertices     = np.array(vertices)
-        self.vertexFlags  = np.array(vertexFlags)
-        self.segments     = np.array(segments)
+        self.vertices = np.array(vertices)
+        self.vertexFlags = np.array(vertexFlags)
+        self.segments = np.array(segments)
         self.segmentFlags = np.array(segmentFlags)
-        self.regions      = np.array(regions)
-        self.regionFlags  = np.array(regionFlags)
-        self.facets       = np.array(facets)
-        self.facetFlags   = np.array(facetFlags)
+        self.regions = np.array(regions)
+        self.regionFlags = np.array(regionFlags)
+        self.facets = np.array(facets)
+        self.facetFlags = np.array(facetFlags)
 
-    def _findEdges(self, dim, coords, from_0):
+    def _findEdges(self, dim):
 
-        if from_0 and (coords == [x * 0.5 for x in dim]):
-            coords = None
+        coords = self.coords
+        from_0 = self.from_0
 
-        if not from_0 and (coords is None):
-            raise ValueError("Cannot locate tank center. Either set from_0 = "
-                             "True, or pass in center coordinates in [coords]")
-        elif from_0 and (coords is not None):
-            raise ValueError("The center of the tank cannot be at coords = "
-                             + str(coords) + " while also starting from_0  "
-                             "(True) with dimensions: " + str(dim))
-        elif from_0 and (coords is None):
+        if from_0:
             self.x0 = 0
             self.x1 = dim[0]
             self.y0 = 0
             self.y1 = dim[1]
-        else: # not from_0 and coords is not None
+        else:  # not from_0 and coords is not None
             self.x0 = coords[0] - 0.5 * dim[0]
             self.x1 = coords[0] + 0.5 * dim[0]
             self.y0 = coords[1] - 0.5 * dim[1]
@@ -956,20 +1099,18 @@ class Tank2D(ShapeRANS):
         added_facets = 0
         if self.spongeLayers['x-']:
             facets += [[[3, 0, 4, 5]]]
-            facetFlags += [2+added_facets]
+            facetFlags += [2 + added_facets]
             added_vertices += 2
             added_facets += 1
         if self.spongeLayers['x+']:
-            facets += [[[2, 1, added_vertices+4, added_vertices+5]]]
-            facetFlags += [2+added_facets]
+            facets += [[[2, 1, added_vertices + 4, added_vertices + 5]]]
+            facetFlags += [2 + added_facets]
         return facets, facetFlags
 
-
-
     def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
-        regions = [[self.x0 + 0.01 * (self.x1 - self.x0), 0.5 * (self.y0 + self.y1)],]
+        regions = [[self.x0 + 0.01 * (self.x1 - self.x0), 0.5 * (self.y0 + self.y1)], ]
         ind_region = 1
-        regionFlags = [ind_region,]
+        regionFlags = [ind_region, ]
         self.regionIndice = {'tank': ind_region - 1}
         if self.spongeLayers['x-']:
             regions += [[self.x0 - 0.5 * self.spongeLayers['x-'],
@@ -1027,11 +1168,12 @@ class Tank2D(ShapeRANS):
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = np.array([self.x0 - 0.5 * self.spongeLayers['x-'],
-                               0.5 * (self.y0 + self.y1), 0.])
+            center = np.array([self.coords[0]-0.5*self.dim[0]-0.5*self.spongeLayers['x-'],
+                               self.coords[1],
+                               0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x-']/2.
+            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1044,11 +1186,12 @@ class Tank2D(ShapeRANS):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
         if x_p is True:
-            center = np.array([self.x1 + 0.5 * self.spongeLayers['x+'],
-                               0.5 * (self.y0 + self.y1), 0.])
+            center = np.array([self.coords[0]+0.5*self.dim[0]+0.5*self.spongeLayers['x+'],
+                               self.coords[1],
+                               0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x+']/2.
+            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1072,7 +1215,7 @@ class Tank2D(ShapeRANS):
         ----------
         dragAlpha: float
             Relaxation zone coefficient
-        smoothing:  
+        smoothing:
             Smoothing distance
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
@@ -1094,11 +1237,12 @@ class Tank2D(ShapeRANS):
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = np.array([self.x0 - 0.5 * self.spongeLayers['x-'],
-                               0.5 * (self.y0 + self.y1), 0.])
+            center = np.array([self.coords[0]-0.5*self.dim[0]-0.5*self.spongeLayers['x-'],
+                               self.coords[1],
+                               0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x-']/2.
+            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -1115,11 +1259,12 @@ class Tank2D(ShapeRANS):
                                                            wind_speed=wind_speed,
                                                            smoothing=smoothing)
         if x_p is True:
-            center = np.array([self.x1 + 0.5 * self.spongeLayers['x+'],
-                               0.5 * (self.y0 + self.y1), 0.])
+            center = np.array([self.coords[0]+0.5*self.dim[0]+0.5*self.spongeLayers['x+'],
+                               self.coords[1],
+                               0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x+']/2.
+            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -1137,6 +1282,8 @@ class Tank2D(ShapeRANS):
                                                            smoothing=smoothing)
 
 #[temp] no tests yet!
+
+
 class TankWithObstacles2D(Tank2D):
     """
     Class to create a 2D rectangular tank with obstacles built out of any wall.
@@ -1182,22 +1329,21 @@ class TankWithObstacles2D(Tank2D):
         the first obstacle starts on.  Default is False.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
-    from_0: Optional[bool]
-        If True (default), the tank extends from the origin to positive x, y, z
     hole: Optional[bool]
-        If True (default), the obstacle of the tank is just an open hole at the 
+        If True (default), the obstacle of the tank is just an open hole at the
         bottom of the tank. If False, a segment at the bottom of the obstacle is
         created to close the hole.
     obstacle_regions: Optional[array_like]
-        To use only if hole=False.(x,y) coordinates of a point inside the 
-        obstacle in order to fill the obstacle with what should be inside 
+        To use only if hole=False.(x,y) coordinates of a point inside the
+        obstacle in order to fill the obstacle with what should be inside
         (for example a porous material).
-        
+
     """
+
     def __init__(self, domain, dim=(0., 0.),
-                 obstacles = None, special_boundaries = None,
-                 full_circle = False,
-                 coords=None, from_0=True, hole=True, obstacle_regions=None):
+                 obstacles=None, special_boundaries=None,
+                 full_circle=False,
+                 coords=None, hole=True, obstacle_regions=None):
         if obstacles:
             self.obstacles = obstacles
         else:
@@ -1211,33 +1357,33 @@ class TankWithObstacles2D(Tank2D):
                              'x+': None}
 
         if special_boundaries:
-            for key in special_boundaries.keys():
+            for key in list(special_boundaries.keys()):
                 self.special_boundaries += [key for v in special_boundaries[key]]
                 self.special_BC_vertices += special_boundaries[key]
 
         self.corners = {'x-y-': False, 'x+y-': False,
                         'x+y+': False, 'x-y+': False}
-                        
+
         self.hole = hole
         self.obstacle_regions = obstacle_regions
-        super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
+        super(TankWithObstacles2D, self).__init__(domain, dim, coords)
 
     def _setupBCs(self):
         super(TankWithObstacles2D, self)._setupBCs()
         for boundary in self.special_boundaries:
-            if boundary not in self.boundaryTags.keys():
+            if boundary not in list(self.boundaryTags.keys()):
                 self.boundaryTags[boundary] = len(self.boundaryTags) + 1
                 self.BC[boundary] = self.BC_class(shape=self, name=boundary)
                 self.BC_list += [self.BC[boundary]]
-	# add boundaryTags
+        # add boundaryTags
         self.obstacle_flags = []
         max_flag = 0
-        for tag, flag in self.boundaryTags.iteritems():
+        for tag, flag in list(self.boundaryTags.items()):
             if flag > max_flag:
                 max_flag = flag
-        flag = max_flag+1
+        flag = max_flag + 1
         for i in range(len(self.obstacles)):
-            tag = 'obstacle'+str(i+1)
+            tag = 'obstacle' + repr(i + 1)
             self.boundaryTags[tag] = flag
             self.obstacle_flags += [flag]
             self.BC[tag] = self.BC_class(shape=self, name=tag)
@@ -1245,7 +1391,7 @@ class TankWithObstacles2D(Tank2D):
             flag += 1
         if self.hole is False:
             assert len(self.obstacles) == len(self.obstacle_regions), 'must have same number of regions as obstacles'
-            
+
     def _resetEdgesFromVertices(self, vertices):
         """
         Resets self.x0, self.x1, self.y0, self.y1 based on the actual shape.
@@ -1300,21 +1446,21 @@ class TankWithObstacles2D(Tank2D):
             Given an (x,y) coordinate gives a label associated to corner or edge
             """
             dim = [self.x1 - self.x0, self.y1 - self.y0]
-            if np.isclose(vertex[0],0) and np.isclose(vertex[1],0):
+            if np.isclose(vertex[0], 0) and np.isclose(vertex[1], 0):
                 return 'x-y-'
-            elif np.isclose(vertex[0],dim[0]) and np.isclose(vertex[1],dim[1]):
+            elif np.isclose(vertex[0], dim[0]) and np.isclose(vertex[1], dim[1]):
                 return 'x+y+'
-            elif np.isclose(vertex[0],0) and np.isclose(vertex[1],dim[1]):
+            elif np.isclose(vertex[0], 0) and np.isclose(vertex[1], dim[1]):
                 return 'x-y+'
-            elif np.isclose(vertex[0],dim[0]) and np.isclose(vertex[1],0):
+            elif np.isclose(vertex[0], dim[0]) and np.isclose(vertex[1], 0):
                 return 'x+y-'
-            elif np.isclose(vertex[0],0):
+            elif np.isclose(vertex[0], 0):
                 return 'x-'
-            elif np.isclose(vertex[0],dim[0]):
+            elif np.isclose(vertex[0], dim[0]):
                 return 'x+'
-            elif np.isclose(vertex[1],0):
+            elif np.isclose(vertex[1], 0):
                 return 'y-'
-            elif np.isclose(vertex[1],dim[1]):
+            elif np.isclose(vertex[1], dim[1]):
                 return 'y+'
             else:
                 raise ValueError("Point " + str(vertex) + " does not seem to"
@@ -1347,7 +1493,7 @@ class TankWithObstacles2D(Tank2D):
             """
             ordering = getClockwiseOrder(first)
             corners = [x for x in ordering
-                       if x in self.corners.keys()
+                       if x in list(self.corners.keys())
                        and ordering.index(x) < ordering.index(last)
                        ]
             corner_vertices = []
@@ -1380,7 +1526,7 @@ class TankWithObstacles2D(Tank2D):
             ordering = getClockwiseOrder(starting_point)
 
             for potential_corner in ordering:
-                if potential_corner in self.corners.keys():
+                if potential_corner in list(self.corners.keys()):
                     self.corners[potential_corner] = True
                     vertex, flag = addCorner(potential_corner)
                     corner_vertices += vertex
@@ -1413,7 +1559,7 @@ class TankWithObstacles2D(Tank2D):
             start = findLocation(obstacle[0])
             end = findLocation(obstacle[-1])
 
-            if start == end and checkClosure(obstacle[0],obstacle[-1]):
+            if start == end and checkClosure(obstacle[0], obstacle[-1]):
                 raise ValueError("Obstacles must be open (start and end"
                                  " vertices must be distinct)")
             if start == former_end and checkClosure(obstacle[0], vertices[-1]):
@@ -1432,9 +1578,9 @@ class TankWithObstacles2D(Tank2D):
                 vertexFlags += [self.boundaryTags[start]
                                 for i in range(len(obstacle))]
             elif self.hole is False:
-                 vertices += obstacle
-                 vertexFlags += [self.boundaryTags['obstacle'+str(nb+1)]
-                                 for i in range(len(obstacle))]
+                vertices += obstacle
+                vertexFlags += [self.boundaryTags['obstacle' + repr(nb + 1)]
+                                for i in range(len(obstacle))]
 
             # ---- Paperwork ---- #
             former_end = end
@@ -1523,10 +1669,9 @@ class TankWithObstacles2D(Tank2D):
                 if end_vertex not in (self.x1y0, self.x1y1):
                     vertexFlags[end_index] = self.boundaryTags['sponge']
 
-
         def getSegmentFlag(start, end):
             if ((self.spongeLayers['x-'] and not sponge_edges_covered['x-']) or
-                (self.spongeLayers['x+'] and not sponge_edges_covered['x+'])):
+                    (self.spongeLayers['x+'] and not sponge_edges_covered['x+'])):
                 checkSpongeStatus(start, end)
 
             if on_sponge_edge['x-'] or on_sponge_edge['x+']:
@@ -1534,10 +1679,10 @@ class TankWithObstacles2D(Tank2D):
 
             else:
                 if vertexFlags[start] in self.obstacle_flags:
-		    if vertexFlags[end] == vertexFlags[start]:
-		        return [vertexFlags[start], ]
-		    else:
-		        return [self.boundaryTags['y-'], ]
+                    if vertexFlags[end] == vertexFlags[start]:
+                        return [vertexFlags[start], ]
+                    else:
+                        return [self.boundaryTags['y-'], ]
                 elif vertexFlags[start] == self.boundaryTags['x+']:
                     if vertexFlags[end] == self.boundaryTags['x-']:
                         return [self.boundaryTags['y+'], ]
@@ -1597,7 +1742,7 @@ class TankWithObstacles2D(Tank2D):
         if self.hole is False:
             start_vertex_obstacle = 0
             for obstacle in self.obstacles:
-                segments += [[start_vertex_obstacle, start_vertex_obstacle+(len(obstacle)-1)]]
+                segments += [[start_vertex_obstacle, start_vertex_obstacle + (len(obstacle) - 1)]]
                 segmentFlags += [self.boundaryTags['y-']]
                 start_vertex_obstacle += len(obstacle)
 
@@ -1625,27 +1770,27 @@ class TankWithObstacles2D(Tank2D):
         return segments, segmentFlags
 
     def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
-    
+
         ind_region = 0
         self.regionIndice = {}
         regions = []
         regionFlags = []
-        
+
         if self.hole is False:
             for i, region in enumerate(self.obstacle_regions):
                 regions = [[region[0], region[1]]]
                 ind_region += 1
-                regionFlags = [ind_region,]
-                self.regionIndice['obstacle'+str(i+1)] = ind_region-1
-            
-        if True in self.corners.values():
+                regionFlags = [ind_region, ]
+                self.regionIndice['obstacle' + repr(i + 1)] = ind_region - 1
+
+        if True in list(self.corners.values()):
             regions += self._getCornerRegion()
         else:
             regions += self._getRandomRegion(vertices, segments)
 
         ind_region += 1
         regionFlags += [ind_region]
-        self.regionIndice['tank']= ind_region - 1
+        self.regionIndice['tank'] = ind_region - 1
 
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
@@ -1673,7 +1818,7 @@ class TankWithObstacles2D(Tank2D):
         max(x1), max(x2), ... , max(xn), min(x1), ... , min(xn)
         """
         points = np.array(points)
-        return np.max(points,0).tolist() + np.min(points,0).tolist()
+        return np.max(points, 0).tolist() + np.min(points, 0).tolist()
 
     def _getCornerRegion(self):
         eps = np.finfo(float).eps
@@ -1711,7 +1856,7 @@ class TankWithObstacles2D(Tank2D):
                 line_x1 = vertices[segment[1]][0]
                 line_y1 = vertices[segment[1]][1]
                 if (line_x0 < vertical_line < line_x1
-                    or line_x0 > vertical_line > line_x1):
+                        or line_x0 > vertical_line > line_x1):
                     # (due to the strict inequality check and
                     # our selection of vertical_line - x1 > x0 should be sure)
                     intersection_height = line_y0 + (
@@ -1770,7 +1915,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x-']/2.
+            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1787,7 +1932,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x+']/2.
+            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1801,7 +1946,7 @@ class TankWithObstacles2D(Tank2D):
                                                  porosity=porosity)
 
     def setGenerationZones(self,  dragAlpha, smoothing, waves=None,
-                           wind_speed=(0., 0., 0.), x_n=False, x_p=False, 
+                           wind_speed=(0., 0., 0.), x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to generation zones
@@ -1842,7 +1987,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x-']/2.
+            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -1864,7 +2009,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = self.spongeLayers['x+']/2.
+            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -1882,7 +2027,6 @@ class TankWithObstacles2D(Tank2D):
                                                            smoothing=smoothing)
 
 
-
 def assembleDomain(domain):
     """
     This function sets up everything needed for the domain, meshing, and
@@ -1897,10 +2041,10 @@ def assembleDomain(domain):
         boundary conditions of the shape.
     """
     _assembleGeometry(domain, BC_class=bc.BC_RANS)
-    domain.bc[0].setNonMaterial()  # set BC for boundary between processors
+    domain.BCbyFlag[0].setNonMaterial()  # set BC for boundary between processors
     assembleAuxiliaryVariables(domain)
     if(domain.name != "PUMIDomain"):
-      _generateMesh(domain)
+        _generateMesh(domain)
 
 
 def assembleAuxiliaryVariables(domain):
@@ -1926,7 +2070,9 @@ def assembleAuxiliaryVariables(domain):
         'moveMesh': [],
         'redist': [],
         'twp': [],
-        'vof': []
+        'vof': [],
+        'thp': [],
+        'vos': []
     }
 
     zones_global = {}
@@ -1937,53 +2083,66 @@ def assembleAuxiliaryVariables(domain):
         aux = domain.auxiliaryVariables
         # ----------------------------
         # RIGID BODIES
-        if 'RigidBody' in shape.auxiliaryVariables.keys():
+        if 'RigidBody' in list(shape.auxiliaryVariables.keys()):
             body = shape.auxiliaryVariables['RigidBody']
             aux['twp'] += [body]
             # fixing mesh on rigid body
             for boundcond in shape.BC_list:
                 boundcond.setRigidBodyMoveMesh(body)
             # update the indice for force/moment calculations
-            body.i_start = start_flag+1
-            body.i_end = start_flag+1+len(shape.BC_list)
-        # ----------------------------
-        # ABSORPTION/GENERATION ZONES
-        if 'ChRigidBody' in shape.auxiliaryVariables.keys():
+            body.i_start = start_flag + 1
+            body.i_end = start_flag + 1 + len(shape.BC_list)
+        if 'ChRigidBody' in list(shape.auxiliaryVariables.keys()):
             body = shape.auxiliaryVariables['ChRigidBody']
             for boundcond in shape.BC_list:
                 boundcond.setChMoveMesh(body)
-            body.i_start = start_flag+1
-            body.i_end = start_flag+1+len(shape.BC_list)
+            if not body.boundaryFlags:
+                flags = []
+                for tag, flag in shape.boundaryTags.items():
+                    flags += [start_flag+flag]
+                body.setBoundaryFlags(flags)
+        if 'WallFunction' in list(shape.auxiliaryVariables.keys()):
+            wall = shape.auxiliaryVariables['WallFunction']
+            for ii in range(len(wall)):
+                aux['twp'] += [wall[ii]]
+                logEvent('WALL ATTACHED TO AUXVAR --> %s' % wall[ii])
+        if 'kWallFunction' in list(shape.auxiliaryVariables.keys()):
+            kWall = shape.auxiliaryVariables['kWallFunction']
+            for ii in range(len(kWall)):
+                aux['kappa'] += [kWall[ii]]
+                logEvent('kWALL ATTACHED TO AUXVAR --> %s' % kWall[ii])
+        # ----------------------------
+        # ABSORPTION/GENERATION ZONES
 
-        if 'RelaxZones' in shape.auxiliaryVariables.keys():
+        if 'RelaxZones' in list(shape.auxiliaryVariables.keys()):
             if not zones_global:
                 aux['twp'] += [bc.RelaxationZoneWaveGenerator(zones_global,
-                                                       domain.nd)]
+                                                              domain.nd)]
             if not hasattr(domain, 'porosityTypes'):
                 # create arrays of default values
-                domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
-                domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
-                domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
-                domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
-            i0 = start_region+1
-            for flag, zone in shape.zones.iteritems():
+                domain.porosityTypes = np.ones(len(domain.regionFlags) + 1)
+                domain.dragAlphaTypes = np.zeros(len(domain.regionFlags) + 1)
+                domain.dragBetaTypes = np.zeros(len(domain.regionFlags) + 1)
+                domain.epsFact_solid = np.zeros(len(domain.regionFlags) + 1)
+            i0 = start_region + 1
+            for flag, zone in list(shape.zones.items()):
                 ind = [i for i, f in enumerate(shape.regionFlags) if f == flag]
                 for i1 in ind:
-                    domain.porosityTypes[i0+i1] = zone.porosity
-                    domain.dragAlphaTypes[i0+i1] = zone.dragAlpha
-                    domain.dragBetaTypes[i0+i1] = zone.dragBeta
-                    domain.epsFact_solid[i0+i1] = zone.epsFact_solid
+                    domain.porosityTypes[i0 + i1] = zone.porosity
+                    domain.dragAlphaTypes[i0 + i1] = zone.dragAlpha
+                    domain.dragBetaTypes[i0 + i1] = zone.dragBeta
+                    domain.epsFact_solid[i0 + i1] = zone.epsFact_solid
                 # update dict with global key instead of local key
-                key = flag+start_rflag
+                key = flag + start_rflag
                 zones_global[key] = zone
         start_flag += len(shape.BC_list)
         # ----------------------------
         # GAUGES
-        gauge_dict = {key: shape.auxiliaryVariables.get(key,[])
-                      for key in shape.auxiliaryVariables.keys()
+        gauge_dict = {key: shape.auxiliaryVariables.get(key, [])
+                      for key in list(shape.auxiliaryVariables.keys())
                       if str(key).startswith('Gauge_')}
-        for key in gauge_dict.keys():
-            key_name = key.split('_', 1)[1] # Cutting off "Gauge_" prefix
+        for key in list(gauge_dict.keys()):
+            key_name = key.split('_', 1)[1]  # Cutting off "Gauge_" prefix
             if key_name not in aux:
                 # It is probably too dangerous to simply put "aux[key_name] = []"
                 # as this system is fragile to typos. Instead, we throw an error.
@@ -1991,14 +2150,14 @@ def assembleAuxiliaryVariables(domain):
                                  key_name,
                                  ' is not a recognized model by SpatialTools.',
                                  ' The known models in our dictionary are ',
-                                 str(aux.keys())
+                                 str(list(aux.keys()))
                                  )
             else:
                 aux[key_name] += gauge_dict[key]
         if shape.regions is not None:
             start_region += len(shape.regions)
-            start_rflag += max(domain.regionFlags[0:start_region])
+            start_rflag = max(domain.regionFlags[0:start_region])
 
 
 def get_unit_vector(vector):
-    return np.array(vector)/np.linalg.norm(vector)
+    return old_div(np.array(vector), np.linalg.norm(vector))

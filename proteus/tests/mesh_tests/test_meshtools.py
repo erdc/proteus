@@ -1,3 +1,10 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from proteus import Comm, Profiling
 from collections import namedtuple
 import numpy.testing as npt
@@ -5,6 +12,7 @@ import numpy as np
 from nose.tools import eq_, ok_
 import os
 import math
+import pytest
 import xml.etree.ElementTree as ElementTree
 from proteus.EGeometry import (EVec,
                                ETen)
@@ -45,7 +53,8 @@ Profiling.procID = comm.rank()
 
 GNUPLOT=False
 
-class TestMeshTools():
+@pytest.mark.MeshTools
+class TestMeshTools(object):
 
     @classmethod
     def setup_class(cls):
@@ -65,7 +74,7 @@ class TestMeshTools():
             if os.path.exists(f):
                 try:
                     os.remove(f)
-                except OSError, e:
+                except OSError as e:
                     print("Error: %s - %s." %(e.filename,e.strerror))
             else:
                     pass
@@ -130,7 +139,7 @@ class TestMeshTools():
                               Node(2,2.0,1.0,1.0)])
         edgesOrdered = [edge0, edge1]
         edgesDisordered = {edge1.nodes: edge1, edge0.nodes: edge0}
-        edgeKeys = edgesDisordered.keys()
+        edgeKeys = list(edgesDisordered.keys())
         edgeKeys.sort()
         for e1,e2_key in zip(edgesOrdered, edgeKeys):
             ok_(e1.nodes == edgesDisordered[e2_key].nodes)
@@ -174,7 +183,7 @@ class TestMeshTools():
         ok_(not t0.hasGeometricInfo)
         ok_(t0.nodes < t1.nodes)
         t0.computeGeometricInfo()
-        ok_((t0.barycenter == EVec(1.0/3.0,1.0/3.0,0.0)).all())
+        ok_((t0.barycenter == EVec(old_div(1.0,3.0),old_div(1.0,3.0),0.0)).all())
         #needs more
 
     def test_Quadrilateral(self):
@@ -214,7 +223,7 @@ class TestMeshTools():
         ok_(not T0.nodes > T1.nodes)
         ok_(not T0.hasGeometricInfo)
         T0.computeGeometricInfo()
-        ok_(T0.volume == 1.0/6.0)
+        ok_(T0.volume == old_div(1.0,6.0))
         triangleDict={}
         for t in T0.triangles:
             triangleDict[t.nodes] = t
@@ -492,7 +501,7 @@ class TestMeshTools():
         children = grid1dFine.refine(grid1d,2)
         parent=0
         child=0
-        for pN,cL in children.iteritems():
+        for pN,cL in children.items():
             ok_(parent == pN)
             for c in cL:
                 ok_(child == c.N)
@@ -511,7 +520,7 @@ class TestMeshTools():
                          [8, 12, 9, 13],
                          [10, 14, 11, 15]]
         parent = 0
-        for pN,cL in children.iteritems():
+        for pN,cL in children.items():
             ok_(parent == pN)
             for ci,c in enumerate(cL):
                 ok_(childElements[pN][ci] == c.N)
@@ -530,7 +539,7 @@ class TestMeshTools():
                          [40,56,44,60,41,57,45,61],
                          [42,58,46,62,43,59,47,63]]
         parent = 0
-        for pN,cL in children.iteritems():
+        for pN,cL in children.items():
             ok_(parent == pN)
             for ci,c in enumerate(cL):
                 ok_(childElements[pN][ci] == c.N)

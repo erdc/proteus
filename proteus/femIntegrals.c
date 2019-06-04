@@ -10,7 +10,7 @@
 /**
    \file femIntegrals.h
    \ingroup femIntegrals
-   
+
    \brief A library of functions for computing the discrete finite element
    formulations.
 
@@ -42,14 +42,14 @@ void copyLeftElementBoundaryInfo(int nElementBoundaries_element,
           {
             xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
                k*3+
-               I] = 
+               I] =
               x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 k*3+
                 I];
             ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                k*nSpace_global+
-               I] = 
+               I] =
               n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                 k*nSpace_global+
@@ -68,14 +68,14 @@ void copyLeftElementBoundaryInfo(int nElementBoundaries_element,
           {
             xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
                k*3+
-               I] = 
+               I] =
               x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 k*3+
                 I];
             ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                k*nSpace_global+
-               I] = 
+               I] =
               n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                 k*nSpace_global+
@@ -83,7 +83,7 @@ void copyLeftElementBoundaryInfo(int nElementBoundaries_element,
             x[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
               right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
               k*3+
-              I]= 
+              I]=
               x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 k*3+
@@ -91,7 +91,7 @@ void copyLeftElementBoundaryInfo(int nElementBoundaries_element,
             n[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
               right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
               k*nSpace_global+
-              I]= 
+              I]=
               -n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                  left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                  k*nSpace_global+
@@ -124,48 +124,48 @@ void copyGlobalElementBoundaryInfo(int nElementBoundaries_element,
       left_eN_global   = elementBoundaryElementsArray[ebN*2+0];
       left_ebN_element  = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
       for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
-	{
-	  dot=0.0;
-	  for (J=0;J<nSpace_global;J++)
-	    dot+= ebqe_n[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-			 k*nSpace_global+
-			 J]*
-	      ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-		 k*nSpace_global+
-		 J];
-	  if(dot < 0.0)
-	    sign=-1.0;
-	  else
-	    sign=1.0;	    
-	
+        {
+          dot=0.0;
+          for (J=0;J<nSpace_global;J++)
+            dot+= ebqe_n[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+                         k*nSpace_global+
+                         J]*
+              ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+                 k*nSpace_global+
+                 J];
+          if(dot < 0.0)
+            sign=-1.0;
+          else
+            sign=1.0;
+
         for (I=0;I<nSpace_global;I++)
           {
-	    x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
-	      left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
-	      k*3+
-	      I] = xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
-		      k*3+
-		      I];
-	    n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-	      left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-	      k*nSpace_global+
-	      I] =
-	      ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-		 k*nSpace_global+
-		 I];
-	    ebqe_x[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*3+
-		      k*3+
-		      I] = xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
-		      k*3+
-		      I];
-	    ebqe_n[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-		   k*nSpace_global+
-		   I]=
-	      sign*ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-		      k*nSpace_global+
-		      I];
+            x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
+              left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
+              k*3+
+              I] = xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
+                      k*3+
+                      I];
+            n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+              left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+              k*nSpace_global+
+              I] =
+              ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+                 k*nSpace_global+
+                 I];
+            ebqe_x[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*3+
+                      k*3+
+                      I] = xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
+                      k*3+
+                      I];
+            ebqe_n[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+                   k*nSpace_global+
+                   I]=
+              sign*ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+                      k*nSpace_global+
+                      I];
           }
-	}
+        }
     }
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
     {
@@ -177,43 +177,43 @@ void copyGlobalElementBoundaryInfo(int nElementBoundaries_element,
       for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
         for (I=0;I<nSpace_global;I++)
           {
-	    x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
-	      left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
-	      k*3+
-	      I] = xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
-		      k*3+
-		      I];
-	    n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-	      left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-	      k*nSpace_global+
-	      I] = ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-		      k*nSpace_global+
-		      I];
-	    x[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
-	      right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
-	      k*3+
-	      I] = xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
-		      k*3+
-		      I];
-	    n[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-	      right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-	      k*nSpace_global+
-	      I] = -ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
-		       k*nSpace_global+
-		       I];
+            x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
+              left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
+              k*3+
+              I] = xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
+                      k*3+
+                      I];
+            n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+              left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+              k*nSpace_global+
+              I] = ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+                      k*nSpace_global+
+                      I];
+            x[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
+              right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
+              k*3+
+              I] = xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
+                      k*3+
+                      I];
+            n[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+              right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+              k*nSpace_global+
+              I] = -ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
+                       k*nSpace_global+
+                       I];
           }
     }
 }
 
 void copyLeftElementBoundaryInfo_movingDomain(int nElementBoundaries_element,
-					      int nElementBoundaryQuadraturePoints_elementBoundary,
-					      int nExteriorElementBoundaries_global,
-					      int nInteriorElementBoundaries_global,
-					      int* elementBoundaryElementsArray,
-					      int* elementBoundaryLocalElementBoundariesArray,
-					      int* exteriorElementBoundariesArray,
-					      int* interiorElementBoundariesArray,
-					      double* xt)
+                                              int nElementBoundaryQuadraturePoints_elementBoundary,
+                                              int nExteriorElementBoundaries_global,
+                                              int nInteriorElementBoundaries_global,
+                                              int* elementBoundaryElementsArray,
+                                              int* elementBoundaryLocalElementBoundariesArray,
+                                              int* exteriorElementBoundariesArray,
+                                              int* interiorElementBoundariesArray,
+                                              double* xt)
 {
   int ebNI,ebN,k,left_eN_global,left_ebN_element,right_eN_global,right_ebN_element,I;
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -229,7 +229,7 @@ void copyLeftElementBoundaryInfo_movingDomain(int nElementBoundaries_element,
             xt[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
               right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
               k*3+
-              I]= 
+              I]=
               xt[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 k*3+
@@ -281,14 +281,14 @@ void parametricFiniteElementSpace_getValuesTrace(int nElements_global,
 }
 
 void parametricFiniteElementSpace_getValuesGlobalExteriorTrace(int nElementBoundaries_element,
-							       int nElementBoundaryQuadraturePoints_elementBoundary,
-							       int nDOF_element,
-							       int nExteriorElementBoundaries_global,
-							       const int* exteriorElementBoundariesArray,
-							       const int* elementBoundaryElementsArray,
-							       const int* elementBoundaryLocalElementBoundariesArray,
-							       double* psi,
-							       double* vArray)
+                                                               int nElementBoundaryQuadraturePoints_elementBoundary,
+                                                               int nDOF_element,
+                                                               int nExteriorElementBoundaries_global,
+                                                               const int* exteriorElementBoundariesArray,
+                                                               const int* elementBoundaryElementsArray,
+                                                               const int* elementBoundaryLocalElementBoundariesArray,
+                                                               double* psi,
+                                                               double* vArray)
 {
   int eN,ebN,ebNE,ebN_local,k,j;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
@@ -302,9 +302,9 @@ void parametricFiniteElementSpace_getValuesGlobalExteriorTrace(int nElementBound
                  k*nDOF_element+
                  j]
             =
-            psi[ebN_local*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element + 
-		k*nDOF_element + 
-		j];
+            psi[ebN_local*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element +
+                k*nDOF_element +
+                j];
     }
 }
 
@@ -338,41 +338,41 @@ void parametricFiniteElementSpace_getGradientValues(int nElements_global,
 }
 
 void parametricFiniteElementSpace_getHessianValues(int nElements_global,
-						   int nQuadraturePoints_element,
-						   int nDOF_element,
-						   int nSpace_global,
-						   double* Hessian_psi,
-						   double* inverseJacobianArray,
-						   double* Hessian_vArray)
+                                                   int nQuadraturePoints_element,
+                                                   int nDOF_element,
+                                                   int nSpace_global,
+                                                   double* Hessian_psi,
+                                                   double* inverseJacobianArray,
+                                                   double* Hessian_vArray)
 {
   int eN,k,j,I,J,K,L,nSpace_global2 = nSpace_global*nSpace_global;
   for(eN=0;eN<nElements_global;eN++)
     for(k=0;k<nQuadraturePoints_element;k++)
       for(j=0;j<nDOF_element;j++)
-	for (I=0;I<nSpace_global;I++)
-	  for (J=0;J<nSpace_global;J++)
-	    for (K=0;K<nSpace_global;K++)
-	      for (L=0;L<nSpace_global;L++)
-		Hessian_vArray[eN*nQuadraturePoints_element*nDOF_element*nSpace_global2+
-			       k*nDOF_element*nSpace_global2+
-			       j*nSpace_global2+
-			       I*nSpace_global+
-			       J]
-		  +=
-		  Hessian_psi[k*nDOF_element*nSpace_global2+
-			      j*nSpace_global2+
-			      K*nSpace_global+
-			      L]
-		  *
-		  inverseJacobianArray[eN*nQuadraturePoints_element*nSpace_global2+
-				       k*nSpace_global2+
-				       L*nSpace_global+
-				       J]
-		  *
-		  inverseJacobianArray[eN*nQuadraturePoints_element*nSpace_global2+
-				       k*nSpace_global2+
-				       K*nSpace_global+
-				       I];
+        for (I=0;I<nSpace_global;I++)
+          for (J=0;J<nSpace_global;J++)
+            for (K=0;K<nSpace_global;K++)
+              for (L=0;L<nSpace_global;L++)
+                Hessian_vArray[eN*nQuadraturePoints_element*nDOF_element*nSpace_global2+
+                               k*nDOF_element*nSpace_global2+
+                               j*nSpace_global2+
+                               I*nSpace_global+
+                               J]
+                  +=
+                  Hessian_psi[k*nDOF_element*nSpace_global2+
+                              j*nSpace_global2+
+                              K*nSpace_global+
+                              L]
+                  *
+                  inverseJacobianArray[eN*nQuadraturePoints_element*nSpace_global2+
+                                       k*nSpace_global2+
+                                       L*nSpace_global+
+                                       J]
+                  *
+                  inverseJacobianArray[eN*nQuadraturePoints_element*nSpace_global2+
+                                       k*nSpace_global2+
+                                       K*nSpace_global+
+                                       I];
 }
 
 void parametricFiniteElementSpace_getGradientValuesTrace(int nElements_global,
@@ -412,16 +412,16 @@ void parametricFiniteElementSpace_getGradientValuesTrace(int nElements_global,
 }
 
 void parametricFiniteElementSpace_getGradientValuesGlobalExteriorTrace(int nElementBoundaries_element,
-								       int nElementBoundaryQuadraturePoints_elementBoundary,
-								       int nDOF_element,
-								       int nSpace_global,
-								       int nExteriorElementBoundaries_global,
-								       const int *exteriorElementBoundariesArray,
-								       const int *elementBoundaryElementsArray,
-								       const int *elementBoundaryLocalElementBoundariesArray,
-								       double* grad_psi,
-								       double* inverseJacobianArray,
-								       double* grad_vArray)
+                                                                       int nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                       int nDOF_element,
+                                                                       int nSpace_global,
+                                                                       int nExteriorElementBoundaries_global,
+                                                                       const int *exteriorElementBoundariesArray,
+                                                                       const int *elementBoundaryElementsArray,
+                                                                       const int *elementBoundaryLocalElementBoundariesArray,
+                                                                       double* grad_psi,
+                                                                       double* inverseJacobianArray,
+                                                                       double* grad_vArray)
 {
   int ebN,ebNE,ebN_local,eN,k,j,I,J,nSpace_global2 = nSpace_global*nSpace_global;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
@@ -430,23 +430,23 @@ void parametricFiniteElementSpace_getGradientValuesGlobalExteriorTrace(int nElem
       eN  = elementBoundaryElementsArray[ebN*2+0];
       ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
       for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
-	for(j=0;j<nDOF_element;j++)
-	  for (I=0;I<nSpace_global;I++)
-	    for (J=0;J<nSpace_global;J++)
-	      grad_vArray[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element*nSpace_global+
-			  k*nDOF_element*nSpace_global+
-			  j*nSpace_global+
-			  I]
-		+=
-		grad_psi[ebN_local*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element*nSpace_global+
-			 k*nDOF_element*nSpace_global+
-			 j*nSpace_global+
-			 J]
-		*
-		inverseJacobianArray[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global2+
-				     k*nSpace_global2+
-				     J*nSpace_global+
-				     I];
+        for(j=0;j<nDOF_element;j++)
+          for (I=0;I<nSpace_global;I++)
+            for (J=0;J<nSpace_global;J++)
+              grad_vArray[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element*nSpace_global+
+                          k*nDOF_element*nSpace_global+
+                          j*nSpace_global+
+                          I]
+                +=
+                grad_psi[ebN_local*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element*nSpace_global+
+                         k*nDOF_element*nSpace_global+
+                         j*nSpace_global+
+                         J]
+                *
+                inverseJacobianArray[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global2+
+                                     k*nSpace_global2+
+                                     J*nSpace_global+
+                                     I];
     }
 }
 
@@ -494,13 +494,13 @@ void parametricMaps_getPermutations(int nElements_global,
     }
 }
 void parametricMaps_getPermutationsGlobalExterior(int nElementBoundaryQuadraturePoints_elementBoundary,
-						  int nSpace_global,
-						  int nExteriorElementBoundaries_global,
-						  const int * exteriorElementBoundariesArray,
-						  const int * elementBoundaryElementsArray,
-						  const int * elementBoundaryLocalElementBoundariesArray,
-						  double* xiArray,
-						  int* permutations)
+                                                  int nSpace_global,
+                                                  int nExteriorElementBoundaries_global,
+                                                  const int * exteriorElementBoundariesArray,
+                                                  const int * elementBoundaryElementsArray,
+                                                  const int * elementBoundaryLocalElementBoundariesArray,
+                                                  double* xiArray,
+                                                  int* permutations)
 {
   const int kTot=nElementBoundaryQuadraturePoints_elementBoundary;
   int eN,ebN,ebNE,ebN_local,k,k0,I;
@@ -515,18 +515,18 @@ void parametricMaps_getPermutationsGlobalExterior(int nElementBoundaryQuadrature
       eN  = elementBoundaryElementsArray[ebN*2+0];
       ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
       for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
-	{
-	  errorNormMin=1.0;
-	  for (k0=0;k0<kTot;k0++)
-	    {
-	      errorNorm=0.0;
-	      for (I=0;I<nSpace_global;I++)
-		{
-		  errorNorm += fabs(xiArray[k0*3+I]
-				    -
-				    xiArray[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*3+
-					    k*3+
-					    I]);
+        {
+          errorNormMin=1.0;
+          for (k0=0;k0<kTot;k0++)
+            {
+              errorNorm=0.0;
+              for (I=0;I<nSpace_global;I++)
+                {
+                  errorNorm += fabs(xiArray[k0*3+I]
+                                    -
+                                    xiArray[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*3+
+                                            k*3+
+                                            I]);
                   }
                 if (errorNorm < errorNormMin)
                   {
@@ -534,16 +534,16 @@ void parametricMaps_getPermutationsGlobalExterior(int nElementBoundaryQuadrature
                                  k] = k0;
                     errorNormMin = errorNorm;
                   }
-	    }
-	}
+            }
+        }
     }
 }
 
 void getPermutationsGlobal(int nElementBoundaries_global,
-			   int nElementBoundaryQuadraturePoints_elementBoundary,
-			   double* xArray,
-			   double* xArrayNew,
-			   int* permutations)
+                           int nElementBoundaryQuadraturePoints_elementBoundary,
+                           double* xArray,
+                           double* xArrayNew,
+                           int* permutations)
 {
   int ebN,k,k0,I;
   register double errorNorm,errorNormMin;
@@ -551,29 +551,29 @@ void getPermutationsGlobal(int nElementBoundaries_global,
   for (ebN=0;ebN<nElementBoundaries_global;ebN++)
     {
       for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
-	{
-	  errorNormMin=1.0;
-	  for (k0=0;k0<nElementBoundaryQuadraturePoints_elementBoundary;k0++)
-	    {
-	      errorNorm=0.0;
-	      for (I=0;I<3;I++)
-		{
-		  errorNorm += fabs(xArrayNew[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
-					      k0*3+
-					      I]
-				    -
-				    xArray[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
-					   k*3+
-					   I]);
-		}
-	      if (errorNorm < errorNormMin)
-		{
-		  permutations[ebN*nElementBoundaryQuadraturePoints_elementBoundary+
-			       k] = k0;
-		  errorNormMin = errorNorm;
-		}
-	    }
-	}
+        {
+          errorNormMin=1.0;
+          for (k0=0;k0<nElementBoundaryQuadraturePoints_elementBoundary;k0++)
+            {
+              errorNorm=0.0;
+              for (I=0;I<3;I++)
+                {
+                  errorNorm += fabs(xArrayNew[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
+                                              k0*3+
+                                              I]
+                                    -
+                                    xArray[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
+                                           k*3+
+                                           I]);
+                }
+              if (errorNorm < errorNormMin)
+                {
+                  permutations[ebN*nElementBoundaryQuadraturePoints_elementBoundary+
+                               k] = k0;
+                  errorNormMin = errorNorm;
+                }
+            }
+        }
     }
 }
 
@@ -642,16 +642,16 @@ void parametricMaps_getValuesTrace(int nElements_global,
 }
 
 void parametricMaps_getValuesGlobalExteriorTrace(int nQuadraturePoints_elementBoundary,
-						 int nDOF_element,
-						 int nSpace_global,
-						 int nExteriorElementBoundaries_global,
-						 const int* exteriorElementBoundariesArray,
-						 const int* elementBoundaryElementsArray,
-						 const int* elementBoundaryLocalElementBoundariesArray,
-						 double* psi,
-						 int* l2g,
-						 double* nodeArray,
-						 double* xArray)
+                                                 int nDOF_element,
+                                                 int nSpace_global,
+                                                 int nExteriorElementBoundaries_global,
+                                                 const int* exteriorElementBoundariesArray,
+                                                 const int* elementBoundaryElementsArray,
+                                                 const int* elementBoundaryLocalElementBoundariesArray,
+                                                 double* psi,
+                                                 int* l2g,
+                                                 double* nodeArray,
+                                                 double* xArray)
 {
   memset(xArray,0,sizeof(double)*nExteriorElementBoundaries_global*nQuadraturePoints_elementBoundary*3);
   int eN,ebN,ebNE,ebN_local,k,j,j_global,I;
@@ -698,11 +698,11 @@ void parametricMaps_getInverseValues(int nElements_global,
       {
         node0 = l2g[eN*nDOF_element];
         for(I=0;I<nSpace_global;I++)
-          dx[I] = 
+          dx[I] =
             xArray[eN*nQuadraturePoints_element*3+
                    k*3+
                    I]
-            - 
+            -
             nodeArray[node0*3+I];
         for(I=0;I<nSpace_global;I++)
           for(J=0;J<nSpace_global;J++)
@@ -739,12 +739,12 @@ void parametricMaps_getInverseValuesTrace(int nElements_global,
         {
           node0 = l2g[eN*nDOF_element];
           for(I=0;I<nSpace_global;I++)
-            dx[I] = 
+            dx[I] =
               xArray[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                      ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
                      k*3+
-                     I] 
-              - 
+                     I]
+              -
               nodeArray[node0*3+I];
           for(I=0;I<nSpace_global;I++)
             for(J=0;J<nSpace_global;J++)
@@ -764,17 +764,17 @@ void parametricMaps_getInverseValuesTrace(int nElements_global,
 }
 
 void parametricMaps_getInverseValuesGlobalExteriorTrace(int nElementBoundaryQuadraturePoints_elementBoundary,
-							int nDOF_element,
-							int nSpace_global,
-							int nExteriorElementBoundaries_global,
-							const int* exteriorElementBoundariesArray,
-							const int* elementBoundaryElementsArray,
-							const int* elementBoundaryLocalElementBoundariesArray,
-							double* inverseJacobian,
-							int* l2g,
-							double* nodeArray,
-							double* xArray,
-							double* xiArray)
+                                                        int nDOF_element,
+                                                        int nSpace_global,
+                                                        int nExteriorElementBoundaries_global,
+                                                        const int* exteriorElementBoundariesArray,
+                                                        const int* elementBoundaryElementsArray,
+                                                        const int* elementBoundaryLocalElementBoundariesArray,
+                                                        double* inverseJacobian,
+                                                        int* l2g,
+                                                        double* nodeArray,
+                                                        double* xArray,
+                                                        double* xiArray)
 {
   memset(xiArray,0,sizeof(double)*nExteriorElementBoundaries_global*nElementBoundaryQuadraturePoints_elementBoundary*3);
   int eN,ebN,ebNE,ebN_local,k,node0,I,J,nSpace_global2=nSpace_global*nSpace_global;
@@ -789,11 +789,11 @@ void parametricMaps_getInverseValuesGlobalExteriorTrace(int nElementBoundaryQuad
         {
           node0 = l2g[eN*nDOF_element];
           for(I=0;I<nSpace_global;I++)
-            dx[I] = 
+            dx[I] =
               xArray[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*3+
                      k*3+
-                     I] 
-              - 
+                     I]
+              -
               nodeArray[node0*3+I];
           for(I=0;I<nSpace_global;I++)
             for(J=0;J<nSpace_global;J++)
@@ -831,7 +831,7 @@ void parametricMaps_getJacobianValues3D(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for(k=0;k<nQuadraturePoints_element;k++)
       {
-        jac = jacobianArray + 
+        jac = jacobianArray +
           eN*nQuadraturePoints_element*9+
           k*9;
         jacDet = jacobianDeterminantArray +
@@ -857,7 +857,7 @@ void parametricMaps_getJacobianValues3D(int nElements_global,
             jac[ZZ] += node[Z]*grad[Z];
           }
         *jacDet
-          = 
+          =
           jac[XX]*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]) -
           jac[XY]*(jac[YX]*jac[ZZ] - jac[YZ]*jac[ZX]) +
           jac[XZ]*(jac[YX]*jac[ZY] - jac[YY]*jac[ZX]);
@@ -893,7 +893,7 @@ void parametricMaps_getJacobianValues2D(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for(k=0;k<nQuadraturePoints_element;k++)
       {
-        jac = jacobianArray + 
+        jac = jacobianArray +
           eN*nQuadraturePoints_element*4+
           k*4;
         jacDet = jacobianDeterminantArray +
@@ -915,7 +915,7 @@ void parametricMaps_getJacobianValues2D(int nElements_global,
             jac[YY] += node[Y]*grad[Y];
           }
         *jacDet
-          = 
+          =
           jac[XX]*jac[YY]- jac[XY]*jac[YX];
         oneOverJacDet = 1.0/(*jacDet);
         jacInv[XX] = oneOverJacDet*jac[YY];
@@ -943,7 +943,7 @@ void parametricMaps_getJacobianValues1D(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for(k=0;k<nQuadraturePoints_element;k++)
       {
-        jac = jacobianArray + 
+        jac = jacobianArray +
           eN*nQuadraturePoints_element+
           k;
         jacDet = jacobianDeterminantArray +
@@ -962,7 +962,7 @@ void parametricMaps_getJacobianValues1D(int nElements_global,
             jac[XX] += node[X]*grad[X];
           }
         *jacDet
-          = 
+          =
           jac[XX];
         oneOverJacDet = 1.0/(*jacDet);
         jacInv[XX] = oneOverJacDet;
@@ -984,7 +984,7 @@ void parametricMaps_getJacobianValuesTrace3D(int nElements_global,
                                              double* unitNormalArray)
 {
   int eN,ebN,k,j,j_global;
-  const int 
+  const int
     X=0,Y=1,Z=2,
     XX=0,XY=1,XZ=2,
     YX=3,YY=4,YZ=5,
@@ -1082,13 +1082,13 @@ void parametricMaps_getJacobianValuesTrace3D(int nElements_global,
           n[X] = (jacInv[XX]*bn[X]+jacInv[YX]*bn[Y]+jacInv[ZX]*bn[Z]);
           n[Y] = (jacInv[XY]*bn[X]+jacInv[YY]*bn[Y]+jacInv[ZY]*bn[Z]);
           n[Z] = (jacInv[XZ]*bn[X]+jacInv[YZ]*bn[Y]+jacInv[ZZ]*bn[Z]);
-          
+
           oneOverNbn = 1.0/sqrt(n[X]*n[X]+n[Y]*n[Y]+n[Z]*n[Z]);
-          
+
           n[X] *= oneOverNbn;
           n[Y] *= oneOverNbn;
           n[Z] *= oneOverNbn;
-          
+
         }
 }
 
@@ -1171,19 +1171,19 @@ void parametricMaps_getJacobianValuesTrace2D(int nElements_global,
 }
 
 void parametricMaps_getJacobianValuesTrace2D_movingDomain(int nElements_global,
-							  int nElementBoundaries_element,
-							  int nQuadraturePoints_element,
-							  int nDOF_element,
-							  double* xtArray,
-							  double* grad_psi,
-							  double* boundaryNormals,
-							  double* boundaryJacobians,
-							  int* l2g,
-							  double* nodeArray,
-							  double* jacobianInverseArray,
-							  double* metricTensorArray,
-							  double* metricTensorDeterminantSqrtArray,
-							  double* unitNormalArray)
+                                                          int nElementBoundaries_element,
+                                                          int nQuadraturePoints_element,
+                                                          int nDOF_element,
+                                                          double* xtArray,
+                                                          double* grad_psi,
+                                                          double* boundaryNormals,
+                                                          double* boundaryJacobians,
+                                                          int* l2g,
+                                                          double* nodeArray,
+                                                          double* jacobianInverseArray,
+                                                          double* metricTensorArray,
+                                                          double* metricTensorDeterminantSqrtArray,
+                                                          double* unitNormalArray)
 {
   int eN,ebN,k,j,j_global;
   const int X=0,Y=1,
@@ -1218,7 +1218,7 @@ void parametricMaps_getJacobianValuesTrace2D_movingDomain(int nElements_global,
             eN*nElementBoundaries_element*nQuadraturePoints_element*2+
             ebN*nQuadraturePoints_element*2+
             k*2;
-	  xt = xtArray + eN*nElementBoundaries_element*nQuadraturePoints_element*3+
+          xt = xtArray + eN*nElementBoundaries_element*nQuadraturePoints_element*3+
             ebN*nQuadraturePoints_element*3+
             k*3;
           bn = boundaryNormals + ebN*2;
@@ -1248,12 +1248,12 @@ void parametricMaps_getJacobianValuesTrace2D_movingDomain(int nElements_global,
           oneOverNbn= 1.0/sqrt(n[X]*n[X]+n[Y]*n[Y]);
           n[X] *= oneOverNbn;
           n[Y] *= oneOverNbn;
-	  xt_dot_xt = xt[X]*xt[X]+xt[Y]*xt[Y];
-	  xt_dot_bj = xt[X]*ebmj[X]+xt[Y]*ebmj[Y];
-	  xt_dot_n  = xt[X]*n[X]+xt[Y]*n[Y];
-	  //printf("%12.5e %12.5e %12.5e\n",xt_dot_xt,xt_dot_bj,xt_dot_n);
-	  //printf("%12.5e \n",((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));
-          *mtDetSqrt=sqrt(((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));// sqrt(det(G^t G))/sqrt(1 + (xt^t n)^2) 
+          xt_dot_xt = xt[X]*xt[X]+xt[Y]*xt[Y];
+          xt_dot_bj = xt[X]*ebmj[X]+xt[Y]*ebmj[Y];
+          xt_dot_n  = xt[X]*n[X]+xt[Y]*n[Y];
+          //printf("%12.5e %12.5e %12.5e\n",xt_dot_xt,xt_dot_bj,xt_dot_n);
+          //printf("%12.5e \n",((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));
+          *mtDetSqrt=sqrt(((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));// sqrt(det(G^t G))/sqrt(1 + (xt^t n)^2)
         }
 }
 
@@ -1315,20 +1315,20 @@ void parametricMaps_getJacobianValuesTrace1D(int nElements_global,
 }
 
 void parametricMaps_getJacobianValuesGlobalExteriorTrace1D(int nQuadraturePoints_element,
-							   int nDOF_element,
-							   int nExteriorElementBoundaries_global,
-							   const int * exteriorElementBoundariesArray,
-							   const int * elementBoundaryElementsArray,
-							   const int * elementBoundaryLocalElementBoundariesArray,
-							   double* grad_psi,
-							   double* boundaryNormals,
-							   double* boundaryJacobians,
-							   int* l2g,
-							   double* nodeArray,
-							   double* jacobianInverseArray,
-							   double* metricTensorArray,
-							   double* metricTensorDeterminantSqrtArray,
-							   double* unitNormalArray)
+                                                           int nDOF_element,
+                                                           int nExteriorElementBoundaries_global,
+                                                           const int * exteriorElementBoundariesArray,
+                                                           const int * elementBoundaryElementsArray,
+                                                           const int * elementBoundaryLocalElementBoundariesArray,
+                                                           double* grad_psi,
+                                                           double* boundaryNormals,
+                                                           double* boundaryJacobians,
+                                                           int* l2g,
+                                                           double* nodeArray,
+                                                           double* jacobianInverseArray,
+                                                           double* metricTensorArray,
+                                                           double* metricTensorDeterminantSqrtArray,
+                                                           double* unitNormalArray)
 {
   int eN,ebN,ebNE,ebN_local,k,j,j_global;
   const int X=0,
@@ -1373,20 +1373,20 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace1D(int nQuadraturePoints
     }
 }
 void parametricMaps_getJacobianValuesGlobalExteriorTrace2D(int nQuadraturePoints_element,
-							   int nDOF_element,
-							   int nExteriorElementBoundaries_global,
-							   const int * exteriorElementBoundariesArray,
-							   const int * elementBoundaryElementsArray,
-							   const int * elementBoundaryLocalElementBoundariesArray,
-							   double* grad_psi,
-							   double* boundaryNormals,
-							   double* boundaryJacobians,
-							   int* l2g,
-							   double* nodeArray,
-							   double* jacobianInverseArray,
-							   double* metricTensorArray,
-							   double* metricTensorDeterminantSqrtArray,
-							   double* unitNormalArray)
+                                                           int nDOF_element,
+                                                           int nExteriorElementBoundaries_global,
+                                                           const int * exteriorElementBoundariesArray,
+                                                           const int * elementBoundaryElementsArray,
+                                                           const int * elementBoundaryLocalElementBoundariesArray,
+                                                           double* grad_psi,
+                                                           double* boundaryNormals,
+                                                           double* boundaryJacobians,
+                                                           int* l2g,
+                                                           double* nodeArray,
+                                                           double* jacobianInverseArray,
+                                                           double* metricTensorArray,
+                                                           double* metricTensorDeterminantSqrtArray,
+                                                           double* unitNormalArray)
 {
   int eN,ebN,ebNE,ebN_local,k,j,j_global;
   const int X=0,Y=1,
@@ -1453,21 +1453,21 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace2D(int nQuadraturePoints
 }
 
 void parametricMaps_getJacobianValuesGlobalExteriorTrace2D_movingDomain(int nQuadraturePoints_element,
-									int nDOF_element,
-									int nExteriorElementBoundaries_global,
-									const int * exteriorElementBoundariesArray,
-									const int * elementBoundaryElementsArray,
-									const int * elementBoundaryLocalElementBoundariesArray,
-									double* xtArray,
-									double* grad_psi,
-									double* boundaryNormals,
-									double* boundaryJacobians,
-									int* l2g,
-									double* nodeArray,
-									double* jacobianInverseArray,
-									double* metricTensorArray,
-									double* metricTensorDeterminantSqrtArray,
-									double* unitNormalArray)
+                                                                        int nDOF_element,
+                                                                        int nExteriorElementBoundaries_global,
+                                                                        const int * exteriorElementBoundariesArray,
+                                                                        const int * elementBoundaryElementsArray,
+                                                                        const int * elementBoundaryLocalElementBoundariesArray,
+                                                                        double* xtArray,
+                                                                        double* grad_psi,
+                                                                        double* boundaryNormals,
+                                                                        double* boundaryJacobians,
+                                                                        int* l2g,
+                                                                        double* nodeArray,
+                                                                        double* jacobianInverseArray,
+                                                                        double* metricTensorArray,
+                                                                        double* metricTensorDeterminantSqrtArray,
+                                                                        double* unitNormalArray)
 {
   int eN,ebN,ebNE,ebN_local,k,j,j_global;
   const int X=0,Y=1,
@@ -1531,32 +1531,32 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace2D_movingDomain(int nQua
           oneOverNbn= 1.0/sqrt(n[X]*n[X]+n[Y]*n[Y]);
           n[X] *= oneOverNbn;
           n[Y] *= oneOverNbn;
-	  xt_dot_xt = xt[X]*xt[X]+xt[Y]*xt[Y];
-	  xt_dot_bj = xt[X]*ebmj[X]+xt[Y]*ebmj[Y];
-	  xt_dot_n  = xt[X]*n[X]+xt[Y]*n[Y];
-	  //printf("%12.5e %12.5e %12.5e\n",xt_dot_xt,xt_dot_bj,xt_dot_n);
-          *mtDetSqrt=sqrt(((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));// sqrt(det(G^t G))/sqrt(1 + (xt^t n)^2) 
+          xt_dot_xt = xt[X]*xt[X]+xt[Y]*xt[Y];
+          xt_dot_bj = xt[X]*ebmj[X]+xt[Y]*ebmj[Y];
+          xt_dot_n  = xt[X]*n[X]+xt[Y]*n[Y];
+          //printf("%12.5e %12.5e %12.5e\n",xt_dot_xt,xt_dot_bj,xt_dot_n);
+          *mtDetSqrt=sqrt(((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));// sqrt(det(G^t G))/sqrt(1 + (xt^t n)^2)
         }
     }
 }
 void parametricMaps_getJacobianValuesGlobalExteriorTrace3D(int nQuadraturePoints_element,
-							   int nDOF_element,
-							   int nExteriorElementBoundaries_global,
-							   const int * exteriorElementBoundariesArray,
-							   const int * elementBoundaryElementsArray,
-							   const int * elementBoundaryLocalElementBoundariesArray,
-							   double* grad_psi,
-							   double* boundaryNormals,
-							   double* boundaryJacobians,
-							   int* l2g,
-							   double* nodeArray,
-							   double* jacobianInverseArray,
-							   double* metricTensorArray,
-							   double* metricTensorDeterminantSqrtArray,
-							   double* unitNormalArray)
+                                                           int nDOF_element,
+                                                           int nExteriorElementBoundaries_global,
+                                                           const int * exteriorElementBoundariesArray,
+                                                           const int * elementBoundaryElementsArray,
+                                                           const int * elementBoundaryLocalElementBoundariesArray,
+                                                           double* grad_psi,
+                                                           double* boundaryNormals,
+                                                           double* boundaryJacobians,
+                                                           int* l2g,
+                                                           double* nodeArray,
+                                                           double* jacobianInverseArray,
+                                                           double* metricTensorArray,
+                                                           double* metricTensorDeterminantSqrtArray,
+                                                           double* unitNormalArray)
 {
   int eN,ebN,ebNE,ebN_local,k,j,j_global;
-  const int 
+  const int
     X=0,Y=1,Z=2,
     XX=0,XY=1,XZ=2,
     YX=3,YY=4,YZ=5,
@@ -1653,13 +1653,13 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace3D(int nQuadraturePoints
           n[X] = (jacInv[XX]*bn[X]+jacInv[YX]*bn[Y]+jacInv[ZX]*bn[Z]);
           n[Y] = (jacInv[XY]*bn[X]+jacInv[YY]*bn[Y]+jacInv[ZY]*bn[Z]);
           n[Z] = (jacInv[XZ]*bn[X]+jacInv[YZ]*bn[Y]+jacInv[ZZ]*bn[Z]);
-          
+
           oneOverNbn = 1.0/sqrt(n[X]*n[X]+n[Y]*n[Y]+n[Z]*n[Z]);
-          
+
           n[X] *= oneOverNbn;
           n[Y] *= oneOverNbn;
           n[Z] *= oneOverNbn;
-          
+
         }
     }
 }
@@ -1685,7 +1685,7 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace3D(int nQuadraturePoints
    @param weak_residual (nElements_global x nDOF_test_element). The element
    weak_residual, which is updated upon return.
 
-   The result of calling this function is 
+   The result of calling this function is
 
    \f[ residual_{e,i} \mapsto residual_{e,i} + \int_{\Omega_e} \rho
    w_i dV \quad \forall e,i \f]
@@ -1706,15 +1706,15 @@ void updateMass_weak(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-        weak_residual[eN*nDOF_test_element + 
-                 i] 
-          += 
-          mt[eN*nQuadraturePoints_element + 
+        weak_residual[eN*nDOF_test_element +
+                 i]
+          +=
+          mt[eN*nQuadraturePoints_element +
             k]
           *
-          w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-	       k*nDOF_test_element + 
-	       i];
+          w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+               k*nDOF_test_element +
+               i];
 }
 
 /**
@@ -1769,17 +1769,17 @@ void updateMassJacobian_weak(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
-          jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+          jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                    i*nDOF_trial_element+
-                   j] 
-            += 
-            dmt[eN*nQuadraturePoints_element + 
+                   j]
+            +=
+            dmt[eN*nQuadraturePoints_element +
                k]
             *
-            v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element + 
-		     k*nDOF_test_X_trial_element + 
-		     j*nDOF_test_element+
-		     i];
+            v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element +
+                     k*nDOF_test_X_trial_element +
+                     j*nDOF_test_element+
+                     i];
 }
 
 void updateMassJacobian_weak_lowmem(int nElements_global,
@@ -1796,19 +1796,19 @@ void updateMassJacobian_weak_lowmem(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
-          jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+          jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                    i*nDOF_trial_element+
-                   j] 
-            += 
-            dmt[eN*nQuadraturePoints_element + 
+                   j]
+            +=
+            dmt[eN*nQuadraturePoints_element +
                k]
             *
-            v[eN*nQuadraturePoints_element*nDOF_trial_element + 
-              k*nDOF_trial_element + 
+            v[eN*nQuadraturePoints_element*nDOF_trial_element +
+              k*nDOF_trial_element +
               j]
             *
-            w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                 k*nDOF_test_element + 
+            w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                 k*nDOF_test_element +
                  i];
 }
 
@@ -1820,7 +1820,7 @@ void updateMassJacobian_weak_lowmem(int nElements_global,
 
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param mt (nElements_global x nQuadraturePoints_element) The change
    in mass with respect to time
 
@@ -1832,18 +1832,18 @@ void updateMassJacobian_weak_lowmem(int nElements_global,
    \f[ \mathcal{R}_k \mapsto \mathcal{R}_k + m_k \f]
 */
 void updateMass_strong(int nElements_global,
-		       int nQuadraturePoints_element,
-		       double* mt,
-		       double* strong_residual)
+                       int nQuadraturePoints_element,
+                       double* mt,
+                       double* strong_residual)
 {
   int eN,k;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       strong_residual[eN*nQuadraturePoints_element+
-		  k] 
-	+=
-	mt[eN*nQuadraturePoints_element+
-	  k]; 
+                  k]
+        +=
+        mt[eN*nQuadraturePoints_element+
+          k];
 }
 
 /**
@@ -1855,7 +1855,7 @@ void updateMass_strong(int nElements_global,
 
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number  of trial functions per  element
 
    @param dmt (nElements_global x nQuadraturePoints_element) The
@@ -1882,14 +1882,14 @@ void updateMassJacobian_strong(int nElements_global,
     for(j=0;j<nDOF_trial_element;j++)
       for (k=0;k<nQuadraturePoints_element;k++)
         dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-                     k*nDOF_trial_element + 
-                     j] 
-          += 
+                     k*nDOF_trial_element +
+                     j]
+          +=
           dmt[eN*nQuadraturePoints_element+
               k]
           *
           v[eN*nQuadraturePoints_element*nDOF_trial_element+
-            k*nDOF_trial_element + 
+            k*nDOF_trial_element +
             j];
 }
 
@@ -1912,33 +1912,33 @@ void updateMassJacobian_strong(int nElements_global,
    @Lstar_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_test_element). The linearized adjoint applied to the weighted
    element test functions.
-   
+
    The result of calling the function is
 
    \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i} + \frac{\partial m_t}{\partial u}_{k} (w dV)_{k,i}
    \f]
 */
 void updateMass_adjoint(int nElements_global,
-			int nQuadraturePoints_element,
-			int nDOF_test_element,
-			double* dmt,
-			double* w_dV,
-			double* Lstar_w_dV)
+                        int nQuadraturePoints_element,
+                        int nDOF_test_element,
+                        double* dmt,
+                        double* w_dV,
+                        double* Lstar_w_dV)
 {
   int eN,i,k;
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                   k*nDOF_test_element + 
-                   i] 
-	  += 
-	  dmt[eN*nQuadraturePoints_element + 
-	      k]
-	  *
-	  w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-	       k*nDOF_test_element + 
-	       i];
+        Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                   k*nDOF_test_element +
+                   i]
+          +=
+          dmt[eN*nQuadraturePoints_element +
+              k]
+          *
+          w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+               k*nDOF_test_element +
+               i];
 }
 
 
@@ -1948,38 +1948,38 @@ void updateMass_adjoint(int nElements_global,
    integral.
 
    @param nElements_global The number of elements in the mesh
-   
+
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number of degrees of freedom per
    element in the test space.
-   
+
    @param nDOF_trial_element The number of degrees of freedom per
    element in the trial space.
-   
+
    @param nSpace The number of spatial dimensions.
-   
+
    @param f (nElements_global x nQuadraturePoints_element x
    nSpace). The advection associated with each quadrature point
    (includes integration weight).
-   
+
    @param grad_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_test_element x nSpace). The weighted finite element test
    function gradient values.
-   
+
    @param weak_residual (nElements_global x nDOF_test_element). The element
    weak_residual, which is updated upon return.
 
    The result of calling this function is
-   
+
    \f[ weak_residual_{e,i} \mapsto weak_residual_{e,i} - \int_{\Omega_e}
    \mathbf{f} \cdot \nabla w_i dV \quad \forall e,i \f]
 
    where
 
    \f[
-   \int_{\Omega_e} \mathbf{f} \cdot \nabla w_i dV =  \int_{\Omega_r} \mathbf{f} \cdot \nabla w_i |J_e| d\hat{V} \int_{\Omega_r} \sum_k \mathbf{f}_k \cdot (\nabla w dV)_i  
+   \int_{\Omega_e} \mathbf{f} \cdot \nabla w_i dV =  \int_{\Omega_r} \mathbf{f} \cdot \nabla w_i |J_e| d\hat{V} \int_{\Omega_r} \sum_k \mathbf{f}_k \cdot (\nabla w dV)_i
    \f]
 */
 void updateAdvection_weak(int nElements_global,
@@ -1995,17 +1995,17 @@ void updateAdvection_weak(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
-          weak_residual[eN*nDOF_test_element + 
-                   i] 
+          weak_residual[eN*nDOF_test_element +
+                   i]
             -=
-            f[eN*nQuadraturePoints_element*nSpace + 
-              k*nSpace + 
+            f[eN*nQuadraturePoints_element*nSpace +
+              k*nSpace +
               I]
             *
-            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-		      k*nDOF_test_element*nSpace + 
-		      i*nSpace + 
-		      I];
+            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                      k*nDOF_test_element*nSpace +
+                      i*nSpace +
+                      I];
 }
 
 /**
@@ -2067,19 +2067,19 @@ void updateAdvectionJacobian_weak(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                      i*nDOF_trial_element+
-                     j] 
+                     j]
               -=
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace + 
-			    k*nDOF_test_X_trial_element*nSpace + 
-			    j*nDOF_test_element*nSpace + 
-			    i*nSpace + 
-			    I];
+              v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace +
+                            k*nDOF_test_X_trial_element*nSpace +
+                            j*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
 }
 
 void updateAdvectionJacobian_weak_lowmem(int nElements_global,
@@ -2098,21 +2098,21 @@ void updateAdvectionJacobian_weak_lowmem(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                      i*nDOF_trial_element+
-                     j] 
+                     j]
               -=
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              v[eN*nQuadraturePoints_element*nDOF_trial_element + 
-                k*nDOF_trial_element + 
+              v[eN*nQuadraturePoints_element*nDOF_trial_element +
+                k*nDOF_trial_element +
                 j]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
-                        i*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
+                        i*nSpace +
                         I];
 }
 
@@ -2141,26 +2141,26 @@ void updateAdvectionJacobian_weak_lowmem(int nElements_global,
    \f[ \mathcal{R}_k \mapsto \mathcal{R}_k + \frac{\mathbf{f}}{u}_k \cdot \nabla u_k \f]
 */
 void updateAdvection_strong(int nElements_global,
-			    int nQuadraturePoints_element,
-			    int nSpace,
-			    double* df,
-			    double* grad_u,
-			    double* strong_residual)
+                            int nQuadraturePoints_element,
+                            int nSpace,
+                            double* df,
+                            double* grad_u,
+                            double* strong_residual)
 {
   int eN,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for(I=0;I<nSpace;I++)
         strong_residual[eN*nQuadraturePoints_element+
-                    k] 
+                    k]
           +=
-	  df[eN*nQuadraturePoints_element*nSpace + 
-	     k*nSpace + 
-	     I]
-	  *
-	  grad_u[eN*nQuadraturePoints_element*nSpace + 
-		 k*nSpace + 
-		 I];
+          df[eN*nQuadraturePoints_element*nSpace +
+             k*nSpace +
+             I]
+          *
+          grad_u[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
+                 I];
 }
 
 /**
@@ -2201,14 +2201,14 @@ void updateAdvectionJacobian_strong(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-                           k*nDOF_trial_element + 
-                           j] 
+                           k*nDOF_trial_element +
+                           j]
             +=
-            df[eN*nQuadraturePoints_element*nSpace + 
-               k*nSpace + 
+            df[eN*nQuadraturePoints_element*nSpace +
+               k*nSpace +
                I]
             *
-            grad_v[eN*nQuadraturePoints_element*nSpace*nDOF_trial_element + 
+            grad_v[eN*nQuadraturePoints_element*nSpace*nDOF_trial_element +
                    k*nSpace*nDOF_trial_element +
                    j*nSpace+
                    I];
@@ -2245,54 +2245,54 @@ void updateAdvectionJacobian_strong(int nElements_global,
    \frac{\partial \mathbf{f}}{\partial u}_k \cdot \nabla (w dV)_{k,i} \f]
 */
 void updateAdvection_adjoint(int nElements_global,
-			     int nQuadraturePoints_element,
-			     int nDOF_test_element,
-			     int nSpace,
-			     double* df,
-			     double* grad_w_dV,
-			     double* Lstar_w_dV)
+                             int nQuadraturePoints_element,
+                             int nDOF_test_element,
+                             int nSpace,
+                             double* df,
+                             double* grad_w_dV,
+                             double* Lstar_w_dV)
 {
   int eN,i,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	for (I=0;I<nSpace;I++)
-	  Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-		    k*nDOF_test_element + 
-		    i] 
-	    -=  
-	    df[eN*nQuadraturePoints_element*nSpace + 
-	       k*nSpace + 
-	       I]
-	    *
-	    grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-		      k*nDOF_test_element*nSpace + 
-		      i*nSpace + 
-		      I];
+        for (I=0;I<nSpace;I++)
+          Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                    k*nDOF_test_element +
+                    i]
+            -=
+            df[eN*nQuadraturePoints_element*nSpace +
+               k*nSpace +
+               I]
+            *
+            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                      k*nDOF_test_element*nSpace +
+                      i*nSpace +
+                      I];
 }
 
 /**
    \brief Loop over all the elements and update the element weak_residual
    with the numerical quadrature approximation of the Hamiltonian
    integral.
-   
+
    @param nElements_global The number of elements in the mesh
-   
+
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number of degrees of freedom per element.
-   
+
    @param h (nElements_global x nQuadraturePoints_element). The
    Hamiltonian associated with each quadrature point (includes
    integration weight).
-   
+
    @param w (nElements_global x nQuadraturePoints_element x
    nDOF_test_element). The finite element test function values.
-   
+
    @param weak_residual (nElements_global x nDOF_test_element). The element
    weak_residual, which is updated upon return.
-   
+
    The result of calling this function is
 
    \f[ weak_residual_{e,i} \mapsto weak_residual_{e,i} - \int_{\Omega_e} h w_i
@@ -2314,13 +2314,13 @@ void updateHamiltonian_weak(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-        weak_residual[eN*nDOF_test_element + i] 
+        weak_residual[eN*nDOF_test_element + i]
           +=
-          H[eN*nQuadraturePoints_element + 
+          H[eN*nQuadraturePoints_element +
             k]
           *
-          w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-            k*nDOF_test_element + 
+          w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+            k*nDOF_test_element +
             i];
 }
 
@@ -2384,19 +2384,19 @@ void updateHamiltonianJacobian_weak(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                      i*nDOF_trial_element +
                      j]
               +=
-              dH[eN*nQuadraturePoints_element*nSpace + 
+              dH[eN*nQuadraturePoints_element*nSpace +
                  k*nSpace+
                  I]
               *
-              grad_v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace + 
-			    k*nDOF_test_X_trial_element*nSpace +
-			    j*nDOF_test_element*nSpace +
-			    i*nSpace+
-			    I];
+              grad_v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace +
+                            k*nDOF_test_X_trial_element*nSpace +
+                            j*nDOF_test_element*nSpace +
+                            i*nSpace+
+                            I];
 }
 
 void updateHamiltonianJacobian_weak_lowmem(int nElements_global,
@@ -2415,20 +2415,20 @@ void updateHamiltonianJacobian_weak_lowmem(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                      i*nDOF_trial_element +
                      j]
               +=
-              dH[eN*nQuadraturePoints_element*nSpace + 
+              dH[eN*nQuadraturePoints_element*nSpace +
                  k*nSpace+
                  I]
               *
-              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                      k*nDOF_trial_element*nSpace +
                      j*nSpace +
                      I]
               *
-              w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
+              w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
                    k*nDOF_test_element +
                    i];
 }
@@ -2460,25 +2460,25 @@ void updateHamiltonianJacobian_weak_lowmem(int nElements_global,
    \todo  cek check  on whether there isn't a better way to do the strong residual. Why not just  use H?
 */
 void updateHamiltonian_strong(int nElements_global,
-			      int nQuadraturePoints_element,
-			      int nSpace,
-			      double* dH,
-			      double* grad_u,
-			      double* strong_residual)
+                              int nQuadraturePoints_element,
+                              int nSpace,
+                              double* dH,
+                              double* grad_u,
+                              double* strong_residual)
 {
   int eN,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
-	strong_residual[eN*nQuadraturePoints_element+k] 
-	  += 
-	  dH[eN*nQuadraturePoints_element*nSpace+
-	     k*nSpace+
-	     I]
-	  *
-	  grad_u[eN*nQuadraturePoints_element*nSpace+
-		 k*nSpace+
-		 I];
+        strong_residual[eN*nQuadraturePoints_element+k]
+          +=
+          dH[eN*nQuadraturePoints_element*nSpace+
+             k*nSpace+
+             I]
+          *
+          grad_u[eN*nQuadraturePoints_element*nSpace+
+                 k*nSpace+
+                 I];
 }
 
 /**
@@ -2519,16 +2519,16 @@ void updateHamiltonianJacobian_strong(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-                       k*nDOF_trial_element + 
-                       j] 
-            += 
+                       k*nDOF_trial_element +
+                       j]
+            +=
             dH[eN*nQuadraturePoints_element*nSpace+
                k*nSpace+
                I]
             *
             grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace+
-                   k*nDOF_trial_element*nSpace + 
-                   j*nSpace + 
+                   k*nDOF_trial_element*nSpace +
+                   j*nSpace +
                    I];
 }
 
@@ -2560,34 +2560,34 @@ void updateHamiltonianJacobian_strong(int nElements_global,
 
    The result of  calling this  funciton is
 
-   \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i} 
+   \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i}
    \frac{\partial \mathbf{H}}{\partial \nabla u}_k \cdot \nabla (w dV)_{k,i} \f]
 */
 void updateHamiltonian_adjoint(int nElements_global,
-			       int nQuadraturePoints_element,
-			       int nDOF_test_element,
-			       int nSpace,
-			       double* dH,
-			       double* grad_w_dV,
-			       double* Lstar_w_dV)
+                               int nQuadraturePoints_element,
+                               int nDOF_test_element,
+                               int nSpace,
+                               double* dH,
+                               double* grad_w_dV,
+                               double* Lstar_w_dV)
 {
   int eN,i,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	for (I=0;I<nSpace;I++)
-	  Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                    k*nDOF_test_element + 
-                    i] 
-	    -=  
-	    dH[eN*nQuadraturePoints_element*nSpace + 
-	       k*nSpace + 
-	       I]
-	    *
-	    grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-		      k*nDOF_test_element*nSpace + 
-		      i*nSpace + 
-		      I];
+        for (I=0;I<nSpace;I++)
+          Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                    k*nDOF_test_element +
+                    i]
+            -=
+            dH[eN*nQuadraturePoints_element*nSpace +
+               k*nSpace +
+               I]
+            *
+            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                      k*nDOF_test_element*nSpace +
+                      i*nSpace +
+                      I];
 }
 
 /**
@@ -2618,7 +2618,7 @@ void updateHamiltonian_adjoint(int nElements_global,
    weak_residual, which is updated upon return.
 
    The result of calling this function is
-   
+
    \f[ weak_residual_{e,i} \mapsto weak_residual_{e,i} + \int_{\Omega_e}
    \bar{\mathbf{a}} \nabla \phi \cdot \nabla w_i dV \quad \forall e,i
    \f]
@@ -2645,18 +2645,18 @@ void updateDiffusion_weak(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           for (J=0;J<nSpace;J++)
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               +=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
-                k*nSpace2 + 
-                I*nSpace + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
+                k*nSpace2 +
+                I*nSpace +
                 J]
               *
-              grad_phi_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 + 
-				   k*nDOF_test_element*nSpace2 + 
-				   i*nSpace2+
-				   J*nSpace + 
-				   I];
+              grad_phi_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
+                                   k*nDOF_test_element*nSpace2 +
+                                   i*nSpace2+
+                                   J*nSpace +
+                                   I];
 }
 
 void updateDiffusion_weak_lowmem(int nElements_global,
@@ -2676,36 +2676,36 @@ void updateDiffusion_weak_lowmem(int nElements_global,
         for (I=0;I<nSpace;I++)
           {
             J=I;
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               +=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
                 k*nSpace2]
               *
-              grad_phi[eN*nQuadraturePoints_element*nSpace + 
-                       k*nSpace + 
+              grad_phi[eN*nQuadraturePoints_element*nSpace +
+                       k*nSpace +
                        J]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
           }
 #else
         for (I=0;I<nSpace;I++)
           for (J=0;J<nSpace;J++)
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               +=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
-                k*nSpace2 + 
-                I*nSpace + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
+                k*nSpace2 +
+                I*nSpace +
                 J]
               *
-              grad_phi[eN*nQuadraturePoints_element*nSpace + 
-                       k*nSpace + 
+              grad_phi[eN*nQuadraturePoints_element*nSpace +
+                       k*nSpace +
                        J]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
 #endif
@@ -2728,18 +2728,18 @@ void updateDiffusion_weak_sd(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           for (m=rowptr[I];m<rowptr[I+1];m++)
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               +=
               a[eN*nQuadraturePoints_element*nnz+
-                k*nnz + 
+                k*nnz +
                 m]
               *
-              grad_phi[eN*nQuadraturePoints_element*nSpace + 
-                       k*nSpace + 
+              grad_phi[eN*nQuadraturePoints_element*nSpace +
+                       k*nSpace +
                        colind[m]]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
 }
@@ -2839,49 +2839,49 @@ void updateDiffusionJacobian_weak(int nElements_global,
           daProduct=0.0;
           for (I=0;I<nSpace;I++)
             for (J=0;J<nSpace;J++)
-              daProduct 
-                += 
+              daProduct
+                +=
                 da[eN*nQuadraturePoints_element*nSpace2 +
                    k*nSpace2 +
                    I*nSpace +
                    J]
                 *
                 grad_phi_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
-				     k*nDOF_test_element*nSpace2 +
-				     i*nSpace2+
-				     J*nSpace +
-				     I];
+                                     k*nDOF_test_element*nSpace2 +
+                                     i*nSpace2+
+                                     J*nSpace +
+                                     I];
           for (j=0;j<nDOF_trial_element;j++)
             {
               dphiProduct=0.0;
               for (I=0;I<nSpace;I++)
                 for (J=0;J<nSpace;J++)
-                  dphiProduct 
+                  dphiProduct
                     +=
-                    a[eN*nQuadraturePoints_element*nSpace2 + 
+                    a[eN*nQuadraturePoints_element*nSpace2 +
                       k*nSpace2+
-                      I*nSpace + 
+                      I*nSpace +
                       J]
                     *
                     grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 +
-				       k*nDOF_test_X_trial_element*nSpace2 +
-				       j*nDOF_test_element*nSpace2 + 
-				       i*nSpace2 + 
-				       J*nSpace + 
-				       I];
-              jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                       i*nDOF_trial_element + 
-                       j] 
-                += 
+                                       k*nDOF_test_X_trial_element*nSpace2 +
+                                       j*nDOF_test_element*nSpace2 +
+                                       i*nSpace2 +
+                                       J*nSpace +
+                                       I];
+              jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                       i*nDOF_trial_element +
+                       j]
+                +=
                 daProduct
                 *
                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
                   k*nDOF_trial_element+
-                  j] 
+                  j]
                 +
                 dphiProduct
                 *
-                dphi[l2g[eN*nDOF_trial_element + 
+                dphi[l2g[eN*nDOF_trial_element +
                          j]];
             }
         }
@@ -2913,8 +2913,8 @@ void updateDiffusionJacobian_weak_lowmem(int nElements_global,
           for (I=0;I<nSpace;I++)
             {
               J=I;
-              daProduct 
-                += 
+              daProduct
+                +=
                 da[eN*nQuadraturePoints_element*nSpace2 +
                    k*nSpace2]
                 *
@@ -2933,41 +2933,41 @@ void updateDiffusionJacobian_weak_lowmem(int nElements_global,
               for (I=0;I<nSpace;I++)
                 {
                   J=I;
-                  dphiProduct 
+                  dphiProduct
                     +=
-                    a[eN*nQuadraturePoints_element*nSpace2 + 
+                    a[eN*nQuadraturePoints_element*nSpace2 +
                       k*nSpace2]
                     *
                     grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                            k*nDOF_trial_element*nSpace +
-                           j*nSpace + 
+                           j*nSpace +
                            J]
                     *
                     grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                               k*nDOF_test_element*nSpace +
-                              i*nSpace + 
+                              i*nSpace +
                               I];
                 }
-              jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                       i*nDOF_trial_element + 
-                       j] 
-                += 
+              jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                       i*nDOF_trial_element +
+                       j]
+                +=
                 daProduct
                 *
                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
                   k*nDOF_trial_element+
-                  j] 
+                  j]
                 +
                 dphiProduct
                 *
-                dphi[l2g[eN*nDOF_trial_element + 
+                dphi[l2g[eN*nDOF_trial_element +
                          j]];
             }
 #else
           for (I=0;I<nSpace;I++)
             for (J=0;J<nSpace;J++)
-              daProduct 
-                += 
+              daProduct
+                +=
                 da[eN*nQuadraturePoints_element*nSpace2 +
                    k*nSpace2 +
                    I*nSpace +
@@ -2986,35 +2986,35 @@ void updateDiffusionJacobian_weak_lowmem(int nElements_global,
               dphiProduct=0.0;
               for (I=0;I<nSpace;I++)
                 for (J=0;J<nSpace;J++)
-                  dphiProduct 
+                  dphiProduct
                     +=
-                    a[eN*nQuadraturePoints_element*nSpace2 + 
+                    a[eN*nQuadraturePoints_element*nSpace2 +
                       k*nSpace2+
-                      I*nSpace + 
+                      I*nSpace +
                       J]
                     *
                     grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                            k*nDOF_trial_element*nSpace +
-                           j*nSpace + 
+                           j*nSpace +
                            J]
                     *
                     grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                               k*nDOF_test_element*nSpace +
-                              i*nSpace + 
+                              i*nSpace +
                               I];
-              jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                       i*nDOF_trial_element + 
-                       j] 
-                += 
+              jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                       i*nDOF_trial_element +
+                       j]
+                +=
                 daProduct
                 *
                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
                   k*nDOF_trial_element+
-                  j] 
+                  j]
                 +
                 dphiProduct
                 *
-                dphi[l2g[eN*nDOF_trial_element + 
+                dphi[l2g[eN*nDOF_trial_element +
                          j]];
             }
 #endif
@@ -3046,8 +3046,8 @@ void updateDiffusionJacobian_weak_sd(int nElements_global,
           daProduct=0.0;
           for (I=0;I<nSpace;I++)
             for (m=rowptr[I];m<rowptr[I+1];m++)
-              daProduct 
-                += 
+              daProduct
+                +=
                 da[eN*nQuadraturePoints_element*nnz+
                    k*nnz +
                    m]
@@ -3065,34 +3065,34 @@ void updateDiffusionJacobian_weak_sd(int nElements_global,
               dphiProduct=0.0;
               for (I=0;I<nSpace;I++)
                 for(m=rowptr[I];m<rowptr[I+1];m++)
-                  dphiProduct 
+                  dphiProduct
                     +=
-                    a[eN*nQuadraturePoints_element*nnz + 
+                    a[eN*nQuadraturePoints_element*nnz +
                       k*nnz+
                       m]
                     *
                     grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                            k*nDOF_trial_element*nSpace +
-                           j*nSpace + 
+                           j*nSpace +
                            colind[m]]
                     *
                     grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                               k*nDOF_test_element*nSpace +
-                              i*nSpace + 
+                              i*nSpace +
                               I];
-              jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                       i*nDOF_trial_element + 
-                       j] 
-                += 
+              jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                       i*nDOF_trial_element +
+                       j]
+                +=
                 daProduct
                 *
                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
                   k*nDOF_trial_element+
-                  j] 
+                  j]
                 +
                 dphiProduct
                 *
-                dphi[l2g[eN*nDOF_trial_element + 
+                dphi[l2g[eN*nDOF_trial_element +
                          j]];
             }
         }
@@ -3108,7 +3108,7 @@ void updateDiffusionJacobian_weak_sd(int nElements_global,
    per element.
 
    @param nSpace The number of spatial dimensions.
-   
+
    @param da (nElements_global x nQuadraturePoints_element x nSpace x
    nSpace) The derivative of the diffusion tensor with respect to u
 
@@ -3123,32 +3123,32 @@ void updateDiffusionJacobian_weak_sd(int nElements_global,
    \f[ \mathcal{R}_k \mapsto \mathcal{R}_k - \partial{\mathbf{\:a}}{u}_k \nabla \phi_k \cdot \nabla u_k \f]
 */
 void updateDiffusion_strong(int nElements_global,
-			    int nQuadraturePoints_element,
-			    int nSpace,
-			    double* da,
-			    double* grad_phi,
-			    double* grad_u,
-			    double* strong_residual)
+                            int nQuadraturePoints_element,
+                            int nSpace,
+                            double* da,
+                            double* grad_phi,
+                            double* grad_u,
+                            double* strong_residual)
 {
   int eN,k,I,J,nSpace2=nSpace*nSpace;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for(I=0;I<nSpace;I++)
-	for (J=0;J<nSpace;J++)
-	  strong_residual[eN*nQuadraturePoints_element+
-		      k] 
-	    -=
-	    da[eN*nQuadraturePoints_element*nSpace2 + 
-	       k*nSpace2 + 
-	       I*nSpace+
-	       J]
-	    *
-	    grad_phi[eN*nQuadraturePoints_element*nSpace + 
-		     k*nSpace + 
-		     J]
-	    *grad_u[eN*nQuadraturePoints_element*nSpace + 
-		    k*nSpace + 
-		    I];
+        for (J=0;J<nSpace;J++)
+          strong_residual[eN*nQuadraturePoints_element+
+                      k]
+            -=
+            da[eN*nQuadraturePoints_element*nSpace2 +
+               k*nSpace2 +
+               I*nSpace+
+               J]
+            *
+            grad_phi[eN*nQuadraturePoints_element*nSpace +
+                     k*nSpace +
+                     J]
+            *grad_u[eN*nQuadraturePoints_element*nSpace +
+                    k*nSpace +
+                    I];
 }
 void updateDiffusion_strong_sd(int nElements_global,
                                int nQuadraturePoints_element,
@@ -3164,20 +3164,20 @@ void updateDiffusion_strong_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for(I=0;I<nSpace;I++)
-	for(m=rowptr[I];m<rowptr[I+1];m++)
-	  strong_residual[eN*nQuadraturePoints_element+
-		      k] 
-	    -=
-	    da[eN*nQuadraturePoints_element*nnz + 
-	       k*nnz+
+        for(m=rowptr[I];m<rowptr[I+1];m++)
+          strong_residual[eN*nQuadraturePoints_element+
+                      k]
+            -=
+            da[eN*nQuadraturePoints_element*nnz +
+               k*nnz+
                m]
-	    *
-	    grad_phi[eN*nQuadraturePoints_element*nSpace + 
-		     k*nSpace + 
-		     colind[m]]
-	    *grad_u[eN*nQuadraturePoints_element*nSpace + 
-		    k*nSpace + 
-		    I];
+            *
+            grad_phi[eN*nQuadraturePoints_element*nSpace +
+                     k*nSpace +
+                     colind[m]]
+            *grad_u[eN*nQuadraturePoints_element*nSpace +
+                    k*nSpace +
+                    I];
 }
 
 /**
@@ -3190,7 +3190,7 @@ void updateDiffusion_strong_sd(int nElements_global,
    per element.
 
    @param nSpace The number of spatial dimensions.
-   
+
    @param da (nElements_global x nQuadraturePoints_element x nSpace x
    nSpace) The derivative of the diffusion tensor with respect to u
 
@@ -3313,7 +3313,7 @@ void updateDiffusionJacobian_strong_sd(int nElements_global,
    \brief Loop over all the elements and update the linearized
    adjoint applied to the weighted test function with the diffusion
    term
-   
+
    @param nElements_global The number of elements in the mesh
 
    @param nQuadraturePoints_element The number of quadrature points
@@ -3323,7 +3323,7 @@ void updateDiffusionJacobian_strong_sd(int nElements_global,
    test space per element.
 
    @param nSpace The number of spatial dimensions.
-  
+
    @param da (nElements_global x nQuadraturePoints_element x nSpace x
    nSpace) The derivative of the diffusion tensor with respect to u
 
@@ -3342,37 +3342,37 @@ void updateDiffusionJacobian_strong_sd(int nElements_global,
    \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i} + \frac{\mathbf{\:a}}{u} \nabla \phi \cdot \nabla (w dV)_{k,i} \f]
  */
 void updateDiffusion_adjoint(int nElements_global,
-			     int nQuadraturePoints_element,
-			     int nDOF_test_element,
-			     int nSpace,
-			     double* da,
-			     double* grad_phi,
-			     double* grad_w_dV,
-			     double* Lstar_w_dV)
+                             int nQuadraturePoints_element,
+                             int nDOF_test_element,
+                             int nSpace,
+                             double* da,
+                             double* grad_phi,
+                             double* grad_w_dV,
+                             double* Lstar_w_dV)
 {
   int eN,i,k,I,J,nSpace2=nSpace*nSpace;
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	for (I=0;I<nSpace;I++)
-	  for(J=0;J<nSpace;J++)
-	    Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-		      k*nDOF_test_element + 
-		      i] 
-	      +=  
-	      da[eN*nQuadraturePoints_element*nSpace2 + 
-		 k*nSpace2 + 
-		 I*nSpace+
-		 J]
-	      *
-	      grad_phi[eN*nQuadraturePoints_element*nSpace+
-		       k*nSpace+
-		       J]
-	      *
-	      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-			k*nDOF_test_element*nSpace + 
-			i*nSpace + 
-			I];
+        for (I=0;I<nSpace;I++)
+          for(J=0;J<nSpace;J++)
+            Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                      k*nDOF_test_element +
+                      i]
+              +=
+              da[eN*nQuadraturePoints_element*nSpace2 +
+                 k*nSpace2 +
+                 I*nSpace+
+                 J]
+              *
+              grad_phi[eN*nQuadraturePoints_element*nSpace+
+                       k*nSpace+
+                       J]
+              *
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
+                        i*nSpace +
+                        I];
 }
 
 void updateDiffusion_adjoint_sd(int nElements_global,
@@ -3390,48 +3390,48 @@ void updateDiffusion_adjoint_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	for (I=0;I<nSpace;I++)
-	  for(m=rowptr[I];m<rowptr[I+1];m++)
-	    Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-		      k*nDOF_test_element + 
-		      i] 
-	      +=  
-	      da[eN*nQuadraturePoints_element*nnz + 
-		 k*nnz+
-		 m]
-	      *
-	      grad_phi[eN*nQuadraturePoints_element*nSpace+
-		       k*nSpace+
-		       colind[m]]
-	      *
-	      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-			k*nDOF_test_element*nSpace + 
-			i*nSpace + 
-			I];
+        for (I=0;I<nSpace;I++)
+          for(m=rowptr[I];m<rowptr[I+1];m++)
+            Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                      k*nDOF_test_element +
+                      i]
+              +=
+              da[eN*nQuadraturePoints_element*nnz +
+                 k*nnz+
+                 m]
+              *
+              grad_phi[eN*nQuadraturePoints_element*nSpace+
+                       k*nSpace+
+                       colind[m]]
+              *
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
+                        i*nSpace +
+                        I];
 }
 
 void updateDiffusion2_strong(int nElements_global,
-			     int nQuadraturePoints_element,
-			     int nSpace,
-			     double* a,
-			     double* Hess_phi,
-			     double* strong_residual)
+                             int nQuadraturePoints_element,
+                             int nSpace,
+                             double* a,
+                             double* Hess_phi,
+                             double* strong_residual)
 {
   int eN,k,I,J,nSpace2=nSpace*nSpace;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for(I=0;I<nSpace;I++)
-	for (J=0;J<nSpace;J++)
-	  {
+        for (J=0;J<nSpace;J++)
+          {
             strong_residual[eN*nQuadraturePoints_element+
-                            k] 
+                            k]
               -=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
-                k*nSpace2 + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
+                k*nSpace2 +
                 I*nSpace+
                 J]
               *
-              Hess_phi[eN*nQuadraturePoints_element*nSpace2 + 
+              Hess_phi[eN*nQuadraturePoints_element*nSpace2 +
                        k*nSpace2 +
                        J*nSpace+
                        I];
@@ -3451,16 +3451,16 @@ void updateDiffusion2_strong_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for(I=0;I<nSpace;I++)
-	for (m=rowptr[I];m<rowptr[I+1];m++)
-	  {
+        for (m=rowptr[I];m<rowptr[I+1];m++)
+          {
             strong_residual[eN*nQuadraturePoints_element+
-                            k] 
+                            k]
               -=
-              a[eN*nQuadraturePoints_element*nnz + 
+              a[eN*nQuadraturePoints_element*nnz +
                 k*nnz+
                 m]
               *
-              Hess_phi[eN*nQuadraturePoints_element*nSpace2 + 
+              Hess_phi[eN*nQuadraturePoints_element*nSpace2 +
                        k*nSpace2 +
                        colind[m]*nSpace+
                        I];
@@ -3468,58 +3468,58 @@ void updateDiffusion2_strong_sd(int nElements_global,
 }
 
 void updateDiffusionJacobian2_strong(int nElements_global,
-				     int nQuadraturePoints_element,
-				     int nDOF_trial_element,
-				     int nSpace,
-				     int* l2g,
-				     double* a,
-				     double* da,
-				     double* v,
-				     double* Hess_phi,
-				     double* dphi,
-				     double* Hess_v,
-				     double* dstrong_residual)
+                                     int nQuadraturePoints_element,
+                                     int nDOF_trial_element,
+                                     int nSpace,
+                                     int* l2g,
+                                     double* a,
+                                     double* da,
+                                     double* v,
+                                     double* Hess_phi,
+                                     double* dphi,
+                                     double* Hess_v,
+                                     double* dstrong_residual)
 {
   int eN,k,j,I,J,nSpace2=nSpace*nSpace;
   /*double tmp;*/
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (j=0;j<nDOF_trial_element;j++)
-	for(I=0;I<nSpace;I++)
-	  for (J=0;J<nSpace;J++)
-	    {
-	      dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-			       k*nDOF_trial_element+
-			       j]
-		-=
-		(da[eN*nQuadraturePoints_element*nSpace2 +
-		    k*nSpace2 +
-		    I*nSpace+
-		    J]
-		 *
-		 v[eN*nQuadraturePoints_element*nDOF_trial_element+
-		   k*nDOF_trial_element+
-		   j]
-		 *
-		 Hess_phi[eN*nQuadraturePoints_element*nSpace2 +
-			  k*nSpace2 +
-			  J*nSpace+
-			  I]
-		 +
-		 a[eN*nQuadraturePoints_element*nSpace2 +
-		   k*nSpace2 +
-		   I*nSpace+
-		   J]
-		 *
-		 dphi[l2g[eN*nDOF_trial_element +
-			  j]]
-		 *
-		 Hess_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace2 +
-			k*nDOF_trial_element*nSpace2 +
-			j*nSpace2+
-			J*nSpace+
-			I]);
-	    }
+        for(I=0;I<nSpace;I++)
+          for (J=0;J<nSpace;J++)
+            {
+              dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
+                               k*nDOF_trial_element+
+                               j]
+                -=
+                (da[eN*nQuadraturePoints_element*nSpace2 +
+                    k*nSpace2 +
+                    I*nSpace+
+                    J]
+                 *
+                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
+                   k*nDOF_trial_element+
+                   j]
+                 *
+                 Hess_phi[eN*nQuadraturePoints_element*nSpace2 +
+                          k*nSpace2 +
+                          J*nSpace+
+                          I]
+                 +
+                 a[eN*nQuadraturePoints_element*nSpace2 +
+                   k*nSpace2 +
+                   I*nSpace+
+                   J]
+                 *
+                 dphi[l2g[eN*nDOF_trial_element +
+                          j]]
+                 *
+                 Hess_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace2 +
+                        k*nDOF_trial_element*nSpace2 +
+                        j*nSpace2+
+                        J*nSpace+
+                        I]);
+            }
 }
 
 void updateDiffusionJacobian2_strong_sd(int nElements_global,
@@ -3542,69 +3542,69 @@ void updateDiffusionJacobian2_strong_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (j=0;j<nDOF_trial_element;j++)
-	for(I=0;I<nSpace;I++)
-	  for (m=rowptr[I];m<rowptr[I+1];m++)
-	    {
-	      dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-			       k*nDOF_trial_element+
-			       j]
-		-=
-		(da[eN*nQuadraturePoints_element*nnz+
-		    k*nnz+
+        for(I=0;I<nSpace;I++)
+          for (m=rowptr[I];m<rowptr[I+1];m++)
+            {
+              dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
+                               k*nDOF_trial_element+
+                               j]
+                -=
+                (da[eN*nQuadraturePoints_element*nnz+
+                    k*nnz+
                     m]
-		 *
-		 v[eN*nQuadraturePoints_element*nDOF_trial_element+
-		   k*nDOF_trial_element+
-		   j]
-		 *
-		 Hess_phi[eN*nQuadraturePoints_element*nSpace2 +
-			  k*nSpace2 +
-			  colind[m]*nSpace+
-			  I]
-		 +
-		 a[eN*nQuadraturePoints_element*nnz+
-		   k*nnz+
+                 *
+                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
+                   k*nDOF_trial_element+
+                   j]
+                 *
+                 Hess_phi[eN*nQuadraturePoints_element*nSpace2 +
+                          k*nSpace2 +
+                          colind[m]*nSpace+
+                          I]
+                 +
+                 a[eN*nQuadraturePoints_element*nnz+
+                   k*nnz+
                    m]
-		 *
-		 dphi[l2g[eN*nDOF_trial_element +
-			  j]]
-		 *
-		 Hess_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace2 +
-			k*nDOF_trial_element*nSpace2 +
-			j*nSpace2+
-			colind[m]*nSpace+
-			I]);
-	    }
+                 *
+                 dphi[l2g[eN*nDOF_trial_element +
+                          j]]
+                 *
+                 Hess_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace2 +
+                        k*nDOF_trial_element*nSpace2 +
+                        j*nSpace2+
+                        colind[m]*nSpace+
+                        I]);
+            }
 }
 
 void updateDiffusion2_adjoint(int nElements_global,
-			      int nQuadraturePoints_element,
-			      int nDOF_test_element,
-			      int nSpace,
-			      double* a,
-			      double* Hess_w_dV,
-			      double* Lstar_w_dV)
+                              int nQuadraturePoints_element,
+                              int nDOF_test_element,
+                              int nSpace,
+                              double* a,
+                              double* Hess_w_dV,
+                              double* Lstar_w_dV)
 {
   int eN,i,k,I,J,nSpace2=nSpace*nSpace;
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	for (I=0;I<nSpace;I++)
-	  for(J=0;J<nSpace;J++)
+        for (I=0;I<nSpace;I++)
+          for(J=0;J<nSpace;J++)
             {
-              Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                         k*nDOF_test_element + 
-                         i] 
-                -=  
-                a[eN*nQuadraturePoints_element*nSpace2 + 
-                  k*nSpace2 + 
+              Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                         k*nDOF_test_element +
+                         i]
+                -=
+                a[eN*nQuadraturePoints_element*nSpace2 +
+                  k*nSpace2 +
                   I*nSpace+
                   J]
                 *
-                Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 + 
+                Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
                           k*nDOF_test_element*nSpace2 +
                           i*nSpace2+
-                          I*nSpace + 
+                          I*nSpace +
                           J];
             }
 }
@@ -3624,21 +3624,21 @@ void updateDiffusion2_adjoint_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	for (I=0;I<nSpace;I++)
-	  for(m=rowptr[I];m<rowptr[I+1];m++)
+        for (I=0;I<nSpace;I++)
+          for(m=rowptr[I];m<rowptr[I+1];m++)
             {
-              Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                         k*nDOF_test_element + 
-                         i] 
-                -=  
+              Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                         k*nDOF_test_element +
+                         i]
+                -=
                 a[eN*nQuadraturePoints_element*nnz+
                   k*nnz+
                   m]
                 *
-                Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 + 
+                Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
                           k*nDOF_test_element*nSpace2 +
                           i*nSpace2+
-                          I*nSpace + 
+                          I*nSpace +
                           colind[m]];
             }
 }
@@ -3691,32 +3691,32 @@ void updateReaction_weak(int nElements_global,
    \brief Loop over all the elements and update the element Jacobian
    with the numerical quadrature approximation of the reaction
    integral Jacobian.
-   
+
    @param nElements_global The number of elements in the mesh
-   
+
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number of degrees of freedom per
    element in the test space.
-   
+
    @param nDOF_trial_element The number of degrees of freedom per
    element in the trial space.
-   
+
    @param dr (nElements_global x nQuadraturePoints_element). The
    derivate of the reaction associated with each quadrature point
    (includes integration weight).
-   
+
    @param v_X_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_trial_element x nDOF_test_element). The tensor product of the
    finite element trial and test function values.
-   
+
    @param jacobian_weak_residual (nElements_global x nDOF_test_element x
    nDOF_trial_element). The element jacobian, which is updated upon
    return.
 
    The result of calling this function is
-   
+
    \f[ jacobian_{e,i,j} \mapsto jacobian_{e,i,j} +\int_{\Omega_e}
    \frac{\partial r}{\partial u} v_j w_i dV \quad \forall e,i,j \f]
 
@@ -3758,7 +3758,7 @@ void updateReactionJacobian_weak_lowmem(int nElements_global,
 
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param r (nElements_global x nQuadraturePoints_element) The reaction term
 
    @param strong_residual (nElements_global x nQuadraturePoints_element)
@@ -3769,18 +3769,18 @@ void updateReactionJacobian_weak_lowmem(int nElements_global,
    \f[ \mathcal{R}_k \mapsto \mathcal{R}_k + r_k \f]
 */
 void updateReaction_strong(int nElements_global,
-			   int nQuadraturePoints_element,
-			   double* r,
-			   double* strong_residual)
+                           int nQuadraturePoints_element,
+                           double* r,
+                           double* strong_residual)
 {
   int eN,k;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       strong_residual[eN*nQuadraturePoints_element+
-		  k] 
-	+= 
-	r[eN*nQuadraturePoints_element+
-	  k]; 
+                  k]
+        +=
+        r[eN*nQuadraturePoints_element+
+          k];
 }
 
 /**
@@ -3791,7 +3791,7 @@ void updateReaction_strong(int nElements_global,
 
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param r (nElements_global x nQuadraturePoints_element) The reaction term
 
    @param strong_residual (nElements_global x nQuadraturePoints_element)
@@ -3814,14 +3814,14 @@ void updateReactionJacobian_strong(int nElements_global,
     for(j=0;j<nDOF_trial_element;j++)
       for (k=0;k<nQuadraturePoints_element;k++)
         dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-                     k*nDOF_trial_element + 
-                     j] 
+                     k*nDOF_trial_element +
+                     j]
           +=
           dr[eN*nQuadraturePoints_element+
-             k] 
+             k]
           *
           v[eN*nQuadraturePoints_element*nDOF_trial_element+
-            k*nDOF_trial_element + 
+            k*nDOF_trial_element +
             j];
 }
 
@@ -3843,33 +3843,33 @@ void updateReactionJacobian_strong(int nElements_global,
    @Lstar_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_test_element). The linearized adjoint applied to the weighted
    element test functions.
-   
+
    The result of calling the function is
 
    \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i} + \frac{\partial r}{\partial u}_{k} (w dV)_{k,i}
    \f]
 */
 void updateReaction_adjoint(int nElements_global,
-			    int nQuadraturePoints_element,
-			    int nDOF_test_element,
-			    double* dr,
-			    double* w_dV,
-			    double* Lstar_w_dV)
+                            int nQuadraturePoints_element,
+                            int nDOF_test_element,
+                            double* dr,
+                            double* w_dV,
+                            double* Lstar_w_dV)
 {
   int eN,i,k;
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                   k*nDOF_test_element + 
-                   i] 
-	  += 
-	  dr[eN*nQuadraturePoints_element + 
-	     k]
-	  *
-	  w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-	       k*nDOF_test_element + 
-	       i];
+        Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                   k*nDOF_test_element +
+                   i]
+          +=
+          dr[eN*nQuadraturePoints_element +
+             k]
+          *
+          w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+               k*nDOF_test_element +
+               i];
 }
 
 
@@ -3917,13 +3917,13 @@ void updateSubgridError(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-        weak_residual[eN*nDOF_test_element + i] 
-          += 
-          error[eN*nQuadraturePoints_element + 
-		k]
+        weak_residual[eN*nDOF_test_element + i]
+          +=
+          error[eN*nQuadraturePoints_element +
+                k]
           *
-          Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                     k*nDOF_test_element + 
+          Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                     k*nDOF_test_element +
                      i];
 }
 
@@ -3931,31 +3931,31 @@ void updateSubgridError(int nElements_global,
    \brief Loop over all the elements and update the element Jacobian
    with the numerical quadrature approximation of the stabilization
    integral Jacobian.
-   
+
    @param nElements_global The number of elements in the mesh
-   
+
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number of degrees of freedom per
    element in the test space.
-   
+
    @param nDOF_trial_element The number of degrees of freedom per
    element in the trial space.
-   
+
    @param error (nElements_global x nQuadraturePoints_element). The
    error approximation associated with each quadrature point
 
    @param Lstar_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_test_element). The linearized adjoint applied to the weighted
    finite element test function values.
-   
+
    @param jacobian_weak_residual (nElements_global x nDOF_test_element x
    nDOF_trial_element). The element jacobian, which is updated upon return.
 
    The result of calling this function is
    \f[
-   jacobian_{e,i,j} \mapsto jacobian_{e,i,j} - \int_{\Omega_e} \tau \frac{\partial \mathcal{R}}{\partial u_j} \mathcal{L^*}(w dV){k,i} \quad \forall e,i 
+   jacobian_{e,i,j} \mapsto jacobian_{e,i,j} - \int_{\Omega_e} \tau \frac{\partial \mathcal{R}}{\partial u_j} \mathcal{L^*}(w dV){k,i} \quad \forall e,i
    \f]
 
    where
@@ -3979,16 +3979,16 @@ void updateSubgridErrorJacobian(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
-          jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                   i*nDOF_trial_element + 
-                   j] 
-            += 
+          jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                   i*nDOF_trial_element +
+                   j]
+            +=
             derror[eN*nQuadraturePoints_element*nDOF_trial_element+
-		   k*nDOF_trial_element+
-		   j]
+                   k*nDOF_trial_element+
+                   j]
             *
-            Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                   k*nDOF_test_element + 
+            Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                   k*nDOF_test_element +
                    i];
 }
 
@@ -4044,16 +4044,16 @@ void updateNumericalDiffusion(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
-          weak_residual[eN*nDOF_test_element + i] 
-            += 
-            numDiff[eN*nQuadraturePoints_element + 
+          weak_residual[eN*nDOF_test_element + i]
+            +=
+            numDiff[eN*nQuadraturePoints_element +
                     k]
             *
-            grad_u_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 + 
-			       k*nDOF_test_element*nSpace2 + 
-			       i*nSpace2 + 
-			       I*nSpace + 
-			       I];
+            grad_u_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
+                               k*nDOF_test_element*nSpace2 +
+                               i*nSpace2 +
+                               I*nSpace +
+                               I];
 }
 
 void updateNumericalDiffusion_lowmem(int nElements_global,
@@ -4070,18 +4070,18 @@ void updateNumericalDiffusion_lowmem(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
-          weak_residual[eN*nDOF_test_element + i] 
-            += 
-            numDiff[eN*nQuadraturePoints_element + 
+          weak_residual[eN*nDOF_test_element + i]
+            +=
+            numDiff[eN*nQuadraturePoints_element +
                     k]
             *
-            grad_u[eN*nQuadraturePoints_element*nSpace + 
-                   k*nSpace + 
+            grad_u[eN*nQuadraturePoints_element*nSpace +
+                   k*nSpace +
                    I]
             *
-            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                      k*nDOF_test_element*nSpace + 
-                      i*nSpace + 
+            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                      k*nDOF_test_element*nSpace +
+                      i*nSpace +
                       I];
 }
 
@@ -4143,19 +4143,19 @@ void updateNumericalDiffusionJacobian(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                     i*nDOF_trial_element + 
-                     j] 
-              += 
-              numDiff[eN*nQuadraturePoints_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                     i*nDOF_trial_element +
+                     j]
+              +=
+              numDiff[eN*nQuadraturePoints_element +
                       k]
               *
-              grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 + 
-				 k*nDOF_test_X_trial_element*nSpace2 + 
-				 j*nDOF_test_element*nSpace2 + 
-				 i*nSpace2 + 
-				 I*nSpace + 
-				 I];
+              grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 +
+                                 k*nDOF_test_X_trial_element*nSpace2 +
+                                 j*nDOF_test_element*nSpace2 +
+                                 i*nSpace2 +
+                                 I*nSpace +
+                                 I];
 }
 
 void updateNumericalDiffusionJacobian_lowmem(int nElements_global,
@@ -4174,43 +4174,43 @@ void updateNumericalDiffusionJacobian_lowmem(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                     i*nDOF_trial_element + 
-                     j] 
-              += 
-              numDiff[eN*nQuadraturePoints_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                     i*nDOF_trial_element +
+                     j]
+              +=
+              numDiff[eN*nQuadraturePoints_element +
                       k]
               *
-              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
-                     k*nDOF_trial_element*nSpace + 
-                     j*nSpace + 
+              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                     k*nDOF_trial_element*nSpace +
+                     j*nSpace +
                      I]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
-                        i*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
+                        i*nSpace +
                         I];
 }
 
-/** 
+/**
     \brief Calculate the product of two scalars at the quadrature points
 */
 void calculateScalarScalarProduct(int nElements_global,
                                   int nQuadraturePoints_element,
-                                  double* s1, 
-                                  double* s2, 
+                                  double* s1,
+                                  double* s2,
                                   double* sResult)
 {
   int eN,k;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
-      sResult[eN*nQuadraturePoints_element + 
-              k] 
-        = 
-        s1[eN*nQuadraturePoints_element + 
+      sResult[eN*nQuadraturePoints_element +
+              k]
+        =
+        s1[eN*nQuadraturePoints_element +
            k]
         *
-        s2[eN*nQuadraturePoints_element + 
+        s2[eN*nQuadraturePoints_element +
            k];
 }
 
@@ -4220,23 +4220,23 @@ void calculateScalarScalarProduct(int nElements_global,
 void calculateVectorScalarProduct(int nElements_global,
                                   int nQuadraturePoints_element,
                                   int nSpace,
-                                  double* v, 
-                                  double* s, 
+                                  double* v,
+                                  double* s,
                                   double* vResult)
 {
   int eN,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
-        vResult[eN*nQuadraturePoints_element*nSpace + 
-                k*nSpace + 
-                I] 
-          = 
-          v[eN*nQuadraturePoints_element*nSpace + 
-            k*nSpace + 
+        vResult[eN*nQuadraturePoints_element*nSpace +
+                k*nSpace +
+                I]
+          =
+          v[eN*nQuadraturePoints_element*nSpace +
+            k*nSpace +
             I]
           *
-          s[eN*nQuadraturePoints_element + 
+          s[eN*nQuadraturePoints_element +
             k];
 }
 
@@ -4246,8 +4246,8 @@ void calculateVectorScalarProduct(int nElements_global,
 void calculateTensorScalarProduct(int nElements_global,
                                   int nQuadraturePoints_element,
                                   int nSpace,
-                                  double* t, 
-                                  double* s, 
+                                  double* t,
+                                  double* s,
                                   double* tResult)
 {
   int eN,k,I,J,nSpace2=nSpace*nSpace;
@@ -4255,22 +4255,22 @@ void calculateTensorScalarProduct(int nElements_global,
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
         for (J=0;J<nSpace;J++)
-          tResult[eN*nQuadraturePoints_element*nSpace2 + 
-                  k*nSpace2 + 
-                  I*nSpace + 
-                  J] 
-            = 
-            t[eN*nQuadraturePoints_element*nSpace2 + 
-              k*nSpace2 + 
-              I*nSpace + 
+          tResult[eN*nQuadraturePoints_element*nSpace2 +
+                  k*nSpace2 +
+                  I*nSpace +
+                  J]
+            =
+            t[eN*nQuadraturePoints_element*nSpace2 +
+              k*nSpace2 +
+              I*nSpace +
               J]
             *
-            s[eN*nQuadraturePoints_element + 
+            s[eN*nQuadraturePoints_element +
               k];
 }
 
 
- 
+
 
 
 
@@ -4300,23 +4300,23 @@ void updateInteriorElementBoundaryFlux(int nInteriorElementBoundaries_global,
         for(k=0;k<nQuadraturePoints_elementBoundary;k++)
           {
             residual[left_eN_global*nDOF_test_element+
-		     i]
+                     i]
               +=
               flux[ebN*nQuadraturePoints_elementBoundary+
                    k]*
               w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		   left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		   k*nDOF_test_element+
-		   i];
+                   left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                   k*nDOF_test_element+
+                   i];
             residual[right_eN_global*nDOF_test_element+
-		     i]
+                     i]
               -=
               flux[ebN*nQuadraturePoints_elementBoundary+
                    k]*
               w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		   right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		   k*nDOF_test_element+
-		   i];
+                   right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                   k*nDOF_test_element+
+                   i];
           }
     }
 }
@@ -4359,14 +4359,14 @@ void updateExteriorElementBoundaryFlux(int nExteriorElementBoundaries_global,
 }
 
 void updateGlobalExteriorElementBoundaryFlux(int nExteriorElementBoundaries_global,
-					     int nQuadraturePoints_elementBoundary,
-					     int nDOF_test_element,
-					     int* exteriorElementBoundaries,
-					     int* elementBoundaryElements,
-					     int* elementBoundaryLocalElementBoundaries,
-					     double* flux,
-					     double* w_dS,
-					     double* residual)
+                                             int nQuadraturePoints_elementBoundary,
+                                             int nDOF_test_element,
+                                             int* exteriorElementBoundaries,
+                                             int* elementBoundaryElements,
+                                             int* elementBoundaryLocalElementBoundaries,
+                                             double* flux,
+                                             double* w_dS,
+                                             double* residual)
 {
   int ebNE,ebN,eN_global,ebN_element,i,k;
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -4390,14 +4390,14 @@ void updateGlobalExteriorElementBoundaryFlux(int nExteriorElementBoundaries_glob
     }
 }
 void updateGlobalExteriorElementBoundaryStressFlux(int nExteriorElementBoundaries_global,
-						   int nQuadraturePoints_elementBoundary,
-						   int nDOF_test_element,
-						   int* exteriorElementBoundaries,
-						   int* elementBoundaryElements,
-						   int* elementBoundaryLocalElementBoundaries,
-						   double* stressFlux,
-						   double* w_dS,
-						   double* residual)
+                                                   int nQuadraturePoints_elementBoundary,
+                                                   int nDOF_test_element,
+                                                   int* exteriorElementBoundaries,
+                                                   int* elementBoundaryElements,
+                                                   int* elementBoundaryLocalElementBoundaries,
+                                                   double* stressFlux,
+                                                   double* w_dS,
+                                                   double* residual)
 {
   int ebNE,ebN,eN_global,ebN_element,i,k,I;
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -4407,30 +4407,30 @@ void updateGlobalExteriorElementBoundaryStressFlux(int nExteriorElementBoundarie
       ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for(i=0;i<nDOF_test_element;i++)
         for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	  residual[eN_global*nDOF_test_element+
-		   i]
-	    +=
-	    stressFlux[ebNE*nQuadraturePoints_elementBoundary+
-		       k]
-	    *
-	    w_dS[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		 k*nDOF_test_element+
-		 i];
+          residual[eN_global*nDOF_test_element+
+                   i]
+            +=
+            stressFlux[ebNE*nQuadraturePoints_elementBoundary+
+                       k]
+            *
+            w_dS[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                 k*nDOF_test_element+
+                 i];
     }
 }
 /**
    \brief Update a two-sided (say nonconservative HJ flux) element boundary flux on interior element boundaries
 */
 void updateInteriorTwoSidedElementBoundaryFlux(int nInteriorElementBoundaries_global,
-					       int nElementBoundaries_element,
-					       int nQuadraturePoints_elementBoundary,
-					       int nDOF_test_element,
-					       int* interiorElementBoundaries,
-					       int* elementBoundaryElements,
-					       int* elementBoundaryLocalElementBoundaries,
-					       double* flux,
-					       double* w_dS,
-					       double* residual)
+                                               int nElementBoundaries_element,
+                                               int nQuadraturePoints_elementBoundary,
+                                               int nDOF_test_element,
+                                               int* interiorElementBoundaries,
+                                               int* elementBoundaryElements,
+                                               int* elementBoundaryLocalElementBoundaries,
+                                               double* flux,
+                                               double* w_dS,
+                                               double* residual)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,i,k;
   for(ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -4444,25 +4444,25 @@ void updateInteriorTwoSidedElementBoundaryFlux(int nInteriorElementBoundaries_gl
         for(k=0;k<nQuadraturePoints_elementBoundary;k++)
           {
             residual[left_eN_global*nDOF_test_element+
-		     i]
+                     i]
               +=
               flux[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-		   left_ebN_element*nQuadraturePoints_elementBoundary+ /*left flux*/
+                   left_ebN_element*nQuadraturePoints_elementBoundary+ /*left flux*/
                    k]*
               w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		   left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		   k*nDOF_test_element+
-		   i];
+                   left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                   k*nDOF_test_element+
+                   i];
             residual[right_eN_global*nDOF_test_element+
-		     i]
+                     i]
               +=
               flux[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-		   right_ebN_element*nQuadraturePoints_elementBoundary+ /*right flux*/
+                   right_ebN_element*nQuadraturePoints_elementBoundary+ /*right flux*/
                    k]*
               w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		   right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		   k*nDOF_test_element+
-		   i];
+                   right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                   k*nDOF_test_element+
+                   i];
           }
     }
 }
@@ -4616,13 +4616,13 @@ void calculateExteriorElementBoundaryStress2D(int nExteriorElementBoundaries_glo
    if that is desired
  */
 void accumulateExteriorElementPressureIntegrals(int nExteriorElementBoundaries_global,
-						int nQuadraturePoints_elementBoundary,
-						int* elementBoundaryMaterialTypes,
-						int* exteriorElementBoundaries,
-						double* p,
-						double* dS,
-						double* P,
-						double* boundaryMeasure)
+                                                int nQuadraturePoints_elementBoundary,
+                                                int* elementBoundaryMaterialTypes,
+                                                int* exteriorElementBoundaries,
+                                                double* p,
+                                                double* dS,
+                                                double* P,
+                                                double* boundaryMeasure)
 {
   int ebNE,ebN,k,elementBoundaryFlag;
   /*loop through exterior element boundaries*/
@@ -4636,9 +4636,9 @@ void accumulateExteriorElementPressureIntegrals(int nExteriorElementBoundaries_g
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         {
           P[elementBoundaryFlag] += p[ebNE*nQuadraturePoints_elementBoundary+k]
-	    *
+            *
             dS[ebNE*nQuadraturePoints_elementBoundary+k];
-	  boundaryMeasure[elementBoundaryFlag] += 
+          boundaryMeasure[elementBoundaryFlag] +=
             dS[ebNE*nQuadraturePoints_elementBoundary+k];
         }
     }
@@ -4649,23 +4649,23 @@ void accumulateExteriorElementPressureIntegrals(int nExteriorElementBoundaries_g
    \brief Update the global residuals from the element residuals.
 */
 void updateGlobalResidualFromElementResidual(int nElements_global,
-					     int nDOF_test_element,
-					     int offset_r,
-					     int stride_r,
-					     int* nFreeDOF_element_r,
-					     int* freeLocal_r,
-					     int* freeGlobal_r,
-					     double* elementResidual,
-					     double* globalResidual)
+                                             int nDOF_test_element,
+                                             int offset_r,
+                                             int stride_r,
+                                             int* nFreeDOF_element_r,
+                                             int* freeLocal_r,
+                                             int* freeGlobal_r,
+                                             double* elementResidual,
+                                             double* globalResidual)
 {
   int eN,ii;
   for (eN=0;eN<nElements_global;eN++)
     for (ii=0;ii<nFreeDOF_element_r[eN];ii++)
-      globalResidual[offset_r + 
-		     stride_r*freeGlobal_r[eN*nDOF_test_element+
-					 ii]] 
+      globalResidual[offset_r +
+                     stride_r*freeGlobal_r[eN*nDOF_test_element+
+                                         ii]]
         +=
-        elementResidual[eN*nDOF_test_element + 
+        elementResidual[eN*nDOF_test_element +
                         freeLocal_r[eN*nDOF_test_element+
                                     ii]];
 }
@@ -4674,43 +4674,43 @@ void updateGlobalResidualFromElementResidual(int nElements_global,
    \brief  Update the global dense jacobian  from the element Jacobians.
 */
 void updateGlobalJacobianFromElementJacobian_dense(int nElements_global,
-						   int nDOF_test_element,
-						   int nDOF_trial_element,
-						   int offset_r,
-						   int stride_r,
-						   int offset_u,
-						   int stride_u,
-						   int nFreeVDOF_global,
-						   int* nFreeDOF_element_r,
-						   int* freeLocal_r,
-						   int* freeGlobal_r,
-						   int* nFreeDOF_element_u,
-						   int* freeLocal_u,
-						   int* freeGlobal_u,
-						   double* elementJacobian,
-						   double* globalJacobian)
+                                                   int nDOF_test_element,
+                                                   int nDOF_trial_element,
+                                                   int offset_r,
+                                                   int stride_r,
+                                                   int offset_u,
+                                                   int stride_u,
+                                                   int nFreeVDOF_global,
+                                                   int* nFreeDOF_element_r,
+                                                   int* freeLocal_r,
+                                                   int* freeGlobal_r,
+                                                   int* nFreeDOF_element_u,
+                                                   int* freeLocal_u,
+                                                   int* freeGlobal_u,
+                                                   double* elementJacobian,
+                                                   double* globalJacobian)
 {
   int eN,ii,jj,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,i,j,jacIndex,I,J;
   for (eN=0;eN<nElements_global;eN++)
     for (ii=0;ii<nFreeDOF_element_r[eN];ii++)
       {
-	i = freeLocal_r[eN*nDOF_test_element+
-			ii];
-	I = offset_r + stride_r*freeGlobal_r[eN*nDOF_test_element+
-					     ii];
-	for (jj=0;jj<nFreeDOF_element_u[eN];jj++)
-	  {
-	    j = freeLocal_u[eN*nDOF_trial_element+
-			    jj];
-	    J = offset_u + stride_u*freeGlobal_u[eN*nDOF_trial_element+
-						 jj];
+        i = freeLocal_r[eN*nDOF_test_element+
+                        ii];
+        I = offset_r + stride_r*freeGlobal_r[eN*nDOF_test_element+
+                                             ii];
+        for (jj=0;jj<nFreeDOF_element_u[eN];jj++)
+          {
+            j = freeLocal_u[eN*nDOF_trial_element+
+                            jj];
+            J = offset_u + stride_u*freeGlobal_u[eN*nDOF_trial_element+
+                                                 jj];
             jacIndex = I + J*nFreeVDOF_global;
-	    globalJacobian[jacIndex]
-	      +=
-	      elementJacobian[eN*nDOF_test_X_trial_element +
-			      i*nDOF_trial_element+
-			      j];
-	  }
+            globalJacobian[jacIndex]
+              +=
+              elementJacobian[eN*nDOF_test_X_trial_element +
+                              i*nDOF_trial_element+
+                              j];
+          }
       }
 }
 
@@ -4774,29 +4774,29 @@ void updateGlobalJacobianFromElementJacobian_eb_dense(int* elementNeighbors,
 
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInteriorElementBoundaries_global,
-								       int nElementBoundaries_element,
-								       int nQuadraturePoints_elementBoundary,
-								       int nDOF_test_element,
-								       int nDOF_trial_element,
-								       int offset_r,
-								       int stride_r,
-								       int offset_u,
-								       int stride_u,
-								       int nFreeVDOF_global,
-								       int* interiorElementBoundaries,
-								       int* elementBoundaryElements,
-								       int* elementBoundaryLocalElementBoundaries,
-								       int* nFreeDOF_element_r,
-								       int* nFreeDOF_element_u,
-								       int* freeLocal_r,
-								       int* freeGlobal_r,
-								       int* freeLocal_u,
-								       int* freeGlobal_u,
-								       double* elementBoundaryFluxJacobian,
-								       double* w_dS,
-								       double* jac)
+                                                                       int nElementBoundaries_element,
+                                                                       int nQuadraturePoints_elementBoundary,
+                                                                       int nDOF_test_element,
+                                                                       int nDOF_trial_element,
+                                                                       int offset_r,
+                                                                       int stride_r,
+                                                                       int offset_u,
+                                                                       int stride_u,
+                                                                       int nFreeVDOF_global,
+                                                                       int* interiorElementBoundaries,
+                                                                       int* elementBoundaryElements,
+                                                                       int* elementBoundaryLocalElementBoundaries,
+                                                                       int* nFreeDOF_element_r,
+                                                                       int* freeLocal_r,
+                                                                       int* freeGlobal_r,
+                                                                       int* nFreeDOF_element_u,
+                                                                       int* freeLocal_u,
+                                                                       int* freeGlobal_u,
+                                                                       double* elementBoundaryFluxJacobian,
+                                                                       double* w_dS,
+                                                                       double* jac)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,ii,i,k,jj,j,jacIndex,I,J;
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -4809,46 +4809,46 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInte
       for(ii=0;ii<nFreeDOF_element_r[left_eN_global];ii++)
         {
           i = freeLocal_r[left_eN_global*nDOF_test_element+
-			ii];
-	  I = offset_r + stride_r*freeGlobal_r[left_eN_global*nDOF_test_element+
-					     ii];
+                        ii];
+          I = offset_r + stride_r*freeGlobal_r[left_eN_global*nDOF_test_element+
+                                             ii];
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
               for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
                 {
                   j = freeLocal_u[left_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
-                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                  jac[jacIndex]
+                    +=
+                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                 0*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]
                     *
-                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
-			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
+                         left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
                   j = freeLocal_u[right_eN_global*nDOF_trial_element+
                                   jj];
-		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
+                  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
                                                        jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
-                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                  jac[jacIndex]
+                    +=
+                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                 1*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]*
-                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
-			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+i];
+                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
+                         left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+i];
                 }
             }
         }
@@ -4856,46 +4856,46 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInte
         {
           i = freeLocal_r[right_eN_global*nDOF_test_element+
                         ii];
-	  I = offset_r + stride_r*freeGlobal_r[right_eN_global*nDOF_test_element+
-					     ii];
+          I = offset_r + stride_r*freeGlobal_r[right_eN_global*nDOF_test_element+
+                                             ii];
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
               for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
                 {
                   j = freeLocal_u[left_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    -= 
+                  jac[jacIndex]
+                    -=
                     elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 0*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]
                     *
                     w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
                   j = freeLocal_u[right_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    -= 
+                  jac[jacIndex]
+                    -=
                     elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 1*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]*
                     w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -4904,7 +4904,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInte
 
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* elementNeighbors,
                                                                           int nElements_global,
                                                                           int nInteriorElementBoundaries_global,
@@ -4921,9 +4921,9 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                                                                           int* elementBoundaryElements,
                                                                           int* elementBoundaryLocalElementBoundaries,
                                                                           int* nFreeDOF_element_r,
-                                                                          int* nFreeDOF_element_u,
                                                                           int* freeLocal_r,
                                                                           int* freeGlobal_r,
+                                                                          int* nFreeDOF_element_u,
                                                                           int* freeLocal_u,
                                                                           int* freeGlobal_u,
                                                                           double* elementBoundaryFluxJacobian_eb,
@@ -4968,15 +4968,15 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[left_eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          += 
-                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                        jac[jacIndex]
+                          +=
+                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                          0*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          k*nDOF_trial_element+
                                                          j]
                           *
-                          w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                          w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
                                left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                                k*nDOF_test_element+
                                i];
@@ -5001,14 +5001,14 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[right_eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          += 
-                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                        jac[jacIndex]
+                          +=
+                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                          1*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          k*nDOF_trial_element+
                                                          j]*
-                          w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                          w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
                                left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                                k*nDOF_test_element+i];
 /*                         printf("ind=%i,ebN = %i,left_eN_global=%i,left_ebN_element=%i,ebN_element=%i,i=%i,j=%i,jac=%12.5e,fjac=%12.5e,w=%12.5e\n", */
@@ -5042,8 +5042,8 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[left_eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          -= 
+                        jac[jacIndex]
+                          -=
                           elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          0*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
@@ -5075,8 +5075,8 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[right_eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          -= 
+                        jac[jacIndex]
+                          -=
                           elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          1*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
@@ -5105,29 +5105,29 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
 }
 /**
    \brief Update the global dense Jacobian from the element boundary two-sided Hamiltonflux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(int nInteriorElementBoundaries_global,
-									  int nElementBoundaries_element,
-									  int nQuadraturePoints_elementBoundary,
-									  int nDOF_test_element,
-									  int nDOF_trial_element,
-									  int offset_r,
-									  int stride_r,
-									  int offset_u,
-									  int stride_u,
-									  int nFreeVDOF_global,
-									  int* interiorElementBoundaries,
-									  int* elementBoundaryElements,
-									  int* elementBoundaryLocalElementBoundaries,
-									  int* nFreeDOF_element_r,
-									  int* nFreeDOF_element_u,
-									  int* freeLocal_r,
-									  int* freeGlobal_r,
-									  int* freeLocal_u,
-									  int* freeGlobal_u,
-									  double* elementBoundaryFluxJacobian_2sided,
-									  double* w_dS,
-									  double* jac)
+                                                                          int nElementBoundaries_element,
+                                                                          int nQuadraturePoints_elementBoundary,
+                                                                          int nDOF_test_element,
+                                                                          int nDOF_trial_element,
+                                                                          int offset_r,
+                                                                          int stride_r,
+                                                                          int offset_u,
+                                                                          int stride_u,
+                                                                          int nFreeVDOF_global,
+                                                                          int* interiorElementBoundaries,
+                                                                          int* elementBoundaryElements,
+                                                                          int* elementBoundaryLocalElementBoundaries,
+                                                                          int* nFreeDOF_element_r,
+                                                                          int* freeLocal_r,
+                                                                          int* freeGlobal_r,
+                                                                          int* nFreeDOF_element_u,
+                                                                          int* freeLocal_u,
+                                                                          int* freeGlobal_u,
+                                                                          double* elementBoundaryFluxJacobian_2sided,
+                                                                          double* w_dS,
+                                                                          double* jac)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,ii,i,k,jj,j,jacIndex,I,J;
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -5139,100 +5139,100 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(in
       right_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+1];
       /*left  flux*/
       for(ii=0;ii<nFreeDOF_element_r[left_eN_global];ii++)
-	{
-	  i = freeLocal_r[left_eN_global*nDOF_test_element+
-			  ii];
-	  I = offset_r + stride_r*freeGlobal_r[left_eN_global*nDOF_test_element+
-					       ii];
-	  for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	    {
-	      for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
-		{
-		  j = freeLocal_u[left_eN_global*nDOF_trial_element+
-				  jj];
-		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
-						       jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-		  jac[jacIndex] 
-		    += 
-		    elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
-						       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
-						       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left  neig. dep*/
-						       k*nDOF_trial_element+
-						       j]
-		    *
-		    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
-			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
-		}
-	      for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
-		{
-		  j = freeLocal_u[right_eN_global*nDOF_trial_element+
-				  jj];
-		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
-						       jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-		  jac[jacIndex] 
-		    += 
-		    elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
-						       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
-						       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right  neig. dep*/
-						       k*nDOF_trial_element+
-						       j]*
-		    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
-			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+i];
-		}
-	    }/*k*/
-	}/*ii*/
+        {
+          i = freeLocal_r[left_eN_global*nDOF_test_element+
+                          ii];
+          I = offset_r + stride_r*freeGlobal_r[left_eN_global*nDOF_test_element+
+                                               ii];
+          for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+            {
+              for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
+                {
+                  j = freeLocal_u[left_eN_global*nDOF_trial_element+
+                                  jj];
+                  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
+                                                       jj];
+                  jacIndex = I+J*nFreeVDOF_global;
+                  jac[jacIndex]
+                    +=
+                    elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+                                                       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
+                                                       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left  neig. dep*/
+                                                       k*nDOF_trial_element+
+                                                       j]
+                    *
+                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
+                         left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
+                }
+              for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
+                {
+                  j = freeLocal_u[right_eN_global*nDOF_trial_element+
+                                  jj];
+                  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
+                                                       jj];
+                  jacIndex = I+J*nFreeVDOF_global;
+                  jac[jacIndex]
+                    +=
+                    elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+                                                       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
+                                                       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right  neig. dep*/
+                                                       k*nDOF_trial_element+
+                                                       j]*
+                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
+                         left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+i];
+                }
+            }/*k*/
+        }/*ii*/
       /*right flux*/
       for(ii=0;ii<nFreeDOF_element_r[right_eN_global];ii++)
         {
           i = freeLocal_r[right_eN_global*nDOF_test_element+
                         ii];
-	  I = offset_r + stride_r*freeGlobal_r[right_eN_global*nDOF_test_element+
-					     ii];
+          I = offset_r + stride_r*freeGlobal_r[right_eN_global*nDOF_test_element+
+                                             ii];
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
               for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
                 {
                   j = freeLocal_u[left_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
+                  jac[jacIndex]
+                    +=
                     elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
-						       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left neighbor*/
-						       k*nDOF_trial_element+
-						       j]
+                                                       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
+                                                       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left neighbor*/
+                                                       k*nDOF_trial_element+
+                                                       j]
                     *
                     w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
                   j = freeLocal_u[right_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
+                  jac[jacIndex]
+                    +=
                     elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
-						       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right neig dep*/
-						       k*nDOF_trial_element+
-						       j]*
+                                                       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
+                                                       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right neig dep*/
+                                                       k*nDOF_trial_element+
+                                                       j]*
                     w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -5241,24 +5241,24 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(in
 
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExteriorElementBoundaries_global,
                                                                        int nElementBoundaries_element,
                                                                        int nQuadraturePoints_elementBoundary,
                                                                        int nDOF_test_element,
                                                                        int nDOF_trial_element,
-								       int offset_r,
-								       int stride_r,
-								       int offset_u,
-								       int stride_u,
+                                                                       int offset_r,
+                                                                       int stride_r,
+                                                                       int offset_u,
+                                                                       int stride_u,
                                                                        int nFreeVDOF_global,
                                                                        int* exteriorElementBoundaries,
                                                                        int* elementBoundaryElements,
                                                                        int* elementBoundaryLocalElementBoundaries,
                                                                        int* nFreeDOF_element_r,
-                                                                       int* nFreeDOF_element_u,
                                                                        int* freeLocal_r,
                                                                        int* freeGlobal_r,
+                                                                       int* nFreeDOF_element_u,
                                                                        int* freeLocal_u,
                                                                        int* freeGlobal_u,
                                                                        double* elementBoundaryFluxJacobian,
@@ -5275,7 +5275,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExte
         {
           i = freeLocal_r[eN_global*nDOF_test_element+
                           ii];
-	  I = offset_r + stride_r*freeGlobal_r[eN_global*nDOF_test_element+
+          I = offset_r + stride_r*freeGlobal_r[eN_global*nDOF_test_element+
                                                ii];
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
@@ -5283,20 +5283,20 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExte
                 {
                   j = freeLocal_u[eN_global*nDOF_trial_element+
                                   jj];
-		  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
+                  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
                                                        jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
-                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                  jacIndex = I+J*nFreeVDOF_global;
+                  jac[jacIndex]
+                    +=
+                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                 0*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]
                     *
-                    w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
-			 ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                    w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
+                         ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -5305,7 +5305,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExte
 
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(int* elementNeighbors,
                                                                           int nElements_global,
                                                                           int nExteriorElementBoundaries_global,
@@ -5322,9 +5322,9 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(int* e
                                                                           int* elementBoundaryElements,
                                                                           int* elementBoundaryLocalElementBoundaries,
                                                                           int* nFreeDOF_element_r,
-                                                                          int* nFreeDOF_element_u,
                                                                           int* freeLocal_r,
                                                                           int* freeGlobal_r,
+                                                                          int* nFreeDOF_element_u,
                                                                           int* freeLocal_u,
                                                                           int* freeGlobal_u,
                                                                           double* elementBoundaryFluxJacobian_eb,
@@ -5362,15 +5362,15 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          += 
-                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                        jac[jacIndex]
+                          +=
+                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                          0*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_eN*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          k*nDOF_trial_element+
                                                          j]
                           *
-                          w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                          w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
                                ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                                k*nDOF_test_element+
                                i];
@@ -5395,31 +5395,31 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(int* e
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at exterior boundaries
           only difference from updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian
           is test function dimensionality right now
-*/    
+*/
 void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(int* elementNeighbors,
-										int nElements_global,
-										int nExteriorElementBoundaries_global,
-										int nElementBoundaries_element,
-										int nQuadraturePoints_elementBoundary,
-										int nDOF_test_element,
-										int nDOF_trial_element,
-										int offset_r,
-										int stride_r,
-										int offset_u,
-										int stride_u,
-										int nFreeVDOF_global,
-										int* exteriorElementBoundaries,
-										int* elementBoundaryElements,
-										int* elementBoundaryLocalElementBoundaries,
-										int* nFreeDOF_element_r,
-										int* nFreeDOF_element_u,
-										int* freeLocal_r,
-										int* freeGlobal_r,
-										int* freeLocal_u,
-										int* freeGlobal_u,
-										double* elementBoundaryFluxJacobian_eb,
-										double* w_dS,
-										double* jac)
+                                                                                int nElements_global,
+                                                                                int nExteriorElementBoundaries_global,
+                                                                                int nElementBoundaries_element,
+                                                                                int nQuadraturePoints_elementBoundary,
+                                                                                int nDOF_test_element,
+                                                                                int nDOF_trial_element,
+                                                                                int offset_r,
+                                                                                int stride_r,
+                                                                                int offset_u,
+                                                                                int stride_u,
+                                                                                int nFreeVDOF_global,
+                                                                                int* exteriorElementBoundaries,
+                                                                                int* elementBoundaryElements,
+                                                                                int* elementBoundaryLocalElementBoundaries,
+                                                                                int* nFreeDOF_element_r,
+                                                                                int* freeLocal_r,
+                                                                                int* freeGlobal_r,
+                                                                                int* nFreeDOF_element_u,
+                                                                                int* freeLocal_u,
+                                                                                int* freeGlobal_u,
+                                                                                double* elementBoundaryFluxJacobian_eb,
+                                                                                double* w_dS,
+                                                                                double* jac)
 {
   int ebNE,ebN,eN_global,ebN_element,ebN_eN,eN_ebN,ii,i,k,jj,j,I,J,jacIndex;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -5452,9 +5452,9 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(
                         J = offset_u + stride_u*freeGlobal_u[eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          += 
-                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                        jac[jacIndex]
+                          +=
+                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                          0*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_eN*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          k*nDOF_trial_element+
@@ -5482,28 +5482,28 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(
 }
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(int nExteriorElementBoundaries_global,
-									     int nQuadraturePoints_elementBoundary,
-									     int nDOF_test_element,
-									     int nDOF_trial_element,
-									     int offset_r,
-									     int stride_r,
-									     int offset_u,
-									     int stride_u,
-									     int nFreeVDOF_global,
-									     int* exteriorElementBoundaries,
-									     int* elementBoundaryElements,
-									     int* elementBoundaryLocalElementBoundaries,
-									     int* nFreeDOF_element_r,
-									     int* nFreeDOF_element_u,
-									     int* freeLocal_r,
-									     int* freeGlobal_r,
-									     int* freeLocal_u,
-									     int* freeGlobal_u,
-									     double* elementBoundaryFluxJacobian,
-									     double* w_dS,
-									     double* jac)
+                                                                             int nQuadraturePoints_elementBoundary,
+                                                                             int nDOF_test_element,
+                                                                             int nDOF_trial_element,
+                                                                             int offset_r,
+                                                                             int stride_r,
+                                                                             int offset_u,
+                                                                             int stride_u,
+                                                                             int nFreeVDOF_global,
+                                                                             int* exteriorElementBoundaries,
+                                                                             int* elementBoundaryElements,
+                                                                             int* elementBoundaryLocalElementBoundaries,
+                                                                             int* nFreeDOF_element_r,
+                                                                             int* freeLocal_r,
+                                                                             int* freeGlobal_r,
+                                                                             int* nFreeDOF_element_u,
+                                                                             int* freeLocal_u,
+                                                                             int* freeGlobal_u,
+                                                                             double* elementBoundaryFluxJacobian,
+                                                                             double* w_dS,
+                                                                             double* jac)
 {
   int ebNE,ebN,eN_global,ebN_element,ii,i,k,jj,j,I,J,jacIndex;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -5515,7 +5515,7 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(int
         {
           i = freeLocal_r[eN_global*nDOF_test_element+
                           ii];
-	  I = offset_r + stride_r*freeGlobal_r[eN_global*nDOF_test_element+
+          I = offset_r + stride_r*freeGlobal_r[eN_global*nDOF_test_element+
                                                ii];
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
@@ -5523,18 +5523,18 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(int
                 {
                   j = freeLocal_u[eN_global*nDOF_trial_element+
                                   jj];
-		  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
+                  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
                                                        jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
+                  jacIndex = I+J*nFreeVDOF_global;
+                  jac[jacIndex]
+                    +=
                     elementBoundaryFluxJacobian[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]
                     *
                     w_dS[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -5545,39 +5545,39 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(int
    \brief  Update the global CSR jacobian  from the element Jacobians.
 */
 void updateGlobalJacobianFromElementJacobian_CSR(int nElements_global,
-						 int nDOF_test_element,
-						 int nDOF_trial_element,
-						 int* nFreeDOF_element_r,
-						 int* freeLocal_r,
-						 int* nFreeDOF_element_u,
-						 int* freeLocal_u,
-						 int* csrRowIndeces_ru,
-						 int* csrColumnOffsets_ru,
-						 double* elementJacobian,
-						 double* globalJacobian)
+                                                 int nDOF_test_element,
+                                                 int nDOF_trial_element,
+                                                 int* nFreeDOF_element_r,
+                                                 int* freeLocal_r,
+                                                 int* nFreeDOF_element_u,
+                                                 int* freeLocal_u,
+                                                 int* csrRowIndeces_ru,
+                                                 int* csrColumnOffsets_ru,
+                                                 double* elementJacobian,
+                                                 double* globalJacobian)
 {
   int eN,ii,jj,i,j,jacIndex,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element;
   for (eN=0;eN<nElements_global;eN++)
     for (ii=0;ii<nFreeDOF_element_r[eN];ii++)
       {
-	i = freeLocal_r[eN*nDOF_test_element+
-		      ii];
-	for (jj=0;jj<nFreeDOF_element_u[eN];jj++)
-	  {
-	    j = freeLocal_u[eN*nDOF_trial_element+
-			  jj];
-	    jacIndex = csrRowIndeces_ru[eN*nDOF_test_element+
-				     ii]
-	      +
-	      csrColumnOffsets_ru[eN*nDOF_test_X_trial_element+
+        i = freeLocal_r[eN*nDOF_test_element+
+                      ii];
+        for (jj=0;jj<nFreeDOF_element_u[eN];jj++)
+          {
+            j = freeLocal_u[eN*nDOF_trial_element+
+                          jj];
+            jacIndex = csrRowIndeces_ru[eN*nDOF_test_element+
+                                     ii]
+              +
+              csrColumnOffsets_ru[eN*nDOF_test_X_trial_element+
                                   ii*nDOF_trial_element+
                                   jj];
-	    globalJacobian[jacIndex]
-	      +=
-	      elementJacobian[eN*nDOF_test_X_trial_element + 
-			      i*nDOF_trial_element + 
-			      j];
-	  }
+            globalJacobian[jacIndex]
+              +=
+              elementJacobian[eN*nDOF_test_X_trial_element +
+                              i*nDOF_trial_element +
+                              j];
+          }
       }
 }
 
@@ -5630,7 +5630,7 @@ void updateGlobalJacobianFromElementJacobian_eb_CSR(int* elementNeighbors,
                     +=
                     elementJacobian_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element +
                                        ebN*nDOF_test_X_trial_element+
-                                       i*nDOF_trial_element + 
+                                       i*nDOF_trial_element +
                                        j];
                 }
             }
@@ -5639,24 +5639,24 @@ void updateGlobalJacobianFromElementJacobian_eb_CSR(int* elementNeighbors,
 
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteriorElementBoundaries_global,
-								     int nElementBoundaries_element,
-								     int nQuadraturePoints_elementBoundary,
-								     int nDOF_test_element,
-								     int nDOF_trial_element,
-								     int* interiorElementBoundaries,
-								     int* elementBoundaryElements,
-								     int* elementBoundaryLocalElementBoundaries,
-								     int* nFreeDOF_element_r,
-								     int* freeLocal_r,
-								     int* nFreeDOF_element_u,
-								     int* freeLocal_u,
-								     int* csrRowIndeces_ru,
-								     int* csrColumnOffsets_eb_ru,
-								     double* elementBoundaryFluxJacobian,
-								     double* w_dS,
-								     double* jac)
+                                                                     int nElementBoundaries_element,
+                                                                     int nQuadraturePoints_elementBoundary,
+                                                                     int nDOF_test_element,
+                                                                     int nDOF_trial_element,
+                                                                     int* interiorElementBoundaries,
+                                                                     int* elementBoundaryElements,
+                                                                     int* elementBoundaryLocalElementBoundaries,
+                                                                     int* nFreeDOF_element_r,
+                                                                     int* freeLocal_r,
+                                                                     int* nFreeDOF_element_u,
+                                                                     int* freeLocal_u,
+                                                                     int* csrRowIndeces_ru,
+                                                                     int* csrColumnOffsets_eb_ru,
+                                                                     double* elementBoundaryFluxJacobian,
+                                                                     double* w_dS,
+                                                                     double* jac)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,ii,i,k,jj,j,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,jacIndex;
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -5691,9 +5691,9 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteri
                                                 j]
                     *
                     w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
-			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
@@ -5715,9 +5715,9 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteri
                                                 j]
                     *
                     w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
-			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -5747,9 +5747,9 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteri
                                                 j]
                     *
                     w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
@@ -5770,9 +5770,9 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteri
                                                 k*nDOF_trial_element+
                                                 j]*
                     w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -5781,24 +5781,24 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteri
 
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(int nExteriorElementBoundaries_global,
-								     int nElementBoundaries_element,
-								     int nQuadraturePoints_elementBoundary,
+                                                                     int nElementBoundaries_element,
+                                                                     int nQuadraturePoints_elementBoundary,
                                                                      int nDOF_test_element,
-								     int nDOF_trial_element,
-								     int* exteriorElementBoundaries,
-								     int* elementBoundaryElements,
-								     int* elementBoundaryLocalElementBoundaries,
-								     int* nFreeDOF_element_r,
-								     int* freeLocal_r,
-								     int* nFreeDOF_element_u,
-								     int* freeLocal_u,
-								     int* csrRowIndeces_ru,
-								     int* csrColumnOffsets_eb_ru,
-								     double* elementBoundaryFluxJacobian,
-								     double* w_dS,
-								     double* jac)
+                                                                     int nDOF_trial_element,
+                                                                     int* exteriorElementBoundaries,
+                                                                     int* elementBoundaryElements,
+                                                                     int* elementBoundaryLocalElementBoundaries,
+                                                                     int* nFreeDOF_element_r,
+                                                                     int* freeLocal_r,
+                                                                     int* nFreeDOF_element_u,
+                                                                     int* freeLocal_u,
+                                                                     int* csrRowIndeces_ru,
+                                                                     int* csrColumnOffsets_eb_ru,
+                                                                     double* elementBoundaryFluxJacobian,
+                                                                     double* w_dS,
+                                                                     double* jac)
 {
   int ebNE,ebN,eN_global,ebN_element,ii,i,k,jj,j,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,jacIndex;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -5831,9 +5831,9 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(int nExteri
                                                 j]
                     *
                     w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
-			 ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -5841,23 +5841,23 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(int nExteri
 }
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_CSR(int nExteriorElementBoundaries_global,
-									   int nQuadraturePoints_elementBoundary,
-									   int nDOF_test_element,
-									   int nDOF_trial_element,
-									   int* exteriorElementBoundaries,
-									   int* elementBoundaryElements,
-									   int* elementBoundaryLocalElementBoundaries,
-									   int* nFreeDOF_element_r,
-									   int* freeLocal_r,
-									   int* nFreeDOF_element_u,
-									   int* freeLocal_u,
-									   int* csrRowIndeces_ru,
-									   int* csrColumnOffsets_eb_ru,
-									   double* elementBoundaryFluxJacobian,
-									   double* w_dS,
-									   double* jac)
+                                                                           int nQuadraturePoints_elementBoundary,
+                                                                           int nDOF_test_element,
+                                                                           int nDOF_trial_element,
+                                                                           int* exteriorElementBoundaries,
+                                                                           int* elementBoundaryElements,
+                                                                           int* elementBoundaryLocalElementBoundaries,
+                                                                           int* nFreeDOF_element_r,
+                                                                           int* freeLocal_r,
+                                                                           int* nFreeDOF_element_u,
+                                                                           int* freeLocal_u,
+                                                                           int* csrRowIndeces_ru,
+                                                                           int* csrColumnOffsets_eb_ru,
+                                                                           double* elementBoundaryFluxJacobian,
+                                                                           double* w_dS,
+                                                                           double* jac)
 {
   int ebNE,ebN,eN_global,ii,i,k,jj,j,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,jacIndex;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -5888,8 +5888,8 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_CSR(int n
                                                 j]
                     *
                     w_dS[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -5898,25 +5898,25 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_CSR(int n
 
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(int* elementNeighbors,
                                                                         int nInteriorElementBoundaries_global,
-								     int nElementBoundaries_element,
-								     int nQuadraturePoints_elementBoundary,
-								     int nDOF_test_element,
-								     int nDOF_trial_element,
-								     int* interiorElementBoundaries,
-								     int* elementBoundaryElements,
-								     int* elementBoundaryLocalElementBoundaries,
-								     int* nFreeDOF_element_r,
-								     int* freeLocal_r,
-								     int* nFreeDOF_element_u,
-								     int* freeLocal_u,
-								     int* csrRowIndeces_ru,
-								     int* csrColumnOffsets_eb_eNebN_ru,
-								     double* elementBoundaryFluxJacobian_eb,
-								     double* w_dS,
-								     double* jac)
+                                                                     int nElementBoundaries_element,
+                                                                     int nQuadraturePoints_elementBoundary,
+                                                                     int nDOF_test_element,
+                                                                     int nDOF_trial_element,
+                                                                     int* interiorElementBoundaries,
+                                                                     int* elementBoundaryElements,
+                                                                     int* elementBoundaryLocalElementBoundaries,
+                                                                     int* nFreeDOF_element_r,
+                                                                     int* freeLocal_r,
+                                                                     int* nFreeDOF_element_u,
+                                                                     int* freeLocal_u,
+                                                                     int* csrRowIndeces_ru,
+                                                                     int* csrColumnOffsets_eb_eNebN_ru,
+                                                                     double* elementBoundaryFluxJacobian_eb,
+                                                                     double* w_dS,
+                                                                     double* jac)
 {
   int ebNI,ebN,ebN_element,left_eN_ebN,right_eN_ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,ii,i,k,jj,j,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,jacIndex;
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -6102,25 +6102,25 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(int* ele
 
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(int* elementNeighbors,
                                                                         int nExteriorElementBoundaries_global,
-								     int nElementBoundaries_element,
-								     int nQuadraturePoints_elementBoundary,
+                                                                     int nElementBoundaries_element,
+                                                                     int nQuadraturePoints_elementBoundary,
                                                                      int nDOF_test_element,
-								     int nDOF_trial_element,
-								     int* exteriorElementBoundaries,
-								     int* elementBoundaryElements,
-								     int* elementBoundaryLocalElementBoundaries,
-								     int* nFreeDOF_element_r,
-								     int* freeLocal_r,
-								     int* nFreeDOF_element_u,
-								     int* freeLocal_u,
-								     int* csrRowIndeces_ru,
-								     int* csrColumnOffsets_eb_eNebN_ru,
-								     double* elementBoundaryFluxJacobian_eb,
-								     double* w_dS,
-								     double* jac)
+                                                                     int nDOF_trial_element,
+                                                                     int* exteriorElementBoundaries,
+                                                                     int* elementBoundaryElements,
+                                                                     int* elementBoundaryLocalElementBoundaries,
+                                                                     int* nFreeDOF_element_r,
+                                                                     int* freeLocal_r,
+                                                                     int* nFreeDOF_element_u,
+                                                                     int* freeLocal_u,
+                                                                     int* csrRowIndeces_ru,
+                                                                     int* csrColumnOffsets_eb_eNebN_ru,
+                                                                     double* elementBoundaryFluxJacobian_eb,
+                                                                     double* w_dS,
+                                                                     double* jac)
 {
   int ebNE,ebN,ebN_eN,eN_ebN,eN_global,ebN_element,ii,i,k,jj,j,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,jacIndex;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -6183,25 +6183,25 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(int* ele
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at exterior boundaries
           only difference from updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian
           is test function dimensionality right now
-*/    
+*/
 void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(int* elementNeighbors,
-									      int nExteriorElementBoundaries_global,
-									      int nElementBoundaries_element,
-									      int nQuadraturePoints_elementBoundary,
-									      int nDOF_test_element,
-									      int nDOF_trial_element,
-									      int* exteriorElementBoundaries,
-									      int* elementBoundaryElements,
-									      int* elementBoundaryLocalElementBoundaries,
-									      int* nFreeDOF_element_r,
-									      int* freeLocal_r,
-									      int* nFreeDOF_element_u,
-									      int* freeLocal_u,
-									      int* csrRowIndeces_ru,
-									      int* csrColumnOffsets_eb_eNebN_ru,
-									      double* elementBoundaryFluxJacobian_eb,
-									      double* w_dS,
-									      double* jac)
+                                                                              int nExteriorElementBoundaries_global,
+                                                                              int nElementBoundaries_element,
+                                                                              int nQuadraturePoints_elementBoundary,
+                                                                              int nDOF_test_element,
+                                                                              int nDOF_trial_element,
+                                                                              int* exteriorElementBoundaries,
+                                                                              int* elementBoundaryElements,
+                                                                              int* elementBoundaryLocalElementBoundaries,
+                                                                              int* nFreeDOF_element_r,
+                                                                              int* freeLocal_r,
+                                                                              int* nFreeDOF_element_u,
+                                                                              int* freeLocal_u,
+                                                                              int* csrRowIndeces_ru,
+                                                                              int* csrColumnOffsets_eb_eNebN_ru,
+                                                                              double* elementBoundaryFluxJacobian_eb,
+                                                                              double* w_dS,
+                                                                              double* jac)
 {
   int ebNE,ebN,ebN_eN,eN_ebN,eN_global,ebN_element,ii,i,k,jj,j,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,jacIndex;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -6261,24 +6261,24 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(in
 }
 /**
    \brief Update the global CSR Jacobian from the element boundary two-sided Hamiltonian flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(int nInteriorElementBoundaries_global,
-									    int nElementBoundaries_element,
-									    int nQuadraturePoints_elementBoundary,
-									    int nDOF_test_element,
-									    int nDOF_trial_element,
-									    int* interiorElementBoundaries,
-									    int* elementBoundaryElements,
-									    int* elementBoundaryLocalElementBoundaries,
-									    int* nFreeDOF_element_r,
-									    int* freeLocal_r,
-									    int* nFreeDOF_element_u,
-									    int* freeLocal_u,
-									    int* csrRowIndeces_ru,
-									    int* csrColumnOffsets_eb_ru,
-									    double* elementBoundaryFluxJacobian_2sided,
-									    double* w_dS,
-									    double* jac)
+                                                                            int nElementBoundaries_element,
+                                                                            int nQuadraturePoints_elementBoundary,
+                                                                            int nDOF_test_element,
+                                                                            int nDOF_trial_element,
+                                                                            int* interiorElementBoundaries,
+                                                                            int* elementBoundaryElements,
+                                                                            int* elementBoundaryLocalElementBoundaries,
+                                                                            int* nFreeDOF_element_r,
+                                                                            int* freeLocal_r,
+                                                                            int* nFreeDOF_element_u,
+                                                                            int* freeLocal_u,
+                                                                            int* csrRowIndeces_ru,
+                                                                            int* csrColumnOffsets_eb_ru,
+                                                                            double* elementBoundaryFluxJacobian_2sided,
+                                                                            double* w_dS,
+                                                                            double* jac)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,ii,i,k,jj,j,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,jacIndex;
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -6309,15 +6309,15 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(int 
                   jac[jacIndex]
                     +=
                     elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
-						       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
-						       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left neig dep*/
-						       k*nDOF_trial_element+
-						       j]
+                                                       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
+                                                       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left neig dep*/
+                                                       k*nDOF_trial_element+
+                                                       j]
                     *
                     w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
-			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
@@ -6334,15 +6334,15 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(int 
                   jac[jacIndex]
                     +=
                     elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
-						       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
-						       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right neig dep*/
-						       k*nDOF_trial_element+
-						       j]
+                                                       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
+                                                       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right neig dep*/
+                                                       k*nDOF_trial_element+
+                                                       j]
                     *
                     w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
-			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -6368,15 +6368,15 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(int 
                   jac[jacIndex]
                     +=
                     elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
-						       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left neig dep*/
-						       k*nDOF_trial_element+
-						       j]
+                                                       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
+                                                       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left neig dep*/
+                                                       k*nDOF_trial_element+
+                                                       j]
                     *
                     w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
@@ -6393,14 +6393,14 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(int 
                   jac[jacIndex]
                     +=
                     elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
-						       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right neig dep*/
-						       k*nDOF_trial_element+
-						       j]*
+                                                       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
+                                                       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right neig dep*/
+                                                       k*nDOF_trial_element+
+                                                       j]*
                     w_dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
-			 k*nDOF_test_element+
-			 i];
+                         right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
+                         k*nDOF_test_element+
+                         i];
                 }
             }
         }
@@ -6423,19 +6423,19 @@ void calculateWeightedShape(int nElements_global,
     for (k=0;k<nQuadraturePoints_element;k++)
       for (i=0;i<nDOF_test_element;i++)
         w_dV[eN*nQuadraturePoints_element*nDOF_test_element+
-	     k*nDOF_test_element+
-	     i] 
-	  =
+             k*nDOF_test_element+
+             i]
+          =
           w[eN*nQuadraturePoints_element*nDOF_test_element+
-	    k*nDOF_test_element+
-	    i]
+            k*nDOF_test_element+
+            i]
           *
           dVR[k]
           *
           abs_det_jac[eN*nQuadraturePoints_element+
                       k];
 }
-          
+
 /**
    \brief Weight the test function with the integration weights
 */
@@ -6456,7 +6456,7 @@ void calculateWeightedShapeGradients(int nElements_global,
           grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
                     k*nDOF_test_element*nSpace+
                     i*nSpace+
-                    I] 
+                    I]
             =
             grad_w[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
                    k*nDOF_test_element*nSpace+
@@ -6471,13 +6471,13 @@ void calculateWeightedShapeGradients(int nElements_global,
 
 /// THIS SHOULD BE REMOVED BEFORE MERGE
 void calculateWeightedPiolaShapeGradients(int nElements_global,
-					  int nQuadraturePoints_element,
-					  int nDOF_test_element,
-					  int nSpace,
-					  double* dVR,
-					  double* abs_det_jac,
-					  double* grad_w,
-					  double* grad_w_dV)
+                                          int nQuadraturePoints_element,
+                                          int nDOF_test_element,
+                                          int nSpace,
+                                          double* dVR,
+                                          double* abs_det_jac,
+                                          double* grad_w,
+                                          double* grad_w_dV)
 {
   int eN,i,k,I;
   for (eN=0;eN<nElements_global;eN++)
@@ -6487,7 +6487,7 @@ void calculateWeightedPiolaShapeGradients(int nElements_global,
           grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
                     k*nDOF_test_element*nSpace+
                     i*nSpace+
-                    I] 
+                    I]
             =
             grad_w[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
                    k*nDOF_test_element*nSpace+
@@ -6495,7 +6495,7 @@ void calculateWeightedPiolaShapeGradients(int nElements_global,
                    I]
             *
             dVR[k]
-	    ;
+            ;
 }
 
 void calculateWeightedShapeHessians(int nElements_global,
@@ -6512,25 +6512,25 @@ void calculateWeightedShapeHessians(int nElements_global,
     for (k=0;k<nQuadraturePoints_element;k++)
       for (i=0;i<nDOF_test_element;i++)
         for (I=0;I<nSpace;I++)
-	  for (J=0;J<nSpace;J++)
-	    Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2+
-		      k*nDOF_test_element*nSpace2+
-		      i*nSpace2+
-		      I*nSpace+
-		      J] 
-	      =
-	      Hess_w[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2+
-		     k*nDOF_test_element*nSpace2+
-		     i*nSpace2+
-		     I*nSpace+
-		     J]
-	      *
-	      dVR[k]
-	      *
-	      abs_det_jac[eN*nQuadraturePoints_element+
-			  k];
+          for (J=0;J<nSpace;J++)
+            Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2+
+                      k*nDOF_test_element*nSpace2+
+                      i*nSpace2+
+                      I*nSpace+
+                      J]
+              =
+              Hess_w[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2+
+                     k*nDOF_test_element*nSpace2+
+                     i*nSpace2+
+                     I*nSpace+
+                     J]
+              *
+              dVR[k]
+              *
+              abs_det_jac[eN*nQuadraturePoints_element+
+                          k];
 }
-          
+
 /**
    \brief Calcualte the tensor product of trial and test functions at the quadrature  points
 */
@@ -6547,16 +6547,16 @@ void calculateShape_X_weightedShape(int nElements_global,
     for (k=0;k<nQuadraturePoints_element;k++)
       for (i=0;i<nDOF_test_element;i++)
         for (j=0;j<nDOF_trial_element;j++)
-          v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element + 
+          v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element +
                    k*nDOF_test_X_trial_element+
                    j*nDOF_test_element+
-                   i] 
-            = 
-            v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+                   i]
+            =
+            v[eN*nQuadraturePoints_element*nDOF_trial_element +
               k*nDOF_trial_element+
               j]
             *
-            w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
+            w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
                  k*nDOF_test_element+
                  i];
 }
@@ -6579,17 +6579,17 @@ void calculateShape_X_weightedGradShape(int nElements_global,
       for (i=0;i<nDOF_test_element;i++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace + 
+            v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace +
                           k*nDOF_test_X_trial_element*nSpace+
                           j*nDOF_test_element*nSpace+
                           i*nSpace+
-                          I] 
-              = 
-              v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+                          I]
+              =
+              v[eN*nQuadraturePoints_element*nDOF_trial_element +
                 k*nDOF_trial_element+
                 j]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                         k*nDOF_test_element*nSpace+
                         i*nSpace+
                         I];
@@ -6613,18 +6613,18 @@ void calculateGradShape_X_weightedShape(int nElements_global,
       for (i=0;i<nDOF_test_element;i++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            grad_v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace + 
+            grad_v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace +
                           k*nDOF_test_X_trial_element*nSpace+
                           j*nDOF_test_element*nSpace+
                           i*nSpace+
-                          I] 
-              = 
-              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+                          I]
+              =
+              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                      k*nDOF_trial_element*nSpace+
                      j*nSpace+
                      I]
               *
-              w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
+              w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
                    k*nDOF_test_element+
                    i];
 }
@@ -6648,19 +6648,19 @@ void calculateGradShape_X_weightedGradShape(int nElements_global,
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
             for (J=0;J<nSpace;J++)
-              grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 + 
+              grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 +
                                  k*nDOF_test_X_trial_element*nSpace2+
                                  j*nDOF_test_element*nSpace2+
                                  i*nSpace2+
                                  I*nSpace+
-                                 J] 
-                = 
-                grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+                                 J]
+                =
+                grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                        k*nDOF_trial_element*nSpace+
                        j*nSpace+
                        I]
                 *
-                grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
+                grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                           k*nDOF_test_element*nSpace+
                           i*nSpace+
                           J];
@@ -6687,7 +6687,7 @@ void calculateWeightedShapeTrace(int nElements_global,
             w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
                  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                  k*nDOF_test_element+
-                 i] 
+                 i]
               =
               w[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
                 ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
@@ -6702,13 +6702,13 @@ void calculateWeightedShapeTrace(int nElements_global,
           }
 }
 void calculateWeightedPiolaShapeTrace(int nElements_global,
-				      int nElementBoundaries_element,
-				      int nElementBoundaryQuadraturePoints_elementBoundary,
-				      int nDOF_test_element,
-				      double* dSR,
-				      double* sqrt_det_g,
-				      double* w,
-				      double* w_dS)
+                                      int nElementBoundaries_element,
+                                      int nElementBoundaryQuadraturePoints_elementBoundary,
+                                      int nDOF_test_element,
+                                      double* dSR,
+                                      double* sqrt_det_g,
+                                      double* w,
+                                      double* w_dS)
 {
   int eN,ebN,i,k;
   for (eN=0;eN<nElements_global;eN++)
@@ -6719,7 +6719,7 @@ void calculateWeightedPiolaShapeTrace(int nElements_global,
             w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
                  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                  k*nDOF_test_element+
-                 i] 
+                 i]
               =
               w[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
                 ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
@@ -6733,7 +6733,7 @@ void calculateWeightedPiolaShapeTrace(int nElements_global,
                          k];
           }
 }
-          
+
 /**
    \brief Calcualte the tensor product of trial and test functions at the quadrature  points
 */
@@ -6752,18 +6752,18 @@ void calculateShape_X_weightedShapeTrace(int nElements_global,
       for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
         for (i=0;i<nDOF_test_element;i++)
           for (j=0;j<nDOF_trial_element;j++)
-            v_X_w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element + 
+            v_X_w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element +
                      ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element +
                      k*nDOF_test_X_trial_element+
                      j*nDOF_test_element+
-                     i] 
-              = 
-              v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                     i]
+              =
+              v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element +
                 ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element +
                 k*nDOF_trial_element+
                 j]
               *
-              w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element + 
+              w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                    ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                    k*nDOF_trial_element+
                    i];
@@ -6789,21 +6789,21 @@ void calculateGradShape_X_weightedShapeTrace(int nElements_global,
         for (i=0;i<nDOF_test_element;i++)
           for (j=0;j<nDOF_trial_element;j++)
             for (I=0;I<nSpace;I++)
-              grad_v_X_w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace + 
-                            ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace + 
+              grad_v_X_w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace +
+                            ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace +
                             k*nDOF_test_X_trial_element*nSpace+
                             j*nDOF_test_element*nSpace+
                             i*nSpace+
-                            I] 
-                = 
-                grad_v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
-                       ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+                            I]
+                =
+                grad_v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+                       ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
                        k*nDOF_trial_element*nSpace+
                        j*nSpace+
                        I]
                 *
-                w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element + 
-                     ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element + 
+                w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
+                     ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                      k*nDOF_test_element+
                      i];
 }
@@ -6812,15 +6812,15 @@ void calculateGradShape_X_weightedShapeTrace(int nElements_global,
    global exterior boundary version
 */
 void calculateWeightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoints_elementBoundary,
-					       int nDOF_test_element,
-					       int nExteriorElementBoundaries_global,
-					       const int* exteriorElementBoundariesArray,
-					       const int* elementBoundaryElementsArray,
-					       const int* elementBoundaryLocalElementBoundariesArray,
-					       double* dSR,
-					       double* sqrt_det_g,
-					       double* w,
-					       double* w_dS)
+                                               int nDOF_test_element,
+                                               int nExteriorElementBoundaries_global,
+                                               const int* exteriorElementBoundariesArray,
+                                               const int* elementBoundaryElementsArray,
+                                               const int* elementBoundaryLocalElementBoundariesArray,
+                                               double* dSR,
+                                               double* sqrt_det_g,
+                                               double* w,
+                                               double* w_dS)
 {
   int ebNE,i,k;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
@@ -6830,7 +6830,7 @@ void calculateWeightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoi
           {
             w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                  k*nDOF_test_element+
-                 i] 
+                 i]
               =
               w[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                 k*nDOF_test_element+
@@ -6848,70 +6848,70 @@ void calculateWeightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoi
    global exterior boundary version
 */
 void calculateShape_X_weightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoints_elementBoundary,
-						       int nDOF_trial_element,
-						       int nDOF_test_element,
-						       int nExteriorElementBoundaries_global,
-						       const int* exteriorElementBoundariesArray,
-						       const int* elementBoundaryElementsArray,
-						       const int* elementBoundaryLocalElementBoundariesArray,
-						       double* v,
-						       double* w_dS,
-						       double* v_X_w_dS)
+                                                       int nDOF_trial_element,
+                                                       int nDOF_test_element,
+                                                       int nExteriorElementBoundaries_global,
+                                                       const int* exteriorElementBoundariesArray,
+                                                       const int* elementBoundaryElementsArray,
+                                                       const int* elementBoundaryLocalElementBoundariesArray,
+                                                       double* v,
+                                                       double* w_dS,
+                                                       double* v_X_w_dS)
 {
   int ebNE,k,i,j,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
       for (i=0;i<nDOF_test_element;i++)
-	for (j=0;j<nDOF_trial_element;j++)
-	  v_X_w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element +
-		   k*nDOF_test_X_trial_element+
-		   j*nDOF_test_element+
-		   i] 
-	    = 
-	    v[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element +
-	      k*nDOF_trial_element+
-	      j]
-	    *
-	    w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
-		 k*nDOF_trial_element+
-		 i];
+        for (j=0;j<nDOF_trial_element;j++)
+          v_X_w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element +
+                   k*nDOF_test_X_trial_element+
+                   j*nDOF_test_element+
+                   i]
+            =
+            v[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element +
+              k*nDOF_trial_element+
+              j]
+            *
+            w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
+                 k*nDOF_trial_element+
+                 i];
 }
 
 /**
    \brief Calculate  the tensor  product of trial function gradients and test functions at the quadrature points.
 */
 void calculateGradShape_X_weightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoints_elementBoundary,
-							   int nDOF_trial_element,
-							   int nDOF_test_element,
-							   int nSpace,
-							   int nExteriorElementBoundaries_global,
-							   const int* exteriorElementBoundariesArray,
-							   const int* elementBoundaryElementsArray,
-							   const int* elementBoundaryLocalElementBoundariesArray,
-							   double* grad_v,
-							   double* w_dS,
-							   double* grad_v_X_w_dS)
+                                                           int nDOF_trial_element,
+                                                           int nDOF_test_element,
+                                                           int nSpace,
+                                                           int nExteriorElementBoundaries_global,
+                                                           const int* exteriorElementBoundariesArray,
+                                                           const int* elementBoundaryElementsArray,
+                                                           const int* elementBoundaryLocalElementBoundariesArray,
+                                                           double* grad_v,
+                                                           double* w_dS,
+                                                           double* grad_v_X_w_dS)
 {
   int ebNE,k,i,j,I,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
       for (i=0;i<nDOF_test_element;i++)
-	for (j=0;j<nDOF_trial_element;j++)
-	  for (I=0;I<nSpace;I++)
-	    grad_v_X_w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace + 
-			  k*nDOF_test_X_trial_element*nSpace+
-			  j*nDOF_test_element*nSpace+
-			  i*nSpace+
-			  I] 
-	      = 
-	      grad_v[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
-		     k*nDOF_trial_element*nSpace+
-		     j*nSpace+
-		     I]
-	      *
-	      w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element + 
-		   k*nDOF_test_element+
-		   i];
+        for (j=0;j<nDOF_trial_element;j++)
+          for (I=0;I<nSpace;I++)
+            grad_v_X_w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace +
+                          k*nDOF_test_X_trial_element*nSpace+
+                          j*nDOF_test_element*nSpace+
+                          i*nSpace+
+                          I]
+              =
+              grad_v[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+                     k*nDOF_trial_element*nSpace+
+                     j*nSpace+
+                     I]
+              *
+              w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
+                   k*nDOF_test_element+
+                   i];
 }
 
 
@@ -6937,48 +6937,48 @@ void calculateIntegrationWeights(int nElements_global,
 }
 
 void calculateElementBoundaryIntegrationWeights(int nElements_global,
-						int nElementBoundaries_element,
-						int nQuadraturePoints_elementBoundary,
-						double* sqrt_det_g,
-						double* referenceWeights,
-						double* weights)
+                                                int nElementBoundaries_element,
+                                                int nQuadraturePoints_elementBoundary,
+                                                double* sqrt_det_g,
+                                                double* referenceWeights,
+                                                double* weights)
 {
   int ebN,eN,k;
   for (eN=0;eN<nElements_global;eN++)
     for (ebN=0; ebN < nElementBoundaries_element; ebN++)
       for (k=0;k<nQuadraturePoints_elementBoundary;k++)
-	weights[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-		ebN*nQuadraturePoints_elementBoundary +
-		k]
-	  =
-	  sqrt_det_g[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-		     ebN*nQuadraturePoints_elementBoundary +
-		     k]
-	  *
-	  referenceWeights[k];
+        weights[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                ebN*nQuadraturePoints_elementBoundary +
+                k]
+          =
+          sqrt_det_g[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                     ebN*nQuadraturePoints_elementBoundary +
+                     k]
+          *
+          referenceWeights[k];
 }
 
 void calculateGlobalExteriorElementBoundaryIntegrationWeights(int nQuadraturePoints_elementBoundary,
-							      int nExteriorElementBoundaries_global,
-							      double* sqrt_det_g,
-							      double* referenceWeights,
-							      double* weights)
+                                                              int nExteriorElementBoundaries_global,
+                                                              double* sqrt_det_g,
+                                                              double* referenceWeights,
+                                                              double* weights)
 {
   int ebNE,k;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     for (k=0;k<nQuadraturePoints_elementBoundary;k++)
       weights[ebNE*nQuadraturePoints_elementBoundary +
-	      k]
-	=
-	sqrt_det_g[ebNE*nQuadraturePoints_elementBoundary +
-		   k]
-	*
-	referenceWeights[k];
+              k]
+        =
+        sqrt_det_g[ebNE*nQuadraturePoints_elementBoundary +
+                   k]
+        *
+        referenceWeights[k];
 }
 
 /**
    \brief Calculate the values of a multicomponent finite element function at the quadrature  points from the degrees of freedom and the test function values at the quadrature points
-*/ 
+*/
 void calculateFiniteElementFunctionValues(int nElements_global,
                                           int nQuadraturePoints_element,
                                           int nDOF_trial_element,
@@ -6996,8 +6996,8 @@ void calculateFiniteElementFunctionValues(int nElements_global,
         for (t=0;t<nComponents;t++)
           u[eN*nQuadraturePoints_element*nComponents+
             k*nComponents+
-            t] 
-            += 
+            t]
+            +=
             dof[l2g[eN*nDOF_trial_element+
                     j]*nComponents+
                 t]
@@ -7009,7 +7009,7 @@ void calculateFiniteElementFunctionValues(int nElements_global,
 
 /**
    \brief Calculate the gradient values of a multicomponent finite element function at the quadrature  points from the degrees of freedom and the test function gradient values at the quadrature points
-*/ 
+*/
 void calculateFiniteElementFunctionGradientValues(int nElements_global,
                                                   int nQuadraturePoints_element,
                                                   int nDOF_trial_element,
@@ -7043,14 +7043,14 @@ void calculateFiniteElementFunctionGradientValues(int nElements_global,
 }
 
 void calculateFiniteElementFunctionHessianValues(int nElements_global,
-						 int nQuadraturePoints_element,
-						 int nDOF_trial_element,
-						 int nComponents,
-						 int nSpace,
-						 int* l2g,
-						 double* dof,
-						 double* Hessian_v,
-						 double* Hessian_u)
+                                                 int nQuadraturePoints_element,
+                                                 int nDOF_trial_element,
+                                                 int nComponents,
+                                                 int nSpace,
+                                                 int* l2g,
+                                                 double* dof,
+                                                 double* Hessian_v,
+                                                 double* Hessian_u)
 {
   int eN,k,j,t,I,J,nSpace2=nSpace*nSpace;
   memset(Hessian_u,0,sizeof(double)*nElements_global*nQuadraturePoints_element*nComponents*nSpace2);
@@ -7059,22 +7059,22 @@ void calculateFiniteElementFunctionHessianValues(int nElements_global,
       for (j=0;j<nDOF_trial_element;j++)
         for (t=0;t<nComponents;t++)
           for  (I=0;I<nSpace;I++)
-	    for  (J=0;J<nSpace;J++)
-	      Hessian_u[eN*nQuadraturePoints_element*nComponents*nSpace2+
-			k*nComponents*nSpace2+
-			t*nSpace2+
-			I*nSpace+
-			J]
-		+=
-		dof[l2g[eN*nDOF_trial_element+
-			j]*nComponents+
-		    t]
-		*
-		Hessian_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace2+
-			  k*nDOF_trial_element*nSpace2+
-			  j*nSpace2+
-			  I*nSpace+
-			  J];
+            for  (J=0;J<nSpace;J++)
+              Hessian_u[eN*nQuadraturePoints_element*nComponents*nSpace2+
+                        k*nComponents*nSpace2+
+                        t*nSpace2+
+                        I*nSpace+
+                        J]
+                +=
+                dof[l2g[eN*nDOF_trial_element+
+                        j]*nComponents+
+                    t]
+                *
+                Hessian_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace2+
+                          k*nDOF_trial_element*nSpace2+
+                          j*nSpace2+
+                          I*nSpace+
+                          J];
 }
 
 /**
@@ -7143,21 +7143,21 @@ void calculateFiniteElementFunctionGradientTensorValues(int nElements_global,
             for(I=0;I<nSpace;I++)
               for(J=0;J<nSpace;J++)
                 grad_u_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nComponents*nSpace2+
-                                   k*nDOF_test_element*nComponents*nSpace2 + 
+                                   k*nDOF_test_element*nComponents*nSpace2 +
                                    i*nComponents*nSpace2 +
                                    t*nSpace2 +
-                                   I*nSpace + 
-                                   J] 
+                                   I*nSpace +
+                                   J]
                   +=
                   dof[l2g[eN*nDOF_trial_element+
                           j]*nComponents+
                       t]
                   *
-                  grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 + 
-                                     k*nDOF_test_X_trial_element*nSpace2 + 
-                                     j*nDOF_test_element*nSpace2 + 
-                                     i*nSpace2 + 
-                                     I*nSpace + 
+                  grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 +
+                                     k*nDOF_test_X_trial_element*nSpace2 +
+                                     j*nDOF_test_element*nSpace2 +
+                                     i*nSpace2 +
+                                     I*nSpace +
                                      J];
 }
 
@@ -7184,8 +7184,8 @@ void calculateFiniteElementFunctionValuesTrace(int nElements_global,
             u[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nComponents+
               ebN*nQuadraturePoints_elementBoundary*nComponents+
               k*nComponents+
-              t] 
-              += 
+              t]
+              +=
               dof[l2g[eN*nDOF_trial_element+j]*nComponents+
                   t]
               *
@@ -7222,8 +7222,8 @@ void calculateFiniteElementFunctionGradientValuesTrace(int nElements_global,
                      ebN*nQuadraturePoints_elementBoundary*nComponents*nSpace+
                      k*nComponents*nSpace+
                      t*nSpace+
-                     I] 
-                += 
+                     I]
+                +=
                 dof[l2g[eN*nDOF_trial_element+j]*nComponents+
                     t]
                 *
@@ -7234,16 +7234,16 @@ void calculateFiniteElementFunctionGradientValuesTrace(int nElements_global,
                        I];
 }
 void calculateFiniteElementFunctionValuesGlobalExteriorTrace(int nQuadraturePoints_elementBoundary,
-							     int nDOF_trial_element,
-							     int nComponents,
-							     int nExteriorElementBoundaries_global,
-							     const int * exteriorElementBoundariesArray,
-							     const int * elementBoundaryElementsArray,
-							     const int * elementBoundaryLocalElementBoundariesArray,
-							     int* l2g,
-							     double* dof,
-							     double* v,
-							     double* u)
+                                                             int nDOF_trial_element,
+                                                             int nComponents,
+                                                             int nExteriorElementBoundaries_global,
+                                                             const int * exteriorElementBoundariesArray,
+                                                             const int * elementBoundaryElementsArray,
+                                                             const int * elementBoundaryLocalElementBoundariesArray,
+                                                             int* l2g,
+                                                             double* dof,
+                                                             double* v,
+                                                             double* u)
 {
   int eN,ebN,ebNE,ebN_local,k,j,t;
   memset(u,0,sizeof(double)*nExteriorElementBoundaries_global*nQuadraturePoints_elementBoundary*nComponents);
@@ -7257,8 +7257,8 @@ void calculateFiniteElementFunctionValuesGlobalExteriorTrace(int nQuadraturePoin
           for(t=0;t<nComponents;t++)
             u[ebNE*nQuadraturePoints_elementBoundary*nComponents+
               k*nComponents+
-              t] 
-              += 
+              t]
+              +=
               dof[l2g[eN*nDOF_trial_element+j]*nComponents+
                   t]
               *
@@ -7269,17 +7269,17 @@ void calculateFiniteElementFunctionValuesGlobalExteriorTrace(int nQuadraturePoin
 }
 
 void calculateFiniteElementFunctionGradientValuesGlobalExteriorTrace(int nQuadraturePoints_elementBoundary,
-								     int nDOF_trial_element,
-								     int nComponents,
-								     int nSpace,
-								     int nExteriorElementBoundaries_global,
-								     const int * exteriorElementBoundariesArray,
-								     const int * elementBoundaryElementsArray,
-								     const int * elementBoundaryLocalElementBoundariesArray,
-								     int* l2g,
-								     double* dof,
-								     double* grad_v,
-								     double* grad_u)
+                                                                     int nDOF_trial_element,
+                                                                     int nComponents,
+                                                                     int nSpace,
+                                                                     int nExteriorElementBoundaries_global,
+                                                                     const int * exteriorElementBoundariesArray,
+                                                                     const int * elementBoundaryElementsArray,
+                                                                     const int * elementBoundaryLocalElementBoundariesArray,
+                                                                     int* l2g,
+                                                                     double* dof,
+                                                                     double* grad_v,
+                                                                     double* grad_u)
 {
   int eN,ebN,ebNE,ebN_local,k,j,t,I;
   memset(grad_u,0,sizeof(double)*nExteriorElementBoundaries_global*nQuadraturePoints_elementBoundary*nComponents*nSpace);
@@ -7295,8 +7295,8 @@ void calculateFiniteElementFunctionGradientValuesGlobalExteriorTrace(int nQuadra
               grad_u[ebNE*nQuadraturePoints_elementBoundary*nComponents*nSpace+
                      k*nComponents*nSpace+
                      t*nSpace+
-                     I] 
-                += 
+                     I]
+                +=
                 dof[l2g[eN*nDOF_trial_element+j]*nComponents+
                     t]
                 *
@@ -7350,8 +7350,8 @@ void calculateFlowVelocity(int nElements_global,
 /**
    \brief Update a single  element of the Jacobian
 */
-void updateAddJacobian_CSR(int jacIndex, 
-                           double val, 
+void updateAddJacobian_CSR(int jacIndex,
+                           double val,
                            double* jac)
 {
   jac[jacIndex] += val;
@@ -7360,7 +7360,7 @@ void updateAddJacobian_CSR(int jacIndex,
 /**
    \brief  Set all the Jacobian entries  to 0.0
 */
-void zeroJacobian_CSR(int nNonzeros, 
+void zeroJacobian_CSR(int nNonzeros,
                       double* jac)
 {
   memset(jac,0,sizeof(double)*nNonzeros);
@@ -7369,14 +7369,14 @@ void zeroJacobian_CSR(int nNonzeros,
 void calculateInteriorElementBoundaryVelocities(int nInteriorElementBoundaries_global,
                                                 int nElementBoundaries_element,
                                                 int nQuadraturePoints_elementBoundary,
-						int nSpace,
+                                                int nSpace,
                                                 int* interiorElementBoundaries,
                                                 int* elementBoundaryElements,
                                                 int* elementBoundaryLocalElementBoundaries,
-						double* m,
+                                                double* m,
                                                 double* a,
-						double* grad_phi,
-						double* f,
+                                                double* grad_phi,
+                                                double* f,
                                                 double* vAverage,
                                                 double* vJump,
                                                 double* mAverage,
@@ -7392,83 +7392,83 @@ void calculateInteriorElementBoundaryVelocities(int nInteriorElementBoundaries_g
       left_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       right_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+1];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	{
-	  mLeft 
-	    = 
-	    m[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-	      left_ebN_element*nQuadraturePoints_elementBoundary+
-	      k];
-	  mRight
-	    =
-	    m[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-	      right_ebN_element*nQuadraturePoints_elementBoundary+
-	      k];
-	  for (I=0;I<nSpace;I++)
-	    {
-	      vLeft 
-		= 
-		f[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		  k*nSpace+
-		  I];
-	      vRight
-		=
-		f[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		  right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		  k*nSpace+
-		  I];
-	      for (J=0;J<nSpace;J++)
-		{
-		  vLeft 
-		    -= 
-		    a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-		      left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-		      k*nSpace2+
-		      I*nSpace+
-		      J]
-		    *
-		    grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-			     k*nSpace+
-			     J];
-		  vRight -=
-		    a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-		      right_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-		      k*nSpace2+
-		      I*nSpace+
-		      J]
-		    *
-		    grad_phi[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			     right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-			     k*nSpace+
-			     J];
-		}
-	      vAverage[ebN*nQuadraturePoints_elementBoundary*nSpace+
-		       k*nSpace+
-		       I] = 0.5*(vLeft + vRight);
-	      vJump[ebN*nQuadraturePoints_elementBoundary*nSpace+
-		    k*nSpace+
-		    I] = (vLeft - vRight);
-	    }
-	  mAverage[ebN*nQuadraturePoints_elementBoundary+
-		   k] = 0.5*(mLeft+mRight);
-	  mJump[ebN*nQuadraturePoints_elementBoundary+
-		k] = mLeft - mRight;
-	}
+        {
+          mLeft
+            =
+            m[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+              left_ebN_element*nQuadraturePoints_elementBoundary+
+              k];
+          mRight
+            =
+            m[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+              right_ebN_element*nQuadraturePoints_elementBoundary+
+              k];
+          for (I=0;I<nSpace;I++)
+            {
+              vLeft
+                =
+                f[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+                  I];
+              vRight
+                =
+                f[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                  right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+                  I];
+              for (J=0;J<nSpace;J++)
+                {
+                  vLeft
+                    -=
+                    a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                      left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                      k*nSpace2+
+                      I*nSpace+
+                      J]
+                    *
+                    grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                             left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                             k*nSpace+
+                             J];
+                  vRight -=
+                    a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                      right_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                      k*nSpace2+
+                      I*nSpace+
+                      J]
+                    *
+                    grad_phi[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                             right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                             k*nSpace+
+                             J];
+                }
+              vAverage[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       I] = 0.5*(vLeft + vRight);
+              vJump[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                    k*nSpace+
+                    I] = (vLeft - vRight);
+            }
+          mAverage[ebN*nQuadraturePoints_elementBoundary+
+                   k] = 0.5*(mLeft+mRight);
+          mJump[ebN*nQuadraturePoints_elementBoundary+
+                k] = mLeft - mRight;
+        }
     }
 }
 
 void calculateExteriorElementBoundaryVelocities(int nExteriorElementBoundaries_global,
                                                 int nElementBoundaries_element,
                                                 int nQuadraturePoints_elementBoundary,
-						int nSpace,
+                                                int nSpace,
                                                 int* exteriorElementBoundaries,
                                                 int* elementBoundaryElements,
                                                 int* elementBoundaryLocalElementBoundaries,
-						double* m,
+                                                double* m,
                                                 double* a,
-						double* grad_phi,
-						double* f,
+                                                double* grad_phi,
+                                                double* f,
                                                 double* vAverage,
                                                 double* vJump,
                                                 double* mAverage,
@@ -7482,47 +7482,47 @@ void calculateExteriorElementBoundaryVelocities(int nExteriorElementBoundaries_g
       left_eN_global = elementBoundaryElements[ebN*2+0];
       left_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	{
-	  mLeft 
-	    = 
-	    m[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-	      left_ebN_element*nQuadraturePoints_elementBoundary+
-	      k];
-	  for (I=0;I<nSpace;I++)
-	    {
-	      vLeft 
-		= 
-		f[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		  k*nSpace+
-		  I];
-	      for (J=0;J<nSpace;J++)
-		{
-		  vLeft 
-		    -= 
-		    a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-		      left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-		      k*nSpace2+
-		      I*nSpace+
-		      J]
-		    *
-		    grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-			     k*nSpace+
-			     J];
-		}
-	      vAverage[ebN*nQuadraturePoints_elementBoundary*nSpace+
-		       k*nSpace+
-		       I] = vLeft;
-	      vJump[ebN*nQuadraturePoints_elementBoundary*nSpace+
-		    k*nSpace+
-		    I] = vLeft;
-	    }
-	  mAverage[ebN*nQuadraturePoints_elementBoundary+
-		   k] = mLeft;
-	  mJump[ebN*nQuadraturePoints_elementBoundary+
-		k] = mLeft;
-	}
+        {
+          mLeft
+            =
+            m[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+              left_ebN_element*nQuadraturePoints_elementBoundary+
+              k];
+          for (I=0;I<nSpace;I++)
+            {
+              vLeft
+                =
+                f[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+                  I];
+              for (J=0;J<nSpace;J++)
+                {
+                  vLeft
+                    -=
+                    a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                      left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                      k*nSpace2+
+                      I*nSpace+
+                      J]
+                    *
+                    grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                             left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                             k*nSpace+
+                             J];
+                }
+              vAverage[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+
+                       I] = vLeft;
+              vJump[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                    k*nSpace+
+                    I] = vLeft;
+            }
+          mAverage[ebN*nQuadraturePoints_elementBoundary+
+                   k] = mLeft;
+          mJump[ebN*nQuadraturePoints_elementBoundary+
+                k] = mLeft;
+        }
     }
 }
 
@@ -7530,15 +7530,15 @@ void calculateExteriorElementBoundaryVelocities(int nExteriorElementBoundaries_g
   load in boundary condition velocity values directy into velocity vector
 */
 void setExteriorGlobalElementBoundaryVelocityValues(int updateFluxValues,
-						    int nExteriorElementBoundaries_global,
-						    int nQuadraturePoints_elementBoundary,
-						    int nSpace,
-						    int* exteriorElementBoundaries,
-						    int* elementBoundaryElements,
-						    int* elementBoundaryLocalElementBoundaries,
-						    double* n,
-						    double* vn_in,
-						    double* v_out)
+                                                    int nExteriorElementBoundaries_global,
+                                                    int nQuadraturePoints_elementBoundary,
+                                                    int nSpace,
+                                                    int* exteriorElementBoundaries,
+                                                    int* elementBoundaryElements,
+                                                    int* elementBoundaryLocalElementBoundaries,
+                                                    double* n,
+                                                    double* vn_in,
+                                                    double* v_out)
 {
   int ebNE,ebN,k,I;
   double multiple = 0.0;
@@ -7546,57 +7546,57 @@ void setExteriorGlobalElementBoundaryVelocityValues(int updateFluxValues,
     multiple = 1.0;
   /*mwf debug*/
   printf("setExteriorGlobalElementBoundaryVelocityValues update= %d nExtElmBndr_global= %d nQuadElmBndr= %d nSpace=%d \n",
-	 updateFluxValues,nExteriorElementBoundaries_global,nQuadraturePoints_elementBoundary,nSpace);
+         updateFluxValues,nExteriorElementBoundaries_global,nQuadraturePoints_elementBoundary,nSpace);
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     {
       ebN = exteriorElementBoundaries[ebNE];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for (I=0;I<nSpace;I++)
-	  {
-	    v_out[ebN*nQuadraturePoints_elementBoundary*nSpace+
-		 k*nSpace+
-		 I] = 
-	      multiple*v_out[ebN*nQuadraturePoints_elementBoundary*nSpace+
-			     k*nSpace+
-			     I]
-	      +
-	      n[ebN*nQuadraturePoints_elementBoundary*nSpace+
-		k*nSpace+
-		I]
-	      *
-	      vn_in[ebN*nQuadraturePoints_elementBoundary+
-		    k];
-	    
-	    /*mwf debug*/
-	    printf("setExtGlobElmVel ebN=%d k=%d I=%d vn_in=%g v_out=%g \n",
-		   ebN,k,I,
-		   vn_in[ebN*nQuadraturePoints_elementBoundary+
-				 k],
-		   v_out[ebN*nQuadraturePoints_elementBoundary*nSpace+
-			 k*nSpace+
-			 I]);
+          {
+            v_out[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                 k*nSpace+
+                 I] =
+              multiple*v_out[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                             k*nSpace+
+                             I]
+              +
+              n[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                k*nSpace+
+                I]
+              *
+              vn_in[ebN*nQuadraturePoints_elementBoundary+
+                    k];
 
-	  }
+            /*mwf debug*/
+            printf("setExtGlobElmVel ebN=%d k=%d I=%d vn_in=%g v_out=%g \n",
+                   ebN,k,I,
+                   vn_in[ebN*nQuadraturePoints_elementBoundary+
+                                 k],
+                   v_out[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                         k*nSpace+
+                         I]);
+
+          }
     }
-  
+
 }
-				       
+
 
 /**
    \brief Calculate the Peclet and Courant-Friedrichs-Lewy numbers for the scalar advection-diffusion-reaction equation
 */
 void calculateDimensionlessNumbersADR(int nElements_global,
-				      int nQuadraturePoints_element,
-				      int nSpace,
-				      int computeDiffusiveTimeStepLimit,
-				      double* elementDiameter,
-				      double* df,
-				      double* a,
-				      double* dphi,
-				      double* dr,
-				      double* dmt,
-				      double* pe,
-				      double* cfl)
+                                      int nQuadraturePoints_element,
+                                      int nSpace,
+                                      int computeDiffusiveTimeStepLimit,
+                                      double* elementDiameter,
+                                      double* df,
+                                      double* a,
+                                      double* dphi,
+                                      double* dr,
+                                      double* dmt,
+                                      double* pe,
+                                      double* cfl)
 {
   int eN,k,I,nSpace2=nSpace*nSpace;
   double h,Vlin,Alin,A_II,num,den,cfl1,cfl2;
@@ -7608,34 +7608,34 @@ void calculateDimensionlessNumbersADR(int nElements_global,
           Vlin = 0.0;
           Alin = 0.0;
           for(I=0;I<nSpace;I++)
-            Vlin 
-              += 
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+            Vlin
+              +=
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I];
           Vlin = sqrt(Vlin);
           /*max diagonal entry for A. This choice needs to be looked into*/
           for(I=0;I<nSpace;I++)
             {
-              A_II = a[eN*nQuadraturePoints_element*nSpace2 + 
-                       k*nSpace2 + 
-                       I*nSpace + 
+              A_II = a[eN*nQuadraturePoints_element*nSpace2 +
+                       k*nSpace2 +
+                       I*nSpace +
                        I];
               Alin = (A_II > Alin) ? A_II : Alin;
             }
-          Alin*=dphi[eN*nQuadraturePoints_element + 
+          Alin*=dphi[eN*nQuadraturePoints_element +
                      k];
           cfl1 = Vlin/h;
           cfl2 = Alin/(h*h);
-	  if (computeDiffusiveTimeStepLimit)
-	    cfl[eN*nQuadraturePoints_element + 
+          if (computeDiffusiveTimeStepLimit)
+            cfl[eN*nQuadraturePoints_element +
                 k] = cfl2;
-	  else
-            cfl[eN*nQuadraturePoints_element + 
+          else
+            cfl[eN*nQuadraturePoints_element +
                 k] = cfl1;
           num = 0.5*Vlin*h + 1.0e-8;
           den = Alin + num*1.0e-8;
@@ -7647,7 +7647,7 @@ void calculateDimensionlessNumbersADR(int nElements_global,
 void calculateDimensionlessNumbersADR_sd(int nElements_global,
                                          int nQuadraturePoints_element,
                                          int nSpace,
-					 int computeDiffusiveTimeStepLimit,
+                                         int computeDiffusiveTimeStepLimit,
                                          int* rowptr,
                                          int* colind,
                                          double* elementDiameter,
@@ -7670,14 +7670,14 @@ void calculateDimensionlessNumbersADR_sd(int nElements_global,
           Alin = 0.0;
           for(I=0;I<nSpace;I++)
             {
-              Vlin 
-                += 
-                df[eN*nQuadraturePoints_element*nSpace + 
-                   k*nSpace + 
+              Vlin
+                +=
+                df[eN*nQuadraturePoints_element*nSpace +
+                   k*nSpace +
                    I]
                 *
-                df[eN*nQuadraturePoints_element*nSpace + 
-                   k*nSpace + 
+                df[eN*nQuadraturePoints_element*nSpace +
+                   k*nSpace +
                    I];
             }
           Vlin = sqrt(Vlin);
@@ -7695,15 +7695,15 @@ void calculateDimensionlessNumbersADR_sd(int nElements_global,
                     }
                 }
             }
-          Alin*=dphi[eN*nQuadraturePoints_element + 
+          Alin*=dphi[eN*nQuadraturePoints_element +
                      k];
           cfl1 = Vlin/h;
           cfl2 = Alin/(h*h);
-	  if (computeDiffusiveTimeStepLimit)
-	    cfl[eN*nQuadraturePoints_element + 
+          if (computeDiffusiveTimeStepLimit)
+            cfl[eN*nQuadraturePoints_element +
                 k] = cfl2;
-	  else
-            cfl[eN*nQuadraturePoints_element + 
+          else
+            cfl[eN*nQuadraturePoints_element +
                 k] = cfl1;
           num = 0.5*Vlin*h + 1.0e-8;
           den = Alin + num*1.0e-8;
@@ -7714,12 +7714,12 @@ void calculateDimensionlessNumbersADR_sd(int nElements_global,
 
 /*just compute CFL*/
 void calculateCFLADR(int nElements_global,
-		     int nQuadraturePoints_element,
-		     int nSpace,
-		     double* elementDiameter,
-		     double* dm,
-		     double* df,
-		     double* cfl)
+                     int nQuadraturePoints_element,
+                     int nSpace,
+                     double* elementDiameter,
+                     double* dm,
+                     double* df,
+                     double* cfl)
 {
   int eN,k,I;
   double h,Vlin,dmdu,cfl1;
@@ -7728,35 +7728,35 @@ void calculateCFLADR(int nElements_global,
       h = elementDiameter[eN];
       for (k=0;k<nQuadraturePoints_element;k++)
         {
-	  dmdu = dm[eN*nQuadraturePoints_element + k];
+          dmdu = dm[eN*nQuadraturePoints_element + k];
           Vlin = 0.0;
           for(I=0;I<nSpace;I++)
-            Vlin 
-              += 
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+            Vlin
+              +=
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I];
           Vlin = sqrt(Vlin)/(dmdu+1.0e-10);
           cfl1 = Vlin/h;
-	  cfl[eN*nQuadraturePoints_element + 
-	      k] = cfl1;
+          cfl[eN*nQuadraturePoints_element +
+              k] = cfl1;
 
         }
     }
 }
 /*not really likely but in case have two separate characteristic speeds to add?*/
 void calculateCFLADR2speeds(int nElements_global,
-			    int nQuadraturePoints_element,
-			    int nSpace,
-			    double* elementDiameter,
-			    double* dm,
-			    double* df1,
-			    double* df2,
-			    double* cfl)
+                            int nQuadraturePoints_element,
+                            int nSpace,
+                            double* elementDiameter,
+                            double* dm,
+                            double* df1,
+                            double* df2,
+                            double* cfl)
 {
   int eN,k,I;
   double h,Vlin,dmdu,cfl1;
@@ -7765,31 +7765,31 @@ void calculateCFLADR2speeds(int nElements_global,
       h = elementDiameter[eN];
       for (k=0;k<nQuadraturePoints_element;k++)
         {
-	  dmdu = dm[eN*nQuadraturePoints_element + k];
+          dmdu = dm[eN*nQuadraturePoints_element + k];
           Vlin = 0.0;
           for(I=0;I<nSpace;I++)
-            Vlin 
-              += 
-              df1[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+            Vlin
+              +=
+              df1[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              df1[eN*nQuadraturePoints_element*nSpace + 
-		  k*nSpace + 
-		  I]
-	      + 
-              df2[eN*nQuadraturePoints_element*nSpace + 
-		  k*nSpace + 
-		  I]
+              df1[eN*nQuadraturePoints_element*nSpace +
+                  k*nSpace +
+                  I]
+              +
+              df2[eN*nQuadraturePoints_element*nSpace +
+                  k*nSpace +
+                  I]
               *
-              df2[eN*nQuadraturePoints_element*nSpace + 
-		  k*nSpace + 
-		  I];
+              df2[eN*nQuadraturePoints_element*nSpace +
+                  k*nSpace +
+                  I];
 
           Vlin = sqrt(Vlin)/(dmdu+1.0e-10);
           cfl1 = Vlin/h;
-	  cfl[eN*nQuadraturePoints_element + 
-	      k] = cfl1;
+          cfl[eN*nQuadraturePoints_element +
+              k] = cfl1;
 
         }
     }
@@ -7798,7 +7798,7 @@ void calculateCFLADR2speeds(int nElements_global,
 
 /**
    \brief Calculate the diffusive flux at interior element boundary quadrature points
-*/ 
+*/
 void updateInteriorElementBoundaryDiffusiveVelocity(int nInteriorElementBoundaries_global,
                                                     int nElementBoundaries_element,
                                                     int nQuadraturePoints_elementBoundary,
@@ -7825,7 +7825,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity(int nInteriorElementBoundari
               velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
-                -= 
+                -=
                 a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
                   left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
                   k*nSpace2+
@@ -7834,7 +7834,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity(int nInteriorElementBoundari
                 *
                 grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                          left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                         k*nSpace+J];     
+                         k*nSpace+J];
               velocity[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
@@ -7880,7 +7880,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBound
               velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
-                -= 
+                -=
                 a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
                   left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
                   k*nnz+
@@ -7888,7 +7888,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBound
                 *
                 grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                          left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                         k*nSpace+colind[m]];     
+                         k*nSpace+colind[m]];
               velocity[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
@@ -7907,7 +7907,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBound
 
 /**
    \brief Calculate the diffusive flux at exterior element boundary quadrature points
-*/ 
+*/
 void updateExteriorElementBoundaryDiffusiveVelocity(int nExteriorElementBoundaries_global,
                                                     int nElementBoundaries_element,
                                                     int nQuadraturePoints_elementBoundary,
@@ -7927,24 +7927,24 @@ void updateExteriorElementBoundaryDiffusiveVelocity(int nExteriorElementBoundari
       ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for(I=0;I<nSpace;I++)
-	  {
-	    for(J=0;J<nSpace;J++)
-	      {
-		velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			 ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-			 k*nSpace+I]
-		  -= 
-		  a[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-		    ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-		    k*nSpace2+
-		    I*nSpace+
-		    J]
-		  *
-		  grad_phi[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			   ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-			   k*nSpace+J];
-	      }
-	  }/*I*/
+          {
+            for(J=0;J<nSpace;J++)
+              {
+                velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                         ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                         k*nSpace+I]
+                  -=
+                  a[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                    ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                    k*nSpace2+
+                    I*nSpace+
+                    J]
+                  *
+                  grad_phi[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                           ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                           k*nSpace+J];
+              }
+          }/*I*/
     }
 }
 
@@ -7969,59 +7969,59 @@ void updateExteriorElementBoundaryDiffusiveVelocity_sd(int nExteriorElementBound
       ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for(I=0;I<nSpace;I++)
-	  {
-	    for(m=rowptr[I];m<rowptr[I+1];m++)
-	      {
-		velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			 ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-			 k*nSpace+I]
-		  -= 
-		  a[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-		    ebN_element*nQuadraturePoints_elementBoundary*nnz+
-		    k*nnz+
+          {
+            for(m=rowptr[I];m<rowptr[I+1];m++)
+              {
+                velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                         ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                         k*nSpace+I]
+                  -=
+                  a[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                    ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                    k*nnz+
                     m]
-		  *
-		  grad_phi[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			   ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-			   k*nSpace+colind[m]];
-	      }
-	  }/*I*/
+                  *
+                  grad_phi[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                           ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                           k*nSpace+colind[m]];
+              }
+          }/*I*/
     }
 }
 
 /**
    \brief Calculate the diffusive flux at exterior element boundary quadrature points
-*/ 
+*/
 void updateGlobalExteriorElementBoundaryDiffusiveVelocity(int nExteriorElementBoundaries_global,
-							  int nQuadraturePoints_elementBoundary,
-							  int nSpace,
-							  int* exteriorElementBoundaries,
-							  int* elementBoundaryElements,
-							  int* elementBoundaryLocalElementBoundaries,
-							  double* a,
-							  double* grad_phi,
-							  double* velocity)
+                                                          int nQuadraturePoints_elementBoundary,
+                                                          int nSpace,
+                                                          int* exteriorElementBoundaries,
+                                                          int* elementBoundaryElements,
+                                                          int* elementBoundaryLocalElementBoundaries,
+                                                          double* a,
+                                                          double* grad_phi,
+                                                          double* velocity)
 {
   int ebNE,k,J,I,nSpace2=nSpace*nSpace;
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     {
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for(I=0;I<nSpace;I++)
-	  {
-	    for(J=0;J<nSpace;J++)
-	      {
-		velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-			 k*nSpace+I]
-		  -= 
-		  a[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
-		    k*nSpace2+
-		    I*nSpace+
-		    J]
-		  *
-		  grad_phi[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-			   k*nSpace+J];
-	      }
-	  }/*I*/
+          {
+            for(J=0;J<nSpace;J++)
+              {
+                velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                         k*nSpace+I]
+                  -=
+                  a[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+                    k*nSpace2+
+                    I*nSpace+
+                    J]
+                  *
+                  grad_phi[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                           k*nSpace+J];
+              }
+          }/*I*/
     }
 }
 
@@ -8042,20 +8042,20 @@ void updateGlobalExteriorElementBoundaryDiffusiveVelocity_sd(int nExteriorElemen
     {
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for(I=0;I<nSpace;I++)
-	  {
-	    for(m=rowptr[I];m<rowptr[I+1];m++)
-	      {
-		velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-			 k*nSpace+I]
-		  -= 
-		  a[ebNE*nQuadraturePoints_elementBoundary*nnz+
-		    k*nnz+
-		    m]
-		  *
-		  grad_phi[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-			   k*nSpace+colind[m]];
-	      }
-	  }/*I*/
+          {
+            for(m=rowptr[I];m<rowptr[I+1];m++)
+              {
+                velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                         k*nSpace+I]
+                  -=
+                  a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                    k*nnz+
+                    m]
+                  *
+                  grad_phi[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                           k*nSpace+colind[m]];
+              }
+          }/*I*/
     }
 }
 
@@ -8087,8 +8087,8 @@ void updateInteriorElementBoundaryAdvectiveVelocity(int nInteriorElementBoundari
             velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                      left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                      k*nSpace+
-                     J]      
-              += 
+                     J]
+              +=
               f[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                 left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                 k*nSpace+
@@ -8097,7 +8097,7 @@ void updateInteriorElementBoundaryAdvectiveVelocity(int nInteriorElementBoundari
                      right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                      k*nSpace+
                      J]
-              += 
+              +=
               f[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                 right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                 k*nSpace+
@@ -8145,13 +8145,13 @@ void updateExteriorElementBoundaryAdvectiveVelocity(int nExteriorElementBoundari
    \brief Update the advective flux at exterior element boundaries.
 */
 void updateGlobalExteriorElementBoundaryAdvectiveVelocity(int nExteriorElementBoundaries_global,
-							  int nQuadraturePoints_elementBoundary,
-							  int nSpace,
-							  int* exteriorElementBoundaries,
-							  int* elementBoundaryElements,
-							  int* elementBoundaryLocalElementBoundaries,
-							  double* f,
-							  double* velocity)
+                                                          int nQuadraturePoints_elementBoundary,
+                                                          int nSpace,
+                                                          int* exteriorElementBoundaries,
+                                                          int* elementBoundaryElements,
+                                                          int* elementBoundaryLocalElementBoundaries,
+                                                          double* f,
+                                                          double* velocity)
 {
   int ebNE,k,J;
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -8172,18 +8172,18 @@ void updateGlobalExteriorElementBoundaryAdvectiveVelocity(int nExteriorElementBo
 
 /**
    \brief Calculate the velocity from shock capturing at interior element boundary quadrature points
-*/ 
+*/
 void updateInteriorElementBoundaryShockCapturingVelocity(int nInteriorElementBoundaries_global,
-							 int nElementBoundaries_element,
-							 int nQuadraturePoints_elementBoundary,
-							 int nQuadraturePoints_element,
-							 int nSpace,
-							 int* interiorElementBoundaries,
-							 int* elementBoundaryElements,
-							 int* elementBoundaryLocalElementBoundaries,
-							 double* numDiff,
-							 double* grad_u,
-							 double* velocity)
+                                                         int nElementBoundaries_element,
+                                                         int nQuadraturePoints_elementBoundary,
+                                                         int nQuadraturePoints_element,
+                                                         int nSpace,
+                                                         int* interiorElementBoundaries,
+                                                         int* elementBoundaryElements,
+                                                         int* elementBoundaryLocalElementBoundaries,
+                                                         double* numDiff,
+                                                         double* grad_u,
+                                                         double* velocity)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,k,I;
   double numDiffAvg_left,numDiffAvg_right;
@@ -8199,43 +8199,43 @@ void updateInteriorElementBoundaryShockCapturingVelocity(int nInteriorElementBou
       numDiffAvg_right = numDiff[right_eN_global*nQuadraturePoints_element+0];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for(I=0;I<nSpace;I++)
-	  {
-	    velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		     k*nSpace+I]
-	      -= 
-	      numDiffAvg_left
-	      *
-	      grad_u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		     k*nSpace+I];     
-	    velocity[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		     right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		     k*nSpace+I]
-	      -=
+          {
+            velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                     k*nSpace+I]
+              -=
+              numDiffAvg_left
+              *
+              grad_u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                     k*nSpace+I];
+            velocity[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                     right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                     k*nSpace+I]
+              -=
                 numDiffAvg_right
                 *
                 grad_u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		       right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		       k*nSpace+I];
-	  }
+                       right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                       k*nSpace+I];
+          }
     }
 }
 
 /**
    \brief Calculate the shock capturing flux at exterior element boundary quadrature points
-*/ 
+*/
 void updateExteriorElementBoundaryShockCapturingVelocity(int nExteriorElementBoundaries_global,
-							 int nElementBoundaries_element,
-							 int nQuadraturePoints_elementBoundary,
-							 int nQuadraturePoints_element,
-							 int nSpace,
-							 int* exteriorElementBoundaries,
-							 int* elementBoundaryElements,
-							 int* elementBoundaryLocalElementBoundaries,
-							 double* numDiff,
-							 double* grad_u,
-							 double* velocity)
+                                                         int nElementBoundaries_element,
+                                                         int nQuadraturePoints_elementBoundary,
+                                                         int nQuadraturePoints_element,
+                                                         int nSpace,
+                                                         int* exteriorElementBoundaries,
+                                                         int* elementBoundaryElements,
+                                                         int* elementBoundaryLocalElementBoundaries,
+                                                         double* numDiff,
+                                                         double* grad_u,
+                                                         double* velocity)
 {
   int ebNE,ebN,eN_global,ebN_element,k,I;
   double numDiffAvg;
@@ -8248,34 +8248,34 @@ void updateExteriorElementBoundaryShockCapturingVelocity(int nExteriorElementBou
       numDiffAvg  = numDiff[eN_global*nQuadraturePoints_element+0];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for(I=0;I<nSpace;I++)
-	  {
-	    velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		     ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		     k*nSpace+I]
-		  -= 
-		  numDiffAvg
-		  *
-		  grad_u[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			 ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-			 k*nSpace+I];
-	      
-	  }/*I*/
+          {
+            velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                     ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                     k*nSpace+I]
+                  -=
+                  numDiffAvg
+                  *
+                  grad_u[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                         ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                         k*nSpace+I];
+
+          }/*I*/
     }/*ebN*/
 }
 
- 
+
 /**
    \brief Calculate the shock capturing flux at exterior element boundary quadrature points
-*/ 
+*/
 void updateGlobalExteriorElementBoundaryShockCapturingVelocity(int nExteriorElementBoundaries_global,
-							       int nQuadraturePoints_elementBoundary,
-							       int nSpace,
-							       int* exteriorElementBoundaries,
-							       int* elementBoundaryElements,
-							       int* elementBoundaryLocalElementBoundaries,
-							       double* numDiff,
-							       double* grad_u,
-							       double* velocity)
+                                                               int nQuadraturePoints_elementBoundary,
+                                                               int nSpace,
+                                                               int* exteriorElementBoundaries,
+                                                               int* elementBoundaryElements,
+                                                               int* elementBoundaryLocalElementBoundaries,
+                                                               double* numDiff,
+                                                               double* grad_u,
+                                                               double* velocity)
 {
   int ebNE,k,I;
   double numDiffAvg;
@@ -8283,17 +8283,17 @@ void updateGlobalExteriorElementBoundaryShockCapturingVelocity(int nExteriorElem
     {
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for(I=0;I<nSpace;I++)
-	  {
-	    numDiffAvg  = numDiff[ebNE*nQuadraturePoints_elementBoundary+k];
-	    velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-		     k*nSpace+I]
-		  -= 
-		  numDiffAvg
-		  *
-		  grad_u[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-			 k*nSpace+I];
-	      
-	  }/*I*/
+          {
+            numDiffAvg  = numDiff[ebNE*nQuadraturePoints_elementBoundary+k];
+            velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                     k*nSpace+I]
+                  -=
+                  numDiffAvg
+                  *
+                  grad_u[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                         k*nSpace+I];
+
+          }/*I*/
     }/*ebN*/
 }
 void calculateInteriorElementBoundaryAverageVelocity(int nInteriorElementBoundaries_global,
@@ -8349,24 +8349,24 @@ void calculateExteriorElementBoundaryAverageVelocity(int nExteriorElementBoundar
       left_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for (I=0;I<nSpace;I++)
-	  {
-	    
-	    vAverage[ebN*nQuadraturePoints_elementBoundary*nSpace+
-		     k*nSpace+
-		     I]
-	      = v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		  k*nSpace+
-		  I];
-	    /*mwf debug
-	    printf("vfem.ext.vavg ebN=%d eN=%d ebN_element=%d k=%d v[%d]= %g \n",ebN,left_eN_global,
-		   left_ebN_element,k,I,
-		   v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-		     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		     k*nSpace+
-		     I]);
-	    */
-	  }
+          {
+
+            vAverage[ebN*nQuadraturePoints_elementBoundary*nSpace+
+                     k*nSpace+
+                     I]
+              = v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+                  I];
+            /*mwf debug
+            printf("vfem.ext.vavg ebN=%d eN=%d ebN_element=%d k=%d v[%d]= %g \n",ebN,left_eN_global,
+                   left_ebN_element,k,I,
+                   v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                     k*nSpace+
+                     I]);
+            */
+          }
     }
 }
 
@@ -8383,27 +8383,27 @@ void calculateConservationResidualDG(int nElements_global,
     {
       conservationResidual[eN] = 0.0;
       for (i = 0; i < nDOF_test_element; i++)
-	conservationResidual[eN] += elementResidual[eN*nDOF_test_element + i];
+        conservationResidual[eN] += elementResidual[eN*nDOF_test_element + i];
     }
 }
 
 /**
  \brief calculate mass conservation error as
-\f[ 
+\f[
    \sum_{i} res_{E,i} + \sum_{E,e} \int_{e} \vec v \cdot \vec n_e \ds
 \f]
-  where \f$res_{E,i}\f$ is the \f$i\f$'th test function's residual on element \f$E\f$   
+  where \f$res_{E,i}\f$ is the \f$i\f$'th test function's residual on element \f$E\f$
 */
 void calculateConservationResidual(int nElements_global,
-				   int nDOF_test_element,
-				   int nElementBoundaries_element,
-				   int nQuadraturePoints_elementBoundary,
-				   int nSpace,
-				   double * n,
-				   double * dS_u,
-				   double * elementResidual,
-				   double * velocity,
-				   double * conservationResidual)
+                                   int nDOF_test_element,
+                                   int nElementBoundaries_element,
+                                   int nQuadraturePoints_elementBoundary,
+                                   int nSpace,
+                                   double * n,
+                                   double * dS_u,
+                                   double * elementResidual,
+                                   double * velocity,
+                                   double * conservationResidual)
 {
   int eN,ebN,i,k,I;
   double boundaryFlux;
@@ -8412,57 +8412,57 @@ void calculateConservationResidual(int nElements_global,
       conservationResidual[eN] = 0.0;
 
       for (i = 0; i < nDOF_test_element; i++)
-	conservationResidual[eN] += elementResidual[eN*nDOF_test_element + i];
-      
+        conservationResidual[eN] += elementResidual[eN*nDOF_test_element + i];
+
       boundaryFlux = 0.0;
       for (ebN = 0; ebN < nElementBoundaries_element; ebN++)
-	{
-	  for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	    {
-	      for (I = 0; I < nSpace; I++)
-		{
-		  boundaryFlux += 
-		    n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + 
-		      ebN*nQuadraturePoints_elementBoundary*nSpace + 
-		      k*nSpace + 
-		      I]
-		    *
-		    velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + 
-			     ebN*nQuadraturePoints_elementBoundary*nSpace + 
-			     k*nSpace + 
-			     I]
-		    *
-		    dS_u[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary + 
-			 ebN*nQuadraturePoints_elementBoundary + 
-			 k];
-		}/*I*/
-	    }/*k*/
-	}/*ebN*/
+        {
+          for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
+            {
+              for (I = 0; I < nSpace; I++)
+                {
+                  boundaryFlux +=
+                    n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+                      ebN*nQuadraturePoints_elementBoundary*nSpace +
+                      k*nSpace +
+                      I]
+                    *
+                    velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+                             ebN*nQuadraturePoints_elementBoundary*nSpace +
+                             k*nSpace +
+                             I]
+                    *
+                    dS_u[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary +
+                         ebN*nQuadraturePoints_elementBoundary +
+                         k];
+                }/*I*/
+            }/*k*/
+        }/*ebN*/
       /*mwf debug
       printf("calcConsRes eN=%d accum= %g boundaryFlux= %g diff=%g \n",eN,conservationResidual[eN],boundaryFlux,
-	     conservationResidual[eN] -boundaryFlux);
-     
+             conservationResidual[eN] -boundaryFlux);
+
       */
       conservationResidual[eN] += boundaryFlux;
 
     }/*eN*/
 }
 /* void calculateConservationResidualGlobalBoundaries(int nElements_global, */
-/* 						   int nInteriorElementBoundaries_global, */
-/* 						   int nExteriorElementBoundaries_global, */
-/* 						   int nElementBoundaries_element, */
-/* 						   int nQuadraturePoints_elementBoundary, */
-/* 						   int nNodes_element, */
-/* 						   int nSpace, */
-/* 						   int* interiorElementBoundaries, */
-/* 						   int* exteriorElementBoundaries, */
-/* 						   int* elementBoundaryElements, */
-/* 						   int* elementBoundaryLocalElementBoundaries, */
-/* 						   double* dS, */
-/* 						   double* normal, */
-/* 						   double* elementResidual, */
-/* 						   double* velocity, */
-/* 						   double* conservationResidual) */
+/*                                                 int nInteriorElementBoundaries_global, */
+/*                                                 int nExteriorElementBoundaries_global, */
+/*                                                 int nElementBoundaries_element, */
+/*                                                 int nQuadraturePoints_elementBoundary, */
+/*                                                 int nNodes_element, */
+/*                                                 int nSpace, */
+/*                                                 int* interiorElementBoundaries, */
+/*                                                 int* exteriorElementBoundaries, */
+/*                                                 int* elementBoundaryElements, */
+/*                                                 int* elementBoundaryLocalElementBoundaries, */
+/*                                                 double* dS, */
+/*                                                 double* normal, */
+/*                                                 double* elementResidual, */
+/*                                                 double* velocity, */
+/*                                                 double* conservationResidual) */
 /* { */
 /*   int ebNI,ebNE,ebN,eN,nN,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,k,I; */
 /*   register double flux,ds; */
@@ -8472,9 +8472,9 @@ void calculateConservationResidual(int nElements_global,
 /*   for (eN = 0; eN < nElements_global; eN++) */
 /*     { */
 /*       for (nN = 0; nN < nNodes_element; nN++) */
-/* 	{ */
-/* 	  conservationResidual[eN] += elementResidual[eN*nNodes_element + nN]; */
-/* 	} */
+/*      { */
+/*        conservationResidual[eN] += elementResidual[eN*nNodes_element + nN]; */
+/*      } */
 /*     } */
 /*   /\*now loop through element boundaries and update element sums*\/ */
 /*   /\*interior*\/ */
@@ -8488,23 +8488,23 @@ void calculateConservationResidual(int nElements_global,
 
 /*       flux = 0.0; */
 /*       for(k=0;k<nQuadraturePoints_elementBoundary;k++) */
-/* 	{ */
+/*      { */
 /*           ds = dS[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+ */
-/* 		  left_ebN_element*nQuadraturePoints_elementBoundary+ */
-/* 		  k]; */
-/* 	  for (I = 0; I < nSpace; I++) */
-/* 	    { */
-/* 	      flux+= velocity[ebN*nQuadraturePoints_elementBoundary*nSpace+ */
-/* 			      k*nSpace+ */
-/* 			      I] */
-/* 		* */
-/* 		normal[ebN*nQuadraturePoints_elementBoundary*nSpace+ */
-/* 		       k*nSpace+ */
-/* 		       I]  */
-/* 		*  */
-/* 		ds; */
-/* 	    } */
-/* 	}/\*k*\/ */
+/*                left_ebN_element*nQuadraturePoints_elementBoundary+ */
+/*                k]; */
+/*        for (I = 0; I < nSpace; I++) */
+/*          { */
+/*            flux+= velocity[ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+/*                            k*nSpace+ */
+/*                            I] */
+/*              * */
+/*              normal[ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+/*                     k*nSpace+ */
+/*                     I]  */
+/*              *  */
+/*              ds; */
+/*          } */
+/*      }/\*k*\/ */
 /*       conservationResidual[left_eN] += flux; */
 /*       conservationResidual[right_eN]-= flux; */
 
@@ -8517,41 +8517,41 @@ void calculateConservationResidual(int nElements_global,
 /*       ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0]; */
 /*       flux = 0.0; */
 /*       for(k=0;k<nQuadraturePoints_elementBoundary;k++) */
-/* 	{ */
+/*      { */
 /*           ds = dS[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+ */
-/* 		  ebN_element*nQuadraturePoints_elementBoundary+ */
-/* 		  k]; */
-/* 	  for (I = 0; I < nSpace; I++) */
-/* 	    { */
-/* 	      flux+= velocity[ebN*nQuadraturePoints_elementBoundary*nSpace+ */
-/* 			      k*nSpace+ */
-/* 			      I] */
-/* 		* */
-/* 		normal[ebN*nQuadraturePoints_elementBoundary*nSpace+ */
-/* 		       k*nSpace+ */
-/* 		       I] */
-/* 		* */
-/* 		ds; */
-/* 	    } */
-/* 	}/\*k*\/ */
+/*                ebN_element*nQuadraturePoints_elementBoundary+ */
+/*                k]; */
+/*        for (I = 0; I < nSpace; I++) */
+/*          { */
+/*            flux+= velocity[ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+/*                            k*nSpace+ */
+/*                            I] */
+/*              * */
+/*              normal[ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+/*                     k*nSpace+ */
+/*                     I] */
+/*              * */
+/*              ds; */
+/*          } */
+/*      }/\*k*\/ */
 /*       conservationResidual[eN] += flux; */
 /*     }/\*ebNE*\/ */
 /* } */
 
 
 void copyGlobalElementBoundaryVelocityToElementBoundary(int nElements_global,
-							int nInteriorElementBoundaries_global,
-							int nExteriorElementBoundaries_global,
-							int nElementBoundaries_global,
-							int nElementBoundaries_element,
-							int nQuadraturePoints_elementBoundary,
-							int nSpace,
-							int * interiorElementBoundaries,
-							int * exteriorElementBoundaries,
-							int * elementBoundaryElementsArray,
-							int * elementBoundaryLocalElementBoundariesArray,
-							double * velocityBoundary_global,
-							double * velocityBoundary_element)
+                                                        int nInteriorElementBoundaries_global,
+                                                        int nExteriorElementBoundaries_global,
+                                                        int nElementBoundaries_global,
+                                                        int nElementBoundaries_element,
+                                                        int nQuadraturePoints_elementBoundary,
+                                                        int nSpace,
+                                                        int * interiorElementBoundaries,
+                                                        int * exteriorElementBoundaries,
+                                                        int * elementBoundaryElementsArray,
+                                                        int * elementBoundaryLocalElementBoundariesArray,
+                                                        double * velocityBoundary_global,
+                                                        double * velocityBoundary_element)
 {
   int ebN,ebNE,ebNI,eN_left,eN_right,ebN_left_element,ebN_right_element,k,I;
 
@@ -8564,24 +8564,24 @@ void copyGlobalElementBoundaryVelocityToElementBoundary(int nElements_global,
       ebN_right_element= elementBoundaryLocalElementBoundariesArray[ebN*2 + 1];
 
       for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	for (I = 0; I < nSpace; I++)
-	  {
-	    velocityBoundary_element[eN_left*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-				     ebN_left_element*nQuadraturePoints_elementBoundary*nSpace +
-				     k*nSpace + 
-				     I] = 
-	      velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
-				      k*nSpace + 
-				      I];
-	    velocityBoundary_element[eN_right*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-				     ebN_right_element*nQuadraturePoints_elementBoundary*nSpace +
-				     k*nSpace + 
-				     I] = 
-	      velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
-				      k*nSpace + 
-				      I];
+        for (I = 0; I < nSpace; I++)
+          {
+            velocityBoundary_element[eN_left*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+                                     ebN_left_element*nQuadraturePoints_elementBoundary*nSpace +
+                                     k*nSpace +
+                                     I] =
+              velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
+                                      k*nSpace +
+                                      I];
+            velocityBoundary_element[eN_right*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+                                     ebN_right_element*nQuadraturePoints_elementBoundary*nSpace +
+                                     k*nSpace +
+                                     I] =
+              velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
+                                      k*nSpace +
+                                      I];
 
-	  }
+          }
     }/*ebNI*/
 
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
@@ -8591,27 +8591,27 @@ void copyGlobalElementBoundaryVelocityToElementBoundary(int nElements_global,
       ebN_left_element = elementBoundaryLocalElementBoundariesArray[ebN*2 + 0];
 
       for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	for (I = 0; I < nSpace; I++)
-	  {
-	    velocityBoundary_element[eN_left*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-				     ebN_left_element*nQuadraturePoints_elementBoundary*nSpace +
-				     k*nSpace + 
-				     I] = 
-	      velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
-				      k*nSpace + 
-				      I];
-	  }
-    }/*ebNE*/ 
+        for (I = 0; I < nSpace; I++)
+          {
+            velocityBoundary_element[eN_left*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+                                     ebN_left_element*nQuadraturePoints_elementBoundary*nSpace +
+                                     k*nSpace +
+                                     I] =
+              velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
+                                      k*nSpace +
+                                      I];
+          }
+    }/*ebNE*/
 }
 void loadBoundaryFluxIntoGlobalElementBoundaryVelocity(int nExteriorElementBoundaries_global,
-						       int nQuadraturePoints_elementBoundary,
-						       int nSpace,
-						       int* exteriorElementBoundaries,
-						       int* fluxElementBoundaries,
-						       double* normal,
-						       double* flux,
-						       double updateCoef,
-						       double* velocity)
+                                                       int nQuadraturePoints_elementBoundary,
+                                                       int nSpace,
+                                                       int* exteriorElementBoundaries,
+                                                       int* fluxElementBoundaries,
+                                                       double* normal,
+                                                       double* flux,
+                                                       double updateCoef,
+                                                       double* velocity)
 {
   int ebNE,ebN,I,k;
   double val;
@@ -8619,32 +8619,32 @@ void loadBoundaryFluxIntoGlobalElementBoundaryVelocity(int nExteriorElementBound
     {
       ebN = exteriorElementBoundaries[ebNE];
       if (fluxElementBoundaries[ebNE] > 0)
-	{
-	  for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	    {
-	      for (I=0; I < nSpace; I++)
-		{
-		  val = velocity[ebN*nQuadraturePoints_elementBoundary*nSpace + 
-				 k*nSpace + I];
-		  velocity[ebN*nQuadraturePoints_elementBoundary*nSpace + 
-			   k*nSpace + I]
-		    = val*updateCoef + 
-		    flux[ebN*nQuadraturePoints_elementBoundary +
-			 k] 
-		    *
-		    normal[ebN*nQuadraturePoints_elementBoundary*nSpace + 
-			   k*nSpace + I];
-		  /*mwf debug
-		  printf("load fluxes ebNE=%d ebN=%d k=%d I=%d val=%g flux=%g n=%g vel=%g\n",
-			 ebNE,ebN,k,I,val,
-			 flux[ebN*nQuadraturePoints_elementBoundary+k],
-			 normal[ebN*nQuadraturePoints_elementBoundary*nSpace + k*nSpace + I],
-			 velocity[ebN*nQuadraturePoints_elementBoundary*nSpace + 
-				  k*nSpace + I]);
-		  */
-		}
-	    }
-	}
+        {
+          for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
+            {
+              for (I=0; I < nSpace; I++)
+                {
+                  val = velocity[ebN*nQuadraturePoints_elementBoundary*nSpace +
+                                 k*nSpace + I];
+                  velocity[ebN*nQuadraturePoints_elementBoundary*nSpace +
+                           k*nSpace + I]
+                    = val*updateCoef +
+                    flux[ebN*nQuadraturePoints_elementBoundary +
+                         k]
+                    *
+                    normal[ebN*nQuadraturePoints_elementBoundary*nSpace +
+                           k*nSpace + I];
+                  /*mwf debug
+                  printf("load fluxes ebNE=%d ebN=%d k=%d I=%d val=%g flux=%g n=%g vel=%g\n",
+                         ebNE,ebN,k,I,val,
+                         flux[ebN*nQuadraturePoints_elementBoundary+k],
+                         normal[ebN*nQuadraturePoints_elementBoundary*nSpace + k*nSpace + I],
+                         velocity[ebN*nQuadraturePoints_elementBoundary*nSpace +
+                                  k*nSpace + I]);
+                  */
+                }
+            }
+        }
     }
 
 }
@@ -8851,7 +8851,7 @@ void updateInteriorElementBoundary_MixedForm_weakJacobian(int nInteriorElementBo
                   -=
                   dphi_trace_left[ebN*nQuadraturePoints_elementBoundary+
                                   k]*
-                  
+
                   v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                     left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                     k*nDOF_test_element+
@@ -8897,7 +8897,7 @@ void updateInteriorElementBoundary_MixedForm_weakJacobian(int nInteriorElementBo
                   -=
                   dphi_trace_left[ebN*nQuadraturePoints_elementBoundary+
                                   k]*
-                  
+
                   v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                     left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                     k*nDOF_test_element+
@@ -9058,46 +9058,46 @@ void updatePotential_MixedForm_weak(int nElements_global,
                 k]
             *
             grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-		      k*nDOF_test_element*nSpace +
-		      i*nSpace +
-		      I];
+                      k*nDOF_test_element*nSpace +
+                      i*nSpace +
+                      I];
 }
 
 void updatePotential_MixedForm_weak_gwvd(int nElements_global,
                                     int nQuadraturePoints_element,
                                     int nDOF_test_element,
                                     int nSpace,
-				    double  epsilon,
+                                    double  epsilon,
                                     double* phi,
-				    double* w_dV,
+                                    double* w_dV,
                                     double* grad_w_dV,
                                     double* b,
-				    double* mf) 
+                                    double* mf)
 {
   int eN,i,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (I=0;I<nSpace;I++)
       for (i=0;i<nDOF_test_element;i++)
         for (k=0;k<nQuadraturePoints_element;k++)
-          { 
-	    b[eN*nDOF_test_element*nSpace +
+          {
+            b[eN*nDOF_test_element*nSpace +
             I*nDOF_test_element+i]
-	      += 
+              +=
             phi[eN*nQuadraturePoints_element+
                 k]
             *
             grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-		      k*nDOF_test_element*nSpace +
-		      i*nSpace +
-		      I];
-	        if (I==nSpace-1)
-	      { 
-		b[eN*nDOF_test_element*nSpace +
-		I*nDOF_test_element+i]
-	       -= epsilon*mf[eN*nQuadraturePoints_element+
-			     k ]*w_dV[eN*nQuadraturePoints_element*nDOF_test_element+ k*nDOF_test_element + i ];
-			     }
-	  }
+                      k*nDOF_test_element*nSpace +
+                      i*nSpace +
+                      I];
+                if (I==nSpace-1)
+              {
+                b[eN*nDOF_test_element*nSpace +
+                I*nDOF_test_element+i]
+               -= epsilon*mf[eN*nQuadraturePoints_element+
+                             k ]*w_dV[eN*nQuadraturePoints_element*nDOF_test_element+ k*nDOF_test_element + i ];
+                             }
+          }
 }
 
 void updatePotential_MixedForm_weakJacobian(int nElements_global,
@@ -9208,18 +9208,18 @@ void calculateVelocityQuadrature_MixedForm(int nElements_global,
 }
 
 void calculateVelocityQuadrature_MixedForm2(int nElements_global,
-					    int nElementBoundaries_element,
-					    int nElementBoundaryQuadraturePoints_elementBoundary,
-					    int nDOF_element,
-					    int nSpace,
-					    int nQuadraturePoints_element,
-					    double* qa,
-					    double* qw_dV,
-					    double* b,
-					    double* v,
-					    double* V,
-					    double* qv,
-					    double* qV)
+                                            int nElementBoundaries_element,
+                                            int nElementBoundaryQuadraturePoints_elementBoundary,
+                                            int nDOF_element,
+                                            int nSpace,
+                                            int nQuadraturePoints_element,
+                                            double* qa,
+                                            double* qw_dV,
+                                            double* b,
+                                            double* v,
+                                            double* V,
+                                            double* qv,
+                                            double* qV)
 {
   int eN,ebN,k,i,j,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
   PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
@@ -9237,93 +9237,93 @@ void calculateVelocityQuadrature_MixedForm2(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     {
       for(I=0;I<nSpace;I++)
-	{
-	  memset(A_inv,0,sizeof(double)*nDOF_element2);
-	  for(i=0;i<nDOF_element;i++)
-	    for(j=0;j<nDOF_element;j++)
-	      {
-		for(k=0;k<nQuadraturePoints_element;k++)
-		  {
-		    //cek hack do diagonal only for now
-		    A_inv[i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nSpace2+
-						       k*nSpace2+
-						       I*nSpace+
-						       I])
-		      *qv[eN*nQuadraturePoints_element*nDOF_element+
-			  k*nDOF_element+
-			  j]
-		      *
-		      qw_dV[eN*nQuadraturePoints_element*nDOF_element+
-			    k*nDOF_element+
-			    i];
-		  }
-	      }
-	  info=0;
-	  dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
-	  dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
-	  
-	  /* velocity DOF */
-	  for(i=0;i<nDOF_element;i++)
-	    {
-	      V_dof[I][i]=0.0;
-	      for(j=0;j<nDOF_element;j++)
-		V_dof[I][i]
-		  +=
-		  A_inv[i*nDOF_element+
-			j]
-		  *
-		  b[eN*nSpace*nDOF_element+
-		    I*nDOF_element+
-		    j];
-	    }
-	}
+        {
+          memset(A_inv,0,sizeof(double)*nDOF_element2);
+          for(i=0;i<nDOF_element;i++)
+            for(j=0;j<nDOF_element;j++)
+              {
+                for(k=0;k<nQuadraturePoints_element;k++)
+                  {
+                    //cek hack do diagonal only for now
+                    A_inv[i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nSpace2+
+                                                       k*nSpace2+
+                                                       I*nSpace+
+                                                       I])
+                      *qv[eN*nQuadraturePoints_element*nDOF_element+
+                          k*nDOF_element+
+                          j]
+                      *
+                      qw_dV[eN*nQuadraturePoints_element*nDOF_element+
+                            k*nDOF_element+
+                            i];
+                  }
+              }
+          info=0;
+          dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
+          dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
+
+          /* velocity DOF */
+          for(i=0;i<nDOF_element;i++)
+            {
+              V_dof[I][i]=0.0;
+              for(j=0;j<nDOF_element;j++)
+                V_dof[I][i]
+                  +=
+                  A_inv[i*nDOF_element+
+                        j]
+                  *
+                  b[eN*nSpace*nDOF_element+
+                    I*nDOF_element+
+                    j];
+            }
+        }
       /* evaluate at element quadrature */
       for(k=0;k<nQuadraturePoints_element;k++)
-	for(j=0;j<nDOF_element;j++)
-	  for(I=0;I<nSpace;I++)
-	    qV[eN*nQuadraturePoints_element*nSpace+
-	       k*nSpace+
-	       I]
-	      +=
-	      V_dof[I][j]
-	      *
-	      qv[eN*nQuadraturePoints_element*nDOF_element+
-		 k*nDOF_element+
-		 j];
+        for(j=0;j<nDOF_element;j++)
+          for(I=0;I<nSpace;I++)
+            qV[eN*nQuadraturePoints_element*nSpace+
+               k*nSpace+
+               I]
+              +=
+              V_dof[I][j]
+              *
+              qv[eN*nQuadraturePoints_element*nDOF_element+
+                 k*nDOF_element+
+                 j];
       /* evaluate at element boundary quadrature*/
       for (ebN=0;ebN<nElementBoundaries_element;ebN++)
-	for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
-	  for(j=0;j<nDOF_element;j++)
-	    for(I=0;I<nSpace;I++)
-	      V[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
-		ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
-		k*nSpace+
-		I]
-		+=
-		V_dof[I][j]
-		*
-		v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
-		  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
-		  k*nDOF_element+
-		  j];
+        for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
+          for(j=0;j<nDOF_element;j++)
+            for(I=0;I<nSpace;I++)
+              V[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+                ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+                k*nSpace+
+                I]
+                +=
+                V_dof[I][j]
+                *
+                v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+                  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+                  k*nDOF_element+
+                  j];
     }
 }
 
 void calculateVelocityQuadrature_MixedForm2_sd(int nElements_global,
-					       int nElementBoundaries_element,
-					       int nElementBoundaryQuadraturePoints_elementBoundary,
-					       int nDOF_element,
-					       int nSpace,
-					       int nQuadraturePoints_element,
-					       const int * rowptr,
-					       const int * colind,
-					       double* qa,
-					       double* qw_dV,
-					       double* b,
-					       double* v,
-					       double* V,
-					       double* qv,
-					       double* qV)
+                                               int nElementBoundaries_element,
+                                               int nElementBoundaryQuadraturePoints_elementBoundary,
+                                               int nDOF_element,
+                                               int nSpace,
+                                               int nQuadraturePoints_element,
+                                               const int * rowptr,
+                                               const int * colind,
+                                               double* qa,
+                                               double* qw_dV,
+                                               double* b,
+                                               double* v,
+                                               double* V,
+                                               double* qv,
+                                               double* qV)
 {
   int eN,ebN,k,i,j,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
   int m,nnz=rowptr[nSpace];
@@ -9342,103 +9342,103 @@ void calculateVelocityQuadrature_MixedForm2_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     {
       for(I=0;I<nSpace;I++)
-	{
-	  memset(A_inv,0,sizeof(double)*nDOF_element2);
-	  for(i=0;i<nDOF_element;i++)
-	    for(j=0;j<nDOF_element;j++)
-	      {
-		for(k=0;k<nQuadraturePoints_element;k++)
-		  {
-		    //cek hack do diagonal only for now
-		    for (m=rowptr[I]; m < rowptr[I+1];m++)
-		      if (colind[m] == I)
-			{
-			  /*mwf debug
-			  printf("mixedform2 eN=%d I=%d m=%d colind[m]=%d a=%g \n",
-				 eN,I,m,colind[m],qa[eN*nQuadraturePoints_element*nnz+
-						     k*nnz + m]);
-			  */
-			  A_inv[i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
-							     k*nnz + m])
-			    *qv[eN*nQuadraturePoints_element*nDOF_element+
-				k*nDOF_element+
-				j]
-			    *
-			    qw_dV[eN*nQuadraturePoints_element*nDOF_element+
-				  k*nDOF_element+
-				  i];
-			}
-		  }
-	      }
-	  info=0;
-	  dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
-	  dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
-	  
-	  /* velocity DOF */
-	  for(i=0;i<nDOF_element;i++)
-	    {
-	      V_dof[I][i]=0.0;
-	      for(j=0;j<nDOF_element;j++)
-		V_dof[I][i]
-		  +=
-		  A_inv[i*nDOF_element+
-			j]
-		  *
-		  b[eN*nSpace*nDOF_element+
-		    I*nDOF_element+
-		    j];
-	    }
-	}
+        {
+          memset(A_inv,0,sizeof(double)*nDOF_element2);
+          for(i=0;i<nDOF_element;i++)
+            for(j=0;j<nDOF_element;j++)
+              {
+                for(k=0;k<nQuadraturePoints_element;k++)
+                  {
+                    //cek hack do diagonal only for now
+                    for (m=rowptr[I]; m < rowptr[I+1];m++)
+                      if (colind[m] == I)
+                        {
+                          /*mwf debug
+                          printf("mixedform2 eN=%d I=%d m=%d colind[m]=%d a=%g \n",
+                                 eN,I,m,colind[m],qa[eN*nQuadraturePoints_element*nnz+
+                                                     k*nnz + m]);
+                          */
+                          A_inv[i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
+                                                             k*nnz + m])
+                            *qv[eN*nQuadraturePoints_element*nDOF_element+
+                                k*nDOF_element+
+                                j]
+                            *
+                            qw_dV[eN*nQuadraturePoints_element*nDOF_element+
+                                  k*nDOF_element+
+                                  i];
+                        }
+                  }
+              }
+          info=0;
+          dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
+          dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
+
+          /* velocity DOF */
+          for(i=0;i<nDOF_element;i++)
+            {
+              V_dof[I][i]=0.0;
+              for(j=0;j<nDOF_element;j++)
+                V_dof[I][i]
+                  +=
+                  A_inv[i*nDOF_element+
+                        j]
+                  *
+                  b[eN*nSpace*nDOF_element+
+                    I*nDOF_element+
+                    j];
+            }
+        }
       /* evaluate at element quadrature */
       for(k=0;k<nQuadraturePoints_element;k++)
-	for(j=0;j<nDOF_element;j++)
-	  for(I=0;I<nSpace;I++)
-	    qV[eN*nQuadraturePoints_element*nSpace+
-	       k*nSpace+
-	       I]
-	      +=
-	      V_dof[I][j]
-	      *
-	      qv[eN*nQuadraturePoints_element*nDOF_element+
-		 k*nDOF_element+
-		 j];
+        for(j=0;j<nDOF_element;j++)
+          for(I=0;I<nSpace;I++)
+            qV[eN*nQuadraturePoints_element*nSpace+
+               k*nSpace+
+               I]
+              +=
+              V_dof[I][j]
+              *
+              qv[eN*nQuadraturePoints_element*nDOF_element+
+                 k*nDOF_element+
+                 j];
       /* evaluate at element boundary quadrature*/
       for (ebN=0;ebN<nElementBoundaries_element;ebN++)
-	for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
-	  for(j=0;j<nDOF_element;j++)
-	    for(I=0;I<nSpace;I++)
-	      V[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
-		ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
-		k*nSpace+
-		I]
-		+=
-		V_dof[I][j]
-		*
-		v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
-		  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
-		  k*nDOF_element+
-		  j];
+        for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
+          for(j=0;j<nDOF_element;j++)
+            for(I=0;I<nSpace;I++)
+              V[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+                ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+                k*nSpace+
+                I]
+                +=
+                V_dof[I][j]
+                *
+                v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+                  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+                  k*nDOF_element+
+                  j];
     }
 }
 
 /* Velocity Quadrature_MixedForm2 function that saves the velocity degrees of freedom, tjp added*/
 
 void calculateVelocityQuadrature_MixedForm2_vdof_sd(int nElements_global,
-					       int nElementBoundaries_element,
-					       int nElementBoundaryQuadraturePoints_elementBoundary,
-					       int nDOF_element,
-					       int nSpace,
-					       int nQuadraturePoints_element,
-					       const int * rowptr,
-					       const int * colind,
-					       double* qa,
-					       double* qw_dV,
-					       double* b,
-					       double* v,
-					       double* V,
-					       double* qv,
-					       double* qV,
-					       double* vel_dofs)
+                                               int nElementBoundaries_element,
+                                               int nElementBoundaryQuadraturePoints_elementBoundary,
+                                               int nDOF_element,
+                                               int nSpace,
+                                               int nQuadraturePoints_element,
+                                               const int * rowptr,
+                                               const int * colind,
+                                               double* qa,
+                                               double* qw_dV,
+                                               double* b,
+                                               double* v,
+                                               double* V,
+                                               double* qv,
+                                               double* qV,
+                                               double* vel_dofs)
 {
   int eN,ebN,k,i,j,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
   int m,nnz=rowptr[nSpace];
@@ -9458,103 +9458,103 @@ void calculateVelocityQuadrature_MixedForm2_vdof_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     {
       for(I=0;I<nSpace;I++)
-	{
-	  memset(A_inv,0,sizeof(double)*nDOF_element2);
-	  for(i=0;i<nDOF_element;i++)
-	    for(j=0;j<nDOF_element;j++)
-	      {
-		for(k=0;k<nQuadraturePoints_element;k++)
-		  {
-		    //cek hack do diagonal only for now
-		    for (m=rowptr[I]; m < rowptr[I+1];m++)
-		      if (colind[m] == I)
-			{
-			  /*mwf debug
-			  printf("mixedform2 eN=%d I=%d m=%d colind[m]=%d a=%g \n",
-				 eN,I,m,colind[m],qa[eN*nQuadraturePoints_element*nnz+
-						     k*nnz + m]);
-			  */
-			  A_inv[i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
-							     k*nnz + m])
-			    *qv[eN*nQuadraturePoints_element*nDOF_element+
-				k*nDOF_element+
-				j]
-			    *
-			    qw_dV[eN*nQuadraturePoints_element*nDOF_element+
-				  k*nDOF_element+
-				  i];
-			}
-		  }
-	      }
-	  info=0;
-	  dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
-	  dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
-	  
-	  /* velocity DOF */
-	  for(i=0;i<nDOF_element;i++)
-	    {
-	      V_dof[I][i]=0.0;
-	      vel_dofs_temp[eN][I][i]=0.0;
-	      for(j=0;j<nDOF_element;j++)
-		{
-		V_dof[I][i]
-		  +=
-		  A_inv[i*nDOF_element+
-			j]
-		  *
-		  b[eN*nSpace*nDOF_element+
-		    I*nDOF_element+
-		    j];
-	        vel_dofs_temp[eN][I][i] 
-		+= A_inv[i*nDOF_element+
-			j]
-		  *
-		  b[eN*nSpace*nDOF_element+
-		    I*nDOF_element+
-		    j];
-		}
-	    }
-	}
+        {
+          memset(A_inv,0,sizeof(double)*nDOF_element2);
+          for(i=0;i<nDOF_element;i++)
+            for(j=0;j<nDOF_element;j++)
+              {
+                for(k=0;k<nQuadraturePoints_element;k++)
+                  {
+                    //cek hack do diagonal only for now
+                    for (m=rowptr[I]; m < rowptr[I+1];m++)
+                      if (colind[m] == I)
+                        {
+                          /*mwf debug
+                          printf("mixedform2 eN=%d I=%d m=%d colind[m]=%d a=%g \n",
+                                 eN,I,m,colind[m],qa[eN*nQuadraturePoints_element*nnz+
+                                                     k*nnz + m]);
+                          */
+                          A_inv[i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
+                                                             k*nnz + m])
+                            *qv[eN*nQuadraturePoints_element*nDOF_element+
+                                k*nDOF_element+
+                                j]
+                            *
+                            qw_dV[eN*nQuadraturePoints_element*nDOF_element+
+                                  k*nDOF_element+
+                                  i];
+                        }
+                  }
+              }
+          info=0;
+          dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
+          dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
+
+          /* velocity DOF */
+          for(i=0;i<nDOF_element;i++)
+            {
+              V_dof[I][i]=0.0;
+              vel_dofs_temp[eN][I][i]=0.0;
+              for(j=0;j<nDOF_element;j++)
+                {
+                V_dof[I][i]
+                  +=
+                  A_inv[i*nDOF_element+
+                        j]
+                  *
+                  b[eN*nSpace*nDOF_element+
+                    I*nDOF_element+
+                    j];
+                vel_dofs_temp[eN][I][i]
+                += A_inv[i*nDOF_element+
+                        j]
+                  *
+                  b[eN*nSpace*nDOF_element+
+                    I*nDOF_element+
+                    j];
+                }
+            }
+        }
 
       /* Change the shape of the velocity degrees of freedom */
-	for(j=0;j<nDOF_element;j++)
-	  for(I=0;I<nSpace;I++)
-	    vel_dofs[eN*nDOF_element*nSpace+
-	       j*nSpace+
-	       I]
-	      =vel_dofs_temp[eN][I][j];
-	  
+        for(j=0;j<nDOF_element;j++)
+          for(I=0;I<nSpace;I++)
+            vel_dofs[eN*nDOF_element*nSpace+
+               j*nSpace+
+               I]
+              =vel_dofs_temp[eN][I][j];
+
       /* evaluate at element quadrature */
       for(k=0;k<nQuadraturePoints_element;k++)
-	for(j=0;j<nDOF_element;j++)
-	  for(I=0;I<nSpace;I++)
-	    qV[eN*nQuadraturePoints_element*nSpace+
-	       k*nSpace+
-	       I]
-	      +=
-	      V_dof[I][j]
-	      *
-	      qv[eN*nQuadraturePoints_element*nDOF_element+
-		 k*nDOF_element+
-		 j];
+        for(j=0;j<nDOF_element;j++)
+          for(I=0;I<nSpace;I++)
+            qV[eN*nQuadraturePoints_element*nSpace+
+               k*nSpace+
+               I]
+              +=
+              V_dof[I][j]
+              *
+              qv[eN*nQuadraturePoints_element*nDOF_element+
+                 k*nDOF_element+
+                 j];
 
-     
+
       /* evaluate at element boundary quadrature*/
       for (ebN=0;ebN<nElementBoundaries_element;ebN++)
-	for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
-	  for(j=0;j<nDOF_element;j++)
-	    for(I=0;I<nSpace;I++)
-	      V[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
-		ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
-		k*nSpace+
-		I]
-		+=
-		V_dof[I][j]
-		*
-		v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
-		  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
-		  k*nDOF_element+
-		  j];
+        for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
+          for(j=0;j<nDOF_element;j++)
+            for(I=0;I<nSpace;I++)
+              V[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+                ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+                k*nSpace+
+                I]
+                +=
+                V_dof[I][j]
+                *
+                v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+                  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+                  k*nDOF_element+
+                  j];
     }
 }
 
@@ -9726,8 +9726,8 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
                                                     int nDOF_element,
                                                     int nSpace,
                                                     int nQuadraturePoints_element,
-						    double* qa,
-						    double* qw_dV,
+                                                    double* qa,
+                                                    double* qw_dV,
                                                     double* db,
                                                     double* db_eb,
                                                     double* v,
@@ -9768,47 +9768,47 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     {
       for(I=0;I<nSpace;I++)
-	{
-	  memset(A_inv[I],0,sizeof(double)*nDOF_element2);
-	  for(i=0;i<nDOF_element;i++)
-	    for(j=0;j<nDOF_element;j++)
-	      {
-		for(k=0;k<nQuadraturePoints_element;k++)
-		  {
-		    //cek hack do diagonal only for now
-		    A_inv[I][i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nSpace2+
-							  k*nSpace2+
-							  I*nSpace+
-							  I])
-		      *qv[eN*nQuadraturePoints_element*nDOF_element+
-			  k*nDOF_element+
-			  j]
-		      *
-		      qw_dV[eN*nQuadraturePoints_element*nDOF_element+
-			    k*nDOF_element+
-			    i];
-		  }
-	      }
-	  info=0;
-	  dgetrf_(&dim,&dim,&A_inv[I],&dim,ipiv,&info);
-	  dgetri_(&dim,&A_inv[I],&dim,ipiv,work,&lwork,&info);
-	  /* get derivatives of velocity DOF w.r.t. u DOF*/
-	  for(jj=0;jj<nDOF_element;jj++)
-	    for(i=0;i<nDOF_element;i++)
-	      {
-		DV_dof[I][i][jj]=0.0;
-		for(j=0;j<nDOF_element;j++)
-		  DV_dof[I][i][jj]
-		    +=
-		    A_inv[I][i*nDOF_element+
-			     j]
-		    *
-		    db[eN*nSpace*nDOF_element2+
-		       I*nDOF_element2+
-		       j*nDOF_element+
-		       jj];
-	      }
-	}
+        {
+          memset(A_inv[I],0,sizeof(double)*nDOF_element2);
+          for(i=0;i<nDOF_element;i++)
+            for(j=0;j<nDOF_element;j++)
+              {
+                for(k=0;k<nQuadraturePoints_element;k++)
+                  {
+                    //cek hack do diagonal only for now
+                    A_inv[I][i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nSpace2+
+                                                          k*nSpace2+
+                                                          I*nSpace+
+                                                          I])
+                      *qv[eN*nQuadraturePoints_element*nDOF_element+
+                          k*nDOF_element+
+                          j]
+                      *
+                      qw_dV[eN*nQuadraturePoints_element*nDOF_element+
+                            k*nDOF_element+
+                            i];
+                  }
+              }
+          info=0;
+          dgetrf_(&dim,&dim,&A_inv[I],&dim,ipiv,&info);
+          dgetri_(&dim,&A_inv[I],&dim,ipiv,work,&lwork,&info);
+          /* get derivatives of velocity DOF w.r.t. u DOF*/
+          for(jj=0;jj<nDOF_element;jj++)
+            for(i=0;i<nDOF_element;i++)
+              {
+                DV_dof[I][i][jj]=0.0;
+                for(j=0;j<nDOF_element;j++)
+                  DV_dof[I][i][jj]
+                    +=
+                    A_inv[I][i*nDOF_element+
+                             j]
+                    *
+                    db[eN*nSpace*nDOF_element2+
+                       I*nDOF_element2+
+                       j*nDOF_element+
+                       jj];
+              }
+        }
       /* get derivatives of velocity at element quadrature  w.r.t u DOF on element*/
       for(k=0;k<nQuadraturePoints_element;k++)
         for(j=0;j<nDOF_element;j++)
@@ -9855,7 +9855,7 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
                     DV_dof[I][i][jj]
                       +=
                       A_inv[I][i*nDOF_element+
-			       j]
+                               j]
                       *
                       db_eb[eN*nElementBoundaries_element*nSpace*nDOF_element2+
                             ebN*nSpace*nDOF_element2+
@@ -9909,23 +9909,23 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
 }
 
 void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
-							int nElementBoundaries_element,
-							int nElementBoundaryQuadraturePoints_elementBoundary,
-							int nDOF_element,
-							int nSpace,
-							int nQuadraturePoints_element,
-							const int *rowptr,
-							const int *colind,
-							double* qa,
-							double* qw_dV,
-							double* db,
-							double* db_eb,
-							double* v,
-							double* DV,
-							double* DV_eb,
-							double* qv,
-							double* qDV,
-							double* qDV_eb)
+                                                        int nElementBoundaries_element,
+                                                        int nElementBoundaryQuadraturePoints_elementBoundary,
+                                                        int nDOF_element,
+                                                        int nSpace,
+                                                        int nQuadraturePoints_element,
+                                                        const int *rowptr,
+                                                        const int *colind,
+                                                        double* qa,
+                                                        double* qw_dV,
+                                                        double* db,
+                                                        double* db_eb,
+                                                        double* v,
+                                                        double* DV,
+                                                        double* DV_eb,
+                                                        double* qv,
+                                                        double* qDV,
+                                                        double* qDV_eb)
 {
   int eN,ebN,ebN_ebN,k,i,j,jj,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
   int m,nnz=rowptr[nSpace];
@@ -9959,51 +9959,51 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     {
       for(I=0;I<nSpace;I++)
-	{
-	  memset(A_inv[I],0,sizeof(double)*nDOF_element2);
-	  for(i=0;i<nDOF_element;i++)
-	    for(j=0;j<nDOF_element;j++)
-	      {
-		for(k=0;k<nQuadraturePoints_element;k++)
-		  {
-		    //cek hack do diagonal only for now
-		    for (m=rowptr[I]; m < rowptr[I+1]; m++)
-		      if (colind[m] == I)
-			{
-			  A_inv[I][i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
-							     k*nnz+m])
-			    *qv[eN*nQuadraturePoints_element*nDOF_element+
-				k*nDOF_element+
-				j]
-			    *
-			    qw_dV[eN*nQuadraturePoints_element*nDOF_element+
-				  k*nDOF_element+
-				  i];
-			}
-		  }
-	      }
-	  info=0;
-	  dgetrf_(&dim,&dim,A_inv[I],&dim,ipiv,&info);
-	  dgetri_(&dim,A_inv[I],&dim,ipiv,work,&lwork,&info);
-	  /* get derivatives of velocity DOF w.r.t. u DOF*/
-	  for(jj=0;jj<nDOF_element;jj++)
-	    {
-	      for(i=0;i<nDOF_element;i++)
-		{
-		  DV_dof[I][i][jj]=0.0;
-		  for(j=0;j<nDOF_element;j++)
-		    DV_dof[I][i][jj]
-		      +=
-		      A_inv[I][i*nDOF_element+
-			    j]
-		      *
-		      db[eN*nSpace*nDOF_element2+
-			 I*nDOF_element2+
-			 j*nDOF_element+
-			 jj];
-		}
-	    }
-	}
+        {
+          memset(A_inv[I],0,sizeof(double)*nDOF_element2);
+          for(i=0;i<nDOF_element;i++)
+            for(j=0;j<nDOF_element;j++)
+              {
+                for(k=0;k<nQuadraturePoints_element;k++)
+                  {
+                    //cek hack do diagonal only for now
+                    for (m=rowptr[I]; m < rowptr[I+1]; m++)
+                      if (colind[m] == I)
+                        {
+                          A_inv[I][i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
+                                                             k*nnz+m])
+                            *qv[eN*nQuadraturePoints_element*nDOF_element+
+                                k*nDOF_element+
+                                j]
+                            *
+                            qw_dV[eN*nQuadraturePoints_element*nDOF_element+
+                                  k*nDOF_element+
+                                  i];
+                        }
+                  }
+              }
+          info=0;
+          dgetrf_(&dim,&dim,A_inv[I],&dim,ipiv,&info);
+          dgetri_(&dim,A_inv[I],&dim,ipiv,work,&lwork,&info);
+          /* get derivatives of velocity DOF w.r.t. u DOF*/
+          for(jj=0;jj<nDOF_element;jj++)
+            {
+              for(i=0;i<nDOF_element;i++)
+                {
+                  DV_dof[I][i][jj]=0.0;
+                  for(j=0;j<nDOF_element;j++)
+                    DV_dof[I][i][jj]
+                      +=
+                      A_inv[I][i*nDOF_element+
+                            j]
+                      *
+                      db[eN*nSpace*nDOF_element2+
+                         I*nDOF_element2+
+                         j*nDOF_element+
+                         jj];
+                }
+            }
+        }
       for(k=0;k<nQuadraturePoints_element;k++)
         for(j=0;j<nDOF_element;j++)
           for(jj=0;jj<nDOF_element;jj++)
@@ -10043,22 +10043,22 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
           for(I=0;I<nSpace;I++)
             for(jj=0;jj<nDOF_element;jj++)
               {
-		for(i=0;i<nDOF_element;i++)
-		  {
-		    DV_dof[I][i][jj] = 0.0;
-		    for(j=0;j<nDOF_element;j++)
-		      DV_dof[I][i][jj]
-			+=
-			A_inv[I][i*nDOF_element+
-			      j]
-			*
-			db_eb[eN*nElementBoundaries_element*nSpace*nDOF_element2+
-			      ebN*nSpace*nDOF_element2+
-			      I*nDOF_element2+
-			      j*nDOF_element+
-			      jj];
-		  }
-	      }
+                for(i=0;i<nDOF_element;i++)
+                  {
+                    DV_dof[I][i][jj] = 0.0;
+                    for(j=0;j<nDOF_element;j++)
+                      DV_dof[I][i][jj]
+                        +=
+                        A_inv[I][i*nDOF_element+
+                              j]
+                        *
+                        db_eb[eN*nElementBoundaries_element*nSpace*nDOF_element2+
+                              ebN*nSpace*nDOF_element2+
+                              I*nDOF_element2+
+                              j*nDOF_element+
+                              jj];
+                  }
+              }
           /* quadrature calculations */
           for(k=0;k<nQuadraturePoints_element;k++)
             for(j=0;j<nDOF_element;j++)
@@ -10149,19 +10149,19 @@ void updateDiffusion_MixedForm_weak(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           for (J=0;J<nSpace;J++)
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               -=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
-                k*nSpace2 + 
-                I*nSpace + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
+                k*nSpace2 +
+                I*nSpace +
                 J]
               *
-              qV[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              qV[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  J]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
 }
@@ -10170,13 +10170,13 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
                                        int nQuadraturePoints_element,
                                        int nDOF_test_element,
                                        int nSpace,
-				       int rho_split,
+                                       int rho_split,
                                        int* rowptr,
                                        int* colind,
                                        double* a,
                                        double* qV,
                                        double* grad_w_dV,
-				       double* velocity, /* added for ldg coupling */
+                                       double* velocity, /* added for ldg coupling */
                                        double* weak_residual)
 {
   int eN,i,k,I,m,nnz=rowptr[nSpace];
@@ -10186,46 +10186,46 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
         for (I=0;I<nSpace;I++)
           for (m=rowptr[I];m<rowptr[I+1];m++)
             {
-	    weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               -=
              a[eN*nQuadraturePoints_element*nnz+
                 k*nnz+
                 m]
               *
-              qV[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              qV[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  colind[m]]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
-	    }
+            }
 
   for(eN=0;eN<nElements_global;eN++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
-	  if (rho_split==0)
-	    {
-	      for (m=rowptr[I];m<rowptr[I+1];m++)
-		{
-		  velocity[eN*nQuadraturePoints_element*nSpace + 
-			   k*nSpace + I]
-		    += a[eN*nQuadraturePoints_element*nnz+
-			 k*nnz+ m]
-		    *
-		    qV[eN*nQuadraturePoints_element*nSpace + 
-		       k*nSpace + colind[m]];
-	        }
-	    }
-	  else if (rho_split==1)
-	    {
-	      velocity[eN*nQuadraturePoints_element*nSpace + 
-			   k*nSpace + I]
-		    = 
-		    qV[eN*nQuadraturePoints_element*nSpace + 
-		       k*nSpace + I];
-	    }
+          if (rho_split==0)
+            {
+              for (m=rowptr[I];m<rowptr[I+1];m++)
+                {
+                  velocity[eN*nQuadraturePoints_element*nSpace +
+                           k*nSpace + I]
+                    += a[eN*nQuadraturePoints_element*nnz+
+                         k*nnz+ m]
+                    *
+                    qV[eN*nQuadraturePoints_element*nSpace +
+                       k*nSpace + colind[m]];
+                }
+            }
+          else if (rho_split==1)
+            {
+              velocity[eN*nQuadraturePoints_element*nSpace +
+                           k*nSpace + I]
+                    =
+                    qV[eN*nQuadraturePoints_element*nSpace +
+                       k*nSpace + I];
+            }
 }
 
 void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
@@ -10254,19 +10254,19 @@ void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
             daProduct=0.0;
             for (I=0;I<nSpace;I++)
               for (J=0;J<nSpace;J++)
-                daProduct 
-                  -= 
+                daProduct
+                  -=
                   da[eN*nQuadraturePoints_element*nSpace2 +
                      k*nSpace2 +
                      I*nSpace +
                      J]
                   *
-                  qV[eN*nQuadraturePoints_element*nSpace + 
-                     k*nSpace + 
+                  qV[eN*nQuadraturePoints_element*nSpace +
+                     k*nSpace +
                      J]
                   *
-                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                            k*nDOF_test_element*nSpace + 
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
                             i*nSpace+
                             I];
             for (j=0;j<nDOF_trial_element;j++)
@@ -10274,31 +10274,31 @@ void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
                 dphiProduct=0.0;
                 for (I=0;I<nSpace;I++)
                   for (J=0;J<nSpace;J++)
-                    dphiProduct 
+                    dphiProduct
                       -=
-                      a[eN*nQuadraturePoints_element*nSpace2 + 
+                      a[eN*nQuadraturePoints_element*nSpace2 +
                         k*nSpace2+
-                        I*nSpace + 
+                        I*nSpace +
                         J]
                       *
-                      qDV[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+                      qDV[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                           k*nDOF_trial_element*nSpace +
                           j*nSpace+
                           J]
                       *
-                      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                                k*nDOF_test_element*nSpace + 
+                      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                                k*nDOF_test_element*nSpace +
                                 i*nSpace+
                                 I];
-                jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                                       i*nDOF_trial_element + 
-                                       j] 
-                  += 
+                jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                                       i*nDOF_trial_element +
+                                       j]
+                  +=
                   daProduct
                   *
                   v[eN*nQuadraturePoints_element*nDOF_trial_element+
                     k*nDOF_trial_element+
-                    j] 
+                    j]
                   +
                   dphiProduct;
               }
@@ -10312,11 +10312,11 @@ void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
                   dphiProduct=0.0;
                   for (I=0;I<nSpace;I++)
                     for (J=0;J<nSpace;J++)
-                      dphiProduct 
+                      dphiProduct
                         -=
-                        a[eN*nQuadraturePoints_element*nSpace2 + 
+                        a[eN*nQuadraturePoints_element*nSpace2 +
                           k*nSpace2+
-                          I*nSpace + 
+                          I*nSpace +
                           J]
                         *
                         qDV_eb[eN*nElementBoundaries_element*nQuadraturePoints_element*nDOF_trial_element*nSpace +
@@ -10325,18 +10325,18 @@ void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
                                j*nSpace+
                                J]
                         *
-                        grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                                  k*nDOF_test_element*nSpace + 
+                        grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                                  k*nDOF_test_element*nSpace +
                                   i*nSpace+
                                   I];
-                  jacobian_weak_residual_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element + 
-                                            ebN*nDOF_test_X_trial_element + 
-                                            i*nDOF_trial_element + 
-                                            j] 
-                    += 
+                  jacobian_weak_residual_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element +
+                                            ebN*nDOF_test_X_trial_element +
+                                            i*nDOF_trial_element +
+                                            j]
+                    +=
                     dphiProduct;
                 }
-            }       
+            }
     }
 }
 
@@ -10368,18 +10368,18 @@ void updateDiffusionJacobian_MixedForm_weak_sd(int nElements_global,
             daProduct=0.0;
             for (I=0;I<nSpace;I++)
               for (m=rowptr[I];m<rowptr[I+1];m++)
-                daProduct 
-                  -= 
+                daProduct
+                  -=
                   da[eN*nQuadraturePoints_element*nnz+
                      k*nnz+
                      m]
                   *
-                  qV[eN*nQuadraturePoints_element*nSpace + 
-                     k*nSpace + 
+                  qV[eN*nQuadraturePoints_element*nSpace +
+                     k*nSpace +
                      colind[m]]
                   *
-                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                            k*nDOF_test_element*nSpace + 
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
                             i*nSpace+
                             I];
             for (j=0;j<nDOF_trial_element;j++)
@@ -10387,30 +10387,30 @@ void updateDiffusionJacobian_MixedForm_weak_sd(int nElements_global,
                 dphiProduct=0.0;
                 for (I=0;I<nSpace;I++)
                   for(m=rowptr[I];m<rowptr[I+1];m++)
-                    dphiProduct 
+                    dphiProduct
                       -=
                       a[eN*nQuadraturePoints_element*nnz+
                         k*nnz+
                         m]
                       *
-                      qDV[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+                      qDV[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                           k*nDOF_trial_element*nSpace +
                           j*nSpace+
                           colind[m]]
                       *
-                      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                                k*nDOF_test_element*nSpace + 
+                      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                                k*nDOF_test_element*nSpace +
                                 i*nSpace+
                                 I];
-                jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                                       i*nDOF_trial_element + 
-                                       j] 
-                  += 
+                jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                                       i*nDOF_trial_element +
+                                       j]
+                  +=
                   daProduct
                   *
                   v[eN*nQuadraturePoints_element*nDOF_trial_element+
                     k*nDOF_trial_element+
-                    j] 
+                    j]
                   +
                   dphiProduct;
               }
@@ -10424,7 +10424,7 @@ void updateDiffusionJacobian_MixedForm_weak_sd(int nElements_global,
                   dphiProduct=0.0;
                   for (I=0;I<nSpace;I++)
                     for(m=rowptr[I];m<rowptr[I+1];m++)
-                      dphiProduct 
+                      dphiProduct
                         -=
                         a[eN*nQuadraturePoints_element*nnz+
                           k*nnz+
@@ -10436,18 +10436,18 @@ void updateDiffusionJacobian_MixedForm_weak_sd(int nElements_global,
                                j*nSpace+
                                colind[m]]
                         *
-                        grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                                  k*nDOF_test_element*nSpace + 
+                        grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                                  k*nDOF_test_element*nSpace +
                                   i*nSpace+
                                   I];
-                  jacobian_weak_residual_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element + 
-                                            ebN*nDOF_test_X_trial_element + 
-                                            i*nDOF_trial_element + 
-                                            j] 
-                    += 
+                  jacobian_weak_residual_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element +
+                                            ebN*nDOF_test_X_trial_element +
+                                            i*nDOF_trial_element +
+                                            j]
+                    +=
                     dphiProduct;
                 }
-            }       
+            }
     }
 }
 
@@ -10519,7 +10519,7 @@ void estimate_mt_lowmem(int nElements_global,
               {
                 mt[eN*nQuadraturePoints_element+
                    k] = 0.0;
-                massMatrix[i*nDOF_element+j] += 
+                massMatrix[i*nDOF_element+j] +=
                   v[eN*nQuadraturePoints_element*nDOF_element+
                     k*nDOF_element+
                     j]
@@ -10543,15 +10543,15 @@ void estimate_mt_lowmem(int nElements_global,
 \brief copy quantity in an elementBoundary quadrature array to one that sits only on exterior boundaries
 */
 void copyExteriorElementBoundaryValuesFromElementBoundaryValues(int nExteriorElementBoundaries_global,
-								int nElements_global,
-								int nElementBoundaries_element,
-								int nQuadraturePoints_elementBoundary,
-								int nValuesPerQuadraturePoint,
-								const int * exteriorElementBoundaries,
-								const int* elementBoundaryElements,
-								const int * elementBoundaryLocalElementBoundaries,
-								const double * ebq_val,
-								double * ebqe_val)
+                                                                int nElements_global,
+                                                                int nElementBoundaries_element,
+                                                                int nQuadraturePoints_elementBoundary,
+                                                                int nValuesPerQuadraturePoint,
+                                                                const int * exteriorElementBoundaries,
+                                                                const int* elementBoundaryElements,
+                                                                const int * elementBoundaryLocalElementBoundaries,
+                                                                const double * ebq_val,
+                                                                double * ebqe_val)
 {
   int ebNE,ebN,eN,ebN_element,k,i;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
@@ -10560,31 +10560,31 @@ void copyExteriorElementBoundaryValuesFromElementBoundaryValues(int nExteriorEle
       eN  = elementBoundaryElements[ebN*2+0];
       ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	for (i=0; i < nValuesPerQuadraturePoint; i++)
-	  {
-	    ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-		   k*nValuesPerQuadraturePoint + i]
-	      = 
-	      ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
-		      ebN_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
-		      k*nValuesPerQuadraturePoint+
-		      i];
-	  }/*i,k*/
+        for (i=0; i < nValuesPerQuadraturePoint; i++)
+          {
+            ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                   k*nValuesPerQuadraturePoint + i]
+              =
+              ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
+                      ebN_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
+                      k*nValuesPerQuadraturePoint+
+                      i];
+          }/*i,k*/
     }/*ebNE*/
 }
 /**
 \brief copy quantity that sits only on exterior boundaries into an elementBoundary quadrature array
 */
 void copyExteriorElementBoundaryValuesToElementBoundaryValues(int nExteriorElementBoundaries_global,
-							      int nElements_global,
-							      int nElementBoundaries_element,
-							      int nQuadraturePoints_elementBoundary,
-							      int nValuesPerQuadraturePoint,
-							      const int * exteriorElementBoundaries,
-							      const int* elementBoundaryElements,
-							      const int * elementBoundaryLocalElementBoundaries,
-							      const double * ebqe_val,
-							      double * ebq_val)
+                                                              int nElements_global,
+                                                              int nElementBoundaries_element,
+                                                              int nQuadraturePoints_elementBoundary,
+                                                              int nValuesPerQuadraturePoint,
+                                                              const int * exteriorElementBoundaries,
+                                                              const int* elementBoundaryElements,
+                                                              const int * elementBoundaryLocalElementBoundaries,
+                                                              const double * ebqe_val,
+                                                              double * ebq_val)
 {
   int ebNE,ebN,eN,ebN_element,k,i;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
@@ -10593,29 +10593,29 @@ void copyExteriorElementBoundaryValuesToElementBoundaryValues(int nExteriorEleme
       eN  = elementBoundaryElements[ebN*2+0];
       ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	for (i=0; i < nValuesPerQuadraturePoint; i++)
-	  {
-	    ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
-		    ebN_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
-		    k*nValuesPerQuadraturePoint+
-		    i] 
-	      = 
-	      ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-		       k*nValuesPerQuadraturePoint + i];
-	  }/*i,k*/
+        for (i=0; i < nValuesPerQuadraturePoint; i++)
+          {
+            ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
+                    ebN_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
+                    k*nValuesPerQuadraturePoint+
+                    i]
+              =
+              ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                       k*nValuesPerQuadraturePoint + i];
+          }/*i,k*/
     }/*ebNE*/
 }
 /**
 \brief copy quantity that sits only on exterior boundaries into a global elementBoundary quadrature array
 */
 void copyExteriorElementBoundaryValuesToGlobalElementBoundaryValues(int nExteriorElementBoundaries_global,
-								    int nQuadraturePoints_elementBoundary,
-								    int nValuesPerQuadraturePoint,
-								    const int * exteriorElementBoundaries,
-								    const int* elementBoundaryElements,
-								    const int * elementBoundaryLocalElementBoundaries,
-								    const double * ebqe_val,
-								    double * ebq_global_val)
+                                                                    int nQuadraturePoints_elementBoundary,
+                                                                    int nValuesPerQuadraturePoint,
+                                                                    const int * exteriorElementBoundaries,
+                                                                    const int* elementBoundaryElements,
+                                                                    const int * elementBoundaryLocalElementBoundaries,
+                                                                    const double * ebqe_val,
+                                                                    double * ebq_global_val)
 {
   int ebNE,ebN,eN,k,i;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
@@ -10623,15 +10623,15 @@ void copyExteriorElementBoundaryValuesToGlobalElementBoundaryValues(int nExterio
       ebN = exteriorElementBoundaries[ebNE];
       eN  = elementBoundaryElements[ebN*2+0];
       for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	for (i=0; i < nValuesPerQuadraturePoint; i++)
-	  {
-	    ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
-			   k*nValuesPerQuadraturePoint+
-			   i] 
-	      = 
-	      ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-		       k*nValuesPerQuadraturePoint + i];
-	  }/*i,k*/
+        for (i=0; i < nValuesPerQuadraturePoint; i++)
+          {
+            ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
+                           k*nValuesPerQuadraturePoint+
+                           i]
+              =
+              ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                       k*nValuesPerQuadraturePoint + i];
+          }/*i,k*/
     }/*ebNE*/
 }
 
@@ -10639,13 +10639,13 @@ void copyExteriorElementBoundaryValuesToGlobalElementBoundaryValues(int nExterio
 \brief copy quantity that sits only on exterior boundaries from a global elementBoundary quadrature array
 */
 void copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(int nExteriorElementBoundaries_global,
-								      int nQuadraturePoints_elementBoundary,
-								      int nValuesPerQuadraturePoint,
-								      const int * exteriorElementBoundaries,
-								      const int* elementBoundaryElements,
-								      const int * elementBoundaryLocalElementBoundaries,
-								      const double * ebq_global_val,
-								      double * ebqe_val)
+                                                                      int nQuadraturePoints_elementBoundary,
+                                                                      int nValuesPerQuadraturePoint,
+                                                                      const int * exteriorElementBoundaries,
+                                                                      const int* elementBoundaryElements,
+                                                                      const int * elementBoundaryLocalElementBoundaries,
+                                                                      const double * ebq_global_val,
+                                                                      double * ebqe_val)
 {
   int ebNE,ebN,eN,k,i;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
@@ -10653,15 +10653,15 @@ void copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(int nExter
       ebN = exteriorElementBoundaries[ebNE];
       eN  = elementBoundaryElements[ebN*2+0];
       for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	for (i=0; i < nValuesPerQuadraturePoint; i++)
-	  {
-	    ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-		     k*nValuesPerQuadraturePoint + i]
-	      =
-	      ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
-			     k*nValuesPerQuadraturePoint+
-			     i]; 
-	  }/*i,k*/
+        for (i=0; i < nValuesPerQuadraturePoint; i++)
+          {
+            ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                     k*nValuesPerQuadraturePoint + i]
+              =
+              ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
+                             k*nValuesPerQuadraturePoint+
+                             i];
+          }/*i,k*/
     }/*ebNE*/
 }
 
@@ -10682,29 +10682,29 @@ double scalarDomainIntegral(int nElements,
 }
 
 double scalarHeavisideDomainIntegral(int nElements,
-				     int nQuadraturePoints_element,
-				     double* dV,
-				     double* nValueArray)
+                                     int nQuadraturePoints_element,
+                                     double* dV,
+                                     double* nValueArray)
 {
   int eN,k;
   register double integral=0.0;
   for(eN=0;eN<nElements;eN++)
     for(k=0;k<nQuadraturePoints_element;k++)
       {
-	if(nValueArray[eN*nQuadraturePoints_element + k] > 0.0)
-	  integral += dV[eN*nQuadraturePoints_element+k];
-	else if (nValueArray[eN*nQuadraturePoints_element + k] == 0.0)
-	  integral += 0.5*dV[eN*nQuadraturePoints_element+k];
+        if(nValueArray[eN*nQuadraturePoints_element + k] > 0.0)
+          integral += dV[eN*nQuadraturePoints_element+k];
+        else if (nValueArray[eN*nQuadraturePoints_element + k] == 0.0)
+          integral += 0.5*dV[eN*nQuadraturePoints_element+k];
       }
   return integral;
 }
 
 double scalarSmoothedHeavisideDomainIntegral(int nElements,
-					     int nQuadraturePoints_element,
-					     double epsFact,
-					     double* elementDiameter,
-					     double* dV,
-					     double* nValueArray)
+                                             int nQuadraturePoints_element,
+                                             double epsFact,
+                                             double* elementDiameter,
+                                             double* dV,
+                                             double* nValueArray)
 {
   int eN,k;
   register double integral=0.0,eps,H,phi;
@@ -10712,24 +10712,24 @@ double scalarSmoothedHeavisideDomainIntegral(int nElements,
     {
       eps = elementDiameter[eN]*epsFact;
       for(k=0;k<nQuadraturePoints_element;k++)
-	{
-	  phi = nValueArray[eN*nQuadraturePoints_element + k];
-	  if (phi > eps)
-	    H=1.0;
-	  else if (phi < -eps)
-	    H=0.0;
-	  else if (phi==0.0)
-	    H=0.5;
-	  else
-	    H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
-	  integral += H*dV[eN*nQuadraturePoints_element+k];
-	}
+        {
+          phi = nValueArray[eN*nQuadraturePoints_element + k];
+          if (phi > eps)
+            H=1.0;
+          else if (phi < -eps)
+            H=0.0;
+          else if (phi==0.0)
+            H=0.5;
+          else
+            H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
+          integral += H*dV[eN*nQuadraturePoints_element+k];
+        }
     }
   return integral;
 }
 
 double fluxDomainBoundaryIntegral(int nExteriorElementBoundaries,
-				  int nElementBoundaries_owned,
+                                  int nElementBoundaries_owned,
                                   int nQuadraturePoints_elementBoundary,
                                   int* flag,
                                   int* exteriorElementBoundariesArray,
@@ -10754,14 +10754,14 @@ double fluxDomainBoundaryIntegral(int nExteriorElementBoundaries,
 }
 
 double fluxDomainBoundaryIntegralFromVector(int nExteriorElementBoundaries,
-					    int nElementBoundaries_owned,
-					    int nQuadraturePoints_elementBoundary,
-					    int nSpace,
-					    int* flag,
-					    int* exteriorElementBoundaries,
-					    double* dS,
-					    double* nValueArray,
-					    double* normal)
+                                            int nElementBoundaries_owned,
+                                            int nQuadraturePoints_elementBoundary,
+                                            int nSpace,
+                                            int* flag,
+                                            int* exteriorElementBoundaries,
+                                            double* dS,
+                                            double* nValueArray,
+                                            double* normal)
 {
   int ebNE,ebN,k,I;
   register double integral=0.0,flux=0.0;
@@ -10772,31 +10772,31 @@ double fluxDomainBoundaryIntegralFromVector(int nExteriorElementBoundaries,
         {
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
-	      flux=0.0;
-	      for (I=0;I<nSpace;I++)
-		{
-		  flux += nValueArray[ebNE*nQuadraturePoints_elementBoundary*nSpace + k*nSpace+I]*
-		    normal[ebNE*nQuadraturePoints_elementBoundary*nSpace + k*nSpace+I];
-		}
-	      integral += flux*dS[ebNE*nQuadraturePoints_elementBoundary+k];
-	    }
-	}
+              flux=0.0;
+              for (I=0;I<nSpace;I++)
+                {
+                  flux += nValueArray[ebNE*nQuadraturePoints_elementBoundary*nSpace + k*nSpace+I]*
+                    normal[ebNE*nQuadraturePoints_elementBoundary*nSpace + k*nSpace+I];
+                }
+              integral += flux*dS[ebNE*nQuadraturePoints_elementBoundary+k];
+            }
+        }
     }
   return integral;
 }
 
 
-void computeC0P1InterpolantDGP12(int nElements_global,		     
-				 int nNodes_global,
-				 int nNodes_element,
-				 int nDOF_element,
-				 int dim_dof,
-				 const int* elementNodesArray,
-				 const int* nodeElementOffsets,
-				 const int* nodeElementsArray,
-				 const int* l2g,
-				 const double * dof,
-				 double* nodalAverage)
+void computeC0P1InterpolantDGP12(int nElements_global,
+                                 int nNodes_global,
+                                 int nNodes_element,
+                                 int nDOF_element,
+                                 int dim_dof,
+                                 const int* elementNodesArray,
+                                 const int* nodeElementOffsets,
+                                 const int* nodeElementsArray,
+                                 const int* l2g,
+                                 const double * dof,
+                                 double* nodalAverage)
 {
   int eN,nN,i,ig,iv;
   int nElements_nN;
@@ -10804,33 +10804,33 @@ void computeC0P1InterpolantDGP12(int nElements_global,
   for (iv = 0; iv < dim_dof; iv++)
     {
       for (eN = 0; eN < nElements_global; eN++)
-	{
-	  for (i = 0; i < nNodes_element; i++)
-	    {
-	      nN = elementNodesArray[eN*nNodes_element + i];
-	      ig = l2g[eN*nDOF_element + i];
-	      nodalAverage[nN*dim_dof + iv] += dof[ig*dim_dof + iv];
-	    }
-	}
+        {
+          for (i = 0; i < nNodes_element; i++)
+            {
+              nN = elementNodesArray[eN*nNodes_element + i];
+              ig = l2g[eN*nDOF_element + i];
+              nodalAverage[nN*dim_dof + iv] += dof[ig*dim_dof + iv];
+            }
+        }
       for (nN = 0; nN < nNodes_global; nN++)
-	{
-	  nElements_nN = nodeElementOffsets[nN+1] - nodeElementOffsets[nN];
-	  nodalAverage[nN*dim_dof + iv] /= nElements_nN;
-	}
+        {
+          nElements_nN = nodeElementOffsets[nN+1] - nodeElementOffsets[nN];
+          nodalAverage[nN*dim_dof + iv] /= nElements_nN;
+        }
     }/*iv*/
 }
 
-void computeC0P1InterpolantDGP0(int nElements_global,		     
-				int nNodes_global,
-				int nNodes_element,
-				int nDOF_element,
-				int dim_dof,
-				const int* elementNodesArray,
-				const int* nodeElementOffsets,
-				const int* nodeElementsArray,
-				const int* l2g,
-				const double * dof,
-				double* nodalAverage)
+void computeC0P1InterpolantDGP0(int nElements_global,
+                                int nNodes_global,
+                                int nNodes_element,
+                                int nDOF_element,
+                                int dim_dof,
+                                const int* elementNodesArray,
+                                const int* nodeElementOffsets,
+                                const int* nodeElementsArray,
+                                const int* l2g,
+                                const double * dof,
+                                double* nodalAverage)
 {
   int eN,nN,i,ig,iv;
   int nElements_nN;
@@ -10838,33 +10838,33 @@ void computeC0P1InterpolantDGP0(int nElements_global,
   for (iv = 0; iv < dim_dof; iv++)
     {
       for (eN = 0; eN < nElements_global; eN++)
-	{
-	  ig = l2g[eN*nDOF_element+0];
-	  for (i = 0; i < nNodes_element; i++)
-	    {
-	      nN = elementNodesArray[eN*nNodes_element+i];
-	      nodalAverage[nN*dim_dof + iv] += dof[ig*dim_dof + iv];
-	    }
-	}
+        {
+          ig = l2g[eN*nDOF_element+0];
+          for (i = 0; i < nNodes_element; i++)
+            {
+              nN = elementNodesArray[eN*nNodes_element+i];
+              nodalAverage[nN*dim_dof + iv] += dof[ig*dim_dof + iv];
+            }
+        }
       for (nN = 0; nN < nNodes_global; nN++)
-	{
-	  nElements_nN =  nodeElementOffsets[nN+1] - nodeElementOffsets[nN];
-	  nodalAverage[nN*dim_dof + iv] /= nElements_nN;
-	}
+        {
+          nElements_nN =  nodeElementOffsets[nN+1] - nodeElementOffsets[nN];
+          nodalAverage[nN*dim_dof + iv] /= nElements_nN;
+        }
     }
 }
 
-void computeC0P1InterpolantNCP1(int nElements_global,		     
-				int nNodes_global,
-				int nNodes_element,
-				int nDOF_element,
-				int dim_dof,
-				const int* elementNodesArray,
-				const int* nodeElementOffsets,
-				const int* nodeElementsArray,
-				const int* l2g,
-				const double * dof,
-				double* nodalAverage)
+void computeC0P1InterpolantNCP1(int nElements_global,
+                                int nNodes_global,
+                                int nNodes_element,
+                                int nDOF_element,
+                                int dim_dof,
+                                const int* elementNodesArray,
+                                const int* nodeElementOffsets,
+                                const int* nodeElementsArray,
+                                const int* l2g,
+                                const double * dof,
+                                double* nodalAverage)
 {
   int eN,nN,i,j,ig,jg,iv;
   int nElements_nN;
@@ -10874,36 +10874,36 @@ void computeC0P1InterpolantNCP1(int nElements_global,
   for (iv = 0; iv < dim_dof; iv++)
     {
       for (eN = 0; eN < nElements_global; eN++)
-	{
-	  /*
-	    recall N_i = n_d(1/n_d - \lambda_i) 
-	    lambda_i = barycentric coord for node i
-	    
-	  */
-	  for (i = 0; i < nNodes_element; i++)
-	    {
-	      val = 0.0;
-	      for (j=0; j < i; j++)
-		{
-		  jg = l2g[eN*nDOF_element+j];
-		  val += dof[jg*dim_dof + iv];
-		}
-	      for (j=i+1; j < nNodes_element; j++)
-		{
-		  jg = l2g[eN*nDOF_element+j];
-		  val += dof[jg*dim_dof + iv];
-		}
-	      ig = l2g[eN*nDOF_element+i];
-	      val += (1.0-nd)*dof[ig*dim_dof + iv];
-	      nN = elementNodesArray[eN*nNodes_element+i];
-	      nodalAverage[nN*dim_dof + iv] += val;
-	    }
-	}
+        {
+          /*
+            recall N_i = n_d(1/n_d - \lambda_i)
+            lambda_i = barycentric coord for node i
+
+          */
+          for (i = 0; i < nNodes_element; i++)
+            {
+              val = 0.0;
+              for (j=0; j < i; j++)
+                {
+                  jg = l2g[eN*nDOF_element+j];
+                  val += dof[jg*dim_dof + iv];
+                }
+              for (j=i+1; j < nNodes_element; j++)
+                {
+                  jg = l2g[eN*nDOF_element+j];
+                  val += dof[jg*dim_dof + iv];
+                }
+              ig = l2g[eN*nDOF_element+i];
+              val += (1.0-nd)*dof[ig*dim_dof + iv];
+              nN = elementNodesArray[eN*nNodes_element+i];
+              nodalAverage[nN*dim_dof + iv] += val;
+            }
+        }
       for (nN = 0; nN < nNodes_global; nN++)
-	{
-	  nElements_nN = nodeElementOffsets[nN+1] - nodeElementOffsets[nN];
-	  nodalAverage[nN*dim_dof + iv] /= nElements_nN;
-	}
+        {
+          nElements_nN = nodeElementOffsets[nN+1] - nodeElementOffsets[nN];
+          nodalAverage[nN*dim_dof + iv] /= nElements_nN;
+        }
     }/*iv*/
 }
 
@@ -10911,16 +10911,16 @@ void computeC0P1InterpolantNCP1(int nElements_global,
   for debugging
  */
 int checkElementBoundaryAndExteriorElementBoundaryArraysSame(int nElementBoundaries_element,
-							     int nExteriorElementBoundaries_global,
-							     int nQuadraturePoints_elementBoundary,
-							     int nValuesPerQuadraturePoint,
-							     double tolerance,
-							     const int * exteriorElementBoundariesArray,
-							     const int * elementBoundaryElementsArray,
-							     const int * elementBoundaryLocalElementBoundariesArray,
-							     const double * ebq_val,
-							     const double * ebqe_val,
-							     int* firstBadIndex)
+                                                             int nExteriorElementBoundaries_global,
+                                                             int nQuadraturePoints_elementBoundary,
+                                                             int nValuesPerQuadraturePoint,
+                                                             double tolerance,
+                                                             const int * exteriorElementBoundariesArray,
+                                                             const int * elementBoundaryElementsArray,
+                                                             const int * elementBoundaryLocalElementBoundariesArray,
+                                                             const double * ebq_val,
+                                                             const double * ebqe_val,
+                                                             int* firstBadIndex)
 {
   int eN,ebN,ebN_local,ebNE,k,i;
   double val1,val2;
@@ -10934,21 +10934,21 @@ int checkElementBoundaryAndExteriorElementBoundaryArraysSame(int nElementBoundar
       ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
 
       for (i=0; i < nValuesPerQuadraturePoint; i++)
-	{
-	  val1 = ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-			 ebN_local*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-			 k*nValuesPerQuadraturePoint + 
-			 i];
-	  val2 = ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-			  k*nValuesPerQuadraturePoint + 
-			  i];
-	  if (fabs(val1-val2) > tolerance)
-	    {
-	      failed = 1;
-	      *firstBadIndex = ebNE;
-	      return failed;
-	    }
-	}
+        {
+          val1 = ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                         ebN_local*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                         k*nValuesPerQuadraturePoint +
+                         i];
+          val2 = ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                          k*nValuesPerQuadraturePoint +
+                          i];
+          if (fabs(val1-val2) > tolerance)
+            {
+              failed = 1;
+              *firstBadIndex = ebNE;
+              return failed;
+            }
+        }
     }
   return failed;
 }
@@ -10957,15 +10957,15 @@ int checkElementBoundaryAndExteriorElementBoundaryArraysSame(int nElementBoundar
   for debugging
  */
 int checkGlobalElementBoundaryAndExteriorElementBoundaryArraysSame(int nExteriorElementBoundaries_global,
-								   int nQuadraturePoints_elementBoundary,
-								   int nValuesPerQuadraturePoint,
-								   double tolerance,
-								   const int * exteriorElementBoundariesArray,
-								   const int * elementBoundaryElementsArray,
-								   const int * elementBoundaryLocalElementBoundariesArray,
-								   const double * ebq_global_val,
-								   const double * ebqe_val,
-								   int* firstBadIndex)
+                                                                   int nQuadraturePoints_elementBoundary,
+                                                                   int nValuesPerQuadraturePoint,
+                                                                   double tolerance,
+                                                                   const int * exteriorElementBoundariesArray,
+                                                                   const int * elementBoundaryElementsArray,
+                                                                   const int * elementBoundaryLocalElementBoundariesArray,
+                                                                   const double * ebq_global_val,
+                                                                   const double * ebqe_val,
+                                                                   int* firstBadIndex)
 {
   int eN,ebN,ebNE,k,i;
   double val1,val2;
@@ -10978,31 +10978,31 @@ int checkGlobalElementBoundaryAndExteriorElementBoundaryArraysSame(int nExterior
       eN  = elementBoundaryElementsArray[ebN*2+0];
 
       for (i=0; i < nValuesPerQuadraturePoint; i++)
-	{
-	  val1 = ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-				k*nValuesPerQuadraturePoint + 
-				i];
-	  val2 = ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-			  k*nValuesPerQuadraturePoint + 
-			  i];
-	  if (fabs(val1-val2) > tolerance)
-	    {
-	      failed = 1;
-	      *firstBadIndex = ebNE;
-	      return failed;
-	    }
-	}
+        {
+          val1 = ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                                k*nValuesPerQuadraturePoint +
+                                i];
+          val2 = ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
+                          k*nValuesPerQuadraturePoint +
+                          i];
+          if (fabs(val1-val2) > tolerance)
+            {
+              failed = 1;
+              *firstBadIndex = ebNE;
+              return failed;
+            }
+        }
     }
   return failed;
 }
 
 void copyFreeUnknownsToGlobalUnknowns(int nDOF2set,
-				      int offset,
-				      int stride,
-				      const int* globalDOFids,
-				      const int* freeDOFids,
-				      const double * free_u,
-				      double * u)
+                                      int offset,
+                                      int stride,
+                                      const int* globalDOFids,
+                                      const int* freeDOFids,
+                                      const double * free_u,
+                                      double * u)
 {
   int i,dofN,free_dofN;
   for (i = 0; i < nDOF2set; i++)
@@ -11014,12 +11014,12 @@ void copyFreeUnknownsToGlobalUnknowns(int nDOF2set,
 }
 
 void copyGlobalUnknownsToFreeUnknowns(int nDOF2set,
-				      int offset,
-				      int stride,
-				      const int* globalDOFids,
-				      const int* freeDOFids,
-				      const double * u,
-				      double * free_u)
+                                      int offset,
+                                      int stride,
+                                      const int* globalDOFids,
+                                      const int* freeDOFids,
+                                      const double * u,
+                                      double * free_u)
 {
   int i,dofN,free_dofN;
   for (i = 0; i < nDOF2set; i++)
@@ -11031,20 +11031,20 @@ void copyGlobalUnknownsToFreeUnknowns(int nDOF2set,
 }
 
 void updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundaries_global,
-						   int nElementBoundaries_element,
-						   int nQuadraturePoints_elementBoundary,
-						   int nDOF_test_element,
-						   int nSpace,
-						   int* interiorElementBoundaries,
-						   int* elementBoundaryElements,
-						   int* elementBoundaryLocalElementBoundaries,
-						   double sigma,
-						   double* u,
-						   double* n,
-						   double* a,
-						   double* grad_w,
-						   double* dS,
-						   double* residual)
+                                                   int nElementBoundaries_element,
+                                                   int nQuadraturePoints_elementBoundary,
+                                                   int nDOF_test_element,
+                                                   int nSpace,
+                                                   int* interiorElementBoundaries,
+                                                   int* elementBoundaryElements,
+                                                   int* elementBoundaryLocalElementBoundaries,
+                                                   double sigma,
+                                                   double* u,
+                                                   double* n,
+                                                   double* a,
+                                                   double* grad_w,
+                                                   double* dS,
+                                                   double* residual)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,i,k,I,J,nSpace2=nSpace*nSpace;
   for(ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -11057,80 +11057,80 @@ void updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundarie
       for(i=0;i<nDOF_test_element;i++)
         for(k=0;k<nQuadraturePoints_elementBoundary;k++)
           {
-	    for (I=0;I<nSpace;I++)
-	      for (J=0;J<nSpace;J++)
-		{
-		  residual[left_eN_global*nDOF_test_element+
-			   i] 
-		    -= 
-		    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				  left_ebN_element*nQuadraturePoints_elementBoundary+
-				  k]
-				-u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				   right_ebN_element*nQuadraturePoints_elementBoundary+
-				   k])
-			       *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-				  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-				  k*nSpace+I]
-			       *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-				  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-				  k*nSpace2+
-				  J*nSpace+
-				  I]
-			       *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-				       left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-				       k*nDOF_test_element*nSpace+
-				       i*nSpace+
-				       I]
-			       *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				   left_ebN_element*nQuadraturePoints_elementBoundary+
-				   k]);
-		  residual[right_eN_global*nDOF_test_element+
-			   i]
-		    -= 
-		    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				  left_ebN_element*nQuadraturePoints_elementBoundary+
-				  k]
-				-u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				   right_ebN_element*nQuadraturePoints_elementBoundary+
-				   k])
-			       *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-				  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-				  k*nSpace+I]
-			       *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-				  right_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-				  k*nSpace2+
-				  J*nSpace+
-				  I]
-			       *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-				       right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-				       k*nDOF_test_element*nSpace+
-				       i*nSpace+
-				       I]
-			       *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				   right_ebN_element*nQuadraturePoints_elementBoundary+
-				   k]);
-		}
-	  }
+            for (I=0;I<nSpace;I++)
+              for (J=0;J<nSpace;J++)
+                {
+                  residual[left_eN_global*nDOF_test_element+
+                           i]
+                    -=
+                    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary+
+                                  k]
+                                -u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                   right_ebN_element*nQuadraturePoints_elementBoundary+
+                                   k])
+                               *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                  k*nSpace+I]
+                               *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                  k*nSpace2+
+                                  J*nSpace+
+                                  I]
+                               *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                       left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                       k*nDOF_test_element*nSpace+
+                                       i*nSpace+
+                                       I]
+                               *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                   left_ebN_element*nQuadraturePoints_elementBoundary+
+                                   k]);
+                  residual[right_eN_global*nDOF_test_element+
+                           i]
+                    -=
+                    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary+
+                                  k]
+                                -u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                   right_ebN_element*nQuadraturePoints_elementBoundary+
+                                   k])
+                               *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                  k*nSpace+I]
+                               *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                  right_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                  k*nSpace2+
+                                  J*nSpace+
+                                  I]
+                               *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                       right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                       k*nDOF_test_element*nSpace+
+                                       i*nSpace+
+                                       I]
+                               *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                   right_ebN_element*nQuadraturePoints_elementBoundary+
+                                   k]);
+                }
+          }
     }
 }
-			       
+
 void updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundaries_global,
-						   int nQuadraturePoints_elementBoundary,
-						   int nDOF_test_element,
-						   int nSpace,
-						   int* isDOFBoundary,
-						   int* exteriorElementBoundaries,
-						   int* elementBoundaryElements,
-						   int* elementBoundaryLocalElementBoundaries,
-						   double sigma,
-						   double* u,
-						   double* ub,
-						   double* n,
-						   double* a,
-						   double* grad_w,
-						   double* dS,
-						   double* residual)
+                                                   int nQuadraturePoints_elementBoundary,
+                                                   int nDOF_test_element,
+                                                   int nSpace,
+                                                   int* isDOFBoundary,
+                                                   int* exteriorElementBoundaries,
+                                                   int* elementBoundaryElements,
+                                                   int* elementBoundaryLocalElementBoundaries,
+                                                   double sigma,
+                                                   double* u,
+                                                   double* ub,
+                                                   double* n,
+                                                   double* a,
+                                                   double* grad_w,
+                                                   double* dS,
+                                                   double* residual)
 {
   int ebNE,ebN,eN_global,i,k,I,J,nSpace2=nSpace*nSpace;
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -11140,64 +11140,64 @@ void updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundarie
       for(i=0;i<nDOF_test_element;i++)
         for(k=0;k<nQuadraturePoints_elementBoundary;k++)
           {
-	    if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
-	      {
-		for (I=0;I<nSpace;I++)
-		  for (J=0;J<nSpace;J++)
-		    {
-		      residual[eN_global*nDOF_test_element+
-			       i] 
-			-= 
-			sigma*((u[ebNE*nQuadraturePoints_elementBoundary+
-				      k]
-				    -ub[ebNE*nQuadraturePoints_elementBoundary+
-					k])
-				   *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-				      k*nSpace+
-				      I]
-				   *a[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
-				      k*nSpace2+
-				      J*nSpace+
-				      I]
-				   *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-					   k*nDOF_test_element*nSpace+
-					   i*nSpace+
-					   I]
-				   *dS[ebNE*nQuadraturePoints_elementBoundary+
-				       k]);
-		    }
-	      }
-	  }
+            if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
+              {
+                for (I=0;I<nSpace;I++)
+                  for (J=0;J<nSpace;J++)
+                    {
+                      residual[eN_global*nDOF_test_element+
+                               i]
+                        -=
+                        sigma*((u[ebNE*nQuadraturePoints_elementBoundary+
+                                      k]
+                                    -ub[ebNE*nQuadraturePoints_elementBoundary+
+                                        k])
+                                   *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                                      k*nSpace+
+                                      I]
+                                   *a[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+                                      k*nSpace2+
+                                      J*nSpace+
+                                      I]
+                                   *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                           k*nDOF_test_element*nSpace+
+                                           i*nSpace+
+                                           I]
+                                   *dS[ebNE*nQuadraturePoints_elementBoundary+
+                                       k]);
+                    }
+              }
+          }
     }
 }
-			       
+
 void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int nInteriorElementBoundaries_global,
-									   int nElementBoundaries_element,
-									   int nQuadraturePoints_elementBoundary,
-									   int nDOF_test_element,
-									   int nDOF_trial_element,
-									   int nSpace,
-									   int offset_r,
-									   int stride_r,
-									   int offset_u,
-									   int stride_u,
-									   int nFreeVDOF_global,
-									   int* interiorElementBoundaries,
-									   int* elementBoundaryElements,
-									   int* elementBoundaryLocalElementBoundaries,
-									   int* nFreeDOF_element_r,
-									   int* nFreeDOF_element_u,
-									   int* freeLocal_r,
-									   int* freeGlobal_r,
-									   int* freeLocal_u,
-									   int* freeGlobal_u,
-									   double sigma,
-									   double* v,
-									   double* n,
-									   double* a,
-									   double* grad_w,
-									   double* dS,
-									   double* jac)
+                                                                           int nElementBoundaries_element,
+                                                                           int nQuadraturePoints_elementBoundary,
+                                                                           int nDOF_test_element,
+                                                                           int nDOF_trial_element,
+                                                                           int nSpace,
+                                                                           int offset_r,
+                                                                           int stride_r,
+                                                                           int offset_u,
+                                                                           int stride_u,
+                                                                           int nFreeVDOF_global,
+                                                                           int* interiorElementBoundaries,
+                                                                           int* elementBoundaryElements,
+                                                                           int* elementBoundaryLocalElementBoundaries,
+                                                                           int* nFreeDOF_element_r,
+                                                                           int* freeLocal_r,
+                                                                           int* freeGlobal_r,
+                                                                           int* nFreeDOF_element_u,
+                                                                           int* freeLocal_u,
+                                                                           int* freeGlobal_u,
+                                                                           double sigma,
+                                                                           double* v,
+                                                                           double* n,
+                                                                           double* a,
+                                                                           double* grad_w,
+                                                                           double* dS,
+                                                                           double* jac)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,ii,i,k,jj,j,jacIndex,I,J,II,JJ,nSpace2=nSpace*nSpace;
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -11209,146 +11209,146 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int n
       right_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+1];
       /*left  flux*/
       for(ii=0;ii<nFreeDOF_element_r[left_eN_global];ii++)
-	{
-	  i = freeLocal_r[left_eN_global*nDOF_test_element+
-			  ii];
-	  I = offset_r + stride_r*freeGlobal_r[left_eN_global*nDOF_test_element+
-					       ii];
-	  for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	    {
-	      for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
-		{
-		  j = freeLocal_u[left_eN_global*nDOF_trial_element+
-				  jj];
-		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
-						       jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-		  for (II=0;II<nSpace;II++)
-		    for (JJ=0;JJ<nSpace;JJ++)
-		      jac[jacIndex] 
-			-= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					k*nDOF_trial_element+
-					j]
-				      *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-					 left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-					 k*nSpace+
-					 II]
-				      *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-					 left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+
-					 II*nSpace+
-					 JJ]
-				      *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-					      left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-					      k*nDOF_trial_element*nSpace+
-					      i*nSpace+
-					      II]
-				      *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-					  left_ebN_element*nQuadraturePoints_elementBoundary+
-					  k]);
-		}
-	      for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
-		{
-		  j = freeLocal_u[right_eN_global*nDOF_trial_element+
-				  jj];
-		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
-						       jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-		  for (II=0;II<nSpace;II++)
-		    for (JJ=0;JJ<nSpace;JJ++)
-		      jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    k*nDOF_trial_element+
-						    j]
-						  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						     k*nSpace+
-						     II]
-						  *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-						     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-						     k*nSpace2+
-						     II*nSpace+
-						     JJ]
-						  *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  k*nDOF_trial_element*nSpace+
-							  i*nSpace+
-							  II]
-						  *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-						      left_ebN_element*nQuadraturePoints_elementBoundary+
-						      k]);
-		}
-	    }/*k*/
-	}/*ii*/
+        {
+          i = freeLocal_r[left_eN_global*nDOF_test_element+
+                          ii];
+          I = offset_r + stride_r*freeGlobal_r[left_eN_global*nDOF_test_element+
+                                               ii];
+          for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+            {
+              for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
+                {
+                  j = freeLocal_u[left_eN_global*nDOF_trial_element+
+                                  jj];
+                  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
+                                                       jj];
+                  jacIndex = I+J*nFreeVDOF_global;
+                  for (II=0;II<nSpace;II++)
+                    for (JJ=0;JJ<nSpace;JJ++)
+                      jac[jacIndex]
+                        -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                        left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                        k*nDOF_trial_element+
+                                        j]
+                                      *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                         left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                         k*nSpace+
+                                         II]
+                                      *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                         left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+
+                                         II*nSpace+
+                                         JJ]
+                                      *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                              left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                              k*nDOF_trial_element*nSpace+
+                                              i*nSpace+
+                                              II]
+                                      *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                          left_ebN_element*nQuadraturePoints_elementBoundary+
+                                          k]);
+                }
+              for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
+                {
+                  j = freeLocal_u[right_eN_global*nDOF_trial_element+
+                                  jj];
+                  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
+                                                       jj];
+                  jacIndex = I+J*nFreeVDOF_global;
+                  for (II=0;II<nSpace;II++)
+                    for (JJ=0;JJ<nSpace;JJ++)
+                      jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    k*nDOF_trial_element+
+                                                    j]
+                                                  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     k*nSpace+
+                                                     II]
+                                                  *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                                     k*nSpace2+
+                                                     II*nSpace+
+                                                     JJ]
+                                                  *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          k*nDOF_trial_element*nSpace+
+                                                          i*nSpace+
+                                                          II]
+                                                  *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                      left_ebN_element*nQuadraturePoints_elementBoundary+
+                                                      k]);
+                }
+            }/*k*/
+        }/*ii*/
       /*right flux*/
       for(ii=0;ii<nFreeDOF_element_r[right_eN_global];ii++)
         {
           i = freeLocal_r[right_eN_global*nDOF_test_element+
                         ii];
-	  I = offset_r + stride_r*freeGlobal_r[right_eN_global*nDOF_test_element+
-					     ii];
+          I = offset_r + stride_r*freeGlobal_r[right_eN_global*nDOF_test_element+
+                                             ii];
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
               for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
                 {
                   j = freeLocal_u[left_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-		  for (II=0;II<nSpace;II++)
-		    for (JJ=0;JJ<nSpace;JJ++)
-		      jac[jacIndex] -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    k*nDOF_trial_element+
-						    j]
-						  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						     k*nSpace+
-						     II]
-						  *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-						     right_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-						     k*nSpace2+
-						     II*nSpace+
-						     JJ]
-						  *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  k*nDOF_trial_element*nSpace+
-							  i*nSpace+
-							  II]
-						  *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-						      right_ebN_element*nQuadraturePoints_elementBoundary+
-						      k]);
+                  for (II=0;II<nSpace;II++)
+                    for (JJ=0;JJ<nSpace;JJ++)
+                      jac[jacIndex] -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    k*nDOF_trial_element+
+                                                    j]
+                                                  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     k*nSpace+
+                                                     II]
+                                                  *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                                     right_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                                     k*nSpace2+
+                                                     II*nSpace+
+                                                     JJ]
+                                                  *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          k*nDOF_trial_element*nSpace+
+                                                          i*nSpace+
+                                                          II]
+                                                  *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                      right_ebN_element*nQuadraturePoints_elementBoundary+
+                                                      k]);
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
                   j = freeLocal_u[right_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-		  for (II=0;II<nSpace;II++)
-		    for (JJ=0;JJ<nSpace;JJ++)
-		      jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    k*nDOF_trial_element+j]
-						  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						     k*nSpace+
-						     II]
-						  *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
-						     right_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
-						     k*nSpace2+
-						     II*nSpace+
-						     JJ]
-						  *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  k*nDOF_trial_element*nSpace+
-							  i*nSpace+
-							  II]
-						  *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-						      right_ebN_element*nQuadraturePoints_elementBoundary+
-						      k]);
+                  for (II=0;II<nSpace;II++)
+                    for (JJ=0;JJ<nSpace;JJ++)
+                      jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    k*nDOF_trial_element+j]
+                                                  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     k*nSpace+
+                                                     II]
+                                                  *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                                     right_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
+                                                     k*nSpace2+
+                                                     II*nSpace+
+                                                     JJ]
+                                                  *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          k*nDOF_trial_element*nSpace+
+                                                          i*nSpace+
+                                                          II]
+                                                  *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                      right_ebN_element*nQuadraturePoints_elementBoundary+
+                                                      k]);
                 }
             }
         }
@@ -11356,32 +11356,32 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int n
 }
 
 void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int nExteriorElementBoundaries_global,
-									   int nQuadraturePoints_elementBoundary,
-									   int nDOF_test_element,
-									   int nDOF_trial_element,
-									   int nSpace,
-									   int offset_r,
-									   int stride_r,
-									   int offset_u,
-									   int stride_u,
-									   int nFreeVDOF_global,
-									   int* exteriorElementBoundaries,
-									   int* elementBoundaryElements,
-									   int* elementBoundaryLocalElementBoundaries,
-									   int* nFreeDOF_element_r,
-									   int* nFreeDOF_element_u,
-									   int* freeLocal_r,
-									   int* freeGlobal_r,
-									   int* freeLocal_u,
-									   int* freeGlobal_u,
-									   int* isDOFBoundary,
-									   double sigma,
-									   double* v,
-									   double* n,
-									   double* a,
-									   double* grad_w,
-									   double* dS,
-									   double* jac)
+                                                                           int nQuadraturePoints_elementBoundary,
+                                                                           int nDOF_test_element,
+                                                                           int nDOF_trial_element,
+                                                                           int nSpace,
+                                                                           int offset_r,
+                                                                           int stride_r,
+                                                                           int offset_u,
+                                                                           int stride_u,
+                                                                           int nFreeVDOF_global,
+                                                                           int* exteriorElementBoundaries,
+                                                                           int* elementBoundaryElements,
+                                                                           int* elementBoundaryLocalElementBoundaries,
+                                                                           int* nFreeDOF_element_r,
+                                                                           int* freeLocal_r,
+                                                                           int* freeGlobal_r,
+                                                                           int* nFreeDOF_element_u,
+                                                                           int* freeLocal_u,
+                                                                           int* freeGlobal_u,
+                                                                           int* isDOFBoundary,
+                                                                           double sigma,
+                                                                           double* v,
+                                                                           double* n,
+                                                                           double* a,
+                                                                           double* grad_w,
+                                                                           double* dS,
+                                                                           double* jac)
 {
   int ebNE,ebN,eN_global,ii,i,k,jj,j,jacIndex,I,J,II,JJ,nSpace2=nSpace*nSpace;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -11389,64 +11389,64 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int n
       ebN = exteriorElementBoundaries[ebNE];
       eN_global   = elementBoundaryElements[ebN*2+0];
       for(ii=0;ii<nFreeDOF_element_r[eN_global];ii++)
-	{
-	  i = freeLocal_r[eN_global*nDOF_test_element+
-			  ii];
-	  I = offset_r + stride_r*freeGlobal_r[eN_global*nDOF_test_element+
-					       ii];
-	  for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	    {
-	      for(jj=0;jj<nFreeDOF_element_u[eN_global];jj++)
-		{
-		  j = freeLocal_u[eN_global*nDOF_trial_element+
-				  jj];
-		  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
-						       jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-		  if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
-		    {
-		      for (II=0;II<nSpace;II++)
-			for (JJ=0;JJ<nSpace;JJ++)
-			  jac[jacIndex] 
-			    -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					k*nDOF_trial_element+
-					j]
-				      *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-					 k*nSpace+
-					 II]
-				      *a[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
-					 II*nSpace+
-					 JJ]
-				      *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-					      k*nDOF_trial_element*nSpace+
-					      i*nSpace+
-					      II]
-				      *dS[ebNE*nQuadraturePoints_elementBoundary+
-					  k]);
-		    }
-		}
-	    }
+        {
+          i = freeLocal_r[eN_global*nDOF_test_element+
+                          ii];
+          I = offset_r + stride_r*freeGlobal_r[eN_global*nDOF_test_element+
+                                               ii];
+          for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+            {
+              for(jj=0;jj<nFreeDOF_element_u[eN_global];jj++)
+                {
+                  j = freeLocal_u[eN_global*nDOF_trial_element+
+                                  jj];
+                  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
+                                                       jj];
+                  jacIndex = I+J*nFreeVDOF_global;
+                  if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
+                    {
+                      for (II=0;II<nSpace;II++)
+                        for (JJ=0;JJ<nSpace;JJ++)
+                          jac[jacIndex]
+                            -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                        k*nDOF_trial_element+
+                                        j]
+                                      *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                                         k*nSpace+
+                                         II]
+                                      *a[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+                                         II*nSpace+
+                                         JJ]
+                                      *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                              k*nDOF_trial_element*nSpace+
+                                              i*nSpace+
+                                              II]
+                                      *dS[ebNE*nQuadraturePoints_elementBoundary+
+                                          k]);
+                    }
+                }
+            }
         }
     }
 }
 
 void updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBoundaries_global,
-						      int nElementBoundaries_element,
-						      int nQuadraturePoints_elementBoundary,
-						      int nDOF_test_element,
-						      int nSpace,
-						      int* rowptr,
-						      int* colind,
-						      int* interiorElementBoundaries,
-						      int* elementBoundaryElements,
-						      int* elementBoundaryLocalElementBoundaries,
-						      double sigma,
-						      double* u,
-						      double* n,
-						      double* a,
-						      double* grad_w,
-						      double* dS,
-						      double* residual)
+                                                      int nElementBoundaries_element,
+                                                      int nQuadraturePoints_elementBoundary,
+                                                      int nDOF_test_element,
+                                                      int nSpace,
+                                                      int* rowptr,
+                                                      int* colind,
+                                                      int* interiorElementBoundaries,
+                                                      int* elementBoundaryElements,
+                                                      int* elementBoundaryLocalElementBoundaries,
+                                                      double sigma,
+                                                      double* u,
+                                                      double* n,
+                                                      double* a,
+                                                      double* grad_w,
+                                                      double* dS,
+                                                      double* residual)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,i,k,I,m,nnz=rowptr[nSpace];
   for(ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -11459,82 +11459,82 @@ void updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBounda
       for(i=0;i<nDOF_test_element;i++)
         for(k=0;k<nQuadraturePoints_elementBoundary;k++)
           {
-	    for (I=0;I<nSpace;I++)
-	      for (m=rowptr[I];m<rowptr[I+1];m++)
-		{
-		  residual[left_eN_global*nDOF_test_element+
-			   i] 
-		    -= 
-		    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				  left_ebN_element*nQuadraturePoints_elementBoundary+
-				  k]
-				-u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				   right_ebN_element*nQuadraturePoints_elementBoundary+
-				   k])
-			       *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-				  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-				  k*nSpace+
-				  colind[m]]
-			       *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-				  left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-				  k*nnz+
-				  m]
-			       *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-				       left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-				       k*nDOF_test_element*nSpace+
-				       i*nSpace+
-				       I]
-			       *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				   left_ebN_element*nQuadraturePoints_elementBoundary+
-				   k]);
-		  residual[right_eN_global*nDOF_test_element+
-			   i]
-		    -= 
-		    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				  left_ebN_element*nQuadraturePoints_elementBoundary+
-				  k]
-				-u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				   right_ebN_element*nQuadraturePoints_elementBoundary+
-				   k])
-			       *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-				  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-				  k*nSpace+
-				  colind[m]]
-			       *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-				  right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-				  k*nnz+
-				  m]
-			       *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-				       right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-				       k*nDOF_test_element*nSpace+
-				       i*nSpace+
-				       I]
-			       *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-				   right_ebN_element*nQuadraturePoints_elementBoundary+
-				   k]);
-		}
-	  }
+            for (I=0;I<nSpace;I++)
+              for (m=rowptr[I];m<rowptr[I+1];m++)
+                {
+                  residual[left_eN_global*nDOF_test_element+
+                           i]
+                    -=
+                    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary+
+                                  k]
+                                -u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                   right_ebN_element*nQuadraturePoints_elementBoundary+
+                                   k])
+                               *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                  k*nSpace+
+                                  colind[m]]
+                               *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                  k*nnz+
+                                  m]
+                               *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                       left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                       k*nDOF_test_element*nSpace+
+                                       i*nSpace+
+                                       I]
+                               *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                   left_ebN_element*nQuadraturePoints_elementBoundary+
+                                   k]);
+                  residual[right_eN_global*nDOF_test_element+
+                           i]
+                    -=
+                    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary+
+                                  k]
+                                -u[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                   right_ebN_element*nQuadraturePoints_elementBoundary+
+                                   k])
+                               *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                  k*nSpace+
+                                  colind[m]]
+                               *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                  right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                  k*nnz+
+                                  m]
+                               *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                       right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                       k*nDOF_test_element*nSpace+
+                                       i*nSpace+
+                                       I]
+                               *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                   right_ebN_element*nQuadraturePoints_elementBoundary+
+                                   k]);
+                }
+          }
     }
 }
-			       
+
 void updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBoundaries_global,
-						      int nQuadraturePoints_elementBoundary,
-						      int nDOF_test_element,
-						      int nSpace,
-						      int* rowptr,
-						      int* colind,
-						      int* isDOFBoundary,
-						      int* exteriorElementBoundaries,
-						      int* elementBoundaryElements,
-						      int* elementBoundaryLocalElementBoundaries,
-						      double sigma,
-						      double* u,
-						      double* ub,
-						      double* n,
-						      double* a,
-						      double* grad_w,
-						      double* dS,
-						      double* residual)
+                                                      int nQuadraturePoints_elementBoundary,
+                                                      int nDOF_test_element,
+                                                      int nSpace,
+                                                      int* rowptr,
+                                                      int* colind,
+                                                      int* isDOFBoundary,
+                                                      int* exteriorElementBoundaries,
+                                                      int* elementBoundaryElements,
+                                                      int* elementBoundaryLocalElementBoundaries,
+                                                      double sigma,
+                                                      double* u,
+                                                      double* ub,
+                                                      double* n,
+                                                      double* a,
+                                                      double* grad_w,
+                                                      double* dS,
+                                                      double* residual)
 {
   int ebNE,ebN,eN_global,i,k,I,m,nnz=rowptr[nSpace];
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -11544,65 +11544,65 @@ void updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBounda
       for(i=0;i<nDOF_test_element;i++)
         for(k=0;k<nQuadraturePoints_elementBoundary;k++)
           {
-	    if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
-	      {
-		for (I=0;I<nSpace;I++)
-		  for (m=rowptr[I];m<rowptr[I+1];m++)
-		    {
-		      residual[eN_global*nDOF_test_element+
-			       i] 
-			-= 
-			sigma*((u[ebNE*nQuadraturePoints_elementBoundary+
-				      k]
-				    -ub[ebNE*nQuadraturePoints_elementBoundary+
-					k])
-				   *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-				      k*nSpace+
-				      colind[m]]
-				   *a[ebNE*nQuadraturePoints_elementBoundary*nnz+
-				      k*nnz+
-				      m]
-				   *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
-					   k*nDOF_test_element*nSpace+
-					   i*nSpace+
-					   I]
-				   *dS[ebNE*nQuadraturePoints_elementBoundary+
-				       k]);
-		    }
-	      }
-	  }
+            if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
+              {
+                for (I=0;I<nSpace;I++)
+                  for (m=rowptr[I];m<rowptr[I+1];m++)
+                    {
+                      residual[eN_global*nDOF_test_element+
+                               i]
+                        -=
+                        sigma*((u[ebNE*nQuadraturePoints_elementBoundary+
+                                      k]
+                                    -ub[ebNE*nQuadraturePoints_elementBoundary+
+                                        k])
+                                   *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                                      k*nSpace+
+                                      colind[m]]
+                                   *a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                                      k*nnz+
+                                      m]
+                                   *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element*nSpace+
+                                           k*nDOF_test_element*nSpace+
+                                           i*nSpace+
+                                           I]
+                                   *dS[ebNE*nQuadraturePoints_elementBoundary+
+                                       k]);
+                    }
+              }
+          }
     }
 }
-			       
+
 void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(int nInteriorElementBoundaries_global,
-									      int nElementBoundaries_element,
-									      int nQuadraturePoints_elementBoundary,
-									      int nDOF_test_element,
-									      int nDOF_trial_element,
-									      int nSpace,
-									      int* rowptr,
-									      int* colind,
-									      int offset_r,
-									      int stride_r,
-									      int offset_u,
-									      int stride_u,
-									      int nFreeVDOF_global,
-									      int* interiorElementBoundaries,
-									      int* elementBoundaryElements,
-									      int* elementBoundaryLocalElementBoundaries,
-									      int* nFreeDOF_element_r,
-									      int* nFreeDOF_element_u,
-									      int* freeLocal_r,
-									      int* freeGlobal_r,
-									      int* freeLocal_u,
-									      int* freeGlobal_u,
-									      double sigma,
-									      double* v,
-									      double* n,
-									      double* a,
-									      double* grad_w,
-									      double* dS,
-									      double* jac)
+                                                                              int nElementBoundaries_element,
+                                                                              int nQuadraturePoints_elementBoundary,
+                                                                              int nDOF_test_element,
+                                                                              int nDOF_trial_element,
+                                                                              int nSpace,
+                                                                              int* rowptr,
+                                                                              int* colind,
+                                                                              int offset_r,
+                                                                              int stride_r,
+                                                                              int offset_u,
+                                                                              int stride_u,
+                                                                              int nFreeVDOF_global,
+                                                                              int* interiorElementBoundaries,
+                                                                              int* elementBoundaryElements,
+                                                                              int* elementBoundaryLocalElementBoundaries,
+                                                                              int* nFreeDOF_element_r,
+                                                                              int* freeLocal_r,
+                                                                              int* freeGlobal_r,
+                                                                              int* nFreeDOF_element_u,
+                                                                              int* freeLocal_u,
+                                                                              int* freeGlobal_u,
+                                                                              double sigma,
+                                                                              double* v,
+                                                                              double* n,
+                                                                              double* a,
+                                                                              double* grad_w,
+                                                                              double* dS,
+                                                                              double* jac)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,ii,i,k,jj,j,jacIndex,I,J,II,m,nnz=rowptr[nSpace];
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -11614,151 +11614,151 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(in
       right_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+1];
       /*left  flux*/
       for(ii=0;ii<nFreeDOF_element_r[left_eN_global];ii++)
-	{
-	  i = freeLocal_r[left_eN_global*nDOF_test_element+
-			  ii];
-	  I = offset_r + stride_r*freeGlobal_r[left_eN_global*nDOF_test_element+
-					       ii];
-	  for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	    {
-	      for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
-		{
-		  j = freeLocal_u[left_eN_global*nDOF_trial_element+
-				  jj];
-		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
-						       jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-		  for (II=0;II<nSpace;II++)
-		    for(m=rowptr[II];m<rowptr[II+1];m++)
-		      {
-			jac[jacIndex] 
-			  -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					  left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					  k*nDOF_trial_element+
-					  j]
-					*n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-					   left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-					   k*nSpace+
-					   colind[II]]
-					*a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-					   left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-					   k*nnz+
-					   m]
-					*grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-						left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-						k*nDOF_trial_element*nSpace+
-						i*nSpace+
-						II]
-					*dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-					    left_ebN_element*nQuadraturePoints_elementBoundary+
-					    k]);
-		      }
-		}
-	      for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
-		{
-		  j = freeLocal_u[right_eN_global*nDOF_trial_element+
-				  jj];
-		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
-						       jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-		  for (II=0;II<nSpace;II++)
-		    for (m=rowptr[II];m<rowptr[II+1];m++)
-		      {
-			jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						      right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						      k*nDOF_trial_element+
-						      j]
-						    *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						       left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						       k*nSpace+
-						       colind[m]]
-						    *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-						       left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-						       k*nnz+
-						       m]
-						    *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							    left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							    k*nDOF_trial_element*nSpace+
-							    i*nSpace+
-							    II]
-						    *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-							left_ebN_element*nQuadraturePoints_elementBoundary+
-							k]);
-		      }
-		}
-	    }/*k*/
-	}/*ii*/
+        {
+          i = freeLocal_r[left_eN_global*nDOF_test_element+
+                          ii];
+          I = offset_r + stride_r*freeGlobal_r[left_eN_global*nDOF_test_element+
+                                               ii];
+          for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+            {
+              for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
+                {
+                  j = freeLocal_u[left_eN_global*nDOF_trial_element+
+                                  jj];
+                  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
+                                                       jj];
+                  jacIndex = I+J*nFreeVDOF_global;
+                  for (II=0;II<nSpace;II++)
+                    for(m=rowptr[II];m<rowptr[II+1];m++)
+                      {
+                        jac[jacIndex]
+                          -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                          left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                          k*nDOF_trial_element+
+                                          j]
+                                        *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                           left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                           k*nSpace+
+                                           colind[II]]
+                                        *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                           left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                           k*nnz+
+                                           m]
+                                        *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                k*nDOF_trial_element*nSpace+
+                                                i*nSpace+
+                                                II]
+                                        *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                            left_ebN_element*nQuadraturePoints_elementBoundary+
+                                            k]);
+                      }
+                }
+              for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
+                {
+                  j = freeLocal_u[right_eN_global*nDOF_trial_element+
+                                  jj];
+                  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
+                                                       jj];
+                  jacIndex = I+J*nFreeVDOF_global;
+                  for (II=0;II<nSpace;II++)
+                    for (m=rowptr[II];m<rowptr[II+1];m++)
+                      {
+                        jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                      right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                      k*nDOF_trial_element+
+                                                      j]
+                                                    *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                       left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                       k*nSpace+
+                                                       colind[m]]
+                                                    *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                                       left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                                       k*nnz+
+                                                       m]
+                                                    *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                            left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                            k*nDOF_trial_element*nSpace+
+                                                            i*nSpace+
+                                                            II]
+                                                    *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                        left_ebN_element*nQuadraturePoints_elementBoundary+
+                                                        k]);
+                      }
+                }
+            }/*k*/
+        }/*ii*/
       /*right flux*/
       for(ii=0;ii<nFreeDOF_element_r[right_eN_global];ii++)
         {
           i = freeLocal_r[right_eN_global*nDOF_test_element+
                         ii];
-	  I = offset_r + stride_r*freeGlobal_r[right_eN_global*nDOF_test_element+
-					     ii];
+          I = offset_r + stride_r*freeGlobal_r[right_eN_global*nDOF_test_element+
+                                             ii];
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
               for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
                 {
                   j = freeLocal_u[left_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-		  for (II=0;II<nSpace;II++)
-		    for (m=rowptr[II];m<rowptr[II+1];m++)
-		      {
-			jac[jacIndex] -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						      left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						      k*nDOF_trial_element+
-						      j]
-						    *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						       left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						       k*nSpace+
-						       colind[m]]
-						    *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-						       right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-						       k*nnz+
-						       m]
-						    *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							    k*nDOF_trial_element*nSpace+
-							    i*nSpace+
-							    II]
-						    *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-							right_ebN_element*nQuadraturePoints_elementBoundary+
-							k]);
-		      }
+                  for (II=0;II<nSpace;II++)
+                    for (m=rowptr[II];m<rowptr[II+1];m++)
+                      {
+                        jac[jacIndex] -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                      left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                      k*nDOF_trial_element+
+                                                      j]
+                                                    *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                       left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                       k*nSpace+
+                                                       colind[m]]
+                                                    *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                                       right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                                       k*nnz+
+                                                       m]
+                                                    *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                            right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                            k*nDOF_trial_element*nSpace+
+                                                            i*nSpace+
+                                                            II]
+                                                    *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                        right_ebN_element*nQuadraturePoints_elementBoundary+
+                                                        k]);
+                      }
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
                   j = freeLocal_u[right_eN_global*nDOF_trial_element+
                                 jj];
-		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
-						     jj];
+                  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
+                                                     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-		  for (II=0;II<nSpace;II++)
-		    for (m=rowptr[II];m<rowptr[II+1];m++)
-		      {
-			jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						      right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						      k*nDOF_trial_element+j]
-						    *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						       left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						       k*nSpace+
-						       colind[m]]
-						    *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-						       right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-						       k*nnz+
-						       m]
-						    *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							    k*nDOF_trial_element*nSpace+
-							    i*nSpace+
-							    II]
-						    *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-							right_ebN_element*nQuadraturePoints_elementBoundary+
-							k]);
-		      }
+                  for (II=0;II<nSpace;II++)
+                    for (m=rowptr[II];m<rowptr[II+1];m++)
+                      {
+                        jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                      right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                      k*nDOF_trial_element+j]
+                                                    *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                       left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                       k*nSpace+
+                                                       colind[m]]
+                                                    *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                                       right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                                       k*nnz+
+                                                       m]
+                                                    *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                            right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                            k*nDOF_trial_element*nSpace+
+                                                            i*nSpace+
+                                                            II]
+                                                    *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                        right_ebN_element*nQuadraturePoints_elementBoundary+
+                                                        k]);
+                      }
                 }
             }
         }
@@ -11766,34 +11766,34 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(in
 }
 
 void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(int nExteriorElementBoundaries_global,
-									      int nQuadraturePoints_elementBoundary,
-									      int nDOF_test_element,
-									      int nDOF_trial_element,
-									      int nSpace,
-									      int* rowptr,
-									      int* colind,
-									      int offset_r,
-									      int stride_r,
-									      int offset_u,
-									      int stride_u,
-									      int nFreeVDOF_global,
-									      int* exteriorElementBoundaries,
-									      int* elementBoundaryElements,
-									      int* elementBoundaryLocalElementBoundaries,
-									      int* nFreeDOF_element_r,
-									      int* nFreeDOF_element_u,
-									      int* freeLocal_r,
-									      int* freeGlobal_r,
-									      int* freeLocal_u,
-									      int* freeGlobal_u,
-									      int* isDOFBoundary,
-									      double sigma,
-									      double* v,
-									      double* n,
-									      double* a,
-									      double* grad_w,
-									      double* dS,
-									      double* jac)
+                                                                              int nQuadraturePoints_elementBoundary,
+                                                                              int nDOF_test_element,
+                                                                              int nDOF_trial_element,
+                                                                              int nSpace,
+                                                                              int* rowptr,
+                                                                              int* colind,
+                                                                              int offset_r,
+                                                                              int stride_r,
+                                                                              int offset_u,
+                                                                              int stride_u,
+                                                                              int nFreeVDOF_global,
+                                                                              int* exteriorElementBoundaries,
+                                                                              int* elementBoundaryElements,
+                                                                              int* elementBoundaryLocalElementBoundaries,
+                                                                              int* nFreeDOF_element_r,
+                                                                              int* freeLocal_r,
+                                                                              int* freeGlobal_r,
+                                                                              int* nFreeDOF_element_u,
+                                                                              int* freeLocal_u,
+                                                                              int* freeGlobal_u,
+                                                                              int* isDOFBoundary,
+                                                                              double sigma,
+                                                                              double* v,
+                                                                              double* n,
+                                                                              double* a,
+                                                                              double* grad_w,
+                                                                              double* dS,
+                                                                              double* jac)
 {
   int ebNE,ebN,eN_global,ii,i,k,jj,j,jacIndex,I,J,II,m,nnz=rowptr[nSpace];
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -11801,77 +11801,77 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(in
       ebN = exteriorElementBoundaries[ebNE];
       eN_global   = elementBoundaryElements[ebN*2+0];
       for(ii=0;ii<nFreeDOF_element_r[eN_global];ii++)
-	{
-	  i = freeLocal_r[eN_global*nDOF_test_element+
-			  ii];
-	  I = offset_r + stride_r*freeGlobal_r[eN_global*nDOF_test_element+
-					       ii];
-	  for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	    {
-	      for(jj=0;jj<nFreeDOF_element_u[eN_global];jj++)
-		{
-		  j = freeLocal_u[eN_global*nDOF_trial_element+
-				  jj];
-		  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
-						       jj];
-		  jacIndex = I+J*nFreeVDOF_global;
-		  if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
-		    {
-		      for (II=0;II<nSpace;II++)
-			for (m=rowptr[II];m<rowptr[II+1];m++)
-			  jac[jacIndex] 
-			    -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					k*nDOF_trial_element+
-					j]
-				      *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-					 k*nSpace+
-					 colind[m]]
-				      *a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+        {
+          i = freeLocal_r[eN_global*nDOF_test_element+
+                          ii];
+          I = offset_r + stride_r*freeGlobal_r[eN_global*nDOF_test_element+
+                                               ii];
+          for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+            {
+              for(jj=0;jj<nFreeDOF_element_u[eN_global];jj++)
+                {
+                  j = freeLocal_u[eN_global*nDOF_trial_element+
+                                  jj];
+                  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
+                                                       jj];
+                  jacIndex = I+J*nFreeVDOF_global;
+                  if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
+                    {
+                      for (II=0;II<nSpace;II++)
+                        for (m=rowptr[II];m<rowptr[II+1];m++)
+                          jac[jacIndex]
+                            -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                        k*nDOF_trial_element+
+                                        j]
+                                      *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                                         k*nSpace+
+                                         colind[m]]
+                                      *a[ebNE*nQuadraturePoints_elementBoundary*nnz+
                                          k*nnz+
-					 m]
-				      *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-					      k*nDOF_trial_element*nSpace+
-					      i*nSpace+
-					      II]
-				      *dS[ebNE*nQuadraturePoints_elementBoundary+
-					  k]);
-		    }
-		}
-	    }
+                                         m]
+                                      *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                              k*nDOF_trial_element*nSpace+
+                                              i*nSpace+
+                                              II]
+                                      *dS[ebNE*nQuadraturePoints_elementBoundary+
+                                          k]);
+                    }
+                }
+            }
         }
     }
 }
 void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int nInteriorElementBoundaries_global,
-									    int nElementBoundaries_element,
-									    int nQuadraturePoints_elementBoundary,
-									    int nDOF_test_element,
-									    int nDOF_trial_element,
-									    int nSpace,
-									    int* rowptr,
-									    int* colind,
-									    int offset_r,
-									    int stride_r,
-									    int offset_u,
-									    int stride_u,
-									    int nFreeVDOF_global,
-									    int* interiorElementBoundaries,
-									    int* elementBoundaryElements,
-									    int* elementBoundaryLocalElementBoundaries,
-									    int* nFreeDOF_element_r,
-									    int* nFreeDOF_element_u,
-									    int* freeLocal_r,
-									    int* freeGlobal_r,
-									    int* freeLocal_u,
-									    int* freeGlobal_u,
-									    int* csrRowIndeces_ru,
-									    int* csrColumnOffsets_eb_ru,
-									    double sigma,
-									    double* v,
-									    double* n,
-									    double* a,
-									    double* grad_w,
-									    double* dS,
-									    double* jac)
+                                                                            int nElementBoundaries_element,
+                                                                            int nQuadraturePoints_elementBoundary,
+                                                                            int nDOF_test_element,
+                                                                            int nDOF_trial_element,
+                                                                            int nSpace,
+                                                                            int* rowptr,
+                                                                            int* colind,
+                                                                            int offset_r,
+                                                                            int stride_r,
+                                                                            int offset_u,
+                                                                            int stride_u,
+                                                                            int nFreeVDOF_global,
+                                                                            int* interiorElementBoundaries,
+                                                                            int* elementBoundaryElements,
+                                                                            int* elementBoundaryLocalElementBoundaries,
+                                                                            int* nFreeDOF_element_r,
+                                                                            int* freeLocal_r,
+                                                                            int* freeGlobal_r,
+                                                                            int* nFreeDOF_element_u,
+                                                                            int* freeLocal_u,
+                                                                            int* freeGlobal_u,
+                                                                            int* csrRowIndeces_ru,
+                                                                            int* csrColumnOffsets_eb_ru,
+                                                                            double sigma,
+                                                                            double* v,
+                                                                            double* n,
+                                                                            double* a,
+                                                                            double* grad_w,
+                                                                            double* dS,
+                                                                            double* jac)
 {
   int ebNI,ebN,left_eN_global,right_eN_global,left_ebN_element,right_ebN_element,ii,i,k,jj,j,jacIndex,II,m,nnz=rowptr[nSpace],nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
@@ -11883,89 +11883,88 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
       right_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+1];
       /*left  flux*/
       for(ii=0;ii<nFreeDOF_element_r[left_eN_global];ii++)
-	{
-	  i = freeLocal_r[left_eN_global*nDOF_test_element+
-			  ii];
-	  for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	    {
-	      for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
-		{
-		  j = freeLocal_u[left_eN_global*nDOF_trial_element+
-				  jj];
-		  jacIndex = csrRowIndeces_ru[left_eN_global*nDOF_test_element+
-					      ii]
-		    +
-		    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element +
+        {
+          i = freeLocal_r[left_eN_global*nDOF_test_element+
+                          ii];
+          for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+            {
+              for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
+                {
+                  j = freeLocal_u[left_eN_global*nDOF_trial_element+
+                                  jj];
+                  jacIndex = csrRowIndeces_ru[left_eN_global*nDOF_test_element+
+                                              ii]
+                    +
+                    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element +
                                            0*2*nDOF_test_X_trial_element +
                                            0*nDOF_test_X_trial_element +
                                            ii*nDOF_trial_element +
                                            jj];
-		  for (II=0;II<nSpace;II++)
-		    for(m=rowptr[II];m<rowptr[II+1];m++)
-		      jac[jacIndex] 
-			-= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					k*nDOF_trial_element+
-					j]
-				      *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-					 left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-					 k*nSpace+
-					 colind[m]]
-				      *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-					 left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-					 k*nnz+
-					 m]
-				      *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-					      left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-					      k*nDOF_trial_element*nSpace+
-					      i*nSpace+
-					      II]
-				      *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-					  left_ebN_element*nQuadraturePoints_elementBoundary+
-					  k]);
-		}
-	      for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
-		{
-		  j = freeLocal_u[right_eN_global*nDOF_trial_element+
-				  jj];
-		  jacIndex = csrRowIndeces_ru[left_eN_global*nDOF_test_element+
-					      ii]
-		    +
-		    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element+
-					   0*2*nDOF_test_X_trial_element+
-					   1*nDOF_test_X_trial_element+
-					   ii*nDOF_trial_element+
-					   jj];
-		  for (II=0;II<nSpace;II++)
-		    for (m=rowptr[II];m<rowptr[II+1];m++)
-		      jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    k*nDOF_trial_element+
-						    j]
-						  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						     k*nSpace+
-						     colind[m]]
-						  *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-						     left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-						     k*nnz+
-						     m]
-						  *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  k*nDOF_trial_element*nSpace+
-							  i*nSpace+
-							  II]
-						  *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-						      left_ebN_element*nQuadraturePoints_elementBoundary+
-						      k]);
-		}
-	    }/*k*/
-	}/*ii*/
+                  for (II=0;II<nSpace;II++)
+                    for(m=rowptr[II];m<rowptr[II+1];m++)
+                      jac[jacIndex] -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    k*nDOF_trial_element+
+                                                    j]
+                                                  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     k*nSpace+
+                                                     colind[m]]
+                                                  *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                                     k*nnz+
+                                                     m]
+                                                  *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          k*nDOF_trial_element*nSpace+
+                                                          i*nSpace+
+                                                          II]
+                                                  *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                      left_ebN_element*nQuadraturePoints_elementBoundary+
+                                                      k]);
+                }
+              for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
+                {
+                  j = freeLocal_u[right_eN_global*nDOF_trial_element+
+                                  jj];
+                  jacIndex = csrRowIndeces_ru[left_eN_global*nDOF_test_element+
+                                              ii]
+                    +
+                    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element+
+                                           0*2*nDOF_test_X_trial_element+
+                                           1*nDOF_test_X_trial_element+
+                                           ii*nDOF_trial_element+
+                                           jj];
+                  for (II=0;II<nSpace;II++)
+                    for (m=rowptr[II];m<rowptr[II+1];m++)
+                      jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    k*nDOF_trial_element+
+                                                    j]
+                                                  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     k*nSpace+
+                                                     colind[m]]
+                                                  *a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                                     k*nnz+
+                                                     m]
+                                                  *grad_w[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          k*nDOF_trial_element*nSpace+
+                                                          i*nSpace+
+                                                          II]
+                                                  *dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                      left_ebN_element*nQuadraturePoints_elementBoundary+
+                                                      k]);
+                }
+            }/*k*/
+        }/*ii*/
       /*right flux*/
       for(ii=0;ii<nFreeDOF_element_r[right_eN_global];ii++)
         {
           i = freeLocal_r[right_eN_global*nDOF_test_element+
-                        ii];
+                          ii];
           for(k=0;k<nQuadraturePoints_elementBoundary;k++)
             {
               for(jj=0;jj<nFreeDOF_element_u[left_eN_global];jj++)
@@ -11973,69 +11972,69 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
                   j = freeLocal_u[left_eN_global*nDOF_trial_element+
                                 jj];
                   jacIndex = csrRowIndeces_ru[right_eN_global*nDOF_test_element+
-					      ii]
-		    +
-		    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element+
-					   1*2*nDOF_test_X_trial_element+
-					   0*nDOF_test_X_trial_element+
-					   ii*nDOF_trial_element+
-					   jj];
-		  for (II=0;II<nSpace;II++)
-		    for (m=rowptr[II];m<rowptr[II+1];m++)
-		      jac[jacIndex] -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    k*nDOF_trial_element+
-						    j]
-						  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						     k*nSpace+
-						     colind[m]]
-						  *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-						     right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-						     k*nnz+
-						     m]
-						  *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  k*nDOF_trial_element*nSpace+
-							  i*nSpace+
-							  II]
-						  *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-						      right_ebN_element*nQuadraturePoints_elementBoundary+
-						      k]);
+                                              ii]
+                    +
+                    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element+
+                                           1*2*nDOF_test_X_trial_element+
+                                           0*nDOF_test_X_trial_element+
+                                           ii*nDOF_trial_element+
+                                           jj];
+                  for (II=0;II<nSpace;II++)
+                    for (m=rowptr[II];m<rowptr[II+1];m++)
+                      jac[jacIndex] -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    k*nDOF_trial_element+
+                                                    j]
+                                                  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     k*nSpace+
+                                                     colind[m]]
+                                                  *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                                     right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                                     k*nnz+
+                                                     m]
+                                                  *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          k*nDOF_trial_element*nSpace+
+                                                          i*nSpace+
+                                                          II]
+                                                  *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                      right_ebN_element*nQuadraturePoints_elementBoundary+
+                                                      k]);
                 }
               for(jj=0;jj<nFreeDOF_element_u[right_eN_global];jj++)
                 {
                   j = freeLocal_u[right_eN_global*nDOF_trial_element+
-                                jj];
-		  jacIndex = csrRowIndeces_ru[right_eN_global*nDOF_test_element+
-					      ii]
-		    +
-		    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element+
-					   1*2*nDOF_test_X_trial_element+
-					   1*nDOF_test_X_trial_element+
-					   ii*nDOF_trial_element+
-					   jj];
-		  for (II=0;II<nSpace;II++)
-		    for (m=rowptr[II];m<rowptr[II+1];m++)
-		      jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-						    k*nDOF_trial_element+j]
-						  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-						     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-						     k*nSpace+
-						     colind[m]]
-						  *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
-						     right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
-						     k*nnz+
-						     m]
-						  *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-							  k*nDOF_trial_element*nSpace+
-							  i*nSpace+
-							  II]
-						  *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-						      right_ebN_element*nQuadraturePoints_elementBoundary+
-						      k]);
+                                  jj];
+                  jacIndex = csrRowIndeces_ru[right_eN_global*nDOF_test_element+
+                                              ii]
+                    +
+                    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element+
+                                           1*2*nDOF_test_X_trial_element+
+                                           1*nDOF_test_X_trial_element+
+                                           ii*nDOF_trial_element+
+                                           jj];
+                  for (II=0;II<nSpace;II++)
+                    for (m=rowptr[II];m<rowptr[II+1];m++)
+                      jac[jacIndex] += sigma*0.5*(v[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                                    k*nDOF_trial_element+j]
+                                                  *n[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
+                                                     k*nSpace+
+                                                     colind[m]]
+                                                  *a[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
+                                                     right_ebN_element*nQuadraturePoints_elementBoundary*nnz+
+                                                     k*nnz+
+                                                     m]
+                                                  *grad_w[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          right_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                                          k*nDOF_trial_element*nSpace+
+                                                          i*nSpace+
+                                                          II]
+                                                  *dS[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+                                                      right_ebN_element*nQuadraturePoints_elementBoundary+
+                                                      k]);
                 }
             }
         }
@@ -12043,36 +12042,36 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
 }
 
 void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int nExteriorElementBoundaries_global,
-									    int nQuadraturePoints_elementBoundary,
-									    int nDOF_test_element,
-									    int nDOF_trial_element,
-									    int nSpace,
-									    int* rowptr,
-									    int* colind,
-									    int offset_r,
-									    int stride_r,
-									    int offset_u,
-									    int stride_u,
-									    int nFreeVDOF_global,
-									    int* exteriorElementBoundaries,
-									    int* elementBoundaryElements,
-									    int* elementBoundaryLocalElementBoundaries,
-									    int* nFreeDOF_element_r,
-									    int* nFreeDOF_element_u,
-									    int* freeLocal_r,
-									    int* freeGlobal_r,
-									    int* freeLocal_u,
-									    int* freeGlobal_u,
-									    int* csrRowIndeces_ru,
-									    int* csrColumnOffsets_eb_ru,
-									    int* isDOFBoundary,
-									    double sigma,
-									    double* v,
-									    double* n,
-									    double* a,
-									    double* grad_w,
-									    double* dS,
-									    double* jac)
+                                                                            int nQuadraturePoints_elementBoundary,
+                                                                            int nDOF_test_element,
+                                                                            int nDOF_trial_element,
+                                                                            int nSpace,
+                                                                            int* rowptr,
+                                                                            int* colind,
+                                                                            int offset_r,
+                                                                            int stride_r,
+                                                                            int offset_u,
+                                                                            int stride_u,
+                                                                            int nFreeVDOF_global,
+                                                                            int* exteriorElementBoundaries,
+                                                                            int* elementBoundaryElements,
+                                                                            int* elementBoundaryLocalElementBoundaries,
+                                                                            int* nFreeDOF_element_r,
+                                                                            int* freeLocal_r,
+                                                                            int* freeGlobal_r,
+                                                                            int* nFreeDOF_element_u,
+                                                                            int* freeLocal_u,
+                                                                            int* freeGlobal_u,
+                                                                            int* csrRowIndeces_ru,
+                                                                            int* csrColumnOffsets_eb_ru,
+                                                                            int* isDOFBoundary,
+                                                                            double sigma,
+                                                                            double* v,
+                                                                            double* n,
+                                                                            double* a,
+                                                                            double* grad_w,
+                                                                            double* dS,
+                                                                            double* jac)
 {
   int ebNE,ebN,eN_global,ii,i,k,jj,j,jacIndex,II,m,nnz=rowptr[nSpace],nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
@@ -12080,427 +12079,427 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
       ebN = exteriorElementBoundaries[ebNE];
       eN_global   = elementBoundaryElements[ebN*2+0];
       for(ii=0;ii<nFreeDOF_element_r[eN_global];ii++)
-	{
-	  i = freeLocal_r[eN_global*nDOF_test_element+
-			  ii];
-	  for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	    {
-	      for(jj=0;jj<nFreeDOF_element_u[eN_global];jj++)
-		{
-		  j = freeLocal_u[eN_global*nDOF_trial_element+
-				  jj];
-		  jacIndex = csrRowIndeces_ru[eN_global*nDOF_test_element+
-					      ii]
-		    +
-		    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element +
+        {
+          i = freeLocal_r[eN_global*nDOF_test_element+
+                          ii];
+          for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+            {
+              for(jj=0;jj<nFreeDOF_element_u[eN_global];jj++)
+                {
+                  j = freeLocal_u[eN_global*nDOF_trial_element+
+                                  jj];
+                  jacIndex = csrRowIndeces_ru[eN_global*nDOF_test_element+
+                                              ii]
+                    +
+                    csrColumnOffsets_eb_ru[ebN*4*nDOF_test_X_trial_element +
                                            0*2*nDOF_test_X_trial_element +
                                            0*nDOF_test_X_trial_element +
                                            ii*nDOF_trial_element +
                                            jj];
-		  if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
-		    {
-		      for (II=0;II<nSpace;II++)
-			for (m=rowptr[II];m<rowptr[II+1];m++)
-			  jac[jacIndex] 
-			    -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-					k*nDOF_trial_element+
-					j]
-				      *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-					 k*nSpace+
-					 colind[m]]
-				      *a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                  if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
+                    {
+                      for (II=0;II<nSpace;II++)
+                        for (m=rowptr[II];m<rowptr[II+1];m++)
+                          jac[jacIndex]
+                            -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                                        k*nDOF_trial_element+
+                                        j]
+                                      *n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                                         k*nSpace+
+                                         colind[m]]
+                                      *a[ebNE*nQuadraturePoints_elementBoundary*nnz+
                                          k*nnz+
-					 m]
-				      *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
-					      k*nDOF_trial_element*nSpace+
-					      i*nSpace+
-					      II]
-				      *dS[ebNE*nQuadraturePoints_elementBoundary+
-					  k]);
-		    }
-		}
-	    }
+                                         m]
+                                      *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                              k*nDOF_trial_element*nSpace+
+                                              i*nSpace+
+                                              II]
+                                      *dS[ebNE*nQuadraturePoints_elementBoundary+
+                                          k]);
+                    }
+                }
+            }
         }
     }
 }
 
 void update_f_movingDomain_q(int nElements_global,
-			     int nQuadraturePoints_element,
-			     int nSpace,
-			     double* xt,
-			     double* m,
-			     double* f)
+                             int nQuadraturePoints_element,
+                             int nSpace,
+                             double* xt,
+                             double* m,
+                             double* f)
 {
   int eN,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
-	f[eN*nQuadraturePoints_element*nSpace + 
-	  k*nSpace + 
-	  I] 
-	  -=
-	  m[eN*nQuadraturePoints_element + 
-	    k]
-	  *
-	  xt[eN*nQuadraturePoints_element*3 + 
-	     k*3 + 
-	     I];
+        f[eN*nQuadraturePoints_element*nSpace +
+          k*nSpace +
+          I]
+          -=
+          m[eN*nQuadraturePoints_element +
+            k]
+          *
+          xt[eN*nQuadraturePoints_element*3 +
+             k*3 +
+             I];
 }
 
 void update_f_movingDomain_constantMass_q(int nElements_global,
-					  int nQuadraturePoints_element,
-					  int nSpace,
-					  double* xt,
-					  double* f)
+                                          int nQuadraturePoints_element,
+                                          int nSpace,
+                                          double* xt,
+                                          double* f)
 {
   int eN,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
-	f[eN*nQuadraturePoints_element*nSpace + 
-	  k*nSpace + 
-	  I] 
-	  -=
-	  xt[eN*nQuadraturePoints_element*3 + 
-	     k*3 + 
-	     I];
+        f[eN*nQuadraturePoints_element*nSpace +
+          k*nSpace +
+          I]
+          -=
+          xt[eN*nQuadraturePoints_element*3 +
+             k*3 +
+             I];
 }
 
 void update_f_movingDomain_ebq(int nElements_global,
-			       int nElementBoundaries_element,
-			       int nQuadraturePoints_elementBoundary,
-			       int nSpace,
-			       double* xt,
-			       double* m,
-			       double* f)
+                               int nElementBoundaries_element,
+                               int nQuadraturePoints_elementBoundary,
+                               int nSpace,
+                               double* xt,
+                               double* m,
+                               double* f)
 {
   int eN,ebN,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for(ebN=0;ebN<nElementBoundaries_element;ebN++)
       for (k=0;k<nQuadraturePoints_elementBoundary;k++)
-	for (I=0;I<nSpace;I++)
-	  f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + 
-	    ebN*nQuadraturePoints_elementBoundary*nSpace+
-	    k*nSpace + 
-	    I] 
-	    -=
-	    m[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
-	      ebN*nQuadraturePoints_elementBoundary+
-	      k]
-	    *
-	    xt[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*3+ 
-	       ebN*nQuadraturePoints_elementBoundary*3+
-	       k*3 + 
-	       I];
+        for (I=0;I<nSpace;I++)
+          f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+            ebN*nQuadraturePoints_elementBoundary*nSpace+
+            k*nSpace +
+            I]
+            -=
+            m[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
+              ebN*nQuadraturePoints_elementBoundary+
+              k]
+            *
+            xt[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*3+
+               ebN*nQuadraturePoints_elementBoundary*3+
+               k*3 +
+               I];
 }
 
 void update_f_movingDomain_constantMass_ebq(int nElements_global,
-					    int nElementBoundaries_element,
-					    int nQuadraturePoints_elementBoundary,
-					    int nSpace,
-					    double* xt,
-					    double* f)
+                                            int nElementBoundaries_element,
+                                            int nQuadraturePoints_elementBoundary,
+                                            int nSpace,
+                                            double* xt,
+                                            double* f)
 {
   int eN,ebN,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for(ebN=0;ebN<nElementBoundaries_element;ebN++)
       for (k=0;k<nQuadraturePoints_elementBoundary;k++)
-	for (I=0;I<nSpace;I++)
-	  f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + 
-	    ebN*nQuadraturePoints_elementBoundary*nSpace+
-	    k*nSpace + 
-	    I] 
-	    -=
-	    xt[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*3+ 
-	       ebN*nQuadraturePoints_elementBoundary*3+
-	       k*3 + 
-	       I];
+        for (I=0;I<nSpace;I++)
+          f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+            ebN*nQuadraturePoints_elementBoundary*nSpace+
+            k*nSpace +
+            I]
+            -=
+            xt[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*3+
+               ebN*nQuadraturePoints_elementBoundary*3+
+               k*3 +
+               I];
 }
 
 void updateStress_weak(int nElements_global,
-		       int nQuadraturePoints_element,
-		       int nDOF_test_element,
-		       int nSpace,
-		       double* sigma,
-		       double* grad_w_dV,
-		       double* weak_residual_x,
-		       double* weak_residual_y,
-		       double* weak_residual_z)
+                       int nQuadraturePoints_element,
+                       int nDOF_test_element,
+                       int nSpace,
+                       double* sigma,
+                       double* grad_w_dV,
+                       double* weak_residual_x,
+                       double* weak_residual_y,
+                       double* weak_residual_z)
 {
   int eN,i,k,I,J,nSpace2=nSpace*nSpace;
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	for (J=0;J<nSpace;J++)
-	  {
-	    I=0;
-	    weak_residual_x[eN*nDOF_test_element + i] 
-	      +=
-	      sigma[eN*nQuadraturePoints_element*nSpace2+
-		    k*nSpace2 + 
-		    I*nSpace+
-		    J]
-	      *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+        for (J=0;J<nSpace;J++)
+          {
+            I=0;
+            weak_residual_x[eN*nDOF_test_element + i]
+              +=
+              sigma[eN*nQuadraturePoints_element*nSpace2+
+                    k*nSpace2 +
+                    I*nSpace+
+                    J]
+              *
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         J];
-	    I=1;
-	    weak_residual_y[eN*nDOF_test_element + i] 
-	      +=
-	      sigma[eN*nQuadraturePoints_element*nSpace2+
-		    k*nSpace2 + 
-		    I*nSpace+
-		    J]
-	      *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+            I=1;
+            weak_residual_y[eN*nDOF_test_element + i]
+              +=
+              sigma[eN*nQuadraturePoints_element*nSpace2+
+                    k*nSpace2 +
+                    I*nSpace+
+                    J]
+              *
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         J];
-	    I=2;
-	    weak_residual_z[eN*nDOF_test_element + i] 
-	      +=
-	      sigma[eN*nQuadraturePoints_element*nSpace2+
-		    k*nSpace2 + 
-		    I*nSpace+
-		    J]
-	      *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+            I=2;
+            weak_residual_z[eN*nDOF_test_element + i]
+              +=
+              sigma[eN*nQuadraturePoints_element*nSpace2+
+                    k*nSpace2 +
+                    I*nSpace+
+                    J]
+              *
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         J];
-	  }
+          }
 }
 
 void updateStressJacobian_weak(int nElements_global,
-			       int nQuadraturePoints_element,
-			       int nDOF_trial_element,
-			       int nDOF_test_element,
-			       int nSpace,
-			       double* dsigma_xx,
-			       double* dsigma_xy,
-			       double* dsigma_xz,
-			       double* dsigma_yx,
-			       double* dsigma_yy,
-			       double* dsigma_yz,
-			       double* dsigma_zx,
-			       double* dsigma_zy,
-			       double* dsigma_zz,
-			       double* grad_v,
-			       double* grad_w_dV,
-			       double* jacobian_weak_residual_xx,
-			       double* jacobian_weak_residual_xy,
-			       double* jacobian_weak_residual_xz,
-			       double* jacobian_weak_residual_yx,
-			       double* jacobian_weak_residual_yy,
-			       double* jacobian_weak_residual_yz,
-			       double* jacobian_weak_residual_zx,
-			       double* jacobian_weak_residual_zy,
-			       double* jacobian_weak_residual_zz)
+                               int nQuadraturePoints_element,
+                               int nDOF_trial_element,
+                               int nDOF_test_element,
+                               int nSpace,
+                               double* dsigma_xx,
+                               double* dsigma_xy,
+                               double* dsigma_xz,
+                               double* dsigma_yx,
+                               double* dsigma_yy,
+                               double* dsigma_yz,
+                               double* dsigma_zx,
+                               double* dsigma_zy,
+                               double* dsigma_zz,
+                               double* grad_v,
+                               double* grad_w_dV,
+                               double* jacobian_weak_residual_xx,
+                               double* jacobian_weak_residual_xy,
+                               double* jacobian_weak_residual_xz,
+                               double* jacobian_weak_residual_yx,
+                               double* jacobian_weak_residual_yy,
+                               double* jacobian_weak_residual_yz,
+                               double* jacobian_weak_residual_zx,
+                               double* jacobian_weak_residual_zy,
+                               double* jacobian_weak_residual_zz)
 {
   int eN,i,j,k,I,J,nDOF_test_X_trial_element=nDOF_test_element*nDOF_trial_element,nSpace2=nSpace*nSpace;
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	for (j=0;j<nDOF_trial_element;j++)
-	  for (I=0;I<nSpace;I++)
-	    for(J=0;J<nSpace;J++)
-	      {
-		//x
-		jacobian_weak_residual_xx[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_xx[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-		jacobian_weak_residual_xy[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_xy[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-		jacobian_weak_residual_xz[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_xz[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-		//y
-		jacobian_weak_residual_yx[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_yx[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-		jacobian_weak_residual_yy[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_yy[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-		jacobian_weak_residual_yz[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_yz[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-		//z
-		jacobian_weak_residual_zx[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_zx[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-		jacobian_weak_residual_zy[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_zy[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-		jacobian_weak_residual_zz[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
-					  j]
-		  +=
-		  dsigma_zz[eN*nQuadraturePoints_element*nSpace2 + 
-			    k*nSpace2+
-			    I*nSpace+
-			    J]
-		  *
-		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
-			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
-			 J]
-		  *
-		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
-			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
-			    I];
-	      }
+        for (j=0;j<nDOF_trial_element;j++)
+          for (I=0;I<nSpace;I++)
+            for(J=0;J<nSpace;J++)
+              {
+                //x
+                jacobian_weak_residual_xx[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_xx[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+                jacobian_weak_residual_xy[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_xy[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+                jacobian_weak_residual_xz[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_xz[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+                //y
+                jacobian_weak_residual_yx[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_yx[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+                jacobian_weak_residual_yy[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_yy[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+                jacobian_weak_residual_yz[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_yz[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+                //z
+                jacobian_weak_residual_zx[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_zx[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+                jacobian_weak_residual_zy[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_zy[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+                jacobian_weak_residual_zz[eN*nDOF_test_X_trial_element +
+                                          i*nDOF_trial_element +
+                                          j]
+                  +=
+                  dsigma_zz[eN*nQuadraturePoints_element*nSpace2 +
+                            k*nSpace2+
+                            I*nSpace+
+                            J]
+                  *
+                  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                         k*nDOF_trial_element*nSpace +
+                         j*nSpace +
+                         J]
+                  *
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
+                            i*nSpace +
+                            I];
+              }
 }
 
-/*load nodal degrees of freedom from an element based set of interpolation values*/ 
+/*load nodal degrees of freedom from an element based set of interpolation values*/
 void projectFromNodalInterpolationConditions(int nElements_global,
-					     int nDOF_element,
-					     int dim_dof,
-					     const int * l2g,
-					     const int * functional_map_element,
-					     const double * interpolationValues,
-					     double * dofs)
+                                             int nDOF_element,
+                                             int dim_dof,
+                                             const int * l2g,
+                                             const int * functional_map_element,
+                                             const double * interpolationValues,
+                                             double * dofs)
 {
   int eN,i,j,k;
-  
+
   //  printf("dim_dof = %d, nDOF_element = %d\n",dim_dof,nDOF_element);
   for (eN = 0; eN < nElements_global; eN++)
     {
       for (i=0; i < nDOF_element; i++)
-	{
-	  k = functional_map_element[i]; /*dof i maps to interp value k locally*/
-	  //  printf("eN=%d, k=%d, i=%d\n",eN,k,i);
-	  for (j=0; j < dim_dof; j++)
-	    {
-	      //     printf("l2g[%d]= %d \n", eN*nDOF_element+i, l2g[eN*nDOF_element+i]);
-	      //     printf("l2g[%d]*%d+%d = %d  \n", eN*nDOF_element+i, dim_dof, j, l2g[eN*nDOF_element+i]*dim_dof + j);
-	      //     printf("interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j] = %.2f \n", interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j]);
-	      dofs[l2g[eN*nDOF_element+i]*dim_dof + j] = interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j];
-	      
-	    }
-	}
+        {
+          k = functional_map_element[i]; /*dof i maps to interp value k locally*/
+          //  printf("eN=%d, k=%d, i=%d\n",eN,k,i);
+          for (j=0; j < dim_dof; j++)
+            {
+              //     printf("l2g[%d]= %d \n", eN*nDOF_element+i, l2g[eN*nDOF_element+i]);
+              //     printf("l2g[%d]*%d+%d = %d  \n", eN*nDOF_element+i, dim_dof, j, l2g[eN*nDOF_element+i]*dim_dof + j);
+              //     printf("interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j] = %.2f \n", interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j]);
+              dofs[l2g[eN*nDOF_element+i]*dim_dof + j] = interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j];
+
+            }
+        }
     }
 }
 /** @}*/

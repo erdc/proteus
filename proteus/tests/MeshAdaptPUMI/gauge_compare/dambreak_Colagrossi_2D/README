@@ -1,0 +1,11 @@
+This test is to ensure that the restart process after adapt is working properly with 
+
+1) RANS2P lagged subgrid error
+2) RANS2P lagged shock capturing
+3) lagged eddy-viscosity
+4) Lagged shock capturing for VF and LS
+5) LAG_LES=1.0 for dynamic smagorinsky
+
+This is for the nonconservative form of NS and for adaptive time stepping.
+Oddly, fixed time stepping yields slight differences on the order of 1e-14 which throws off the current (simple) method for comparison.
+

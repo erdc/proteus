@@ -1,0 +1,1 @@
+-rans2p_ksp_type bcgsl -rans2p_pc_type asm -rans2p_pc_asm_type basic -rans2p_ksp_atol 1.0e-8 -rans2p_ksp_rtol 0.0

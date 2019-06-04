@@ -8,7 +8,7 @@ def read_from_hdf5(hdfFile,label,dof_map=None):
     If dof_map is not none, this determines shape of the output array
     """
     assert hdfFile is not None, "requires hdf5 for heavy data"
-    vals = hdfFile.getNode(label).read()
+    vals = hdfFile.get_node(label).read()
     if dof_map is not None:
         dof = vals[dof_map]
     else:

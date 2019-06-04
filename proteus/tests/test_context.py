@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os, sys
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
@@ -5,8 +6,8 @@ from nose.tools import eq_ as eq
 def ContextObject():
     from collections import namedtuple
     globalSettings = {"nnx":11, "T":10.0, "g":9.8}
-    MyContext = namedtuple("MyContext",globalSettings.keys())
-    return MyContext._make(globalSettings.values())
+    MyContext = namedtuple("MyContext",list(globalSettings.keys()))
+    return MyContext._make(list(globalSettings.values()))
 
 def check_eq(context):
     eq(context.nnx,11)

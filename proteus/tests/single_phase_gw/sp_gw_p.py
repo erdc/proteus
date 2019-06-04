@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import proteus
 from proteus import *
 from proteus.default_p import *
@@ -7,7 +8,7 @@ reload(proteus.default_p)
 """
 flow equation for transient, single phase flow example
 """
-from single_phase_gw import *
+from .single_phase_gw import *
 
 coefficients = STC.SinglePhaseDarcyCoefficients(conductivities,sources,
                                                 S_ss,

@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
@@ -22,7 +26,7 @@ def remove_files(filenames):
         if os.path.exists(f):
             try:
                 os.remove(f)
-            except OSError, e:
+            except OSError as e:
                 print ("Error: %s - %s" %(e.filename,e.strerror))
         else:
             pass
@@ -52,30 +56,30 @@ class TestAuxFunctions(unittest.TestCase):
         K = 100000.0
         C = 1000.0
         m = 50.0
-        a0 = (F - C*v0 - K*u0) / m
+        a0 = old_div((F - C*v0 - K*u0), m)
         velCheck = True
         # Loop through substeps
         for i in range(substeps):
             # 1st step
             u1 = u0
             v1 = v0
-            a1 = (F - C*v1 - K*u1) / m
+            a1 = old_div((F - C*v1 - K*u1), m)
             # 2nd step
             u2 = u0 + v1*dt/2.
             v2 = v0 + a1*dt/2.
-            a2 = (F - C*v2 - K*u2) / m
+            a2 = old_div((F - C*v2 - K*u2), m)
             # 3rd step
             u3 = u0 + v2*dt/2.
             v3 = v0 + a2*dt/2.
-            a3 = (F - C*v3 - K*u3) / m
+            a3 = old_div((F - C*v3 - K*u3), m)
             # 4th step
             u4 = u0 + v3*dt
             v4 = v0 + a3*dt
-            a4 = (F - C*v4 - K*u4) / m
+            a4 = old_div((F - C*v4 - K*u4), m)
             # Final step
             u = u0 + dt/6.*(v1+2*v2+2*v3+v4)
             v = v0 + dt/6.*(a1+2*a2+2*a3+a4)
-            a = (F - C*v - K*u) / m
+            a = old_div((F - C*v - K*u), m)
             # Check for friction module, when velocity is reversed
             if velCheck:
                 if v0*v < 0.0:
@@ -209,8 +213,8 @@ class TestRigidBody(unittest.TestCase):
         mst.assembleDomain(domain2D)      
         c2d = caisson2D
         c2d.nd = 2
-        Ix = ((dim[0]**2)/12.)
-        Iy = ((dim[1]**2)/12.)
+        Ix = (old_div((dim[0]**2),12.))
+        Iy = (old_div((dim[1]**2),12.))
         It = Ix + Iy 
         mass = 50.0
         I1 = It*mass
@@ -225,9 +229,9 @@ class TestRigidBody(unittest.TestCase):
         pos = np.array([0.0, 0.0, 0.0])
         dim = (0.3, 0.385, 0.4)
         angle = radians(10.)
-        Ix = ((dim[0]**2)/12.)
-        Iy = ((dim[1]**2)/12.)
-        Iz = ((dim[2]**2)/12.)
+        Ix = (old_div((dim[0]**2),12.))
+        Iy = (old_div((dim[1]**2),12.))
+        Iz = (old_div((dim[2]**2),12.))
         It = np.array([ [Iz + Iy, 0.0, 0.0],
                         [0.0, Ix + Iz, 0.0],
                         [0.0, 0.0, Ix + Iy] ])
@@ -235,7 +239,7 @@ class TestRigidBody(unittest.TestCase):
         # rotational axis and versors
         ax, ay, az = axis = np.array([1., 1., 1.])
         mod = np.sqrt((ax**2)+(ay**2)+(az**2))
-        axis_ver = (axis/mod)
+        axis_ver = (old_div(axis,mod))
         # shape
         caisson = mst.Cuboid(domain=domain3D, dim=dim, coords=[pos[0], pos[1], pos[2]])
         caisson.rotate(rot=angle, axis=axis)
@@ -274,7 +278,7 @@ class TestRigidBody(unittest.TestCase):
 
         F = np.array([100.0, -200.0, 10.0])
         mass = 150.0
-        acceleration = F/mass
+        acceleration = old_div(F,mass)
 
         c2d.F = F
         c2d.mass = mass
@@ -296,7 +300,7 @@ class TestRigidBody(unittest.TestCase):
 
         F = np.array([100.0, -200.0, 10.0])
         mass = 150.0
-        acceleration = F/mass
+        acceleration = old_div(F,mass)
 
         c2d.F = F
         c2d.mass = mass
@@ -318,8 +322,8 @@ class TestRigidBody(unittest.TestCase):
         mst.assembleDomain(domain2D)      
         c2d = caisson2D
         c2d.nd = 2
-        Ix = ((dim[0]**2)/12.)
-        Iy = ((dim[1]**2)/12.)
+        Ix = (old_div((dim[0]**2),12.))
+        Iy = (old_div((dim[1]**2),12.))
         It = Ix + Iy 
         mass = 50.0
         c2d.mass, c2d.It = mass, It
@@ -330,14 +334,14 @@ class TestRigidBody(unittest.TestCase):
         c2d.init_barycenter, c2d.last_position, c2d.last_velocity = init_barycenter, last_position, last_velocity 
         Fx, Fy, Fz = F = np.array([200., 300., 0.0])
         dt, substeps = 0.001, 50  
-        dt_sub = c2d.dt_sub = float(dt/substeps)
+        dt_sub = c2d.dt_sub = float(old_div(dt,substeps))
         c2d.F, c2d.substeps, c2d.dt, c2d.acceleration = F, substeps, dt, c2d.getAcceleration()
 
         # runge-kutta calculation
         c2d.scheme = 'Runge_Kutta'
         u0 = ux0, uy0, uz0 = last_position - init_barycenter
         v0 = vx0, vy0, vz0 = last_velocity
-        a0 = ax0, ay0, az0 = (F - C*v0 - K*u0) / mass
+        a0 = ax0, ay0, az0 = old_div((F - C*v0 - K*u0), mass)
         for ii in range(substeps):
             ux, vx, ax = bd.runge_kutta(ux0, vx0, ax0, dt_sub, substeps, Fx, Kx, Cx, mass, False)
             uy, vy, ay = bd.runge_kutta(uy0, vy0, ay0, dt_sub, substeps, Fy, Ky, Cy, mass, False)
@@ -346,41 +350,6 @@ class TestRigidBody(unittest.TestCase):
         c2d.h = c2d.getDisplacement(dt)
         npt.assert_equal(c2d.h, h)
 
-#    def testImposeSinusoidalMotion(self):
-#        from proteus import Domain  
-#        from proteus import SpatialTools as st    
-#        from proteus.mprans import SpatialTools as mst
-#        from proteus.mprans import BodyDynamics as bd   
-#
-#        # parameters
-#        domain2D = Domain.PlanarStraightLineGraphDomain()
-#        pos = np.array([1.0, 1.0, 0.0])
-#        dim = (0.3, 0.385)
-#        caisson = mst.Rectangle(domain=domain2D, dim=dim, coords=[pos[0], pos[1]])
-#        caisson2D = bd.RigidBody(shape=caisson)
-#        mst.assembleDomain(domain2D)      
-#        c2d = caisson2D
-#        c2d.nd = 2
-#        c2d.attachModel(model='twp', ar='auxiliaryVariables')
-#        t = c2d.model.stepController.t_model_last = 5.25
-#        # transl and rot amplitudes, transl and rot periods
-#        At, Tt, Ar, Tr = c2d.At, c2d.Tt, c2d.Ar, c2d.Tr = np.array([2.0, 2.0, 0.0]), np.array([4.0, 4.0, 0.0]), np.array([0.0, 0.0, 1.0]), np.array([0.0, 0.0, 3.0])
-#        Wt, Wr = 2.*3.14/Tt, 2.*3.14/Tr 
-#        for ii in range(len(Tt)):
-#            if Tt[ii] == 0.0:
-#                Wt[ii]=0.0
-#            if Tr[ii] == 0.0:
-#                Wr[ii]=0.0
-#        displ = dx, dy, dz = At[0]*sin(Wt[0]*t), At[1]*sin(Wt[1]*t), At[2]*sin(Wt[2]*t)
-#        rot   = rx, ry, rz = Ar[0]*sin(Wr[0]*t), Ar[1]*sin(Wr[1]*t), Ar[2]*sin(Wr[2]*t)
-#        init_barycenter, last_position, rot0 = pos, pos*2.0, np.array([0.0, 0.0, 2.0])
-#        c2d.init_barycenter, c2d.last_position, c2d.last_rotation_euler = init_barycenter, last_position, rot0
-#        displTot = displ - (last_position - init_barycenter)
-#        rotTot   = rot  - rot0
-#        # from bodydynamics
-#        displTot2, rotTot2 = c2d.imposeSinusoidalMotion()
-#        npt.assert_equal(displTot, displTot2)
-#        npt.assert_equal(rotTot, rotTot2)
 
     def testStep(self):
         from proteus import Domain  
@@ -397,8 +366,8 @@ class TestRigidBody(unittest.TestCase):
         mst.assembleDomain(domain2D)      
         c2d = caisson2D
         nd = c2d.nd = 2
-        Ix = ((dim[0]**2)/12.)
-        Iy = ((dim[1]**2)/12.)
+        Ix = (old_div((dim[0]**2),12.))
+        Iy = (old_div((dim[1]**2),12.))
         It = Ix + Iy 
         mass = 50.0
         I = mass*It
@@ -408,12 +377,12 @@ class TestRigidBody(unittest.TestCase):
         F = Fx, Fy, Fz = np.array([200., 300., 0.0])
         M = Mx, My, Mz = np.array([0., 0., 50.0])
         dt, substeps = 0.001, 20  
-        dt_sub = c2d.dt_sub = float(dt/substeps)
+        dt_sub = c2d.dt_sub = float(old_div(dt,substeps))
         c2d.F, c2d.substeps, c2d.dt, c2d.acceleration = F, substeps, dt, c2d.getAcceleration()
         c2d.InputMotion = False
         c2d.scheme = 'Forward_Euler'
-        h, tra_velocity = bd.forward_euler(last_position, last_velocity, F/mass, dt)
-        rot, rot_velocity = bd.forward_euler(last_rotation, last_ang_vel, M/I, dt)
+        h, tra_velocity = bd.forward_euler(last_position, last_velocity, old_div(F,mass), dt)
+        rot, rot_velocity = bd.forward_euler(last_rotation, last_ang_vel, old_div(M,I), dt)
         if rot[2] < 0.0: rot[2]=-rot[2]
         # 2d calculation
         caisson.translate(h[:nd]), caisson.rotate(rot[2])
@@ -455,8 +424,8 @@ class CaissonBody(unittest.TestCase):
         pivot = np.array([(caisson.vertices[0][0]+caisson.vertices[1][0])*0.5, caisson.vertices[0][1], 0.0])
         d = dx, dy, dz = pivot - caisson.barycenter
         # inertia transformation with different pivot 
-        Ix = ((dim[0]**2)/12.) + dy**2
-        Iy = ((dim[1]**2)/12.) + dx**2
+        Ix = (old_div((dim[0]**2),12.)) + dy**2
+        Iy = (old_div((dim[1]**2),12.)) + dx**2
         It = Ix + Iy 
         I = It*mass
         I1 = c2d.getInertia(vec=(0.,0.,1.), pivot=pivot)
@@ -484,9 +453,9 @@ class CaissonBody(unittest.TestCase):
         mst.assembleDomain(domain2D)      
         c2d = caisson2D
         c2d.nd = 2
-        dt_sub = c2d.dt_sub = float(dt/substeps)
-        Ix = ((dim[0]**2)/12.)
-        Iy = ((dim[1]**2)/12.)
+        dt_sub = c2d.dt_sub = float(old_div(dt,substeps))
+        Ix = (old_div((dim[0]**2),12.))
+        Iy = (old_div((dim[1]**2),12.))
         It = Ix + Iy 
         mass = 50.0
         c2d.mass, c2d.It = mass, It
@@ -503,11 +472,11 @@ class CaissonBody(unittest.TestCase):
         c2d.last_uxEl = pos[0]+disp[0]-init_barycenter[0]           
         c2d.F, c2d.init_barycenter, c2d.last_position, c2d.last_velocity = F, init_barycenter, last_position, last_velocity  
         eps = 10.**-30
-        sign_static, sign_dynamic = Fx/abs(Fx+eps), last_velocity[0]/abs(last_velocity[0]+eps)
+        sign_static, sign_dynamic = old_div(Fx,abs(Fx+eps)), old_div(last_velocity[0],abs(last_velocity[0]+eps))
         c2d.sliding, sign, m = True, sign_dynamic, m_dynamic
         # vertical calculation and frictional force        
         uy0, vy0 = (last_position[1] - init_barycenter[1]), last_velocity[1]
-        ay0 = (Fy - Cy*vy0 - Ky*uy0) / mass
+        ay0 = old_div((Fy - Cy*vy0 - Ky*uy0), mass)
         uy, vy, ay = bd.runge_kutta(uy0, vy0, ay0, dt_sub, substeps, Fy, Ky, Cy, mass, False)
         Rx = -Kx*(last_position[0]-init_barycenter[0])
         Ry = -Ky*uy
@@ -520,7 +489,7 @@ class CaissonBody(unittest.TestCase):
         vx0, vz0 = last_velocity[0], last_velocity[2]
         Fh = Fx+Ftan
         Kx, Cx = 0.0, 0.0
-        ax0, az0 = (Fh - Cx*vx0 - Kx*ux0) / mass , (Fz - Cz*vz0 - Kz*uz0) / mass
+        ax0, az0 = old_div((Fh - Cx*vx0 - Kx*ux0), mass) , old_div((Fz - Cz*vz0 - Kz*uz0), mass)
         ux, vx, ax = bd.runge_kutta(ux0, vx0, ax0, dt_sub, substeps, Fh, Kx, Cx, mass, True)
         uz, vz, az = bd.runge_kutta(uz0, vz0, az0, dt_sub, substeps, Fz, Kz, Cz, mass, False)
         # bodydynamics calculation
@@ -547,9 +516,9 @@ class CaissonBody(unittest.TestCase):
         mst.assembleDomain(domain2D)      
         c2d = caisson2D
         c2d.nd = 2
-        dt_sub = c2d.dt_sub = float(dt/substeps)
-        Ix = ((dim[0]**2)/12.)
-        Iy = ((dim[1]**2)/12.)
+        dt_sub = c2d.dt_sub = float(old_div(dt,substeps))
+        Ix = (old_div((dim[0]**2),12.))
+        Iy = (old_div((dim[1]**2),12.))
         It = Ix + Iy 
         mass = 50.0
         c2d.mass, c2d.It = mass, It
@@ -566,11 +535,11 @@ class CaissonBody(unittest.TestCase):
         c2d.last_uxEl = pos[0]+disp[0]-init_barycenter[0]           
         c2d.F, c2d.init_barycenter, c2d.last_position, c2d.last_velocity = F, init_barycenter, last_position, last_velocity  
         eps = 10.**-30
-        sign_static, sign_dynamic = Fx/abs(Fx+eps), last_velocity[0]/abs(last_velocity[0]+eps)
+        sign_static, sign_dynamic = old_div(Fx,abs(Fx+eps)), old_div(last_velocity[0],abs(last_velocity[0]+eps))
         c2d.sliding, sign, m = False, sign_static, m_static
         # vertical calculation and frictional force        
         uy0, vy0 = (last_position[1] - init_barycenter[1]), last_velocity[1]
-        ay0 = (Fy - Cy*vy0 - Ky*uy0) / mass
+        ay0 = old_div((Fy - Cy*vy0 - Ky*uy0), mass)
         uy, vy, ay = bd.runge_kutta(uy0, vy0, ay0, dt_sub, substeps, Fy, Ky, Cy, mass, False)
         Rx = -Kx*(last_position[0]-init_barycenter[0])
         Ry = -Ky*uy
@@ -583,7 +552,7 @@ class CaissonBody(unittest.TestCase):
         vx0, vz0 = last_velocity[0], last_velocity[2]
         Fh = Fx+Ftan
         Kx, Cx = 0.0, 0.0
-        ax0, az0 = (Fh - Cx*vx0 - Kx*ux0) / mass , (Fz - Cz*vz0 - Kz*uz0) / mass
+        ax0, az0 = old_div((Fh - Cx*vx0 - Kx*ux0), mass) , old_div((Fz - Cz*vz0 - Kz*uz0), mass)
         ux, vx, ax = bd.runge_kutta(ux0, vx0, ax0, dt_sub, substeps, Fh, Kx, Cx, mass, True)
         uz, vz, az = bd.runge_kutta(uz0, vz0, az0, dt_sub, substeps, Fz, Kz, Cz, mass, False)
         # bodydynamics calculation
@@ -610,9 +579,9 @@ class CaissonBody(unittest.TestCase):
         mst.assembleDomain(domain2D)      
         c2d = caisson2D
         c2d.nd = 2
-        dt_sub = c2d.dt_sub = float(dt/substeps)
-        Ix = ((dim[0]**2)/12.)
-        Iy = ((dim[1]**2)/12.)
+        dt_sub = c2d.dt_sub = float(old_div(dt,substeps))
+        Ix = (old_div((dim[0]**2),12.))
+        Iy = (old_div((dim[1]**2),12.))
         It = Ix + Iy 
         mass = 50.0
         c2d.mass, c2d.It = mass, It
@@ -629,11 +598,11 @@ class CaissonBody(unittest.TestCase):
         c2d.last_uxEl = pos[0]+disp[0]-init_barycenter[0]           
         c2d.F, c2d.init_barycenter, c2d.last_position, c2d.last_velocity = F, init_barycenter, last_position, last_velocity  
         eps = 10.**-30
-        sign_static, sign_dynamic = Fx/abs(Fx+eps), last_velocity[0]/abs(last_velocity[0]+eps)
+        sign_static, sign_dynamic = old_div(Fx,abs(Fx+eps)), old_div(last_velocity[0],abs(last_velocity[0]+eps))
         c2d.sliding, sign, m = False, sign_static, m_static
         # vertical calculation and frictional force        
         uy0, vy0 = (last_position[1] - init_barycenter[1]), last_velocity[1]
-        ay0 = (Fy - Cy*vy0 - Ky*uy0) / mass
+        ay0 = old_div((Fy - Cy*vy0 - Ky*uy0), mass)
         uy, vy, ay = bd.runge_kutta(uy0, vy0, ay0, dt_sub, substeps, Fy, Ky, Cy, mass, False)
         Rx = -Kx*(last_position[0]-init_barycenter[0])
         Ry = -Ky*uy
@@ -645,7 +614,7 @@ class CaissonBody(unittest.TestCase):
         ux0, uz0 = last_position[0] - init_barycenter[0], last_position[2] - init_barycenter[2]
         vx0, vz0 = last_velocity[0], last_velocity[2]
         Fh = Fx        
-        ax0, az0 = (Fh - Cx*vx0 - Kx*ux0) / mass , (Fz - Cz*vz0 - Kz*uz0) / mass
+        ax0, az0 = old_div((Fh - Cx*vx0 - Kx*ux0), mass) , old_div((Fz - Cz*vz0 - Kz*uz0), mass)
         ux, vx, ax = bd.runge_kutta(ux0, vx0, ax0, dt_sub, substeps, Fh, Kx, Cx, mass, True)
         uz, vz, az = bd.runge_kutta(uz0, vz0, az0, dt_sub, substeps, Fz, Kz, Cz, mass, False)
         # bodydynamics calculation
@@ -672,7 +641,7 @@ class CaissonBody(unittest.TestCase):
         mst.assembleDomain(domain2D)      
         c2d = caisson2D
         c2d.nd = 2
-        dt_sub = c2d.dt_sub = float(dt/substeps)
+        dt_sub = c2d.dt_sub = float(old_div(dt,substeps))
         Krot = 200000.
         Crot = 2000.
         c2d.Krot, c2d.Crot =  Krot, Crot
@@ -692,15 +661,15 @@ class CaissonBody(unittest.TestCase):
         distance = dx, dy, dz = pivot - barycenter
         Mpivot = np.array([0., 0., dx*Fy-dy*Fx]) # Moment calculated in pivot
         Mp = M - Mpivot # Moment transformation through the new pivot
-        Ix = ((dim[0]**2)/12.) + dy**2
-        Iy = ((dim[1]**2)/12.) + dx**2
+        Ix = (old_div((dim[0]**2),12.)) + dy**2
+        Iy = (old_div((dim[1]**2),12.)) + dx**2
         It = Ix + Iy    
         I = It*mass
         c2d.springs = True
         # runge-kutta calculation
         c2d.scheme = 'Runge_Kutta'
         rz0, vrz0 = atan2(last_rotation[0,1], last_rotation[0,0]), last_ang_vel[2]
-        arz0 = (Mp[2] - Crot*vrz0 - Krot*rz0) / I
+        arz0 = old_div((Mp[2] - Crot*vrz0 - Krot*rz0), I)
         rz, vrz, arz = bd.runge_kutta(rz0, vrz0, arz0, dt_sub, substeps, Mp[2], Krot, Crot, I, False)
         # calculation with bodydynamics mopdule
         c2d.cV_init = c2d.cV = c2d.cV_last = caisson.vertices
@@ -713,8 +682,70 @@ class CaissonBody(unittest.TestCase):
         npt.assert_equal(c2d.ang_acc[2], arz)
 
 
+class Paddle(unittest.TestCase):
+    def testCalculate_init(self):
+        from proteus import Domain
+        from proteus.mprans import SpatialTools as mst
+        from proteus.mprans.BodyDynamics import PaddleBody
+        domain2D = Domain.PlanarStraightLineGraphDomain()        
+        pos = np.array([2.0, 0.1 , 0.0])
+        dim = (0.3, 1.)
+        paddle = mst.Rectangle(domain=domain2D, dim=dim, coords=[pos[0], pos[1]])
+        
+        PB=PaddleBody(paddle,substeps=20)
+        PB.calculate_init()
+        npt.assert_equal(PB.position,[pos[0],0.,0.])
+        npt.assert_equal(PB.last_position,[pos[0],0.,0.])
+        npt.assert_equal(PB.rotation,np.eye(3))
+        npt.assert_equal(PB.last_rotation,np.eye(3))
+        from proteus.mprans.BodyDynamics import getEulerAngles
+        npt.assert_equal(PB.rotation_euler,getEulerAngles(PB.rotation))
+        npt.assert_equal(PB.last_rotation_euler,getEulerAngles(PB.last_rotation))
+        npt.assert_equal(PB.cV_init,np.array([(1.85,-0.4),
+                                              (2.15,-0.4),
+                                              (2.15,0.6),
+                                              (1.85,0.6)]))
+        npt.assert_equal(PB.cV,np.array([(1.85,-0.4),
+                                              (2.15,-0.4),
+                                              (2.15,0.6),
+                                              (1.85,0.6)]))
+        npt.assert_equal(PB.cV_last,np.array([(1.85,-0.4),
+                                              (2.15,-0.4),
+                                              (2.15,0.6),
+                                              (1.85,0.6)]))
 
-
+    def testPaddleMotion(self):
+        from proteus import Domain
+        from proteus.mprans import SpatialTools as mst
+        from proteus.mprans.BodyDynamics import PaddleBody
+        domain2D = Domain.PlanarStraightLineGraphDomain()        
+        pos = np.array([2.0, 0.1 , 0.0])
+        dim = (0.3, 1.)
+        paddle = mst.Rectangle(domain=domain2D, dim=dim, coords=[pos[0], pos[1]])
+        
+        PB=PaddleBody(paddle,substeps=20)
+        PB.calculate_init()
+        At  = [1.,0.,0.]
+        Ar =  [0.1,0.,0.]
+        Tt = Tr = [0.5,0.,0.]
+        rampS = 0.1
+        rampE = 0.1
+        Tend = 2.
+        PB.inputMotion(InputMotion=True, pivot=None,
+                       At=At, Tt=Tt,
+                       Ar=Ar, Tr=Tr,
+                       rampStart=rampS, rampEnd =rampE, Tend = Tend)
+        # tersting initial ramp
+        times= [0.04, 0.95 ,1.93]
+        for tt in times:
+            ramp = min(1.,tt/rampS,(Tend-tt)/rampE)
+            getVars = PB.imposeSinusoidalMotion(tt=tt)
+            disp = ramp*np.array(At)*np.sin(2*np.pi/Tt[0]*tt)
+            rot =  ramp*np.array(Ar)*np.sin(2*np.pi/Tt[0]*tt)
+            disp = disp - (PB.last_position - PB.init_barycenter)
+            npt.assert_equal(disp,getVars[0])
+            npt.assert_equal(rot,getVars[1])
+            
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

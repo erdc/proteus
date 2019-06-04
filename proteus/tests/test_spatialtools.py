@@ -5,6 +5,9 @@ TO DO:
 test inertia
 test rigid body calculations
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import unittest
 import numpy.testing as npt
 import numpy as np
@@ -85,11 +88,11 @@ def create_custom3D(domain, folder=None):
                       facetFlags=facetFlags3D, boundaryTags=bt3D)
     return custom3D
 
-def create_tank2D(domain, dim=(0., 0.), coords=None, from_0=True):
-    return Tank2D(domain, dim, coords, from_0)
+def create_tank2D(domain, dim=(0., 0.), coords=None):
+    return Tank2D(domain, dim, coords)
 
-def create_tank3D(domain, dim=(0., 0., 0.), coords=None, from_0=True):
-    return Tank3D(domain, dim, coords, from_0)
+def create_tank3D(domain, dim=(0., 0., 0.), coords=None):
+    return Tank3D(domain, dim, coords)
 
 class TestShapeDomainBuilding(unittest.TestCase):
 
@@ -295,7 +298,7 @@ class TestShapeRANS(unittest.TestCase):
         epsFact_solid = 0.5
         center = [0.5, 0., 0.]
         orientation = [1., 0., 0.]
-        dragAlpha = 0.5/1.005e-6
+        dragAlpha = old_div(0.5,1.005e-6)
         dragBeta = 0.
         porosity = 1.
         domain = create_domain2D()
@@ -407,7 +410,7 @@ class TestShapeRANS(unittest.TestCase):
         epsFact_solid = 0.5
         center = [0.5, 0., 0.]
         orientation = [1., 0., 0.]
-        dragAlpha = 0.5/1.005e-6
+        dragAlpha = old_div(0.5,1.005e-6)
         dragBeta = 0.
         porosity = 1.
         from proteus import WaveTools as wt
@@ -454,6 +457,34 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(rightzone.zone_type, 'generation')
         npt.assert_equal(rightzone.center[0], 5.)
         npt.assert_equal(rightzone.center[1], 2.)
+        npt.assert_equal(rightzone.orientation[0], -1.)
+        npt.assert_equal(rightzone.orientation[1], 0.)
+        npt.assert_equal(rightzone.dragAlpha, dragAlpha)
+        npt.assert_equal(rightzone.dragBeta, dragBeta)
+        npt.assert_equal(rightzone.porosity, porosity)
+        npt.assert_equal(rightzone.Shape, tank)
+        # test translation
+        tank = create_tank2D(domain, dim=[4., 4.])
+        tank.setSponge(x_n=1.5, x_p=2.)
+        tr_val = np.array([1.1, 1.2])
+        tank.translate(tr_val)
+        npt.assert_equal(tank.spongeLayers['x-'], 1.5)
+        npt.assert_equal(tank.spongeLayers['x+'], 2.)
+        tank.setGenerationZones(dragAlpha, smoothing = 0.,waves=waves, x_n=True, x_p=True)
+        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
+        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
+        npt.assert_equal(leftzone.zone_type, 'generation')
+        npt.assert_equal(leftzone.center[0], -0.75+tr_val[0])
+        npt.assert_equal(leftzone.center[1], 2.+tr_val[1])
+        npt.assert_equal(leftzone.orientation[0], 1.)
+        npt.assert_equal(leftzone.orientation[1], 0.)
+        npt.assert_equal(leftzone.dragAlpha, dragAlpha)
+        npt.assert_equal(leftzone.dragBeta, dragBeta)
+        npt.assert_equal(leftzone.porosity, porosity)
+        npt.assert_equal(leftzone.Shape, tank)
+        npt.assert_equal(rightzone.zone_type, 'generation')
+        npt.assert_equal(rightzone.center[0], 5.+tr_val[0])
+        npt.assert_equal(rightzone.center[1], 2.+tr_val[1])
         npt.assert_equal(rightzone.orientation[0], -1.)
         npt.assert_equal(rightzone.orientation[1], 0.)
         npt.assert_equal(rightzone.dragAlpha, dragAlpha)
@@ -520,7 +551,7 @@ class TestShapeRANS(unittest.TestCase):
 
     def test_porous_zones(self):
         flag = 1
-        dragAlpha = 0.5/1.005e-6
+        dragAlpha = old_div(0.5,1.005e-6)
         dragBeta = 0.
         porosity = 1.
         domain = create_domain2D()

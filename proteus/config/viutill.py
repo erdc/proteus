@@ -1,4 +1,5 @@
-from default import *
+from __future__ import absolute_import
+from .default import *
 
 PROTEUS_PRELOAD_LIBS=[]
 PROTEUS_EXTRA_LINK_ARGS=['-L/app/acml/acml-4.4.0/gfortran64/lib','-lacml'] + platform_extra_link_args

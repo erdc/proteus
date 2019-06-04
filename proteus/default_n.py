@@ -5,19 +5,20 @@ The default values for numerics modules
 
   Clean up default_n.py, finish documenting, decide on tolerance scheme
 """
-from TimeIntegration import *
-from Quadrature import *
-from FemTools import *
-from SubgridError import *
-from ShockCapturing import *
-from NumericalFlux import *
-from NonlinearSolvers import *
-from LinearAlgebraTools import *
-from LinearSolvers import *
-from lapackWrappers import *
-from StepControl import *
-from AuxiliaryVariables import *
-from MeshTools import *
+from __future__ import absolute_import
+from .TimeIntegration import *
+from .Quadrature import *
+from .FemTools import *
+from .SubgridError import *
+from .ShockCapturing import *
+from .NumericalFlux import *
+from .NonlinearSolvers import *
+from .LinearAlgebraTools import *
+from .LinearSolvers import *
+from .clapack import *
+from .StepControl import *
+from .AuxiliaryVariables import *
+from .MeshTools import *
 ## \todo clean up default_n module
 
 stepController = FixedStep
@@ -94,6 +95,14 @@ nnz = None
 triangleOptions="q30DenA"
 """Options string for triangle or tetGen"""
 
+triangleFlag=0
+"""Set the diagonal direction when triangulating a quadrilateral mesh
+
+0 - right leaning
+1 - alternating 'union jack'
+2 - left leaning
+"""
+
 nLevels = 1
 """Number of levels for multilevel mesh"""
 
@@ -148,6 +157,8 @@ computeEigenvalues = False
 computeEigenvectors = None#'left','right'
 
 linearSmoother = None
+
+linearSmootherOptions = ()
 
 linTolFac = 0.001
 
@@ -227,7 +238,7 @@ levelNonlinearSolverConvergenceTest = 'r'
 
 linearSolverConvergenceTest = 'r' #r,its,r-true for true residual
 #we can add this if desired for setting solver specific options in petsc
-#linear_solver_options_prefix= None #
+linear_solver_options_prefix= None #
 
 bcsTimeDependent = True
 """Allow optimizations if boundary conditions are not time dependent"""
@@ -240,3 +251,5 @@ adaptMesh_nSteps = 10
 
 adaptMesh_numIter = 2
 """If the mesh adaption  algorithm is iterative, do this many iterates"""
+
+quad = None

@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import proteus
 import numpy
 from proteus import *
@@ -9,27 +13,30 @@ from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
                               C0_AffineLinearOnSimplexWithNodalBasis)
-from proteus.flcbdfWrappers import globalMax
+from proteus.Comm import (globalMax,
+                          globalSum)
 from proteus.Profiling import memory
 from proteus.Profiling import logEvent as log
 from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
-import cPresInc
+from . import cPresInc
+
+
 class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior):
     def __init__(self,
                  vt,
                  getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions):
-        proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
-                                                                                        getAdvectiveFluxBoundaryConditions,
-                                                                                        getDiffusiveFluxBoundaryConditions)
+        proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior.__init__(self, vt, getPointwiseBoundaryConditions,
+                                                                                 getAdvectiveFluxBoundaryConditions,
+                                                                                 getDiffusiveFluxBoundaryConditions)
 
 
 class Coefficients(TC_base):
-    r"""
+    """
     The coefficients for pressure increment solution
 
     Update is given by
@@ -40,122 +47,217 @@ class Coefficients(TC_base):
        a = \frac{\tau (1-\theta_s)}{\rho_f} + \frac{\tau \theta_s}{\rho_s}
        q^t = (1-\theta_s) v_f + \theta_s v_s
     """
+
     def __init__(self,
                  rho_f_min=998.0,
                  rho_s_min=998.0,
                  nd=2,
+                 VOS_model=0,
+                 VOF_model=1,
                  modelIndex = None,
-                 fluidModelIndex = None):
+                 fluidModelIndex = None, 
+                 sedModelIndex = None, 
+                 fixNullSpace=False,
+                 INTEGRATE_BY_PARTS_DIV_U=True,
+                 nullSpace="NoNullSpace"):
         """Construct a coefficients object
 
         :param modelIndex: This model's index into the model list
         :param fluidModelIndex: The fluid momentum model's index
         """
-        assert(nd in [2,3])
+        """
+        TODO
+        """
+        self.nullSpace = nullSpace
+        self.fixNullSpace=fixNullSpace
+        self.INTEGRATE_BY_PARTS_DIV_U=INTEGRATE_BY_PARTS_DIV_U
+        self.VOS_model=VOS_model
+        self.VOF_model=VOF_model
+        assert(nd in [2,3])        
         self.nd = nd
         if self.nd == 2:
-            sdInfo    = {(0,0):(np.array([0,1,2],dtype='i'),
-                                np.array([0,1],dtype='i'))}
+            sdInfo = {(0, 0): (np.array([0, 1, 2], dtype='i'),
+                               np.array([0, 1], dtype='i'))}
         else:
-            sdInfo    = {(0,0):(np.array([0,1,2,3],dtype='i'),
-                                np.array([0,1,2],dtype='i'))}
+            sdInfo = {(0, 0): (np.array([0, 1, 2, 3], dtype='i'),
+                               np.array([0, 1, 2], dtype='i'))}
         TC_base.__init__(self,
-                         nc = 1,
-                         variableNames = ['pInc'],
-                         diffusion = {0:{0:{0:'constant'}}},
-                         potential = {0:{0:'u'}},
-                         advection = {0:{0:'constant'}},
+                         nc=1,
+                         variableNames=['pInc'],
+                         diffusion={0: {0: {0: 'constant'}}},
+                         potential={0: {0: 'u'}},
+                         advection={0: {0: 'constant'}},
                          sparseDiffusionTensors=sdInfo,
-                         useSparseDiffusion = True)
+                         useSparseDiffusion=True)
         self.rho_f_min = rho_f_min
         self.rho_s_min = rho_s_min
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
+        self.sedModelIndex = sedModelIndex
 
-    def attachModels(self,modelList):
+    def attachModels(self, modelList):
         """
         Attach the model for velocity and density to PresureIncrement model
         """
         self.model = modelList[self.modelIndex]
         self.fluidModel = modelList[self.fluidModelIndex]
+        if self.sedModelIndex is not None:
+            self.sedModel = modelList[self.sedModelIndex]
+        if self.VOS_model is not None:
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+        else:
+            self.model.q_vos = np.zeros_like(self.model.q[('u',0)])
+            self.model.ebqe_vos = np.zeros_like(self.model.ebqe[('u',0)])
 
-    def initializeMesh(self,mesh):
+    def initializeMesh(self, mesh):
         """
         Give the TC object access to the mesh for any mesh-dependent information.
         """
         pass
 
-    def initializeElementQuadrature(self,t,cq):
+    def initializeElementQuadrature(self, t, cq):
         """
         Give the TC object access to the element quadrature storage
         """
         pass
-    def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
+
+    def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         """
         Give the TC object access to the element boundary quadrature storage
         """
         pass
-    def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
+
+    def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         """
         Give the TC object access to the exterior element boundary quadrature storage
         """
         pass
-    def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
+
+    def initializeGeneralizedInterpolationPointQuadrature(self, t, cip):
         """
         Give the TC object access to the generalized interpolation point storage. These points are used  to project nonlinear potentials (phi).
         """
         pass
-    def preStep(self,t,firstStep=False):
+
+    def preStep(self, t, firstStep=False):
         """
         Move the current values to values_last to keep cached set of values for bdf1 algorithm
         """
         copyInstructions = {}
         return copyInstructions
-    def postStep(self,t,firstStep=False):
+
+    def postStep(self, t, firstStep=False):
         """
         Update the fluid velocities
         """
-        alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
-        for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
-            self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
-            #cek hack, need to do scale this right for 3p flow
-            self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
-            self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
-            self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
-        self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
-        self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
+        if self.fluidModel.KILL_PRESSURE_TERM is False and self.fluidModel.coefficients.CORRECT_VELOCITY is True:
+            assert self.INTEGRATE_BY_PARTS_DIV_U, "INTEGRATE_BY_PARTS the div(U) must be set to true to correct the velocity"
+            alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
+            q_vos = self.model.q_vos
+            ebqe_vos = self.model.ebqe_vos
+            q_a = 1.0/(q_vos*self.rho_s_min + (1.0-q_vos)*self.rho_f_min)/alphaBDF
+            ebqe_a = 1.0/(ebqe_vos*self.rho_s_min + (1.0-ebqe_vos)*self.rho_f_min)/alphaBDF
+            if self.sedModelIndex is not None:
+                for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
+                    self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i] * q_a
+                    self.fluidModel.ebqe[('velocity',0)][...,i] += (self.model.ebqe[('advectiveFlux', 0)] +
+                                                                    self.model.ebqe[('diffusiveFlux', 0, 0)] -
+                                                                    self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
+                    self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i] * q_a
+                    self.fluidModel.coefficients.ebqe_velocity_solid[...,i] += (self.model.ebqe[('advectiveFlux', 0)] +
+                                                                                self.model.ebqe[('diffusiveFlux', 0, 0)] -
+                                                                                self.fluidModel.coefficients.ebqe_velocity_solid[..., i]) * self.model.ebqe['n'][..., i]
+# end of loop
+                self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
+                self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
+                self.sedModel.q[('velocity',0)][:] = self.fluidModel.coefficients.q_velocity_solid
+                self.sedModel.ebqe[('velocity',0)][:] = self.fluidModel.coefficients.ebqe_velocity_solid
+                self.sedModel.stabilization.v_last[:] = self.sedModel.q[('velocity',0)]
+                self.sedModel.coefficients.ebqe_velocity_last[:] = self.sedModel.ebqe[('velocity',0)]
+                assert(self.fluidModel.coefficients.q_velocity_solid is self.sedModel.q[('velocity',0)])
+                assert(self.fluidModel.coefficients.ebqe_velocity_solid is self.sedModel.ebqe[('velocity',0)])
+                # This is for disabling the motion of sediment when it's needed
+                if self.sedModel.coefficients.staticSediment:
+                    for i in range(self.sedModel.q[('velocity',0)].shape[-1]):
+                        self.sedModel.q[('velocity',0)][...,i] = 0.0
+                        self.sedModel.ebqe[('velocity',0)][...,i] = 0.0  
+                        self.fluidModel.coefficients.q_velocity_solid[...,i] = 0.0
+                        self.fluidModel.coefficients.ebqe_velocity_solid[...,i] = 0.0 
+                #for eN in range(self.model.q_vos.shape[0]):
+                #    for k in range(self.model.q_vos.shape[1]):
+                #        if self.model.q_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
+                #            self.sedModel.q[('velocity',0)][eN,k] = 0.0
+                #for eN in range(self.model.ebqe_vos.shape[0]):
+                #    for k in range(self.model.ebqe_vos.shape[1]):
+                #        if self.model.ebqe_vos[eN,k] >= self.sedModel.coefficients.maxFraction:
+                #            self.sedModel.ebqe[('velocity',0)][eN,k] = 0.0 
+            else:
+                for i in range(self.fluidModel.q[('velocity', 0)].shape[-1]):
+                    self.fluidModel.q[('velocity', 0)][..., i] -= old_div(self.model.q[('grad(u)', 0)][..., i], (self.rho_f_min * alphaBDF))
+                    self.fluidModel.ebqe[('velocity', 0)][..., i] += (self.model.ebqe[('advectiveFlux', 0)] +
+                                                                      self.model.ebqe[('diffusiveFlux', 0, 0)] -
+                                                                      self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
+                    self.fluidModel.coefficients.q_velocity_solid[..., i] -= old_div(self.model.q[('grad(u)', 0)][..., i], (self.rho_s_min * alphaBDF))
+                    self.fluidModel.coefficients.ebqe_velocity_solid[..., i] -= old_div(self.model.ebqe[('grad(u)', 0)][..., i], (self.rho_s_min * alphaBDF))
+                self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity', 0)]
+                self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity', 0)]
+                
+
         copyInstructions = {}
         return copyInstructions
-    def evaluate(self,t,c):
-        self.evaluatePresureIncrement(t,c)
-    def evaluatePresureIncrement(self,t,c):
+
+    def evaluate(self, t, c):
+        self.evaluatePresureIncrement(t, c)
+
+    def evaluatePresureIncrement(self, t, c):
         """
         Evaluate the coefficients after getting the velocities and densities
         """
-        u_shape = c[('u',0)].shape
+        u_shape = c[('u', 0)].shape
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
+
+        vs = None
+        vos = None
+
         if  u_shape == self.fluidModel.q[('u',0)].shape:
             vf = self.fluidModel.q[('velocity',0)]
-            vs = self.fluidModel.coefficients.q_velocity_solid
-            vos = self.fluidModel.coefficients.q_vos
-            rho_s = self.fluidModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.q_rho
+            rho_s =  self.rho_s_min
+            if self.sedModelIndex is not None:
+                vs = self.sedModel.q[('velocity',0)]
+                vos = self.sedModel.coefficients.q_vos
+                rho_s = self.sedModel.coefficients.rho_s
         if  u_shape == self.fluidModel.ebqe[('u',0)].shape:
             vf = self.fluidModel.ebqe[('velocity',0)]
-            vs = self.fluidModel.coefficients.ebqe_velocity_solid
-            vos = self.fluidModel.coefficients.ebqe_vos
-            rho_s = self.fluidModel.coefficients.rho_s
             rho_f = self.fluidModel.coefficients.ebqe_rho
+            rho_s =  self.rho_s_min
+            if self.sedModelIndex is not None:
+                vs = self.sedModel.ebqe[('velocity',0)]
+                vos = self.sedModel.coefficients.ebqe_vos
+                rho_s = self.sedModel.coefficients.rho_s
+        
         assert rho_s >= self.rho_s_min, "solid density out of bounds"
         assert (rho_f >= self.rho_f_min).all(), "fluid density out of bounds"
-        for i in range(vs.shape[-1]):
-            c[('f',0)][...,i] = (1.0-vos)*vf[...,i] + vos*vs[...,i]
-        #a is really a scalar diffusion but defining it as diagonal tensor
+
+        if self.sedModelIndex is not None:        
+            for i in range(vs.shape[-1]):
+                c[('f',0)][...,i] = (1.0-vos)*vf[...,i] + vos*vs[...,i]
+        else:
+            for i in range(vf.shape[-1]):
+                c[('f',0)][...,i] = vf[...,i] 
+
+                #a is really a scalar diffusion but defining it as diagonal tensor
         #if we push phase momentum interchange (drag) to correction
         #then a may become a full  tensor
-        c['a_f'] = 1.0/(self.rho_f_min*alphaBDF)
-        c['a_s'] = 1.0/(self.rho_s_min*alphaBDF)
-        c[('a',0,0)][...,0] = (1.0-vos)*c['a_f'] + vos*c['a_s']
+        if self.sedModelIndex is not None:
+            a_penalty = (1.0-vos)*self.rho_f_min*alphaBDF + vos*self.rho_s_min*alphaBDF
+            c['a_f'] = old_div((1.0-vos),a_penalty)
+            c['a_s'] = old_div((vos),a_penalty)
+            c[('a',0,0)][...,0] = c['a_f'] + c['a_s']
+        else:
+            c['a_f'] = old_div(1.0, (self.rho_f_min * alphaBDF))
+            c[('a', 0, 0)][..., 0] =  c['a_f'] 
         for i in range(1,c[('a',0,0)].shape[-1]):
             c[('a',0,0)][...,i] = c[('a',0,0)][...,0]
 
@@ -188,7 +290,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
                  movingDomain=False):
-        from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
         #
@@ -237,29 +338,29 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # cek come back
         if self.stabilization is not None:
             for ci in range(self.nc):
-                if coefficients.mass.has_key(ci):
-                    for flag in coefficients.mass[ci].values():
+                if ci in coefficients.mass:
+                    for flag in list(coefficients.mass[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.advection.has_key(ci):
-                    for flag in coefficients.advection[ci].values():
+                if ci in coefficients.advection:
+                    for flag in list(coefficients.advection[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.diffusion.has_key(ci):
-                    for diffusionDict in coefficients.diffusion[ci].values():
-                        for flag in diffusionDict.values():
+                if ci in coefficients.diffusion:
+                    for diffusionDict in list(coefficients.diffusion[ci].values()):
+                        for flag in list(diffusionDict.values()):
                             if flag != 'constant':
                                 self.stabilizationIsNonlinear = True
-                if coefficients.potential.has_key(ci):
-                    for flag in coefficients.potential[ci].values():
+                if ci in coefficients.potential:
+                    for flag in list(coefficients.potential[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.reaction.has_key(ci):
-                    for flag in coefficients.reaction[ci].values():
+                if ci in coefficients.reaction:
+                    for flag in list(coefficients.reaction[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
-                if coefficients.hamiltonian.has_key(ci):
-                    for flag in coefficients.hamiltonian[ci].values():
+                if ci in coefficients.hamiltonian:
+                    for flag in list(coefficients.hamiltonian[ci].values()):
                         if flag == 'nonlinear':
                             self.stabilizationIsNonlinear = True
         # determine if we need element boundary storage
@@ -277,15 +378,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # assume same space dim for all variables
         self.nSpace_global = self.u[0].femSpace.nSpace_global
         self.nDOF_trial_element = [
-            u_j.femSpace.max_nDOF_element for u_j in self.u.values()]
+            u_j.femSpace.max_nDOF_element for u_j in list(self.u.values())]
         self.nDOF_phi_trial_element = [
-            phi_k.femSpace.max_nDOF_element for phi_k in self.phi.values()]
+            phi_k.femSpace.max_nDOF_element for phi_k in list(self.phi.values())]
         self.n_phi_ip_element = [
-            phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in self.phi.values()]
+            phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in list(self.phi.values())]
         self.nDOF_test_element = [
-            femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
+            femSpace.max_nDOF_element for femSpace in list(self.testSpace.values())]
         self.nFreeDOF_global = [
-            dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
+            dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element = sum(self.nDOF_trial_element)
         self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
@@ -299,7 +400,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elemQuadIsDict = isinstance(elementQuadrature, dict)
         if elemQuadIsDict:  # set terms manually
             for I in self.coefficients.elementIntegralKeys:
-                if elementQuadrature.has_key(I):
+                if I in elementQuadrature:
                     elementQuadratureDict[I] = elementQuadrature[I]
                 else:
                     elementQuadratureDict[I] = elementQuadrature['default']
@@ -309,7 +410,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(I):
+                    if I in elementQuadrature:
                         elementQuadratureDict[
                             ('stab',) + I[1:]] = elementQuadrature[I]
                     else:
@@ -321,7 +422,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
-                    if elementQuadrature.has_key(('numDiff', ci, ci)):
+                    if ('numDiff', ci, ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff', ci, ci)] = elementQuadrature[
                             ('numDiff', ci, ci)]
                     else:
@@ -331,14 +432,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     elementQuadratureDict[
                         ('numDiff', ci, ci)] = elementQuadrature
         if massLumping:
-            for ci in self.coefficients.mass.keys():
+            for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('m', ci)] = Quadrature.SimplexLobattoQuadrature(
                     self.nSpace_global, 1)
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[
                     ('stab',) + I[1:]] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global, 1)
         if reactionLumping:
-            for ci in self.coefficients.mass.keys():
+            for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('r', ci)] = Quadrature.SimplexLobattoQuadrature(
                     self.nSpace_global, 1)
             for I in self.coefficients.elementIntegralKeys:
@@ -347,7 +448,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elementBoundaryQuadratureDict = {}
         if isinstance(elementBoundaryQuadrature, dict):  # set terms manually
             for I in self.coefficients.elementBoundaryIntegralKeys:
-                if elementBoundaryQuadrature.has_key(I):
+                if I in elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[
                         I] = elementBoundaryQuadrature[I]
                 else:
@@ -377,23 +478,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nElements_global *
             self.mesh.nElementBoundaries_element *
             self.nElementBoundaryQuadraturePoints_elementBoundary)
-        if type(self.u[0].femSpace) == C0_AffineLinearOnSimplexWithNodalBasis:
-            # print self.nQuadraturePoints_element
-            if self.nSpace_global == 3:
-                assert(self.nQuadraturePoints_element == 5)
-            elif self.nSpace_global == 2:
-                assert(self.nQuadraturePoints_element == 6)
-            elif self.nSpace_global == 1:
-                assert(self.nQuadraturePoints_element == 3)
-
-            # print self.nElementBoundaryQuadraturePoints_elementBoundary
-            if self.nSpace_global == 3:
-                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
-            elif self.nSpace_global == 2:
-                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
-            elif self.nSpace_global == 1:
-                assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
-
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
@@ -411,6 +495,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             'd')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['a'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
             ('grad(u)',
              0)] = numpy.zeros(
@@ -424,6 +510,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
+        self.ebqe['a'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary),
+            'd')
         self.ebqe[
             ('grad(u)',
              0)] = numpy.zeros(
@@ -432,7 +522,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nSpace_global),
             'd')
 
-        self.q[('v',0)] = numpy.zeros(
+        self.q[('v', 0)] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nDOF_trial_element[0]),
@@ -453,13 +543,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.ebq[('v',0)] = numpy.zeros(
+        self.ebq[('v', 0)] = numpy.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nDOF_trial_element[0]),
             'd')
-        self.ebq[('w',0)] = numpy.zeros(
+        self.ebq[('w', 0)] = numpy.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -488,8 +578,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
-             self.nSpace_global-1,
-             self.nSpace_global-1),
+             self.nSpace_global - 1,
+             self.nSpace_global - 1),
             'd')
         self.ebq['sqrt(det(g))'] = numpy.zeros(
             (self.mesh.nElements_global,
@@ -502,7 +592,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-        self.ebq[('dS_u',0)] = numpy.zeros(
+        self.ebq[('dS_u', 0)] = numpy.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
@@ -511,7 +601,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-        self.ebqe[('dS_u',0)] = self.ebqe['dS']
+        self.ebqe[('dS_u', 0)] = self.ebqe['dS']
         self.ebqe['n'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -526,8 +616,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe['g'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
-             self.nSpace_global-1,
-             self.nSpace_global-1),
+             self.nSpace_global - 1,
+             self.nSpace_global - 1),
             'd')
         self.ebqe['sqrt(det(g))'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
@@ -543,12 +633,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.ebqe[('advectiveFlux_bc_flag',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
-        self.ebqe[('diffusiveFlux_bc_flag',0,0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
-        self.ebqe[('advectiveFlux_bc',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('diffusiveFlux_bc',0,0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('advectiveFlux',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('diffusiveFlux',0,0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('advectiveFlux_bc_flag', 0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
+        self.ebqe[('diffusiveFlux_bc_flag', 0, 0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
+        self.ebqe[('advectiveFlux_bc', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('diffusiveFlux_bc', 0, 0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('advectiveFlux', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('diffusiveFlux', 0, 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set(
             [('u', ci) for ci in range(self.nc)])
@@ -630,21 +723,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux = None
         # set penalty terms
         # cek todo move into numerical flux initialization
-        if self.ebq_global.has_key('penalty'):
+        if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant / (
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, (
+                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
         # penalty term
         # cek move  to Numerical flux initialization
-        if self.ebqe.has_key('penalty'):
+        if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant / \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
+                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
+                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         log(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default
@@ -659,17 +752,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.globalResidualDummy = None
         log("flux bc objects")
-        for ci,fbcObject  in self.fluxBoundaryConditionsObjectsDict.iteritems():
-            self.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
-            for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
-                if self.coefficients.advection.has_key(ci):
-                    self.ebqe[('advectiveFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
-                    self.ebqe[('advectiveFlux_bc_flag',ci)][t[0],t[1]] = 1
-            for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
-                self.ebqe[('diffusiveFlux_bc_flag',ck,ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc',ck,ci)].shape,'i')
-                for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
-                    self.ebqe[('diffusiveFlux_bc',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
-                    self.ebqe[('diffusiveFlux_bc_flag',ck,ci)][t[0],t[1]] = 1
+        for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
+            self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
+            for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
+                if ci in self.coefficients.advection:
+                    self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
+                    self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
+            for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
+                self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
+                for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
+                    self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
+                    self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
         compKernelFlag = 0
         self.presinc = cPresInc.PresInc(
@@ -691,7 +784,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getResidual(self, u, r):
         import pdb
         import copy
-        from proteus.flcbdfWrappers import globalSum
         """
         Calculate the element residuals and add in to the global residual
         """
@@ -701,20 +793,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.numericalFlux.setDirichletValues(self.ebqe)
 
         # flux boundary conditions
-        for t, g in self.fluxBoundaryConditionsObjectsDict[
-                0].advectiveFluxBoundaryConditionsDict.iteritems():
-            self.ebqe[
-                ('advectiveFlux_bc', 0)][
-                t[0], t[1]] = g(
-                self.ebqe[
-                    ('x')][
-                    t[0], t[1]], self.timeIntegration.t)
+        for t, g in list(self.fluxBoundaryConditionsObjectsDict[
+                0].advectiveFluxBoundaryConditionsDict.items()):
+            self.ebqe[('advectiveFlux_bc', 0)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
             self.ebqe[('advectiveFlux_bc_flag', 0)][t[0], t[1]] = 1
-        for t,g in self.fluxBoundaryConditionsObjectsDict[
-                0].diffusiveFluxBoundaryConditionsDictDict[0].iteritems():
+        for t, g in list(self.fluxBoundaryConditionsObjectsDict[
+                0].diffusiveFluxBoundaryConditionsDictDict[0].items()):
             self.ebqe[('diffusiveFlux_bc',0,0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
-            self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1
-
+            self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1 
+        if self.coefficients.fixNullSpace and self.comm.rank() == 0:
+            self.u[0].dof[0] = 0
         self.presinc.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -738,18 +826,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # physics
             self.mesh.nElements_global,
             self.numericalFlux.isDOFBoundary[0],
-            self.ebqe[('advectiveFlux_bc_flag', 0)],
+            self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
             self.u[0].femSpace.dofMap.l2g,
             self.u[0].dof,
             self.coefficients.fluidModel.timeIntegration.alpha_bdf,
-            self.coefficients.fluidModel.q[('velocity',0)],
+            self.coefficients.fluidModel.q[('velocity', 0)],
+            self.coefficients.fluidModel.q['divU'],
             self.coefficients.fluidModel.coefficients.q_velocity_solid,
             self.coefficients.fluidModel.coefficients.q_vos,
             self.coefficients.fluidModel.coefficients.rho_s,
             self.coefficients.fluidModel.coefficients.q_rho,
             self.coefficients.rho_s_min,
             self.coefficients.rho_f_min,
-            self.coefficients.fluidModel.ebqe[('velocity',0)],
+            self.coefficients.fluidModel.ebqe[('velocity', 0)],
             self.coefficients.fluidModel.coefficients.ebqe_velocity_solid,
             self.coefficients.fluidModel.coefficients.ebqe_vos,
             self.coefficients.fluidModel.coefficients.ebqe_rho,
@@ -757,22 +846,29 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('grad(u)', 0)],
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
-            self.numericalFlux.ebqe[('u',0)],
+            self.numericalFlux.ebqe[('u', 0)],
             self.ebqe[('advectiveFlux', 0)],
             self.ebqe[('diffusiveFlux', 0, 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
+            self.ebqe[('diffusiveFlux_bc', 0, 0)],
             self.offset[0], self.stride[0],
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray)
+            self.mesh.elementBoundaryLocalElementBoundariesArray, 
+            self.coefficients.INTEGRATE_BY_PARTS_DIV_U,
+            self.q['a'],
+            self.ebqe['a'])
+
+        if self.coefficients.fixNullSpace and self.comm.rank() == 0:
+            r[0] = 0.
         log("Global residual", level=9, data=r)
-        #turn this on to view the global conservation residual
-        #it should be the same as the linear solver residual tolerance
-        #self.coefficients.massConservationError = fabs(
+        # turn this on to view the global conservation residual
+        # it should be the same as the linear solver residual tolerance
+        # self.coefficients.massConservationError = fabs(
         #    globalSum(r[:self.mesh.nNodes_owned].sum()))
-        #log("   Mass Conservation Error", level=3,
+        # log("   Mass Conservation Error", level=3,
         #    data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
 
@@ -800,18 +896,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.mesh.nElements_global,
             self.numericalFlux.isDOFBoundary[0],
-            self.ebqe[('advectiveFlux_bc_flag', 0)],
+            self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
             self.u[0].femSpace.dofMap.l2g,
             self.u[0].dof,
             self.coefficients.fluidModel.timeIntegration.alpha_bdf,
-            self.coefficients.fluidModel.q[('velocity',0)],
+            self.coefficients.fluidModel.q[('velocity', 0)],
             self.coefficients.fluidModel.coefficients.q_velocity_solid,
             self.coefficients.fluidModel.coefficients.q_vos,
             self.coefficients.fluidModel.coefficients.rho_s,
             self.coefficients.fluidModel.coefficients.q_rho,
             self.coefficients.rho_s_min,
             self.coefficients.rho_f_min,
-            self.coefficients.fluidModel.ebqe[('velocity',0)],
+            self.coefficients.fluidModel.ebqe[('velocity', 0)],
             self.coefficients.fluidModel.coefficients.ebqe_velocity_solid,
             self.coefficients.fluidModel.coefficients.ebqe_vos,
             self.coefficients.fluidModel.coefficients.ebqe_rho,
@@ -822,6 +918,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.csrColumnOffsets_eb[(0, 0)])
+
+        if self.coefficients.fixNullSpace and self.comm.rank() == 0:
+            dofN = 0
+            global_dofN = self.offset[0] + self.stride[0] * dofN
+            for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                else:
+                    self.nzval[i] = 0.0
+
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
@@ -868,8 +974,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                             self.ebqe['sqrt(det(g))'],
                                                                             self.ebqe['n'])
         cfemIntegrals.calculateIntegrationWeights(self.ebqe['sqrt(det(g))'],
-                                                  self.elementBoundaryQuadratureWeights[('u',0)],
-                                                  self.ebqe[('dS_u',0)])
+                                                  self.elementBoundaryQuadratureWeights[('u', 0)],
+                                                  self.ebqe[('dS_u', 0)])
         self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(
             self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(
@@ -879,14 +985,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisGradientValuesTraceRef(
             self.elementBoundaryQuadraturePoints)
         log("setting flux boundary conditions")
-        self.fluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
-                                                                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                                  self.ebqe[('x')],
-                                                                                  self.advectiveFluxBoundaryConditionsSetterDict[cj],
-                                                                                  self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
-                                                       for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
+        self.fluxBoundaryConditionsObjectsDict = dict([(cj, FluxBoundaryConditions(self.mesh,
+                                                                                   self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                                   self.ebqe[('x')],
+                                                                                   self.advectiveFluxBoundaryConditionsSetterDict[cj],
+                                                                                   self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
+                                                       for cj in list(self.advectiveFluxBoundaryConditionsSetterDict.keys())])
         log("initializing coefficients ebqe")
-        self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
+        self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t, self.ebqe)
 
     def estimate_mt(self):
         pass

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from __future__ import print_function
 import sys
 import os
 import glob
@@ -14,9 +15,9 @@ for pf1 in pFiles:
             nf1Set=set(glob.glob(pf1[:-5]+'*_n.py'))
             caseDict[pf2] -= nf1Set
 for pf in pFiles:
-    print pf
-    print caseDict[pf]
-for p,nList in caseDict.iteritems():
+    print(pf)
+    print(caseDict[pf])
+for p,nList in caseDict.items():
     if len(nList) == 0:
         sys.stdout.write("\n----------------Skipping "+p+".  No n file----------------------\n")
         sys.stdout.flush()

@@ -1,0 +1,4 @@
+2D_poisson_hex_degree2.h5 filter=lfs diff=lfs merge=lfs -text
+2D_poisson_simplex_degree2.h5 filter=lfs diff=lfs merge=lfs -text
+3D_poisson_hex_degree2.h5 filter=lfs diff=lfs merge=lfs -text
+3D_poisson_simplex_degree2.h5 filter=lfs diff=lfs merge=lfs -text

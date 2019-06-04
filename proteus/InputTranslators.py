@@ -4,10 +4,17 @@ Classes for taking input in other formats
 .. inheritance-diagram:: proteus.InputTranslators
    :parts: 1
 """
+from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from proteus.EGeometry import *
 from .Profiling import logEvent
 
-class GF:
+class GF(object):
     """
     Read a file from the vessel database an set up in a domain.
     """
@@ -84,7 +91,7 @@ class GF:
                     fvertex =  (float(location),
                                float(vertex[0]),
                                float(vertex[1]))
-                    if not vertexDictSec.has_key(fvertex):
+                    if fvertex not in vertexDictSec:
                         vertexDictSec[fvertex] = nV; nV+=1
                     section['vertexList'].append((vertexDictSec[fvertex],fvertex))
                 #check for thin section
@@ -139,7 +146,7 @@ class GF:
                     fvertex =  (p[1][0],
                                 -p[1][1],
                                 p[1][2])
-                    if not vertexDict.has_key(fvertex):
+                    if fvertex not in vertexDict:
                         vertexDict[fvertex] = nV; nV+=1
                         section_right['nVertices']+=1
                         section_right['vertexList'].append((vertexDict[fvertex],fvertex))
@@ -147,8 +154,8 @@ class GF:
                         section_right['vertexList'].append((vertexDict[fvertex],fvertex))
                 if section_right['vertexList'][0] != section_right['vertexList'][-1]:
                     section_right['vertexList'].append(section_right['vertexList'][0])
-            vertexList = vertexDict.keys()
-            for v,vN in vertexDict.iteritems():
+            vertexList = list(vertexDict.keys())
+            for v,vN in vertexDict.items():
                 vertexList[vN] = v
             #shell thickness
             if "PROP" not in lines[nl]:
@@ -179,14 +186,14 @@ class GF:
             else:
                 fList.append([p[0] for p in pList])
                 ftList.append(self.facetTypes['solid'])
-        for shape in shapes.values():
+        for shape in list(shapes.values()):
             #front and back facet
             if sN_restrict == -1:
                 appendEndFacets(shape['sections'][0]['vertexList'],facets,facetFlags)
                 appendEndFacets(shape['sections'][shape['nSections']-1]['vertexList'],facets,facetFlags)
-                sectionsToInclude = range(shape['nSections']-1)
+                sectionsToInclude = list(range(shape['nSections']-1))
             else:
-                if shape == shapes.values()[0]:
+                if shape == list(shapes.values())[0]:
                     appendEndFacets(shape['sections'][sN_restrict]['vertexList'],facets,facetFlags)
                     appendEndFacets(shape['sections'][sN_restrict+1]['vertexList'],facets,facetFlags)
                     sectionsToInclude = [sN_restrict]
@@ -209,7 +216,7 @@ class GF:
                     if points_sNp1.count(pN) > 1:
                         nLoops_sNp1 +=0.25
                 if nLoops_sN > nLoops_sNp1:
-                    logEvent("***********non-matching loops************ "+`nLoops_sN`+" "+`nLoops_sNp1`)
+                    logEvent("***********non-matching loops************ "+repr(nLoops_sN)+" "+repr(nLoops_sNp1))
                     #split points_sN into two loops
                     loop_1_sN=[points_sN.pop(0)]
                     loop_2_sN=[]
@@ -248,17 +255,17 @@ class GF:
                     if min_edge_loop_2_sNp1 < min_edge_loop_1_sNp1:
                         if max_edge_loop_2_sNp1 < min_edge_loop_1_sNp1:
                             pList_sN = [(pN,vertexList[pN]) for pN in loop_2_sN]
-                            print "cut loop"
+                            print("cut loop")
                             facets.append(loop_1_sN[:-1])
                             facetFlags.append(self.facetTypes['solid'])
                     elif min_edge_loop_1_sNp1 < min_edge_loop_2_sNp1:
                         if max_edge_loop_1_sNp1 < min_edge_loop_2_sNp1:
                             pList_sN = [(pN,vertexList[pN]) for pN in loop_1_sN]
-                            print "cut loop"
+                            print("cut loop")
                             facets.append(loop_2_sN[:-1])
                             facetFlags.append(self.facetTypes['solid'])
                 if nLoops_sNp1 > nLoops_sN:
-                    logEvent("***********non-matching loops************ "+`nLoops_sN`+" "+`nLoops_sNp1`)
+                    logEvent("***********non-matching loops************ "+repr(nLoops_sN)+" "+repr(nLoops_sNp1))
                     #split points_sN into two loops
                     loop_1_sNp1=[points_sNp1.pop(0)]
                     loop_2_sNp1=[]
@@ -297,13 +304,13 @@ class GF:
                     if min_edge_loop_2_sN < min_edge_loop_1_sN:
                         if max_edge_loop_2_sN < min_edge_loop_1_sN:
                             pList_sNp1 = [(pN,vertexList[pN]) for pN in loop_2_sNp1]
-                            print "cut loop"
+                            print("cut loop")
                             facets.append(loop_1_sNp1[:-1])
                             facetFlags.append(self.facetTypes['solid'])
                     elif min_edge_loop_1_sN < min_edge_loop_2_sN:
                         if max_edge_loop_1_sN < min_edge_loop_2_sN:
                             pList_sNp1 = [(pN,vertexList[pN]) for pN in loop_1_sNp1]
-                            print "cut loop"
+                            print("cut loop")
                             facets.append(loop_2_sNp1[:-1])
                             facetFlags.append(self.facetTypes['solid'])
                 if len(pList_sN) > len(pList_sN):
@@ -312,8 +319,8 @@ class GF:
                 else:
                     pShort=pList_sN
                     pLong=pList_sNp1
-                print pLong
-                print pShort
+                print(pLong)
+                print(pShort)
                 #assume first vertex in lists should be connected (could do nearest neighbor search)
                 pNL=0
                 pN=0
@@ -367,8 +374,8 @@ class GF:
                     facetFlags.append(self.facetTypes['solid'])
                     pNL+=1
                 #assert(pLong[pNL][0] in facets[-1] and pShort[pN][0] in facets[-1])
-                print pLong[0],pLong[-1]
-                print pShort[0],pShort[-1]
+                print(pLong[0],pLong[-1])
+                print(pShort[0],pShort[-1])
                 assert(pLong[0][0] == pLong[-1][0] and pShort[0][0] == pShort[-1][0])
                 assert(pLong[0][0] in facets[-1] and pShort[0][0] in facets[-1])
 #                assert(pNL == len(pLong)-1 and pN == len(pShort)-1)
@@ -391,7 +398,7 @@ class GF:
         for f in facets:
             if facets.count(f) > 1:
                 for i in range(facets.count(f)):
-                    logEvent("***********deleting repeated facet************ "+`f`)
+                    logEvent("***********deleting repeated facet************ "+repr(f))
                     I = facets.index(f)
                     del facets[I]
                 #mwf delete facetFlag too?
@@ -484,12 +491,12 @@ class GF:
         if sN_restrict == -1:
             pN0=0
             pf.write(str(len(vertexDict))+' 3 0 1\n')
-            vertexList = [(pN+1,p[0],p[1],p[2],0) for p,pN in vertexDict.iteritems()]
+            vertexList = [(pN+1,p[0],p[1],p[2],0) for p,pN in vertexDict.items()]
             vertexList.sort()
             for p in vertexList:
                 pf.write('%d %e %e %e %d\n' % p)
         else:
-            shapeList=shapes.values()
+            shapeList=list(shapes.values())
             vertexSet=set()
             for sN in sectionsToInclude:
                 vertexSet |= set(shapeList[-1]['sections'][sN]['vertexList'])
@@ -521,7 +528,7 @@ class GF:
         pf.close()
 
 
-class Ipars:
+class Ipars(object):
     """
     Extract as much as possible from and IPARS input file
     """
@@ -571,7 +578,7 @@ class Ipars:
                                     values[key].append(eval(val))
                             except:
                                 values[key].append(val)
-        for key,value in values.iteritems():
+        for key,value in values.items():
             logEvent(key+":"+str(value))
         #
         #MESH. Write a poly file matching the grid
@@ -690,7 +697,7 @@ class Ipars:
         self.L=(Lx*0.3048,Ly*0.3048,Lz*0.3048)
 
 
-class ADH_metfile:
+class ADH_metfile(object):
     """
     read an ADH met file for boundary conditions etc
     """
@@ -720,23 +727,23 @@ class ADH_metfile:
         self.entries = {'day':0,'hour':1,'min':2}
         for  i,label in enumerate(self.full_file[3].split()[2:]):
             self.entries[label] = i+3
-        for entry in self.entries.keys():
+        for entry in list(self.entries.keys()):
             self.data[entry] = numpy.zeros((self.npoints),'d')
 
         for i,line in enumerate(self.full_file[5:]):
-            for entry,column in self.entries.iteritems():
+            for entry,column in self.entries.items():
                 self.data[entry][i] = float(line.split()[column])
 
         #generate a time entry out of hours days minutes
         self.time_unit = 'day' #hour, sec
         self.data['time'] = numpy.zeros((self.npoints),'d')
-        self.data['time'] = self.data['day']+self.data['hour']/24.0 + self.data['min']/(24.*60.)
+        self.data['time'] = self.data['day']+old_div(self.data['hour'],24.0) + old_div(self.data['min'],(24.*60.))
     def getValue(self,entry,t):
         """
         lookup value of entry at time t
         """
-        if entry not in self.data.keys():
-            print "ADH_metfile entry= %s not found " % entry
+        if entry not in list(self.data.keys()):
+            print("ADH_metfile entry= %s not found " % entry)
             return None
         if entry in ['latitude','longitude','zone']:
             return self.data[entry]

@@ -5,6 +5,12 @@ along lines to mimic gauges in lab and field experiments.
    :parts: 1
 
 """
+from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import os
 from collections import defaultdict, OrderedDict
 from itertools import product
@@ -190,6 +196,7 @@ class Gauges(AV_base):
         self.dofsVecs = []
         self.pointGaugeVecs = []
         self.segments = []
+        self.adapted = False
 
         self.isPointGauge = bool(points)
         self.isLineGauge = bool(lines) and not integrate
@@ -310,13 +317,17 @@ class Gauges(AV_base):
 
         numLocalQuantities = sum([len(self.measuredQuantities[field]) for field in self.fields])
         self.localQuantitiesBuf = np.zeros(numLocalQuantities)
-
         if self.gaugeComm.rank != 0:
             self.globalQuantitiesBuf = None
             self.globalQuantitiesCounts = None
         else:
-            self.fileName = os.path.join(Profiling.logDir, self.fileName)
-            self.file = open(self.fileName, 'w')
+            if self.adapted:
+              if(Profiling.logDir not in self.fileName):
+                self.fileName = os.path.join(Profiling.logDir, self.fileName)                
+              self.file = open(self.fileName, 'a')
+            else:
+              self.fileName = os.path.join(Profiling.logDir, self.fileName)
+              self.file = open(self.fileName, 'w')
 
             if self.isLineIntegralGauge:
                 #Only need to set up mapping for point gauges
@@ -449,7 +460,7 @@ class Gauges(AV_base):
 
         points = self.points
 
-        for point, l_d in points.iteritems():
+        for point, l_d in points.items():
             if 'nearest_node' not in l_d:
                 # TODO: Clarify assumption here about all fields sharing the same element mesh
                 field_id = self.fieldNames.index(list(l_d['fields'])[0])
@@ -481,7 +492,8 @@ class Gauges(AV_base):
 
         for field, field_id in zip(self.fields, self.field_ids):
             m = PETSc.Mat().create(PETSc.COMM_SELF)
-            m.setSizes([len(self.measuredQuantities[field]), self.num_owned_nodes])
+            m.setSizes([len(self.measuredQuantities[field]),
+                        self.u[field_id].femSpace.dim])
             m.setType('aij')
             m.setUp()
             # matrices are a list in same order as fields
@@ -551,11 +563,11 @@ class Gauges(AV_base):
 
                 segment_length, proc_rank, segment = longest_segment
                 if segment_length == 0:
-                    print segment_pos
-                    print 'segments'
-                    for segment in selected_segments: print segment
-                    print 'length_segments'
-                    for length_segment in length_segments: print length_segment
+                    print(segment_pos)
+                    print('segments')
+                    for segment in selected_segments: print(segment)
+                    print('length_segments')
+                    for length_segment in length_segments: print(length_segment)
                     raise FloatingPointError("Unable to identify next segment while segmenting, are %s in domain?" %
                                              str(endpoints))
                 logEvent("Identified best segment of length %g on %d: %s" % (segment_length, proc_rank, str(segment)), 9)
@@ -591,7 +603,7 @@ class Gauges(AV_base):
         endpoints = np.asarray(endpoints, np.double)
         length = norm(endpoints[1] - endpoints[0])
 
-        length_segments = [(norm(i[0]-endpoints[0])/length, norm(i[1]-endpoints[0])/length, i) for i in intersections]
+        length_segments = [(old_div(norm(i[0]-endpoints[0]),length), old_div(norm(i[1]-endpoints[0]),length), i) for i in intersections]
 
         segments = self.pruneDuplicateSegments(endpoints, length_segments)
         return segments
@@ -637,7 +649,7 @@ class Gauges(AV_base):
                     # only assign coefficients for locally owned points
                     if field in point_data:
                         pointID = point_data[field]
-                        self.lineIntegralGaugeMats[fieldIndex].setValue(lineIndex, pointID, segmentLength/2, addv=True)
+                        self.lineIntegralGaugeMats[fieldIndex].setValue(lineIndex, pointID, old_div(segmentLength,2), addv=True)
 
         for m in self.lineIntegralGaugeMats:
             m.assemble()
@@ -662,7 +674,7 @@ class Gauges(AV_base):
             lineSegments = self.getMeshIntersections(line)
             self.addLineGaugePoints(line, lineSegments)
             linesSegments.append(lineSegments)
-
+  
         self.identifyMeasuredQuantities()
 
         self.buildGaugeComm()
@@ -671,7 +683,10 @@ class Gauges(AV_base):
             self.initOutputWriter()
             self.buildPointGaugeOperators()
             self.buildLineIntegralGaugeOperators(self.lines, linesSegments)
-            self.outputHeader()
+            if self.adapted:
+              pass
+            else:
+              self.outputHeader()
         return self
 
     def get_time(self):
@@ -683,7 +698,6 @@ class Gauges(AV_base):
         """ Outputs a single header for a CSV style file to self.file"""
 
         assert self.isGaugeOwner
-
         if self.gaugeComm.rank == 0:
             self.file.write("%10s" % ('time',))
             if self.isPointGauge or self.isLineGauge:
@@ -723,7 +737,7 @@ class Gauges(AV_base):
             globalLineIntegralGaugeBuf = []
 
         if self.gaugeComm.rank == 0:
-            self.file.write("%10.4e" % time)
+            self.file.write("%25.15e" % time)
             if self.isPointGauge or self.isLineGauge:
                 for id in self.globalQuantitiesMap:
                     self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))
