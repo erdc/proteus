@@ -1,8 +1,8 @@
 #include "mesh.h"
-#include "cmeshToolsModule.h"
 #include <apf.h>
 #include <apfMesh2.h>
 #include <apfNumbering.h>
+#include <queue>
 
 /**
    \file MeshAdaptPUMI.h
@@ -18,17 +18,22 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double); 
+  MeshAdaptPUMIDrvr(double, double, double, int, int, int, const char*, const char*,const char*,double,double,int,double,double); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
+  int loadMeshForAnalytic(const char* meshFile,double* boxDim, double* sphereCenter, double radius); //mesh and construct analytic geometry
+  void writeMesh(const char* meshFile);
+  void cleanMesh();
 
   //Functions to construct proteus mesh data structures
   int reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int hasModel);
+  int reconstructFromProteus2(Mesh& mesh, int* isModelVert, int* bFaces);
   int constructFromSerialPUMIMesh(Mesh& mesh);
   int constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
   int updateMaterialArrays(Mesh& mesh,int dim, int bdryID, int GeomTag);
   int updateMaterialArrays(Mesh& mesh);
+  int updateMaterialArrays2(Mesh& mesh);
   void numberLocally();
   int localNumber(apf::MeshEntity* e);
   int dumpMesh(Mesh& mesh);
@@ -44,17 +49,27 @@ class MeshAdaptPUMIDrvr{
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double interfaceBandSize);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 
   //MeshAdapt functions
   int willAdapt();
-  int adaptPUMIMesh();
-  int calculateSizeField();
+  int willErrorAdapt();
+  int willInterfaceAdapt();
+  int adaptPUMIMesh(const char* input);
+  int setSphereSizeField();
+  int calculateSizeField(double L_band);
+  void predictiveInterfacePropagation();
+
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
+  int gradeMesh();
+
+  //analytic geometry
+  gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
+  void updateSphereCoordinates(double*sphereCenter);
 
   //Quality Check Functions
   double getMinimumQuality();
@@ -64,13 +79,20 @@ class MeshAdaptPUMIDrvr{
   double getMPvalue(double field_val,double val_0, double val_1); //get the multiphase value of physical properties
   apf::Field* getViscosityField(apf::Field* voff); //derive a field of viscosity based on VOF field
 
+  //needed for checkpointing/restart
+  void set_nAdapt(int numberAdapt);
 
   //Public Variables
-  double hmax, hmin; //bounds on mesh size
+  double hmax, hmin, hPhi; //bounds on mesh size
   int numIter; //number of iterations for MeshAdapt
   int nAdapt; //counter for number of adapt steps
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
+  int maxAspect; //maximum aspect ratio
+  int adaptMesh; //is adaptivity turned on?
+  int numAdaptSteps; //Number adaptivity
+  double N_interface_band; //number of elements in half-band around interface
+  double gradingFactor;
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic
@@ -84,6 +106,9 @@ class MeshAdaptPUMIDrvr{
   int getSimmetrixBC();
   void removeBCData();
   char* modelFileName; 
+  
+  //VMS
+  void get_VMS_error(double& total_error_out);
   
   //tags used to identify types of BC
   apf::MeshTag* BCtag;
@@ -116,11 +141,12 @@ class MeshAdaptPUMIDrvr{
 
   double rho[2], nu[2];
   double g[3];
-  double delta_t;
+  double delta_T;
   apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
+  apf::Field* vmsErrH1; //error field for VMS
   apf::Field* errRho_reg; //error-density field from ERM
   apf::Field* errRel_reg; //relative error field from ERM
   /* this field stores isotropic size */
@@ -128,6 +154,10 @@ class MeshAdaptPUMIDrvr{
   /* these fields store anisotropic size and metric tensor */
   apf::Field* size_scale;
   apf::Field* size_frame;
+
+  //queue for size fields
+  std::queue<apf::Field*> sizeFieldList;
+  void isotropicIntersect();
 
   int constructGlobalNumbering(Mesh& mesh);
   int constructGlobalStructures(Mesh& mesh);

@@ -10,10 +10,12 @@ import os
 import sys
 import inspect
 import numpy
+import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 import singlephase_mass_matrix_THQuad_2D_4 as sp_mm_2d_THQuad
 
+@pytest.mark.LinearSolvers
 class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Verify construction of 2D Mass Matrix using transport coefficients """
 

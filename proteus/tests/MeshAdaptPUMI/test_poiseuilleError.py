@@ -1,3 +1,4 @@
+from builtins import range
 import numpy
 from proteus import MeshTools
 from proteus import cmeshTools
@@ -23,13 +24,14 @@ def test_poiseuilleError(verbose=0):
     domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic',logType='off')
     domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
     domain.faceList=[[80],[76],[42],[24],[82],[78]]
+    domain.boundaryLabels = [1,2,3,4,5,6]
 
     mesh = MeshTools.TetrahedralMesh()
     mesh.cmesh = cmeshTools.CMesh()
     comm = Comm.init()
 
     nElements_initial = mesh.nElements_global
-    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList, domain.regList,parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain,domain.PUMIMesh, domain.faceList, domain.regList,parallel = comm.size() > 1, dim = domain.nd)
 
     domain.PUMIMesh.transferFieldToPUMI("coordinates",mesh.nodeArray)
 
@@ -37,7 +39,9 @@ def test_poiseuilleError(verbose=0):
     rho = numpy.array([998.2,998.2])
     nu = numpy.array([1.004e-6, 1.004e-6])
     g = numpy.asarray([0.0,0.0,0.0])
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
+    deltaT = 1.0 #dummy number 
+    epsFact = 1.0 #dummy number 
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
 
     #Poiseuille Flow
     Ly=0.2

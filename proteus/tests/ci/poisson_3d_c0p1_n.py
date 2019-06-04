@@ -1,6 +1,10 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from poisson_3d_p import *
+try:
+    from .poisson_3d_p import *
+except:
+    from poisson_3d_p import *
 reload(default_n)
 
 #steady-state so no time integration

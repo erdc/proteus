@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 
@@ -69,9 +72,9 @@ coefficients = ShallowWater(g=g,
 #initial condition functions
 
 #for depth
-class DamBreakIC:
+class DamBreakIC(object):
     def __init__(self,Lx,HL,HR):
-        self.xc = Lx/2.0
+        self.xc = old_div(Lx,2.0)
         self.HL=HL
         self.HR=HR
     def uOfXT(self,x,t):
@@ -82,7 +85,7 @@ class DamBreakIC:
             h = self.HR
         return h
 #for momentum
-class ZeroIC:
+class ZeroIC(object):
     def uOfXT(self,x,t):
         return 0.0
 

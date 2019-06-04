@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import print_function
+from builtins import range
 from numpy import *
 import proteus
 from proteus.MeshTools import *
@@ -59,13 +61,13 @@ def readFun():
     data = []
     for i in range(6):
         line = funIn.readline()
-        print line.strip()
+        print(line.strip())
         words = line.split()
         if words[0] == 'ND':
             nNodes = int(words[1])
     line = funIn.readline()
     while line.strip() != 'ENDDS':
-        print "Reading "+line.strip()
+        print("Reading "+line.strip())
         words = line.split()
         u = zeros(nNodes,Float)
         for i in range(nNodes):
@@ -76,7 +78,7 @@ def readFun():
                                             LinearNodalBasisTet(),
                                             NodalInterpolationConditions(mesh)))
         line = funIn.readline()
-    print "Read %i timesteps" % len(fun)
+    print("Read %i timesteps" % len(fun))
     #find maximum coorindates (assume they are positive)
     nodesX = mesh.nodeArray[:][0]
     nodesY = mesh.nodeArray[:][1]
@@ -91,9 +93,9 @@ def readFun():
     Lx = maxx - minx
     Ly = maxy - miny
     Lz = maxz - minz
-    print "Building rectangular output grid ["+`minx`+","+`maxx`+"] (x), [" + \
-          `miny`+","+`maxy`+"] (y), [" + \
-          `minz`+","+`maxz`+"] (z)"
+    print("Building rectangular output grid ["+repr(minx)+","+repr(maxx)+"] (x), [" + \
+          repr(miny)+","+repr(maxy)+"] (y), [" + \
+          repr(minz)+","+repr(maxz)+"] (z)")
     outputGrid = RectangularGrid(opts.nx,opts.ny,opts.nz,Lx,Ly,Lz)
     #now compute the projection of the mesh and solution onto this grid
     eList={}
@@ -104,7 +106,7 @@ def readFun():
     for k in range(outputGrid.nz):
         for j in range(outputGrid.ny):
             for i in range(outputGrid.nx):
-                X = outputGrid.getNode(i,j,k)+offSet
+                X = outputGrid.get_node(i,j,k)+offSet
                 e = spaceMap.findElement(X)
                 eList[(i,j,k)]=e
                 if e!='OFFMESH':
@@ -120,7 +122,7 @@ def readFun():
     zOut.close()
     U = zeros((opts.nx,opts.ny,opts.nz),Float)
     for ts,f in enumerate(fun):
-        funOut = open(funOutFilename+`ts`+'.grf','w')
+        funOut = open(funOutFilename+repr(ts)+'.grf','w')
         for k in range(outputGrid.nz):
             for j in range(outputGrid.ny):
                 for i in range(outputGrid.nx):

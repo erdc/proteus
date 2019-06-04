@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import glob
 files = glob.glob('*.py') + glob.glob('*.cpp') + glob.glob('*.c') + glob.glob('*.h')  + glob.glob('*.pxd')
-print files
+print(files)
 for f in files:
     if f != "replacePYADH.py":
         fh = open(f,'r')

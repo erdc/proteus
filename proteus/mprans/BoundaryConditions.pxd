@@ -3,6 +3,9 @@ from libcpp cimport bool
 cimport numpy as np
 from proteus.BoundaryConditions cimport (BC_Base,
                                          BoundaryCondition)
+# needed for cython > 0.27
+from proteus cimport BoundaryConditions
+
 ctypedef double[:,:,:] double_memview3
 ctypedef double[:,:] double_memview2
 ctypedef double[:] double_memview1
@@ -28,6 +31,7 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition vof_dirichlet
         cdef BoundaryCondition k_dirichlet
         cdef BoundaryCondition dissipation_dirichlet
+        cdef BoundaryCondition pAddedMass_dirichlet
         # advective
         cdef BoundaryCondition p_advective
         cdef BoundaryCondition u_advective
@@ -49,6 +53,31 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition u_stress
         cdef BoundaryCondition v_stress
         cdef BoundaryCondition w_stress
+        # sediment solver
+        cdef BoundaryCondition us_dirichlet
+        cdef BoundaryCondition vs_dirichlet
+        cdef BoundaryCondition ws_dirichlet
+        cdef BoundaryCondition vos_dirichlet
+        cdef BoundaryCondition us_advective
+        cdef BoundaryCondition vs_advective
+        cdef BoundaryCondition ws_advective
+        cdef BoundaryCondition vos_advective
+        cdef BoundaryCondition us_diffusive
+        cdef BoundaryCondition vs_diffusive
+        cdef BoundaryCondition ws_diffusive
+        # projection scheme
+        cdef BoundaryCondition pInit_dirichlet
+        cdef BoundaryCondition pInc_dirichlet
+        cdef BoundaryCondition pInit_advective
+        cdef BoundaryCondition pInc_advective
+        cdef BoundaryCondition pInit_diffusive
+        cdef BoundaryCondition pInc_diffusive
+        # clsvof
+        cdef BoundaryCondition clsvof_dirichlet
+        cdef BoundaryCondition clsvof_advective
+        cdef BoundaryCondition clsvof_diffusive
+
+
         # functions
         # cpdef void reset(self)
         # cpdef void setNonMaterial(self)

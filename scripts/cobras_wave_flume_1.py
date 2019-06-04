@@ -110,7 +110,7 @@ poly = open('cobras_wave_flume_1.poly','w')
 poly.write('%d %d %d %d \n' % (nvertices,2,0,0))
 #write vertices
 poly.write("#vertices \n")
-for key,p in vertices.iteritems():
+for key,p in vertices.items():
     poly.write('%d %12.5e %12.5e #%s \n' % (vertexId[key]+1,xshift+p[0],yshift+p[1],key))
 #write segments
 nSegments = len(segments)

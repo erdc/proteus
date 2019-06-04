@@ -1,3 +1,8 @@
+"""
+This file declares a list of C++ objects from Chrono that can be used in
+ cython files.
+"""
+
 
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -5,7 +10,7 @@ from libcpp cimport bool
 from libcpp.memory cimport (shared_ptr,
                             make_shared)
 
-cdef extern from "ChMoorings.h":
+cdef extern from "ProtChMoorings.h":
 
     # ------- CORE ------- #
 
@@ -13,7 +18,9 @@ cdef extern from "ChMoorings.h":
         double x()
         double y()
         double z()
-        ChVector(double x, double y, double z)
+        ChVector(double x,
+                 double y,
+                 double z)
         ChVector()
 
     cdef cppclass ChQuaternion[double]:
@@ -21,29 +28,96 @@ cdef extern from "ChMoorings.h":
         double e1()
         double e2()
         double e3()
-        ChQuaternion(double e0, double e1, double e2, double e3)
+        ChQuaternion(double e0,
+                     double e1,
+                     double e2,
+                     double e3)
         ChQuaternion()
 
-    cdef cppclass ChMatrix
+    cdef cppclass ChCoordsys[double]:
+        ChVector pos
+        ChQuaternion rot
+        ChCoordsys()
+        ChCoordsys(ChVector &mv,
+                   ChQuaternion &mq)
+        ChCoordsys(ChVector &mv,
+                   double Alpha,
+                   ChVector &mu)
+
+    cdef cppclass ChMatrix:
+        double GetElement(int row,
+                          int col)
+        double SetElement(int row,
+                          int col,
+                          double element)
 
     cdef cppclass ChMatrix33[double]:
         ChVector Get_A_Xaxis()
         ChVector Get_A_Yaxis()
         ChVector Get_A_Zaxis()
+        double GetElement(int row,
+                          int col)
+        void SetElement(int row,
+                        int col,
+                        double elem)
 
+    cdef cppclass ChMatrixDynamic[double](ChMatrix):
+        ChMatrixDynamic()
+        ChMatrixDynamic(const int row,
+                        const int col)
+        ChMatrixDynamic operator=(const ChMatrix& matbis)
+        ChMatrixDynamic operator+(const ChMatrix& matbis)
+        ChVector Get_A_Xaxis()
+        ChVector Get_A_Yaxis()
+        ChVector Get_A_Zaxis()
+
+    cdef cppclass ChTriangle:
+        ChTriangle(const ChVector &mp1,
+                   const ChVector &mp2,
+                   const ChVector &mp3)
+
+    cdef cppclass ChTriangleMesh:
+        void addTriangle(const ChVector &vertex0,
+                         const ChVector &vertex1,
+                         const ChVector &vertex2)
+        void addTriangle(const ChTriangle &atriangle)
+
+    cdef cppclass ChTriangleMeshConnected(ChTriangleMesh):
+        ChTriangleMeshConnected()
+        vector[ChVector[double]]& getCoordsVertices()
+        vector[ChVector[double]]& getCoordsNormals()
+        vector[ChVector[int]]& getIndicesVertexes()
+        void LoadWavefrontMesh(string filename,
+                               bool load_normals=True,
+                               bool load_uv=False)
+
+    cdef cppclass ChCollisionModel:
+        bool AddTriangleMesh(shared_ptr[ChTriangleMesh] trimesh,
+                             bool is_static,
+                             bool is_convex,
+                             const ChVector &pos,
+                             const ChMatrix33 &rot,
+                             double sphereswept_thickness)
+        void SetEnvelope(double amargin)
+        void SetSafeMargin(double amargin)
+        void ClearModel()
+        void BuildModel()
+
+    ChQuaternion Q_from_AngAxis(double angle,
+                                const ChVector &axis)
 
     # ------- PHYSICS ------- #
 
     cdef cppclass ChSystem:
         void Add(shared_ptr[ChPhysicsItem] newitem)
         void AddBody(shared_ptr[ChBody] newbody)
+        double GetChTime()
+        void SetupInitial()
 
     cdef cppclass ChSystemSMC:
         void Add(shared_ptr[ChPhysicsItem] newitem)
         void AddBody(shared_ptr[ChBody] newbody)
         double GetStep()
-        double GetChTime()
-        void SetupInitial()
 
     cdef cppclass ChPhysicsItem:
         ChPhysicsItem()
@@ -60,9 +134,13 @@ cdef extern from "ChMoorings.h":
 
     cdef cppclass ChFrameMoving[double](ChFrame):
         ChVector& GetPos_dt()
+        void SetPos_dt(ChVector &pos_dt)
         ChQuaternion& GetRot_dt()
+        void SetRot_dt(ChQuaternion &mrot_dt)
         ChVector& GetPos_dtdt()
+        void SetPos_dtdt(ChVector &mpos_dtdt)
         ChQuaternion& GetRot_dtdt()
+        void SetRot_dtdt(ChQuaternion &mrot_dtdt)
         ChMatrix33 GetA_dt()
         ChMatrix33 GetA_dtdt()
         ChVector GetWvel_loc()
@@ -74,15 +152,24 @@ cdef extern from "ChMoorings.h":
     cdef cppclass ChBody(ChPhysicsItem, ChBodyFrame):
         ChBody() except +
         # void SetRot(ChQuaternion &rot) except +
-        void SetInertiaXX(ChVector &iner)
-        void SetInertiaXY(ChVector &iner)
+        # void SetInertiaXX(ChVector &iner)
+        # void SetInertiaXY(ChVector &iner)
+        # const ChMatrix33& GetInertia()
         void SetBodyFixed(bool state) except +
         void SetMaterialSurface(const shared_ptr[ChMaterialSurface] &mnewsurf) except +
-        void SetMass(double newmass)
-        double GetMass()
+        shared_ptr[ChCollisionModel] GetCollisionModel()
+        void SetCollide(bool state)
+        bool GetCollide()
+        # void SetMass(double newmass)
+        # double GetMass()
 
     cdef cppclass ChBodyEasyBox(ChBody):
-        ChBodyEasyBox(double Xsize, double Ysize, double Zsize, double mdensity, bool collide=False, bool visual_asset=True)
+        ChBodyEasyBox(double Xsize,
+                      double Ysize,
+                      double Zsize,
+                      double mdensity,
+                      bool collide=False,
+                      bool visual_asset=True)
 
 
     # ------- NODES ------- #
@@ -139,10 +226,21 @@ cdef extern from "ChMoorings.h":
         ChElementGeneric()
 
     cdef cppclass ChElementBeam(ChElementGeneric):
-        void EvaluateSectionDisplacement(const double eta, const ChMatrix &displ, ChVector &u_displ, ChVector &u_rotaz)
-        void EvaluateSectionFrame(const double eta, const ChMatrix &displ, ChVector &u_displ, ChQuaternion &rot)
-        void EvaluateSectionForceTorque(const double eta, const ChMatrix &displ, ChVector &Fforce, ChVector &Mtorque)
-        void EvaluateSectionStrain(const double eta, const ChMatrix &displ, ChVector &StrainV)
+        void EvaluateSectionDisplacement(const double eta,
+                                         const ChMatrix &displ,
+                                         ChVector &u_displ,
+                                         ChVector &u_rotaz)
+        void EvaluateSectionFrame(const double eta,
+                                  const ChMatrix &displ,
+                                  ChVector &u_displ,
+                                  ChQuaternion &rot)
+        void EvaluateSectionForceTorque(const double eta,
+                                        const ChMatrix &displ,
+                                        ChVector &Fforce,
+                                        ChVector &Mtorque)
+        void EvaluateSectionStrain(const double eta,
+                                   const ChMatrix &displ,
+                                   ChVector &StrainV)
         double GetMass()
         double GetRestLength()
         void SetRestLength(double ml)
@@ -154,13 +252,18 @@ cdef extern from "ChMoorings.h":
 
     cdef cppclass ChElementBeamANCF:
         void SetNodes(shared_ptr[ChNodeFEAxyzDD] nodeA, shared_ptr[ChNodeFEAxyzDD] nodeB, shared_ptr[ChNodeFEAxyzDD] nodeC)
-        void SetDimensions(double lenX, double beam_h, double beam_w)
+        void SetDimensions(double lenX,
+                           double beam_h,
+                           double beam_w)
         shared_ptr[ChNodeFEAxyzDD] GetNodeA()
         shared_ptr[ChNodeFEAxyzDD] GetNodeB()
         shared_ptr[ChNodeFEAxyzDD] GetNodeC()
         void setAlphaDamp(double a)
         double GetLengthX() const
         double GetMass()
+
+    cdef cppclass ChElementBeamEuler:
+        ChElementBeamEuler()
 
     # ------- SECTIONS ------- #
     cdef cppclass ChBeamSection:
@@ -185,7 +288,8 @@ cdef extern from "ChMoorings.h":
 
 
     cdef cppclass ChMesh:
-        void SetAutomaticGravity(bool mg, int num_points=1)
+        void SetAutomaticGravity(bool mg,
+                                 int num_points=1)
 
     cdef cppclass ChMaterialSurface:
         ChMaterialSurface() except +
@@ -220,19 +324,45 @@ cdef extern from "ChMoorings.h":
 
     cdef cppclass ChContactSurfaceNodeCloud(ChContactSurface):
         ChContactSurfaceNodeCloud()
-        void AddNode(shared_ptr[ChNodeFEAxyz] mnode, const double point_radius=0.001)
-        void AddNode(shared_ptr[ChNodeFEAxyzrot] mnode, const double point_radius=0.001)
+        void AddNode(shared_ptr[ChNodeFEAxyz] mnode,
+                     const double point_radius=0.001)
+        void AddNode(shared_ptr[ChNodeFEAxyzrot] mnode,
+                     const double point_radius=0.001)
         void AddAllNodes(const double point_radius)
 
-    cdef cppclass ChLinkPointFrame:
+    cdef cppclass ChLinkBase:
+        ChVector Get_react_force()
+    
+    cdef cppclass ChLink(ChLinkBase)
+    
+    cdef cppclass ChLinkMate(ChLink)
+    
+    cdef cppclass ChLinkMateGeneric(ChLinkMate)
+        
+    cdef cppclass ChLinkPointFrame(ChLinkBase):
         int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector* pos)
         ChVector GetReactionOnNode()
         ChVector GetReactionOnBody()
         #virtual 
         #int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector[double] *pos=0)
 
-    cdef cppclass ChLinkPointPoint:
+    cdef cppclass ChLinkPointPoint(ChLinkBase):
         #virtual 
         ChLinkPointPoint()
         int Initialize(shared_ptr[ChNodeFEAxyz] anodeA, shared_ptr[ChNodeFEAxyz] anodeB)
+    
 
+cdef extern from "ChBodyAddedMass.h":
+    cdef cppclass ChBodyAddedMass(ChBody):
+        ChBodyAddedMass() except +
+        void SetMass(double newmass)
+        void SetInertia(ChMatrix33& newXInertia)
+        void SetInertiaXX(ChVector& newXInertia)
+        void SetInertiaXY(ChVector& newXInertia)
+        double GetMass()
+        const ChMatrix33& GetInertia()
+        ChVector GetInertiaXX()
+        ChVector GetInertiaXY()
+        void SetMfullmass(ChMatrixDynamic Mfullmass_in)
+        void SetInvMfullmass(ChMatrixDynamic inv_Mfullmass_in)
+    ChBodyAddedMass * newChBodyAddedMass()

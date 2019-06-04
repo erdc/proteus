@@ -1,6 +1,10 @@
+from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from ladr_ss_2d_p import *
+try:
+    from .ladr_ss_2d_p import *
+except:
+    from ladr_ss_2d_p import *
 
 timeIntegration = NoIntegration
 

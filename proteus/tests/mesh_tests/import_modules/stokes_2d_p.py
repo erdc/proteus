@@ -1,9 +1,14 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus import iproteus as ip
 from proteus.default_p import *
 reload(default_p)
 from proteus import Domain
-import stokes_2d
+try:
+    from . import stokes_2d
+except:
+    import stokes_2d
 from proteus import Context
 Context.setFromModule(stokes_2d)
 ct=Context.get()
@@ -44,7 +49,7 @@ if (numeric_scheme!= "C0Q1C0Q1" and numeric_scheme!="THQuads"):
 
 # analytical solution
 
-class pTrue:
+class pTrue(object):
     def __init__(self):
         self.grad_p = L[0]
         pass
@@ -53,7 +58,7 @@ class pTrue:
     def uOfXT(self,x,t):
         return self.uOfX(x)
 
-class uTrue:
+class uTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):
@@ -61,7 +66,7 @@ class uTrue:
     def uOfXT(self,x,t):
         return self.uOfX(x)
 
-class vTrue:
+class vTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):

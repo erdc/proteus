@@ -1,3 +1,4 @@
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from couette import *
@@ -107,26 +108,26 @@ diffusiveFluxBoundaryConditions = {0:{},
                                    2:{2:getDFBC_v},
                                    3:{3:getDFBC_w}}
 
-class PerturbedSurface_p:
+class PerturbedSurface_p(object):
     def __init__(self,waterLevel):
         self.waterLevel=waterLevel
     def uOfXT(self,x,t):
         return hydrostatic_pressure(x)
 
-class AtRest:
+class AtRest(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-class CouetteProfile:
+class CouetteProfile(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         v = Uinf*(x[2])/L[2]
         return v
 
-class Constant:
+class Constant(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

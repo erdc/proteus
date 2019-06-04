@@ -1,6 +1,8 @@
 #include "MeshAdaptPUMI.h"
 #include <apfMesh.h>
 #include <apfShape.h>
+#include <stdio.h>
+#include <string.h>
 
 /** 
  * \file MeshFields.cpp
@@ -114,7 +116,7 @@ int MeshAdaptPUMIDrvr::transferFieldToProteus(const char* name, double* outArray
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p)
+int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p, double deltaT, double interfaceBandSize)
 /**
  * @brief Transfer material properties to the MeshAdaptPUMI class
  * 
@@ -135,6 +137,8 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
   else if(nsd==3){
     g[0] = g_p[0]; g[1] = g_p[1]; g[2] = g_p[2];
   }
+  N_interface_band = interfaceBandSize;
+  delta_T = deltaT;
   return 0;
 }
 
