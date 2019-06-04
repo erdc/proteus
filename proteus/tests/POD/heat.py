@@ -3,6 +3,7 @@
 Fine-scale heat equation solver
 The equation is du/du - Laplace u + u + f(x,y,z,t) = 0
 """
+from __future__ import print_function
 from heat_init import *
 
 physics.name = "heat_3d"
@@ -14,7 +15,7 @@ start = time.time()
 failed=ns.calculateSolution('run1')
 assert(not failed)
 end = time.time() # we measure time required to obtain the fully resolved solution
-print 'Time required was %s seconds' % (end - start)
+print('Time required was %s seconds' % (end - start))
 
 #arrays for using matplotlib's unstructured plotting interface
 x = ns.modelList[0].levelModelList[-1].mesh.nodeArray[:,0]

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 def printFinalSolutionToFile(resFileName,outputFileName,
                              key='u_dof',component=0,meshLevel=0,verbose=0):
     """
@@ -9,7 +10,7 @@ def printFinalSolutionToFile(resFileName,outputFileName,
     """
     import os
     if not os.path.exists(resFileName):
-        print """resFileName= %s not found! """ % resFileName
+        print("""resFileName= %s not found! """ % resFileName)
         return True
     import shelve
     results = shelve.open(resFileName)
@@ -24,12 +25,12 @@ def printFinalSolutionToFile(resFileName,outputFileName,
             output.close()
         return False
     except KeyError:
-        print """results['solutionData'][%s][%s][%s] not found """ % (component,
+        print("""results['solutionData'][%s][%s][%s] not found """ % (component,
                                                                    meshLevel,
-                                                                   key)
+                                                                   key))
         if verbose > 0:
-            print """results.keys() = %s """ % results.keys()
-            print """results['solutionData'].keys() = %s """ % results['solutionData'].keys()
+            print("""results.keys() = %s """ % list(results.keys()))
+            print("""results['solutionData'].keys() = %s """ % list(results['solutionData'].keys()))
         return True
     return True
 
@@ -66,12 +67,12 @@ if __name__ == '__main__':
     outputFileName  = args[1]
 
     if opts.verbose > 0:
-        print """calling with resultsFileName=%s outputFileName=%s
+        print("""calling with resultsFileName=%s outputFileName=%s
         key=%s component=%s level=%s """ % (resultsFileName,
                                             outputFileName,
                                             opts.keyname,
                                             opts.component,
-                                            opts.level)
+                                            opts.level))
     failed = printFinalSolutionToFile(resultsFileName,outputFileName,
                                       key=opts.keyname,
                                       component=opts.component,

@@ -1,13 +1,16 @@
-dist: trusty
-sudo: true
+os: linux
+dist: xenial
+#sudo: required
 
 language: python
 
 env:
-- TEST_PROFILE="test.proteus.yaml"
+  - TEST_PROFILE="proteus"
+  - TEST_PROFILE="1st_set"
+  - TEST_PROFILE="2nd_set"  
 
 python:
-- 2.7
+  - 2.7
 
 addons:
   apt:
@@ -19,36 +22,51 @@ addons:
 
 before_install:
 - pip install pyliblzma
-- wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
-- tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
-- cd git-lfs-1.5.5
-- PREFIX=${HOME} ./install.sh
-- export PATH=${HOME}/bin:${PATH}
-- cd ..
 
 install:
-- git lfs fetch
-- git lfs checkout
-- make hashdist
-- make stack
+- git lfs pull
+- ./stack/hit/bin/hit init-home
+- ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
+- ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_16_04 --objects="build"
 - make stack/default.yaml
-- ./hashdist/bin/hit init-home
-- ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
-- ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_ubuntu_14_04 --objects="build"
-- cd stack
-- ../hashdist/bin/hit build -v default.yaml
-- cd ..
-- make profile
-- FC=gfortran CC=mpicc CXX=mpicxx make install
+- pushd $HOME
+- mkdir -p hashdist_src
+- mkdir -p hashdist_bld
+- rm -rf .hashdist/src .hashdist/bld
+- ln -s $HOME/hashdist_src .hashdist/src 
+- ln -s $HOME/hashdist_bld .hashdist/bld
+- popd
+- pushd stack
+- ../stack/hit/bin/hit build -j 2 -v default.yaml
+- popd
+- export PATHSAVE=$PATH
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
+- PROTEUS_OPT="-w -O2 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
 - export SSL_CERT_DIR=/etc/ssl/certs
-- ls $SSL_CERT_DIR
+- pip install matplotlib
+
+cache:
+  - timeout: 1000
+  - directories:
+    - $HOME/hashdist_src    
+    - $HOME/hashdist_bld    
 
 script:
-- py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests
+  - export MPLBACKEND="AGG"
+  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
+  
+  - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
+  
+  - if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set; fi
+  - unset LD_LIBRARY_PATH #reset things so we don't break cache?
+  - export PATH=$PATHSAVE
 
 notifications:
   email:
     on_success: change
     on_failure: always
+
+after_success:
+  - pip install codecov
+  - codecov

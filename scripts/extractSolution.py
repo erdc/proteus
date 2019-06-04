@@ -1,73 +1,76 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from builtins import str
+from builtins import range
 import tables
 import os
 import sys
 
 def splitH5all(basename1,basename2,size,start,finaltime,stride):
 
-    print "=================="
-    print "   Extracting"
-    print "=================="
+    print("==================")
+    print("   Extracting")
+    print("==================")
 
     for proc in range(0,size):
-        print "Processor", proc
+        print("Processor", proc)
         splitH5single(basename1,basename2,proc,start,finaltime,stride)
 
-    print "=================="
-    print "   Composing"
-    print "=================="
+    print("==================")
+    print("   Composing")
+    print("==================")
     H5toXMF("solution",size,start,finaltime,stride)
 
 def splitH5single(basename1,basename2,proc,start,finaltime,stride):
 
 # Loop over entries and put in appropriate file
     filename=basename1+str(proc)+".h5"
-    print " Open:",filename
-    f1 = tables.openFile(filename)
+    print(" Open:",filename)
+    f1 = tables.open_file(filename)
     filename=basename2+str(proc)+".h5"
-    print " Open:",filename
-    f2 = tables.openFile(filename)
+    print(" Open:",filename)
+    f2 = tables.open_file(filename)
 
-    print "   Step:",
+    print("   Step:", end=' ')
 
     for step in range(start,finaltime+1,stride):
-        print  step,
+        print(step, end=' ')
         sys.stdout.flush()
 
         filename="sol.p"+str(proc)+"."+str(step)+".h5"
-        hdfFile=  tables.openFile(filename,
+        hdfFile=  tables.open_file(filename,
                             mode = "w",
                             title = filename+" Data")
 
 
         name =  "elementsSpatial_Domain"+str(step)
-        hdfFile.createArray("/","elements",f1.getNode("/",name)[:])
+        hdfFile.createArray("/","elements",f1.get_node("/",name)[:])
 
         name =  "nodesSpatial_Domain"+str(step)
-        hdfFile.createArray("/","nodes",f1.getNode("/",name)[:])
+        hdfFile.createArray("/","nodes",f1.get_node("/",name)[:])
 
         name =  "u"+str(step)
-        hdfFile.createArray("/","u",f1.getNode("/",name)[:])
+        hdfFile.createArray("/","u",f1.get_node("/",name)[:])
 
         name =  "v"+str(step)
-        hdfFile.createArray("/","v",f1.getNode("/",name)[:])
+        hdfFile.createArray("/","v",f1.get_node("/",name)[:])
 
         name =  "w"+str(step)
-        hdfFile.createArray("/","w",f1.getNode("/",name)[:])
+        hdfFile.createArray("/","w",f1.get_node("/",name)[:])
 
         name =  "p"+str(step)
-        hdfFile.createArray("/","p",f1.getNode("/",name)[:])
+        hdfFile.createArray("/","p",f1.get_node("/",name)[:])
 
         name =  "phid"+str(step)
-        hdfFile.createArray("/","phid",f2.getNode("/",name)[:])
+        hdfFile.createArray("/","phid",f2.get_node("/",name)[:])
 
         hdfFile.close()
 
     f1.close()
     f2.close()
 
-    print "finished"
+    print("finished")
 
 def H5toXMF(basename,size,start,finaltime,stride):
 
@@ -87,13 +90,13 @@ def H5toXMF(basename,size,start,finaltime,stride):
     XMFfile1.write(t1 + '<Grid GridType="Collection"   CollectionType="Temporal">'+"\n")
 
     string=""
-    print "   Step:",
+    print("   Step:", end=' ')
     for step in range(start,finaltime+1,stride):
-        print step,
+        print(step, end=' ')
         sys.stdout.flush()
 
         filename = basename+"."+str(step)+".h5"
-        hdfFile=  tables.openFile(filename,
+        hdfFile=  tables.open_file(filename,
                             mode = "w",
                             title = filename+" Data")
 
@@ -110,11 +113,11 @@ def H5toXMF(basename,size,start,finaltime,stride):
             group = hdfFile.createGroup(hdfFile.root, 'p'+str(proc))
 
             solname="sol.p"+str(proc)+"."+str(step)+".h5"
-            f1 = tables.openFile(solname)
+            f1 = tables.open_file(solname)
 
             string = string + t3+'<Grid GridType="Uniform">'+"\n"
 
-            data=f1.getNode("/","elements")[:]
+            data=f1.get_node("/","elements")[:]
             hdfFile.createArray(group,"elements",data)
 
             string = string + t4 + '<Topology NumberOfElements="' +str(len(data))+ '" Type="Tetrahedron">'+"\n"
@@ -123,7 +126,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
             string = string + t5 +'</DataItem>'+"\n"
             string = string + t4 + '</Topology>'+"\n"
 
-            data=f1.getNode("/","nodes")[:]
+            data=f1.get_node("/","nodes")[:]
             hdfFile.createArray(group,"nodes",data)
 
             string = string + t4 + '<Geometry Type="XYZ">'+"\n"
@@ -132,7 +135,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
             string = string + t5 + '</DataItem>'+"\n"
             string = string + t4 + '</Geometry>'+"\n"
 
-            data=f1.getNode("/","u")[:]
+            data=f1.get_node("/","u")[:]
             hdfFile.createArray(group,"u",data)
 
             string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="u">'+"\n"
@@ -141,7 +144,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
             string = string + t5 + '</DataItem>'+"\n"
             string = string + t4 + '</Attribute>'+"\n"
 
-            data=f1.getNode("/","v")[:]
+            data=f1.get_node("/","v")[:]
             hdfFile.createArray(group,"v",data)
 
             string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="v">'+"\n"
@@ -150,7 +153,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
             string = string + t5 + '</DataItem>'+"\n"
             string = string + t4 + '</Attribute>'+"\n"
 
-            data=f1.getNode("/","w")[:]
+            data=f1.get_node("/","w")[:]
             hdfFile.createArray(group,"w",data)
 
             string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="w">'+"\n"
@@ -159,7 +162,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
             string = string + t5 + '</DataItem>'+"\n"
             string = string + t4 + '</Attribute>'+"\n"
 
-            data=f1.getNode("/","p")[:]
+            data=f1.get_node("/","p")[:]
             hdfFile.createArray(group,"p",data)
 
             string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="p">'+"\n"
@@ -168,7 +171,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
             string = string + t5 + '</DataItem>'+"\n"
             string = string + t4 + '</Attribute>'+"\n"
 
-            data=f1.getNode("/","phid")[:]
+            data=f1.get_node("/","phid")[:]
             hdfFile.createArray(group,"phid",data)
 
             string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="phid">'+"\n"

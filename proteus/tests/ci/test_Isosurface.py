@@ -1,6 +1,11 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
 import os
+import pytest
 
-class TestIsosurface():
+class TestIsosurface(object):
 
     @classmethod
     def setup_class(cls):
@@ -22,17 +27,15 @@ class TestIsosurface():
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
-        
+
     def test_povgen(self):
         import difflib
-        import urllib
         import subprocess
         import os
-        urllib.urlretrieve(
-            'https://dl.dropboxusercontent.com/u/26353144/floating_bar.h5',
-            'floating_bar.h5')
         subprocess.check_call(['povgen.py',
-                               'floating_bar',
+                               os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                            'comparison_files',
+                                            'floating_bar'),
                                '-s',
                                '3'])
         povfiles = []
@@ -40,10 +43,9 @@ class TestIsosurface():
             filename = 'phi_t_0.000000_{0:04d}.pov'.format(i)
             with open(filename, 'r') as f:
                 povfiles.append(f.readlines())
-        urllib.urlretrieve(
-            'https://dl.dropboxusercontent.com/u/26353144/phi_t_0.000000_000.tgz',
-            'phi_t_0.000000_000.tgz')
-        subprocess.check_call(['tar', 'xzf', 'phi_t_0.000000_000.tgz'])
+        subprocess.check_call(['tar', 'xzf', os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                          'comparison_files',
+                                                          'phi_t_0.000000_000.tgz')])
         saved_povfiles = []
         for i in range(3):
             filename = 'phi_t_0.000000_{0:04d}.pov'.format(i)
@@ -54,5 +56,3 @@ class TestIsosurface():
                                                   povfiles[i],
                                                   "archived",
                                                   "test")))
-        os.remove('phi_t_0.000000_000.tgz')
-        os.remove('floating_bar.h5')

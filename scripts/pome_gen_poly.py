@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import zip
+from builtins import range
 import math
 n_domain_vertices = 100
 domain_vertices =[(0.75*math.sin(2.0*math.pi*float(n)/float(n_domain_vertices))+0.5,0.75*math.cos(2.0*math.pi*float(n)/float(n_domain_vertices))+0.5) for  n in range(n_domain_vertices)]
@@ -36,9 +39,9 @@ for g,c in enumerate(grain_centers):
     sStart = sStart + points_on_grain
     nSegmentGroups = nSegmentGroups+1
 poly.write('%d %d \n' % (len(segments),1))
-print segments
+print(segments)
 poly.write("#segments \n")
-for sN,s,sG in zip(range(len(segments)),segments,segmentGroups):
+for sN,s,sG in zip(list(range(len(segments))),segments,segmentGroups):
     poly.write('%d %d %d %d \n' % (sN+1,s[0]+1,s[1]+1,sG))
 poly.write('%d \n' % len(grain_centers))
 for gN,g in enumerate(grain_centers):

@@ -1,0 +1,12 @@
+# This matrix was generate from a RANS2P simulation of the two-phase step problem.
+
+  * 55630 triangles and 28193 nodes
+  * Strongly enforced free-slip boundary condtions
+  * Uses nonconservative form of the NSE
+  * Pressure-projection stablization
+  * Viscosity / density values:
+    rho_0 = 1.0 #1.205 / 998.2
+    nu_0 = 1.0 / 50.
+    rho_1 =  1.205 / 998.2
+    nu_1 = (1.0/50) * ( 1.500e-5 / 1.004e-6)
+  * This comes from the initial Newton iteration (e.g. it solves a stokes like problem)

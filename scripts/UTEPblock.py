@@ -1,10 +1,13 @@
 #!/usr/bin/env python
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy
 
 Lx=1.0; Ly=1.0;
 nx=128; ny=128;
 #nx=16; ny=16;
-dx=Lx/nx; dy = Ly/ny
+dx=old_div(Lx,nx); dy = old_div(Ly,ny)
 
 vertices = []
 for j in range(ny+1):

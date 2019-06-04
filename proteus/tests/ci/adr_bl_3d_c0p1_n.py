@@ -1,7 +1,13 @@
+from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
-from adr_bl_3d_p import *
-
+try:
+    from .adr_bl_3d_p import *
+except:
+    from adr_bl_3d_p import *
+    
 #steady-state so no time integration
 timeIntegration = NoIntegration
 #number of output timesteps
@@ -14,7 +20,7 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
 logEvent("""Mesh generated using: tetgen -%s %s"""  % (triangleOptions,domain.polyfile+".poly"))
-triangleOptions="VApq1.35q12feena%e" % ((he**3)/6.0,)
+triangleOptions="VApq1.35q12feena%e" % (old_div((he**3),6.0),)
 
 #number of levels in mesh
 nLevels = 1

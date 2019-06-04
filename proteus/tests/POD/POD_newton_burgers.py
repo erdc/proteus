@@ -6,6 +6,7 @@ The equation is
 
 .. math: \frac{\partial u}{\partial t} + \nabla \cdot (\frac{1}{2} u^2 - \epsilon \nabla u) = 0
 """
+from __future__ import print_function
 from burgers_init import *
 
 physics.name = "pod_burgers_{0}d".format(physics.nd)
@@ -29,7 +30,7 @@ start = time.time()
 failed=ns.calculateSolution('run1')
 assert(not failed)
 end = time.time() # we measure time required to obtain the fully resolved solution
-print 'Time required was %s seconds' % (end - start)
+print('Time required was %s seconds' % (end - start))
 
 if physics.nd == 3:
     burgers_plot3d()

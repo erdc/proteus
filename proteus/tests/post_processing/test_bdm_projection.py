@@ -4,15 +4,14 @@
 Test module for BDM2 Elements
 
 """
-import os,sys,inspect
+from __future__ import print_function
+from builtins import object
+import proteus.test_utils.TestTools
+import os
+import sys
+import inspect
 
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0,cmd_folder)
-
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() )) [0],"import_modules")))
-if cmd_subfolder not in sys.path:
-    sys.path.insert(0,cmd_subfolder)
+proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 
 from proteus.iproteus import *
 from proteus import Comm
@@ -20,9 +19,12 @@ comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 import numpy as np
+import pytest
+
 import bdm_tests_template as bt_temp
 
-class TestBDM2Reference1():
+@pytest.mark.PostProcessingTools
+class TestBDM2Reference1(object):
 
     @classmethod
     def setup_class(cls):
@@ -47,7 +49,7 @@ class TestBDM2Reference1():
             if os.path.exists(file):
                 try:
                     os.remove(file)
-                except OSError, e:
+                except OSError as e:
                     print ("Error: %s - %s." %(e.filename, e.strerror ))
             else:
                 pass

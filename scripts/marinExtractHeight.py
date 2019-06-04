@@ -1,5 +1,11 @@
 #! /usr/bin/env pvpython
 
+# for use with pvpython versions at least 4.4
+from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 from paraview import servermanager
 from paraview.simple import *
 from optparse import OptionParser
@@ -32,7 +38,7 @@ parser.add_option("-a","--accuracy",
 if not paraview.servermanager.ActiveConnection:
     connection = paraview.servermanager.Connect()
 
-reader = servermanager.sources.XdmfReader(FileName=opts.filename)
+reader = servermanager.sources.XDMFReader(FileNames=opts.filename)
 reader.UpdatePipeline()
 timesteps = reader.TimestepValues
 
@@ -42,18 +48,18 @@ xloc = [2.724, 2.228,1.732, 0.582]
 
 lines=[]
 for x in xloc:
-    lines.append(LineSource(Point1=[x,0.5,0.0],Point2=[x,0.5,1.0],Resolution=opts.resolution))
+    lines.append(Line(Point1=[x,0.5,0.0],Point2=[x,0.5,1.0],Resolution=opts.resolution))
 
 probes=[]
 for line in lines:
-    probes.append(ProbePoint(Source=line,Input=reader))
+    probes.append(ProbeLocation(ProbeType=line,Input=reader))
 
 point=PointSource(Center=[0.0,0.5,0.0],NumberOfPoints=1)
-pprobe=ProbePoint(Source=point,Input=reader)
+pprobe=ProbeLocation(ProbeType=point,Input=reader)
 
 outfile = open("height.txt",'w')
 for time in timesteps:
-    print "Time =" + str(time)
+    print("Time =" + str(time))
     outfile.write(str(time))
 
     phi_old = 99.99
@@ -69,7 +75,7 @@ for time in timesteps:
             phi = pdata.GetArray("phid").GetTuple1(i)
 
             if (phi > 0.0) and (phi_old < 0.0):
-                height = (float(i-1) + (phi_old/(phi_old-phi)))/float(opts.resolution)
+                height = old_div((float(i-1) + (old_div(phi_old,(phi_old-phi)))),float(opts.resolution))
             phi_old=phi
 
         if (height > 0.0):
@@ -80,7 +86,7 @@ for time in timesteps:
                 pdata2= fp2.GetPointData()
                 phi  = pdata2.GetArray("phid").GetTuple1(0)
                 height = height - phi
-                print time,height, phi
+                print(time,height, phi)
         else:
             height = 0.0
         outfile.write("  " + str(height))

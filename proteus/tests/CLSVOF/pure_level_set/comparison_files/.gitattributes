@@ -1,0 +1,4 @@
+clsvof_test_case_1.h5 filter=lfs diff=lfs merge=lfs -text
+clsvof_test_case_2.h5 filter=lfs diff=lfs merge=lfs -text
+clsvof_test_case_3.h5 filter=lfs diff=lfs merge=lfs -text
+clsvof_test_case_4.h5 filter=lfs diff=lfs merge=lfs -text

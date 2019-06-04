@@ -1,4 +1,5 @@
-from default import *
+from __future__ import absolute_import
+from .default import *
 
 platform_extra_link_args = ['-Wl,'+ "-L" + PROTEUS_LIB_DIR]
 PROTEUS_EXTRA_LINK_ARGS=['-lopenblas'] + platform_extra_link_args

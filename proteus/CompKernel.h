@@ -1074,7 +1074,7 @@ public:
     const int NSPACE2=NSPACE*NSPACE;
     for(int I=0;I<NSPACE;I++)
       for(int J=0;J<NSPACE;J++)
-	hess[I*2+J] = 0.0;
+	hess[I*NSPACE+J] = 0.0;
     for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
       for(int I=0;I<NSPACE;I++)
 	for(int J=0;J<NSPACE;J++)
@@ -1113,7 +1113,8 @@ public:
     const int NSPACE2=NSPACE*NSPACE;
     for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
       for(int I=0;I<NSPACE;I++)
-	hess_trial[j*NSPACE+I] = 0.0;
+	for(int J=0;J<NSPACE;J++)
+	  hess_trial[j*NSPACE2+I*NSPACE+J] = 0.0;
     for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
       for(int I=0;I<NSPACE;I++)
 	for(int J=0;J<NSPACE;J++)
@@ -1882,6 +1883,28 @@ public:
 	for(int J=0;J<2;J++)
 	  grad_trial[j*2+I] += jacInv[J*2+I]*grad_trial_ref[j*2+J];
   }
+
+  /*
+   *  DOFaverage
+   *  ----------
+   *
+   *  Calculate the average DOF value for at a given mesh element.
+   *
+   *  @param dof array of finite element DOF values
+   *  @param l2g_element local 2 global mapping for the current mesh element
+   *  @param val return value with the average DOF values
+   */
+
+  inline void DOFaverage (const double* dof, const int* l2g_element, double& val)
+  {
+    val = 0.0;
+
+    for (int j=0; j<NDOF_MESH_TRIAL_ELEMENT; j++)
+      val+=dof[l2g_element[j]];
+
+    val /= NDOF_MESH_TRIAL_ELEMENT;
+  }
+
   
   inline void hessTrialFromRef(const double* hess_trial_ref, const double* jacInv, double* hess_trial)
   {
@@ -1954,6 +1977,34 @@ public:
 			     const double& w_dV)
   {
     return dmt*w_dV;
+  }
+
+  /*
+   *  pressureProjection_weak
+   *  -----------------------
+   *
+   *  Inner product calculation of the pressure projection
+   *  stablization method of Bochev, Dohrmann and
+   *  Gunzburger (2006).
+   *
+   *  @param viscosity viscosity at point
+   *  @param p the pressure value (either trial function
+   *           or actual value)
+   *  @param p_avg the pressure projection value (either
+   *           1./3. for test functions of the average
+   *	       value of the pressure on the element)
+   *  @param dV this is the integral weight
+   *
+   */
+
+  inline double pressureProjection_weak(const double& viscosity,
+					const double& p,
+					const double& p_avg,
+					const double& q,
+					const double& dV)
+  {
+    if (viscosity==0.){ return 0.;}
+    return (1./viscosity)*(p-p_avg)*(q-1./3.)*dV;
   }
 
   inline double Advection_weak(const double  f[2],

@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
-from adr import *
-reload(default_p)
-
+try:
+    from .adr import *
+except:
+    from adr import *
 name = "ladr_2d"
 nd = 2; #Two dimensions
 L=(1.0,1.0,1.0); 
@@ -25,7 +28,7 @@ dirichletConditions = {0:getDBC}
 advectiveFluxBoundaryConditions = {}
 diffusiveFluxBoundaryConditions = {0:{}}
 
-class IC:
+class IC(object):
     def __init__(self):
         pass
     def uOfXT(self,x,t):

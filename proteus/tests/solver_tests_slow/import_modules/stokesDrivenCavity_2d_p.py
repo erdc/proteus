@@ -1,18 +1,16 @@
+from __future__ import absolute_import
+from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus import Domain
-import stokesDrivenCavity_2d
-from proteus import Context
-Context.setFromModule(stokesDrivenCavity_2d)
-ct=Context.get()
-
+try:
+    from . import stokesDrivenCavity_2d
+except:
+    import stokesDrivenCavity_2d
+ct = stokesDrivenCavity_2d.opts
 """
-Stokes Driven Cavity Flow - the file contains the physics
-corresponding to a Stokes Driven Cavity Flow.  See notes
-for a detailed description.
-
-This model is being used to study the preformance of
-Schur complement preconditioners.
+Stokes Driven Cavity Flow - this file contains the physics
+corresponding to a Stokes Driven Cavity Flow test simulation.
 """
 
 #######################################################
@@ -43,7 +41,7 @@ if (numeric_scheme != "C0Q1C0Q1" and numeric_scheme != "THQuads"):
 
 # TODO - these classes should be renamed as we do not have a true solution for this problem
 
-class uTrue:
+class uTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):
@@ -51,7 +49,7 @@ class uTrue:
     def uOfXT(self,x,t):
         return self.uOfX(x)
 
-class vTrue:
+class vTrue(object):
     def __init__(self):
         pass
     def uOfX(self,x):
