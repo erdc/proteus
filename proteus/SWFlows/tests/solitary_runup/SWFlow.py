@@ -25,7 +25,7 @@ we are doing simulation in 2d but only consider x direction velocity
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
-T = 10.0
+T = 20.0
 g = 9.81
 h0 = 1.0
 # Tstar corresponds to experimental data time at Tstar = {10,15,20,...,65}
@@ -35,7 +35,7 @@ opts = Context.Options([
     ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", Tstar, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.1, "Desired CFL restriction"),
+    ("cfl", 0.33, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level")
 ])
 
@@ -109,11 +109,14 @@ class y_mom_at_t0(object):
         h = water_height_at_t0().uOfXT(X, t)
         return 0.
 
+
 """
 heta and hw are needed for the dispersive modified green naghdi equations
 source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
 THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
 """
+
+
 class heta_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
@@ -136,7 +139,6 @@ class hw_at_t0(object):
 
 def water_height_DBC(X, flag):
     return None
-
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0]:
