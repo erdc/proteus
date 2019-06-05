@@ -1573,10 +1573,24 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
-                               double * q_p,
-                               double * q_grad_p,
-                               double * ebqe_p,
-                               double * ebqe_grad_p,
+                               double *q_ptt_old,
+                               double *q_pt_old,
+                               double *q_p_old,
+                               double *q_ptt,
+                               double *q_pt,
+                               double *q_p,
+                               double *utt_u_dof_old,
+                               double *utt_v_dof_old,
+                               double *ut_u_dof_old,
+                               double *ut_v_dof_old,
+                               double *u_u_dof_old,
+                               double *u_v_dof_old,
+                               double *utt_u_dof,
+                               double *utt_v_dof,
+                               double *ut_u_dof,
+                               double *ut_v_dof,
+                               double *u_u_dof,
+                               double *u_v_dof,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_hess_trial_ref,
@@ -1652,9 +1666,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * u_dof_old_old,
                                double * v_dof_old_old,
                                double * w_dof_old_old,
-			       double * uStar_dof,
-			       double * vStar_dof,
-			       double * wStar_dof,
+                               double * uStar_dof,
+                               double * vStar_dof,
+                               double * wStar_dof,
                                double * g,
                                double useVF,
                                double * vf,
@@ -1791,14 +1805,14 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double* ncDrag,
                                double* betaDrag,
                                double* vos_vel_nodes,
-			       double * entropyResidualPerNode,
-			       double * laggedEntropyResidualPerNode,
+                               double * entropyResidualPerNode,
+                               double * laggedEntropyResidualPerNode,
                                double * uStar_dMatrix,
                                double * vStar_dMatrix,
                                double * wStar_dMatrix,
                                int numDOFs_1D,
                                int NNZ_1D,
-			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
+                               int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
                                int *rowptr_1D, int *colind_1D,
                                double *isBoundary_1D,
                                int INT_BY_PARTS_PRESSURE)
@@ -2009,8 +2023,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * vStar_dMatrix,
                                double * wStar_dMatrix,
                                int numDOFs_1D,
-			       int offset_u, int offset_v, int offset_w,
-			       int stride_u, int stride_v, int stride_w,
+                               int offset_u, int offset_v, int offset_w,
+                               int stride_u, int stride_v, int stride_w,
                                int *rowptr_1D, int *colind_1D,
                                int *rowptr, int *colind,
                                int INT_BY_PARTS_PRESSURE)
@@ -2037,19 +2051,19 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                       double * ebqe_velocity,
                                       double * velocityAverage)
         void getBoundaryDOFs(double* mesh_dof,
-			     int* mesh_l2g,
-			     double* mesh_trial_trace_ref,
-			     double* mesh_grad_trial_trace_ref,
-			     double* dS_ref,
-                             double* vel_test_trace_ref,
-			     double* normal_ref,
-			     double* boundaryJac_ref,
-			     int* vel_l2g,
-			     int nExteriorElementBoundaries_global,
-		             int* exteriorElementBoundariesArray,
-			     int* elementBoundaryElementsArray,
-			     int* elementBoundaryLocalElementBoundariesArray,
-			     double *isBoundary_1D)
+                            int* mesh_l2g,
+                            double* mesh_trial_trace_ref,
+                            double* mesh_grad_trial_trace_ref,
+                            double* dS_ref,
+                            double* vel_test_trace_ref,
+                            double* normal_ref,
+                            double* boundaryJac_ref,
+                            int* vel_l2g,
+                            int nExteriorElementBoundaries_global,
+                            int* exteriorElementBoundariesArray,
+                            int* elementBoundaryElementsArray,
+                            int* elementBoundaryLocalElementBoundariesArray,
+                            double *isBoundary_1D)
     cppRANS3PF2D_base * newRANS3PF2D(int nSpaceIn,
                                      int nQuadraturePoints_elementIn,
                                      int nDOF_mesh_trial_elementIn,
@@ -2148,10 +2162,8 @@ cdef class RANS3PF2D:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
-                          numpy.ndarray q_p,
-                          numpy.ndarray q_grad_p,
-                          numpy.ndarray ebqe_p,
-                          numpy.ndarray ebqe_grad_p,
+                          pressure_data,
+                          velocity_data,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_hess_trial_ref,
@@ -2372,6 +2384,27 @@ cdef class RANS3PF2D:
                           numpy.ndarray colind_1D,
                           numpy.ndarray isBoundary_1D,
                           int INT_BY_PARTS_PRESSURE):
+        cdef numpy.ndarray q_ptt_old = pressure_data[0]
+        cdef numpy.ndarray q_pt_old  = pressure_data[1]
+        cdef numpy.ndarray q_p_old   = pressure_data[2]
+        cdef numpy.ndarray q_ptt     = pressure_data[3]
+        cdef numpy.ndarray q_pt      = pressure_data[4]
+        cdef numpy.ndarray q_p       = pressure_data[5]
+
+        cdef numpy.ndarray utt_u_dof_old = velocity_data[0]
+        cdef numpy.ndarray utt_v_dof_old = velocity_data[1]
+        cdef numpy.ndarray ut_u_dof_old  = velocity_data[2]
+        cdef numpy.ndarray ut_v_dof_old  = velocity_data[3]
+        cdef numpy.ndarray u_u_dof_old   = velocity_data[4]
+        cdef numpy.ndarray u_v_dof_old   = velocity_data[5]
+        cdef numpy.ndarray utt_u_dof = velocity_data[6]
+        cdef numpy.ndarray utt_v_dof = velocity_data[7]
+        cdef numpy.ndarray ut_u_dof  = velocity_data[8]
+        cdef numpy.ndarray ut_v_dof  = velocity_data[9]
+        cdef numpy.ndarray u_u_dof   = velocity_data[10]
+        cdef numpy.ndarray u_v_dof   = velocity_data[11]
+        
+        
         cdef numpy.ndarray uStar_dof = uStar[0]
         cdef numpy.ndarray vStar_dof = uStar[1]
         cdef numpy.ndarray wStar_dof = uStar[2]
@@ -2391,10 +2424,24 @@ cdef class RANS3PF2D:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                       < double * > q_ptt_old.data,
+                                       < double * > q_pt_old.data,
+                                       < double * > q_p_old.data,
+                                       < double * > q_ptt.data,
+                                       < double * > q_pt.data,
                                        < double * > q_p.data,
-                                       < double * > q_grad_p.data,
-                                       < double * > ebqe_p.data,
-                                       < double * > ebqe_grad_p.data,
+                                       < double * > utt_u_dof_old.data,
+                                       < double * > utt_v_dof_old.data,
+                                       < double * > ut_u_dof_old.data,
+                                       < double * > ut_v_dof_old.data,
+                                       < double * > u_u_dof_old.data,
+                                       < double * > u_v_dof_old.data,
+                                       < double * > utt_u_dof.data,
+                                       < double * > utt_v_dof.data,
+                                       < double * > ut_u_dof.data,
+                                       < double * > ut_v_dof.data,
+                                       < double * > u_u_dof.data,
+                                       < double * > u_v_dof.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_hess_trial_ref.data,

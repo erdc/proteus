@@ -89,10 +89,24 @@ public:
                                  double *p_grad_trial_ref,
                                  double *p_test_ref,
                                  double *p_grad_test_ref,
+                                 double *q_ptt_old,/////////////data for pressure
+                                 double *q_pt_old,
+                                 double *q_p_old,
+                                 double *q_ptt,
+                                 double *q_pt,
                                  double *q_p,
-                                 double *q_grad_p,
-                                 double *ebqe_p,
-                                 double *ebqe_grad_p,
+                                 double *utt_u_dof_old,/////////data for velocity
+                                 double *utt_v_dof_old,
+                                 double *ut_u_dof_old,
+                                 double *ut_v_dof_old,
+                                 double *u_u_dof_old,
+                                 double *u_v_dof_old,
+                                 double *utt_u_dof,
+                                 double *utt_v_dof,
+                                 double *ut_u_dof,
+                                 double *ut_v_dof,
+                                 double *u_u_dof,
+                                 double *u_v_dof,
                                  double *vel_trial_ref,
                                  double *vel_grad_trial_ref,
                                  double *vel_hess_trial_ref,
@@ -1979,10 +1993,24 @@ public:
       double *p_grad_trial_ref,
       double *p_test_ref,
       double *p_grad_test_ref,
+      double *q_ptt_old,/////////////data for pressure
+      double *q_pt_old,
+      double *q_p_old,
+      double *q_ptt,
+      double *q_pt,
       double *q_p,
-      double *q_grad_p,
-      double *ebqe_p,
-      double *ebqe_grad_p,
+      double *utt_u_dof_old,/////////data for velocity
+      double *utt_v_dof_old,
+      double *ut_u_dof_old,
+      double *ut_v_dof_old,
+      double *u_u_dof_old,
+      double *u_v_dof_old,
+      double *utt_u_dof,
+      double *utt_v_dof,
+      double *ut_u_dof,
+      double *ut_v_dof,
+      double *u_u_dof,
+      double *u_v_dof,
       double *vel_trial_ref,
       double *vel_grad_trial_ref,
       double *vel_hess_trial_ref,
@@ -2278,6 +2306,20 @@ public:
         register double p = 0.0, u = 0.0, v = 0.0, w = 0.0, un = 0.0, vn = 0.0, wn = 0.0,
                         grad_p[nSpace], grad_u[nSpace], grad_v[nSpace], grad_w[nSpace],
                         grad_un[nSpace],grad_vn[nSpace],
+                        
+                        u2_n = 0.0, u1_n = 0.0, u0_n = 0.0,
+                        u2   = 0.0, u1   = 0.0, u0   = 0.0,
+                        v2_n = 0.0, v1_n = 0.0, v0_n = 0.0,
+                        v2   = 0.0, v1   = 0.0, v0   = 0.0,
+                        p2_n = 0.0, p1_n = 0.0, p0_n = 0.0,
+                        p2   = 0.0, p1   = 0.0, p0   = 0.0,
+                        grad_u2_n[nSpace],grad_v2_n[nSpace],
+                        grad_u1_n[nSpace],grad_v1_n[nSpace],
+                        grad_u0_n[nSpace],grad_v0_n[nSpace],
+                        grad_u2[nSpace],grad_v2[nSpace],
+                        grad_u1[nSpace],grad_v1[nSpace],
+                        grad_u0[nSpace],grad_v0[nSpace],
+
                         hess_u[nSpace2], hess_v[nSpace2],
                         mom_u_acc = 0.0,
                         dmom_u_acc_u = 0.0,
@@ -2419,16 +2461,49 @@ public:
         /* ck.valFromDOF(w_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],wn); */
         //get the solution gradients
         /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p); */
-        for (int I = 0; I < nSpace; I++)
-          grad_p[I] = q_grad_p[eN_k_nSpace + I];
+        // for (int I = 0; I < nSpace; I++)
+        //   grad_p[I] = q_grad_p[eN_k_nSpace + I];
         ck.gradFromDOF(u_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u);
         ck.gradFromDOF(v_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v);
         ck.gradFromDOF(u_dof_old, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_un);
         ck.gradFromDOF(v_dof_old, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_vn);
-        ck.hessFromDOF(u_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_u);
-        ck.hessFromDOF(v_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_v);
-        ck.hessFromDOF(uStar_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_uStar);
-        ck.hessFromDOF(vStar_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_vStar);
+
+        //
+        // COMPUTE VALUES
+        //
+        p2_n = q_ptt_old[eN_k];
+        p1_n = q_pt_old[eN_k];
+        p0_n = q_p_old[eN_k];
+        p2   = q_ptt[eN_k];
+        p1   = q_pt[eN_k];
+        p0   = q_p[eN_k];
+
+        ck.valFromDOF(utt_u_dof_old, &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], u2_n);
+        ck.valFromDOF(utt_v_dof_old, &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], v2_n);
+        ck.valFromDOF(ut_u_dof_old,  &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], u1_n);
+        ck.valFromDOF(ut_v_dof_old,  &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], v1_n);
+        ck.valFromDOF(u_u_dof_old,   &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], u0_n);
+        ck.valFromDOF(u_v_dof_old,   &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], v0_n);
+        ck.valFromDOF(utt_u_dof, &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], u2);
+        ck.valFromDOF(utt_v_dof, &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], v2);
+        ck.valFromDOF(ut_u_dof,  &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], u1);
+        ck.valFromDOF(ut_v_dof,  &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], v1);
+        ck.valFromDOF(u_u_dof,   &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], u0);
+        ck.valFromDOF(u_v_dof,   &vel_l2g[eN_nDOF_trial_element], &vel_trial_ref[k * nDOF_trial_element], v0);
+        
+        ck.gradFromDOF(utt_u_dof_old, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u2_n);
+        ck.gradFromDOF(utt_v_dof_old, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v2_n);
+        ck.gradFromDOF(ut_u_dof_old,  &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u1_n);
+        ck.gradFromDOF(ut_v_dof_old,  &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v1_n);
+        ck.gradFromDOF(u_u_dof_old,   &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u0_n);
+        ck.gradFromDOF(u_v_dof_old,   &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v0_n);
+        ck.gradFromDOF(utt_u_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u2);
+        ck.gradFromDOF(utt_v_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v2);
+        ck.gradFromDOF(ut_u_dof,  &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u1);
+        ck.gradFromDOF(ut_v_dof,  &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v1);
+        ck.gradFromDOF(u_u_dof,   &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u0);
+        ck.gradFromDOF(u_v_dof,   &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v0);
+        
 
         double curl_cross_old[2];
         get_curl_cross(un, vn, grad_un, grad_vn, curl_cross_old);
@@ -2931,13 +3006,13 @@ public:
           //cek hack use trial ck.gradTrialFromRef(&vel_grad_test_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_test_trace);
           //solution and gradients
           /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_ext); */
-          p_ext = ebqe_p[ebNE_kb];
+          // p_ext = ebqe_p[ebNE_kb];
           ck.valFromDOF(u_dof, &vel_l2g[eN_nDOF_trial_element], &vel_trial_trace_ref[ebN_local_kb * nDOF_test_element], u_ext);
           ck.valFromDOF(v_dof, &vel_l2g[eN_nDOF_trial_element], &vel_trial_trace_ref[ebN_local_kb * nDOF_test_element], v_ext);
           /* ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext); */
           /* ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext); */
-          for (int I = 0; I < nSpace; I++)
-            grad_p_ext[I] = ebqe_grad_p[ebNE_kb_nSpace + I];
+          // for (int I = 0; I < nSpace; I++)
+          //   grad_p_ext[I] = ebqe_grad_p[ebNE_kb_nSpace + I];
           ck.gradFromDOF(u_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial_trace, grad_u_ext);
           ck.gradFromDOF(v_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial_trace, grad_v_ext);
           /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_w_ext); */
@@ -4062,8 +4137,6 @@ public:
           grad_p[I] = q_grad_p[eN_k_nSpace + I];
         ck.gradFromDOF(u_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u);
         ck.gradFromDOF(v_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v);
-        ck.hessFromDOF(u_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_u);
-        ck.hessFromDOF(v_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_v);
         /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
         //precalculate test function products with integration weights
         for (int j = 0; j < nDOF_trial_element; j++)
