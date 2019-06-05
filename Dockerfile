@@ -17,12 +17,14 @@ RUN cd proteus && git pull && make develop
 ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
 ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
-RUN cd proteus && PATH=/usr/bin/path:$PATH ./linux/bin/pip install matplotlib
+RUN cd proteus && make lfs && git lfs fetch && git lfs checkout
+RUN cd proteus && mkdir ${HOME}/bin && export PATH=${HOME}/bin:${PATH} && echo $PATH && ln -s /usr/bin/pkg-config ${HOME}/bin && hash -r && ./linux/bin/pip install matplotlib
 RUN cd proteus && make jupyter
-
+#RUN cd proteus && pip install jupyterhub voila
+#RUN cd proteus && jupyter labextension install @jupyter-widgets/jupyterlab-manager
 USER root
 
-RUN jupyter kernelspec install-self
+RUN ipython kernel install
 
 USER $NB_USER
 
