@@ -204,6 +204,7 @@ namespace proteus
             {
               register int  i_nSpace=i*nSpace;
               elementResidual_u[i] += (u - q_p_last[eN_k] + lambda*q_p_inc[eN_k]) * u_test_dV[i];
+              // elementResidual_u[i] += (u - q_p_last[eN_k]) * u_test_dV[i];//debug
             }//i
           q_u[eN_k] = u;
           for(int I=0;I<nSpace;I++)

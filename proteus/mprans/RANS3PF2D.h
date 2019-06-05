@@ -905,6 +905,8 @@ public:
     mom_u_source -= forcex;
     mom_v_source -= forcey;
     
+    if(0)
+    {
     // u momentum Hamiltonian (pressure)
     double aux_pressure = 0.0;
     mom_u_ham = grad_p[0] * aux_pressure;
@@ -925,17 +927,20 @@ public:
     mom_v_ham += rho * (uStar * grad_v[0] + vStar * grad_v[1]);
     dmom_v_ham_grad_v[0] = rho * uStar;
     dmom_v_ham_grad_v[1] = rho * vStar;
-
-    // mom_u_ham = 0.0;
-    // dmom_u_ham_grad_p[0] = 0.0;
-    // dmom_u_ham_grad_p[1] = 0.0;
-    // mom_v_ham = 0.0;
-    // dmom_v_ham_grad_p[0] = 0.0;
-    // dmom_v_ham_grad_p[1] = 0.0;
-    // dmom_u_ham_grad_u[0] = 0.0;
-    // dmom_u_ham_grad_u[1] = 0.0;
-    // dmom_v_ham_grad_v[0] = 0.0;
-    // dmom_v_ham_grad_v[1] = 0.0;
+  }
+  else
+  {
+    mom_u_ham = 0.0;
+    dmom_u_ham_grad_p[0] = 0.0;
+    dmom_u_ham_grad_p[1] = 0.0;
+    mom_v_ham = 0.0;
+    dmom_v_ham_grad_p[0] = 0.0;
+    dmom_v_ham_grad_p[1] = 0.0;
+    dmom_u_ham_grad_u[0] = 0.0;
+    dmom_u_ham_grad_u[1] = 0.0;
+    dmom_v_ham_grad_v[0] = 0.0;
+    dmom_v_ham_grad_v[1] = 0.0;
+  }
   }
 
   //VRANS specific
@@ -1950,7 +1955,16 @@ public:
     vx = ball_velocity[3 * I + 0] - ball_angular_velocity[3 * I + 2] * (y - ball_center[3 * I + 1]);
     vy = ball_velocity[3 * I + 1] + ball_angular_velocity[3 * I + 2] * (x - ball_center[3 * I + 0]);
   }
-
+  // void get_curl_cross(double u, double v, double *grad_u, double *grad_v, double *curl_cross)
+  // {
+  //   curl_cross[0] = -v*(grad_v[0]-grad_u[1]);
+  //   curl_cross[1] =  u*(grad_v[0]-grad_u[1]);
+  // }
+  void get_curl_cross(double u, double v, double *grad_u, double *grad_v, double *curl_cross)
+  {
+    curl_cross[0] = u*grad_u[0]+v*grad_u[1];
+    curl_cross[1] = u*grad_v[0]+v*grad_v[1];
+  }
   void calculateResidual( //element
       double *mesh_trial_ref,
       double *mesh_grad_trial_ref,
@@ -2263,6 +2277,7 @@ public:
                      eN_nDOF_trial_element = eN * nDOF_trial_element;
         register double p = 0.0, u = 0.0, v = 0.0, w = 0.0, un = 0.0, vn = 0.0, wn = 0.0,
                         grad_p[nSpace], grad_u[nSpace], grad_v[nSpace], grad_w[nSpace],
+                        grad_un[nSpace],grad_vn[nSpace],
                         hess_u[nSpace2], hess_v[nSpace2],
                         mom_u_acc = 0.0,
                         dmom_u_acc_u = 0.0,
@@ -2408,10 +2423,16 @@ public:
           grad_p[I] = q_grad_p[eN_k_nSpace + I];
         ck.gradFromDOF(u_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_u);
         ck.gradFromDOF(v_dof, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_v);
+        ck.gradFromDOF(u_dof_old, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_un);
+        ck.gradFromDOF(v_dof_old, &vel_l2g[eN_nDOF_trial_element], vel_grad_trial, grad_vn);
         ck.hessFromDOF(u_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_u);
         ck.hessFromDOF(v_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_v);
         ck.hessFromDOF(uStar_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_uStar);
         ck.hessFromDOF(vStar_dof, &vel_l2g[eN_nDOF_trial_element], vel_hess_trial, hess_vStar);
+
+        double curl_cross_old[2];
+        get_curl_cross(un, vn, grad_un, grad_vn, curl_cross_old);
+
         /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
         //precalculate test function products with integration weights
         for (int j = 0; j < nDOF_trial_element; j++)
@@ -2644,6 +2665,7 @@ public:
               + ck.Diffusion_weak(sdInfo_u_v_rowptr, sdInfo_u_v_colind, mom_uv_diff_ten, grad_v, &vel_grad_test_dV[i_nSpace])
               + ck.Reaction_weak(mom_u_source, vel_test_dV[i])
               + ck.Hamiltonian_weak(mom_u_ham, vel_test_dV[i])
+              + curl_cross_old[0] * vel_test_dV[i]
               - p * vel_grad_test_dV[i_nSpace + 0]
               //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
               // USE_SUPG * ck.SubgridError(subgridError_u, Lstar_u_u[i]) +
@@ -2659,6 +2681,7 @@ public:
               + ck.Diffusion_weak(sdInfo_v_u_rowptr, sdInfo_v_u_colind, mom_vu_diff_ten, grad_u, &vel_grad_test_dV[i_nSpace])
               + ck.Diffusion_weak(sdInfo_v_v_rowptr, sdInfo_v_v_colind, mom_vv_diff_ten, grad_v, &vel_grad_test_dV[i_nSpace])
               + ck.Reaction_weak(mom_v_source, vel_test_dV[i])
+              + curl_cross_old[1] * vel_test_dV[i]
               + ck.Hamiltonian_weak(mom_v_ham, vel_test_dV[i])
               - p * vel_grad_test_dV[i_nSpace + 1]
               //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
