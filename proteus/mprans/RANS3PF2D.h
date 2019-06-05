@@ -876,17 +876,18 @@ public:
     dmom_v_adv_v[0] = 0.0;
     dmom_v_adv_v[1] = 0.0;
 
-    // {///for symmetric gradient
-    //   //u momentum diffusion tensor
-    //   mom_uu_diff_ten[0] = 2.0 * mu;
-    //   mom_uu_diff_ten[1] = mu;
-    //   mom_uv_diff_ten[0] = mu;
+    if(1){///for symmetric gradient
+      //u momentum diffusion tensor
+      mom_uu_diff_ten[0] = 2.0 * mu;
+      mom_uu_diff_ten[1] = mu;
+      mom_uv_diff_ten[0] = mu;
 
-    //   //v momentum diffusion tensor
-    //   mom_vv_diff_ten[0] = mu;
-    //   mom_vv_diff_ten[1] = 2.0 * mu;
-    //   mom_vu_diff_ten[0] = mu;
-    // }
+      //v momentum diffusion tensor
+      mom_vv_diff_ten[0] = mu;
+      mom_vv_diff_ten[1] = 2.0 * mu;
+      mom_vu_diff_ten[0] = mu;
+    }
+    else
     {
       //u momentum diffusion tensor
       mom_uu_diff_ten[0] = mu;
@@ -904,13 +905,11 @@ public:
     mom_u_source -= forcex;
     mom_v_source -= forcey;
     
-    //u momentum Hamiltonian (pressure)
+    // u momentum Hamiltonian (pressure)
     double aux_pressure = 0.0;
     mom_u_ham = grad_p[0] * aux_pressure;
     dmom_u_ham_grad_p[0] = aux_pressure;
     dmom_u_ham_grad_p[1] = 0.0;
-    
-
     //v momentum Hamiltonian (pressure)
     mom_v_ham = grad_p[1] * aux_pressure;
     dmom_v_ham_grad_p[0] = 0.0;
@@ -926,6 +925,17 @@ public:
     mom_v_ham += rho * (uStar * grad_v[0] + vStar * grad_v[1]);
     dmom_v_ham_grad_v[0] = rho * uStar;
     dmom_v_ham_grad_v[1] = rho * vStar;
+
+    // mom_u_ham = 0.0;
+    // dmom_u_ham_grad_p[0] = 0.0;
+    // dmom_u_ham_grad_p[1] = 0.0;
+    // mom_v_ham = 0.0;
+    // dmom_v_ham_grad_p[0] = 0.0;
+    // dmom_v_ham_grad_p[1] = 0.0;
+    // dmom_u_ham_grad_u[0] = 0.0;
+    // dmom_u_ham_grad_u[1] = 0.0;
+    // dmom_v_ham_grad_v[0] = 0.0;
+    // dmom_v_ham_grad_v[1] = 0.0;
   }
 
   //VRANS specific
@@ -2627,11 +2637,11 @@ public:
           elementResidual_u[i] += // mql. CHECK.
               ck.Mass_weak(mom_u_acc_t, vel_test_dV[i])
               + ck.Advection_weak(mom_u_adv, &vel_grad_test_dV[i_nSpace])
-              + mom_uu_diff_ten[0] * grad_u[0] * vel_grad_test_dV[i_nSpace + 0]
-              + mom_uu_diff_ten[1] * grad_u[1] * vel_grad_test_dV[i_nSpace + 1]
-              - lambda * q_divU[eN_k] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
-              // ck.Diffusion_weak(sdInfo_u_u_rowptr, sdInfo_u_u_colind, mom_uu_diff_ten, grad_u, &vel_grad_test_dV[i_nSpace]) +
-              // ck.Diffusion_weak(sdInfo_u_v_rowptr, sdInfo_u_v_colind, mom_uv_diff_ten, grad_v, &vel_grad_test_dV[i_nSpace]) +
+              // + mom_uu_diff_ten[0] * grad_u[0] * vel_grad_test_dV[i_nSpace + 0]
+              // + mom_uu_diff_ten[1] * grad_u[1] * vel_grad_test_dV[i_nSpace + 1]
+              - lambda * q_divU[eN_k] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
+              + ck.Diffusion_weak(sdInfo_u_u_rowptr, sdInfo_u_u_colind, mom_uu_diff_ten, grad_u, &vel_grad_test_dV[i_nSpace])
+              + ck.Diffusion_weak(sdInfo_u_v_rowptr, sdInfo_u_v_colind, mom_uv_diff_ten, grad_v, &vel_grad_test_dV[i_nSpace])
               + ck.Reaction_weak(mom_u_source, vel_test_dV[i])
               + ck.Hamiltonian_weak(mom_u_ham, vel_test_dV[i])
               - p * vel_grad_test_dV[i_nSpace + 0]
@@ -2643,11 +2653,11 @@ public:
           elementResidual_v[i] +=
               ck.Mass_weak(mom_v_acc_t, vel_test_dV[i])
               + ck.Advection_weak(mom_v_adv, &vel_grad_test_dV[i_nSpace])
-              + mom_vv_diff_ten[0] * grad_v[0] * vel_grad_test_dV[i_nSpace + 0]
-              + mom_vv_diff_ten[1] * grad_v[1] * vel_grad_test_dV[i_nSpace + 1]
-              - lambda * q_divU[eN_k] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
-              // ck.Diffusion_weak(sdInfo_v_u_rowptr, sdInfo_v_u_colind, mom_vu_diff_ten, grad_u, &vel_grad_test_dV[i_nSpace]) +
-              // ck.Diffusion_weak(sdInfo_v_v_rowptr, sdInfo_v_v_colind, mom_vv_diff_ten, grad_v, &vel_grad_test_dV[i_nSpace]) +
+              // + mom_vv_diff_ten[0] * grad_v[0] * vel_grad_test_dV[i_nSpace + 0]
+              // + mom_vv_diff_ten[1] * grad_v[1] * vel_grad_test_dV[i_nSpace + 1]
+              - lambda * q_divU[eN_k] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
+              + ck.Diffusion_weak(sdInfo_v_u_rowptr, sdInfo_v_u_colind, mom_vu_diff_ten, grad_u, &vel_grad_test_dV[i_nSpace])
+              + ck.Diffusion_weak(sdInfo_v_v_rowptr, sdInfo_v_v_colind, mom_vv_diff_ten, grad_v, &vel_grad_test_dV[i_nSpace])
               + ck.Reaction_weak(mom_v_source, vel_test_dV[i])
               + ck.Hamiltonian_weak(mom_v_ham, vel_test_dV[i])
               - p * vel_grad_test_dV[i_nSpace + 1]
@@ -4240,10 +4250,10 @@ public:
                 ck.MassJacobian_weak(dmom_u_acc_u_t, vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 + ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u, &vel_grad_trial[j_nSpace], vel_test_dV[i])
                 + ck.AdvectionJacobian_weak(dmom_u_adv_u, vel_trial_ref[k * nDOF_trial_element + j], &vel_grad_test_dV[i_nSpace])
-                // ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr, sdInfo_u_u_colind, mom_uu_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace]) +
-                + mom_uu_diff_ten[0] * vel_grad_trial[j_nSpace + 0] * vel_grad_test_dV[i_nSpace + 0]
-                + mom_uu_diff_ten[1] * vel_grad_trial[j_nSpace + 1] * vel_grad_test_dV[i_nSpace + 1]
-                - lambda * vel_grad_trial[j_nSpace + 0] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
+                + ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr, sdInfo_u_u_colind, mom_uu_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
+                // + mom_uu_diff_ten[0] * vel_grad_trial[j_nSpace + 0] * vel_grad_test_dV[i_nSpace + 0]
+                // + mom_uu_diff_ten[1] * vel_grad_trial[j_nSpace + 1] * vel_grad_test_dV[i_nSpace + 1]
+                - lambda * vel_grad_trial[j_nSpace + 0] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
                 //VRANS
                 + ck.ReactionJacobian_weak(dmom_u_source[0], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 //
@@ -4254,15 +4264,15 @@ public:
 
             elementJacobian_u_v[i][j] +=
                 ck.AdvectionJacobian_weak(dmom_u_adv_v, vel_trial_ref[k * nDOF_trial_element + j], &vel_grad_test_dV[i_nSpace])
-                // ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr, sdInfo_u_v_colind, mom_uv_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace]) +
-                - lambda * vel_grad_trial[j_nSpace + 1] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
+                + ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr, sdInfo_u_v_colind, mom_uv_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
+                - lambda * vel_grad_trial[j_nSpace + 1] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
                 //VRANS
                 + ck.ReactionJacobian_weak(dmom_u_source[1], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 ;
             elementJacobian_v_u[i][j] +=
                 ck.AdvectionJacobian_weak(dmom_v_adv_u, vel_trial_ref[k * nDOF_trial_element + j], &vel_grad_test_dV[i_nSpace])
-                // ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr, sdInfo_v_u_colind, mom_vu_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace]) +
-                - lambda * vel_grad_trial[j_nSpace + 0] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
+                + ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr, sdInfo_v_u_colind, mom_vu_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
+                - lambda * vel_grad_trial[j_nSpace + 0] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
                 //VRANS
                 + ck.ReactionJacobian_weak(dmom_v_source[0], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 ;
@@ -4270,10 +4280,10 @@ public:
                 ck.MassJacobian_weak(dmom_v_acc_v_t, vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 + ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v, &vel_grad_trial[j_nSpace], vel_test_dV[i])
                 + ck.AdvectionJacobian_weak(dmom_v_adv_v, vel_trial_ref[k * nDOF_trial_element + j], &vel_grad_test_dV[i_nSpace])
-                // ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr, sdInfo_v_v_colind, mom_vv_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace]) +
-                + mom_vv_diff_ten[0] * vel_grad_trial[j_nSpace + 0] * vel_grad_test_dV[i_nSpace + 0]
-                + mom_vv_diff_ten[1] * vel_grad_trial[j_nSpace + 1] * vel_grad_test_dV[i_nSpace + 1]
-                - lambda * vel_grad_trial[j_nSpace + 1] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
+                + ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr, sdInfo_v_v_colind, mom_vv_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
+                // + mom_vv_diff_ten[0] * vel_grad_trial[j_nSpace + 0] * vel_grad_test_dV[i_nSpace + 0]
+                // + mom_vv_diff_ten[1] * vel_grad_trial[j_nSpace + 1] * vel_grad_test_dV[i_nSpace + 1]
+                - lambda * vel_grad_trial[j_nSpace + 1] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
                 + ck.ReactionJacobian_weak(dmom_v_source[1], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 // USE_SUPG * ck.SubgridErrorJacobian(dsubgridError_v_v[j], Lstar_v_v[i]) +
                 // ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k], &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
