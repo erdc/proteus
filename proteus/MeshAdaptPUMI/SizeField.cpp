@@ -71,24 +71,27 @@ int MeshAdaptPUMIDrvr::setSphereSizeField()
   {
     int modelTag = m->getModelTag(m->toModel(ent));
     //std::cout<<"This is the model tag "<<modelTag<<std::endl;
-    apf::Vector3 pt;
+    //std::cout<<xyz_offset_ssf[0]<<","<<xyz_offset_ssf[1]<<","<<xyz_offset_ssf[2]<<std::endl;
+	apf::Vector3 pt;
 	m->getPoint(ent,0,pt);
 	 
 	double radius=sphereRadius_ssf;  
 	double sizeDesired;
 	double distance;
 	distance = sqrt((pt[0]-xyz_offset_ssf[0])*(pt[0]-xyz_offset_ssf[0])+(pt[1]-xyz_offset_ssf[1])*(pt[1]-xyz_offset_ssf[1])+(pt[2]-xyz_offset_ssf[2])*(pt[2]-xyz_offset_ssf[2]));
-    std::cout<<"The distance between this vertex and the sphere center is "<<distance<<std::endl;
-	if(distance<=radius){
+    std::cout<<"The distance between this vertex, "<<pt[0]<<","<<pt[1]<<","<<pt[2]<<", and the sphere center, "<<xyz_offset_ssf[0]<<","<<xyz_offset_ssf[1]<<","<<xyz_offset_ssf[2]<<", is "<<distance<<std::endl;
+	if(distance<=radius+hmin){
 	//if(modelTag==123){
         sizeDesired=hmin;
 	  std::cout<<"minimum set for this point "<<std::endl;}
     else
         sizeDesired=hmax;
     apf::setScalar(size_iso,ent,0,sizeDesired);
+    //apf::writeVtkFiles("distanceResult",m,distance);
   }
   m->end(it);
   gradeMesh();
+  apf::writeVtkFiles("distanceResult",m);
 }
 
 
