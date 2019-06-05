@@ -2619,7 +2619,7 @@ public:
         }
         // save divergence of velocity
         q_divU[eN_k] = q_grad_u[eN_k_nSpace + 0] + q_grad_v[eN_k_nSpace + 1];
-
+        const double lambda = 1.0;
         for (int i = 0; i < nDOF_test_element; i++)
         {
           register int i_nSpace = i * nSpace;
@@ -2629,6 +2629,7 @@ public:
               + ck.Advection_weak(mom_u_adv, &vel_grad_test_dV[i_nSpace])
               + mom_uu_diff_ten[0] * grad_u[0] * vel_grad_test_dV[i_nSpace + 0]
               + mom_uu_diff_ten[1] * grad_u[1] * vel_grad_test_dV[i_nSpace + 1]
+              - lambda * q_divU[eN_k] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
               // ck.Diffusion_weak(sdInfo_u_u_rowptr, sdInfo_u_u_colind, mom_uu_diff_ten, grad_u, &vel_grad_test_dV[i_nSpace]) +
               // ck.Diffusion_weak(sdInfo_u_v_rowptr, sdInfo_u_v_colind, mom_uv_diff_ten, grad_v, &vel_grad_test_dV[i_nSpace]) +
               + ck.Reaction_weak(mom_u_source, vel_test_dV[i])
@@ -2644,6 +2645,7 @@ public:
               + ck.Advection_weak(mom_v_adv, &vel_grad_test_dV[i_nSpace])
               + mom_vv_diff_ten[0] * grad_v[0] * vel_grad_test_dV[i_nSpace + 0]
               + mom_vv_diff_ten[1] * grad_v[1] * vel_grad_test_dV[i_nSpace + 1]
+              - lambda * q_divU[eN_k] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
               // ck.Diffusion_weak(sdInfo_v_u_rowptr, sdInfo_v_u_colind, mom_vu_diff_ten, grad_u, &vel_grad_test_dV[i_nSpace]) +
               // ck.Diffusion_weak(sdInfo_v_v_rowptr, sdInfo_v_v_colind, mom_vv_diff_ten, grad_v, &vel_grad_test_dV[i_nSpace]) +
               + ck.Reaction_weak(mom_v_source, vel_test_dV[i])
@@ -4213,6 +4215,7 @@ public:
         dmom_adv_sge[1] = dmom_u_acc_u * (q_velocity_sge[eN_k_nSpace + 1] - MOVING_DOMAIN * yt);
         /* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
         //cek todo add RBLES terms consistent to residual modifications or ignore the partials w.r.t the additional RBLES terms
+        const double lambda = 1.0;
         for (int i = 0; i < nDOF_test_element; i++)
         {
           register int i_nSpace = i * nSpace;
@@ -4240,6 +4243,7 @@ public:
                 // ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr, sdInfo_u_u_colind, mom_uu_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace]) +
                 + mom_uu_diff_ten[0] * vel_grad_trial[j_nSpace + 0] * vel_grad_test_dV[i_nSpace + 0]
                 + mom_uu_diff_ten[1] * vel_grad_trial[j_nSpace + 1] * vel_grad_test_dV[i_nSpace + 1]
+                - lambda * vel_grad_trial[j_nSpace + 0] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
                 //VRANS
                 + ck.ReactionJacobian_weak(dmom_u_source[0], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 //
@@ -4251,12 +4255,14 @@ public:
             elementJacobian_u_v[i][j] +=
                 ck.AdvectionJacobian_weak(dmom_u_adv_v, vel_trial_ref[k * nDOF_trial_element + j], &vel_grad_test_dV[i_nSpace])
                 // ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr, sdInfo_u_v_colind, mom_uv_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace]) +
+                - lambda * vel_grad_trial[j_nSpace + 1] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
                 //VRANS
                 + ck.ReactionJacobian_weak(dmom_u_source[1], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 ;
             elementJacobian_v_u[i][j] +=
                 ck.AdvectionJacobian_weak(dmom_v_adv_u, vel_trial_ref[k * nDOF_trial_element + j], &vel_grad_test_dV[i_nSpace])
                 // ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr, sdInfo_v_u_colind, mom_vu_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace]) +
+                - lambda * vel_grad_trial[j_nSpace + 0] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
                 //VRANS
                 + ck.ReactionJacobian_weak(dmom_v_source[0], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 ;
@@ -4267,6 +4273,7 @@ public:
                 // ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr, sdInfo_v_v_colind, mom_vv_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace]) +
                 + mom_vv_diff_ten[0] * vel_grad_trial[j_nSpace + 0] * vel_grad_test_dV[i_nSpace + 0]
                 + mom_vv_diff_ten[1] * vel_grad_trial[j_nSpace + 1] * vel_grad_test_dV[i_nSpace + 1]
+                - lambda * vel_grad_trial[j_nSpace + 1] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 0])
                 + ck.ReactionJacobian_weak(dmom_v_source[1], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 // USE_SUPG * ck.SubgridErrorJacobian(dsubgridError_v_v[j], Lstar_v_v[i]) +
                 // ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k], &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
