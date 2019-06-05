@@ -1203,6 +1203,8 @@ namespace proteus
         C=0.0;
         for (int i=0;i<nParticles;i++)
           {
+            double* vel_pointer= &particle_velocities[i*sd_offset*nSpace];
+
             if(use_ball_as_particle==1)
             {
                 get_distance_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s);
@@ -1214,6 +1216,9 @@ namespace proteus
                 center[0] = ball_center[3*i + 0];
                 center[1] = ball_center[3*i + 1];
                 center[2] = ball_center[3*i + 2];
+                u_s = vel[0];
+                v_s = vel[1];
+                w_s = vel[2];
             }
             else
             {
@@ -1224,6 +1229,9 @@ namespace proteus
                 vel[0] = particle_velocities[i * sd_offset * nSpace + 0];
                 vel[1] = particle_velocities[i * sd_offset * nSpace + 1];
                 vel[2] = particle_velocities[i * sd_offset * nSpace + 2];
+            	  u_s = vel_pointer[0];
+            	  v_s = vel_pointer[1];
+            	  w_s = vel_pointer[2];
                 center[0] = particle_centroids[3*i + 0];
                 center[1] = particle_centroids[3*i + 1];
                 center[2] = particle_centroids[3*i + 2];
@@ -1231,9 +1239,7 @@ namespace proteus
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
             fluid_outward_normal[2] = -phi_s_normal[2];
-            u_s = vel[0];
-            v_s = vel[1];
-            w_s = vel[2];
+
             H_s = smoothedHeaviside(eps_s, phi_s);
             D_s = smoothedDirac(eps_s, phi_s);
             double rel_vel_norm=sqrt((uStar - u_s)*(uStar - u_s)+
