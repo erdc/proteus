@@ -196,22 +196,14 @@ namespace proteus
                 }
             }
           //
-          //calculate pde coefficients at quadrature points
           //
-          evaluateCoefficients(u,//u is p
-                               q_p_last[eN_k],
-                               q_p_inc[eN_k],
-                               &q_massFlux[eN_k_nSpace],
-                               f,
-                               r);
-          //
+          const double lambda = 1.0;
           //update element residual
           //
           for(int i=0;i<nDOF_test_element;i++)
             {
               register int  i_nSpace=i*nSpace;
-              elementResidual_u[i] += ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) +
-                ck.Reaction_weak(r,u_test_dV[i]);
+              elementResidual_u[i] += (u - q_p_last[eN_k] + lambda*q_p_inc[eN_k]) * u_test_dV[i];
             }//i
           q_u[eN_k] = u;
           for(int I=0;I<nSpace;I++)
@@ -328,6 +320,7 @@ namespace proteus
       //ebNE is the Exterior element boundary INdex
       //ebN is the element boundary INdex
       //eN is the element index
+      if(0)
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
         {
           register int ebN = exteriorElementBoundariesArray[ebNE],
