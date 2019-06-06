@@ -998,44 +998,6 @@ public:
                                                 double gradC_y,
                                                 double gradC_z)
   {
-    double rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, viscosity, H_s;
-    H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
-    nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
-    rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
-    mu = rho_0 * nu_0 * (1.0 - H_mu) + rho_1 * nu_1 * H_mu;
-    viscosity = nu;
-    uc = sqrt(u * u + v * v * +w * w);
-    duc_du = u / (uc + 1.0e-12);
-    duc_dv = v / (uc + 1.0e-12);
-    duc_dw = w / (uc + 1.0e-12);
-    double fluid_velocity[2] = {uStar, vStar}, solid_velocity[2] = {uStar_s, vStar_s};
-    double new_beta = closure.betaCoeff(1.0 - phi_s,
-                                        rho,
-                                        fluid_velocity,
-                                        solid_velocity,
-                                        viscosity) *
-                      DRAG_FAC;
-    //new_beta = 254800.0;//hack fall velocity of 0.1 with no pressure gradient
-    double beta2 = 156976.4; //hack, fall velocity of 0.1 with hydrostatic water
-
-    mom_u_source += (1.0 - phi_s) * new_beta * (u - u_s) - TURB_FORCE_FAC * new_beta * nu_t * gradC_x / closure.sigmaC_ +
-                    (1.0 - phi_s) * (1.0 - DRAG_FAC) * beta2 * (u - u_s);
-    mom_v_source += (1.0 - phi_s) * new_beta * (v - v_s) - TURB_FORCE_FAC * new_beta * nu_t * gradC_y / closure.sigmaC_ +
-                    (1.0 - phi_s) * (1.0 - DRAG_FAC) * beta2 * (v - v_s);
-
-    /* mom_w_source += phi_s*new_beta*(w-w_s); */
-
-    dmom_u_source[0] = (1.0 - phi_s) * new_beta + (1.0 - phi_s) * (1.0 - DRAG_FAC) * beta2;
-    dmom_u_source[1] = 0.0;
-    /* dmom_u_source[2] = 0.0; */
-
-    dmom_v_source[0] = 0.0;
-    dmom_v_source[1] = (1.0 - phi_s) * new_beta + (1.0 - phi_s) * (1.0 - DRAG_FAC) * beta2;
-    /*dmom_v_source[2] = 0.0; */
-
-    dmom_w_source[0] = 0.0;
-    dmom_w_source[1] = 0.0;
-    /*dmom_w_source[2] =  (1.0 - phi_s) * new_beta; */
   }
 
   inline void updateSolidParticleTerms(bool element_owned,
@@ -1101,103 +1063,7 @@ public:
                                        double *particle_netMoments,
                                        double *particle_surfaceArea)
   {
-    double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s;
-    double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
-    double phi_s_normal[2] = {0.0};
-    double fluid_outward_normal[2];
-    double vel[2];
-    double center[2];
-    H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
-    nu = nu_0 * (1.0 - H_mu) + nu_1 * H_mu;
-    rho = rho_0 * (1.0 - H_mu) + rho_1 * H_mu;
-    mu = rho_0 * nu_0 * (1.0 - H_mu) + rho_1 * nu_1 * H_mu;
-    C = 0.0;
-    for (int i = 0; i < nParticles; i++)
-    {
-      if (use_ball_as_particle == 1)
-      {
-        get_distance_to_ith_ball(nParticles, ball_center, ball_radius, i, x, y, z, phi_s);
-        get_normal_to_ith_ball(nParticles, ball_center, ball_radius, i, x, y, z, phi_s_normal[0], phi_s_normal[1]);
-        get_velocity_to_ith_ball(nParticles, ball_center, ball_radius,
-                                 ball_velocity, ball_angular_velocity,
-                                 i, x, y, z,
-                                 vel[0], vel[1]);
-        center[0] = ball_center[3 * i + 0];
-        center[1] = ball_center[3 * i + 1];
-      }
-      else
-      {
-        phi_s = particle_signed_distances[i * sd_offset];
-        phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * 3 + 0];
-        phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * 3 + 1];
-        vel[0] = particle_velocities[i * sd_offset * 3 + 0];
-        vel[1] = particle_velocities[i * sd_offset * 3 + 1];
-        center[0] = particle_centroids[3 * i + 0];
-        center[1] = particle_centroids[3 * i + 1];
-      }
-      fluid_outward_normal[0] = -phi_s_normal[0];
-      fluid_outward_normal[1] = -phi_s_normal[1];
-      u_s = vel[0];
-      v_s = vel[1];
-      w_s = 0;
-      H_s = smoothedHeaviside(eps_s, phi_s);
-      D_s = smoothedDirac(eps_s, phi_s);
-      double rel_vel_norm = sqrt((uStar - u_s) * (uStar - u_s) +
-                                 (vStar - v_s) * (vStar - v_s) +
-                                 (wStar - w_s) * (wStar - w_s));
 
-      double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
-      double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
-
-      C = (D_s * C_surf + (1.0 - H_s) * C_vol);
-      force_x = dV * D_s * (p * fluid_outward_normal[0] - mu * (fluid_outward_normal[0] * 2 * grad_u[0] + fluid_outward_normal[1] * (grad_u[1] + grad_v[0])) + C_surf * (u - u_s) * rho);
-      force_y = dV * D_s * (p * fluid_outward_normal[1] - mu * (fluid_outward_normal[0] * (grad_u[1] + grad_v[0]) + fluid_outward_normal[1] * 2 * grad_v[1]) + C_surf * (v - v_s) * rho);
-      force_p_x = dV * D_s * p * fluid_outward_normal[0];
-      force_p_y = dV * D_s * p * fluid_outward_normal[1];
-      force_stress_x = dV * D_s * (-mu * (fluid_outward_normal[0] * 2 * grad_u[0] + fluid_outward_normal[1] * (grad_u[1] + grad_v[0])) + C_surf * (u - u_s) * rho);
-      force_stress_y = dV * D_s * (-mu * (fluid_outward_normal[0] * (grad_u[1] + grad_v[0]) + fluid_outward_normal[1] * 2 * grad_v[1]) + C_surf * (v - v_s) * rho);
-      //always 3D for particle centroids
-      r_x = x - center[0];
-      r_y = y - center[1];
-
-      if (element_owned)
-      {
-        particle_surfaceArea[i] += dV * D_s;
-        particle_netForces[i * 3 + 0] += force_x;
-        particle_netForces[i * 3 + 1] += force_y;
-        particle_netForces[(i + nParticles) * 3 + 0] += force_p_x;
-        particle_netForces[(i + 2 * nParticles) * 3 + 0] += force_stress_x;
-        particle_netForces[(i + nParticles) * 3 + 1] += force_p_y;
-        particle_netForces[(i + 2 * nParticles) * 3 + 1] += force_stress_y;
-        particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
-      }
-
-      // These should be done inside to make sure the correct velocity of different particles are used
-      mom_u_source += C * (u - u_s);
-      mom_v_source += C * (v - v_s);
-
-      dmom_u_source[0] += C;
-      dmom_v_source[1] += C;
-
-      //Nitsche terms
-      mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
-      dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-      dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
-
-      mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
-      dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-      dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
-
-      mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
-      mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
-      dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
-      dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
-
-      mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
-      mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
-      dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
-      dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
-    }
   }
   inline void compute_force_around_solid(bool element_owned,
                                          const double dV,
@@ -2727,17 +2593,58 @@ public:
         q_divU[eN_k] = q_grad_u[eN_k_nSpace + 0] + q_grad_v[eN_k_nSpace + 1];
         const double lambda = 1.0;
         double p_prediction = 0.0;
+        double  grad_u_np2[nSpace], grad_v_np2[nSpace],curl_cross_np2[nSpace],
+                grad_u_np1[nSpace], grad_v_np1[nSpace],curl_cross_np1[nSpace],
+                grad_u_np0[nSpace], grad_v_np0[nSpace],curl_cross_np0[nSpace],
+                u_np2,v_np2,
+                u_np1,v_np1,
+                u_np0,v_np0;
+        u_np2 = u0_n + 2.0*u1_n/alphaBDF + 2.0*u2_n/alphaBDF/alphaBDF;
+        v_np2 = v0_n + 2.0*v1_n/alphaBDF + 2.0*v2_n/alphaBDF/alphaBDF;
+        u_np1 = u0_n + u1_n/alphaBDF + 0.5*u2_n/alphaBDF/alphaBDF;
+        v_np1 = v0_n + v1_n/alphaBDF + 0.5*v2_n/alphaBDF/alphaBDF;
+        u_np0 = u0_n;
+        v_np0 = v0_n;
+        for (int I = 0; I < nSpace; I++)
+        {
+          grad_u_np2[I] = grad_u0_n[I] + 2.0*grad_u1_n[I]/alphaBDF + 2.0*grad_u2_n[I]/alphaBDF/alphaBDF;
+          grad_v_np2[I] = grad_v0_n[I] + 2.0*grad_v1_n[I]/alphaBDF + 2.0*grad_v2_n[I]/alphaBDF/alphaBDF;
+          grad_u_np1[I] = grad_u0_n[I] +     grad_u1_n[I]/alphaBDF + 0.5*grad_u2_n[I]/alphaBDF/alphaBDF;
+          grad_v_np1[I] = grad_v0_n[I] +     grad_v1_n[I]/alphaBDF + 0.5*grad_v2_n[I]/alphaBDF/alphaBDF;
+          grad_u_np0[I] = grad_u0_n[I];
+          grad_v_np0[I] = grad_v0_n[I];
+        }
+        get_curl_cross(u_np2, v_np2, grad_u_np2, grad_v_np2, curl_cross_np2);
+        get_curl_cross(u_np1, v_np1, grad_u_np1, grad_v_np1, curl_cross_np1);
+        get_curl_cross(u_np0, v_np0, grad_u_np0, grad_v_np0, curl_cross_np0);
+
         if(USE_SBM==-1)
         {
           p_prediction = p2_n;
+          for (int I = 0; I < nSpace; I++)
+          {
+            curl_cross_old[I] = (curl_cross_np2[I]-2.0*curl_cross_np1[I]+curl_cross_np0[I])/alphaBDF/alphaBDF;
+          }
         }
         else if(USE_SBM==-2)
         {
           p_prediction = p1_n + p2 / alphaBDF;
+          mom_u_source = mom_u_source + 0.5 * (u2 - u2_n);//mom_u_source contains minus sign since it is on lhs
+          mom_v_source = mom_v_source + 0.5 * (v2 - v2_n);
+          for (int I = 0; I < nSpace; I++)
+          {
+            curl_cross_old[I] = (curl_cross_np2[I]-curl_cross_np0[I])*0.5/alphaBDF;
+          }
         }
         else if(USE_SBM==-3)
         {
           p_prediction = p0_n + p1 / alphaBDF - 0.5 * p2 / alphaBDF / alphaBDF;
+          mom_u_source = mom_u_source + 0.5 * (u1 - u1_n) + (u2 - u2_n)/12.0/alphaBDF;//mom_u_source contains minus sign since it is on lhs
+          mom_v_source = mom_v_source + 0.5 * (v1 - v1_n) + (v2 - v2_n)/12.0/alphaBDF;
+          for (int I = 0; I < nSpace; I++)
+          {
+            curl_cross_old[I] = curl_cross_np0[I];
+          }
         }
         
         for (int i = 0; i < nDOF_test_element; i++)
@@ -4341,7 +4248,7 @@ public:
                 // + mom_uu_diff_ten[1] * vel_grad_trial[j_nSpace + 1] * vel_grad_test_dV[i_nSpace + 1]
                 - lambda * vel_grad_trial[j_nSpace + 0] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
                 //VRANS
-                + ck.ReactionJacobian_weak(dmom_u_source[0], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
+                // + ck.ReactionJacobian_weak(dmom_u_source[0], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 //
                 //ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
                 // USE_SUPG * ck.SubgridErrorJacobian(dsubgridError_u_u[j], Lstar_u_u[i]) +
@@ -4353,14 +4260,14 @@ public:
                 + ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr, sdInfo_u_v_colind, mom_uv_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
                 - lambda * vel_grad_trial[j_nSpace + 1] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
                 //VRANS
-                + ck.ReactionJacobian_weak(dmom_u_source[1], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
+                // + ck.ReactionJacobian_weak(dmom_u_source[1], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 ;
             elementJacobian_v_u[i][j] +=
                 ck.AdvectionJacobian_weak(dmom_v_adv_u, vel_trial_ref[k * nDOF_trial_element + j], &vel_grad_test_dV[i_nSpace])
                 + ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr, sdInfo_v_u_colind, mom_vu_diff_ten, &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
                 - lambda * vel_grad_trial[j_nSpace + 0] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
                 //VRANS
-                + ck.ReactionJacobian_weak(dmom_v_source[0], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
+                // + ck.ReactionJacobian_weak(dmom_v_source[0], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 ;
             elementJacobian_v_v[i][j] +=
                 ck.MassJacobian_weak(dmom_v_acc_v_t, vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
@@ -4370,7 +4277,7 @@ public:
                 // + mom_vv_diff_ten[0] * vel_grad_trial[j_nSpace + 0] * vel_grad_test_dV[i_nSpace + 0]
                 // + mom_vv_diff_ten[1] * vel_grad_trial[j_nSpace + 1] * vel_grad_test_dV[i_nSpace + 1]
                 - lambda * vel_grad_trial[j_nSpace + 1] * (vel_grad_test_dV[i_nSpace + 0] + vel_grad_test_dV[i_nSpace + 1])
-                + ck.ReactionJacobian_weak(dmom_v_source[1], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
+                // + ck.ReactionJacobian_weak(dmom_v_source[1], vel_trial_ref[k * nDOF_trial_element + j], vel_test_dV[i])
                 // USE_SUPG * ck.SubgridErrorJacobian(dsubgridError_v_v[j], Lstar_v_v[i]) +
                 // ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k], &vel_grad_trial[j_nSpace], &vel_grad_test_dV[i_nSpace])
                 ;
