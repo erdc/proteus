@@ -514,7 +514,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     abort();
   }
 
-  isotropicIntersect();
+  //isotropicIntersect();
 
   if(logging_config=="on"){
     char namebuffer[50];
@@ -580,7 +580,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->maximumIterations = numIter;
   if(size_field_config == "meshQuality")
   {
-    in->shouldSnap = true;
+    in->shouldSnap = false;
     in->shouldTransferParametric=true;
   }
   else
