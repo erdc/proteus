@@ -811,6 +811,26 @@ class NS_base(object):  # (HasTraits):
 
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1}
 
+        rans2p_idx = None
+        vof_idx = None
+        ncls_idx = None
+        rdls_idx = None
+        mcorr_idx = None
+        for idx,model in enumerate(self.modelList):
+              if(model.name  == 'rans2p' or model.name=='twp_navier_stokes_p'):
+                  rans2p_idx = idx
+              if(model.name == 'vof' or model.name=='vof_p'):
+                  vof_idx = idx
+              if(model.name == 'ncls' or model.name=='ls_p'):
+                  ncls_idx = idx
+              if(model.name == 'rdls' or model.name=='redist_p'):
+                  rdls_idx = idx
+              if(model.name == 'mcorr' or model.name=='ls_consrv_p'):
+                  mcorr_idx = idx
+        if(rans2p_idx is None):
+              import sys
+              sys.exit("Needs rans2p")
+
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
@@ -828,9 +848,10 @@ class NS_base(object):  # (HasTraits):
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and ((modelListOld[0].levelModelList[0].stabilization.nSteps - 1) > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+                if(modelListOld[rans2p_idx].levelModelList[0].stabilization.lag and ((modelListOld[rans2p_idx].levelModelList[0].stabilization.nSteps - 1) > modelListOld[rans2p_idx].levelModelList[0].stabilization.nStepsToDelay) ):
+                    self.modelList[rans2p_idx].levelModelList[0].stabilization.nSteps = self.modelList[rans2p_idx].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[rans2p_idx].levelModelList[0].stabilization.updateSubgridErrorHistory()
+
 
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
@@ -842,7 +863,7 @@ class NS_base(object):  # (HasTraits):
         if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ) 
           or self.opts.hotStart):
 
-            for idx in [3,4]:
+            for idx in [rdls_idx,mcorr_idx]:
                 model = self.modelList[idx]
                 self.preStep(model)
                 self.setWeakDirichletConditions(model)
@@ -871,14 +892,15 @@ class NS_base(object):  # (HasTraits):
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
-        ###
+                if(modelListOld[rans2p_idx].levelModelList[0].stabilization.lag and modelListOld[rans2p_idx].levelModelList[0].stabilization.nSteps > modelListOld[rans2p_idx].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[rans2p_idx].levelModelList[0].stabilization.nSteps = self.modelList[rans2p_idx].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[rans2p_idx].levelModelList[0].stabilization.updateSubgridErrorHistory()
+
 
         ###need to re-distance and mass correct
+
         if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12) or self.opts.hotStart  ):
-            for idx in [3,4]:
+            for idx in [rdls_idx,mcorr_idx]:
                 model = self.modelList[idx]
                 self.preStep(model)
                 self.setWeakDirichletConditions(model)

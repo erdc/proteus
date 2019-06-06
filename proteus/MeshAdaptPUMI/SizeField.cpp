@@ -60,8 +60,8 @@ static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::Mes
 
 int MeshAdaptPUMIDrvr::setSphereSizeField()
 {
-  freeField(size_iso);
-  size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  apf::Field* sphereSize = apf::createLagrangeField(m, "sphereSize", apf::SCALAR, 1);
+
 
   apf::MeshIterator *it = m->begin(0);
   apf::MeshEntity* ent;
@@ -74,10 +74,11 @@ int MeshAdaptPUMIDrvr::setSphereSizeField()
         sizeDesired=hmin;
     else
         sizeDesired=hmax;
-    apf::setScalar(size_iso,ent,0,sizeDesired);
+    apf::setScalar(sphereSize,ent,0,sizeDesired);
   }
   m->end(it);
-  gradeMesh();
+
+  sizeFieldList.push(sphereSize);
 }
 
 
