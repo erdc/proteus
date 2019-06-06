@@ -2726,6 +2726,20 @@ public:
         // save divergence of velocity
         q_divU[eN_k] = q_grad_u[eN_k_nSpace + 0] + q_grad_v[eN_k_nSpace + 1];
         const double lambda = 1.0;
+        double p_prediction = 0.0;
+        if(USE_SBM==-1)
+        {
+          p_prediction = p2_n;
+        }
+        else if(USE_SBM==-2)
+        {
+          p_prediction = p1_n + p2 / alphaBDF;
+        }
+        else if(USE_SBM==-3)
+        {
+          p_prediction = p0_n + p1 / alphaBDF - 0.5 * p2 / alphaBDF / alphaBDF;
+        }
+        
         for (int i = 0; i < nDOF_test_element; i++)
         {
           register int i_nSpace = i * nSpace;
@@ -2741,7 +2755,7 @@ public:
               + ck.Reaction_weak(mom_u_source, vel_test_dV[i])
               + ck.Hamiltonian_weak(mom_u_ham, vel_test_dV[i])
               + curl_cross_old[0] * vel_test_dV[i]
-              - p * vel_grad_test_dV[i_nSpace + 0]
+              - p_prediction * vel_grad_test_dV[i_nSpace + 0]
               //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
               // USE_SUPG * ck.SubgridError(subgridError_u, Lstar_u_u[i]) +
               // ck.NumericalDiffusion(q_numDiff_u_last[eN_k], grad_u, &vel_grad_test_dV[i_nSpace])
@@ -2758,7 +2772,7 @@ public:
               + ck.Reaction_weak(mom_v_source, vel_test_dV[i])
               + curl_cross_old[1] * vel_test_dV[i]
               + ck.Hamiltonian_weak(mom_v_ham, vel_test_dV[i])
-              - p * vel_grad_test_dV[i_nSpace + 1]
+              - p_prediction * vel_grad_test_dV[i_nSpace + 1]
               //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
               // USE_SUPG * ck.SubgridError(subgridError_v, Lstar_v_v[i]) +
               // ck.NumericalDiffusion(q_numDiff_v_last[eN_k], grad_v, &vel_grad_test_dV[i_nSpace])
