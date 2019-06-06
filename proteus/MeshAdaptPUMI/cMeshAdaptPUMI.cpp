@@ -161,7 +161,9 @@ int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile,double* boxDim,d
   comm_rank = PCU_Comm_Self();
   m = apf::loadMdsMesh(".null", meshFile);
   m->verify();
-
+ 
+  sphereRadius_ssf=radius;
+	
   //create analytic geometry 
   gmi_model* testModel = createSphereInBox(boxDim,sphereCenter,radius);
   m->verify();
