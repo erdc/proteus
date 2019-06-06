@@ -219,8 +219,8 @@ class Dispatcher(object):
         comm.barrier()#ensure files are ready for master
         if comm.isMaster():
             import copy
-            import io
-            profilingLog = io.StringIO()
+            from StringIO import StringIO
+            profilingLog = StringIO()
             stats = pstats.Stats(profile_rank_name, stream=profilingLog)
             stats.__dict__['files']=['Maximum times across MPI tasks for',
                                      stats.__dict__['files'][0]]

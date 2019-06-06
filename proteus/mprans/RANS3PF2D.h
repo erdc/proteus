@@ -2447,7 +2447,7 @@ public:
         //get the trial function gradients
         /* ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial); */
         ck.gradTrialFromRef(&vel_grad_trial_ref[k * nDOF_trial_element * nSpace], jacInv, vel_grad_trial);
-        ck.hessTrialFromRef(&vel_hess_trial_ref[k * nDOF_trial_element * nSpace2], jacInv, vel_hess_trial);
+        // ck.hessTrialFromRef(&vel_hess_trial_ref[k * nDOF_trial_element * nSpace2], jacInv, vel_hess_trial);
         //get the solution
         /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
         p = q_p[eN_k];
@@ -4124,7 +4124,7 @@ public:
         //get the trial function gradients
         /* ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial); */
         ck.gradTrialFromRef(&vel_grad_trial_ref[k * nDOF_trial_element * nSpace], jacInv, vel_grad_trial);
-        ck.hessTrialFromRef(&vel_hess_trial_ref[k * nDOF_trial_element * nSpace2], jacInv, vel_hess_trial);
+        // ck.hessTrialFromRef(&vel_hess_trial_ref[k * nDOF_trial_element * nSpace2], jacInv, vel_hess_trial);
         //get the solution
         /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
         p = q_p[eN_k];
@@ -4265,30 +4265,6 @@ public:
 
         double C_particles = 0.0;
 
-        //
-        //
-        //moving mesh
-        //
-        mom_u_adv[0] -= MOVING_DOMAIN * dmom_u_acc_u * mom_u_acc * xt; // multiply by rho*porosity. mql. CHECK.
-        mom_u_adv[1] -= MOVING_DOMAIN * dmom_u_acc_u * mom_u_acc * yt;
-        /* mom_u_adv[2] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*zt; */
-        dmom_u_adv_u[0] -= MOVING_DOMAIN * dmom_u_acc_u * xt;
-        dmom_u_adv_u[1] -= MOVING_DOMAIN * dmom_u_acc_u * yt;
-        /* dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt; */
-
-        mom_v_adv[0] -= MOVING_DOMAIN * dmom_v_acc_v * mom_v_acc * xt;
-        mom_v_adv[1] -= MOVING_DOMAIN * dmom_v_acc_v * mom_v_acc * yt;
-        /* mom_v_adv[2] -= MOVING_DOMAIN*dmom_v_acc_v*mom_v_acc*zt; */
-        dmom_v_adv_v[0] -= MOVING_DOMAIN * dmom_v_acc_v * xt;
-        dmom_v_adv_v[1] -= MOVING_DOMAIN * dmom_v_acc_v * yt;
-        /* dmom_v_adv_v[2] -= MOVING_DOMAIN*dmom_v_acc_v*zt; */
-
-        /* mom_w_adv[0] -= MOVING_DOMAIN*dmom_w_acc_w*mom_w_acc*xt; */
-        /* mom_w_adv[1] -= MOVING_DOMAIN*dmom_w_acc_w*mom_w_acc*yt; */
-        /* mom_w_adv[2] -= MOVING_DOMAIN*dmom_w_acc_w*mom_w_acc*zt; */
-        /* dmom_w_adv_w[0] -= MOVING_DOMAIN*dmom_w_acc_w*xt; */
-        /* dmom_w_adv_w[1] -= MOVING_DOMAIN*dmom_w_acc_w*yt; */
-        /* dmom_w_adv_w[2] -= MOVING_DOMAIN*dmom_w_acc_w*zt; */
         //
         //calculate time derivatives
         //
