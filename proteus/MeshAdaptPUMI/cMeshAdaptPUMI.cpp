@@ -448,6 +448,8 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
   }
 
 
+  //need to have size field here just to define it
+
   //set the error reference field to be the current error field for next time otherwise, retrieve the error_reference field
   if(!m->findField("error_reference"))
   {  
@@ -465,6 +467,10 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
 
   double dt_step = dt_err; //global variable imported from VMS
 
+  if(m->findField("sizeRatio"))
+    apf::destroyField(m->findField("sizeRatio"));
+  apf::Field* sizeRatioField = apf::createField(m,"sizeRatio",apf::SCALAR,apf::getVoronoiShape(m->getDimension(),1));
+
   it = m->begin(m->getDimension());
 
   while( (ent = m->iterate(it) ) )
@@ -473,15 +479,37 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
     double err_local_ref = apf::getScalar(error_reference,ent,0);
     double errorRate = (err_local_current-err_local_ref)/(T_current-T_reference);
     apf::setScalar(errorRateField,ent,0,errorRate);
-    double err_predict = errorRate*dt_step + err_local_current;
-    double sizeRatio_local = apf::getScalar(m->findField("sizeRatio"),ent,0);
+    double err_predict = errorRate*delta_T_next + err_local_current;
+
+    //double sizeRatio_local = apf::getScalar(m->findField("sizeRatio"),ent,0);
     //if(errorRate > 0 && (err_predict > target_error) && sizeRatio_local>2.0 && nTriggers>=5)
-    if(errorRate > 0 && sizeRatio_local>2.0)
+    //double sizeRatio_local_predict = pow(err_predict/target_error,2.0/(2*1+2));
+
+    double h_old;
+    double h_new;
+    apf::MeshElement* element = apf::createMeshElement(m, ent);
+
+    if (m->getDimension() == 2)
+      h_old = apf::computeLargestHeightInTri(m,ent);
+    else
+      h_old = apf::computeShortestHeightInTet(m,ent);
+    h_new = h_old * pow((target_error / err_predict),2.0/(2.0*(1.0)+nsd));
+    //clamp h_new and then compare against h_old
+    if(h_new > hmax)
+        h_new = hmax;
+    if(h_new < hmin)
+        h_new = hmin;
+    double sizeRatio_local_predict = h_old/h_new;
+    apf::setScalar(sizeRatioField,ent,0,sizeRatio_local_predict);
+    apf::destroyMeshElement(element);
+
+    //apf::setScalar(sizeRatioField,ent,0,size_ratio_local_predict);
+    if(errorRate > 0 && sizeRatio_local_predict>2.0 && nTriggers>=5)
     {
-        if(apf::getScalar(errorTriggered,ent,0))
+        if(apf::getScalar(errorTriggered,ent,0)==1)
         {
             adaptFlag = 1;
-            apf::setScalar(errorTriggered,ent,0,2.0);
+            apf::setScalar(errorTriggered,ent,0,2.0);   
         }
         else
             apf::setScalar(errorTriggered,ent,0,1.0);
@@ -506,10 +534,11 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
     {   
         double err_local_current = apf::getScalar(error_current,ent,0);
         double err_local_ref = apf::getScalar(error_reference,ent,0);
-        double errorRate = (err_local_current-err_local_ref)/(T_current-T_reference);
+        //double errorRate = (err_local_current-err_local_ref)/(T_current-T_reference);
+        double errorRate = apf::getScalar(errorRateField,ent,0);
     
         //double err_predict = errorRate*dt_step*numAdaptSteps + err_local_current;
-        double err_predict = errorRate*dt_step*5 + err_local_current;
+        double err_predict = errorRate*dt_step*numAdaptSteps/10.0 + err_local_current;
         if(err_predict > err_local_current)
         {
             apf::setScalar(error_current,ent,0,err_predict);
@@ -545,8 +574,8 @@ int MeshAdaptPUMIDrvr::willAdapt()
   if(size_field_config == "combined" or size_field_config == "VMS")
   {
     //willErrorAdapt_reference();
-    //adaptFlag += willErrorAdapt_reference();
-    willErrorAdapt_reference();
+    adaptFlag += willErrorAdapt_reference();
+    //willErrorAdapt_reference();
     //willErrorAdapt();
   }
 
@@ -782,7 +811,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 
 
   apf::MeshEntity* edgeForSwap_target;
-  if(nAdapt == 4)
+  if(nAdapt == 5)
   {
     apf::MeshIterator* it_edge = m->begin(1);
     apf::MeshEntity* edgeForSwap;
@@ -792,7 +821,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
         m->getAdjacent(edgeForSwap,2,edge2Face);
         if(edge2Face.getSize()==2)
         {
-            if(localNumber(edge2Face[0])==490 && localNumber(edge2Face[1])==800 )
+            //if(localNumber(edge2Face[0])==235 && localNumber(edge2Face[1])==1331 )
+            if(localNumber(edge2Face[0])==1331 && localNumber(edge2Face[1])==235 )
+            //if(localNumber(edge2Face[0])==490 && localNumber(edge2Face[1])==800 )
             //if(localNumber(edge2Face[0])==3041 && localNumber(edge2Face[1])==642 )
             {
                 std::cout<<"centroid is at "<<apf::getLinearCentroid(m,edgeForSwap)<<std::endl;
@@ -903,7 +934,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   std::cout<<"Begin adapt!\n";
 
 /*
-  if(nAdapt == 4)
+  if(nAdapt == 5)
   {
     //std::abort();
     ma::adaptSwap(in,edgeForSwap_target);
