@@ -471,7 +471,29 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             'd')
         self.q[('r', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-
+        
+        self.q['x'] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
+        self.q['J'] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element,
+                 self.nSpace_global,
+                 self.nSpace_global),
+                'd')
+        self.q['det(J)'] = numpy.zeros(
+            (self.mesh.nElements_global,
+                self.nQuadraturePoints_element),
+            'd')
+        self.q['abs(det(J))'] = numpy.zeros(
+            (self.mesh.nElements_global,
+                self.nQuadraturePoints_element),
+            'd')
+        self.q['inverse(J)'] = numpy.zeros(
+            (self.mesh.nElements_global,
+                self.nQuadraturePoints_element,
+                self.nSpace_global,
+                self.nSpace_global),
+                'd')
         self.ebqe[
             ('u',
              0)] = numpy.zeros(
@@ -723,8 +745,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         This function should be called only when the mesh changes.
         """
-        # self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
-        #                                          self.q['x'])
+        self.u[0].femSpace.elementMaps.getValues(
+            self.elementQuadraturePoints, self.q['x'])
+        self.u[0].femSpace.elementMaps.getJacobianValues(
+            self.elementQuadraturePoints,
+            self.q['J'],
+            self.q['inverse(J)'],
+            self.q['det(J)'])
+        self.q['abs(det(J))'][:] = numpy.abs(self.q['det(J)'])
         self.u[0].femSpace.elementMaps.getBasisValuesIP(
             self.u[0].femSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray)
         self.u[0].femSpace.elementMaps.getBasisValuesRef(
