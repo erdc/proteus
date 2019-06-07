@@ -1323,17 +1323,18 @@ class NS_base(object):  # (HasTraits):
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
             deltaT = self.modelList[0].levelModelList[0].timeIntegration.dtLast
             T_current = self.systemStepController.t_system_last
-            #deltaT = self.systemStepController.dt_system 
+            deltaT_next = self.systemStepController.dt_system 
             #T_current = self.systemStepController.t_system
         else:
             deltaT = 0.0
+            deltaT_next = 0.0
             T_current = 0.0
         epsFact = p0.ct.epsFact_density 
 
         # I want to put in here two arrays of densities are viscosities....
         
         #p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,T_current,epsFact)
-        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,T_current,epsFact)
+        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,deltaT_next,T_current,epsFact)
         del rho, nu, g, epsFact
 
 
@@ -1456,6 +1457,7 @@ class NS_base(object):  # (HasTraits):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
             elif(sfConfig=="VMS" or sfConfig=="combined"):
+              #ERM_total = p0.domain.PUMIMesh.get_local_error()
               errorTotal = p0.domain.PUMIMesh.get_VMS_error()
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
@@ -1465,7 +1467,7 @@ class NS_base(object):  # (HasTraits):
               #hack for single edge swap quickly and that's it for that
               #if(p0.domain.PUMIMesh.nAdapt()==4):
               #  adaptMeshNow=True
-              #if(p0.domain.PUMIMesh.nAdapt()>4):
+              #if(p0.domain.PUMIMesh.nAdapt()>5):
               #  adaptMeshNow=False
               ###
             elif(sfConfig=='interface' ):
@@ -1591,6 +1593,7 @@ class NS_base(object):  # (HasTraits):
         #    p0.domain.PUMIMesh.get_local_error()
 
         logEvent("Converting PUMI mesh to Proteus")
+        logEvent("Adapt number %s" % p0.domain.PUMIMesh.nAdapt())
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
         #PUMI conversion #1, they should be merged
@@ -1664,12 +1667,13 @@ class NS_base(object):  # (HasTraits):
         if(hasattr(self,"tn")):
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
-            #deltaT = self.systemStepController.dt_system 
+            deltaT_next = self.systemStepController.dt_system 
             deltaT = self.modelList[0].levelModelList[0].timeIntegration.dtLast
             #T_current = self.systemStepController.t_system
             T_current = self.systemStepController.t_system_last
         else:
             deltaT = 0.0
+            deltaT_next = 0.0
             T_current = 0.0
         epsFact = p0.epsFact_density 
 
@@ -1677,10 +1681,11 @@ class NS_base(object):  # (HasTraits):
         
         #p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,T_current,epsFact)
         g = numpy.asarray(self.pList[0].ct.g)
-        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,T_current,epsFact)
+        p0.domain.PUMIMesh.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,deltaT_next,T_current,epsFact)
 
 
         errorTotal = p0.domain.PUMIMesh.get_VMS_error()
+        #ERM_total = p0.domain.PUMIMesh.get_local_error()
         filestring = "postAdapt_error_"+str(p0.domain.PUMIMesh.nAdapt())
         self.pList[0].domain.PUMIMesh.writeMesh(filestring)
         

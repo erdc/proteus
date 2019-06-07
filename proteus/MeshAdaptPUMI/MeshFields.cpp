@@ -114,7 +114,7 @@ int MeshAdaptPUMIDrvr::transferFieldToProteus(const char* name, double* outArray
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p, double deltaT, double T_simulation,double interfaceBandSize)
+int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p, double deltaT, double deltaT_next,double T_simulation,double interfaceBandSize)
 /**
  * @brief Transfer material properties to the MeshAdaptPUMI class
  * 
@@ -145,6 +145,7 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
   }
   N_interface_band = interfaceBandSize;
   delta_T = deltaT;
+  delta_T_next = deltaT_next;
   T_current = T_simulation;
   return 0;
 }

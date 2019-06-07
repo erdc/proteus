@@ -50,7 +50,7 @@ class MeshAdaptPUMIDrvr{
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
   int transferElementFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double T_simulation,double interfaceBandSize);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double deltaT_next,double T_simulation,double interfaceBandSize);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 
@@ -147,6 +147,7 @@ class MeshAdaptPUMIDrvr{
   double* nu;
   double g[3];
   double delta_T;
+  double delta_T_next;
   double T_current; //for error trigger
   double T_reference; //for error trigger
   apf::MeshTag* diffFlux;
