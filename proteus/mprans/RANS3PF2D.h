@@ -840,10 +840,6 @@ public:
                                    int INT_BY_PARTS_PRESSURE)
   {
     double rho, nu, mu, H_rho, d_rho, H_mu, d_mu, norm_n, nu_t0 = 0.0, nu_t1 = 0.0, nu_t;
-    H_rho = (1.0 - useVF) * smoothedHeaviside(eps_rho, phi) + useVF * fmin(1.0, fmax(0.0, vf));
-    d_rho = (1.0 - useVF) * smoothedDirac(eps_rho, phi);
-    H_mu = (1.0 - useVF) * smoothedHeaviside(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
-    d_mu = (1.0 - useVF) * smoothedDirac(eps_mu, phi);
 
     rho = rho_0;
     nu  = nu_0;
@@ -921,40 +917,40 @@ public:
     
     if(0)
     {
-    // u momentum Hamiltonian (pressure)
-    double aux_pressure = 0.0;
-    mom_u_ham = grad_p[0] * aux_pressure;
-    dmom_u_ham_grad_p[0] = aux_pressure;
-    dmom_u_ham_grad_p[1] = 0.0;
-    //v momentum Hamiltonian (pressure)
-    mom_v_ham = grad_p[1] * aux_pressure;
-    dmom_v_ham_grad_p[0] = 0.0;
-    dmom_v_ham_grad_p[1] = aux_pressure;
+      // u momentum Hamiltonian (pressure)
+      double aux_pressure = 0.0;
+      mom_u_ham = grad_p[0] * aux_pressure;
+      dmom_u_ham_grad_p[0] = aux_pressure;
+      dmom_u_ham_grad_p[1] = 0.0;
+      //v momentum Hamiltonian (pressure)
+      mom_v_ham = grad_p[1] * aux_pressure;
+      dmom_v_ham_grad_p[0] = 0.0;
+      dmom_v_ham_grad_p[1] = aux_pressure;
 
-    //u momentum Hamiltonian (advection)
-    mom_u_ham += rho * (uStar * grad_u[0] + vStar * grad_u[1]);
-    dmom_u_ham_grad_u[0] = rho * uStar;
-    dmom_u_ham_grad_u[1] = rho * vStar;
-    /* dmom_u_ham_grad_u[2]=porosity*rho*wStar; */
+      //u momentum Hamiltonian (advection)
+      mom_u_ham += rho * (uStar * grad_u[0] + vStar * grad_u[1]);
+      dmom_u_ham_grad_u[0] = rho * uStar;
+      dmom_u_ham_grad_u[1] = rho * vStar;
+      /* dmom_u_ham_grad_u[2]=porosity*rho*wStar; */
 
-    //v momentum Hamiltonian (advection)
-    mom_v_ham += rho * (uStar * grad_v[0] + vStar * grad_v[1]);
-    dmom_v_ham_grad_v[0] = rho * uStar;
-    dmom_v_ham_grad_v[1] = rho * vStar;
-  }
-  else
-  {
-    mom_u_ham = 0.0;
-    dmom_u_ham_grad_p[0] = 0.0;
-    dmom_u_ham_grad_p[1] = 0.0;
-    mom_v_ham = 0.0;
-    dmom_v_ham_grad_p[0] = 0.0;
-    dmom_v_ham_grad_p[1] = 0.0;
-    dmom_u_ham_grad_u[0] = 0.0;
-    dmom_u_ham_grad_u[1] = 0.0;
-    dmom_v_ham_grad_v[0] = 0.0;
-    dmom_v_ham_grad_v[1] = 0.0;
-  }
+      //v momentum Hamiltonian (advection)
+      mom_v_ham += rho * (uStar * grad_v[0] + vStar * grad_v[1]);
+      dmom_v_ham_grad_v[0] = rho * uStar;
+      dmom_v_ham_grad_v[1] = rho * vStar;
+    }
+    else
+    {
+      mom_u_ham = 0.0;
+      dmom_u_ham_grad_p[0] = 0.0;
+      dmom_u_ham_grad_p[1] = 0.0;
+      mom_v_ham = 0.0;
+      dmom_v_ham_grad_p[0] = 0.0;
+      dmom_v_ham_grad_p[1] = 0.0;
+      dmom_u_ham_grad_u[0] = 0.0;
+      dmom_u_ham_grad_u[1] = 0.0;
+      dmom_v_ham_grad_v[0] = 0.0;
+      dmom_v_ham_grad_v[1] = 0.0;
+    }
   }
 
   //VRANS specific
@@ -2180,26 +2176,6 @@ public:
         //
         //moving mesh
         //
-        mom_u_adv[0] -= MOVING_DOMAIN * dmom_u_acc_u * mom_u_acc * xt; // multiply by rho*porosity. mql. CHECK.
-        mom_u_adv[1] -= MOVING_DOMAIN * dmom_u_acc_u * mom_u_acc * yt;
-        /* mom_u_adv[2] -= MOVING_DOMAIN*dmom_u_acc_u*mom_u_acc*zt; */
-        dmom_u_adv_u[0] -= MOVING_DOMAIN * dmom_u_acc_u * xt;
-        dmom_u_adv_u[1] -= MOVING_DOMAIN * dmom_u_acc_u * yt;
-        /* dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt; */
-
-        mom_v_adv[0] -= MOVING_DOMAIN * dmom_v_acc_v * mom_v_acc * xt;
-        mom_v_adv[1] -= MOVING_DOMAIN * dmom_v_acc_v * mom_v_acc * yt;
-        /* mom_v_adv[2] -= MOVING_DOMAIN*dmom_v_acc_v*mom_v_acc*zt; */
-        dmom_v_adv_v[0] -= MOVING_DOMAIN * dmom_v_acc_v * xt;
-        dmom_v_adv_v[1] -= MOVING_DOMAIN * dmom_v_acc_v * yt;
-        /* dmom_v_adv_v[2] -= MOVING_DOMAIN*dmom_v_acc_v*zt; */
-
-        /* mom_w_adv[0] -= MOVING_DOMAIN*dmom_w_acc_w*mom_w_acc*xt; */
-        /* mom_w_adv[1] -= MOVING_DOMAIN*dmom_w_acc_w*mom_w_acc*yt; */
-        /* mom_w_adv[2] -= MOVING_DOMAIN*dmom_w_acc_w*mom_w_acc*zt; */
-        /* dmom_w_adv_w[0] -= MOVING_DOMAIN*dmom_w_acc_w*xt; */
-        /* dmom_w_adv_w[1] -= MOVING_DOMAIN*dmom_w_acc_w*yt; */
-        /* dmom_w_adv_w[2] -= MOVING_DOMAIN*dmom_w_acc_w*zt; */
         //
         //calculate time derivative at quadrature points
         //
@@ -2585,9 +2561,6 @@ public:
     //
     //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
     //
-    std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles * 3 * 3), particle_netMoments(nParticles * 3);
-    const int nQuadraturePoints_global(nElements_global * nQuadraturePoints_element);
-    //std::set<int> active_velocity_dof;
 
     for (int eN = 0; eN < nElements_global; eN++)
     {
@@ -2733,14 +2706,14 @@ public:
                         p_grad_test_dV[nDOF_test_element * nSpace], vel_grad_test_dV[nDOF_test_element * nSpace],
                         x, y, z, xt, yt, zt,
                         //VRANS
-            porosity,
+                        porosity,
                         //meanGrainSize,
-            dmom_u_source[nSpace],
+                        dmom_u_source[nSpace],
                         dmom_v_source[nSpace],
                         dmom_w_source[nSpace],
                         mass_source,
                         //
-            G[nSpace * nSpace], G_dd_G, tr_G, h_phi, dmom_adv_star[nSpace], dmom_adv_sge[nSpace];
+                        G[nSpace * nSpace], G_dd_G, tr_G, h_phi, dmom_adv_star[nSpace], dmom_adv_sge[nSpace];
         //get jacobian, etc for mapping reference element
         ck.calculateMapping_element(eN,
                                     k,
