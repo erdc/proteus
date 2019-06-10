@@ -843,7 +843,8 @@ namespace proteus
                                                double gradC_y,
                                                double gradC_z,
                                                double p,
-                                               double& entropyProduction)
+                                               double& entropyProduction,
+                                               int& ep_count)
       {
         double rhoFluid, muFluid,nuFluid,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -900,12 +901,16 @@ namespace proteus
 				// sigma	  : schmidt number                  closure.sigmaC_
         //
         // The pressure term wasn't originally in this function, but has been set to pass it in now (5/21/19).
-        
+         double otherbit=new_beta * nu_t /closure.sigmaC_;
          entropyProduction = (vos * new_beta) * (u_f-u)*(u_f-u) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_x*(u_f-u);
          entropyProduction += (vos * new_beta) * (v_f-v)*(v_f-v) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_y*(v_f-v);
          entropyProduction += (vos * new_beta) * (w_f-w)*(w_f-w) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_z*(w_f-w);
-      if(entropyProduction<0)
-        {std::cout<<"The second law of thermodynamics has just been violated!"<<std::endl;}
+      if(entropyProduction<0 && ep_count<1)
+        {std::cout<<"The second law of thermodynamics has just been violated!"<<std::endl;
+        std::cout<<"The pressure is "<<p<<" and the other bit is "<<otherbit<<" and the turbulent viscosity is "<<nu_t<<"."<<std::endl;
+        ep_count=2;}
+        //else
+        //{std::cout<<"Entropy production is fine!"<<std::endl;}
       }
 
 
@@ -1677,6 +1682,7 @@ namespace proteus
           mesh_volume_conservation_err_max=0.0,
           mesh_volume_conservation_err_max_weak=0.0;
         double globalConservationError=0.0;
+        int ep_count=0; // So the entropy violation signal doesn't dominate the screen
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -1705,6 +1711,7 @@ namespace proteus
             //
             //loop over quadrature points and compute integrands
             //
+
             for(int k=0;k<nQuadraturePoints_element;k++)
               {
                 //compute indices and declare local storage
@@ -2009,7 +2016,8 @@ namespace proteus
                                                   q_grad_vos[eN_k_nSpace+1],
                                                   q_grad_vos[eN_k_nSpace+1],
                                                   p,
-                                                  entropyProduction);
+                                                  entropyProduction,
+                                                  ep_count);
 
 		updateFrictionalPressure(vos,
                                          grad_vos,
@@ -3285,6 +3293,7 @@ namespace proteus
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
         //
+            int ep_count=2; // For not vomiting the entropy violation signal everywhere
         for(int eN=0;eN<nElements_global;eN++)
           {
             register double eps_rho,eps_mu;
@@ -3643,7 +3652,8 @@ namespace proteus
                                                   q_grad_vos[eN_k_nSpace+1],
                                                   q_grad_vos[eN_k_nSpace+1],
                                                   p,
-                                                  entropyProduction);
+                                                  entropyProduction,
+                                                  ep_count);
 
                 double mu_fr_tmp=0.0;
 		updateFrictionalPressure(vos,
