@@ -25,24 +25,24 @@ opts = Context.Options([
     ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 9.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.30, "Desired CFL restriction"),
+    ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs",True,"Use reflecting BCs")
+    ("reflecting_BCs", True, "Use reflecting BCs")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (30.0, 25.0)  # this is length in x direction and y direction
+L = (48.8, 26.5)  # this is length in x direction and y direction
 refinement = opts.refinement
-domain = RectangularDomain(L=L)
+domain = RectangularDomain(L=L,x=[0,-13.25,0])
 
 # CREATE REFINEMENT #
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 2) + 1
 he = old_div(L[0], float(nnx - 1))
-triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
+triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 
 ###############################
 #  CONSTANTS NEEDED FOR SETUP #
@@ -72,28 +72,56 @@ def solitary_wave(x, t):
 
 def bathymetry_function(X):
     x = X[0]
-    y = X[1]
+    y = X[1] + yc
+
     # first define cone topography
-    cone = np.max(hcone - np.sqrt(((x-17.0)**2+(y-yc)**2)/(rcone/hcone)**2),0.0)
+    cone = np.maximum(
+        hcone - np.sqrt(((x - 17.0)**2 + (y - yc)**2) / (rcone / hcone)**2), 0.0)
 
     # define some stuff we need for shelf
-    dist = 1.0 - MIN(1.0, ABS(y - yc)/yc)
+    dist = 1.0 - np.minimum(1.0, np.abs(y - yc) / yc)
     aux_x = 12.50 + 12.4999 * (1.0 - dist)
     aux_z = 0.70 + 0.050 * (1.0 - dist)
 
-    # then do annoying stuff for piecewise functions
-    conds = [x < 10.2, (10.2 < x) & (x - aux_x <= 0.0), (aux_x - x <= 0.) & (x <= 25.), \
-                        (13.948 < x) & (x<= 14.045)]
-    bath = [lambda x: 0, \
-    lambda x: aux_z / (aux_x-10.20) * (x-10.2), \
-    lambda x: 0.75 + (aux_z-0.75)/(aux_x-25.)*(x-25.), \
-    lambda x: 3.6 / 20. + 0.076 - (0.076 - 0.022) / (14.045 - 13.948) * (x - 13.948) - h0, \
-    lambda x: 1 / 20. * (x - 10.) - h0]
-    return np.piecewise(x, conds, bath)
+    # initialize bath with shape of x array
+    bath = 0. * x
+
+    # silly hack because X switches from list to array of
+    # length 3 in different functions
+    if (isinstance(X, list)):
+        for i, value in enumerate(X[0]):
+            if value < 10.2:
+                bath[i] = 0.
+            if ((10.2 <= value) & (value  <= aux_x[i])):
+                bath[i] = aux_z[i] / (aux_x[i] - 10.20) * (value - 10.2)
+            if ((aux_x[i] <= value) & (value <= 25.)):
+                bath[i] = 0.75 + (aux_z[i] - 0.75) / \
+                    (aux_x[i] - 25.) * (value - 25.)
+            if ((25. < value) & (value <= 32.5)):
+                bath[i] = 1. + (1. - 0.5) / (32.5 - 17.5) * (value - 32.5)
+            if (32.5 < value):
+                bath[i] = 1.
+    else:
+            if x < 10.2:
+                bath = 0.0
+            if ((10.2 < x) & (x <= aux_x)):
+                bath = aux_z / (aux_x - 10.20) * (x - 10.2)
+            if ((aux_x <= x) & (x <= 25.)):
+                bath = 0.75 + (aux_z - 0.75) / \
+                    (aux_x - 25.) * (x - 25.)
+            if ((25. < x) & (x <= 32.5)):
+                bath = 1. + (1. - 0.5) / (32.5 - 17.5) * (x - 32.5)
+            if (32.5 < x):
+                bath = 1.
+
+    bath = bath + cone
+    return bath
 
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
+
+
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
         eta = h0 + solitary_wave(X[0], 0)
@@ -119,7 +147,7 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        hw = 2.0 * solitary_wave(X[0], 0) * vel * np.sinh(vel * (X[0]-xs))
+        hw = 2.0 * solitary_wave(X[0], 0) * vel * np.sinh(vel * (X[0] - xs))
         return hw
 
 ###############################
@@ -127,9 +155,12 @@ class hw_at_t0(object):
 ###############################
 
 # Actually don't need any of these
+
+
 def water_height_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
+
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0]:
@@ -149,15 +180,16 @@ def hw_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
 
+
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-from proteus.Gauges import PointGauges
-p = PointGauges(gauges=(( ('h'), ((30, 15, 0), (60,15,0)) ),),
-                activeTime=(0, 10),
-                sampleRate=0.1,
-                fileName='island_gauges.csv')
-auxiliaryVariables = [p]
+# from proteus.Gauges import PointGauges
+# p = PointGauges(gauges=((('h'), ((30, 15, 0), (60, 15, 0))),),
+#                 activeTime=(0, 10),
+#                 sampleRate=0.1,
+#                 fileName='island_gauges.csv')
+# auxiliaryVariables = [p]
 
 
 # ********************************** #
@@ -170,11 +202,11 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0()}
-boundaryConditions = {'water_height': lambda x,flag: None,
-                      'x_mom': lambda x,flag: None,
-                      'y_mom': lambda x,flag: None,
-                      'h_times_eta': lambda x,flag: None,
-                      'h_times_w': lambda x,flag: None}
+boundaryConditions = {'water_height': lambda x, flag: None,
+                      'x_mom': lambda x, flag: None,
+                      'y_mom': lambda x, flag: None,
+                      'h_times_eta': lambda x, flag: None,
+                      'h_times_w': lambda x, flag: None}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -188,4 +220,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
-mySWFlowProblem.physical_parameters['mannings'] = 0.0
+mySWFlowProblem.physical_parameters['mannings'] = 0.02
