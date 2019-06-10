@@ -605,9 +605,19 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   boxLength = boxDim[0];
   boxWidth = boxDim[1];
   boxHeight = boxDim[2];
+//  xyz_offset[0] = sphereCenter[0];
+//  xyz_offset[1] = sphereCenter[1];
+//  xyz_offset[2] = sphereCenter[2];
+  std::cout<<"Setting regular xyz_offset."<<std::endl;
   xyz_offset[0] = sphereCenter[0];
   xyz_offset[1] = sphereCenter[1];
   xyz_offset[2] = sphereCenter[2];
+  std::cout<<"Setting xyz_offset_ssf."<<std::endl;
+  xyz_offset_ssf[0] = sphereCenter[0];
+  xyz_offset_ssf[1] = sphereCenter[1];
+  xyz_offset_ssf[2] = sphereCenter[2];
+
+	
 	
   lion_set_verbosity(1);
 
@@ -694,6 +704,11 @@ void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
   xyz_offset[0] = sphereCenter[0];
   xyz_offset[1] = sphereCenter[1];
   xyz_offset[2] = sphereCenter[2];
+  std::cout<<"Setting xyz_offset_ssf."<<std::endl;
+  xyz_offset_ssf[0] = sphereCenter[0];
+  xyz_offset_ssf[1] = sphereCenter[1];
+  xyz_offset_ssf[2] = sphereCenter[2];
+
 }
 
 
