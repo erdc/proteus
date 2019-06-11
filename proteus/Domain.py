@@ -68,6 +68,9 @@ class D_base(object):
         self.useSpatialTools = False
         # default value for barycenters (compatibility with TwoPhaseFlow)
         self.barycenters = None
+        # default (empty) file names for mesh
+        self.geofile = None
+        self.polyfile = None
 
     #Get the mesh entity to model entity classification for every entity
     def isOnLine(self,pointA,pointB,testPoint):

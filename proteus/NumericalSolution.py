@@ -268,6 +268,7 @@ class NS_base(object):  # (HasTraits):
                 fileprefix = None
                 # run mesher
                 if p.domain.use_gmsh is True:
+                    assert p.domain.geofile is not None, 'please define domain.geofile to use gmsh'
                     fileprefix = p.domain.geofile
                     if comm.isMaster() and (p.genMesh or not (os.path.exists(fileprefix+".ele") and
                                                               os.path.exists(fileprefix+".node") and
@@ -283,6 +284,7 @@ class NS_base(object):  # (HasTraits):
                         # convert gmsh to triangle format
                         MeshTools.msh2simplex(fileprefix=fileprefix, nd=2)
                 else:
+                    assert p.domain.polyfile is not None, 'please define domain.polyfile to use gmsh'
                     fileprefix = p.domain.polyfile
                     if comm.isMaster() and p.genMesh:
                         logEvent("Calling Triangle to generate 2D mesh for "+p.name)
@@ -311,8 +313,10 @@ class NS_base(object):  # (HasTraits):
                 from subprocess import call
                 import sys
                 if p.domain.use_gmsh is True:
+                    assert p.domain.geofile is not None, 'please define domain.geofile to use gmsh'
                     fileprefix = p.domain.geofile
                 else:
+                    assert p.domain.polyfile is not None, 'please define domain.polyfile to use tetgen'
                     fileprefix = p.domain.polyfile
                 if comm.rank() == 0 and (p.genMesh or not (os.path.exists(fileprefix+".ele") and
                                                            os.path.exists(fileprefix+".node") and
