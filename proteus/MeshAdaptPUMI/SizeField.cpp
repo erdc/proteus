@@ -80,8 +80,9 @@ int MeshAdaptPUMIDrvr::setSphereSizeField()
 	if(distance<=sphereRadius_ssf+hmin){
     //if(modelTag==123){
         sizeDesired=hmin;
-        std::cout<<"The distance between this vertex, "<<pt[0]<<","<<pt[1]<<","<<pt[2]<<", and the sphere center, "<<xyz_offset_ssf[0]<<","<<xyz_offset_ssf[1]<<","<<xyz_offset_ssf[2]<<", is "<<distance<<std::endl;
-		std::cout<<"minimum set for this point "<<std::endl;}
+        //std::cout<<"The distance between this vertex, "<<pt[0]<<","<<pt[1]<<","<<pt[2]<<", and the sphere center, "<<xyz_offset_ssf[0]<<","<<xyz_offset_ssf[1]<<","<<xyz_offset_ssf[2]<<", is "<<distance<<std::endl;
+		//std::cout<<"minimum set for this point "<<std::endl;
+		}
     else
         sizeDesired=hmax;
     apf::setScalar(sphereSize,ent,0,sizeDesired);
