@@ -296,7 +296,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         reaction = {}
         hamiltonian = {}
         if nd == 2:
-            variableNames = ['h', 'hu', 'hv', 'heta', 'hw']
+            variableNames = ['h', 'h_u', 'h_v', 'h_eta', 'h_w']
             mass = {0: {0: 'linear'},
                     1: {0: 'linear', 1: 'linear'},
                     2: {0: 'linear', 2: 'linear'},
@@ -1281,7 +1281,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.heta_dof_old = numpy.copy(self.u[3].dof)
         self.hw_dof_old = numpy.copy(self.u[4].dof)
         # hEps
-        eps = 1E-5
+        eps = 1E-5  # JLG uses 1E-5 so I put it here too -EJT
         self.hEps = eps * self.u[0].dof.max()
         # normal vectors
         self.normalx = numpy.zeros(self.u[0].dof.shape, 'd')

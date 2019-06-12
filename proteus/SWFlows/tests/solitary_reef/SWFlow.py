@@ -23,7 +23,7 @@ places in the tank measuring the water height (location can be see in bottom)
 # *************************** #
 opts = Context.Options([
     ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 9.0, "Final time for simulation"),
+    ("final_time", 12.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
@@ -53,7 +53,7 @@ g = 9.81
 h0 = 0.78
 alpha = 0.5 * h0
 xs = 5.0
-vel = np.sqrt(old_div(3 * alpha, (4 * h0**3)))
+vel = np.sqrt(old_div(3. * alpha, (4. * h0**3)))
 
 # stuff for bathymetry, including shelf and cone
 rcone = 3.
@@ -87,7 +87,7 @@ def bathymetry_function(X):
     bath = 0. * x
 
     # silly hack because X switches from list to array of
-    # length 3 in different functions
+    # length 3 (x,y,z) when called in initial conditions
     if (isinstance(X, list)):
         for i, value in enumerate(X[0]):
             if value < 10.2:
