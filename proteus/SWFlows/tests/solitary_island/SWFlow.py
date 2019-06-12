@@ -15,7 +15,7 @@ import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 """
 This is the problem of a solitary wave overtopping a canonical island.
 This experiment was done at (insert ref here). There were several gauges
-places in the tank measuring the water height
+places in the tank measuring the water height (location can be see in bottom)
 """
 
 # *************************** #
@@ -25,7 +25,7 @@ opts = Context.Options([
     ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 9.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.30, "Desired CFL restriction"),
+    ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
     ("reflecting_BCs",True,"Use reflecting BCs")
 ])
@@ -62,9 +62,9 @@ scone = 4.0
 hcone = 0.9
 
 
-###############################
-#   Functions defined here    #
-###############################
+#####################################
+#   Some functions defined here    #
+####################################
 def solitary_wave(x, t):
     sechSqd = (1.00 / np.cosh(vel * (x - xs)))**2.00
     soliton = alpha * sechSqd
@@ -100,10 +100,6 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
-
-# heta and hw are needed for the modified green naghdi equations
-# source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-# THE GREEN NAGHDI EQUATIONS' by Guermond, Popov, Tovar, Kees
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):
@@ -142,6 +138,16 @@ def heta_DBC(X, flag):
 def hw_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
+
+# **************************** #
+# ********** GAUGES ********** #
+# **************************** #
+from proteus.Gauges import PointGauges
+p = PointGauges(gauges=(( ('h'), ((30, 15, 0), (60,15,0)) ),),
+                activeTime=(0, 10),
+                sampleRate=0.1,
+                fileName='island_gauges.csv')
+auxiliaryVariables = [p]
 
 
 # ********************************** #
