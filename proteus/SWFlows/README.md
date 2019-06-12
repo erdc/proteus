@@ -16,16 +16,16 @@ propagate solitary waves, etc etc etc.
 ## Getting Started
 
 These instructions will help you run these tests on your local machine and help
-you set up a new tests for your specific needs.
+you set up new tests for your specific needs.
 
 ### Prerequisites
 
 Each test directory in `/SWFlows/tests/` contains a python file named
-SWFlows.py. This is the file that sets up a domain, initial conditions and
+SWFlow.py. This is the file that sets up a domain, initial conditions and
 boundary conditions for a specific problem. This is the only file that you
 need to modify to run these tests.
 
-Each SWFlows.py file has its own set of options to choose which model to run,
+Each SWFlow.py file has its own set of options to choose which model to run,
 final run time of the simulation, refinement level of mesh, etc. For example,
 in `SWFlows/tests/dam_over_bumps`, we see the following set of default options:
 
@@ -44,7 +44,7 @@ opts= Context.Options([
 
 ## Running the tests
 
-Explain how to run the automated tests for this system
+To
 
 ### Break down into end to end tests
 
@@ -76,19 +76,24 @@ Add additional notes about how to deploy this on a live system
 
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
 
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Manuel Quezada De Luna**
+* **Chris Kees**
+* **Eric Tovar**
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## References
+
+* J.-L. Guermond, M. Quezada de Luna, B. Popov, C. Kees, and M. Farthing. Well-balanced second-order finite element approximation of the shallow water equations with friction. SIAM Journal on Scientific Computing, 40(6):A3873– A3901, 2018.
+* J.-L. Guermond,, B. Popov, E. Tovar, C. Kees. Robust explicit relaxtion technique for solving the Green-Naghdi equations.
+manuscript, 2019
 
 ## Acknowledgments
 
