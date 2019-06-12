@@ -25,7 +25,7 @@ SWFlow.py. This is the file that sets up a domain, initial conditions and
 boundary conditions for a specific problem. This is the only file that you
 need to modify to run these tests.
 
-Each SWFlow.py file has its own set of options to choose which model to run,
+Each `SWFlow.py` file has its own set of options to choose which model to run,
 final run time of the simulation, refinement level of mesh, etc. For example,
 in `SWFlows/tests/dam_over_bumps`, we see the following set of default options:
 
@@ -44,7 +44,11 @@ opts= Context.Options([
 
 ## Running the tests
 
-To
+To run a single test, go to test of your choice. We will do the test in  `SWFlows/dam_over_bumps`. Without any modifications to the context options, we can do one of two things
+
+```
+parun --SWEs
+```
 
 ### Break down into end to end tests
 
@@ -92,7 +96,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## References
 
 * J.-L. Guermond, M. Quezada de Luna, B. Popov, C. Kees, and M. Farthing. Well-balanced second-order finite element approximation of the shallow water equations with friction. SIAM Journal on Scientific Computing, 40(6):A3873– A3901, 2018.
-* J.-L. Guermond,, B. Popov, E. Tovar, C. Kees. Robust explicit relaxtion technique for solving the Green-Naghdi equations.
+* J.-L. Guermond, B. Popov, E. Tovar, C. Kees. Robust explicit relaxtion technique for solving the Green-Naghdi equations.
 manuscript, 2019
 
 ## Acknowledgments
