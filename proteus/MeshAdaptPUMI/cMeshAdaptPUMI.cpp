@@ -504,7 +504,7 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
     apf::destroyMeshElement(element);
 
     //apf::setScalar(sizeRatioField,ent,0,size_ratio_local_predict);
-    if(errorRate > 0 && sizeRatio_local_predict>2.0 && nTriggers>=5)
+    if(errorRate > 0 && sizeRatio_local_predict>2.0 && nTriggers>= (0.1*numAdaptSteps))
     {
         if(apf::getScalar(errorTriggered,ent,0)==1)
         {
@@ -518,6 +518,13 @@ int MeshAdaptPUMIDrvr::willErrorAdapt_reference()
         apf::setScalar(errorTriggered,ent,0,-1.0);
   }
   m->end(it);
+
+  //upper bound on adapt steps
+  if(nTriggers>=2*numAdaptSteps)
+  {
+    logEvent("Adapting because upper limit was reached.",4);
+    adaptFlag = 1;
+  }
 
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
