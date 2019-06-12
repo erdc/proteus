@@ -221,6 +221,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
+                 relaxation_zones=None,
                  nullSpace='NoNullSpace'):
         self.use_pseudo_penalty = 0
         self.use_ball_as_particle = use_ball_as_particle
@@ -760,6 +761,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                             self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
                             self.ebq_particle_velocity_s[ebN,kb,:] = vel(self.model.ebq_global['x'][ebN,kb])
 
+        if self.relaxation_zones is not None:
+            if firstStep is True:
+                self.relaxation_zones.calculate_init()
+                self.relaxation_zones.attachModel(self.model, None)
+            else:
+                self.relaxation_zones.calculate()
         # if self.comm.isMaster():
         # print "wettedAreas"
         # print self.wettedAreas[:]

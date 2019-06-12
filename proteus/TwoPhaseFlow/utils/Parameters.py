@@ -331,6 +331,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.ball_center_acceleration = None
         copts.ball_angular_acceleration = None
         copts.ball_density = None
+        copts.relaxation_zones = None
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
@@ -429,6 +430,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             ball_center_acceleration=copts.ball_center_acceleration,
             ball_angular_acceleration=copts.ball_angular_acceleration,
             ball_density=copts.ball_density,
+            relaxation_zones=copts.relaxation_zones,
         )
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
