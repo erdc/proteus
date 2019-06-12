@@ -67,7 +67,8 @@ def bathymetry_function(X):
     slope = 1.0 / 20.
     x = X[0]
     bath = 0.5 - 0.2 + 0.0 * x
-    # silly hack because X switches from list to array in different functions
+    # silly hack because X switches from list to array of
+    # length 3 (x,y,z) when called in initial conditions
     if (isinstance(X, list)):
         for counter, value in enumerate(X[0]):
             if value < 10.0:

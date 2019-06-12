@@ -54,6 +54,7 @@ mannings = k
 def bathymetry_function(X):
     x = X[0]
     y = X[1]
+    import pdb; pdb.set_trace()
     bump1 = 1-1./8*np.sqrt((x-30)**2+(y-6)**2)
     bump2 = 1-1./8*np.sqrt((x-30)**2+(y-24)**2)
     bump3 = 3-3./10*np.sqrt((x-47.5)**2+(y-15)**2)

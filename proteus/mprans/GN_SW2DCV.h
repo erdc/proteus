@@ -20,7 +20,37 @@
 #define LAMBDA_MGN 1 // DO NOT CHANGE THIS. -EJT
 
 namespace proteus {
-/* FOR mGN, maybe we don't need a lot of these inline functions */
+/* FOR mGN, maybe we don't need a lot of these inline functions after first two
+ * that I defined */
+
+// for mGN stuff -EJT
+inline double GN_nu1(const double &g, const double &hL, const double &uL,
+                     const double &etaL, const double &meshSizeL) {
+
+  // See section 4.4 of first mGN paper by Guermond, Popov, Tovar, Kees for
+  // formulas
+  double augL = LAMBDA_MGN / (3. * meshSizeL) * (6. * hL + 12. * (hL - etaL));
+
+  if (etaL >= hL) {
+    augL = LAMBDA_MGN / (3. * meshSizeL) * 6. * hL;
+  }
+  augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2.0);
+
+  return uL - sqrt(g * hL) * sqrt(1 + augL);
+} // EJT
+inline double GN_nu3(const double &g, const double &hR, const double &uR,
+                     const double &etaR, const double &meshSizeR) {
+  // See section 4.4 of first mGN paper by Guermond, Popov, Tovar, Kees for
+  // formulas
+  double augR = LAMBDA_MGN / (3. * meshSizeR) * (6. * hR + 12. * (hR - etaR));
+
+  if (etaR >= hR) {
+    augR = LAMBDA_MGN / (3. * meshSizeR) * 6. * hR;
+  }
+  augR = augR * std::pow(meshSizeR / fmax(meshSizeR, hR), 2.0);
+
+  return uR + sqrt(g * hR) * sqrt(1 + augR);
+}
 
 // FOR CELL BASED ENTROPY VISCOSITY
 inline double ENTROPY(const double &g, const double &h, const double &hu,
@@ -86,33 +116,6 @@ inline double nu3(const double &g, const double &hStar, const double &hR,
                   const double &uR) {
   return (uR + sqrt(g * hR) * sqrt((1 + fmax((hStar - hR) / 2 / hR, 0.0)) *
                                    (1 + fmax((hStar - hR) / hR, 0.))));
-} // EJT
-inline double GN_nu1(const double &g, const double &hL, const double &uL,
-                     const double &etaL, const double &meshSizeL) {
-
-  // See section 4.4 of first mGN paper by Guermond, Popov, Tovar, Kees for
-  // formulas
-  double augL = LAMBDA_MGN / (3. * meshSizeL) * (6. * hL + 12. * (hL - etaL));
-
-  if (etaL >= hL) {
-    augL = LAMBDA_MGN / (3. * meshSizeL) * 6. * hL;
-  }
-  augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2.0);
-
-  return uL - sqrt(g * hL) * sqrt(1 + augL);
-} // EJT
-inline double GN_nu3(const double &g, const double &hR, const double &uR,
-                     const double &etaR, const double &meshSizeR) {
-  // See section 4.4 of first mGN paper by Guermond, Popov, Tovar, Kees for
-  // formulas
-  double augR = LAMBDA_MGN / (3. * meshSizeR) * (6. * hR + 12. * (hR - etaR));
-
-  if (etaR >= hR) {
-    augR = LAMBDA_MGN / (3. * meshSizeR) * 6. * hR;
-  }
-  augR = augR * std::pow(meshSizeR / fmax(meshSizeR, hR), 2.0);
-
-  return uR + sqrt(g * hR) * sqrt(1 + augR);
 }
 inline double phiDiff(const double &g, const double &h1k, const double &h2k,
                       const double &hL, const double &hR, const double &uL,
@@ -459,7 +462,6 @@ public:
                                               double hEpsL, double hEpsR,
                                               bool debugging) {
     double lambda1, lambda3;
-    /* See equation 4.12 from mGN paper -EJT */
 
     // 1-eigenvalue: uL-sqrt(g*hL)*sqrt(1 + augL)
     // 3-eigenvalue: uR+sqrt(g*hR)*sqrt(1 + augR)
@@ -548,7 +550,7 @@ public:
     }
 #endif
 
-    // mGN approx wave speeds defined here
+    /* See equation 4.12 from mGN paper -EJT */
     lambda1 = GN_nu1(g, hL, velL, etaL, meshSizeL);
     lambda3 = GN_nu3(g, hR, velR, etaR, meshSizeR);
     return fmax(fabs(lambda1), fabs(lambda3));
@@ -1133,11 +1135,12 @@ public:
       double one_over_hiReg =
           2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
 
+      // For limiting h, initializing hMin and hMax
       double hiMin = hi;
       double hiMax = hi;
       double Pnegi = 0., Pposi = 0.;
 
-      // For limiting heta
+      // For limiting heta, initializing heta_Min, heta_max
       double hetai_Min = hetai;
       double hetai_Max = hetai;
       double Pnegi_heta = 0., Pposi_heta = 0.;
@@ -1157,7 +1160,7 @@ public:
         double psi_ij = 0;
         if (hBT != 0)
           psi_ij = 1 / (2 * hBT[ij]) *
-                   (huBT[ij] * huBT[ij] + huBT[ij] * huBT[ij]); // Eqn (6.29)
+                   (huBT[ij] * huBT[ij] + huBT[ij] * huBT[ij]); // Eqn (6.31)
         Kmax[i] = fmax(psi_ij, Kmax[i]);
 
         // read some vectors
@@ -1207,9 +1210,8 @@ public:
         hetai_Min = std::min(hetai_Min, hetaBT[ij]);
         hetai_Max = std::max(hetai_Max, hetaBT[ij]);
 
-        // HERE WE DO HETA LIMTING STUFF
-
-        // COMPUTE LOW ORDER SOLUTION (WITHOUT EXTENDED SOURCE) //
+        /* COMPUTE LOW ORDER SOLUTION (WITHOUT EXTENDED SOURCE). See EQN 6.23 in
+         * SW friction paper */
         if (i != j) {
           hLow[i] += hi * (-dt / mi * 2 * dLow[ij]) +
                      dt / mi * (2 * dLow[ij] * hBT[ij]);
@@ -1285,7 +1287,7 @@ public:
 
       double ci =
           Kmax[i] * hLow[i] -
-          0.5 * (huLow[i] * huLow[i] + hvLow[i] * hvLow[i]); // for conv. lim.
+          0.5 * (huLow[i] * huLow[i] + hvLow[i] * hvLow[i]); // for KE lim.
 
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       for (int offset = csrRowIndeces_DofLoops[i];
@@ -1881,8 +1883,9 @@ public:
         etaMax[i] = fabs(eta[i]);
         etaMin[i] = fabs(eta[i]);
 
-        // COMPUTE EXTENDED SOURCE TERM //
-        // FRICTION //
+        /* COMPUTE EXTENDED SOURCE TERMS */
+
+        // Friction
         if (LINEAR_FRICTION == 1) {
           extendedSourceTerm_hu[i] = mannings * hui * mi;
           extendedSourceTerm_hv[i] = mannings * hvi * mi;
@@ -1905,14 +1908,15 @@ public:
 
         /* Note for implementation purposes, we are using the more robust Gamma
          * function for the modified Green naghdi equations. That is, the
-         * function that might lose hyperbolicity but still works for some
-         * reason. -EJT  */
+         * function that might lose hyperbolicity but we still use if statements
+         * in the defition for lambda max so we don't lose hyperbolicity. -EJT
+         */
+
         double ratioi =
             (2.0 * hetai) / (std::pow(etai, 2.0) + std::pow(hi, 2.0) + hEps);
 
-        // This is h^2 Gamma'(eta/h)
+        // This is h^2*Gamma'(eta/h) at ith node
         double hSqd_GammaPi = 6.0 * (hetai - std::pow(hi, 2.0));
-
         // if (etai >= hi) {
         //   hSqd_GammaPi = 6.0 * (std::pow(etai, 2.0) - hetai);
         // }
@@ -1957,10 +1961,9 @@ public:
           double meshSizej =
               std::sqrt(lumped_mass_matrix[j]); // local mesh size in 2d
 
-          // for mGN
+          // This is modified pressure term, pTilde at jth node
           double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
                            (hetaj - std::pow(hj, 2.0));
-
           // if (etaj >= hj) {
           //   pTildej = -(LAMBDA_MGN * g / meshj) / 3.0 * 2.0 *
           //             (std::pow(etaj, 3.0) - std::pow(hj, 3.0));
@@ -2101,7 +2104,7 @@ public:
 
           // for mGN stuff, need it for bar states definition -EJT
           double meshSizej = std::sqrt(mj); // local mesh size in 2d
-          double pTildej = -(LAMBDA_MGN * g / meshSizej) / 3.0 * 6.0 * hj *
+          double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
                            (hetaj - std::pow(hj, 2.0));
 
           // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
@@ -2153,11 +2156,13 @@ public:
                            fmax(0, (uj * Cx[ij] + vj * Cy[ij])));
 
             // JLG put this hack in the code, so I'm doing it too -EJT
-            muLij = (1. + hEps) *
-                    muLowij; // fmax(psi[i], psi[j]); // enhance the order to
-            // 2nd order.
+            muLij = (1. + hEps) * muLowij; // No EV
 
-            dLow[ij] = fmax(dLij, muLij); // save dLow for limiting step
+            // Need this dLij for low order update and bar states
+            dLij = fmax(dLowij, muLij);
+
+            // Then save dLow for limiting step
+            dLow[ij] = fmax(dLowij, muLij);
 
             ////////////////////////
             // COMPUTE BAR STATES //
