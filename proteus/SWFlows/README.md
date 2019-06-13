@@ -40,15 +40,18 @@ opts= Context.Options([
     ])
 
 ```
+Here `sw_model` refers to which model is chosen; 0 for the Shallow Water Equations and 1 for the modified Green-Naghdi equations (or "Dispersive SWEs"). The rest of the options should be straight forward.
 
 
 ## Running the tests
 
-To run a single test, go to test of your choice. We will do the test in  `SWFlows/dam_over_bumps`. Without any modifications to the context options, we can do one of two things
+To run a single test, go to a test directory of your choice. For this description, we are the directory `SWFlows/tests/dam_over_bumps`. Without any modifications to the context options, one can run the following command:
 
 ```
-parun --SWEs
+parun --SWEs -l1 -v SWFlow.py
 ```
+
+which will execute the solver with the above default context options. The `-l1` flag controls the amount of output during the execution; you can choose a number between 1 and 10. (See the `proteus/parun.py` file for more details on the different flag options.)
 
 ### Break down into end to end tests
 
@@ -66,7 +69,7 @@ Explain what these tests test and why
 Give an example
 ```
 
-## Deployment
+<!-- ## Deployment
 
 Add additional notes about how to deploy this on a live system
 
@@ -74,11 +77,11 @@ Add additional notes about how to deploy this on a live system
 
 * [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
 * [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds -->
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](https://github.com/erdc/proteus/blob/master/CONTRIBUTING.md) for details on the Proteus code of conduct, and the process for submitting pull requests to us.
 
 
 ## Authors
@@ -99,8 +102,8 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * J.-L. Guermond, B. Popov, E. Tovar, C. Kees. Robust explicit relaxtion technique for solving the Green-Naghdi equations.
 manuscript, 2019
 
-## Acknowledgments
+<!-- ## Acknowledgments
 
 * Hat tip to anyone whose code was used
 * Inspiration
-* etc
+* etc -->
