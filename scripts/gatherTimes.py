@@ -28,7 +28,7 @@ def gatherTimes(filename,dataDir='.',addname="_complete", tCount=None, global_sy
     in case archiving failed to collect results from all times
     """
     import h5py
-    xmlFile = open(filename+".xmf","r")
+    xmlFile = open(filename+".xmf","rb")
     h5File = h5py.File(filename+".h5","r")
     tree = ElementTree(file=xmlFile)
     xmlFile.close()
@@ -58,7 +58,7 @@ def gatherTimes(filename,dataDir='.',addname="_complete", tCount=None, global_sy
                 for j in range(size):
                     Grid = fromstring(grid_array[j])
                     SpatialCollection.append(Grid)
-    xmlFile = open(filename+addname+".xmf","w")
+    xmlFile = open(filename+addname+".xmf","wb")
     indentXML(tree.getroot())
     tree.write(xmlFile)
     xmlFile.close()
