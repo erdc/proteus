@@ -1917,9 +1917,9 @@ public:
 
         // This is h^2*Gamma'(eta/h) at ith node
         double hSqd_GammaPi = 6.0 * (hetai - std::pow(hi, 2.0));
-        // if (etai >= hi) {
-        //   hSqd_GammaPi = 6.0 * (std::pow(etai, 2.0) - hetai);
-        // }
+        if (hetai > std::pow(hi, 2.0)) {
+          hSqd_GammaPi = 6.0 * (std::pow(etai, 2.0) - hetai);
+        }
 
         extendedSourceTerm_heta[i] = hwi * mi * ratioi;
         extendedSourceTerm_hw[i] =
@@ -1961,13 +1961,16 @@ public:
           double meshSizej =
               std::sqrt(lumped_mass_matrix[j]); // local mesh size in 2d
 
+          // for "bad" branch of gamma function
+          double diff_over_h_j = (hetaj - std::pow(hj, 2.0)) * one_over_hjReg;
           // This is modified pressure term, pTilde at jth node
           double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
                            (hetaj - std::pow(hj, 2.0));
-          // if (etaj >= hj) {
-          //   pTildej = -(LAMBDA_MGN * g / meshj) / 3.0 * 2.0 *
-          //             (std::pow(etaj, 3.0) - std::pow(hj, 3.0));
-          // }
+          if (hetaj > std::pow(hj, 2.0)) {
+            pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
+                      diff_over_h_j *
+                      (std::pow(etaj, 2.0) + etaj * hj * std::pow(hj, 2.0));
+          }
 
           // auxiliary functions to compute fluxes
           double aux_h =
@@ -2069,11 +2072,19 @@ public:
         double etai = hetai * one_over_hiReg;
         double wi = hwi * one_over_hiReg;
 
+        // for "bad" branch of gamma function
+        double diff_over_h_i = (hetai - std::pow(hi, 2.0)) * one_over_hiReg;
+
         // for mGN stuff
         double meshSizei = std::sqrt(mi); // local mesh size in 2d
         double pTildei = -(LAMBDA_MGN * g / meshSizei) / 3.0 * 6.0 * hi *
                          (hetai - std::pow(hi, 2.0));
 
+        if (hetai > std::pow(hi, 2.0)) {
+          pTildei = -(LAMBDA_MGN * g / (3.0 * meshSizei)) * 2.0 *
+                    diff_over_h_i *
+                    (std::pow(etai, 2.0) + etai * hi * std::pow(hi, 2.0));
+        }
         // HIGH ORDER DISSIPATIVE TERMS
         double ith_dHij_minus_muHij_times_hStarStates = 0.,
                ith_dHij_minus_muHij_times_huStarStates = 0.,
@@ -2104,9 +2115,17 @@ public:
 
           // for mGN stuff, need it for bar states definition -EJT
           double meshSizej = std::sqrt(mj); // local mesh size in 2d
+
+          // for "bad" branch of gamma function
+          double diff_over_h_j = (hetaj - std::pow(hj, 2.0)) * one_over_hjReg;
+          // This is modified pressure term, pTilde at jth node
           double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
                            (hetaj - std::pow(hj, 2.0));
-
+          if (hetaj > std::pow(hj, 2.0)) {
+            pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
+                      diff_over_h_j *
+                      (std::pow(etaj, 2.0) + etaj * hj * std::pow(hj, 2.0));
+          }
           // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
           // hwStar
           double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
@@ -2124,8 +2143,8 @@ public:
           // Dissipative well balancing term
           double muLowij = 0., muLij = 0., muHij = 0.;
           double dLowij = 0., dLij = 0., dHij = 0.;
-          if (i !=
-              j) // This is not necessary. See formula for ith_dissipative_terms
+          if (i != j) // This is not necessary. See formula for
+                      // ith_dissipative_terms
           {
             ////////////////////////
             // DISSIPATIVE MATRIX //
@@ -2146,8 +2165,8 @@ public:
                                 hvi, hetai, mi, hEps, hEps, false) *
                                 cji_norm);
             }
-            dLij = dLowij; // * fmax(psi[i], psi[j]); // enhance the order to
-                           // 2nd order. No EV
+            dLij = dLowij; // * fmax(psi[i], psi[j]); // enhance the order
+                           // to 2nd order. No EV
 
             ///////////////////////////////////////
             // WELL BALANCING DISSIPATIVE MATRIX //
@@ -2222,8 +2241,8 @@ public:
             dHij = fmin(dLowij, dEVij);
             muHij = fmin(muLowij, dEVij);
 
-            // Assume no EV for now and just use the alpha limiting for higher
-            // order method. -EJT
+            // Assume no EV for now and just use the alpha limiting for
+            // higher order method. -EJT
             dHij = fmax(psi[i], psi[j]) * dLij;
             muHij = fmax(psi[i], psi[j]) * muLij;
 
@@ -2251,10 +2270,10 @@ public:
             muH_minus_muL[ij] = muHij - muLij;
           } else // i==j
           {
-            dH_minus_dL[ij] =
-                0.; // Not true but the prod of this times Uj-Ui will be zero
-            muH_minus_muL[ij] =
-                0.; // Not true but the prod of this times Uj-Ui will be zero
+            dH_minus_dL[ij] = 0.;   // Not true but the prod of this times
+                                    // Uj-Ui will be zero
+            muH_minus_muL[ij] = 0.; // Not true but the prod of this times
+                                    // Uj-Ui will be zero
           }
           // update ij
           ij += 1;
@@ -2284,7 +2303,8 @@ public:
                         (hyp_flux_hw[i] + extendedSourceTerm_hw[i] -
                          ith_dHij_minus_muHij_times_hwStarStates -
                          ith_muHij_times_hwStates);
-          // clean up potential negative water height due to machine precision
+          // clean up potential negative water height due to machine
+          // precision
           if (globalResidual[offset_h + stride_h * i] >= -hEps &&
               globalResidual[offset_h + stride_h * i] < hEps)
             globalResidual[offset_h + stride_h * i] = 0;
@@ -2325,10 +2345,10 @@ public:
             eN = elementBoundaryElementsArray[ebN * 2 + 0],
             ebN_local = elementBoundaryLocalElementBoundariesArray[ebN * 2 + 0];
         register double normal[3];
-        { // "Loop" in quad points
-          int kb =
-              0; // NOTE: I need to consider just one quad point since the
-                 // element is not curved so the normal is constant per element
+        {             // "Loop" in quad points
+          int kb = 0; // NOTE: I need to consider just one quad point since
+                      // the element is not curved so the normal is constant
+                      // per element
           register int ebN_local_kb =
               ebN_local * nQuadraturePoints_elementBoundary + kb;
           register double jac_ext[nSpace * nSpace], jacDet_ext,
@@ -2461,8 +2481,8 @@ public:
                    k, // index to a scalar at a quadrature point
             eN_k_nSpace = eN_k * nSpace,
             eN_nDOF_trial_element =
-                eN *
-                nDOF_trial_element; // index to a vector at a quadrature point
+                eN * nDOF_trial_element; // index to a vector at a
+                                         // quadrature point
 
         // declare local storage
         register double jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
@@ -2619,8 +2639,8 @@ public:
                    k, // index to a scalar at a quadrature point
             eN_k_nSpace = eN_k * nSpace,
             eN_nDOF_trial_element =
-                eN *
-                nDOF_trial_element; // index to a vector at a quadrature point
+                eN * nDOF_trial_element; // index to a vector at a
+                                         // quadrature point
 
         // declare local storage
         register double jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
