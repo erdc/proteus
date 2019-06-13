@@ -46,7 +46,7 @@ femSpaces = {0: FESpace['basis']}
 femSpaces = {0: FESpace['basis'],
              1: FESpace['basis'],
              2: FESpace['basis']}
-
+             
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
