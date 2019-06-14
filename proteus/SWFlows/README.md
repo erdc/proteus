@@ -2,16 +2,16 @@
 
 The SWFlows app contains a number of tests for the the 2D nonlinear Shallow Water Equations, and the 2D modified Green-Naghdi equations. Both models are
 numerically solved using continuous, linear finite elements as seen in
-[cite friction paper] and [cite mGN paper].
+[Guermond, *et al* 2018] and [Guermond *et al* 2019].
 
 Some introduction stuff on the SW equations.
 
 The modified Green-Naghdi equations are a set of a equations that form a
 hyperbolic system and are an O(h) approximation to the traditional Green-Naghdi
-equations, where h is the mesh size.  
+equations, where h is the mesh size.
 
-The different tests demonstrate the respective models abilities to handle wet/dry states, reciprocate "real" world problems (see malpasset, colorado_river),
-propagate solitary waves, etc etc etc.
+The different tests demonstrate the respective models abilities to handle wet/dry states, reciprocate "real world" problems (see malpasset, colorado_river),
+propagate solitary waves, etc.
 
 ## Getting Started
 
@@ -20,14 +20,19 @@ you set up new tests for your specific needs.
 
 ### Prerequisites
 
-Each test directory in `/SWFlows/tests/` contains a python file named
-SWFlow.py. This is the file that sets up a domain, initial conditions and
-boundary conditions for a specific problem. This is the only file that you
-need to modify to run these tests.
+The only prerequisite that you need is a working copy of Proteus. If you have yet to build Proteus, go to your Proteus directory and run
 
-Each `SWFlow.py` file has its own set of options to choose which model to run,
-final run time of the simulation, refinement level of mesh, etc. For example,
-in `SWFlows/tests/dam_over_bumps`, we see the following set of default options:
+```
+make develop
+```
+
+## Running the tests
+
+Each test directory in `proteus/SWFlows/tests/` contains a python file named
+`SWFlow.py`. This is the file that sets up the computational domain, initial conditions,
+boundary conditions, and other problem specific options.
+
+Each `SWFlow.py` file has its own set of default context options. These include choosing which model to use, final run time of the simulation, refinement level of mesh, etc. For example, in `SWFlows/tests/dam_over_bumps`, we see the following set of default options:
 
 ```
 opts= Context.Options([
@@ -40,20 +45,32 @@ opts= Context.Options([
     ])
 
 ```
-Here `sw_model` refers to which model is chosen; 0 for the Shallow Water Equations and 1 for the modified Green-Naghdi equations (or "Dispersive SWEs"). The rest of the options should be straight forward.
+Here `sw_model` refers to which model is chosen: 0 for the Shallow Water Equations and 1 for the modified Green-Naghdi equations (or "Dispersive SWEs"). The rest of the options are straight forward.
 
-
-## Running the tests
-
-To run a single test, go to a test directory of your choice. For this description, we are the directory `SWFlows/tests/dam_over_bumps`. Without any modifications to the context options, one can run the following command:
+To run a single test, go to a test directory of your choice. For this description, we will be using the directory `SWFlows/tests/dam_over_bumps` as an example. Without any modifications to the default context options, one can run the following command:
 
 ```
 parun --SWEs -l1 -v SWFlow.py
 ```
 
-which will execute the solver with the above default context options. The `-l1` flag controls the amount of output during the execution; you can choose a number between 1 and 10. (See the `proteus/parun.py` file for more details on the different flag options.)
+which will execute the solver with the above default context options. The `-l1` flag controls the amount of output during the execution; you can choose any number between 1 and 10. The `-v` flag stands for verbose. (See the `proteus/parun.py` file for more details on the different flag options for `parun`.)
 
-### Break down into end to end tests
+To use options other than the default options, one can run something like:
+
+```
+parun --SWEs -l1 -v SWFlow.py -C "sw_model=1 final_time=100"
+```
+
+which switches the model to the Dispersive SWEs and increases the final time to 100 seconds.
+
+## Creating a test
+
+Creating a new test is as simple as copying one of the existing directories,
+and modifying appropriately to fit your needs.
+
+Currently, most of the tests are set up to use a rectangular domain with triangle elements created by an in house function in Proteus. The SWFlows Apps can be used with meshes created by Triangle and Gmsh. The "real world" tests such as the Malpesset problem and Colorado River problem are using meshes created by the software SMS (https://www.aquaveo.com/software/sms-surface-water-modeling-system-introduction) in the ADH format. If you would like to use your own mesh, but aren't sure how to use it, please contact us and we can gladly help.
+
+## Break down into end to end tests
 
 Explain what these tests test and why
 
@@ -79,18 +96,17 @@ Add additional notes about how to deploy this on a live system
 * [Maven](https://maven.apache.org/) - Dependency Management
 * [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds -->
 
+## Authors
+
+* **Dr. Manuel Quezada De Luna**
+* **Dr. Chris Kees**
+* **Eric Tovar(*)**
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](https://github.com/erdc/proteus/blob/master/CONTRIBUTING.md) for details on the Proteus code of conduct, and the process for submitting pull requests to us.
 
-
-## Authors
-
-* **Manuel Quezada De Luna**
-* **Chris Kees**
-* **Eric Tovar**
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of Proteus [contributors](https://github.com/erdc/proteus/blob/master/CONTRIBUTORS.md) who participated in this project.
 
 ## License
 
@@ -100,7 +116,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 * J.-L. Guermond, M. Quezada de Luna, B. Popov, C. Kees, and M. Farthing. Well-balanced second-order finite element approximation of the shallow water equations with friction. SIAM Journal on Scientific Computing, 40(6):A3873– A3901, 2018.
 * J.-L. Guermond, B. Popov, E. Tovar, C. Kees. Robust explicit relaxtion technique for solving the Green-Naghdi equations.
-manuscript, 2019
+manuscript, 2019.
 
 <!-- ## Acknowledgments
 
