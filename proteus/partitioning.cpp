@@ -3043,6 +3043,7 @@ int partitionElements(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh, int nEleme
                          elementNeighbors_subdomain,
                          PETSC_NULL,//weights_subdomain,
                          &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  PetscFree(weights_subdomain);
   MatPartitioning petscPartition;
   MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
@@ -3052,7 +3053,7 @@ int partitionElements(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh, int nEleme
   IS elementPartitioningIS_new;
   MatPartitioningApply(petscPartition,&elementPartitioningIS_new);
   MatPartitioningDestroy(&petscPartition);
-  //MatDestroy(&petscAdjacency);
+  MatDestroy(&petscAdjacency);
   //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
 
   //experiment with metis

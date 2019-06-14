@@ -58,13 +58,34 @@ static void setSizeField(apf::Mesh2 *m,apf::MeshEntity *vertex,double h,apf::Mes
   }
 }
 
-
-int MeshAdaptPUMIDrvr::calculateSizeField()
-//Implementation of banded interface, edge intersection algorithm
-//If mesh edge intersects the 0 level-set, then the adjacent edges need to be refined 
+int MeshAdaptPUMIDrvr::setSphereSizeField()
 {
   freeField(size_iso);
   size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+
+  apf::MeshIterator *it = m->begin(0);
+  apf::MeshEntity* ent;
+  while ((ent = m->iterate(it)))
+  {
+    int modelTag = m->getModelTag(m->toModel(ent));
+    //std::cout<<"This is the model tag "<<modelTag<<std::endl;
+    double sizeDesired;
+    if(modelTag==123)
+        sizeDesired=hmin;
+    else
+        sizeDesired=hmax;
+    apf::setScalar(size_iso,ent,0,sizeDesired);
+  }
+  m->end(it);
+  gradeMesh();
+}
+
+
+int MeshAdaptPUMIDrvr::calculateSizeField(double L_band)
+//Implementation of banded interface, edge intersection algorithm
+//If mesh edge intersects the 0 level-set, then the adjacent edges need to be refined 
+{
+  apf::Field* interfaceBand = apf::createLagrangeField(m, "interfaceBand", apf::SCALAR, 1);
   apf::Field *phif = m->findField("phi");
   assert(phif);
 
@@ -72,8 +93,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::MeshIterator *it = m->begin(1);
   apf::MeshEntity *edge;
 
-  double safetyFactor = 2.0; //need to make this user defined
-  double L_band = N_interface_band*hPhi*safetyFactor;
+  //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
 
   PCU_Comm_Begin();
   while ((edge = m->iterate(it)))
@@ -92,20 +112,20 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 
     if(caseNumber==1 || caseNumber == 2)
     {
-      setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
-      setSizeField(m,vertex2,hPhi,vertexMarker,size_iso);
+      setSizeField(m,vertex1,hPhi,vertexMarker,interfaceBand);
+      setSizeField(m,vertex2,hPhi,vertexMarker,interfaceBand);
     }
     else
     {
       if (phi1*phi2 <0)
       {
-        setSizeField(m,vertex1,hPhi,vertexMarker,size_iso);
-        setSizeField(m,vertex2,hPhi,vertexMarker,size_iso);
+        setSizeField(m,vertex1,hPhi,vertexMarker,interfaceBand);
+        setSizeField(m,vertex2,hPhi,vertexMarker,interfaceBand);
       }
       else
       {
-        setSizeField(m,vertex1,hmax,vertexMarker,size_iso);
-        setSizeField(m,vertex2,hmax,vertexMarker,size_iso);
+        setSizeField(m,vertex1,hmax,vertexMarker,interfaceBand);
+        setSizeField(m,vertex2,hmax,vertexMarker,interfaceBand);
       }
     }
 
@@ -122,20 +142,406 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     PCU_COMM_UNPACK(ent);
     PCU_COMM_UNPACK(h_received);
     //take minimum of received values
-    double h_current = apf::getScalar(size_iso,ent,0);
+    double h_current = apf::getScalar(interfaceBand,ent,0);
     double h_final = std::min(h_current,h_received);
-    apf::setScalar(size_iso,ent,0,h_final);
+    apf::setScalar(interfaceBand,ent,0,h_final);
   }
 
   //Synchronization has all remote copies track the owning copy value
-  apf::synchronize(size_iso);
+  apf::synchronize(interfaceBand);
   m->end(it);
 
-  //Grade the Mesh
-  gradeMesh();
-  
   m->destroyTag(vertexMarker);
+
+  //add to queue
+  sizeFieldList.push(interfaceBand);
   return 0;
+}
+
+int intersectsInterface(apf::MeshEntity* edge, apf::Field* levelSet)
+{
+    apf::Mesh* m = apf::getMesh(levelSet);
+    apf::Adjacent edge_adjVerts;
+    m->getAdjacent(edge,0,edge_adjVerts);
+    apf::MeshEntity *vertex1 = edge_adjVerts[0];
+    apf::MeshEntity *vertex2 = edge_adjVerts[1];
+    double phi1 = apf::getScalar(levelSet,vertex1,0);
+    double phi2 = apf::getScalar(levelSet,vertex2,0);
+    int doesIntersect = 0;
+    if(phi1*phi2 < 0) //implies different signs and therefore intersects interface
+        doesIntersect = 1;
+    return doesIntersect;
+}
+
+//Struct definition
+struct edgeWalkerInfo{
+    apf::MeshEntity* vertex;  
+    apf::Vector3 actualPosition;
+    double direction;
+    double L_local;
+    apf::MeshTag* trackerTag;
+    //const char* tagName;
+    int edgeID;
+    int initialRank;
+};
+
+int checkForPropagation(apf::Mesh* m, edgeWalkerInfo inputObject)
+{
+    apf::MeshEntity* vert = inputObject.vertex;
+    apf::Vector3 actualPosition = inputObject.actualPosition;
+    double L_local = inputObject.L_local;
+    double direction = inputObject.direction;
+
+    apf::MeshTag* vertexMaxTraverse = m->findTag("maximumTraversal");
+    apf::Field* predictInterfaceBand = m->findField("predictInterfaceBand");
+    apf::Field* levelSet = m->findField("phi");
+
+    apf::Vector3 pt_vert;
+    m->getPoint(vert,0,pt_vert);
+    apf::Vector3 difference_vect = pt_vert-actualPosition;
+
+    //check if vertex needs to be added to queue based on traversal distance
+    int dontContinue = 0;
+    if(m->hasTag(vert,vertexMaxTraverse))
+    {
+        double traversalDistance;
+        m->getDoubleTag(vert,vertexMaxTraverse,&traversalDistance);    
+        if((L_local-difference_vect.getLength()) < traversalDistance*1.01) //has to be 1% higher
+            dontContinue=1;
+    } 
+
+    //directionality
+    double phiCurrent = apf::getScalar(levelSet,vert,0);
+    if((difference_vect.getLength() > L_local) || dontContinue || (phiCurrent*direction<=0))
+        return 0;
+    else
+        return 1;
+}
+
+int BFS_propagation(apf::Mesh* m, std::queue<edgeWalkerInfo> &markedVertices)
+{   
+//objects in the queue are assumed to be checked and needing to be modified
+//the adjacencies are checked before adding into the queue
+//for parallelism, what's important is to stop a constant back-and-forth communication on shared vertices; we do this by considering communication when we add an entry into the queue
+
+    //get the latest object
+    edgeWalkerInfo inputObject = markedVertices.front();
+    markedVertices.pop();
+
+    //set the variables from the inputObject
+    apf::MeshEntity* vert = inputObject.vertex;
+    apf::Vector3 actualPosition = inputObject.actualPosition;
+    double L_local = inputObject.L_local;
+    double direction = inputObject.direction;
+
+    //get necessary fields
+    apf::MeshTag* vertexMaxTraverse = m->findTag("maximumTraversal");
+    apf::Field* predictInterfaceBand = m->findField("predictInterfaceBand");
+    apf::Field* levelSet = m->findField("phi");
+
+    int needsParallel=0;
+    
+    apf::Adjacent vertex_adjVerts; 
+    apf::getBridgeAdjacent(m,vert,1,0,vertex_adjVerts);
+    for(int i=0;i<vertex_adjVerts.getSize();i++)
+    {
+
+        apf::MeshEntity* newVert = vertex_adjVerts[i];
+        inputObject.vertex=newVert;
+
+        if(checkForPropagation(m,inputObject))
+        {
+
+            //set new traversal distance
+            apf::Vector3 pt_vert;
+            m->getPoint(newVert,0,pt_vert);
+            apf::Vector3 difference_vect = pt_vert-actualPosition;
+
+            double traversalDistance = L_local-difference_vect.getLength();
+            m->setDoubleTag(newVert,vertexMaxTraverse,&traversalDistance);
+
+            //set size
+            apf::setScalar(predictInterfaceBand,newVert,0,apf::getScalar(predictInterfaceBand,vert,0));
+            //add vertex to queue 
+            inputObject.vertex = newVert;
+            markedVertices.push(inputObject);
+
+            if(m->isShared(newVert))
+            {
+                int initialRank = PCU_Comm_Self();
+                double desiredSize = apf::getScalar(predictInterfaceBand,vert,0);
+                apf::Copies remotes;
+                m->getRemotes(newVert,remotes);
+                for(apf::Copies::iterator iter=remotes.begin(); iter!=remotes.end();++iter)
+                {
+                    PCU_COMM_PACK(iter->first, iter->second);
+                    PCU_COMM_PACK(iter->first, L_local);
+                    PCU_COMM_PACK(iter->first, actualPosition);
+                    PCU_COMM_PACK(iter->first, direction);
+                    PCU_COMM_PACK(iter->first, initialRank);
+                    PCU_COMM_PACK(iter->first, inputObject.edgeID);
+                    PCU_COMM_PACK(iter->first, desiredSize);
+                }
+                needsParallel++;
+            }
+        }
+    } //end of adjacent
+
+    return needsParallel;
+}
+
+
+void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
+//compute Lband
+//edge walk
+{
+    apf::Field* interfaceBand = m->findField("interfaceBand");
+    apf::Field* velocity = m->findField("velocity");
+    apf::Field* levelSet = m->findField("phi");
+
+    //get gradient field
+    apf::Field *gradphi = apf::recoverGradientByVolume(levelSet);
+
+    apf::Field* predictInterfaceBand = apf::createLagrangeField(m,"predictInterfaceBand",apf::SCALAR,1);
+    apf::copyData(predictInterfaceBand,interfaceBand);
+
+    //edge-walk to predict
+    apf::MeshTag* vertexMaxTraverse = m->createDoubleTag("maximumTraversal",1); //define tag field for each vertex to store maximum distance that will be travelled
+
+    apf::MeshEntity* edge;
+    apf::MeshIterator* it = m->begin(1);
+    
+    std::queue <edgeWalkerInfo> markedVertices;
+
+    PCU_Comm_Begin();
+    while( (edge = m->iterate(it)) )
+    {
+        if( intersectsInterface(edge,levelSet))
+        {
+            //get the parameterized position of interface along edge
+            apf::Adjacent edge_adjVerts;
+            m->getAdjacent(edge,0,edge_adjVerts);
+            apf::MeshEntity *vertex1 = edge_adjVerts[0];
+            apf::MeshEntity *vertex2 = edge_adjVerts[1];
+            double phi1 = apf::getScalar(levelSet,vertex1,0);
+            double phi2 = apf::getScalar(levelSet,vertex2,0);
+            apf::Vector3 pt_1, pt_2;
+            m->getPoint(vertex1,0,pt_1);
+            m->getPoint(vertex2,0,pt_2);
+            apf::Vector3 edgeVector = pt_2-pt_1;
+            double edgeLength = apf::measure(m,edge);
+            double zeroPosition =  2*(-phi1/(phi2-phi1))-1.0; //parametric position of interface on the edge
+            double relativePosition = -phi1/(phi2-phi1); //same as zeroPosition but in interval of [0,1]
+            apf::Vector3 actualPosition = (pt_2-pt_1)*relativePosition + pt_1;           
+
+            apf::Vector3 edgePoint(zeroPosition,0.0,0.0);
+            apf::Element* phiElem = apf::createElement(levelSet,edge);
+            apf::Element* gradPhiElem = apf::createElement(gradphi,edge);
+            apf::Element* velocityElem = apf::createElement(velocity,edge);
+            apf::Vector3 localVelocity;
+            apf::getVector(velocityElem,edgePoint,localVelocity);
+            apf::Vector3 localInterfaceNormal;
+            apf::getVector(gradPhiElem,edgePoint,localInterfaceNormal);
+            apf::destroyElement(phiElem);
+            apf::destroyElement(velocityElem);
+            apf::destroyElement(gradPhiElem);
+
+            //get L_local 
+            double L_local = localVelocity.getLength()*numAdaptSteps*delta_T;
+        
+            L_local += (N_interface_band)*hPhi; //add blending region   
+
+            //get direction, multiply this with levelSet value to determine if in same direction
+            double signValue = localVelocity*localInterfaceNormal;
+
+            //find adjacent vertices and their adjacent edges
+            for(int i=0; i<edge_adjVerts.getSize();i++)
+            {
+                edgeWalkerInfo inputObject;
+                inputObject.vertex = edge_adjVerts[i];
+                inputObject.actualPosition = actualPosition;
+                inputObject.direction = signValue;
+                inputObject.L_local = L_local;
+                inputObject.edgeID = localNumber(edge);
+                inputObject.initialRank = PCU_Comm_Self();
+                if(checkForPropagation(m,inputObject))
+                {
+                    markedVertices.push(inputObject);
+
+                    //check for parallel
+                    if(m->isShared(inputObject.vertex))
+                    {
+                        int initialRank = PCU_Comm_Self();
+                        double desiredSize = apf::getScalar(predictInterfaceBand,inputObject.vertex,0);
+                        apf::Copies remotes;
+                        m->getRemotes(inputObject.vertex,remotes);
+                        for(apf::Copies::iterator iter=remotes.begin(); iter!=remotes.end();++iter)
+                        {
+                            PCU_COMM_PACK(iter->first, iter->second);
+                            PCU_COMM_PACK(iter->first, L_local);
+                            PCU_COMM_PACK(iter->first, actualPosition);
+                            PCU_COMM_PACK(iter->first, inputObject.direction);
+                            PCU_COMM_PACK(iter->first, initialRank);
+                            PCU_COMM_PACK(iter->first, inputObject.edgeID);
+                            PCU_COMM_PACK(iter->first, desiredSize);
+                        }
+                    }
+
+                }
+            }
+        } //end if interface edge
+    }
+    m->end(it);
+
+    //The following parallel code is just for the initialization step
+    //There might be a way to put all of this under a function as this is repeated code later on
+    PCU_Comm_Send();
+    while(PCU_Comm_Receive())
+    {
+        apf::MeshEntity* vertex;
+        double L_local;
+        apf::Vector3 actualPosition;
+        double direction;
+        int initialRank;
+        int edgeID;
+        double desiredSize;
+        PCU_COMM_UNPACK(vertex);
+        PCU_COMM_UNPACK(L_local);
+        PCU_COMM_UNPACK(actualPosition);
+        PCU_COMM_UNPACK(direction);
+        PCU_COMM_UNPACK(initialRank);
+        PCU_COMM_UNPACK(edgeID);
+        PCU_COMM_UNPACK(desiredSize);
+            
+        edgeWalkerInfo inputObject;
+        inputObject.vertex = vertex;
+        inputObject.L_local = L_local;
+        inputObject.actualPosition = actualPosition;
+        inputObject.direction = direction;
+        inputObject.edgeID = edgeID;
+        inputObject.initialRank=initialRank;
+
+        //ensures that the size is the same across parts
+        if(desiredSize < apf::getScalar(predictInterfaceBand,vertex,0))
+            apf::setScalar(predictInterfaceBand,vertex,0,desiredSize);
+ 
+        if(checkForPropagation(m,inputObject))
+        {
+            apf::Vector3 pt_vert;
+            m->getPoint(vertex,0,pt_vert);
+            apf::Vector3 difference_vect = pt_vert-actualPosition;
+
+            double traversalDistance = L_local-difference_vect.getLength();
+            m->setDoubleTag(vertex,vertexMaxTraverse,&traversalDistance);
+
+            markedVertices.push(inputObject);
+        }
+    }
+
+    //Parallel preparations
+    int needsParallel=1;
+
+    while(needsParallel>0)
+    {
+        needsParallel=0;
+
+        PCU_Comm_Begin();
+
+        //Handle the queue
+        while(!markedVertices.empty())
+        {
+            needsParallel+=BFS_propagation(m,markedVertices);
+        }
+        PCU_Add_Ints(&needsParallel,1);
+
+        PCU_Comm_Send();
+        while( PCU_Comm_Receive() )
+        {
+            apf::MeshEntity* vertex;
+            double L_local;
+            apf::Vector3 actualPosition;
+            double direction;
+            int initialRank;
+            int edgeID;
+            double desiredSize;
+            PCU_COMM_UNPACK(vertex);
+            PCU_COMM_UNPACK(L_local);
+            PCU_COMM_UNPACK(actualPosition);
+            PCU_COMM_UNPACK(direction);
+            PCU_COMM_UNPACK(initialRank);
+            PCU_COMM_UNPACK(edgeID);
+            PCU_COMM_UNPACK(desiredSize);
+            
+
+            edgeWalkerInfo inputObject;
+            inputObject.vertex = vertex;
+            inputObject.L_local = L_local;
+            inputObject.actualPosition = actualPosition;
+            inputObject.direction = direction;
+            inputObject.edgeID = edgeID;
+            inputObject.initialRank=initialRank;
+
+            //ensures that the size is the same across parts
+            if(desiredSize < apf::getScalar(predictInterfaceBand,vertex,0))
+                apf::setScalar(predictInterfaceBand,vertex,0,desiredSize);
+
+            if(checkForPropagation(m,inputObject))
+            {
+                apf::Vector3 pt_vert;
+                m->getPoint(vertex,0,pt_vert);
+                apf::Vector3 difference_vect = pt_vert-actualPosition;
+
+                double traversalDistance = L_local-difference_vect.getLength();
+                m->setDoubleTag(vertex,vertexMaxTraverse,&traversalDistance);
+
+                markedVertices.push(inputObject);
+            }
+        }
+    }
+
+    apf::copyData(interfaceBand,predictInterfaceBand);
+    apf::destroyField(predictInterfaceBand);
+    apf::destroyField(gradphi);
+
+    //get all tags for destruction
+    apf::MeshIterator* tagIt = m->begin(0);
+    apf::MeshEntity* taggedVertex;
+    while( taggedVertex = m->iterate(tagIt) )
+    {
+        if(m->hasTag(taggedVertex,vertexMaxTraverse))
+            m->removeTag(taggedVertex,vertexMaxTraverse);
+    }
+    m->end(tagIt);
+    m->destroyTag(vertexMaxTraverse);
+
+}
+
+void MeshAdaptPUMIDrvr::isotropicIntersect()
+{
+  freeField(size_iso);
+  size_iso = apf::createFieldOn(m, "proteus_size", apf::SCALAR);
+
+  apf::MeshEntity *vert;
+  apf::MeshIterator *it = m->begin(0);
+  
+  apf::Field *field = sizeFieldList.front();
+  apf::copyData(size_iso,field);
+  sizeFieldList.pop();
+  apf::destroyField(field);
+  while(!sizeFieldList.empty())
+  {
+    field = sizeFieldList.front();
+    while(vert = m->iterate(it))
+    {
+      double value1 = apf::getScalar(size_iso,vert,0);
+      double value2 = apf::getScalar(field,vert,0);
+      double minValue = std::min(value1,value2);
+      apf::setScalar(size_iso,vert,0,minValue);
+    } 
+    sizeFieldList.pop();
+    apf::destroyField(field);
+  }
+  gradeMesh();
 }
 
 //taken from Dan's superconvergent patch recovery code
@@ -800,7 +1206,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //apf::Mesh* m;
   if(size_field_config=="ERM")
     errField = m->findField("ErrorRegion");
-  else if(size_field_config=="VMS")
+  else if(size_field_config=="VMS" || size_field_config=="combined")
     errField = m->findField("VMSH1");
   assert(errField); 
   //apf::Mesh *m = apf::getMesh(vmsErrH1);
@@ -809,12 +1215,14 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::MeshEntity *v;
   apf::MeshElement *element;
   apf::MeshEntity *reg;
-  size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  //size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  apf::Field *errorSize = apf::createLagrangeField(m, "errorSize", apf::SCALAR, 1);
+
   if (adapt_type_config == "anisotropic"){
     size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
     size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
   }
-  apf::Field *size_iso_reg = apf::createField(m, "iso_size", apf::SCALAR, apf::getConstant(nsd));
+  apf::Field *errorSize_reg = apf::createField(m, "iso_size", apf::SCALAR, apf::getConstant(nsd));
   apf::Field *clipped_vtx = apf::createLagrangeField(m, "iso_clipped", apf::SCALAR, 1);
   
   //Get total number of elements
@@ -879,7 +1287,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     else //isotropic
       h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
 
-    apf::setScalar(size_iso_reg, reg, 0, h_new);
+    apf::setScalar(errorSize_reg, reg, 0, h_new);
     apf::destroyMeshElement(element);
   }
   m->end(it);
@@ -888,10 +1296,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   it = m->begin(0);
   while ((v = m->iterate(it)))
   {
-    //averageToEntity(size_iso_reg, size_iso, v);
-    //volumeAverageToEntity(size_iso_reg, size_iso, v);
-    errorAverageToEntity(size_iso_reg, size_iso,errField, v);
-    //minToEntity(size_iso_reg, size_iso, v);
+    //averageToEntity(errorSize_reg, errorSize, v);
+    //volumeAverageToEntity(errorSize_reg, errorSize, v);
+    errorAverageToEntity(errorSize_reg, errorSize,errField, v);
+    //minToEntity(errorSize_reg, errorSize, v);
   }
   m->end(it);
 
@@ -912,8 +1320,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::Field *grad2Speed = apf::recoverGradientByVolume(gradSpeed);
     //apf::Field *hess = computeHessianField(grad2phi);
     //apf::Field *curves = getCurves(hess, gradphi);
-    //apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
-    apf::Field *metricf = computeMetricField(gradSpeed, grad2Speed, size_iso, eps_u);
+    //apf::Field* metricf = computeMetricField(gradphi,grad2phi,errorSize,eps_u);
+    apf::Field *metricf = computeMetricField(gradSpeed, grad2Speed, errorSize, eps_u);
     apf::Field *frame_comps[3] = {apf::createLagrangeField(m, "frame_0", apf::VECTOR, 1), apf::createLagrangeField(m, "frame_1", apf::VECTOR, 1), apf::createLagrangeField(m, "frame_2", apf::VECTOR, 1)};
     //getERMSizeFrames(metricf, gradSpeed, frame_comps);
 
@@ -922,7 +1330,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::Vector3 scale;
     while ((v = m->iterate(it)))
     {
-      double tempScale = apf::getScalar(size_iso, v, 0);
+      double tempScale = apf::getScalar(errorSize, v, 0);
       if (tempScale < hmin)
         apf::setScalar(clipped_vtx, v, 0, -1);
       else if (tempScale > hmax)
@@ -930,7 +1338,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       else
         apf::setScalar(clipped_vtx, v, 0, 0);
       clamp(tempScale, hmin, hmax);
-      apf::setScalar(size_iso,v,0,tempScale);
+      apf::setScalar(errorSize,v,0,tempScale);
     }
     it = m->begin(0);
     while( (v = m->iterate(it)) ){
@@ -960,7 +1368,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
       double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
-      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(size_iso, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
+      scaleFormulaERM(phi, hmin, hmax, apf::getScalar(errorSize, v, 0), curve, lambda, eps_u, scale,nsd,maxAspect);
       apf::setVector(size_scale, v, 0, scale);
       //get frames
 
@@ -1019,7 +1427,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     it = m->begin(0);
     while ((v = m->iterate(it)))
     {
-      double tempScale = apf::getScalar(size_iso, v, 0);
+      double tempScale = apf::getScalar(errorSize, v, 0);
       if (tempScale < hmin)
         apf::setScalar(clipped_vtx, v, 0, -1);
       else if (tempScale > hmax)
@@ -1027,22 +1435,23 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       else
         apf::setScalar(clipped_vtx, v, 0, 0);
       clamp(tempScale, hmin, hmax);
-      apf::setScalar(size_iso, v, 0, tempScale);
+      apf::setScalar(errorSize, v, 0, tempScale);
     }
-    gradeMesh();
-    apf::synchronize(size_iso);
+    //gradeMesh();
+    apf::synchronize(errorSize);
     m->end(it);
     if (target_element_count != 0)
     {
-      sam::scaleIsoSizeField(size_iso, target_element_count);
-      clampField(size_iso, hmin, hmax);
-      gradeMesh();
-      //SmoothField(size_iso);
+      sam::scaleIsoSizeField(errorSize, target_element_count);
+      clampField(errorSize, hmin, hmax);
+      //gradeMesh();
+      //SmoothField(errorSize);
     }
+    sizeFieldList.push(errorSize);
   } 
 
   //Destroy locally required fields
-  apf::destroyField(size_iso_reg);
+  apf::destroyField(errorSize_reg);
   apf::destroyField(clipped_vtx);
   if(comm_rank==0)
     std::cout<<"Finished Size Field\n";
