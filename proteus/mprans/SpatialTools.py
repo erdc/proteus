@@ -2041,7 +2041,7 @@ def assembleDomain(domain):
         boundary conditions of the shape.
     """
     _assembleGeometry(domain, BC_class=bc.BC_RANS)
-    domain.bc[0].setNonMaterial()  # set BC for boundary between processors
+    domain.BCbyFlag[0].setNonMaterial()  # set BC for boundary between processors
     assembleAuxiliaryVariables(domain)
     if(domain.name != "PUMIDomain"):
         _generateMesh(domain)
@@ -2096,8 +2096,11 @@ def assembleAuxiliaryVariables(domain):
             body = shape.auxiliaryVariables['ChRigidBody']
             for boundcond in shape.BC_list:
                 boundcond.setChMoveMesh(body)
-            body.i_start = start_flag + 1
-            body.i_end = start_flag + 1 + len(shape.BC_list)
+            if not body.boundaryFlags:
+                flags = []
+                for tag, flag in shape.boundaryTags.items():
+                    flags += [start_flag+flag]
+                body.setBoundaryFlags(flags)
         if 'WallFunction' in list(shape.auxiliaryVariables.keys()):
             wall = shape.auxiliaryVariables['WallFunction']
             for ii in range(len(wall)):
