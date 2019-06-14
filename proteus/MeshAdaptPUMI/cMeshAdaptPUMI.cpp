@@ -13,6 +13,8 @@
 #include <string.h>
 
 #include "MeshAdaptPUMI.h"
+#include <sam.h>
+#include <samSz.h>
 
 #ifdef PROTEUS_USE_SIMMETRIX
 //PROTEUS_USE_SIMMETRIX is a compiler macro that indicates whether Simmetrix libraries are used
@@ -152,6 +154,28 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   return 0;
 }
 
+int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile,double* boxDim,double* sphereCenter, double radius)
+{
+  //assume analytic 
+  comm_size = PCU_Comm_Peers();
+  comm_rank = PCU_Comm_Self();
+  m = apf::loadMdsMesh(".null", meshFile);
+  m->verify();
+
+  //create analytic geometry 
+  gmi_model* testModel = createSphereInBox(boxDim,sphereCenter,radius);
+  m->verify();
+
+
+/*
+  apf::writeVtkFiles("afterAnalytic",m);
+  std::cout<<"test Model "<<testModel<<" mesh model "<<m->getModel()<<std::endl;
+  std::abort();
+*/
+  return 0;
+}
+
+
 
 int MeshAdaptPUMIDrvr::getSimmetrixBC()
 /**
@@ -282,7 +306,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   return 0;
 } 
 
-int MeshAdaptPUMIDrvr::willAdapt() 
+int MeshAdaptPUMIDrvr::willErrorAdapt() 
 /**
  * @brief Looks at the estimated error and determines if mesh adaptation is necessary.
  *
@@ -292,37 +316,130 @@ int MeshAdaptPUMIDrvr::willAdapt()
  * Assertion is set to ensure that all ranks in a parallel execution will enter the adapt stage
  */
 {
-  if(THRESHOLD==0){
-    THRESHOLD = total_error;
-  }
   int adaptFlag=0;
   int assertFlag;
 
-  if(total_error >= THRESHOLD){
-    adaptFlag = 1;
+  //get current size field
+  apf::Field* currentField;
+
+  if(!size_iso) //if no previous size field
+  {
+    currentField = samSz::isoSize(m);
   }
-/*
-  else{
-    apf::MeshEntity* reg;
-    apf::MeshIterator* iter= m->begin(nsd);
-    while(reg = m->iterate(iter)){
-      if(apf::getScalar(err_reg,reg,0)>target_error)
-        adaptFlag=1;
-    }
-    m->end(iter);
+  else //otherwise use previous size field, remember to reflect this in interfaceAdapt or collapse to a single function
+  {
+    currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
+    apf::copyData(currentField,size_iso);
   }
-*/
+
+  //get error-based size field
+  getERMSizeField(total_error);
+  apf::Field* errorField = sizeFieldList.front();
+  sizeFieldList.pop(); //remove this size field from the queue
+
+
+  //determine if desired mesh is contained in current mesh
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+    double h_current = apf::getScalar(currentField,ent,0);
+    double h_needed = apf::getScalar(errorField,ent,0);
+    if(h_current>h_needed){
+      adaptFlag=1;        
+      //apf::writeVtkFiles("willErrorAdapt", m);
+      //std::cout<<"What is the ent? "<<localNumber(ent)<<std::endl;
+      //std::exit(1);
+      break;
+      
+    }  
+  }//end while
 
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
   assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
+
+  apf::destroyField(currentField);
+  apf::destroyField(errorField);
+
   return adaptFlag;
 }
 
-#include <sam.h>
-#include <samSz.h>
 
-int MeshAdaptPUMIDrvr::adaptPUMIMesh()
+int MeshAdaptPUMIDrvr::willAdapt() 
+//Master function that calls other adapt-trigger functions
+{
+  int adaptFlag = 0;
+  if(size_field_config == "combined" or size_field_config == "isotropic")
+    adaptFlag += willInterfaceAdapt(); 
+  //if(size_field_config == "combined" or size_field_config == "VMS")
+  //  adaptFlag += willErrorAdapt();
+
+  if(adaptFlag > 0)
+    adaptFlag = 1;
+  return adaptFlag;
+}
+
+
+int MeshAdaptPUMIDrvr::willInterfaceAdapt() 
+//Does banded adapt need to happen for an isotropic mesh?
+//I need to loop over all mesh edges and determine if the edge intersects the blending region.
+//If so, need to check the size values on the edge-adjacent vertices.
+//If either size value is greater than h_interface*1.5, then we know we need to adapt
+{
+  int adaptFlag=0;
+  int assertFlag;
+
+  //get current size field
+  apf::Field* currentField;
+/*
+  if(!size_iso) //if no previous size field
+  {
+    currentField = samSz::isoSize(m);
+  }
+  else //otherwise use previous size field, remember to reflect this in interfaceAdapt or collapse to a single function
+  {
+    currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
+    apf::copyData(currentField,size_iso);
+  }
+*/
+
+  currentField = samSz::isoSize(m);
+  double edgeRatio = 1.5; //need to be taken from MeshAdapt library
+
+  //get banded size field
+  double L_band = (N_interface_band)*hPhi;
+  calculateSizeField(L_band);
+  apf::Field* interfaceField = sizeFieldList.front();
+  sizeFieldList.pop(); //destroy this size field
+
+
+  //determine if desired mesh is contained in current mesh
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+    double h_current = apf::getScalar(currentField,ent,0);
+    double h_needed = apf::getScalar(interfaceField,ent,0);
+    if(h_current/h_needed > edgeRatio){
+      adaptFlag=1;        
+      break;
+    }  
+  }//end while
+
+  assertFlag = adaptFlag;
+  PCU_Add_Ints(&assertFlag,1);
+  assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
+
+  apf::destroyField(currentField);
+  apf::destroyField(interfaceField);
+
+  return assertFlag;
+}
+
+
+
+int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 /**
  * @brief Function used to trigger adaptation
  *
@@ -355,10 +472,16 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     getERMSizeField(total_error);
   }
   else if (size_field_config == "meshQuality"){
-    size_iso = samSz::isoSize(m);
+    //size_iso = samSz::isoSize(m);
+    setSphereSizeField();
   }
-  else if (size_field_config == "isotropic")
-    calculateSizeField();
+  else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
+  {
+    double L_band = (N_interface_band+1)*hPhi;
+    calculateSizeField(L_band);
+    if(nAdapt>1)
+        predictiveInterfacePropagation();
+  }
   else if (size_field_config == "isotropicProteus")
     size_iso = m->findField("proteus_size");
   else if (size_field_config == "anisotropicProteus"){
@@ -374,37 +497,29 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
+  else if(size_field_config == "combined" && std::string(inputString)==""){
+    assert(vmsErrH1);
+    //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
+    //calculateSizeField(L_band);
+    double L_band = (N_interface_band+1)*hPhi;
+    calculateSizeField(L_band);
+    if(nAdapt>2)
+        predictiveInterfacePropagation();
+    getERMSizeField(total_error);
+  }
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
   }
+
+  isotropicIntersect();
+
   if(logging_config=="on"){
     char namebuffer[50];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
     sprintf(namebuffer,"beforeAnisotropicAdapt%i_.smb",nAdapt);
     m->writeNative(namebuffer);
-/* Code to output size scale and frame
-    apf::MeshIterator* it = m->begin(0);
-    apf::MeshEntity* test;
-    std::ofstream myfile;
-    myfile.open("meshSizeScale.txt");
-    while(test = m->iterate(it)){ 
-      apf::Vector3 tempScale;
-      apf::getVector(size_scale, test, 0,tempScale);
-      myfile << tempScale[0] <<","<<tempScale[1]<<","<<tempScale[2]<<std::endl;
-    }
-    myfile.close();
-    it = m->begin(0);
-    myfile.open("meshSizeFrame.txt");
-    while(test = m->iterate(it)){
-      apf::Matrix3x3 tempFrame;
-      apf::getMatrix(size_frame, test, 0,tempFrame);
-      myfile << tempFrame[0][0]<<","<<tempFrame[0][1]<<","<<tempFrame[0][2]<<","<<tempFrame[1][0]<<","<<tempFrame[1][1]<<","<<tempFrame[1][2]<<","<<tempFrame[2][0]<<","<<tempFrame[2][1]<<","<<tempFrame[2][2]<<std::endl;
-    }
-    m->end(it);
-    m->writeNative("beforeAnisotropicAdapt.smb");
-*/
   }
 
   if(size_field_config=="ERM"){
@@ -413,7 +528,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
-  if(size_field_config=="VMS"){
+  if(size_field_config=="VMS" || size_field_config=="combined"){
     freeField(vmsErrH1);
     if(PCU_Comm_Self()==0) std::cout<<"cleared VMS field\n";
   }
@@ -431,7 +546,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   apf::Field* adaptFrame;
 
   /// Adapt the mesh
-
   ma::Input* in;
   if(size_field_config == "uniform"){
     in = ma::configureUniformRefine(m);
@@ -453,6 +567,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       in = ma::configure(m, adaptSize);
     }
   }
+
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
   in->shouldRunMidZoltan = true;
@@ -461,7 +576,13 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   //in->shouldRunPostParma = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
-  in->shouldSnap = false;
+  if(size_field_config == "meshQuality")
+  {
+    in->shouldSnap = true;
+    in->shouldTransferParametric=true;
+  }
+  else
+    in->shouldSnap = false;
   //in->goodQuality = 0.16;//0.027;
   //double mass_before = getTotalMass();
   
@@ -479,18 +600,17 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     std::ios::fmtflags saved(std::cout.flags());
     std::cout<<std::setprecision(15)<<"Mass Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
     std::cout.flags(saved);
-*/
     std::ofstream myfile;
     myfile.open("adapt_timing.txt", std::ios::app);
     myfile << t2-t1<<std::endl;
     myfile.close();
-/*
     std::ofstream mymass;
     mymass.open("mass_check.txt", std::ios::app);
     mymass <<std::setprecision(15)<<mass_before<<","<<mass_after<<","<<mass_after-mass_before<<std::endl;
     mymass.close();
 */
   }
+
   if(size_field_config=="ERM"){
     if (has_gBC)
       getSimmetrixBC();
@@ -507,6 +627,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   if(adapt_type_config=="anisotropic")
     apf::destroyField(adaptFrame);
   nAdapt++; //counter for number of adapt steps
+
+  if(logging_config=="debugRestart")
+    m->writeNative("DEBUG_restart.smb");
+
   return 0;
 }
 
@@ -567,7 +691,90 @@ double MeshAdaptPUMIDrvr::getTotalMass()
 
 //Save mesh with solution
 
-void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile){
+void MeshAdaptPUMIDrvr::writeMesh(const char* meshFile)
+{
   m->writeNative(meshFile);
-  apf::writeVtkFiles(meshFile,m);
+  //apf::writeVtkFiles(meshFile,m);
+}
+
+//Clean mesh of all fields and tags
+
+void MeshAdaptPUMIDrvr::cleanMesh()
+{
+  //destroy all fields...
+    
+  for(int i =0;i<m->countFields();i++)
+  {
+    apf::Field* sample = m->getField(i);
+    freeField(sample);
+  }
+  //std::cout<<"find field " <<m->getField(m->countFields())<<" how many fields? "<<m->countFields()<<std::endl;
+  //std::cout<<"is velocity_old here? "<<m->findField("velocity_old")<<std::endl;
+  apf::Field* sample = m->findField("velocity_old");
+  freeField(sample);
+
+  sample = m->findField("vof_old");
+  freeField(sample);
+  sample = m->findField("ls_old");
+  freeField(sample);
+  sample = m->findField("phi");
+  freeField(sample);
+  sample = m->findField("phi_old");
+  freeField(sample);
+  sample = m->findField("phi_old_old");
+  freeField(sample);
+  sample = m->findField("phid_old");
+  freeField(sample);
+  sample = m->findField("phiCorr");
+  freeField(sample);
+  sample = m->findField("phiCorr_old");
+  freeField(sample);
+  sample = m->findField("phiCorr_old_old");
+  freeField(sample);
+  sample = m->findField("p_old");
+  freeField(sample);
+  sample = m->findField("p");
+  freeField(sample);
+  sample = m->findField("p_old_old");
+  freeField(sample);
+
+  sample = m->findField("VMSH1");
+  freeField(sample);
+  sample = m->findField("VMSL2");
+  freeField(sample);
+
+  //destroy all tags
+  apf::DynamicArray<apf::MeshTag*> listTags;
+  m->getTags(listTags);
+  int nTags = listTags.getSize();
+  int numDim = m->getDimension();
+  for(int i=0; i < nTags; i++)
+  {
+    std::string ignoreString ("proteus_number");
+    std::string tagName (m->getTagName(listTags[i]));
+    if(tagName.find(ignoreString) != std::string::npos)
+    {
+      //do nothing
+    }
+    else{
+      for(int j=0;j<(numDim+1);j++)
+      {
+        apf::MeshIterator* it = m->begin(j);
+        apf::MeshEntity* ent;
+        while( (ent = m->iterate(it)) )
+        {
+          if(m->hasTag(ent,listTags[i]))
+            m->removeTag(ent,listTags[i]);
+        }
+        m->end(it);
+      }
+      m->destroyTag(listTags[i]);
+    }
+  }
+}
+
+void MeshAdaptPUMIDrvr::set_nAdapt(int numberAdapt)
+{
+  nAdapt = numberAdapt;
+  return;
 }

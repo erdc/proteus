@@ -2,6 +2,7 @@ from __future__ import division
 from past.utils import old_div
 from builtins import object
 import numpy as np
+from petsc4py import PETSc
 from proteus.Profiling import logEvent
 from proteus.MeshTools import MeshOptions
 from proteus.defaults import (Physics_base,
@@ -91,6 +92,7 @@ class ParametersHolder:
             if model['index'] is not None:
                 model.initializePhysics()
                 model.initializeNumerics()
+                model.initializePETScOptions()
                 self.nModels += 1
                 self.models_list += [model]
                 logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
@@ -98,11 +100,11 @@ class ParametersHolder:
                 logEvent('{name} PHYSICS'.format(name=model.name))
                 logEvent('-----')
                 logEvent('COEFFICIENTS OPTIONS')
-                for key, value in model.p.CoefficientsOptions.__dict__.items():
+                for key, value in sorted(model.p.CoefficientsOptions.__dict__.items()):
                     if key[0] != '_':  # do not print hidden attributes
                         logEvent('{key}: {value}'. format(key=key, value=value))
                 logEvent('END OF COEFFICIENTS OPTIONS')
-                for key, value in model.p.__dict__.items():
+                for key, value in sorted(model.p.__dict__.items()):
                     if key[0] != '_':  # do not print hidden attributes
                         if key in p_base.__dict__.keys():
                             if value != p_base.__dict__[key]:
@@ -114,7 +116,7 @@ class ParametersHolder:
                 logEvent('-----')
                 logEvent('{name} NUMERICS'.format(name=model.name))
                 logEvent('-----')
-                for key, value in model.n.__dict__.items():
+                for key, value in sorted(model.n.__dict__.items()):
                     if key[0] != '_':  # do not print hidden attributes
                         if key in n_base.__dict__.keys():
                             if value != n_base.__dict__[key]:
@@ -126,24 +128,11 @@ class ParametersHolder:
                 logEvent('----------')
 
         logEvent('-----')
+        logEvent('PETSc OPTIONS')
+        petsc_info = PETSc.Options().getAll()
+        for key, val in sorted(petsc_info.items()):
+            logEvent(str(key)+': '+str(val))
         logEvent('-----')
-        logEvent('-----')
-        logEvent('-----')
-        logEvent('-----')
-        n = Numerics_base()
-        p = Physics_base()
-        for i in range(len(all_models)):
-            model = all_models[i]
-            if model['index'] is not None:
-                logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
-                logEvent('-----')
-                for key, value in p.__dict__.items():
-                    if key[0] != '_' and value != model.p.__dict__[key]:  # do not print hidden attributes
-                        logEvent('{key}: {value}'. format(key=key, value=model.p[key]))
-                logEvent('-----n')
-                for key, value in n.__dict__.items():
-                    if key[0] != '_' and value != model.n.__dict__[key]:  # do not print hidden attributes
-                        logEvent('{key}: {value}'. format(key=key, value=model.n[key]))
 
 
 class ParametersModelsHolder:
@@ -208,6 +197,7 @@ class ParametersModelBase(FreezableClass):
         self.index = index
         self.auxiliaryVariables = []
         self._Problem = Problem
+        self.OptDB = PETSc.Options()
         self.p = Physics_base(nd=self._Problem.domain.nd)
         self.p.myTpFlowProblem = self._Problem
         self.p.name = name
@@ -285,6 +275,28 @@ class ParametersModelBase(FreezableClass):
         # to overwrite for each models
         pass
 
+    def initializePETScOptions(self):
+        if not self._Problem.usePETScOptionsFileExternal:
+            # use default options if no file
+            self._initializePETScOptions()
+        else:
+            # check if file contains options for model
+            # use default options for model if no options in file
+            prefix = self.n.linear_solver_options_prefix
+            petsc_options = PETSc.Options().getAll()
+            initialize = True
+            i = 0
+            for key in petsc_options.keys():
+                i += 1
+                if prefix == key[:len(prefix)]:
+                    initialize = False
+                    break
+            if initialize:
+                self._initializePETScOptions()
+
+    def _initializePETScOptions(self):
+        pass
+
 
 class ParametersModelRANS2P(ParametersModelBase):
     """
@@ -304,6 +316,23 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.timeOrder = 2
         copts.stokes = False
         copts.eb_adjoint_sigma = 1.
+        copts.Closure_0_model = None
+        copts.Closure_1_model = None
+        copts.nParticles = 0
+        copts.particle_epsFact = 3.0
+        copts.particle_alpha = 1000.0
+        copts.particle_beta = 1000.0
+        copts.particle_penalty_constant = 1000.0
+        copts.particle_nitsche = 1.0
+        copts.particle_sdfList = None
+        copts.use_ball_as_particle = 0
+        copts.ball_center = None
+        copts.ball_radius = None
+        copts.ball_velocity = None
+        copts.ball_angular_velocity = None
+        copts.ball_center_acceleration = None
+        copts.ball_angular_acceleration = None
+        copts.ball_density = None
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
@@ -323,6 +352,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'rans2p_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        self.n.linearSmoother = LinearSolvers.SimpleNavierStokes3D
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
@@ -356,35 +386,52 @@ class ParametersModelRANS2P(ParametersModelBase):
             epsFact_solid = None
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
-        self.p.coefficients = RANS2P.Coefficients(epsFact=copts.epsFact_viscosity,
-                                                  sigma=pparams.surf_tension_coeff,
-                                                  rho_0=pparams.densityA,
-                                                  nu_0=pparams.kinematicViscosityA,
-                                                  rho_1=pparams.densityB,
-                                                  nu_1=pparams.kinematicViscosityB,
-                                                  g=pparams.gravity,
-                                                  nd=nd,
-                                                  ME_model=ME_model,
-                                                  CLSVOF_model=CLSVOF_model,
-                                                  VF_model=VF_model,
-                                                  LS_model=LS_model,
-                                                  Closure_0_model=K_model,
-                                                  Closure_1_model=DISS_model,
-                                                  epsFact_density=copts.epsFact_density,
-                                                  stokes=copts.stokes,
-                                                  useVF=copts.useVF,
-                                                  useRBLES=copts.useRBLES,
-                                                  useMetrics=copts.useMetrics,
-                                                  eb_adjoint_sigma=copts.eb_adjoint_sigma,
-                                                  eb_penalty_constant=copts.weak_bc_penalty_constant,
-                                                  forceStrongDirichlet=copts.forceStrongDirichlet,
-                                                  turbulenceClosureModel=pparams.useRANS,
-                                                  movingDomain=self.p.movingDomain,
-                                                  porosityTypes=porosityTypes,
-                                                  dragAlphaTypes=dragAlphaTypes,
-                                                  dragBetaTypes=dragBetaTypes,
-                                                  epsFact_solid=epsFact_solid,
-                                                  barycenters=domain.barycenters)
+        self.p.coefficients = RANS2P.Coefficients(
+            epsFact=copts.epsFact_viscosity,
+            sigma=pparams.surf_tension_coeff,
+            rho_0=pparams.densityA,
+            nu_0=pparams.kinematicViscosityA,
+            rho_1=pparams.densityB,
+            nu_1=pparams.kinematicViscosityB,
+            g=pparams.gravity,
+            nd=nd,
+            ME_model=ME_model,
+            CLSVOF_model=CLSVOF_model,
+            VF_model=VF_model,
+            LS_model=LS_model,
+            Closure_0_model=K_model,
+            Closure_1_model=DISS_model,
+            epsFact_density=copts.epsFact_density,
+            stokes=copts.stokes,
+            useVF=copts.useVF,
+            useRBLES=copts.useRBLES,
+            useMetrics=copts.useMetrics,
+            eb_adjoint_sigma=copts.eb_adjoint_sigma,
+            eb_penalty_constant=copts.weak_bc_penalty_constant,
+            forceStrongDirichlet=copts.forceStrongDirichlet,
+            turbulenceClosureModel=pparams.useRANS,
+            movingDomain=self.p.movingDomain,
+            porosityTypes=porosityTypes,
+            dragAlphaTypes=dragAlphaTypes,
+            dragBetaTypes=dragBetaTypes,
+            epsFact_solid=epsFact_solid,
+            barycenters=domain.barycenters,
+            nParticles=copts.nParticles,
+            particle_epsFact=copts.particle_epsFact,
+            particle_alpha=copts.particle_alpha,
+            particle_beta=copts.particle_beta,
+            particle_penalty_constant=copts.particle_penalty_constant,
+            particle_nitsche=copts.particle_nitsche,
+            particle_sdfList=copts.particle_sdfList,
+            use_ball_as_particle=copts.use_ball_as_particle,
+            ball_center=copts.ball_center,
+            ball_radius=copts.ball_radius,
+            ball_velocity=copts.ball_velocity,
+            ball_angular_velocity=copts.ball_angular_velocity,
+            ball_center_acceleration=copts.ball_center_acceleration,
+            ball_angular_acceleration=copts.ball_angular_acceleration,
+            ball_density=copts.ball_density,
+        )
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['pressure'],
@@ -409,19 +456,19 @@ class ParametersModelRANS2P(ParametersModelBase):
                 self.p.advectiveFluxBoundaryConditions[3] = boundaryConditions['vel_w_AFBC']
                 self.p.diffusiveFluxBoundaryConditions[3] = {3: boundaryConditions['vel_w_DFBC']}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
-                                          1: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
-                                          2: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}
-            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].p_advective.init_cython(),
-                                                      1: lambda x, flag: domain.bc[flag].u_advective.init_cython(),
-                                                      2: lambda x, flag: domain.bc[flag].v_advective.init_cython()}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].p_dirichlet.uOfXT,
+                                          1: lambda x, flag: domain.BCbyFlag[flag].u_dirichlet.uOfXT,
+                                          2: lambda x, flag: domain.BCbyFlag[flag].v_dirichlet.uOfXT}
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].p_advective.uOfXT,
+                                                      1: lambda x, flag: domain.BCbyFlag[flag].u_advective.uOfXT,
+                                                      2: lambda x, flag: domain.BCbyFlag[flag].v_advective.uOfXT}
             self.p.diffusiveFluxBoundaryConditions = {0: {},
-                                                      1: {1:lambda x, flag: domain.bc[flag].u_diffusive.init_cython()},
-                                                      2: {2:lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
+                                                      1: {1:lambda x, flag: domain.BCbyFlag[flag].u_diffusive.uOfXT},
+                                                      2: {2:lambda x, flag: domain.BCbyFlag[flag].v_diffusive.uOfXT}}
             if nd == 3:
-                self.p.dirichletConditions[3] = lambda x, flag: domain.bc[flag].w_dirichlet.init_cython()
-                self.p.advectiveFluxBoundaryConditions[3] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
-                self.p.diffusiveFluxBoundaryConditions[3] = {3: lambda x, flag: domain.bc[flag].w_diffusive.init_cython()}
+                self.p.dirichletConditions[3] = lambda x, flag: domain.BCbyFlag[flag].w_dirichlet.uOfXT
+                self.p.advectiveFluxBoundaryConditions[3] = lambda x, flag: domain.BCbyFlag[flag].w_advective.uOfXT
+                self.p.diffusiveFluxBoundaryConditions[3] = {3: lambda x, flag: domain.BCbyFlag[flag].w_diffusive.uOfXT}
 
     def _initializeNumerics(self):
         nd = self._Problem.domain.nd
@@ -460,6 +507,64 @@ class ParametersModelRANS2P(ParametersModelBase):
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.01*self.n.nl_atol_res
 
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        if self.n.linearSmoother == LinearSolvers.SimpleNavierStokes3D:
+            self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+            self.OptDB.setValue(prefix+'pc_type', 'asm')
+            self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
+            self.OptDB.setValue(prefix+'ksp_max_it', 2000)
+            self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
+            self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+            self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
+            self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_package', 'superlu')
+            self.OptDB.setValue(prefix+'ksp_knoll', 1)
+            self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
+        elif self.n.linearSmoother == LinearSolvers.NavierStokes_TwoPhasePCD:
+            # Options for PCD
+            # Global KSP options
+            self.OptDB.setValue(prefix+'ksp_type', 'fgmres')
+            self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+            self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
+            self.OptDB.setValue(prefix+'ksp_pc_side','right')
+            self.OptDB.setValue(prefix+'pc_fieldsplit_type', 'schur')
+            self.OptDB.setValue(prefix+'pc_fieldsplit_schur_fact_type', 'upper')
+            self.OptDB.setValue(prefix+'pc_fieldsplit_schur_precondition', 'user')
+            # Velocity block options
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_type', 'gmres')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_gmres_modifiedgramschmidt', 1)
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_atol', 1e-5)
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_rtol', 1e-5)
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_ksp_pc_side', 'right')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_ksp_type', 'preonly')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_type', 'hypre')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomeramg')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_ksp_type', 'preonly')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_type', 'hypre')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomeramg')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_ksp_type', 'preonly')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_type', 'hypre')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomeramg')
+            self.OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+            #PCD Schur Complement options
+            self.OptDB.setValue(prefix+'fieldsplit_pressure_ksp_type', 'preonly')
+            self.OptDB.setValue('innerTPPCDsolver_Qp_visc_ksp_type', 'preonly')
+            self.OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_type', 'lu')
+            self.OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type', 'superlu_dist')
+            self.OptDB.setValue('innerTPPCDsolver_Qp_dens_ksp_type', 'preonly')
+            self.OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_type', 'lu')
+            self.OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type', 'superlu_dist')
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_type', 'richardson')
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_max_it', 1)
+            #self.OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space',1)
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_type', 'hypre')
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type', 'boomeramg')
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold', 0.5)
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type', 'ext+i-cc')
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+            self.OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl', 2)
 
 class ParametersModelRANS3PF(ParametersModelBase):
     """
@@ -488,6 +593,19 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.eb_adjoint_sigma = 1.
         copts.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY = 0
         copts.USE_SUPG = False
+        copts.nParticles = 0
+        copts.particle_epsFact = 3.0
+        copts.particle_alpha = 1000.0
+        copts.particle_beta = 1000.0
+        copts.particle_penalty_constant = 1000.0
+        copts.particle_nitsche = 1.0
+        copts.particle_sdfList = None
+        copts.use_ball_as_particle = 0
+        copts.ball_center = None
+        copts.ball_radius = None
+        copts.ball_velocity = None
+        copts.ball_angular_velocity = None
+        copts.particles = None
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
@@ -543,40 +661,55 @@ class ParametersModelRANS3PF(ParametersModelBase):
         if copts.forceTerms is not None:
             self.p.forceTerms = copts.forceTerms
             copts.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY = 1
-        self.p.coefficients = RANS3PF.Coefficients(epsFact=copts.epsFact_viscosity,
-                                                   sigma=pparams.surf_tension_coeff,
-                                                   rho_0=pparams.densityA,
-                                                   nu_0=pparams.kinematicViscosityA,
-                                                   rho_1=pparams.densityB,
-                                                   nu_1=pparams.kinematicViscosityB,
-                                                   g=pparams.gravity,
-                                                   nd=nd,
-                                                   ME_model=V_model,
-                                                   PRESSURE_model=PRESSURE_model,
-                                                   SED_model=SED_model,
-                                                   CLSVOF_model=CLSVOF_model,
-                                                   VOF_model=VOF_model,
-                                                   VOS_model=VOS_model,
-                                                   LS_model=LS_model,
-                                                   Closure_0_model=K_model,
-                                                   Closure_1_model=DISS_model,
-                                                   epsFact_density=copts.epsFact_density,
-                                                   stokes=copts.stokes,
-                                                   useVF=copts.useVF,
-                                                   useRBLES=copts.useRBLES,
-                                                   useMetrics=copts.useMetrics,
-                                                   eb_adjoint_sigma=copts.eb_adjoint_sigma,
-                                                   eb_penalty_constant=copts.weak_bc_penalty_constant,
-                                                   forceStrongDirichlet=copts.forceStrongDirichlet,
-                                                   turbulenceClosureModel=pparams.useRANS,
-                                                   movingDomain=self.p.movingDomain,
-                                                   PSTAB=copts.PSTAB,
-                                                   USE_SUPG=copts.USE_SUPG,
-                                                   ARTIFICIAL_VISCOSITY=copts.ARTIFICIAL_VISCOSITY,
-                                                   INT_BY_PARTS_PRESSURE=copts.INT_BY_PARTS_PRESSURE,
-                                                   cE=copts.cE,
-                                                   cMax=copts.cMax,
-                                                   MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=copts.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY)
+        self.p.coefficients = RANS3PF.Coefficients(
+            epsFact=copts.epsFact_viscosity,
+            sigma=pparams.surf_tension_coeff,
+            rho_0=pparams.densityA,
+            nu_0=pparams.kinematicViscosityA,
+            rho_1=pparams.densityB,
+            nu_1=pparams.kinematicViscosityB,
+            g=pparams.gravity,
+            nd=nd,
+            ME_model=V_model,
+            PRESSURE_model=PRESSURE_model,
+            SED_model=SED_model,
+            CLSVOF_model=CLSVOF_model,
+            VOF_model=VOF_model,
+            VOS_model=VOS_model,
+            LS_model=LS_model,
+            Closure_0_model=K_model,
+            Closure_1_model=DISS_model,
+            epsFact_density=copts.epsFact_density,
+            stokes=copts.stokes,
+            useVF=copts.useVF,
+            useRBLES=copts.useRBLES,
+            useMetrics=copts.useMetrics,
+            eb_adjoint_sigma=copts.eb_adjoint_sigma,
+            eb_penalty_constant=copts.weak_bc_penalty_constant,
+            forceStrongDirichlet=copts.forceStrongDirichlet,
+            turbulenceClosureModel=pparams.useRANS,
+            movingDomain=self.p.movingDomain,
+            PSTAB=copts.PSTAB,
+            USE_SUPG=copts.USE_SUPG,
+            ARTIFICIAL_VISCOSITY=copts.ARTIFICIAL_VISCOSITY,
+            INT_BY_PARTS_PRESSURE=copts.INT_BY_PARTS_PRESSURE,
+            cE=copts.cE,
+            cMax=copts.cMax,
+            MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=copts.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
+            nParticles=copts.nParticles,
+            particle_epsFact=copts.particle_epsFact,
+            particle_alpha=copts.particle_alpha,
+            particle_beta=copts.particle_beta,
+            particle_penalty_constant=copts.particle_penalty_constant,
+            particle_nitsche=copts.particle_nitsche,
+            particle_sdfList=copts.particle_sdfList,
+            use_ball_as_particle=copts.use_ball_as_particle,
+            ball_center=copts.ball_center,
+            ball_radius=copts.ball_radius,
+            ball_velocity=copts.ball_velocity,
+            ball_angular_velocity=copts.ball_angular_velocity,
+            particles=copts.particles,
+        )
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['vel_u'],
@@ -597,16 +730,16 @@ class ParametersModelRANS3PF(ParametersModelBase):
                 self.p.advectiveFluxBoundaryConditions[2] = boundaryConditions['vel_w_AFBC']
                 self.p.diffusiveFluxBoundaryConditions[2] = {2: boundaryConditions['vel_w_DFBC']}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].u_dirichlet.init_cython(),
-                                          1: lambda x, flag: domain.bc[flag].v_dirichlet.init_cython()}
-            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].u_advective.init_cython(),
-                                                      1: lambda x, flag: domain.bc[flag].v_advective.init_cython()}
-            self.p.diffusiveFluxBoundaryConditions = {0: {0:lambda x, flag: domain.bc[flag].u_diffusive.init_cython()},
-                                                      1: {1:lambda x, flag: domain.bc[flag].v_diffusive.init_cython()}}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].u_dirichlet.uOfXT,
+                                          1: lambda x, flag: domain.BCbyFlag[flag].v_dirichlet.uOfXT}
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].u_advective.uOfXT,
+                                                      1: lambda x, flag: domain.BCbyFlag[flag].v_advective.uOfXT}
+            self.p.diffusiveFluxBoundaryConditions = {0: {0:lambda x, flag: domain.BCbyFlag[flag].u_diffusive.uOfXT},
+                                                      1: {1:lambda x, flag: domain.BCbyFlag[flag].v_diffusive.uOfXT}}
             if nd == 3:
-                self.p.dirichletConditions[2] = lambda x, flag: domain.bc[flag].w_dirichlet.init_cython()
-                self.p.advectiveFLuxBoundaryConditions[2] = lambda x, flag: domain.bc[flag].w_advective.init_cython()
-                self.p.diffusiveFluxBoundaryConditions[2] = {2: lambda x, flag: domain.bc[flag].w_diffusive.init_cython()}
+                self.p.dirichletConditions[2] = lambda x, flag: domain.BCbyFlag[flag].w_dirichlet.uOfXT
+                self.p.advectiveFLuxBoundaryConditions[2] = lambda x, flag: domain.BCbyFlag[flag].w_advective.uOfXT
+                self.p.diffusiveFluxBoundaryConditions[2] = {2: lambda x, flag: domain.BCbyFlag[flag].w_diffusive.uOfXT}
 
     def _initializeNumerics(self):
         self.n.forceTerms = self.p.forceTerms
@@ -693,8 +826,8 @@ class ParametersModelPressure(ParametersModelBase):
             self.p.dirichletConditions = {0: BC['pressure_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_AFBC']}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].p_dirichlet.init_cython()}
-            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].p_advective.init_cython()}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].p_dirichlet.uOfXT}
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].p_advective.uOfXT}
 
     def _initializeNumerics(self):
         domain = self._Problem.domain
@@ -757,9 +890,9 @@ class ParametersModelPressureInitial(ParametersModelBase):
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_AFBC']}
             self.p.diffusiveFluxBoundaryConditions = {0:{0: BC['pressure_increment_DFBC']}}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].p_dirichlet.init_cython()}
-            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].p_advective.init_cython()}
-            self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.bc[flag].pInc_diffusive.init_cython()}}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].p_dirichlet.uOfXT}
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].p_advective.uOfXT}
+            self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.BCbyFlag[flag].pInc_diffusive.uOfXT}}
         # freeze attributes
         self._freeze()
 
@@ -832,9 +965,9 @@ class ParametersModelPressureIncrement(ParametersModelBase):
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_increment_AFBC']}
             self.p.diffusiveFluxBoundaryConditions = {0:{0: BC['pressure_increment_DFBC']}}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].pInc_dirichlet.init_cython()}
-            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].pInc_advective.init_cython()}
-            self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.bc[flag].pInc_diffusive.init_cython()}}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].pInc_dirichlet.uOfXT}
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].pInc_advective.uOfXT}
+            self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.BCbyFlag[flag].pInc_diffusive.uOfXT}}
         # freeze attributes
         self._freeze()
 
@@ -1344,9 +1477,9 @@ class ParametersModelCLSVOF(ParametersModelBase):
             self.p.advectiveFluxBoundaryConditions = {0: BC['clsvof_AFBC']}
             self.p.diffusiveFluxBoundaryConditions = {0:{0: BC['clsvof_DFBC']}}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython()}
-            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].vof_advective.init_cython()}
-            self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.bc[flag].clsvof_diffusive.init_cython()}}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].vof_dirichlet.uOfXT}
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].vof_advective.uOfXT}
+            self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: domain.BCbyFlag[flag].clsvof_diffusive.uOfXT}}
 
     def _initializeNumerics(self):
         domain = self._Problem.domain
@@ -1439,8 +1572,8 @@ class ParametersModelVOF(ParametersModelBase):
             self.p.dirichletConditions = {0: BC['vof_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['vof_AFBC']}
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython()}
-            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].vof_advective.init_cython()}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].vof_dirichlet.uOfXT}
+            self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].vof_advective.uOfXT}
         self.p.diffusiveFluxBoundaryConditions = {0: {}}
 
     def _initializeNumerics(self):
@@ -1466,6 +1599,15 @@ class ParametersModelVOF(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 
 class ParametersModelNCLS(ParametersModelBase):
@@ -1561,6 +1703,14 @@ class ParametersModelNCLS(ParametersModelBase):
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelRDLS(ParametersModelBase):
     """
@@ -1628,9 +1778,6 @@ class ParametersModelRDLS(ParametersModelBase):
     def _initializeNumerics(self):
         domain = self._Problem.domain
         nd = domain.nd
-        # TIME
-        self.n.timeIntegration = TimeIntegration.NoIntegration
-        self.n.stepController = StepControl.Newton_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
@@ -1647,9 +1794,22 @@ class ParametersModelRDLS(ParametersModelBase):
         # TOLERANCES
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he)
+            self.n.nl_atol_res = max(minTol, 0.1*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'gmres')
+        self.OptDB.setValue(prefix+'pc_type', 'asm')
+        self.OptDB.setValue(prefix+'pc_pc_asm_type', 'basic')
+        self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
+        self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
+        self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_type', 'superlu')
+        self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
+        self.OptDB.setValue(prefix+'max_it', 2000)
 
 class ParametersModelMCorr(ParametersModelBase):
     """
@@ -1742,6 +1902,12 @@ class ParametersModelMCorr(ParametersModelBase):
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelAddedMass(ParametersModelBase):
     """
@@ -1802,7 +1968,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         self.p.initialConditions = {0: dp_IC()}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
-        self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].pAddedMass_dirichlet.init_cython()}
+        self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].pAddedMass_dirichlet.uOfXT}
         self.p.advectiveFluxBoundaryConditions = {}
         def getFlux_am(x, flag):
             #the unit rigid motions will applied internally
@@ -1819,7 +1985,14 @@ class ParametersModelAddedMass(ParametersModelBase):
         if self.n.nl_atol_res is None:
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = self.n.nl_atol_res
+            self.n.l_atol_res = 0.001*self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
     """
@@ -1918,6 +2091,15 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'ksp_constant_null_space', 1)
+        self.OptDB.setValue(prefix+'pc_factor_shift_type', 'NONZERO')
+        self.OptDB.setValue(prefix+'pc_factor_shift_amount', 1e-10)
+        # self.OptDB.setValue(prefix+'ksp_max_it', 2000)
+
 
 class ParametersModelMoveMeshElastic(ParametersModelBase):
     """
@@ -1990,13 +2172,13 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
                 self.p.stressFluxBoundaryConditions[2] = BC['w_stress']
 
         else:
-            self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].hx_dirichlet.init_cython(),
-                                          1: lambda x, flag: domain.bc[flag].hy_dirichlet.init_cython()}
-            self.p.stressFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].u_stress.init_cython(),
-                                                   1: lambda x, flag: domain.bc[flag].v_stress.init_cython()}
+            self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].hx_dirichlet.uOfXT,
+                                          1: lambda x, flag: domain.BCbyFlag[flag].hy_dirichlet.uOfXT}
+            self.p.stressFluxBoundaryConditions = {0: lambda x, flag: domain.BCbyFlag[flag].u_stress.uOfXT,
+                                                   1: lambda x, flag: domain.BCbyFlag[flag].v_stress.uOfXT}
             if nd == 3:
-                self.p.dirichletConditions[2] = lambda x, flag: domain.bc[flag].hz_dirichlet.init_cython()
-                self.p.stressFluxBoundaryConditions[2] = lambda x, flag: domain.bc[flag].w_stress.init_cython()
+                self.p.dirichletConditions[2] = lambda x, flag: domain.BCbyFlag[flag].hz_dirichlet.uOfXT
+                self.p.stressFluxBoundaryConditions[2] = lambda x, flag: domain.BCbyFlag[flag].w_stress.uOfXT
         self.p.fluxBoundaryConditions = {0: 'noFlow',
                                          1: 'noFlow'}
         self.p.advectiveFluxBoundaryConditions = {}
@@ -2022,6 +2204,17 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
+
+    def _initializePETScOptions(self):
+        prefix = self.n.linear_solver_options_prefix
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'asm')
+        self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
+        self.OptDB.setValue(prefix+'ksp_max_it', 2000)
+        self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
+        self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_package', 'superlu')
+        self.OptDB.setValue(prefix+'ksp_knoll', 1)
+        self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
 
 
 class ParametersPhysical(FreezableClass):

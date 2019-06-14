@@ -138,6 +138,7 @@ class TwoPhaseFlowProblem:
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
         self.fastArchive = fastArchive
+        self.usePETScOptionsFileExternal = False
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions

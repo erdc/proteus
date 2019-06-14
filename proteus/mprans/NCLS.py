@@ -1180,6 +1180,9 @@ class LevelModel(OneLevelTransport):
             self.calculateResidual = self.ncls.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.ncls.calculateMassMatrix
 
+        #if(self.timeIntegration.t > 0.002):
+        #  import pdb; pdb.set_trace()
+
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
