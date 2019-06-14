@@ -743,7 +743,7 @@ class PlanarStraightLineGraphDomain(D_base):
         """
         Write the PSLG using the poly format.
         """
-        if not self.polyfile:
+        if True:# if not self.polyfile:
             self.polyfile = fileprefix
             pf = open(fileprefix+'.poly','w')
             #write first line of poly file
@@ -982,9 +982,14 @@ class PUMIDomain(D_base):
       self.faceList=[]
       self.regList=[]
       self.PUMIMesh=None
+      self.checkpointInfo=None
+      self.checkpointFrequency=0 #default never checkpoint
       #
       #it would be useful to define a dictionary mapping strings to faces
       #boundariesTags={'bottom':3,'top':5,'front':1,'back':6,'left':2,'right':4}
+  def writePoly(self,name=None):
+      logEvent("nothing actually dont as this domain type doesn't support writePoly!")
+      return
 
 class PiecewiseLinearComplexDomain(D_base):
     """
@@ -1122,7 +1127,7 @@ class PiecewiseLinearComplexDomain(D_base):
         """
         Write the PLC domain in the poly format.
         """
-        if not self.polyfile:
+        if True:#not self.polyfile:
             self.polyfile = fileprefix
             pf = open(fileprefix+'.poly','w')
             #write first line of poly file

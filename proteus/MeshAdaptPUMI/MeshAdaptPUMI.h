@@ -2,6 +2,7 @@
 #include <apf.h>
 #include <apfMesh2.h>
 #include <apfNumbering.h>
+#include <queue>
 
 /**
    \file MeshAdaptPUMI.h
@@ -21,7 +22,9 @@ class MeshAdaptPUMIDrvr{
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
+  int loadMeshForAnalytic(const char* meshFile,double* boxDim, double* sphereCenter, double radius); //mesh and construct analytic geometry
   void writeMesh(const char* meshFile);
+  void cleanMesh();
 
   //Functions to construct proteus mesh data structures
   int reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int hasModel);
@@ -52,12 +55,21 @@ class MeshAdaptPUMIDrvr{
 
   //MeshAdapt functions
   int willAdapt();
-  int adaptPUMIMesh();
-  int calculateSizeField();
+  int willErrorAdapt();
+  int willInterfaceAdapt();
+  int adaptPUMIMesh(const char* input);
+  int setSphereSizeField();
+  int calculateSizeField(double L_band);
+  void predictiveInterfacePropagation();
+
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
   int gradeMesh();
+
+  //analytic geometry
+  gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
+  void updateSphereCoordinates(double*sphereCenter);
 
   //Quality Check Functions
   double getMinimumQuality();
@@ -67,6 +79,8 @@ class MeshAdaptPUMIDrvr{
   double getMPvalue(double field_val,double val_0, double val_1); //get the multiphase value of physical properties
   apf::Field* getViscosityField(apf::Field* voff); //derive a field of viscosity based on VOF field
 
+  //needed for checkpointing/restart
+  void set_nAdapt(int numberAdapt);
 
   //Public Variables
   double hmax, hmin, hPhi; //bounds on mesh size
@@ -94,7 +108,7 @@ class MeshAdaptPUMIDrvr{
   char* modelFileName; 
   
   //VMS
-  void get_VMS_error(double& total_error);
+  void get_VMS_error(double& total_error_out);
   
   //tags used to identify types of BC
   apf::MeshTag* BCtag;
@@ -140,6 +154,10 @@ class MeshAdaptPUMIDrvr{
   /* these fields store anisotropic size and metric tensor */
   apf::Field* size_scale;
   apf::Field* size_frame;
+
+  //queue for size fields
+  std::queue<apf::Field*> sizeFieldList;
+  void isotropicIntersect();
 
   int constructGlobalNumbering(Mesh& mesh);
   int constructGlobalStructures(Mesh& mesh);

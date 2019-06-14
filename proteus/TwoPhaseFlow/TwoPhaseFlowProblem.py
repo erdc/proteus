@@ -138,6 +138,7 @@ class TwoPhaseFlowProblem:
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
         self.fastArchive = fastArchive
+        self.usePETScOptionsFileExternal = False
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
@@ -183,7 +184,7 @@ class TwoPhaseFlowProblem:
                 assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
                 if nd==3:
                     assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
-            if ls_model == 0:
+            if ls_model == 1:
                 assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
             if ls_model == 0:
                 assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
@@ -213,15 +214,15 @@ class TwoPhaseFlowProblem:
         # parameters
         self.Parameters.initializeParameters()
         # mesh
-        if self.Parameters.mesh.outputFiles['poly'] is True:
-            self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['ply'] is True:
-            self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['asymptote'] is True:
-            self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
-        if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
-            self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
-            self.domain.use_gmsh = True
+        # if self.Parameters.mesh.outputFiles['poly'] is True:
+        #     self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['ply'] is True:
+        #     self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['asymptote'] is True:
+        #     self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
+        # if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
+        #     self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
+        #     self.domain.use_gmsh = True
         # split operator
         self.initializeSO()
 
@@ -251,12 +252,12 @@ class TwoPhaseFlowProblem:
         # others
         so.needEBQ_GLOBAL = False
         so.needEBQ = False
-        so.measureSpeedOfCode = True
+        so.measureSpeedOfCode = False
         so.fastArchive = self.fastArchive
         # archiving time
         outputStepping = self.outputStepping
         tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
-        if tnList[1] == tnList[2]:
+        if len(tnList) > 2 and tnList[1] == tnList[2]:
             del tnList[1]
         if outputStepping['dt_output'] is None:
             if outputStepping['dt_fixed'] > 0:
@@ -374,7 +375,6 @@ default_rans2p_parameters = {'useMetrics': 1.0,
                              'ns_forceStrongDirichlet': False,
                              'weak_bc_penalty_constant': 1.0E6,
                              'useRBLES': 0.0,
-                             'useRANS': 0.0,
                              'ns_closure': 0,
                              'useVF': 1.0,
                              'ns_shockCapturingFactor': 0.25,
