@@ -18,6 +18,7 @@ physical_parameters = mySWFlowProblem.physical_parameters
 numerical_parameters = mySWFlowProblem.swe_parameters
 initialConditions = mySWFlowProblem.initialConditions
 boundaryConditions = mySWFlowProblem.boundaryConditions
+analyticalSolution = mySWFlowProblem.analyticalSolution
 bathymetry = mySWFlowProblem.bathymetry
 reflecting_BCs = mySWFlowProblem.reflectingBCs
 
@@ -57,12 +58,19 @@ initialConditions = {0: initialConditions['water_height'],
                      1: initialConditions['x_mom'],
                      2: initialConditions['y_mom']}
 
-# ***************************************** #    
+# ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
 dirichletConditions = {0: boundaryConditions['water_height'],
                        1: boundaryConditions['x_mom'],
                        2: boundaryConditions['y_mom']}
+
+# **************************************** #
+# ********** ANALYTICAL SOLUTION ********* #
+# **************************************** #
+analyticalSolution = {0: analyticalSolution['h_exact'],
+                      1: analyticalSolution['hu_exact'],
+                      2: analyticalSolution['hv_exact']}
 
 fluxBoundaryConditions = {0: 'outFlow',
                           1: 'outFlow',
@@ -73,5 +81,3 @@ advectiveFluxBoundaryConditions =  {0: lambda x,flag: lambda x,t: 0.0,
 diffusiveFluxBoundaryConditions = {0:{},
                                    1:{1: lambda x,flag: lambda x,t: 0.0},
                                    2:{2: lambda x,flag: lambda x,t: 0.0}}
-
-
