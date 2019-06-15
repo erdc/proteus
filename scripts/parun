@@ -239,8 +239,8 @@ if opts.debug:
 log = Profiling.logEvent
 
 log("Initializing Proteus")
-log("Stack Version: {0}".format(version.stack))
-log("Proteus Version: {0}".format(version.proteus))
+log("Stack Commit: {0}".format(version.stack),0)
+log("Proteus Commit: {0}".format(version.proteus),0)
 
 log("Initializing MPI")
 if opts.petscOptions != None:

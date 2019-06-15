@@ -718,7 +718,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         KE = Norms.scalarDomainIntegral(self.model.q['dV'],
                                         self.model.q['KE'],
                                         self.model.mesh.nElements_owned)
-        logEvent("Pre-step NS, Kinetic Energy = %.15e" % (KE), level=0)
+        logEvent("Pre-step NS, Kinetic Energy = %.15e" % (KE), level=5)
         #import pdb; pdb.set_trace()
         #self.model.q['PE'] = numpy.multiply(self.model.q['x'],self.model.coefficients.g)
         #self.model.q['PE'] = numpy.sum(self.model.q['PE'],2)
@@ -778,7 +778,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         KE = Norms.scalarDomainIntegral(self.model.q['dV'],
                                         self.model.q['KE'],
                                         self.model.mesh.nElements_owned)
-        logEvent("Post-step NS, Kinetic Energy = %.15e" % (KE), level=0)
+        logEvent("Post-step NS, Kinetic Energy = %.15e" % (KE), level=5)
         #import pdb; pdb.set_trace()
         #self.model.q['PE'] = numpy.multiply(self.model.q['x'],self.model.coefficients.g)
         #self.model.q['PE'] = numpy.sum(self.model.q['PE'],2)
