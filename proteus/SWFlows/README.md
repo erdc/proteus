@@ -2,7 +2,7 @@
 
 The SWFlows app contains a number of tests for the the 2D nonlinear Shallow Water Equations, and the 2D modified Green-Naghdi equations. Both models are
 numerically solved using continuous, linear finite elements as seen in
-[Guermond, *et al* 2018] and [Guermond *et al* 2019].
+[Guermond, *et al* 2018](https://doi.org/10.1137/17M1156162) and [Guermond *et al* 2019].
 
 Some introduction stuff on the SW equations.
 
