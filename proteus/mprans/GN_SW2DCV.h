@@ -32,7 +32,7 @@ inline double GN_nu1(const double &g, const double &hL, const double &uL,
   double augL = LAMBDA_MGN / (3. * meshSizeL) * (6. * hL + 12. * (hL - etaL));
 
   if (etaL >= hL) {
-    augL = LAMBDA_MGN / (3. * meshSizeL) * 6. * hL;
+    augL = LAMBDA_MGN / (3. * meshSizeL) * (6. * hL);
   }
   augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2.0);
 
@@ -45,7 +45,7 @@ inline double GN_nu3(const double &g, const double &hR, const double &uR,
   double augR = LAMBDA_MGN / (3. * meshSizeR) * (6. * hR + 12. * (hR - etaR));
 
   if (etaR >= hR) {
-    augR = LAMBDA_MGN / (3. * meshSizeR) * 6. * hR;
+    augR = LAMBDA_MGN / (3. * meshSizeR) * (6. * hR);
   }
   augR = augR * std::pow(meshSizeR / fmax(meshSizeR, hR), 2.0);
 
@@ -1482,6 +1482,8 @@ public:
       double hEps, double *hReg, double *Cx, double *Cy, double *CTx,
       double *CTy, double *dLow, double run_cfl, double *edge_based_cfl,
       int debug) {
+    /* note that for the CFL condition, we use only the values of dij and
+     * don't do the dij = Max(dij,muij) thing */
     std::valarray<double> psi(numDOFsPerEqn);
     double max_edge_based_cfl = 0.;
     int ij = 0;
@@ -1915,10 +1917,12 @@ public:
         double ratioi =
             (2.0 * hetai) / (std::pow(etai, 2.0) + std::pow(hi, 2.0) + hEps);
 
+        double diff_over_h_i = (hetai - std::pow(hi, 2.0)) * one_over_hiReg;
+
         // This is h^2*Gamma'(eta/h) at ith node
         double hSqd_GammaPi = 6.0 * (hetai - std::pow(hi, 2.0));
         if (hetai > std::pow(hi, 2.0)) {
-          hSqd_GammaPi = 6.0 * (std::pow(etai, 2.0) - hetai);
+          hSqd_GammaPi = 6.0 * etai * diff_over_h_i;
         }
 
         extendedSourceTerm_heta[i] = hwi * mi * ratioi;
@@ -1969,7 +1973,7 @@ public:
           if (hetaj > std::pow(hj, 2.0)) {
             pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
                       diff_over_h_j *
-                      (std::pow(etaj, 2.0) + etaj * hj * std::pow(hj, 2.0));
+                      (std::pow(etaj, 2.0) + etaj * hj + std::pow(hj, 2.0));
           }
 
           // auxiliary functions to compute fluxes
