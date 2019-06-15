@@ -297,6 +297,8 @@ if opts.dataDir != '':
     Profiling.logDir = opts.dataDir
 # Initialise datafile
 Profiling.procID=comm.rank()
+if opts.logAllProcesses:
+    Profiling.logAllProcesses = True
 if opts.logLevel > 0:
     if len(args)==0:
         assert opts.TwoPhaseFlow, "Pass arguments to parun or run with --TwoPhaseFlow -f fileName.py"
@@ -482,8 +484,6 @@ elif len(args) == 2: #p and n modules provided
         pass
 else:
     raise RuntimeError("Too many input files specified")
-if sList[0].logAllProcesses or opts.logAllProcesses:
-    Profiling.logAllProcesses = True
 Profiling.flushBuffer=sList[0].flushBuffer
 if opts.batchFileName != "":
     log("Attaching input stream to batch file = "+opts.batchFileName)
