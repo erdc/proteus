@@ -65,15 +65,8 @@ def gatherTimes(filename,dataDir='.',addname="_complete", tCount=None, global_sy
 
 if __name__ == '__main__':
     from optparse import OptionParser
-    usage = ""
+    usage = "usage: %prog [options] filename"
     parser = OptionParser(usage=usage)
-    parser.add_option("-f","--filebase",
-                      help="base name for storage files",
-                      action="store",
-                      type="string",
-                      dest="filebase",
-                      default="simulation")
-
     parser.add_option("-t","--tCount",
                       help="number of time steps",
                       action="store",
@@ -87,5 +80,8 @@ if __name__ == '__main__':
                       default=False)
 
     (opts,args) = parser.parse_args()
-
-    gatherTimes(opts.filebase,tCount = opts.tCount, global_sync = not opts.not_global_sync)
+    if args[0][-3:] == 'xmf':
+        filebase = args[0][:-4]
+    else:
+        filebase = args[0]
+    gatherTimes(filebase,tCount = opts.tCount, global_sync = not opts.not_global_sync)

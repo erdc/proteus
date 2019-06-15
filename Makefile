@@ -277,7 +277,7 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip3 install configparser ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy bqplot hide_code ipympl sympy transforms3d ipymesh voila
+	pip3 install configparser ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet==0.10.3 jupyter_dashboards pythreejs rise cesiumpy bqplot ipympl sympy transforms3d ipymesh voila ipyvolume
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
@@ -286,8 +286,6 @@ jupyter:
 	jupyter nbextension enable --py --sys-prefix ipympl
 	jupyter nbextension enable --py --sys-prefix ipymesh
 	jupyter nbextension enable --py --sys-prefix ipyleaflet
-	jupyter nbextension install --py --sys-prefix hide_code
-	jupyter nbextension enable --py --sys-prefix hide_code
 	jupyter nbextension install --py --sys-prefix rise
 	jupyter nbextension enable --py --sys-prefix rise
 	jupyter dashboards quick-setup --sys-prefix
@@ -295,6 +293,10 @@ jupyter:
 	jupyter nbextension enable --sys-prefix --py ipyparallel
 	jupyter serverextension enable --sys-prefix --py ipyparallel
 	ipython profile create mpi --parallel
+	jupyter nbextension install --sys-prefix --py voila
+	jupyter nbextension enable --sys-prefix --py voila
+	jupyter nbextension install --sys-prefix --py ipyvolume
+	jupyter nbextension enable --sys-prefix --py ipyvolume
 	printf "\nc.NotebookApp.server_extensions.append('ipyparallel.nbextension')\n" >> ${HOME}/.jupyter/jupyter_notebook_config.py
 	printf "\nc.IPClusterEngines.engine_launcher_class = 'MPI'\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalControllerLauncher.controller_cmd = ['python', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py

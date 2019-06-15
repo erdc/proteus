@@ -16,7 +16,7 @@ from builtins import object
 from past.utils import old_div
 import os
 import numpy
-from subprocess import check_call
+from subprocess import check_call, check_output
 
 from . import LinearSolvers
 from . import NonlinearSolvers
@@ -288,7 +288,8 @@ class NS_base(object):  # (HasTraits):
                         logEvent("Calling Triangle to generate 2D mesh for "+p.name)
                         tricmd = "triangle -{0} -e {1}.poly".format(n.triangleOptions, fileprefix)
                         logEvent("Calling triangle on rank 0 with command %s" % (tricmd,))
-                        check_call(tricmd, shell=True)
+                        output=check_output(tricmd, shell=True)
+                        logEvent(str(output,'utf-8'))
                         logEvent("Done running triangle")
                         check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
                         check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
