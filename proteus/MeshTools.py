@@ -5190,7 +5190,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         self.generateFromExistingCoarseMesh(self.coarseMesh,1,
                                             parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.computeGeometricInfo()
-        print(self.meshList[-1].volume)
         #allocate some arrays based on the bathymetry data
         logEvent("InterpolatedBathymetryMesh:Allocating data structures for bathymetry interpolation algorithm")
         if bathyType == "points":
@@ -5573,18 +5572,15 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         mesh.errorAverage_element =  np.zeros((mesh.nElements_global,),'d')
         errorInfty = 0.0
         mesh.elementTags[mesh.elementDiametersArray > self.maxElementDiameter ] = 1
-        print(mesh.elementTags)
         for pN in range(self.nPoints_global):
             eN = self.pointElementsArray[pN]
             if eN >= 0:
-                #print "pN = ",pN,"eN = ",eN,"nodes ",mesh.elementNodesArray[eN,:]
                 zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
                           self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
                           self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2]
-                errorPointwise = old_div(fabs(zInterp - self.domain.bathy[pN,2]), (fabs(self.domain.bathy[pN,2])*self.rtol + self.atol))
-                #print "error ",errorPointwise
+                errorPointwise = fabs(zInterp - self.domain.bathy[pN,2])/(fabs(self.domain.bathy[pN,2])*self.rtol + self.atol)
                 errorInfty = max(errorPointwise,errorInfty)
-                mesh.errorAverage_element[eN] += (old_div(errorPointwise,float(mesh.nPoints_element[eN])))
+                mesh.errorAverage_element[eN] += (errorPointwise/float(mesh.nPoints_element[eN]))
                 #print "error average",mesh.errorAverage_element[eN]
                 if errorPointwise >= 1.0:
                     mesh.elementTags[eN] = 1
@@ -5607,7 +5603,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             errorL2 = old_div(sqrt(errorL2),self.totalArea)#normalize by domain error to make error have units of length
             return errorL2
         else:
-            #print "finished"
+            print("Interpolation Error, L_infty ",errorInfty)
             return errorInfty
 
 class EdgeMesh(Mesh):
