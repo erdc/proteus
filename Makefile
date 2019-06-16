@@ -305,9 +305,9 @@ jupyter:
 	jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 lfs:
-	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
-	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
-	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
+	wget https://github.com/git-lfs/git-lfs/releases/download/v2.7.2/git-lfs-linux-amd64-v2.7.2.tar.gz
+	tar xzvf git-lfs-linux-amd64-2.7.2.tar.gz
+	cd git-lfs-2.7.2 && PREFIX=${HOME} ./install.sh
 	export PATH=${HOME}/bin:${PATH}
 
 proteus_pkg:
