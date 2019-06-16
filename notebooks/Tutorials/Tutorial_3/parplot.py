@@ -154,4 +154,3 @@ def parallel_plot(view, method, *args, **kwargs):
         return result
     else:
         return merged
-
