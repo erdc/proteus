@@ -306,7 +306,7 @@ jupyter:
 
 lfs:
 	wget https://github.com/git-lfs/git-lfs/releases/download/v2.7.2/git-lfs-linux-amd64-v2.7.2.tar.gz
-	tar xzvf git-lfs-linux-amd64-2.7.2.tar.gz
+	tar xzvf git-lfs-linux-amd64-v2.7.2.tar.gz
 	cd git-lfs-2.7.2 && PREFIX=${HOME} ./install.sh
 	export PATH=${HOME}/bin:${PATH}
 
