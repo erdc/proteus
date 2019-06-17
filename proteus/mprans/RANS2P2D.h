@@ -3467,7 +3467,8 @@ namespace proteus
                 //
                 //update residuals
                 //
-                if(true)//boundaryFlags[ebN] > 0)
+                //if(true)//boundaryFlags[ebN] > 0)
+                if(boundaryFlags[ebN] > 0)
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int i=0;i<nDOF_test_element;i++)
                       {

@@ -133,7 +133,8 @@ namespace proteus
                                    double* min_u_bc,
                                    double* max_u_bc,
                                    // AUX QUANTITIES OF INTEREST
-                                   double* quantDOFs)=0;
+                                   double* quantDOFs,
+                                   int* boundaryFlags)=0;
     virtual void calculateJacobian(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -659,7 +660,8 @@ namespace proteus
 			     double* min_u_bc,
 			     double* max_u_bc,
 			     // AUX QUANTITIES OF INTEREST
-			     double* quantDOFs)
+			     double* quantDOFs,
+           int* boundaryFlags)
       {
 	double Ct_sge = 4.0;
 	//

@@ -92,7 +92,8 @@ cdef extern from "VOF.h" namespace "proteus":
                                double * dL_minus_dC,
                                double * min_u_bc,
                                double * max_u_bc,
-                               double * quantDOFs)
+                               double * quantDOFs,
+                               int * boundaryFlags)
         void calculateJacobian(double dt,
                                double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -409,7 +410,8 @@ cdef class cVOF_base:
                           numpy.ndarray dt_times_dH_minus_dL,
                           numpy.ndarray min_u_bc,
                           numpy.ndarray max_u_bc,
-                          numpy.ndarray quantDOFs):
+                          numpy.ndarray quantDOFs,
+                          numpy.ndarray boundaryFlags):
         self.thisptr.calculateResidual(dt,
                                        < double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -496,7 +498,8 @@ cdef class cVOF_base:
                                        < double * > dt_times_dH_minus_dL.data,
                                        < double * > min_u_bc.data,
                                        < double * > max_u_bc.data,
-                                       < double * > quantDOFs.data)
+                                       < double * > quantDOFs.data,
+                                       < int * > boundaryFlags.data)
 
     def calculateJacobian(self,
                           double dt,

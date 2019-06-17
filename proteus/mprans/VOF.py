@@ -1290,7 +1290,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dt_times_dC_minus_dL,
             self.min_u_bc,
             self.max_u_bc,
-            self.quantDOFs)
+            self.quantDOFs,
+            self.mesh.elementBoundaryMaterialTypes)
+
+
+        #from pdb_clone import pdb
+        #if(Comm.get().rank() == 3):
+        #  pdb.set_trace_remote() 
+
+        #self.forceStrongConditions=1
+        #self.dirichletConditionsForceDOF = {}
+        #if self.forceStrongConditions:
+        #    for cj in range(self.nc):
+        #        self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(
+        #            self.u[cj].femSpace, dofBoundaryConditionsSetterDict[cj], weakDirichletConditions=False)
+
 
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
