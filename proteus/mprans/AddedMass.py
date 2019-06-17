@@ -22,6 +22,7 @@ from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 from . import cAddedMass
+from mpi4py import MPI
 
 class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior):
     def __init__(self,
@@ -698,6 +699,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.added_mass_i,
             self.barycenters,
             self.flags_rigidbody)
+        # sum of residual should be zero
+        # but it is sometimes not exactly zero with certain meshes in parallel
+        # hack
+        comm = Comm.get().comm.tompi4py()
+        if comm.size > 1:
+            r_sum_local = np.sum(r[:self.mesh.nNodes_owned])
+            r_sum_global = comm.reduce(r_sum_local, op=MPI.SUM, root=0)
+            if comm.rank == 0:
+                r[0] -= r_sum_global
+                logEvent('R SUM: local: {r_sum_local} global: {r_sum_global}'.format(r_sum_local=r_sum_local, r_sum_global=r_sum_global))
+            logEvent('ACCELERATION INDEX: {id}'.format(id=self.added_mass_i))
+        # end hack
         for k in range(self.Aij.shape[0]):
             for j in range(self.Aij.shape[2]):
                 self.Aij[k,j,self.added_mass_i] = globalSum(
