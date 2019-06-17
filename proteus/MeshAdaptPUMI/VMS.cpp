@@ -529,10 +529,12 @@ apf::Vector3 getResidual_debug(apf::Vector3 qpt,struct Inputs &info){
     apf::Vector3 tempResidual = (tempConv + grad_pres/info.density);
     //acceleration term
     //tempResidual = tempResidual + (vel_vect-vel_vect_old)/dt_err;
+/*
     std::cout<<"What is the acceleration contribution? "<<(vel_vect-vel_vect_old)/dt_err<<" vel_vect_old "<< vel_vect_old<<std::endl;
     std::cout<<"grad pres "<<grad_pres/info.density<<std::endl;
     std::cout<<"gravity "<<info.g<<std::endl;
     std::cout<<"convective term "<<convectiveTerm<<std::endl;
+*/
     
 
     info.vel_vect = vel_vect;

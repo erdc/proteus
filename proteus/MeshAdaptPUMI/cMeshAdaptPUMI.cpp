@@ -17,6 +17,7 @@
 
 #include <apfShape.h>
 
+/*
 #include <apfOmega_h.h>
 #include <Omega_h_library.hpp>
 #include <Omega_h_mesh.hpp>
@@ -25,7 +26,7 @@
 #include <Omega_h_metric.hpp>
 //#include <Omega_h_build.hpp>
 #include "Omega_h_for.hpp"
-
+*/
 extern double dt_err;
 
 #ifdef PROTEUS_USE_SIMMETRIX
