@@ -198,7 +198,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_dirichlet.setConstantBC(0.)
         self.vs_dirichlet.setConstantBC(0.)
         self.ws_dirichlet.setConstantBC(0.)  
-        self.k_dirichlet.setConstantBC(0.)  
+        self.k_dirichlet.setConstantBC(1e-20)
+        self.dissipation_dirichlet.setConstantBC(1e-10) 
         # advective
         self.p_advective.setConstantBC(0.)
         self.pInit_advective.setConstantBC(0.)
@@ -217,7 +218,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.reset()
         self.BC_type = 'FreeSlip'
         # dirichlet
-        self.k_dirichlet.setConstantBC(0.) 
+        self.k_dirichlet.setConstantBC(1e-20)
+        self.dissipation_dirichlet.setConstantBC(1e-10) 
         # advective        
         self.p_advective.setConstantBC(0.)
         self.pInit_advective.setConstantBC(0.)
@@ -305,7 +307,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.vs_diffusive.setConstantBC(0.)
         self.ws_diffusive.setConstantBC(0.)
 
-    def setAtmosphere(self, orientation=None, vof_air=1.):
+    def setAtmosphere(self, orientation=None, vof_air=1.,kInflow=None,dInflow=None):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
@@ -327,7 +329,6 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.pInit_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
         self.vos_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(1e-30)
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
@@ -343,10 +344,21 @@ class BC_RANS(BoundaryConditions.BC_Base):
         if orientation[2] == 1. or orientation[2] == -1.:
             self.w_diffusive.setConstantBC(0.)
             self.ws_diffusive.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(1e-30)
-        self.k_diffusive.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.)
-
+        
+        if kInflow is not None:
+            self.k_dirichlet.setConstantBC(kInflow)
+            self.k_diffusive.setConstantBC(0.)
+        else:
+            self.k_dirichlet.setConstantBC(1e-10)
+            self.k_diffusive.setConstantBC(0.)
+            logEvent("WARNING: Dirichlet condition for k in "+str(self.BC_type)+" has not been set")
+        if dInflow is not None:
+            self.dissipation_dirichlet.setConstantBC(dInflow)
+            self.dissipation_diffusive.setConstantBC(0.)
+        else:
+            self.dissipation_dirichlet.setConstantBC(1e-5)
+            self.dissipation_diffusive.setConstantBC(0.)
+            logEvent("WARNING: Dirichlet condition for dissipation in "+str(self.BC_type)+" has not been set")
     def setRigidBodyMoveMesh(self, body):
         """
         Sets boundary conditions for moving the mesh with a rigid body
