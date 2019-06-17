@@ -756,7 +756,7 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
     cdef int nNodeInStar
     cdef int nNodes = 0
     cdef bool fixed_node = False
-    cdef double[:] fixed_dir
+    cdef double[:] fixed_dir = np.zeros(3)
     cdef double fixed_dir_dist
     cdef int nOffset
     cdef int node
@@ -790,17 +790,19 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
                     fixed_node = True
             if fixed_node is False:
                 if nd == 2:
-                    fixed_dir =  cyFindBoundaryDirectionTriangle(node=node,
-                                                                 nodeArray=nodeArray_,
-                                                                 nodeStarOffsets=nodeStarOffsets,
-                                                                 nodeStarArray=nodeStarArray,
-                                                                 nodeMaterialTypes=nodeMaterialTypes)
+                    cyFindBoundaryDirectionTriangle(dir_=fixed_dir,
+                                                    node=node,
+                                                    nodeArray=nodeArray_,
+                                                    nodeStarOffsets=nodeStarOffsets,
+                                                    nodeStarArray=nodeStarArray,
+                                                    nodeMaterialTypes=nodeMaterialTypes)
                 if nd == 3:
-                    fixed_dir =  cyFindBoundaryDirectionTetra(node=node,
-                                                              nodeArray=nodeArray_,
-                                                              nodeStarOffsets=nodeStarOffsets,
-                                                              nodeStarArray=nodeStarArray,
-                                                              nodeMaterialTypes=nodeMaterialTypes)
+                    cyFindBoundaryDirectionTetra(dir_=fixed_dir,
+                                                 node=node,
+                                                 nodeArray=nodeArray_,
+                                                 nodeStarOffsets=nodeStarOffsets,
+                                                 nodeStarArray=nodeStarArray,
+                                                 nodeMaterialTypes=nodeMaterialTypes)
                 for nOffset in range(nodeStarOffsets[node],
                                     nodeStarOffsets[node+1]):
                     if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
@@ -1363,7 +1365,6 @@ cdef void pyxUpdateElementBoundaryNormalsTetra(double[:,:,:] elementBoundaryNorm
     cdef double[3] normal_check
     cdef double[3] U
     cdef double[3] V
-    cdef double lengthn
     cdef int b_i
     cdef double[:] node0
     cdef double[:] node1
@@ -1410,7 +1411,6 @@ cdef void pyxUpdateElementBoundaryNormalsTriangle(double[:,:,:] elementBoundaryN
                                                   int nElements):
     cdef double[2] normal_check
     cdef double[2] U
-    cdef double lengthn
     cdef int b_i
     cdef double[:] node0
     cdef double[:] node1
@@ -1584,42 +1584,45 @@ cdef int[:] cyCheckOwnedVariable(int variable_nb_local,
     result[1] = new_rank
     return result
 
-cdef double[:] cyFindBoundaryDirectionTriangle(int node,
-                                               double[:,:] nodeArray,
-                                               int[:] nodeStarOffsets,
-                                               int[:] nodeStarArray,
-                                               int[:] nodeMaterialTypes):
-    cdef double[3] fixed_dir
-    cdef double fixed_dir_dist
+cdef void cyFindBoundaryDirectionTriangle(
+    double[:] dir_,
+    int node,
+    double[:,:] nodeArray,
+    int[:] nodeStarOffsets,
+    int[:] nodeStarArray,
+    int[:] nodeMaterialTypes,
+):
+    cdef double dir_dist
     cdef int nOffset
     for nOffset in range(nodeStarOffsets[node],
                             nodeStarOffsets[node+1]):
         if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
-            fixed_dir[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
-            fixed_dir[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
-            fixed_dir[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
-            fixed_dir_dist = sqrt(fixed_dir[0]**2+fixed_dir[1]**2+fixed_dir[2]**2)
-            fixed_dir[0] = fixed_dir[0]/fixed_dir_dist
-            fixed_dir[1] = fixed_dir[1]/fixed_dir_dist
-            fixed_dir[2] = fixed_dir[2]/fixed_dir_dist
-            fixed_dir[0] = abs(fixed_dir[0])
-            fixed_dir[1] = abs(fixed_dir[1])
-            fixed_dir[2] = abs(fixed_dir[2])
-    return fixed_dir
+            dir_[0] = nodeArray[node, 0]-nodeArray[nodeStarArray[nOffset], 0]
+            dir_[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
+            dir_[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
+            dir_dist = sqrt(dir_[0]**2+dir_[1]**2+dir_[2]**2)
+            dir_[0] = dir_[0]/dir_dist
+            dir_[1] = dir_[1]/dir_dist
+            dir_[2] = dir_[2]/dir_dist
+            dir_[0] = abs(dir_[0])
+            dir_[1] = abs(dir_[1])
+            dir_[2] = abs(dir_[2])
 
-cdef double[:] cyFindBoundaryDirectionTetra(int node,
-                                            double[:,:] nodeArray,
-                                            int[:] nodeStarOffsets,
-                                            int[:] nodeStarArray,
-                                            int[:] nodeMaterialTypes):
+cdef void cyFindBoundaryDirectionTetra(
+    double[:] dir_,
+    int node,
+    double[:,:] nodeArray,
+    int[:] nodeStarOffsets,
+    int[:] nodeStarArray,
+    int[:] nodeMaterialTypes,
+):
     cdef double[3] U
     cdef double[3] V
-    cdef double lengthn
+    cdef double dir_dist
     cdef int b_i
     cdef double[:] node0
     cdef double[:] node1
     cdef double[:] node2
-    cdef double[3] fixed_dir
     cdef double nNode = 0
     cdef int nOffset
     # get normal
@@ -1633,24 +1636,23 @@ cdef double[:] cyFindBoundaryDirectionTetra(int node,
                 node1 = nodeArray[nodeStarArray[nOffset]]
             elif nNode == 3:
                 node2 = nodeArray[nodeStarArray[nOffset]]
-    assert nNode > 3, 'error looking for fixed_dir'
+    assert nNode > 3, 'error looking for dir_'
     U[0] = node1[0]-node0[0]
     U[1] = node1[1]-node0[1]
     U[2] = node1[2]-node0[2]
     V[0] = node2[0]-node0[0]
     V[1] = node2[1]-node0[1]
     V[2] = node2[2]-node0[2]
-    fixed_dir[0] = U[1]*V[2]-U[2]*V[1]
-    fixed_dir[1] = U[2]*V[0]-U[0]*V[2]
-    fixed_dir[2] = U[0]*V[1]-U[1]*V[0]
-    fixed_dir_dist = sqrt(fixed_dir[0]**2+fixed_dir[1]**2+fixed_dir[2]**2)
-    fixed_dir[0] /= fixed_dir_dist
-    fixed_dir[1] /= fixed_dir_dist
-    fixed_dir[2] /= fixed_dir_dist
-    fixed_dir[0] = abs(1-fixed_dir[0])
-    fixed_dir[1] = abs(1-fixed_dir[1])
-    fixed_dir[2] = abs(1-fixed_dir[2])
-    return fixed_dir
+    dir_[0] = U[1]*V[2]-U[2]*V[1]
+    dir_[1] = U[2]*V[0]-U[0]*V[2]
+    dir_[2] = U[0]*V[1]-U[1]*V[0]
+    dir_dist = sqrt(dir_[0]**2+dir_[1]**2+dir_[2]**2)
+    dir_[0] /= dir_dist
+    dir_[1] /= dir_dist
+    dir_[2] /= dir_dist
+    dir_[0] = abs(1-dir_[0])
+    dir_[1] = abs(1-dir_[1])
+    dir_[2] = abs(1-dir_[2])
 
 cdef int[:] cyGetGlobalVariable(int variable_nb_local,
                                 int nVariables_owned,

@@ -6,8 +6,8 @@ import numpy as np
 cimport numpy as np
 from libcpp cimport bool
 from proteus.Profiling import logEvent
-from proteus.mprans cimport MeshSmoothing as ms
 from proteus.mprans import MeshSmoothing as ms
+from proteus.mprans cimport MeshSmoothing as ms
 from proteus import Comm
 from mpi4py import MPI
 
@@ -355,6 +355,7 @@ cdef class cCoefficients:
         cdef bool pending = False
         cdef double[:] starting_coords = np.zeros(3)
         cdef int nEbn  # number of boundaries per elements
+        cdef double[:] resultd
         if nd == 2:
             nEbn = 3
         elif nd == 3:
@@ -380,6 +381,7 @@ cdef class cCoefficients:
                 pending = False
                 area = 0.
                 flag = nodeMaterialTypes[node]
+
                 fixed_dir[0] = 1.
                 fixed_dir[1] = 1.
                 fixed_dir[2] = 1.
@@ -394,7 +396,17 @@ cdef class cCoefficients:
                     nPending_disp += 1
                 elif nodesSentBoolArray[node] == 0:
                     if flag != 0:
-                        fixed = True
+                        if fixedNodesBoolArray[node] == 1:
+                            fixed = True
+                        else:
+                            ms.cyFindBoundaryDirectionTriangle(
+                                dir_=fixed_dir,
+                                node=node,
+                                nodeArray=nodeArray,
+                                nodeStarOffsets=nodeStarOffsets,
+                                nodeStarArray=nodeStarArray,
+                                nodeMaterialTypes=nodeMaterialTypes,
+                            )
                     if not fixed:  # either flag==0 or not fixed
                         if i_time == 0:  # nodes are at original position (no search)
                             for ndi in range(nd):
@@ -409,7 +421,7 @@ cdef class cCoefficients:
                             f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
                             for ndi in range(nd):
                                 dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
-                                coords[ndi] += dphi[ndi]*fixed_dir[ndi]*dt
+                                coords[ndi] += dphi[ndi]*dt*fixed_dir[ndi]
                                 xx[node, ndi] = coords[ndi]
                         else:  # find node that moved already (search)
                             result = findN(coords=coords,
@@ -446,6 +458,14 @@ cdef class cCoefficients:
                                 inside_eN = True
                                 nearestNArray[node] = nearestN
                                 typeNArray[node] = typeN
+                                if typeN == 2 and flag != 0:
+                                    # get an element from there
+                                    if elementBoundaryElementsArray[nearestN, 0] == -1 or elementBoundaryElementsArray[nearestN, 0] > nElements_owned:
+                                        nearestN = elementBoundaryElementsArray[nearestN, 1]
+                                        typeN = 1
+                                    elif elementBoundaryElementsArray[nearestN, 1] == -1 or elementBoundaryElementsArray[nearestN, 1] > nElements_owned:
+                                        nearestN = elementBoundaryElementsArray[nearestN, 0]
+                                        typeN = 1
                                 for j in range(nEbn):
                                     bb_i = elementBoundariesArray[nearestN, j]
                                     normal[0] = elementBoundaryNormalsArray[nearestN, j, 0]
@@ -468,7 +488,7 @@ cdef class cCoefficients:
                                     f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
                                     for ndi in range(nd):
                                         dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
-                                        coords[ndi] += dphi[ndi]*fixed_dir[ndi]*dt
+                                        coords[ndi] += dphi[ndi]*dt*fixed_dir[ndi]
                                         xx[node, ndi] = coords[ndi]
                                 if inside_eN is False and pending is False:
                                     print('outside!!', node, nearestN,  coords[0], coords[1], elementBarycentersArray[nearestN,0], elementBarycentersArray[nearestN,1])
