@@ -1987,8 +1987,7 @@ class NS_base(object):  # (HasTraits):
                             self.systemStepController.sequenceStepTaken(model)
                     #end model split operator step
                     if stepFailed:
-#                        systemStepFailed = not self.systemStepController.retrySequence_modelStepFailure()
-                        systemStepFailed = True
+                        systemStepFailed = not self.systemStepController.retrySequence_modelStepFailure()
                         if not systemStepFailed:
                             stepFailed=False
                             logEvent("Retrying sequence")
