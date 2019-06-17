@@ -28,9 +28,7 @@ class SWFlowProblem:
                  boundaryConditions=None,
                  reflectingBCs=False,
                  # OTHERS #
-                 useSuperlu=None,
-                 # ANALYTICAL SOLUTION #,
-                 analyticalSolution=None):
+                 useSuperlu=None):
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         assert sw_model in [
@@ -71,7 +69,6 @@ class SWFlowProblem:
         self.boundaryConditions = boundaryConditions
         self.reflectingBCs = reflectingBCs
         self.useSuperlu = useSuperlu
-        self.analyticalSolution = analyticalSolution
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace().getFESpace()
