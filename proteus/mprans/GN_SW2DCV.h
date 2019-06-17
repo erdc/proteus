@@ -890,8 +890,10 @@ public:
       double Qnegi = mi * (hiMin - hLow[i]);
       double Qposi = mi * (hiMax - hLow[i]);
 
-      double Qnegi_heta = mi * (hetai_Min - hetaLow[i]);
-      double Qposi_heta = mi * (hetai_Max - hetaLow[i]);
+      double Qnegi_heta =
+          mi * (hetai_Min - (hetaLow[i] - extendedSourceTerm_heta[i]));
+      double Qposi_heta =
+          mi * (hetai_Max - (hetaLow[i] - extendedSourceTerm_heta[i]));
 
       ///////////////////////
       // COMPUTE R VECTORS //
@@ -1236,8 +1238,12 @@ public:
       double Qnegi = mi * (hiMin - hLow[i]);
       double Qposi = mi * (hiMax - hLow[i]);
       // for heta
-      double Qnegi_heta = mi * (hetai_Min - hetaLow[i]);
-      double Qposi_heta = mi * (hetai_Max - hetaLow[i]);
+      double Qnegi_heta =
+          mi *
+          (hetai_Min - (hetaLow[i] + extendedSourceTerm_heta[i] * dt / mi));
+      double Qposi_heta =
+          mi *
+          (hetai_Max - (hetaLow[i] + extendedSourceTerm_heta[i] * dt / mi));
 
       ///////////////////////
       // COMPUTE R VECTORS //
@@ -1285,9 +1291,15 @@ public:
       double ith_Limiter_times_FluxCorrectionMatrix4 = 0.;
       double ith_Limiter_times_FluxCorrectionMatrix5 = 0.;
 
+      // double ci =
+      //     Kmax[i] * hLow[i] -
+      //     0.5 * (huLow[i] * huLow[i] + hvLow[i] * hvLow[i]); // for KE lim.
       double ci =
           Kmax[i] * hLow[i] -
-          0.5 * (huLow[i] * huLow[i] + hvLow[i] * hvLow[i]); // for KE lim.
+          0.5 * (std::pow(huLow[i] - extendedSourceTerm_hu[i] * dt / mi * 0.0,
+                          2.0) +
+                 std::pow(hvLow[i] - extendedSourceTerm_hv[i] * dt / mi * 0.0,
+                          2.0)); // for KE lim.
 
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       for (int offset = csrRowIndeces_DofLoops[i];
@@ -1372,7 +1384,10 @@ public:
         double Phv_ij = FluxCorrectionMatrix3 / mi / lambdaj;
 
         double ai = -0.5 * (Phu_ij * Phu_ij + Phv_ij * Phv_ij);
-        double bi = Kmax[i] * Ph_ij - (huLow[i] * Phu_ij + hvLow[i] * Phv_ij);
+        double bi =
+            Kmax[i] * Ph_ij -
+            ((huLow[i] - extendedSourceTerm_hu[i] * dt / mi * 0.0) * Phu_ij +
+             (hvLow[i] - extendedSourceTerm_hv[i] * dt / mi * 0.0) * Phv_ij);
 
         double r1 = ai == 0
                         ? (bi == 0 ? 1. : -ci / bi)
@@ -1390,13 +1405,20 @@ public:
         double lambdai =
             csrRowIndeces_DofLoops[j + 1] - csrRowIndeces_DofLoops[j] - 1;
         double mj = lumped_mass_matrix[j];
-        double cj = Kmax[j] * hLow[j] -
-                    0.5 * (huLow[j] * huLow[j] + hvLow[j] * hvLow[j]);
+        double cj =
+            Kmax[j] * hLow[j] -
+            0.5 * (std::pow(huLow[j] - extendedSourceTerm_hu[j] * dt / mj * 0.0,
+                            2.0) +
+                   std::pow(hvLow[j] - extendedSourceTerm_hv[j] * dt / mj * 0.0,
+                            2.0));
         double Ph_ji = -FluxCorrectionMatrix1 / mj / lambdai; // Aij=-Aji
         double Phu_ji = -FluxCorrectionMatrix2 / mj / lambdai;
         double Phv_ji = -FluxCorrectionMatrix3 / mj / lambdai;
         double aj = -0.5 * (Phu_ji * Phu_ji + Phv_ji * Phv_ji);
-        double bj = Kmax[j] * Ph_ji - (huLow[j] * Phu_ji + hvLow[j] * Phv_ji);
+        double bj =
+            Kmax[j] * Ph_ji -
+            ((huLow[j] - extendedSourceTerm_hu[j] * dt / mj * 0.0) * Phu_ji +
+             (hvLow[j] - extendedSourceTerm_hv[j] * dt / mj * 0.0) * Phv_ji);
 
         r1 = aj == 0 ? (bj == 0 ? 1. : -cj / bj)
                      : (-bj + std::sqrt(bj * bj - 4 * aj * cj)) / 2. / aj;
@@ -1925,9 +1947,9 @@ public:
           hSqd_GammaPi = 6.0 * etai * diff_over_h_i;
         }
 
-        extendedSourceTerm_heta[i] = hwi * mi * ratioi;
+        extendedSourceTerm_heta[i] = -hwi * mi * ratioi;
         extendedSourceTerm_hw[i] =
-            -(LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratioi;
+            (LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratioi;
 
         // HYPERBOLIC FLUXES //
         hyp_flux_h[i] = 0;
@@ -1976,13 +1998,16 @@ public:
                       (std::pow(etaj, 2.0) + etaj * hj + std::pow(hj, 2.0));
           }
 
+          // define pressure here, p = 1/2 g h^2 + pTilde
+          double pressure_j = 0.5 * g * std::pow(hj, 2.) + pTildej;
+
           // auxiliary functions to compute fluxes
           double aux_h =
               huj * Cx[ij] + hvj * Cy[ij]; // f1*C = hj*(uj*Cx[ij] + vj*Cy[ij]);
           double aux_hu =
-              uj * huj * Cx[ij] + uj * hvj * Cy[ij] + pTildej * Cx[ij];
+              uj * huj * Cx[ij] + uj * hvj * Cy[ij] + pressure_j * Cx[ij];
           double aux_hv =
-              vj * huj * Cx[ij] + vj * hvj * Cy[ij] + pTildej * Cy[ij];
+              vj * huj * Cx[ij] + vj * hvj * Cy[ij] + pressure_j * Cy[ij];
           double aux_heta = etaj * huj * Cx[ij] + etaj * hvj * Cy[ij];
           double aux_hw = wj * huj * Cx[ij] + wj * hvj * Cy[ij];
 
@@ -1993,9 +2018,13 @@ public:
           hyp_flux_heta[i] += aux_heta;
           hyp_flux_hw[i] += aux_hw;
 
-          // EXTENDED SOURCE //
-          extendedSourceTerm_hu[i] += g * hi * (hj + Zj) * Cx[ij];
-          extendedSourceTerm_hv[i] += g * hi * (hj + Zj) * Cy[ij];
+          // EXTENDED SOURCE, USING 6.13 //
+          // extendedSourceTerm_hu[i] += g * hi * (hj + Zj) * Cx[ij];
+          // extendedSourceTerm_hv[i] += g * hi * (hj + Zj) * Cy[ij];
+          extendedSourceTerm_hu[i] +=
+              g * (hi * Zj - 0.5 * std::pow(hj - hi, 2.)) * Cx[ij];
+          extendedSourceTerm_hv[i] +=
+              g * (hi * Zj - 0.5 * std::pow(hj - hi, 2.)) * Cy[ij];
 
           // flux for entropy
           ith_flux_term1 += aux_h;
@@ -2087,8 +2116,10 @@ public:
         if (hetai > std::pow(hi, 2.0)) {
           pTildei = -(LAMBDA_MGN * g / (3.0 * meshSizei)) * 2.0 *
                     diff_over_h_i *
-                    (std::pow(etai, 2.0) + etai * hi * std::pow(hi, 2.0));
+                    (std::pow(etai, 2.0) + etai * hi + std::pow(hi, 2.0));
         }
+        double pressure_i = 0.5 * g * std::pow(hi, 2.0) + pTildei;
+
         // HIGH ORDER DISSIPATIVE TERMS
         double ith_dHij_minus_muHij_times_hStarStates = 0.,
                ith_dHij_minus_muHij_times_huStarStates = 0.,
@@ -2128,8 +2159,11 @@ public:
           if (hetaj > std::pow(hj, 2.0)) {
             pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
                       diff_over_h_j *
-                      (std::pow(etaj, 2.0) + etaj * hj * std::pow(hj, 2.0));
+                      (std::pow(etaj, 2.0) + etaj * hj + std::pow(hj, 2.0));
           }
+          // define pressure at jth node
+          double pressure_j = 0.5 * g * std::pow(hj, 2.0) + pTildej;
+
           // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
           // hwStar
           double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
@@ -2190,6 +2224,7 @@ public:
             ////////////////////////
             // COMPUTE BAR STATES //
             ////////////////////////
+            // CHECK THIS CHECK THIS CHECK THIS
             double hBar_ij = 0, hTilde_ij = 0, huBar_ij = 0, huTilde_ij = 0,
                    hvBar_ij = 0, hvTilde_ij = 0, hetaBar_ij = 0,
                    hetaTilde_ij = 0, hwBar_ij = 0, hwTilde_ij = 0;
@@ -2201,32 +2236,32 @@ public:
               hTilde_ij = (dLij - muLij) / (2 * dLij) *
                           ((hStarji - hj) - (hStarij - hi));
               // hu component
-              huBar_ij =
-                  -1. / (2 * dLij) *
-                      ((uj * huj - ui * hui + pTildej - pTildei) * Cx[ij] +
-                       (uj * hvj - ui * hvi) * Cy[ij]) +
-                  0.5 * (huj + hui);
+              huBar_ij = -1. / (2 * dLij) *
+                             ((uj * huj - ui * hui + pressure_j - pressure_i) *
+                                  Cx[ij] +
+                              (uj * hvj - ui * hvi) * Cy[ij]) +
+                         0.5 * (huj + hui);
               huTilde_ij = (dLij - muLij) / (2 * dLij) *
                            ((huStarji - huj) - (huStarij - hui));
               // hv component
-              hvBar_ij =
-                  -1. / (2 * dLij) *
-                      ((vj * huj - vi * hui) * Cx[ij] +
-                       (vj * hvj - vi * hvi + pTildej - pTildei) * Cy[ij]) +
-                  0.5 * (hvj + hvi);
+              hvBar_ij = -1. / (2 * dLij) *
+                             ((vj * huj - vi * hui) * Cx[ij] +
+                              (vj * hvj - vi * hvi + pressure_j - pressure_i) *
+                                  Cy[ij]) +
+                         0.5 * (hvj + hvi);
               hvTilde_ij = (dLij - muLij) / (2 * dLij) *
                            ((hvStarji - hvj) - (hvStarij - hvi));
               // heta component
               hetaBar_ij = -1. / (2 * dLij) *
-                               ((etaj * huj - etai * hui) * Cx[ij] +
-                                (etaj * hvj - etai * hvi) * Cy[ij]) +
+                               ((uj * hetaj - ui * hetai) * Cx[ij] +
+                                (vj * hetaj - vi * hetai) * Cy[ij]) +
                            0.5 * (hetaj + hetai);
               huTilde_ij = (dLij - muLij) / (2 * dLij) *
                            ((hetaStarji - hetaj) - (hetaStarij - hetai));
               // hw component
               hwBar_ij = -1. / (2 * dLij) *
-                             ((wj * huj - wi * hui) * Cx[ij] +
-                              (wj * hvj - wi * hvi) * Cy[ij]) +
+                             ((uj * hwj - ui * hwi) * Cx[ij] +
+                              (vj * hwj - vi * hwi) * Cy[ij]) +
                          0.5 * (hwj + hwi);
               hwTilde_ij = (dLij - muLij) / (2 * dLij) *
                            ((hwStarji - hwj) - (hwStarij - hwi));
@@ -2294,7 +2329,7 @@ public:
                          ith_muHij_times_huStates);
           globalResidual[offset_hv + stride_hv * i] =
               hvi - dt / mi *
-                        (hyp_flux_hv[i] + extendedSourceTerm_hu[i] -
+                        (hyp_flux_hv[i] + extendedSourceTerm_hv[i] -
                          ith_dHij_minus_muHij_times_hvStarStates -
                          ith_muHij_times_hvStates);
           globalResidual[offset_heta + stride_heta * i] =
@@ -2323,7 +2358,7 @@ public:
                     ith_dHij_minus_muHij_times_huStarStates -
                     ith_muHij_times_huStates);
           globalResidual[offset_hv + stride_hv * i] +=
-              dt * (hyp_flux_hv[i] + extendedSourceTerm_hu[i] -
+              dt * (hyp_flux_hv[i] + extendedSourceTerm_hv[i] -
                     ith_dHij_minus_muHij_times_hvStarStates -
                     ith_muHij_times_hvStates);
           globalResidual[offset_heta + stride_heta * i] +=
