@@ -70,7 +70,13 @@ and modifying appropriately to fit your needs.
 
 Currently, most of the tests are set up to use a rectangular domain with triangle elements created by an in house function in Proteus. The SWFlows Apps can be used with meshes created by Triangle and Gmsh. The "real world" tests such as the Malpesset problem and Colorado River problem are using meshes created by the software SMS (https://www.aquaveo.com/software/sms-surface-water-modeling-system-introduction) in the ADH format. If you would like to use your own mesh, but aren't sure how to use it, please contact us and we can gladly help.
 
-## Break down into end to end tests
+## Tests that aren't ready
+elliptic_shoal
+semicircular_shoal
+colorado_river
+south_padre_island
+dunlap_dam
+<!-- ## Break down into end to end tests
 
 Explain what these tests test and why
 
@@ -84,7 +90,7 @@ Explain what these tests test and why
 
 ```
 Give an example
-```
+``` -->
 
 <!-- ## Deployment
 
