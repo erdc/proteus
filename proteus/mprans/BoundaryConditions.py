@@ -349,14 +349,14 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.k_dirichlet.setConstantBC(kInflow)
             self.k_diffusive.setConstantBC(0.)
         else:
-            self.k_dirichlet.setConstantBC(1e-10)
+            self.k_dirichlet.setConstantBC(1e-20)
             self.k_diffusive.setConstantBC(0.)
             logEvent("WARNING: Dirichlet condition for k in "+str(self.BC_type)+" has not been set")
         if dInflow is not None:
             self.dissipation_dirichlet.setConstantBC(dInflow)
             self.dissipation_diffusive.setConstantBC(0.)
         else:
-            self.dissipation_dirichlet.setConstantBC(1e-5)
+            self.dissipation_dirichlet.setConstantBC(1e-10)
             self.dissipation_diffusive.setConstantBC(0.)
             logEvent("WARNING: Dirichlet condition for dissipation in "+str(self.BC_type)+" has not been set")
     def setRigidBodyMoveMesh(self, body):
