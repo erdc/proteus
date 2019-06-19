@@ -1434,7 +1434,7 @@ class NS_base(object):  # (HasTraits):
               minQual = domain.PUMIMesh.getMinimumQuality()
               logEvent('The quality is %f ' % (minQual**(1./3.)))
               #adaptMeshNow=True
-              if(minQual**(1./3.)<0.25):
+              if(minQual**(1./3.)<0.125):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
               
