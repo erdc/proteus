@@ -683,9 +683,9 @@ def getNonOwnedNodeValues(args_,
                         args_[iN, ii] = arg_2doArray[iN-nNodes_owned, ii]
                 else:
                     args_[iN] = arg_2doArray[iN-nNodes_owned]
-            logEvent('Non-owned values recovered with {comm_total} communication steps ({comm_pp}*{nproc})'.format(comm_total=str(comm_size*4),
-                                                                                                                   comm_pp=str(4),
-                                                                                                                   nproc=str(comm_size)))
+            # logEvent('Non-owned values recovered with {comm_total} communication steps ({comm_pp}*{nproc})'.format(comm_total=str(comm_size*4),
+            #                                                                                                        comm_pp=str(4),
+            #                                                                                                        nproc=str(comm_size)))
 
 def checkOwnedVariable(int variable_nb_local,
                        int rank,
@@ -777,6 +777,9 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
                     sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]
                     sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]
                 nNodes += 1
+            nodeArray_[node, 0] = sum_star[0]/nNodes
+            nodeArray_[node, 1] = sum_star[1]/nNodes
+            nodeArray_[node, 2] = sum_star[2]/nNodes
         # boundary smoothing not ready yet
         elif smoothBoundaries is True:
             # smooth on boundary only
@@ -805,40 +808,28 @@ cdef void cySmoothNodesLaplace(double[:,:] nodeArray_,
                                                  nodeMaterialTypes=nodeMaterialTypes)
                 for nOffset in range(nodeStarOffsets[node],
                                     nodeStarOffsets[node+1]):
-                    if nodeMaterialTypes[nodeStarArray[nOffset]] != 0:
-                        if simultaneous is True:
-                            sum_star[0] += nodeArray0[nodeStarArray[nOffset], 0]
-                            sum_star[1] += nodeArray0[nodeStarArray[nOffset], 1]
-                            sum_star[2] += nodeArray0[nodeStarArray[nOffset], 2]
-                        else:
-                            sum_star[0] += nodeArray_[nodeStarArray[nOffset], 0]
-                            sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]
-                            sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]
-                        nNodes += 1
+                    if simultaneous is True:
+                        sum_star[0] += nodeArray0[nodeStarArray[nOffset], 0]
+                        sum_star[1] += nodeArray0[nodeStarArray[nOffset], 1]
+                        sum_star[2] += nodeArray0[nodeStarArray[nOffset], 2]
                     else:
-                        if simultaneous is True:
-                            sum_star[0] += nodeArray0[node, 0]*(1-fixed_dir[0])+nodeArray0[nodeStarArray[nOffset], 0]*fixed_dir[0]
-                            sum_star[1] += nodeArray0[node, 1]*(1-fixed_dir[1])+nodeArray0[nodeStarArray[nOffset], 1]*fixed_dir[1]
-                            sum_star[2] += nodeArray0[node, 2]*(1-fixed_dir[2])+nodeArray0[nodeStarArray[nOffset], 2]*fixed_dir[2]
-                        else:
-                            sum_star[0] += nodeArray_[nodeStarArray[nOffset], 0]*fixed_dir[0]
-                            sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]*fixed_dir[1]
-                            sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]*fixed_dir[2]
-                        nNodes += 1
+                        sum_star[0] += nodeArray_[nodeStarArray[nOffset], 0]
+                        sum_star[1] += nodeArray_[nodeStarArray[nOffset], 1]
+                        sum_star[2] += nodeArray_[nodeStarArray[nOffset], 2]
+                    nNodes += 1
+            nodeArray_[node, 0] += (sum_star[0]/nNodes-nodeArray_[node, 0])*fixed_dir[0]
+            nodeArray_[node, 1] += (sum_star[1]/nNodes-nodeArray_[node, 1])*fixed_dir[1]
+            nodeArray_[node, 2] += (sum_star[2]/nNodes-nodeArray_[node, 2])*fixed_dir[2]
         else:
             sum_star[0] = nodeArray0[node, 0]
             sum_star[1] = nodeArray0[node, 1]
             sum_star[2] = nodeArray0[node, 2]
             nNodes = 1
             fixed_node = True
-        if alpha != 0:
-            nodeArray_[node, 0] = alpha*nodeArray0[node, 0]+(1-alpha)*sum_star[0]/nNodes
-            nodeArray_[node, 1] = alpha*nodeArray0[node, 0]+(1-alpha)*sum_star[1]/nNodes
-            nodeArray_[node, 2] = alpha*nodeArray0[node, 0]+(1-alpha)*sum_star[2]/nNodes
-        else:
-            nodeArray_[node, 0] = sum_star[0]/nNodes
-            nodeArray_[node, 1] = sum_star[1]/nNodes
-            nodeArray_[node, 2] = sum_star[2]/nNodes
+        # if alpha != 0:
+        #     nodeArray_[node, 0] = alpha*nodeArray0[node, 0]+(1-alpha)*sum_star[0]/nNodes
+        #     nodeArray_[node, 1] = alpha*nodeArray0[node, 0]+(1-alpha)*sum_star[1]/nNodes
+        #     nodeArray_[node, 2] = alpha*nodeArray0[node, 0]+(1-alpha)*sum_star[2]/nNodes
 
 cdef void cySmoothNodesCentroid(double[:,:] nodeArray_,
                                 int[:] nodeElementOffsets,
@@ -1601,12 +1592,9 @@ cdef void cyFindBoundaryDirectionTriangle(
             dir_[1] = nodeArray[node, 1]-nodeArray[nodeStarArray[nOffset], 1]
             dir_[2] = nodeArray[node, 2]-nodeArray[nodeStarArray[nOffset], 2]
             dir_dist = sqrt(dir_[0]**2+dir_[1]**2+dir_[2]**2)
-            dir_[0] = dir_[0]/dir_dist
-            dir_[1] = dir_[1]/dir_dist
-            dir_[2] = dir_[2]/dir_dist
-            dir_[0] = abs(dir_[0])
-            dir_[1] = abs(dir_[1])
-            dir_[2] = abs(dir_[2])
+            dir_[0] = abs(dir_[0])/dir_dist
+            dir_[1] = abs(dir_[1])/dir_dist
+            dir_[2] = abs(dir_[2])/dir_dist
 
 cdef void cyFindBoundaryDirectionTetra(
     double[:] dir_,

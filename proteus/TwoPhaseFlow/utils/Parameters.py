@@ -1914,9 +1914,9 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
         mparams = self._Problem.Parameters.Models
-        ME_MODEL = mparams.moveMeshMonitor.index
+        ME_MODEL = self.index
         assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
-        if myparams.useLS is True:
+        if self.p.CoefficientsOptions.useLS is True:
             LS_MODEL = mparams.ncls.index
         else:
             LS_MODEL = None
@@ -1946,7 +1946,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         BC = self._Problem.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: None}
         # self.p.advectiveFluxBoundaryConditions = {}
-        self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: None}}
+        self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: lambda x, t: 0.}}
 
     def _initializeNumerics(self):
         # FINITE ELEMENT SPACES
@@ -1963,9 +1963,10 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'cg')
         self.OptDB.setValue(prefix+'pc_type', 'hypre')
-        self.OptDB.setValue(prefix+'ksp_constant_null_space', 1)
-        self.OptDB.setValue(prefix+'pc_factor_shift_type', 'NONZERO')
-        self.OptDB.setValue(prefix+'pc_factor_shift_amount', 1e-10)
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+        # self.OptDB.setValue(prefix+'ksp_constant_null_space', 1)
+        # self.OptDB.setValue(prefix+'pc_factor_shift_type', 'NONZERO')
+        # self.OptDB.setValue(prefix+'pc_factor_shift_amount', 1e-10)
         # self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 
