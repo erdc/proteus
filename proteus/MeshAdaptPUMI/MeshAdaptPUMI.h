@@ -58,6 +58,7 @@ class MeshAdaptPUMIDrvr{
   int willErrorAdapt();
   int willInterfaceAdapt();
   int adaptPUMIMesh(const char* input);
+  int setSphereSizeField();
   int calculateSizeField(double L_band);
   void predictiveInterfacePropagation();
 
