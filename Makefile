@@ -277,9 +277,10 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip3 install configparser ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet==0.10.3 jupyter_dashboards pythreejs rise cesiumpy bqplot ipympl sympy transforms3d ipymesh voila ipyvolume
+	pip3 install configparser ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet==0.10.3 jupyter_dashboards pythreejs rise cesiumpy bqplot ipympl sympy transforms3d ipymesh voila ipyvolume jupyterlab_latex ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
+	jupyter nbextension enable --py --sys-prefix ipysheet
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
 	jupyter nbextension enable --py --sys-prefix bqplot
 	jupyter nbextension enable --py --sys-prefix pythreejs
@@ -297,12 +298,21 @@ jupyter:
 	jupyter nbextension enable --sys-prefix --py voila
 	jupyter nbextension install --sys-prefix --py ipyvolume
 	jupyter nbextension enable --sys-prefix --py ipyvolume
+	jupyter serverextension enable --sys-prefix --py jupyterlab_latex
 	printf "\nc.NotebookApp.server_extensions.append('ipyparallel.nbextension')\n" >> ${HOME}/.jupyter/jupyter_notebook_config.py
 	printf "\nc.IPClusterEngines.engine_launcher_class = 'MPI'\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalControllerLauncher.controller_cmd = ['python', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	jupyter labextension install @jupyter-widgets/jupyterlab-manager
+	jupyter labextension install jupyter-matplotlib
+	jupyter labextension install @jupyterlab/latex
+	jupyter labextension install jupyterlab-drawio
+	jupyter labextension install @jupyterlab/toc
+	jupyter labextension install @jupyterlab/hub-extension
+	jupyter labextension install ipysheet
+	jupyter labextension install jupyterlab_voyager
+	jupyter labextension install ipytree
 
 lfs:
 	wget https://github.com/git-lfs/git-lfs/releases/download/v2.7.2/git-lfs-linux-amd64-v2.7.2.tar.gz
