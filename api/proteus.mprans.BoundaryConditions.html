@@ -127,6 +127,1445 @@
       
   <div class="section" id="module-proteus.mprans.BoundaryConditions">
 <span id="proteus-mprans-boundaryconditions-module"></span><h1>proteus.mprans.BoundaryConditions module<a class="headerlink" href="#module-proteus.mprans.BoundaryConditions" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS">
+<em class="property">class </em><code class="descclassname">proteus.mprans.BoundaryConditions.</code><code class="descname">BC_RANS</code><span class="sig-paren">(</span><em>shape=None</em>, <em>name=None</em>, <em>b_or=None</em>, <em>b_i=0.</em>, <em>nd=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BoundaryConditions.BC_Base</span></code></p>
+<p>Class regrouping boundary conditions for two-phase flows</p>
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.clsvof_advective">
+<code class="descname">clsvof_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.clsvof_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">clsvof_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.clsvof_diffusive">
+<code class="descname">clsvof_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.clsvof_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">clsvof_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.clsvof_dirichlet">
+<code class="descname">clsvof_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.clsvof_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">clsvof_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.dissipation_advective">
+<code class="descname">dissipation_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.dissipation_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dissipation_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.dissipation_diffusive">
+<code class="descname">dissipation_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.dissipation_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dissipation_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.dissipation_dirichlet">
+<code class="descname">dissipation_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.dissipation_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dissipation_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.hx_dirichlet">
+<code class="descname">hx_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.hx_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">hx_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.hy_dirichlet">
+<code class="descname">hy_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.hy_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">hy_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.hz_dirichlet">
+<code class="descname">hz_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.hz_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">hz_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.k_advective">
+<code class="descname">k_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.k_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">k_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.k_diffusive">
+<code class="descname">k_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.k_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">k_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.k_dirichlet">
+<code class="descname">k_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.k_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">k_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.pAddedMass_dirichlet">
+<code class="descname">pAddedMass_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.pAddedMass_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">pAddedMass_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.pInc_advective">
+<code class="descname">pInc_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.pInc_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">pInc_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.pInc_diffusive">
+<code class="descname">pInc_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.pInc_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">pInc_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.pInc_dirichlet">
+<code class="descname">pInc_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.pInc_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">pInc_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.pInit_advective">
+<code class="descname">pInit_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.pInit_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">pInit_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.pInit_diffusive">
+<code class="descname">pInit_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.pInit_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">pInit_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.pInit_dirichlet">
+<code class="descname">pInit_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.pInit_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">pInit_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.p_advective">
+<code class="descname">p_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.p_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">p_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.p_dirichlet">
+<code class="descname">p_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.p_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">p_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets all BoundaryCondtion functions to None, apart from the BCs
+affecting: moving mesh</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setAtmosphere">
+<code class="descname">setAtmosphere</code><span class="sig-paren">(</span><em>self</em>, <em>orientation=None</em>, <em>vof_air=1.</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setAtmosphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets atmosphere boundary conditions (water can come out)
+(!) pressure dirichlet set to 0 for this BC
+:param orientation: orientation of the boundary. Optional if orientation was already</p>
+<blockquote>
+<div>passed when creating the BC_RANS class instance.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vof_air</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – VOF value of air (default is 1.)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setChMoveMesh">
+<code class="descname">setChMoveMesh</code><span class="sig-paren">(</span><em>self</em>, <em>body</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setChMoveMesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setConstantInletVelocity">
+<code class="descname">setConstantInletVelocity</code><span class="sig-paren">(</span><em>self</em>, <em>U</em>, <em>ramp</em>, <em>kk</em>, <em>dd</em>, <em>b_or</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setConstantInletVelocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets constant velocity in each inlet face with ramping up and turbulence properties</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setConstantOutletPressure">
+<code class="descname">setConstantOutletPressure</code><span class="sig-paren">(</span><em>self</em>, <em>p</em>, <em>rho</em>, <em>g</em>, <em>kk</em>, <em>dd</em>, <em>b_or</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setConstantOutletPressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets constant pressure in each outlet face for single phase flows</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setFixedNodes">
+<code class="descname">setFixedNodes</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setFixedNodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>For moving domains: fixes nodes/boundary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setFreeSlip">
+<code class="descname">setFreeSlip</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setFreeSlip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets free slip conditions at the boundary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setHydrostaticPressureOutletWithDepth">
+<code class="descname">setHydrostaticPressureOutletWithDepth</code><span class="sig-paren">(</span><em>self</em>, <em>seaLevel</em>, <em>rhoUp</em>, <em>rhoDown</em>, <em>g</em>, <em>refLevel</em>, <em>smoothing</em>, <em>U=None</em>, <em>Uwind=None</em>, <em>pRef=0.0</em>, <em>vert_axis=None</em>, <em>air=1.0</em>, <em>water=0.0</em>, <em>kInflow=None</em>, <em>dissipationInflow=None</em>, <em>kInflowAir=None</em>, <em>dissipationInflowAir=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setHydrostaticPressureOutletWithDepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the pressure and vof profile based on the known depth.
+If the boundary is aligned with one of the main axes, sets the tangential
+velocity components to zero as well.
+(!) This condition is best used for boundaries and gravity aligned with</p>
+<blockquote>
+<div>one of the main axes.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>rhoUp</strong> (<em>Phase density of the upper part.</em>) – </li>
+<li><strong>rhoDown</strong> (<em>Phase density of the lower part.</em>) – </li>
+<li><strong>g</strong> (<em>Gravitational acceleration vector.</em>) – </li>
+<li><strong>refLevel</strong> (<em>Level at which pressure = pRef.</em>) – </li>
+<li><strong>pRef</strong> (<em>Reference value for the pressure at x</em><em>[</em><em>vert_axis</em><em>]</em><em>=refLevel</em><em>, </em><em>by default set to 0.</em>) – </li>
+<li><strong>vert_axis</strong> (<em>index of vertical in position vector</em><em>, </em><em>must always be aligned with gravity</em><em>, </em><em>by default set to 1.</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setMoveMesh">
+<code class="descname">setMoveMesh</code><span class="sig-paren">(</span><em>self</em>, <em>last_pos</em>, <em>h=(0.</em>, <em>0.</em>, <em>0.)</em>, <em>rot_matrix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setMoveMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets boundary conditions for moving the mesh with a rigid body</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>last_pos</strong> (<em>array_like</em>) – last position of rigig body</li>
+<li><strong>h</strong> (<em>array_like</em>) – displacement of the body</li>
+<li><strong>rot_matrix</strong> – rotation matrix describing displament due to rotation between last
+position and new position (3x3 array)</li>
+<li><strong>if set manually</strong><strong>, </strong><strong>the input arrays should be updated externally</strong> (<em>(</em><em>!</em><em>)</em>) – without loosing their memory address</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setNoSlip">
+<code class="descname">setNoSlip</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setNoSlip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets no slip conditions at the boundary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setNonMaterial">
+<code class="descname">setNonMaterial</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setNonMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets non-material boundary conditions (diffusive flux and advective vof
+to 0.).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setRigidBodyMoveMesh">
+<code class="descname">setRigidBodyMoveMesh</code><span class="sig-paren">(</span><em>self</em>, <em>body</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setRigidBodyMoveMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets boundary conditions for moving the mesh with a rigid body</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>last_pos</strong> (<em>array_like</em>) – last position of rigig body</li>
+<li><strong>h</strong> (<em>array_like</em>) – displacement of the body</li>
+<li><strong>rot_matrix</strong> – rotation matrix describing displament due to rotation between last
+position and new position (3x3 array)</li>
+<li><strong>if set manually</strong><strong>, </strong><strong>the input arrays should be updated externally</strong> (<em>(</em><em>!</em><em>)</em>) – without loosing their memory address</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setTank">
+<code class="descname">setTank</code><span class="sig-paren">(</span><em>self</em>, <em>b_or=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setTank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setTurbulentDirichlet">
+<code class="descname">setTurbulentDirichlet</code><span class="sig-paren">(</span><em>self</em>, <em>kVal</em>, <em>dissipationVal</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setTurbulentDirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets only dirichlet conditions for turbulence at the boundary.
+It’s a rough approximation for evalueting the near wall turbulence
+based on empirical assumptions.
+More sophisticated wall functions are recommended to be used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kVal</strong> (<em>float.</em>) – constant value applied on k.</li>
+<li><strong>dissipationVal</strong> (<em>float.</em>) – constant value applied on dissipation.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setTurbulentZeroGradient">
+<code class="descname">setTurbulentZeroGradient</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setTurbulentZeroGradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets only zero-gradient conditions for turbulence at the boundary.
+More sophisticated wall functions are recommended to be used.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setTwoPhaseVelocityInlet">
+<code class="descname">setTwoPhaseVelocityInlet</code><span class="sig-paren">(</span><em>self</em>, <em>U</em>, <em>waterLevel</em>, <em>smoothing</em>, <em>Uwind=None</em>, <em>vert_axis=None</em>, <em>air=1.</em>, <em>water=0.</em>, <em>kInflow=None</em>, <em>dissipationInflow=None</em>, <em>kInflowAir=None</em>, <em>dissipationInflowAir=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setTwoPhaseVelocityInlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imposes a velocity profile lower than the sea level and an open
+boundary for higher than the sealevel.
+:param U: Velocity vector at the global system.
+:type U: list.
+:param Uwind: Air velocity vector at the global system.
+:type Uwind: list.
+:param waterLevel: water level at global coordinate system.
+:type waterLevel: float.
+:param smoothing:  range within smoothing function is valid.</p>
+<blockquote>
+<div>[3.0 times mesh element size can be a good value]</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vert_axis</strong> (<em>optional.</em>) – index of vertical in position vector, must always be
+aligned with gravity, by default set to 1].</li>
+<li><strong>air</strong> (<em>optional.</em>) – Volume fraction for air (1.0 by default).</li>
+<li><strong>water</strong> (<em>optional.</em>) – Volume fraction for water (0.0 by default).</li>
+<li><strong>kInflow</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em> (</em><em>optional</em><em>)</em><em></em>) – K inflow value for turbulent model imposed at the boundary.</li>
+<li><strong>dissipationInflow</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em> (</em><em>optional</em><em>)</em><em></em>) – Dissipation inflow value for turbulent model imposed at the boundary.</li>
+<li><strong>kInflowAir</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em> (</em><em>optional</em><em>)</em><em></em>) – Air K inflow value for turbulent model imposed at the boundary.</li>
+<li><strong>dissipationInflowAir</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em> (</em><em>optional</em><em>)</em><em></em>) – Air dissipation inflow value for turbulent model imposed at the boundary.</li>
+<li><strong>the seawater level</strong><strong>, </strong><strong>the condition returns the _dirichlet and</strong> (<em>Below</em>) – </li>
+<li><strong>condition according to the inflow velocity.</strong> (<em>p_advective</em>) – </li>
+<li><strong>the sea water level</strong><strong>, </strong><strong>the condition returns the gravity as zero</strong><strong>,</strong> (<em>Above</em>) – </li>
+<li><strong>sets _dirichlet condition to zero</strong><strong>, </strong><strong>only if there is a zero inflow</strong> (<em>and</em>) – </li>
+<li><strong>component.</strong> (<em>velocity</em>) – </li>
+<li><strong>This condition is best used for boundaries and gravity aligned with</strong> (<em>(</em><em>!</em><em>)</em>) – one of the main axes.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setUnsteadyTwoPhaseVelocityInlet">
+<code class="descname">setUnsteadyTwoPhaseVelocityInlet</code><span class="sig-paren">(</span><em>self</em>, <em>wave</em>, <em>smoothing</em>, <em>vert_axis=None</em>, <em>wind_speed=None</em>, <em>vof_air=1.</em>, <em>vof_water=0.</em>, <em>kInflow=1e-30</em>, <em>dInflow=1e-10</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setUnsteadyTwoPhaseVelocityInlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imposes a velocity profile on the fluid with input wave and wind
+conditions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>wave</strong> (<em>proteus.WaveTools</em>) – class describing a wave (from proteus.WaveTools)</li>
+<li><strong>smoothing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – smoothing distance (typically 3.*he)</li>
+<li><strong>vert_axis</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – index of vertical position vector (x:0, y:1, z:2), must always be
+aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).</li>
+<li><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – speed of air phase</li>
+<li><strong>vof_air</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – VOF value of air (default is 1.)</li>
+<li><strong>vof_water</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – VOF value of water (default is 0.)</li>
+<li><strong>the sea water level</strong> (<em>Above</em>) – </li>
+<li><strong>the sea water level</strong> – </li>
+<li><strong>smoothing</strong><strong>)</strong><strong></strong> (<em>(</em><em>with</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setWallFunction">
+<code class="descname">setWallFunction</code><span class="sig-paren">(</span><em>self</em>, <em>wall</em>, <em>shearStress=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setWallFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets turbulent boundaries for wall treatment.
+Calculation made on nodes outside the viscous sublayer and based
+on assumption on the velocity profile close to the wall in order to
+impose the wall shear stress.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>wall</strong> (<em>wall object.</em>) – BoundaryConditions class to be attached for setting up
+all the turbulent parameters.</li>
+<li><strong>shearStress</strong> (<em>True/False.</em>) – <p>At the moment version with shearStress=False is the only one that
+returns good results.
+Keep it False at the moment!
+- When True, the wall function prescribes diffusive boundaries</p>
+<blockquote>
+<div>for velocity and kappa. It’s like imposing the shear stress.</div></blockquote>
+<ul>
+<li>If False, the wall function prescribes dirichlet conditions.</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.u_advective">
+<code class="descname">u_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.u_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">u_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.u_diffusive">
+<code class="descname">u_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.u_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">u_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.u_dirichlet">
+<code class="descname">u_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.u_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">u_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.u_stress">
+<code class="descname">u_stress</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.u_stress" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">u_stress</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.us_advective">
+<code class="descname">us_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.us_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">us_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.us_diffusive">
+<code class="descname">us_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.us_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">us_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.us_dirichlet">
+<code class="descname">us_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.us_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">us_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.v_advective">
+<code class="descname">v_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.v_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">v_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.v_diffusive">
+<code class="descname">v_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.v_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">v_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.v_dirichlet">
+<code class="descname">v_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.v_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">v_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.v_stress">
+<code class="descname">v_stress</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.v_stress" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">v_stress</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.vof_advective">
+<code class="descname">vof_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.vof_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">vof_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.vof_dirichlet">
+<code class="descname">vof_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.vof_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">vof_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.vos_advective">
+<code class="descname">vos_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.vos_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">vos_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.vos_dirichlet">
+<code class="descname">vos_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.vos_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">vos_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.vs_advective">
+<code class="descname">vs_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.vs_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">vs_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.vs_diffusive">
+<code class="descname">vs_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.vs_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">vs_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.vs_dirichlet">
+<code class="descname">vs_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.vs_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">vs_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.w_advective">
+<code class="descname">w_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.w_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">w_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.w_diffusive">
+<code class="descname">w_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.w_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">w_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.w_dirichlet">
+<code class="descname">w_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.w_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">w_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.w_stress">
+<code class="descname">w_stress</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.w_stress" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">w_stress</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.ws_advective">
+<code class="descname">ws_advective</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.ws_advective" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ws_advective</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.ws_diffusive">
+<code class="descname">ws_diffusive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.ws_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ws_diffusive</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.BC_RANS.ws_dirichlet">
+<code class="descname">ws_dirichlet</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.ws_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>proteus.BoundaryConditions.BoundaryCondition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ws_dirichlet</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone">
+<em class="property">class </em><code class="descclassname">proteus.mprans.BoundaryConditions.</code><code class="descname">RelaxationZone</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Holds information about a relaxation zone (wave generation/absorption
+or porous zone)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>zone_type</strong> (<em>string</em>) – type of zone, can be set to ‘absorption’, ‘generation’, or ‘porous’</li>
+<li><strong>center</strong> (<em>array_like</em>) – coordinates of center of the zone</li>
+<li><strong>orientation</strong> (<em>array_like</em>) – orientation for absorption/generation zones: from boundary to tank</li>
+<li><strong>epsFact_solid</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – half the zone length</li>
+<li><strong>waves</strong> (<em>Optional</em><em>[</em><em>proteus.WaveTools</em><em>]</em>) – class instance of a wave from proteus.WaveTools (must be set for
+generation zone)</li>
+<li><strong>shape</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="proteus.SpatialTools.html#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><em>proteus.SpatialTools.Shape</em></a><em>]</em>) – shape class instance containing region</li>
+<li><strong>dragAlpha</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – parameter for porous zones (default: 0.5/1.005e-6)</li>
+<li><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – parameter for porous zones (default: 0.)</li>
+<li><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – parameter for porous zone (default: 1.)</li>
+<li><strong>vert_axis</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – index of vertical position vector (x:0, y:1, z:2), must always be
+aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).</li>
+<li><strong>smoothing</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – smoothing distance from the free surface (usually 3*he)</li>
+<li><strong>vof_water</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – VOF value of water (default: 0)</li>
+<li><strong>vof_air</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – VOF value of air (default: 1)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.Shape">
+<code class="descname">Shape</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.Shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="proteus.SpatialTools.html#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape">Shape</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.calculate_init">
+<code class="descname">calculate_init</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span> &#x2192; void<a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.calculate_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.calculate_phi_python">
+<code class="descname">calculate_phi_python</code><span class="sig-paren">(</span><em>self</em>, <em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.calculate_phi_python" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.calculate_vel_python">
+<code class="descname">calculate_vel_python</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.calculate_vel_python" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.center">
+<code class="descname">center</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘__Pyx_memviewslice’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">center</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.dragAlpha">
+<code class="descname">dragAlpha</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.dragAlpha" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘double’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dragAlpha</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.dragBeta">
+<code class="descname">dragBeta</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.dragBeta" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘double’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dragBeta</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.epsFact_solid">
+<code class="descname">epsFact_solid</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.epsFact_solid" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘double’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">epsFact_solid</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.orientation">
+<code class="descname">orientation</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.orientation" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘__Pyx_memviewslice’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">orientation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.porosity">
+<code class="descname">porosity</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.porosity" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘double’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">porosity</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.zone_type">
+<code class="descname">zone_type</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.zone_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>str</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">zone_type</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator">
+<em class="property">class </em><code class="descclassname">proteus.mprans.BoundaryConditions.</code><code class="descname">RelaxationZoneWaveGenerator</code><span class="sig-paren">(</span><em>zones</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Prescribe a velocity penalty scaling in a material zone via a
+Darcy-Forchheimer penalty</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>zones</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – dictionary with key as the region flag and values as a RelaxationZone
+class</li>
+<li><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of dimensions of domain</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.ar">
+<code class="descname">ar</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.ar" title="Permalink to this definition">¶</a></dt>
+<dd><p>object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ar</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.attachAuxiliaryVariables">
+<code class="descname">attachAuxiliaryVariables</code><span class="sig-paren">(</span><em>self</em>, <em>avDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.attachAuxiliaryVariables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.attachModel">
+<code class="descname">attachModel</code><span class="sig-paren">(</span><em>self</em>, <em>model</em>, <em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.attachModel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.calculate">
+<code class="descname">calculate</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span> &#x2192; void<a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.calculate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.calculate_init">
+<code class="descname">calculate_init</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span> &#x2192; void<a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.calculate_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.model">
+<code class="descname">model</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">model</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.zones">
+<code class="descname">zones</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.zones" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">zones</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions">
+<em class="property">class </em><code class="descclassname">proteus.mprans.BoundaryConditions.</code><code class="descname">WallFunctions</code><span class="sig-paren">(</span><em>self</em>, <em>turbModel</em>, <em>kWall</em>, <em>b_or</em>, <em>Y</em>, <em>Yplus</em>, <em>U0</em>, <em>nu=1.004e-6</em>, <em>Cmu=0.09</em>, <em>K=0.41</em>, <em>B=5.57</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.AV_base" title="proteus.AuxiliaryVariables.AV_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AuxiliaryVariables.AV_base</span></code></a></p>
+<p>Auxiliary variable used to calculate attributes of an associated shape
+class instance acting as a wall.</p>
+<p>Sets turbulent boundaries for wall treatment.
+Calculation made on nodes outside the viscous sublayer and based
+on assumption on the velocity profile close to the wall in order to
+impose the wall shear stress.</p>
+<ul class="simple">
+<li>k is assumed to be constant in the fully turbulent region close to the wall,</li>
+</ul>
+<p>in this way kv = kp.
+- dissipation is calculated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>turbModel</strong> (<em>string.</em>) – ‘ke’ or ‘kw’, for switching between k-epsilon or k-omega models.</li>
+<li><strong>kWall</strong> (<em>object.</em>) – Class kWall object for extracting kappa from the model.</li>
+<li><strong>Y</strong> (<em>float.</em>) – size of the nearest element to the boundary.</li>
+<li><strong>Yplus</strong> (<em>float.</em>) – size of the nearest element to the boundary in terms of wall unit.</li>
+<li><strong>U0</strong> (<em>array_like.</em>) – stream velocity.</li>
+<li><strong>nu</strong> (<em>float.</em>) – fluid viscosity.</li>
+<li><strong>Cmu</strong> (<em>float.</em>) – turbulent viscosity constant.</li>
+<li><strong>K</strong> (<em>float.</em>) – von Karman coefficient.</li>
+<li><strong>B</strong> (<em>float.</em>) – roughness coefficient for walls.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.attachAuxiliaryVariables">
+<code class="descname">attachAuxiliaryVariables</code><span class="sig-paren">(</span><em>self</em>, <em>avDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.attachAuxiliaryVariables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.attachModel">
+<code class="descname">attachModel</code><span class="sig-paren">(</span><em>self</em>, <em>model</em>, <em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.attachModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attaches model to auxiliary variable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.calculate">
+<code class="descname">calculate</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.calculate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.calculate_init">
+<code class="descname">calculate_init</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.calculate_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.extractVelocity">
+<code class="descname">extractVelocity</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.extractVelocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extraction of the velocity at y+ distance from the boundary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.findElementContainingCoords">
+<code class="descname">findElementContainingCoords</code><span class="sig-paren">(</span><em>self</em>, <em>coords</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.findElementContainingCoords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given global coordinates of a point, returns
+local coordinates and the owner of the point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>coords</strong> (<em>array_like</em>) – global coordinates to look for</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>xi</em> – local coordinates</li>
+<li><strong>eN</strong> (<em>int</em>) – (local) element number</li>
+<li><strong>rank</strong> (<em>int</em>) – processor rank containing element</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.getFluidVelocityLocalCoords">
+<code class="descname">getFluidVelocityLocalCoords</code><span class="sig-paren">(</span><em>self</em>, <em>xi</em>, <em>element</em>, <em>rank</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.getFluidVelocityLocalCoords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given local details, returns velocity field at those coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>xi</strong> – local coords in element</li>
+<li><strong>element</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – element number (local to processor ‘rank’)</li>
+<li><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank of processor owning the element</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.getLocalElement">
+<code class="descname">getLocalElement</code><span class="sig-paren">(</span><em>self</em>, <em>femSpace</em>, <em>coords</em>, <em>node</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.getLocalElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given coordinates and its nearest node, determine if it is on a
+local element.
+:param femSpace: finite element space
+:type femSpace: object
+:param coords: coordinates from which to element
+:type coords: array_like
+:param node: nearest node index
+:type node: int</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>eN</strong> – local index of element (None if not found)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a> or <a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)">None</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.getLocalNearestNode">
+<code class="descname">getLocalNearestNode</code><span class="sig-paren">(</span><em>self</em>, <em>coords</em>, <em>kdtree</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.getLocalNearestNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds nearest node to coordinates (local)
+:param coords: coordinates from which to find nearest node
+:type coords: array_like
+:param kdtree: instance of scipy kdtree
+:type kdtree: scipy.spatial.cKDTree</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><strong>node</strong> (<em>int</em>) – nearest node index</li>
+<li><strong>distance</strong> (<em>float</em>) – distance to nearest node</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.getVariables">
+<code class="descname">getVariables</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.getVariables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates velocity, gradient of the velocity and
+kappa according with wall functions theory (see
+S. B. Pope pg 442-443).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.get_dissipation_dirichlet">
+<code class="descname">get_dissipation_dirichlet</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.get_dissipation_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.get_k_dirichlet">
+<code class="descname">get_k_dirichlet</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.get_k_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.get_u_diffusive">
+<code class="descname">get_u_diffusive</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.get_u_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.get_u_dirichlet">
+<code class="descname">get_u_dirichlet</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.get_u_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.get_v_diffusive">
+<code class="descname">get_v_diffusive</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.get_v_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.get_v_dirichlet">
+<code class="descname">get_v_dirichlet</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.get_v_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.get_w_diffusive">
+<code class="descname">get_w_diffusive</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.get_w_diffusive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.get_w_dirichlet">
+<code class="descname">get_w_dirichlet</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.get_w_dirichlet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.setYplusNormalDirection">
+<code class="descname">setYplusNormalDirection</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em>, <em>relax=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.setYplusNormalDirection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the point at y+ distance in normal
+direction from the boundary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.WallFunctions.tangentialVelocity">
+<code class="descname">tangentialVelocity</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em>, <em>uInit=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.WallFunctions.tangentialVelocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the velocity, calculates its
+tangential component to the wall.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>uInit</strong> (<em>True/False.</em>) – Switch for initializing the module.
+True only during the first time step.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.BoundaryConditions.kWall">
+<em class="property">class </em><code class="descclassname">proteus.mprans.BoundaryConditions.</code><code class="descname">kWall</code><span class="sig-paren">(</span><em>self</em>, <em>Y</em>, <em>Yplus</em>, <em>b_or</em>, <em>nu=1.004e-6</em>, <em>Cmu=0.09</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.kWall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.AV_base" title="proteus.AuxiliaryVariables.AV_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.AuxiliaryVariables.AV_base</span></code></a></p>
+<p>Auxiliary variable used to calculate attributes of an associated shape
+class instance acting as a wall for the k variable.</p>
+<p>Sets turbulent boundaries for wall treatment.</p>
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.kWall.attachAuxiliaryVariables">
+<code class="descname">attachAuxiliaryVariables</code><span class="sig-paren">(</span><em>self</em>, <em>avDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.kWall.attachAuxiliaryVariables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.kWall.attachModel">
+<code class="descname">attachModel</code><span class="sig-paren">(</span><em>self</em>, <em>model</em>, <em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.kWall.attachModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attaches model to auxiliary variable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.kWall.calculate">
+<code class="descname">calculate</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.kWall.calculate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.kWall.calculate_init">
+<code class="descname">calculate_init</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.kWall.calculate_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.kWall.getFluidKappaLocalCoords">
+<code class="descname">getFluidKappaLocalCoords</code><span class="sig-paren">(</span><em>self</em>, <em>xi</em>, <em>element</em>, <em>rank</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.kWall.getFluidKappaLocalCoords" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>xi</strong> – local coords in element</li>
+<li><strong>element</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – element number (local to processor ‘rank’)</li>
+<li><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank of processor owning the element</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.kWall.getKappa">
+<code class="descname">getKappa</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>t</em>, <em>xi</em>, <em>element</em>, <em>rank</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.kWall.getKappa" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.BoundaryConditions.kWall.kappaNearWall">
+<code class="descname">kappaNearWall</code><span class="sig-paren">(</span><em>self</em>, <em>xi</em>, <em>element</em>, <em>rank</em>, <em>kInit=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.pyx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.kWall.kappaNearWall" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 
 
