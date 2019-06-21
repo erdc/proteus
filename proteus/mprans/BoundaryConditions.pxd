@@ -167,7 +167,7 @@ cdef class RelaxationZoneWaveGenerator:
 
 cdef class __cppClass_WavesCharacteristics:
     cdef int vert_axis  # vertical axis
-    # relaxation ene info (if any)
+    # relaxation zone info (if any)
     cdef double[:] center  # center of zone
     cdef double[:] orientation  # orientation of zone
     # zero array
