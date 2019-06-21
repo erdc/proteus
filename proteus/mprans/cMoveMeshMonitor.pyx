@@ -409,8 +409,8 @@ cdef class cCoefficients:
                                 nodeMaterialTypes=nodeMaterialTypes,
                             )
                     if not fixed:  # either flag==0 or not fixed
-                        # if coords[0] == nodeArray[node, 0] and coords[1] == nodeArray[node, 1] and coords[2] == nodeArray[node, 2]:  # nodes are at original position (no search)
-                        if i_time == 0:
+                        if coords[0] == nodeArray[node, 0] and coords[1] == nodeArray[node, 1] and coords[2] == nodeArray[node, 2]:  # nodes are at original position (no search)
+                        # if i_time == 0:
                             for ndi in range(nd):
                                 v_grad[ndi] = grads[node, ndi]
                             area = areas_nodes[node]
@@ -483,7 +483,7 @@ cdef class cCoefficients:
                                     normal[2] = elementBoundaryNormalsArray[nearestN, j, 2]
                                     bound_bar = elementBoundaryBarycentersArray[bb_i]
                                     dot = (bound_bar[0]-coords[0])*normal[0]+(bound_bar[1]-coords[1])*normal[1]+(bound_bar[2]-coords[2])*normal[2]
-                                    if dot < 0:
+                                    if dot < -1e-15:
                                         inside_eN = False
                                         try:
                                             raise AssertionError('did not find containing element! coords outside domain?')
@@ -690,7 +690,7 @@ cdef class cCoefficients:
                                     normal[2] = elementBoundaryNormalsArray[nearestN, ii, 2]
                                     bound_bar = elementBoundaryBarycentersArray[bb_i]
                                     dot = (bound_bar[0]-coords[0])*normal[0]+(bound_bar[1]-coords[1])*normal[1]+(bound_bar[2]-coords[2])*normal[2]
-                                    if dot < 0:
+                                    if dot < -1e-15:
                                         inside_eN = False
                                         try:
                                             raise AssertionError('did not find containing element! coords outside domain??')
