@@ -161,8 +161,8 @@ class FreezableClass(object):
     """
     __frozen = False
 
-    def __init__(self):
-        pass
+    def __init__(self, name=None):
+        self.name = name
 
     def __getitem__(self, key):
         return self.__dict__[key]
@@ -172,7 +172,7 @@ class FreezableClass(object):
 
     def __setattr__(self, key, val):
         if self.__frozen and not hasattr(self, key):
-            raise TypeError("{key} is not an option for model {name}".format(key=key, name=self.name))
+            raise AttributeError("{key} is not an option for class {name}".format(key=key, name=self.__class__.__name__))
         object.__setattr__(self, key, val)
 
     def _freeze(self):
@@ -190,8 +190,7 @@ class ParametersModelBase(FreezableClass):
                  name=None,
                  index=None,
                  Problem=None):
-        super(ParametersModelBase, self).__init__()
-        self.name = name
+        super(ParametersModelBase, self).__init__(name=name)
         self.index = index
         self.auxiliaryVariables = []
         self._Problem = Problem
@@ -2090,8 +2089,7 @@ class ParametersPhysical(FreezableClass):
     """
     """
     def __init__(self):
-        super(ParametersPhysical, self).__init__()
-        self.name = 'physical'
+        super(ParametersPhysical, self).__init__(name='physical')
         self.densityA = 998.2
         self.densityB = 1.205
         self.kinematicViscosityA = 1.004e-6

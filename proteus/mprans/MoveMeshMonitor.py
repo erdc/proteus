@@ -233,89 +233,86 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                 self.mesh.nodeVelocityArray[:] = 0.
 
     def postStep(self, t, firstStep=False):
-        if True:
         # if self.t > 0 or self.do_firstStep is True and firstStep is True:
-            # gradient recovery
-            logEvent("Gradient recovery at mesh nodes", level=3)
-            # self.grads[:] = ms.pyVectorRecoveryAtNodes(vectors=self.model.q[('grad(u)', 0)][:,0,:],
-            #                                            nodeElementsArray=self.mesh.nodeElementsArray,
-            #                                            nodeElementOffsets=self.mesh.nodeElementOffsets,
-            #                                            nd=self.nd)
-            self.grads[:] = cmm.gradientRecoveryAtNodes(grads=self.model.q[('grad(u)', 0)],
+        # gradient recovery
+        logEvent("Gradient recovery at mesh nodes", level=3)
+        # self.grads[:] = ms.pyVectorRecoveryAtNodes(vectors=self.model.q[('grad(u)', 0)][:,0,:],
+        #                                            nodeElementsArray=self.mesh.nodeElementsArray,
+        #                                            nodeElementOffsets=self.mesh.nodeElementOffsets,
+        #                                            nd=self.nd)
+        self.grads[:] = cmm.gradientRecoveryAtNodes(grads=self.model.q[('grad(u)', 0)],
                                                     nodeElementsArray=self.mesh.nodeElementsArray,
                                                     nodeElementOffsets=self.mesh.nodeElementOffsets,
                                                     nd=self.nd)
-            print(self.model.q[('u', 0)])
-            print(self.model.q[('grad(u)', 0)])
-            print(self.grads)
-            logEvent("Area recovery at mesh nodes", level=3)
-            self.areas_nodes[:] = cmm.recoveryAtNodes(scalars=self.areas,
-                                                      nodeElementsArray=self.mesh.nodeElementsArray,
-                                                      nodeElementOffsets=self.mesh.nodeElementOffsets)
-            nNodes_owned = self.mesh.nNodes_owned
-            nNodes_global = self.mesh.nNodes_global
-            nElements_owned = self.mesh.nElements_owned
-            nElements_global = self.mesh.nElements_global
-            nodeNumbering_subdomain2global = self.mesh.globalMesh.nodeNumbering_subdomain2global
-            nodeOffsets_subdomain_owned = self.mesh.globalMesh.nodeOffsets_subdomain_owned
-            ms.getNonOwnedNodeValues(args_=self.grads,
-                                     nNodes_owned=nNodes_owned,
-                                     nNodes_global=nNodes_global,
-                                     nodeNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                     nodeOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
-            ms.getNonOwnedNodeValues(args_=self.areas_nodes,
-                                     nNodes_owned=nNodes_owned,
-                                     nNodes_global=nNodes_global,
-                                     nodeNumbering_subdomain2global=nodeNumbering_subdomain2global,
-                                     nodeOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
-            # ms.getNonOwnedNodeValues(self.u_phi,
-            #                          nNodes_owned,
-            #                          nNodes_global,
-            #                          nodeNumbering_subdomain2global,
-            #                          nodeOffsets_subdomain_owned)
-            self.model.grads = self.grads
-            self.model.areas_nodes = self.areas_nodes
-            # evaluate f at nodes
-            self.evaluateFunAtNodes()
-            # gamma parameter
-            f_over_g = self.uOfXTatNodes/self.areas_nodes
-            f_over_g_max = max(f_over_g)
-            f_over_g_min = min(f_over_g)
-            self.gamma = f_over_g_max/f_over_g_min
-            self.gamma0 = 10.  # user defined parameter
-            self.na = np.log(self.gamma)/np.log(self.gamma0)
-            nNodes_owned = self.mesh.nNodes_owned
-            if self.dt_last is not None or firstStep is False:
-            # if True:
-                # pseudo-time step
-                self.PHI[:] = self.mesh.nodeArray[:]
-                self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
-                                                    xx=self.PHI)
-                if self.dt_last is not None:
-                    dt = self.dt_last
-                else:
-                    dt = self.model.timeIntegration.dt
-                self.mesh.nodeVelocityArray[:] += (self.PHI[:]-self.mesh.nodeArray[:])/dt
-                # self.model.mesh.nodeVelocityArray[:] = self.model.mesh.nodeDisplacementArray[:]/dt
-                self.mesh.nodeArray[:] = self.PHI[:]
-                self.nearest_nodes[:] = self.nearest_nodes0[:]
-                self.eN_phi[:] = None
-            # # tri hack: remove mesh velocity when dirichlet imposed on boundaries
-            if self.noNodeVelocityNodeMaterialTypes is not None:
-                for node in range(nNodes_global):
-                    if self.noNodeVelocityNodeMaterialTypes[self.mesh.nodeMaterialTypes[node]] == 1:
-                        self.mesh.nodeVelocityArray[node, :] = 0.
-            self.cCoefficients.postStep()
-            # IMR_nodes = ms.getInverseMeanRatioTriangleNodes(nodeArray=self.mesh.nodeArray,
-            #                                                 elementNodesArray=self.mesh.elementNodesArray,
-            #                                                 nodeElementOffsets=self.mesh.nodeElementOffsets,
-            #                                                 nodeElementsArray=self.mesh.nodeElementsArray,
-            #                                                 el_average=False,
-            #                                                 nElements=nElements_global,
-            #                                                 nNodes=nNodes_global)
-            # self.model.u[0].dof[:] = IMR_nodes
-            self.dt_last = self.model.timeIntegration.dt
-            self.poststepdone = True
+        # print(self.model.q[('grad(u)', 0)])
+        # print(self.grads)
+        logEvent("Area recovery at mesh nodes", level=3)
+        self.areas_nodes[:] = cmm.recoveryAtNodes(scalars=self.areas,
+                                                  nodeElementsArray=self.mesh.nodeElementsArray,
+                                                  nodeElementOffsets=self.mesh.nodeElementOffsets)
+        nNodes_owned = self.mesh.nNodes_owned
+        nNodes_global = self.mesh.nNodes_global
+        nElements_owned = self.mesh.nElements_owned
+        nElements_global = self.mesh.nElements_global
+        nodeNumbering_subdomain2global = self.mesh.globalMesh.nodeNumbering_subdomain2global
+        nodeOffsets_subdomain_owned = self.mesh.globalMesh.nodeOffsets_subdomain_owned
+        ms.getNonOwnedNodeValues(args_=self.grads,
+                                 nNodes_owned=nNodes_owned,
+                                 nNodes_global=nNodes_global,
+                                 nodeNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                 nodeOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+        ms.getNonOwnedNodeValues(args_=self.areas_nodes,
+                                 nNodes_owned=nNodes_owned,
+                                 nNodes_global=nNodes_global,
+                                 nodeNumbering_subdomain2global=nodeNumbering_subdomain2global,
+                                 nodeOffsets_subdomain_owned=nodeOffsets_subdomain_owned)
+        # ms.getNonOwnedNodeValues(self.u_phi,
+        #                          nNodes_owned,
+        #                          nNodes_global,
+        #                          nodeNumbering_subdomain2global,
+        #                          nodeOffsets_subdomain_owned)
+        self.model.grads = self.grads
+        self.model.areas_nodes = self.areas_nodes
+        # evaluate f at nodes
+        self.evaluateFunAtNodes()
+        # gamma parameter
+        f_over_g = self.uOfXTatNodes/self.areas_nodes
+        f_over_g_max = max(f_over_g)
+        f_over_g_min = min(f_over_g)
+        self.gamma = f_over_g_max/f_over_g_min
+        self.gamma0 = 10.  # user defined parameter
+        self.na = np.log(self.gamma)/np.log(self.gamma0)
+        nNodes_owned = self.mesh.nNodes_owned
+        # if self.dt_last is not None or firstStep is False:
+        # pseudo-time step
+        self.PHI[:] = self.mesh.nodeArray[:]
+        self.cCoefficients.pseudoTimeStepping(eps=self.epsTimeStep,
+                                              xx=self.PHI)
+        if self.dt_last is not None:
+            dt = self.dt_last
+        else:
+            dt = self.model.timeIntegration.dt
+        self.mesh.nodeVelocityArray[:] += (self.PHI[:]-self.mesh.nodeArray[:])/dt
+        # self.model.mesh.nodeVelocityArray[:] = self.model.mesh.nodeDisplacementArray[:]/dt
+        self.mesh.nodeArray[:] = self.PHI[:]
+        self.nearest_nodes[:] = self.nearest_nodes0[:]
+        self.eN_phi[:] = None
+        # # tri hack: remove mesh velocity when dirichlet imposed on boundaries
+        if self.noNodeVelocityNodeMaterialTypes is not None:
+            for node in range(nNodes_global):
+                if self.noNodeVelocityNodeMaterialTypes[self.mesh.nodeMaterialTypes[node]] == 1:
+                    self.mesh.nodeVelocityArray[node, :] = 0.
+        self.cCoefficients.postStep()
+        # IMR_nodes = ms.getInverseMeanRatioTriangleNodes(nodeArray=self.mesh.nodeArray,
+        #                                                 elementNodesArray=self.mesh.elementNodesArray,
+        #                                                 nodeElementOffsets=self.mesh.nodeElementOffsets,
+        #                                                 nodeElementsArray=self.mesh.nodeElementsArray,
+        #                                                 el_average=False,
+        #                                                 nElements=nElements_global,
+        #                                                 nNodes=nNodes_global)
+        # self.model.u[0].dof[:] = IMR_nodes
+        self.dt_last = self.model.timeIntegration.dt
+        self.poststepdone = True
         if self.ntimes_i == self.ntimes_solved-1:
             # reset for next time step
             self.ntimes_i = 0

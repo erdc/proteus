@@ -483,7 +483,7 @@ cdef class cCoefficients:
                                     normal[2] = elementBoundaryNormalsArray[nearestN, j, 2]
                                     bound_bar = elementBoundaryBarycentersArray[bb_i]
                                     dot = (bound_bar[0]-coords[0])*normal[0]+(bound_bar[1]-coords[1])*normal[1]+(bound_bar[2]-coords[2])*normal[2]
-                                    if dot < -1e-15:
+                                    if dot < 0.:
                                         inside_eN = False
                                         try:
                                             raise AssertionError('did not find containing element! coords outside domain?')
@@ -557,15 +557,11 @@ cdef class cCoefficients:
                                 nPending_disp += 1
             # parallel comm
             comm.barrier()
-            if comm.rank == 0:
-                print('HERE')
-            comm.barrier()
             if comm_size > 1:
                 # number of pending solutions to send to other processors
                 nPending_disp_total = comm.allreduce(nPending_disp)
                 parallel_steps = -1
                 while nPending_disp_total > 0:
-                    print(nPending_disp_total)
                     parallel_steps += 1
                     nPending_disp = 0
                     sendBack = True
@@ -690,7 +686,7 @@ cdef class cCoefficients:
                                     normal[2] = elementBoundaryNormalsArray[nearestN, ii, 2]
                                     bound_bar = elementBoundaryBarycentersArray[bb_i]
                                     dot = (bound_bar[0]-coords[0])*normal[0]+(bound_bar[1]-coords[1])*normal[1]+(bound_bar[2]-coords[2])*normal[2]
-                                    if dot < -1e-15:
+                                    if dot < 0.:
                                         inside_eN = False
                                         try:
                                             raise AssertionError('did not find containing element! coords outside domain??')
