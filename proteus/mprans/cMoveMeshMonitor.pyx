@@ -676,9 +676,6 @@ cdef class cCoefficients:
                                     elif elementBoundaryElementsArray[nearestN, 1] == -1:
                                         nearestN = elementBoundaryElementsArray[nearestN, 0]
                                         typeN = 1
-                                    else:
-                                        nearestN = elementBoundaryElementsArray[nearestN, 0]
-                                        typeN = 1
                                 for ii in range(nEbn):
                                     bb_i = elementBoundariesArray[nearestN, ii]
                                     normal[0] = elementBoundaryNormalsArray[nearestN, ii, 0]
@@ -737,11 +734,6 @@ cdef class cCoefficients:
                                     for ndi in range(nd):
                                         dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
                                         coords[ndi] += dphi[ndi]*fixed_dir[ndi]*dt
-                                    # try:
-                                    #     raise AssertionError('did not find containing element! coords outside domain?')
-                                    # except AssertionError as exc:
-                                    #     print('Error: ', exc)
-                                    #     comm.Abort()
                         coords_2rank[new_rank] = np.append(coords_2rank[new_rank],
                                                            [[coords[0],
                                                              coords[1],
@@ -818,9 +810,6 @@ cdef class cCoefficients:
                 for ind in range(nd):
                     xx[node0, ind] = coords[ind]
 
-        comm.barrier()
-        if comm.rank == 0:
-            print('HERE3')
         comm.barrier()
         # FINAL STEP: GET NON-OWNED NODES POSITION FOR CONSISTENCY
         # BUILD NON OWNED NODES ARRAY TO RETRIEVE SOLUTION
@@ -1705,10 +1694,10 @@ cdef int[:] findN(double[:] coords,
                                          variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
                                          variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
         # get an element from there
-        if elementBoundaryElementsArray[nearestN, 0] == -1 or elementBoundaryElementsArray[nearestN, 0] > nElements_owned:
+        if elementBoundaryElementsArray[nearestN, 0] == -1 or elementBoundaryElementsArray[nearestN, 0] >= nElements_owned:
             nearestN = elementBoundaryElementsArray[nearestN, 1]
             typeN = 1
-        elif elementBoundaryElementsArray[nearestN, 1] == -1 or elementBoundaryElementsArray[nearestN, 1] > nElements_owned:
+        elif elementBoundaryElementsArray[nearestN, 1] == -1 or elementBoundaryElementsArray[nearestN, 1] >= nElements_owned:
             nearestN = elementBoundaryElementsArray[nearestN, 0]
             typeN = 1
         else:
