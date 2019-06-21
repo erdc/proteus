@@ -42,7 +42,7 @@ class TwoPhaseFlowProblem:
         if ls_model is not None:
             assert ls_model in [0,1], "ls_model={0,1} for vof+ncls+rdls+mcorr or clsvof respectively"
         assert nd in [2,3], "nd={2,3}"
-        # assert cfl <= 1, "Choose cfl <= 1"
+        assert cfl <= 1, "Choose cfl <= 1"
         assert isinstance (outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
         assert type(he)==float , "Provide (float) he (characteristic mesh size)"
         assert domain is not None, "Provide a domain"
@@ -286,7 +286,7 @@ class OutputStepping:
                  dt_fixed=None):
         self.final_time=final_time
         self.dt_init=dt_init
-        # assert not (dt_output is None and nDTout is None), "Provide dt_output or nDTout"
+        assert not (dt_output is None and nDTout is None), "Provide dt_output or nDTout"
         self.dt_output=dt_output
         self.nDTout = nDTout
         self.dt_fixed = dt_fixed
