@@ -1,7 +1,11 @@
-from __future__ import division
+#!python
+# distutils: language = c++
+# cython: profile=True, binding=True, embedsignature=True
 # cython: wraparound=False
 # cython: boundscheck=False
 # cython: initializedcheck=False
+
+from __future__ import division
 from builtins import str
 from builtins import range
 from past.utils import old_div
@@ -10,15 +14,25 @@ import cython
 """
 Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 """
-import sys
+import os, sys
 import numpy as np
 from proteus import (AuxiliaryVariables,
-                     BoundaryConditions)
+                     BoundaryConditions,
+                     Comm)
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
 from proteus.Profiling import logEvent
 from math import cos, sin, sqrt, atan2, acos, asin
+from mpi4py import MPI
+from scipy import spatial
+
+__all__ = ['BC_RANS',
+           'RelaxationZone',
+           'RelaxationZoneWaveGenerator',
+           '_cppClass_WavesCharacteristics',
+           'WallFunctions',
+           'kWall']
 
 
 class BC_RANS(BoundaryConditions.BC_Base):
@@ -1043,7 +1057,7 @@ class RelaxationZoneWaveGenerator:
             if key > max_key:
                 max_key = key
         self.max_flag = max_key
-        self.zones_array = np.empty(self.max_flag + 1, dtype=object)
+        self.zones_array = np.empty(self.max_flag + 1, dtype=RelaxationZone)
         for key, zone in list(self.zones.items()):
             self.zones_array[key] = zone
 
@@ -1191,18 +1205,6 @@ def __x_to_cpp(x):
     xx[1] = x[1]
     xx[2] = x[2]
     return xx
-
-
-import os
-import sys
-import csv
-import numpy as np
-from mpi4py import MPI
-from scipy import spatial
-from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
-from proteus import SpatialTools as st
-from collections import OrderedDict
-from proteus.mprans import BodyDynamics as bd
 
 
 class WallFunctions(AuxiliaryVariables.AV_base):
