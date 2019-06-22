@@ -169,3 +169,17 @@ cdef double[:,:] cyVectorRecoveryAtNodes(double[:,:] vectors,
                                          int[:] nodeElementsArray,
                                          int[:] nodeElementOffsets,
                                          int nd)
+
+cdef void cyFindBoundaryDirectionTriangle(double[:] dir_,
+                                          int node,
+                                          double[:,:] nodeArray,
+                                          int[:] nodeStarOffsets,
+                                          int[:] nodeStarArray,
+                                          int[:] nodeMaterialTypes)
+
+cdef void cyFindBoundaryDirectionTetra(double[:] dir_,
+                                       int node,
+                                       double[:,:] nodeArray,
+                                       int[:] nodeStarOffsets,
+                                       int[:] nodeStarArray,
+                                       int[:] nodeMaterialTypes)
