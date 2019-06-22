@@ -161,8 +161,8 @@ class FreezableClass(object):
     """
     __frozen = False
 
-    def __init__(self):
-        pass
+    def __init__(self, name=None):
+        self.name = name
 
     def __getitem__(self, key):
         return self.__dict__[key]
@@ -172,7 +172,7 @@ class FreezableClass(object):
 
     def __setattr__(self, key, val):
         if self.__frozen and not hasattr(self, key):
-            raise TypeError("{key} is not an option for model {name}".format(key=key, name=self.name))
+            raise AttributeError("{key} is not an option for class {name}".format(key=key, name=self.__class__.__name__))
         object.__setattr__(self, key, val)
 
     def _freeze(self):
@@ -190,8 +190,7 @@ class ParametersModelBase(FreezableClass):
                  name=None,
                  index=None,
                  Problem=None):
-        super(ParametersModelBase, self).__init__()
-        self.name = name
+        super(ParametersModelBase, self).__init__(name=name)
         self.index = index
         self.auxiliaryVariables = []
         self._Problem = Problem
@@ -1916,9 +1915,9 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
         mparams = self._Problem.Parameters.Models
-        ME_MODEL = mparams.moveMeshMonitor.index
+        ME_MODEL = self.index
         assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
-        if myparams.useLS is True:
+        if self.p.CoefficientsOptions.useLS is True:
             LS_MODEL = mparams.ncls.index
         else:
             LS_MODEL = None
@@ -1948,7 +1947,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         BC = self._Problem.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: None}
         # self.p.advectiveFluxBoundaryConditions = {}
-        self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: None}}
+        self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: lambda x, t: 0.}}
 
     def _initializeNumerics(self):
         # FINITE ELEMENT SPACES
@@ -1965,9 +1964,10 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'cg')
         self.OptDB.setValue(prefix+'pc_type', 'hypre')
-        self.OptDB.setValue(prefix+'ksp_constant_null_space', 1)
-        self.OptDB.setValue(prefix+'pc_factor_shift_type', 'NONZERO')
-        self.OptDB.setValue(prefix+'pc_factor_shift_amount', 1e-10)
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+        # self.OptDB.setValue(prefix+'ksp_constant_null_space', 1)
+        # self.OptDB.setValue(prefix+'pc_factor_shift_type', 'NONZERO')
+        # self.OptDB.setValue(prefix+'pc_factor_shift_amount', 1e-10)
         # self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 
@@ -2091,8 +2091,7 @@ class ParametersPhysical(FreezableClass):
     """
     """
     def __init__(self):
-        super(ParametersPhysical, self).__init__()
-        self.name = 'physical'
+        super(ParametersPhysical, self).__init__(name='physical')
         self.densityA = 998.2
         self.densityB = 1.205
         self.kinematicViscosityA = 1.004e-6
