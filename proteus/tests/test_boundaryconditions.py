@@ -372,7 +372,7 @@ class TestBC(unittest.TestCase):
         # BC = create_BC(folder='mprans')
         BC = create_BC(folder='mprans', b_or=np.array([[0., 0., 1.]]), b_i=0)
         BC.setAtmosphere()
-        p_dir, u_dir, v_dir, w_dir, vof_dir, u_diff, v_diff, w_diff, k_diff, k_dir,d_diff     = [], [], [], [], [], [], [], [], [], [], []
+        p_dir, u_dir, v_dir, w_dir, vof_dir, u_diff, v_diff, w_diff, k_diff, k_dir,d_dir,d_diff     = [], [], [], [], [], [], [], [], [], [], []
         pInc_dir, pInit_dir, us_dir, vs_dir, ws_dir, vos_dir, us_diff, vs_diff, ws_diff = [], [], [], [], [], [], [], [], []
         t_list = get_time_array()
         for t in t_list:
@@ -396,10 +396,12 @@ class TestBC(unittest.TestCase):
             ws_diff += [BC.ws_diffusive.uOfXT(x, t)]
             k_diff += [BC.k_diffusive.uOfXT(x, t)]
             k_dir += [BC.k_dirichlet.uOfXT(x, t)]
+            d_dir += [BC.k_dirichlet.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
         zeros = np.zeros(len(t_list))
         vofAir = zeros + 1.
-        ddir = zeros + 1e-30
+        kdir = zeros + 1e-20
+        ddir = zeros + 1e-10
         npt.assert_equal(p_dir, zeros)
         npt.assert_equal(pInc_dir, zeros)
         npt.assert_equal(pInit_dir, zeros)
@@ -410,7 +412,8 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(vs_dir, zeros)
         npt.assert_equal(ws_dir, zeros)
         npt.assert_equal(vof_dir, vofAir)
-        npt.assert_equal(k_dir, ddir)
+        npt.assert_equal(k_dir, kdir)
+        npt.assert_equal(d_dir, ddir)
         npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
         npt.assert_equal(BC.p_advective.uOfXT, None)
         npt.assert_equal(BC.pInc_advective.uOfXT, None)
