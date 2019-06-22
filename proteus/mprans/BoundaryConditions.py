@@ -349,6 +349,11 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_dirichlet.setConstantBC(0.)
         self.vs_dirichlet.setConstantBC(0.)
         self.ws_dirichlet.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(1e-20)
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_dirichlet.setConstantBC(1e-10)
+        self.dissipation_diffusive.setConstantBC(0.)
+
         if orientation[0] == 1. or orientation[0] == -1.:
             self.u_diffusive.setConstantBC(0.)
             self.us_diffusive.setConstantBC(0.)
@@ -361,18 +366,12 @@ class BC_RANS(BoundaryConditions.BC_Base):
         
         if kInflow is not None:
             self.k_dirichlet.setConstantBC(kInflow)
-            self.k_diffusive.setConstantBC(0.)
         else:
-            self.k_dirichlet.setConstantBC(1e-20)
-            self.k_diffusive.setConstantBC(0.)
-            logEvent("WARNING: Dirichlet condition for k in "+str(self.BC_type)+" has not been set")
+            logEvent("WARNING: Dirichlet condition for k in "+str(self.BC_type)+" has not been set. Ignore if RANS is not used")
         if dInflow is not None:
             self.dissipation_dirichlet.setConstantBC(dInflow)
-            self.dissipation_diffusive.setConstantBC(0.)
         else:
-            self.dissipation_dirichlet.setConstantBC(1e-10)
-            self.dissipation_diffusive.setConstantBC(0.)
-            logEvent("WARNING: Dirichlet condition for dissipation in "+str(self.BC_type)+" has not been set")
+            logEvent("WARNING: Dirichlet condition for dissipation in "+str(self.BC_type)+" has not been set. Ignore if RANS is not used")
     def setRigidBodyMoveMesh(self, body):
         """
         Sets boundary conditions for moving the mesh with a rigid body
