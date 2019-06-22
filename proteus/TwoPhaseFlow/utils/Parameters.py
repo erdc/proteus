@@ -1784,6 +1784,7 @@ class ParametersModelAddedMass(ParametersModelBase):
                                                        Problem=Problem)
         copts = self.p.CoefficientsOptions
         copts.flags_rigidbody = None
+        copts.solve_rate = 0.
         copts._freeze()
         # LEVEL MODEL
         self.p.LevelModelType = AddedMass.LevelModel
@@ -1826,7 +1827,8 @@ class ParametersModelAddedMass(ParametersModelBase):
         self.p.coefficients = AddedMass.Coefficients(nd=nd,
                                                      V_model=V_model,
                                                      barycenters=domain.barycenters,
-                                                     flags_rigidbody=copts.flags_rigidbody)
+                                                     flags_rigidbody=copts.flags_rigidbody,
+                                                     solve_rate=copts.solve_rate)
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
         class dp_IC:
