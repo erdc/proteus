@@ -1266,12 +1266,12 @@ public:
           ith_flux_term1 += huj * Cx[ij] + hvj * Cy[ij]; // f1*C
           if (i != j) {
             dLij = dLow[ij]; //*fmax(psi[i],psi[j]); // enhance the order to 2nd
-                             //order. No EV
+                             // order. No EV
 
             muLowij = fmax(fmax(0., -(ui * Cx[ij] + vi * Cy[ij])),
                            fmax(0, (uj * Cx[ij] + vj * Cy[ij])));
             muLij = muLowij; //*fmax(psi[i],psi[j]); // enhance the order to 2nd
-                             //order. No EV
+                             // order. No EV
             // compute dissipative terms
             ith_dLij_minus_muLij_times_hStarStates +=
                 (dLij - muLij) * (hStarji - hStarij);
@@ -1689,7 +1689,7 @@ public:
                       cji_norm);
             }
             dLij = dLowij;   //*fmax(psi[i],psi[j]); // enhance the order to 2nd
-                             //order. No EV
+                             // order. No EV
             dLow[ij] = dLij; // save dLow for limiting step
 
             ///////////////////////////////////////
@@ -1698,7 +1698,7 @@ public:
             muLowij = fmax(fmax(0., -(ui * Cx[ij] + vi * Cy[ij])),
                            fmax(0, (uj * Cx[ij] + vj * Cy[ij])));
             muLij = muLowij; //*fmax(psi[i],psi[j]); // enhance the order to 2nd
-                             //order.
+                             // order.
 
             ////////////////////////
             // COMPUTE BAR STATES //
@@ -1777,7 +1777,7 @@ public:
                          ith_muHij_times_huStates);
           globalResidual[offset_hv + stride_hv * i] =
               hvi - dt / mi *
-                        (hyp_flux_hv[i] + extendedSourceTerm_hu[i] -
+                        (hyp_flux_hv[i] + extendedSourceTerm_hv[i] -
                          ith_dHij_minus_muHij_times_hvStarStates -
                          ith_muHij_times_hvStates);
           // clean up potential negative water height due to machine precision
@@ -1795,7 +1795,7 @@ public:
                     ith_dHij_minus_muHij_times_huStarStates -
                     ith_muHij_times_huStates);
           globalResidual[offset_hv + stride_hv * i] +=
-              dt * (hyp_flux_hv[i] + extendedSourceTerm_hu[i] -
+              dt * (hyp_flux_hv[i] + extendedSourceTerm_hv[i] -
                     ith_dHij_minus_muHij_times_hvStarStates -
                     ith_muHij_times_hvStates);
         }
