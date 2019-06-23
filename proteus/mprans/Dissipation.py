@@ -4,7 +4,6 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cDissipation import *
 from proteus.mprans.cDissipation2D import *
-
 """
 NOTES:
 
@@ -451,7 +450,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             for eN in range(self.model.ebq[('u',0)].shape[0]):
                 for k in range(self.model.ebq[('u',0)].shape[1]):
                     for l in range(len(self.model.ebq[('u',0)][eN,k])):
-                        self.model.ebq[('u',0)][eN,k,l] = max(  self.model.ebq[('u',0)][eN,k,l], 1e-50)
+                        self.model.ebq[('u',0)][eN,k,l] = max(  self.model.ebq[('u',0)][eN,k,l], 1e-10)
         for eN in range(self.model.ebqe[('u',0)].shape[0]):
             for k in range(self.model.ebqe[('u',0)].shape[1]):
                 self.model.ebqe[('u',0)][eN,k] = max(  self.model.ebqe[('u',0)][eN,k], 1e-10)
