@@ -57,10 +57,13 @@ class Coefficients(TC_base):
                  V_model=None,
                  barycenters=None,
                  flags_rigidbody=None,
+                 solve_rate=0.,
                  nullSpace="ConstantNullSpace"):
         """
         TODO
         """
+        self.solve_rate = solve_rate
+        self.next_solve = 0.
         self.nullSpace = nullSpace
         assert(nd in [2, 3])
         self.nd = nd

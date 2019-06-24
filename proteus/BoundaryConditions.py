@@ -1,3 +1,10 @@
+#!python
+# distutils: language = c++
+# cython: profile=True, binding=True, embedsignature=True
+# cython: wraparound=False
+# cython: boundscheck=False
+# cython: initializedcheck=False
+
 import cython
 """
 Module for creating boundary conditions. Imported in SpatialTools.py
@@ -5,6 +12,9 @@ Module for creating boundary conditions. Imported in SpatialTools.py
 .. inheritance-diagram:: proteus.BoundaryConditions
    :parts: 1
 """
+
+__all__ = ['BC_Base',
+           'BoundaryCondition']
 
 class BC_Base:
     """
