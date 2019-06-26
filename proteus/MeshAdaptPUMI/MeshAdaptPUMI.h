@@ -66,7 +66,7 @@ class MeshAdaptPUMIDrvr{
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
-  int gradeMesh();
+  int gradeMesh(double gradationFactor);
   int setSphereSizeField();
   int loadMeshForAnalytic(const char* meshFile,double* boxDim,double* sphereCenter, double radius);
   gmi_model* createSphereInBox(int boxDim,apf::Vector3 sphereCenter,double radius);

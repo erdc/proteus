@@ -523,7 +523,11 @@ void MeshAdaptPUMIDrvr::isotropicIntersect()
     sizeFieldList.pop();
     //apf::destroyField(field);
   }
-  gradeMesh();
+
+  if(nAdapt < 2) //if first few adapts, need to make sure that gradation is low to allow interface to develop properly
+    gradeMesh(1.1);
+  else
+    gradeMesh(gradingFactor);
 }
 
 //taken from Dan's superconvergent patch recovery code
@@ -1676,7 +1680,7 @@ int serialGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,doub
   return needsParallel;
 }
 
-int MeshAdaptPUMIDrvr::gradeMesh()
+int MeshAdaptPUMIDrvr::gradeMesh(double gradationFactor)
 //Function to grade isotropic mesh through comparison of edge vertex size ratios
 //This implementation accounts for parallel meshes as well
 //First do serial gradation. 
@@ -1699,14 +1703,16 @@ int MeshAdaptPUMIDrvr::gradeMesh()
   int marker[3] = {0,1,0}; 
 
   apf::MeshIterator* it;
-  markEdgesInitial(m,markedEdges,gradingFactor);
+  //markEdgesInitial(m,markedEdges,gradingFactor);
+  markEdgesInitial(m,markedEdges,gradationFactor);
 
   int needsParallel=1;
   int nCount=1;
   while(needsParallel)
   {
     PCU_Comm_Begin();
-    needsParallel = serialGradation(m,markedEdges,gradingFactor);
+    //needsParallel = serialGradation(m,markedEdges,gradingFactor);
+    needsParallel = serialGradation(m,markedEdges,gradationFactor);
 
     PCU_Add_Ints(&needsParallel,1);
     if(comm_rank==0)
