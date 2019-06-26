@@ -14,21 +14,21 @@ import math
 refinement=6
 
 #domain and parameters
-L=(10.0,10.0)   #    (10000.0,10000.0)
+L=(10000.0,10000.0)
 g=9.81
-h0=1.  # 10.0
-a=3.   # 3000.
-B=2.   # 5.
-k=0.5   # 0.002
+h0=10.0
+a=3000.
+B=5.
+k=0.002
 p = old_div(np.sqrt(8*g*h0),a)
 s = old_div(np.sqrt(p**2 - k**2),2.)
 mannings=k
 
 # For time and outputting
-T=1.    #  1000.
+T=1000.
 nDTout=10
 
-AUTOMATED_TEST=False
+AUTOMATED_TEST=True
 if AUTOMATED_TEST:
     T=500
     nDTout=1
@@ -46,7 +46,7 @@ mannings = k
 cE = 1
 LUMPED_MASS_MATRIX = 0
 SSPOrder = 3
-runCFL=0.15
+runCFL=0.25
 useSuperlu = True
 triangleFlag = 1
 reflecting_BCs = False
