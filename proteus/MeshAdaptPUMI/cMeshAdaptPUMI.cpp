@@ -663,7 +663,56 @@ int MeshAdaptPUMIDrvr::willInterfaceAdapt()
   return assertFlag;
 }
 
+void getEdgeLengthStatistics(apf::Mesh* m )
+{
+    //need to get min, max, avg edge lengths in the mesh
+    //need to be able to handle parallel
+    apf::MeshIterator* it=m->begin(1);
+    apf::MeshEntity* ent;
 
+    double minLength = 1000;
+    double maxLength = -1;
+    double sumLength = 0;
+    int numEdges=0;
+    while( (ent = m->iterate(it)) )
+    {
+        if(m->isOwned(ent))
+        {
+            double length = apf::measure(m,ent);
+            sumLength+= length;
+            if(length<minLength)
+                minLength = length;
+            else if(length > maxLength)
+                maxLength = length;
+            numEdges++;
+        }
+    }
+
+/*
+    if(PCU_Comm_Self()==1)
+        std::cout<<"This is numEdges 1 "<<numEdges<<" min "<< minLength<<" max "<<maxLength<<" sum "<< sumLength<<std::endl;
+    PCU_Barrier();
+    if(PCU_Comm_Self()==0)
+        std::cout<<"This is numEdges 0 "<<numEdges<<" min "<< minLength<<" max "<<maxLength<<" sum "<< sumLength<<std::endl;
+*/    
+
+    PCU_Add_Doubles(&sumLength,1);
+    PCU_Add_Ints(&numEdges,1);
+    PCU_Max_Doubles(&maxLength,1);
+    PCU_Min_Doubles(&minLength,1);
+
+    double averageLength = sumLength/numEdges;
+    if(PCU_Comm_Self()==0)    
+    {
+        //write mesh statistics out
+   
+        std::ofstream myfile;
+        myfile.open("meshEdgeLengths.txt", std::ios::app );
+        myfile <<minLength<<","<<maxLength<<","<<averageLength<<","<<numEdges<<std::endl;
+        myfile.close();
+    }
+    return;
+}
 
 int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 /**
@@ -1251,6 +1300,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 */
   free(rho);
   free(nu);
+
+  getEdgeLengthStatistics(m);
+    
   return 0;
 }
 
