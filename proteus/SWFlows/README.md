@@ -4,11 +4,10 @@ The SWFlows app contains a number of tests for the the 2D nonlinear Shallow Wate
 numerically solved using continuous, linear finite elements as seen in
 [Guermond, *et al* 2018](https://doi.org/10.1137/17M1156162) and [Guermond *et al* 2019].
 
-Some introduction stuff on the SW equations.
+The Shallow Water equations are a set of partial differential equations that form a hyperbolic system. They can be used to describe a body of water evolving under the action of gravity under the assumption that the deformations of the free surface are small compared to the water height.
 
-The modified Green-Naghdi equations are a set of a equations that form a
-hyperbolic system and are an O(h) approximation to the traditional Green-Naghdi
-equations, where h is the mesh size.
+The modified Green-Naghdi equations are a set of partial differential equations that form a
+hyperbolic system and are an O(h) approximation to the traditional Green-Naghdi equations, where h is the mesh size. The Green-Naghdi equations are used to describe dispersive water waves.
 
 The different tests demonstrate the respective models abilities to handle wet/dry states, reciprocate "real world" problems (see malpasset, colorado_river),
 propagate solitary waves, etc.
@@ -61,7 +60,7 @@ To use options other than the default options, one can run something like:
 parun --SWEs -l1 -v SWFlow.py -C "sw_model=1 final_time=100"
 ```
 
-which switches the model to the Dispersive SWEs and increases the final time to 100 seconds.
+which switches the model to the dispersive model and increases the final time to 100 seconds.
 
 ## Creating a test
 
