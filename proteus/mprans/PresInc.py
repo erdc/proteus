@@ -101,6 +101,10 @@ class Coefficients(TC_base):
         """
         self.model = modelList[self.modelIndex]
         self.fluidModel = modelList[self.fluidModelIndex]
+        try:
+            self.model.coefficients.phi_sp = self.fluidModel.coefficients.phi_s
+        except:
+            pass
         if self.sedModelIndex is not None:
             self.sedModel = modelList[self.sedModelIndex]
         if self.VOS_model is not None:
