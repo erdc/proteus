@@ -2433,7 +2433,6 @@ class NS_base(object):  # (HasTraits):
                     logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
                 except:
                     pass
-                if model.name is "pressureincrement":
                 try:
                     phi_sp = {}
                     phi_sp[0] = model.levelModelList[-1].coefficients.phi_sp
