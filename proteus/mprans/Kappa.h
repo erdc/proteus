@@ -513,7 +513,7 @@ namespace proteus
       da_dk = porosity*dnu_t_dk/sigma_a;
 
       F_k =  nu_t*PiD4;
-      r = -porosity*(F_k - gamma_k*k - kSed);
+      r = -porosity*F_k + porosity*gamma_k*k +porosity*kSed;
       dr_dk = porosity*(gamma_k+dkSed);
 
     }
