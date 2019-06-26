@@ -25,7 +25,7 @@ s = old_div(np.sqrt(p**2 - k**2),2.)
 mannings=k
 
 # For time and outputting
-T=1000. 
+T=1000.
 nDTout=10
 
 AUTOMATED_TEST=True
@@ -33,7 +33,7 @@ if AUTOMATED_TEST:
     T=500
     nDTout=1
     refinement=2
-    
+
 ######################
 ##### PARAMETERS #####
 ######################
@@ -78,7 +78,7 @@ domain.MeshOptions.triangleOptions=triangleOptions
 def bathymetry(X):
     import numpy as np
     x = X[0]
-    y = X[1] 
+    y = X[1]
     r2 = (x-old_div(L[0],2.))**2+(y-old_div(L[1],2.))**2
     return h0*r2/a/a
 
@@ -89,11 +89,11 @@ def eta_function(X,t):
 
     coeff1 = old_div(-B,g)
     coeff2 = -B**2/2./g
-    
+
     eta_part1 = coeff1*np.exp(-k*t/2.)*(k/2.*np.sin(s*t)+s*np.cos(s*t))*(x-old_div(L[0],2.));
     eta_part2 = coeff1*np.exp(-k*t/2.)*(k/2.*np.cos(s*t)-s*np.sin(s*t))*(y-old_div(L[1],2.));
     eta_part3 = coeff2*np.exp(-k*t);
-    
+
     return h0 + eta_part1 + eta_part2 + eta_part3
 
 def water_height_function(X,t):
@@ -129,7 +129,7 @@ class Zero(object):
         return 0.
 
 analyticalSolution = {0:water_height(),
-                      1:Zero(), 
+                      1:Zero(),
                       2:Zero()}
 
 ###################################
