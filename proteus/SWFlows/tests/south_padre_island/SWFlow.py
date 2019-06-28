@@ -20,7 +20,7 @@ import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 # *************************** #
 opts= Context.Options([
     ('sw_model',0,"sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time",3000.0,"Final time for simulation"),
+    ("final_time",2.0,"Final time for simulation"),
     ("dt_output",1.0,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
     ("refinement",4,"Refinement level"),
@@ -30,7 +30,7 @@ opts= Context.Options([
 ###################
 # DOMAIN AND MESH #
 ###################
-AdH_file = "mal_50sec"
+AdH_file = "SPI"
 domain = None
 
 ##############
@@ -67,10 +67,12 @@ class water_height_at_t0(object):
         m = old_div((y2-y1),(x2-x1))
         dam2 = m*(x-x1)+y1
 
-        if (X[1] <= dam1 and X[1] <= dam2):
-            return np.maximum(100.0-X[2],0.)
-        else:
-            return 0.
+        return 1.
+
+        # if (X[1] <= dam1 and X[1] <= dam2):
+        #     return np.maximum(100.0-X[2],0.)
+        # else:
+        #     return 0.
 
 class Zero(object):
     """still water conditions"""
