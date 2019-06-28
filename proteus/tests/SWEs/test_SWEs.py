@@ -1,4 +1,4 @@
-5#!/usr/bin/env python
+#!/usr/bin/env python
 """
 Test module for SWEs
 """
