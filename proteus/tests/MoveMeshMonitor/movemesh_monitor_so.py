@@ -5,7 +5,7 @@ Split operator module for two-phase flow
 import os
 from proteus.default_so import *
 from proteus import Context
-import movemesh_monitor
+from . import movemesh_monitor
 
 # Create context from main module
 name_so = os.path.basename(__file__)
@@ -14,7 +14,7 @@ if '_so.py' in name_so[-6:]:
 elif '_so.pyc' in name_so[-7:]:
     name = name_so[:-7]
 else:
-    raise NameError, 'Split operator module must end with "_so.py"'
+    raise NameError('Split operator module must end with "_so.py"')
 
 Context.setFromModule(movemesh_monitor)
 ct = Context.get()

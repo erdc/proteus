@@ -100,7 +100,6 @@ class hw_at_t0(object):
         hw = hp * (-c * h0 * eta * hprime / (h0 + eta)**2)
         return hw
 
-
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #

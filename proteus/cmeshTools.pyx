@@ -1,5 +1,4 @@
 # A type of -*- python -*- file
-from cpython.cobject cimport PyCObject_AsVoidPtr
 import cython
 cimport cython
 import numpy as np
@@ -321,91 +320,77 @@ cpdef void cmeshToolsComputeGeometricInfo_tetrahedron(CMesh cmesh):
 # cdef static void cmeshToolsLocallyRefineMultilevelMesh(CMultilevelMesh cmesh,
 
 
-def generateFromTriangleMesh(CMesh cmesh,
-                             object trimesh,
-			     int base):
-    cppm.setFromTriangleElements(<cppm.triangulateio*>(PyCObject_AsVoidPtr(trimesh)),
-                                 cmesh.mesh,
-                                 base)
-    cppm.setFromTriangleNodes(<cppm.triangulateio*>(PyCObject_AsVoidPtr(trimesh)),
-                              cmesh.mesh,
-                              base)
-    cppm.constructElementBoundaryElementsArray_triangle(cmesh.mesh)
-    cppm.copyElementBoundaryMaterialTypesFromTriangle(<cppm.triangulateio*>(PyCObject_AsVoidPtr(trimesh)),
-					              cmesh.mesh,
-                                                      base)
-
 cpdef void generateFromTriangleFiles(CMesh cmesh,
-                                    const char* filebase,
+                                    unicode filebase,
                                     int base):
 
     cdef int failed
-    failed = cppm.readTriangleMesh(cmesh.mesh,filebase,base);
+    failed = cppm.readTriangleMesh(cmesh.mesh,filebase.encode('utf8'),base);
     cppm.constructElementBoundaryElementsArray_triangle(cmesh.mesh);
-    failed = cppm.readTriangleElementBoundaryMaterialTypes(cmesh.mesh,filebase,base);
+    failed = cppm.readTriangleElementBoundaryMaterialTypes(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void writeTriangleFiles(CMesh cmesh,
-                             const char* filebase,
+                             unicode filebase,
                              int base):
     cdef int failed
-    failed = cppm.writeTriangleMesh(cmesh.mesh,filebase,base);
+    failed = cppm.writeTriangleMesh(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void generateFromTetgenFiles(CMesh cmesh,
-                                  const char* filebase,
+                                  unicode filebase,
                                   int base):
     cdef int failed
-    failed = cppm.readTetgenMesh(cmesh.mesh,filebase,base);
+    failed = cppm.readTetgenMesh(cmesh.mesh,filebase.encode('utf8'),base);
     cppm.constructElementBoundaryElementsArray_tetrahedron(cmesh.mesh);
-    failed = cppm.readTetgenElementBoundaryMaterialTypes(cmesh.mesh,filebase,base);
+    failed = cppm.readTetgenElementBoundaryMaterialTypes(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void generateFromTetgenFilesParallel(CMesh cmesh,
-                                          const char* filebase,
+                                          unicode filebase,
                                           int base):
     cdef int failed
-    failed = cppm.readTetgenMesh(cmesh.mesh,filebase,base);
+    failed = cppm.readTetgenMesh(cmesh.mesh,filebase.encode('utf8'),base);
     cppm.constructElementBoundaryElementsArray_tetrahedron(cmesh.mesh);
-    failed = cppm.readTetgenElementBoundaryMaterialTypes(cmesh.mesh,filebase,base);
+    failed = cppm.readTetgenElementBoundaryMaterialTypes(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void writeTetgenFiles(CMesh cmesh,
-                           const char* filebase,
+                           unicode filebase,
                            int base):
     cdef int failed
-    failed = cppm.writeTetgenMesh(cmesh.mesh,filebase,base);
+    failed = cppm.writeTetgenMesh(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void write3dmFiles(CMesh cmesh,
-                        const char* filebase,
+                        unicode filebase,
                         int base):
     cdef int failed
-    failed = cppm.write3dmMesh(cmesh.mesh,filebase,base);
+    failed = cppm.write3dmMesh(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void write2dmFiles(CMesh cmesh,
-                        const char* filebase,
+                        unicode filebase,
                         int base):
     cdef int failed
-    failed = cppm.write2dmMesh(cmesh.mesh,filebase,base);
+    failed = cppm.write2dmMesh(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void generateFromHexFile(CMesh cmesh,
-                              const char* filebase,
+                              unicode filebase,
                               int base):
     cdef int failed
-    failed = cppm.readHex(cmesh.mesh,filebase,base);
+    failed = cppm.readHex(cmesh.mesh,filebase.encode('utf8'),base);
     cppm.constructElementBoundaryElementsArray_hexahedron(cmesh.mesh);
 
 cpdef void generateFrom3DMFile(CMesh cmesh,
-                              const char* filebase,
+                              unicode filebase,
                               int base):
     cdef int failed
-    failed = cppm.read3DM(cmesh.mesh,filebase,base);
+    failed = cppm.read3DM(cmesh.mesh,filebase.encode('utf8'),base);
     cppm.constructElementBoundaryElementsArray_tetrahedron(cmesh.mesh);
-    failed = cppm.readBC(cmesh.mesh,filebase,base);
+    failed = cppm.readBC(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void generateFrom2DMFile(CMesh cmesh,
-                              const char* filebase,
+                              unicode filebase,
                               int base):
     cdef int failed
-    failed = cppm.read2DM(cmesh.mesh,filebase,base);
+    failed = cppm.read2DM(cmesh.mesh,filebase.encode('utf8'),base);
     cppm.constructElementBoundaryElementsArray_triangle(cmesh.mesh);
-    failed = cppm.readBC(cmesh.mesh,filebase,base);
+    failed = cppm.readBC(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void computeGeometricInfo_tetrahedron(CMesh cmesh):
     cppm.computeGeometricInfo_tetrahedron(cmesh.mesh);

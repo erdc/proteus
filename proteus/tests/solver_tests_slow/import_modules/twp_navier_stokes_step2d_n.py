@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from importlib import reload
 from proteus import *
 try:
     from . import step2d

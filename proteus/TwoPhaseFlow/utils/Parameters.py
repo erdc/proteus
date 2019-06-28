@@ -514,7 +514,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
             self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
             self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
-            self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_package', 'superlu')
+            self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_type', 'superlu')
             self.OptDB.setValue(prefix+'ksp_knoll', 1)
             self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
         elif self.n.linearSmoother == LinearSolvers.NavierStokes_TwoPhasePCD:
@@ -2082,7 +2082,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
         self.OptDB.setValue(prefix+'ksp_max_it', 2000)
         self.OptDB.setValue(prefix+'sub_ksp_type', 'preonly')
-        self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_package', 'superlu')
+        self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_type', 'superlu')
         self.OptDB.setValue(prefix+'ksp_knoll', 1)
         self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
 

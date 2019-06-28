@@ -17,7 +17,7 @@ import pickle
 import petsc4py
 import pytest
 
-import duct
+from . import duct
 
 @pytest.fixture()
 def load_periodic_duct(request):
