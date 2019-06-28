@@ -613,7 +613,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.6.0.dev0',
+          version='1.6.1.dev0',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
