@@ -2298,6 +2298,17 @@ class NS_base(object):  # (HasTraits):
                 logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
             except:
                 pass
+            try:
+                phi_sp = {}
+                phi_sp[0] = model.levelModelList[-1].coefficients.phi_sp
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       phi_sp,
+                                                                       res_name_base='phi_sp')
+                logEvent("Writing initial phi_sp at DOFs for = "+model.name+" at time t="+str(self.tnList[0]),level=3)
+            except:
+                pass
             if 'clsvof' in model.name:
                 vofDOFs = {}
                 vofDOFs[0] = model.levelModelList[-1].vofDOFs
@@ -2420,6 +2431,17 @@ class NS_base(object):  # (HasTraits):
                                                                            phi_s,
                                                                            res_name_base='phi_s')
                     logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
+                except:
+                    pass
+                try:
+                    phi_sp = {}
+                    phi_sp[0] = model.levelModelList[-1].coefficients.phi_sp
+                    model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                           t,
+                                                                           self.tCount,
+                                                                           phi_sp,
+                                                                           res_name_base='phi_sp')
+                    logEvent("Writing phi_sp at DOFs for = "+model.name+" at time t="+str(t),level=3)
                 except:
                     pass
             if 'clsvof' in model.name and self.fastArchive==False:
