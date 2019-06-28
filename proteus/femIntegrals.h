@@ -2417,5 +2417,20 @@ void projectFromNodalInterpolationConditions(int nElements_global,
 					     const int * functional_map_element,
 					     const double * interpolationValues,
 					     double * dofs);
+extern void calculateVelocityQuadrature_MixedForm2_sd(int nElements_global,
+                                               int nElementBoundaries_element,
+                                               int nElementBoundaryQuadraturePoints_elementBoundary,
+                                               int nDOF_element,
+                                               int nSpace,
+                                               int nQuadraturePoints_element,
+                                               const int * rowptr,
+                                               const int * colind,
+                                               double* qa,
+                                               double* qw_dV,
+                                               double* b,
+                                               double* v,
+                                               double* V,
+                                               double* qv,
+                                               double* qV);
 /** @} */
 #endif
