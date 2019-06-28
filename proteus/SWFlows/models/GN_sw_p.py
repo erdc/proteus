@@ -19,7 +19,6 @@ initialConditions = mySWFlowProblem.initialConditions
 boundaryConditions = mySWFlowProblem.boundaryConditions
 bathymetry = mySWFlowProblem.bathymetry
 reflecting_BCs = mySWFlowProblem.reflectingBCs
-analyticalSolution = mySWFlowProblem.analyticalSolution
 
 # DOMAIN #
 nd = 2
@@ -59,14 +58,6 @@ initialConditions = {0: initialConditions['water_height'],
                      2: initialConditions['y_mom'],
                      3: initialConditions['h_times_eta'],
                      4: initialConditions['h_times_w']}
-# **************************************** #
-# ********** ANALYTICAL SOLUTION ********* #
-# **************************************** #
-analyticalSolution = {0: analyticalSolution['h_exact'],
-                      1: analyticalSolution['hu_exact'],
-                      2: analyticalSolution['hv_exact'],
-                      3: analyticalSolution['heta_exact'],
-                      4: analyticalSolution['hw_exact']}
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
