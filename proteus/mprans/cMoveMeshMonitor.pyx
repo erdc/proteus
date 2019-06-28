@@ -6,8 +6,8 @@ import numpy as np
 cimport numpy as np
 from libcpp cimport bool
 from proteus.Profiling import logEvent
-from proteus.mprans cimport MeshSmoothing as ms
 from proteus.mprans import MeshSmoothing as ms
+from proteus.mprans cimport MeshSmoothing as ms
 from proteus import Comm
 from mpi4py import MPI
 
@@ -32,7 +32,6 @@ cdef class cCoefficients:
                         areas_=pc.areas,
                         q_rci=pc.model.q[('r', 0)],
                         q_fci=pc.model.q[('f', 0)],
-                        t=pc.t,
                         nElements_owned=pc.mesh.nElements_owned)
 
     cdef cppPreStep(self,
@@ -42,7 +41,6 @@ cdef class cCoefficients:
                     double[:] areas_,
                     double[:, :] q_rci,
                     double[:, :, :] q_fci,
-                    double t,
                     int nElements_owned):
         cdef double integral_1_over_f = 0.
         cdef int N_eN = q_J.shape[0]
@@ -347,14 +345,18 @@ cdef class cCoefficients:
                 # 9: ls
                 # 10: node0
                 # 11: rank0
-                coords_2rank[rank] = np.zeros((0, 12))
-        cdef double[:,:] coords_2doArray = np.zeros((0, 12))
+                # 12: fixed_dir[0]
+                # 13: fixed_dir[1]
+                # 14: fixed_dir[2]
+                coords_2rank[rank] = np.zeros((0, 15))
+        cdef double[:,:] coords_2doArray = np.zeros((0, 15))
         # cdef int[:] solFound_2do
         # cdef int[:] solFound_2doArray
         cdef double[:] nodesSentBoolArray = np.zeros(len(xx))
         cdef bool pending = False
         cdef double[:] starting_coords = np.zeros(3)
         cdef int nEbn  # number of boundaries per elements
+        cdef double[:] resultd
         if nd == 2:
             nEbn = 3
         elif nd == 3:
@@ -380,6 +382,7 @@ cdef class cCoefficients:
                 pending = False
                 area = 0.
                 flag = nodeMaterialTypes[node]
+
                 fixed_dir[0] = 1.
                 fixed_dir[1] = 1.
                 fixed_dir[2] = 1.
@@ -394,9 +397,20 @@ cdef class cCoefficients:
                     nPending_disp += 1
                 elif nodesSentBoolArray[node] == 0:
                     if flag != 0:
-                        fixed = True
+                        if fixedNodesBoolArray[node] == 1:
+                            fixed = True
+                        else:
+                            ms.cyFindBoundaryDirectionTriangle(
+                                dir_=fixed_dir,
+                                node=node,
+                                nodeArray=nodeArray,
+                                nodeStarOffsets=nodeStarOffsets,
+                                nodeStarArray=nodeStarArray,
+                                nodeMaterialTypes=nodeMaterialTypes,
+                            )
                     if not fixed:  # either flag==0 or not fixed
-                        if i_time == 0:  # nodes are at original position (no search)
+                        if coords[0] == nodeArray[node, 0] and coords[1] == nodeArray[node, 1] and coords[2] == nodeArray[node, 2]:  # nodes are at original position (no search)
+                        # if i_time == 0:
                             for ndi in range(nd):
                                 v_grad[ndi] = grads[node, ndi]
                             area = areas_nodes[node]
@@ -409,7 +423,7 @@ cdef class cCoefficients:
                             f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
                             for ndi in range(nd):
                                 dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
-                                coords[ndi] += dphi[ndi]*fixed_dir[ndi]*dt
+                                coords[ndi] += dphi[ndi]*dt*fixed_dir[ndi]
                                 xx[node, ndi] = coords[ndi]
                         else:  # find node that moved already (search)
                             result = findN(coords=coords,
@@ -446,6 +460,22 @@ cdef class cCoefficients:
                                 inside_eN = True
                                 nearestNArray[node] = nearestN
                                 typeNArray[node] = typeN
+                                if typeN == 2 and flag != 0:
+                                    # get an element from there
+                                    if elementBoundaryElementsArray[nearestN, 0] == -1 or elementBoundaryElementsArray[nearestN, 0] > nElements_owned:
+                                        nearestN = elementBoundaryElementsArray[nearestN, 1]
+                                        typeN = 1
+                                    elif elementBoundaryElementsArray[nearestN, 1] == -1 or elementBoundaryElementsArray[nearestN, 1] > nElements_owned:
+                                        nearestN = elementBoundaryElementsArray[nearestN, 0]
+                                        typeN = 1
+                                    else:
+                                        nearestN = elementBoundaryElementsArray[nearestN, 0]
+                                        typeN = 1
+
+                                        # fixed_dir[0] = nodeArray[elementBoundaryNodesArray[1], 0]-nodeArray[elementBoudnaryNodesArray[0], 0]
+                                        # fixed_dir[1] = nodeArray[elementBoundaryNodesArray[1], 1]-nodeArray[elementBoudnaryNodesArray[0], 1]
+                                        # fixed_dir[2] = nodeArray[elementBoundaryNodesArray[1], 2]-nodeArray[elementBoudnaryNodesArray[0], 2]
+
                                 for j in range(nEbn):
                                     bb_i = elementBoundariesArray[nearestN, j]
                                     normal[0] = elementBoundaryNormalsArray[nearestN, j, 0]
@@ -453,8 +483,43 @@ cdef class cCoefficients:
                                     normal[2] = elementBoundaryNormalsArray[nearestN, j, 2]
                                     bound_bar = elementBoundaryBarycentersArray[bb_i]
                                     dot = (bound_bar[0]-coords[0])*normal[0]+(bound_bar[1]-coords[1])*normal[1]+(bound_bar[2]-coords[2])*normal[2]
-                                    if dot < 0:
+                                    if dot < 0.:
                                         inside_eN = False
+                                        try:
+                                            raise AssertionError('did not find containing element! coords outside domain?')
+                                        except AssertionError as exc:
+                                            print('Error: ', exc)
+                                            print('node number', node)
+                                            print('node materialType: ',
+                                                nodeMaterialTypes[node])
+                                            print('node old coordinates: ',
+                                                nodeArray[node, 0],
+                                                nodeArray[node, 1],
+                                                nodeArray[node, 2])
+                                            print('node new coordinates: ',
+                                                coords[0],
+                                                coords[1],
+                                                coords[2])
+                                            print('nearestN (element): ',
+                                                nearestN,
+                                                'type (should be 1): ',
+                                                typeN)
+                                            print('element barycenter: ',
+                                                elementBarycentersArray[nearestN,0],
+                                                elementBarycentersArray[nearestN,1],
+                                                elementBarycentersArray[nearestN,2])
+                                            for ii in range(elementNodesArray.shape[1]):
+                                                print('element node: ',
+                                                    elementNodesArray[nearestN, ii],
+                                                    nodeArray[elementNodesArray[nearestN, ii], 0],
+                                                    nodeArray[elementNodesArray[nearestN, ii], 1],
+                                                    nodeArray[elementNodesArray[nearestN, ii], 2])
+                                            print('fixed_dir: ',
+                                                fixed_dir[0],
+                                                fixed_dir[1],
+                                                fixed_dir[2])
+                                            print('dot: ', dot)
+                                            comm.Abort()
                                 if inside_eN:
                                     xi = femSpace.elementMaps.getInverseValue(nearestN, coords)
                                     # line below needs optimisation:
@@ -468,12 +533,8 @@ cdef class cCoefficients:
                                     f = pc.evaluateFunAtX(x=coords, ls_phi=ls_phi)
                                     for ndi in range(nd):
                                         dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
-                                        coords[ndi] += dphi[ndi]*fixed_dir[ndi]*dt
+                                        coords[ndi] += dphi[ndi]*dt*fixed_dir[ndi]
                                         xx[node, ndi] = coords[ndi]
-                                if inside_eN is False and pending is False:
-                                    print('outside!!', node, nearestN,  coords[0], coords[1], elementBarycentersArray[nearestN,0], elementBarycentersArray[nearestN,1])
-                                    print('outside2!!', node, nodeArray[node, 0],  nodeArray[node, 1])
-                                    print('neighbours', elementNeighborsArray[nearestN, 0], elementNeighborsArray[nearestN, 1], elementNeighborsArray[nearestN, 2])
                             else:  # info to send to other processor
                                 coords_2rank[new_rank] = np.append(coords_2rank[new_rank],
                                                                    [[coords[0],
@@ -487,11 +548,15 @@ cdef class cCoefficients:
                                                                      0,
                                                                      0,
                                                                      node,
-                                                                     my_rank]],
+                                                                     my_rank,
+                                                                     fixed_dir[0],
+                                                                     fixed_dir[1],
+                                                                     fixed_dir[2]]],
                                                                    axis=0)
                                 nodesSentBoolArray[node] = 1
                                 nPending_disp += 1
             # parallel comm
+            comm.barrier()
             if comm_size > 1:
                 # number of pending solutions to send to other processors
                 nPending_disp_total = comm.allreduce(nPending_disp)
@@ -523,10 +588,10 @@ cdef class cCoefficients:
                         if array_size-counts_total[rank_recv, rank_recv] > 0:
                             if my_rank == rank_recv:
                                 # initialise coords_2doArray only on receiving processor
-                                coords_2doArray = np.zeros((array_size, 12))
+                                coords_2doArray = np.zeros((array_size, 15))
                             # -----
                             # get the coords_2doArray (nodes where to retrieve values for arg)
-                            datatype = MPI.DOUBLE.Create_contiguous(12).Commit() 
+                            datatype = MPI.DOUBLE.Create_contiguous(15).Commit()
                             comm.Gatherv(coords_2rank[rank_recv],
                                          [coords_2doArray,
                                           tuple(counts_in[i]*coords_2doArray.shape[1] for i in range(comm_size)),
@@ -548,7 +613,7 @@ cdef class cCoefficients:
                     # COMMUNICATION FINISHED
                     # wipe dicts out
                     for rank in range(comm_size):
-                        coords_2rank[rank] = np.zeros((0, 12))
+                        coords_2rank[rank] = np.zeros((0, 15))
                     nNodes = len(coords_2doArray)
                     for iN in range(nNodes):
                         coords[0] = coords_2doArray[iN, 0]
@@ -564,6 +629,9 @@ cdef class cCoefficients:
                         node0 = int(coords_2doArray[iN, 10])
                         rank0  = int(coords_2doArray[iN, 11])
                         new_rank = my_rank
+                        fixed_dir[0] = coords_2doArray[iN, 12]
+                        fixed_dir[1] = coords_2doArray[iN, 13]
+                        fixed_dir[2] = coords_2doArray[iN, 14]
                         if solFound_2doArray[iN] == 0:
                             result = findN(coords=coords,
                                            nodeArray=nodeArray,
@@ -600,6 +668,14 @@ cdef class cCoefficients:
                             else:
                                 solFound_2doArray[iN] += 1
                                 inside_eN = True  # checking if actually true
+                                if typeN == 2:
+                                    # get an element from there
+                                    if elementBoundaryElementsArray[nearestN, 0] == -1:
+                                        nearestN = elementBoundaryElementsArray[nearestN, 1]
+                                        typeN = 1
+                                    elif elementBoundaryElementsArray[nearestN, 1] == -1:
+                                        nearestN = elementBoundaryElementsArray[nearestN, 0]
+                                        typeN = 1
                                 for ii in range(nEbn):
                                     bb_i = elementBoundariesArray[nearestN, ii]
                                     normal[0] = elementBoundaryNormalsArray[nearestN, ii, 0]
@@ -607,8 +683,43 @@ cdef class cCoefficients:
                                     normal[2] = elementBoundaryNormalsArray[nearestN, ii, 2]
                                     bound_bar = elementBoundaryBarycentersArray[bb_i]
                                     dot = (bound_bar[0]-coords[0])*normal[0]+(bound_bar[1]-coords[1])*normal[1]+(bound_bar[2]-coords[2])*normal[2]
-                                    if dot < 0:
+                                    if dot < 0.:
                                         inside_eN = False
+                                        try:
+                                            raise AssertionError('did not find containing element! coords outside domain??')
+                                        except AssertionError as exc:
+                                            print('Error: ', exc)
+                                            print('node number', node)
+                                            print('node materialType: ',
+                                                nodeMaterialTypes[node])
+                                            print('node old coordinates: ',
+                                                nodeArray[node, 0],
+                                                nodeArray[node, 1],
+                                                nodeArray[node, 2])
+                                            print('node new coordinates: ',
+                                                coords[0],
+                                                coords[1],
+                                                coords[2])
+                                            print('nearestN (element): ',
+                                                nearestN,
+                                                'type (should be 1): ',
+                                                typeN)
+                                            print('element barycenter: ',
+                                                elementBarycentersArray[nearestN,0],
+                                                elementBarycentersArray[nearestN,1],
+                                                elementBarycentersArray[nearestN,2])
+                                            for ii in range(elementNodesArray.shape[1]):
+                                                print('element node: ',
+                                                    elementNodesArray[nearestN, ii],
+                                                    nodeArray[elementNodesArray[nearestN, ii], 0],
+                                                    nodeArray[elementNodesArray[nearestN, ii], 1],
+                                                    nodeArray[elementNodesArray[nearestN, ii], 2])
+                                            print('fixed_dir: ',
+                                                fixed_dir[0],
+                                                fixed_dir[1],
+                                                fixed_dir[2])
+                                            print('dot: ', dot)
+                                            comm.Abort()
                                 if inside_eN:
                                     xi = femSpace.elementMaps.getInverseValue(nearestN, coords)
                                     # line below needs optimisation:
@@ -623,8 +734,6 @@ cdef class cCoefficients:
                                     for ndi in range(nd):
                                         dphi[ndi] = v_grad[ndi]/(t*1./(f*Ccoeff)+(1-t)*1./area)
                                         coords[ndi] += dphi[ndi]*fixed_dir[ndi]*dt
-                                else:
-                                    print('did not find coords', coords[0], coords[1])
                         coords_2rank[new_rank] = np.append(coords_2rank[new_rank],
                                                            [[coords[0],
                                                              coords[1],
@@ -637,16 +746,23 @@ cdef class cCoefficients:
                                                              area,
                                                              ls_phi,
                                                              node0,
-                                                             rank0]],
+                                                             rank0,
+                                                             fixed_dir[0],
+                                                             fixed_dir[1],
+                                                             fixed_dir[2]]],
                                                            axis=0)
                     nPending_disp_total = comm.allreduce(nPending_disp)
 
+        comm.barrier()
+        if comm.rank == 0:
+            print('HERE2')
+        comm.barrier()
         # SEND NODES POSITION SOLUTION BACK TO ORIGINAL PROCESSORS
         if sendBack is True:
             coords_2doArray = coords_2rank[my_rank]
             for rank in range(comm.size):
                 # things to send to other processors to get solution
-                coords_2rank[rank] = np.zeros((0, 12))
+                coords_2rank[rank] = np.zeros((0, 15))
             nNodes = len(coords_2doArray)
             for iN in range(nNodes):
                 rank0 = coords_2doArray[iN, 11]
@@ -671,10 +787,10 @@ cdef class cCoefficients:
                 if array_size-counts_total[rank_recv, rank_recv] > 0:
                     if my_rank == rank_recv:
                         # initialise coords_2doArray only on receiving processor
-                        coords_2doArray = np.zeros((array_size, 12))
+                        coords_2doArray = np.zeros((array_size, 15))
                     # -----
                     # get the coords_2doArray (nodes where to retrieve values for arg)
-                    datatype = MPI.DOUBLE.Create_contiguous(12).Commit() 
+                    datatype = MPI.DOUBLE.Create_contiguous(15).Commit()
                     comm.Gatherv(coords_2rank[rank_recv],
                                  [coords_2doArray,
                                   tuple(counts_in[i]*coords_2doArray.shape[1] for i in range(comm_size)),
@@ -694,6 +810,7 @@ cdef class cCoefficients:
                 for ind in range(nd):
                     xx[node0, ind] = coords[ind]
 
+        comm.barrier()
         # FINAL STEP: GET NON-OWNED NODES POSITION FOR CONSISTENCY
         # BUILD NON OWNED NODES ARRAY TO RETRIEVE SOLUTION
         ms.getNonOwnedNodeValues(xx,
@@ -730,14 +847,13 @@ cdef class cCoefficients:
                                       smoothBoundaries=True,
                                       fixedNodesBoolArray=fixedNodesBoolArray,
                                       alpha=0.)
-            comm.barrier()
+                comm.barrier()
+                ms.getNonOwnedNodeValues(xx,
+                                        nNodes_owned,
+                                        nNodes_global,
+                                        nodeNumbering_subdomain2global,
+                                        nodeOffsets_subdomain_owned)
             logEvent('Done smoothing')
-
-            ms.getNonOwnedNodeValues(xx,
-                                     nNodes_owned,
-                                     nNodes_global,
-                                     nodeNumbering_subdomain2global,
-                                     nodeOffsets_subdomain_owned)
 
         logEvent('Done pseudo-timestepping')
 
@@ -1578,14 +1694,19 @@ cdef int[:] findN(double[:] coords,
                                          variableNumbering_subdomain2global=elementBoundaryNumbering_subdomain2global,
                                          variableOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned)
         # get an element from there
-        if elementBoundaryElementsArray[nearestN, 0] == -1 or elementBoundaryElementsArray[nearestN, 0] > nElements_owned:
+        if elementBoundaryElementsArray[nearestN, 0] == -1 or elementBoundaryElementsArray[nearestN, 0] >= nElements_owned:
             nearestN = elementBoundaryElementsArray[nearestN, 1]
             typeN = 1
-        elif elementBoundaryElementsArray[nearestN, 1] == -1 or elementBoundaryElementsArray[nearestN, 1] > nElements_owned:
+        elif elementBoundaryElementsArray[nearestN, 1] == -1 or elementBoundaryElementsArray[nearestN, 1] >= nElements_owned:
             nearestN = elementBoundaryElementsArray[nearestN, 0]
             typeN = 1
-        assert nearestN != -1, 'wrong element number'
-        assert typeN == 1, 'should have found an element'
+        else:
+            # hack
+            # must be on element boundary between processors
+            # take arbitrary element sharing boundary
+            nearestN = elementBoundaryElementsArray[nearestN, 0]
+            typeN = 1
+
         if nearestN >= nElements_owned:
             result_in = ms.cyCheckOwnedVariable(variable_nb_local=nearestN,
                                                 rank=my_rank,
@@ -1685,3 +1806,5 @@ cdef int[:] findN(double[:] coords,
 #         else:
 #             if rank_recv == my_rank: 
 #                 dict_2doArray[:] = dict_2rank[my_rank]
+
+
