@@ -28,21 +28,21 @@ Context.setFromModule(case)
 ct = Context.get()
 
 # READ FROM myTpFlowProblem #
-assert hasattr(ct,'mySWFlowProblem'), "Create mySWFlowProblem from SWFlowProblem"
+assert hasattr(
+    ct, 'mySWFlowProblem'), "Create mySWFlowProblem from SWFlowProblem"
 sw_model = ct.mySWFlowProblem.sw_model
 outputStepping = ct.mySWFlowProblem.outputStepping
 
 # **************************** #
 # ********** pnList ********** #
 # **************************** #
-if sw_model==0: #SWEs
+if sw_model == 0:  # SWEs
     pnList = [("sw_p", "sw_n")]
 else:
-    raise("Not implemented!")
-    #pnList = [("dsw_p", "dsw_n")]
+    pnList = [("GN_sw_p", "GN_sw_n")]
 
 # **************************** #
 # ********** tnList ********** #
 # **************************** #
-tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
-
+tnList = [0., outputStepping['dt_init']] + [float(k) * outputStepping['final_time'] / float(
+    outputStepping['nDTout']) for k in range(1, outputStepping['nDTout'] + 1)]
