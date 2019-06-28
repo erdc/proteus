@@ -4,11 +4,10 @@ The SWFlows app contains a number of tests for the the 2D nonlinear Shallow Wate
 numerically solved using continuous, linear finite elements as seen in
 [Guermond, *et al* 2018](https://doi.org/10.1137/17M1156162) and [Guermond *et al* 2019].
 
-Some introduction stuff on the SW equations.
+The Shallow Water equations are a set of partial differential equations that form a hyperbolic system. They can be used to describe a body of water evolving under the action of gravity under the assumption that the deformations of the free surface are small compared to the water height.
 
-The modified Green-Naghdi equations are a set of a equations that form a
-hyperbolic system and are an O(h) approximation to the traditional Green-Naghdi
-equations, where h is the mesh size.
+The modified Green-Naghdi equations are a set of partial differential equations that form a
+hyperbolic system and are an O(h) approximation to the traditional Green-Naghdi equations, where h is the mesh size. The Green-Naghdi equations are used to describe dispersive water waves.
 
 The different tests demonstrate the respective models abilities to handle wet/dry states, reciprocate "real world" problems (see malpasset, colorado_river),
 propagate solitary waves, etc.
@@ -61,7 +60,7 @@ To use options other than the default options, one can run something like:
 parun --SWEs -l1 -v SWFlow.py -C "sw_model=1 final_time=100"
 ```
 
-which switches the model to the Dispersive SWEs and increases the final time to 100 seconds.
+which switches the model to the dispersive model and increases the final time to 100 seconds.
 
 ## Creating a test
 
@@ -70,7 +69,13 @@ and modifying appropriately to fit your needs.
 
 Currently, most of the tests are set up to use a rectangular domain with triangle elements created by an in house function in Proteus. The SWFlows Apps can be used with meshes created by Triangle and Gmsh. The "real world" tests such as the Malpesset problem and Colorado River problem are using meshes created by the software SMS (https://www.aquaveo.com/software/sms-surface-water-modeling-system-introduction) in the ADH format. If you would like to use your own mesh, but aren't sure how to use it, please contact us and we can gladly help.
 
-## Break down into end to end tests
+## Tests that aren't ready
+elliptic_shoal
+semicircular_shoal
+colorado_river
+south_padre_island
+dunlap_dam
+<!-- ## Break down into end to end tests
 
 Explain what these tests test and why
 
@@ -84,7 +89,7 @@ Explain what these tests test and why
 
 ```
 Give an example
-```
+``` -->
 
 <!-- ## Deployment
 

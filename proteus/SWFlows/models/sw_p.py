@@ -45,7 +45,8 @@ LUMPED_MASS_MATRIX = numerical_parameters['LUMPED_MASS_MATRIX']
 # ********************************** #
 LevelModelType = SW2DCV.LevelModel
 coefficients = SW2DCV.Coefficients(g=g,
-                                   bathymetry={0:bathymetry} if bathymetry is not None else None,
+                                   bathymetry={
+                                       0: bathymetry} if bathymetry is not None else None,
                                    cE=cE,
                                    LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
                                    LINEAR_FRICTION=LINEAR_FRICTION,
@@ -75,9 +76,9 @@ analyticalSolution = {0: analyticalSolution['h_exact'],
 fluxBoundaryConditions = {0: 'outFlow',
                           1: 'outFlow',
                           2: 'outFlow'}
-advectiveFluxBoundaryConditions =  {0: lambda x,flag: lambda x,t: 0.0,
-                                    1: lambda x,flag: lambda x,t: 0.0,
-                                    2: lambda x,flag: lambda x,t: 0.0}
-diffusiveFluxBoundaryConditions = {0:{},
-                                   1:{1: lambda x,flag: lambda x,t: 0.0},
-                                   2:{2: lambda x,flag: lambda x,t: 0.0}}
+advectiveFluxBoundaryConditions = {0: lambda x, flag: lambda x, t: 0.0,
+                                   1: lambda x, flag: lambda x, t: 0.0,
+                                   2: lambda x, flag: lambda x, t: 0.0}
+diffusiveFluxBoundaryConditions = {0: {},
+                                   1: {1: lambda x, flag: lambda x, t: 0.0},
+                                   2: {2: lambda x, flag: lambda x, t: 0.0}}
