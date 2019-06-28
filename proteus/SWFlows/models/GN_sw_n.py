@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from sw_p import *
+from GN_sw_p import *
 
 # *********************************************** #
 # ********** Read from mySWFlowProblem ********** #
@@ -28,7 +28,7 @@ if domain is not None:
 # ************************************** #
 # ********** TIME INTEGRATION ********** #
 # ************************************** #
-timeIntegration = SW2DCV.RKEV
+timeIntegration = GN_SW2DCV.RKEV
 timeOrder = SSPOrder
 nStagesTime = SSPOrder
 
@@ -42,17 +42,18 @@ stepController = Min_dt_controller
 # ******************************************* #
 elementQuadrature = FESpace['elementQuadrature']
 elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
-femSpaces = {0: FESpace['basis']}
 femSpaces = {0: FESpace['basis'],
              1: FESpace['basis'],
-             2: FESpace['basis']}
-             
+             2: FESpace['basis'],
+             3: FESpace['basis'],
+             4: FESpace['basis']}
+
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
-multilevelNonlinearSolver  = Newton
-fullNewtonFlag = False #NOTE: False just if the method is explicit
-if (LUMPED_MASS_MATRIX==1):
+multilevelNonlinearSolver = Newton
+fullNewtonFlag = False  # NOTE: False just if the method is explicit
+if (LUMPED_MASS_MATRIX == 1):
     levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 else:
     levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
@@ -63,14 +64,14 @@ else:
 try_supg_stabilization = True
 subgridError = None
 shockCapturing = None
-numericalFluxType = SW2DCV.NumericalFlux
+numericalFluxType = GN_SW2DCV.NumericalFlux
 
 # ************************************ #
 # ********** LINEAR ALGEBRA ********** #
 # ************************************ #
 matrix = SparseMatrix
 multilevelLinearSolver = LU
-levelLinearSolver = LU  #  KSP_petsc4py
+levelLinearSolver =  LU  #  KSP_petsc4py
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 
@@ -82,4 +83,4 @@ nl_rtol_res = 0.0
 l_atol_res = 1.0e-7
 l_rtol_res = 0.0
 tolFac = 0.0
-maxLineSearches=0
+maxLineSearches = 0
