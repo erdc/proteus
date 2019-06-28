@@ -2437,7 +2437,7 @@ def calculateExteriorNumericalAdvectiveFlux(np.ndarray exteriorElementBoundaries
                                                         np.ndarray dflux
                                                         ):
     if f.ndim > 3:
-         ccalculateExteriorNumericalAdvectiveFlux( exteriorElementBoundaries[0],
+         ccalculateExteriorNumericalAdvectiveFlux( exteriorElementBoundaries.shape[0],
                                                     f.shape[1],
                                                     f.shape[2],
                                                     f.shape[3],
@@ -2456,7 +2456,7 @@ def calculateExteriorNumericalAdvectiveFlux(np.ndarray exteriorElementBoundaries
                                                     <double*> flux.data,
                                                     <double*> dflux.data)
     else:
-        ccalculateGlobalExteriorNumericalAdvectiveFlux( exteriorElementBoundaries[0],
+        ccalculateGlobalExteriorNumericalAdvectiveFlux( exteriorElementBoundaries.shape[0],
                                                     f.shape[1],
                                                     f.shape[2],
                                                     <int*> exteriorElementBoundaries.data,
