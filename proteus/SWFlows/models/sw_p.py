@@ -18,7 +18,6 @@ physical_parameters = mySWFlowProblem.physical_parameters
 numerical_parameters = mySWFlowProblem.swe_parameters
 initialConditions = mySWFlowProblem.initialConditions
 boundaryConditions = mySWFlowProblem.boundaryConditions
-analyticalSolution = mySWFlowProblem.analyticalSolution
 bathymetry = mySWFlowProblem.bathymetry
 reflecting_BCs = mySWFlowProblem.reflectingBCs
 
