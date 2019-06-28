@@ -148,7 +148,7 @@ cdef class RelaxationZone:
 cdef class RelaxationZoneWaveGenerator:
     cdef int nd  # dimension
     cdef int max_flag  # maximum region flag of relaxation zones (initialised in calculate_init)
-    cdef RelaxationZone[:] zones_array  # zones array for fast access
+    cdef np.ndarray zones_array  # zones array for fast access
     cdef public:
         dict zones  # zones dictionary
         object model  # model attached to zone
