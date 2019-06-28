@@ -439,16 +439,16 @@ independently and lagged in time
         
         for eN in range(self.model.q[('u',0)].shape[0]):
             for k in range(self.model.q[('u',0)].shape[1]):                
-                self.model.q[('u',0)][eN,k] = max(  self.model.q[('u',0)][eN,k], 1e-50)
+                self.model.q[('u',0)][eN,k] = max(  self.model.q[('u',0)][eN,k], 1e-20)
 
         if ('u', 0) in self.model.ebq:
             for eN in range(self.model.ebq[('u',0)].shape[0]):
                 for k in range(self.model.ebq[('u',0)].shape[1]):
                     for l in range(len(self.model.ebq[('u',0)][eN,k])):
-                        self.model.ebq[('u',0)][eN,k,l] = max(  self.model.ebq[('u',0)][eN,k,l], 1e-50)
+                        self.model.ebq[('u',0)][eN,k,l] = max(  self.model.ebq[('u',0)][eN,k,l], 1e-20)
         for eN in range(self.model.ebqe[('u',0)].shape[0]):
             for k in range(self.model.ebqe[('u',0)].shape[1]):
-                self.model.ebqe[('u',0)][eN,k] = max(  self.model.ebqe[('u',0)][eN,k], 1e-50)
+                self.model.ebqe[('u',0)][eN,k] = max(  self.model.ebqe[('u',0)][eN,k], 1e-20)
 
 
         copyInstructions = {}

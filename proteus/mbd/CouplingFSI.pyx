@@ -106,7 +106,7 @@ cdef class ProtChBody:
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
         self.useIBM = False
         self.Aij_factor = 1.
-        self.boundaryFlags = None
+        self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
     def attachShape(self,

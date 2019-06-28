@@ -4,41 +4,42 @@ from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2DCV
-from proteus.mprans import GN_SW2DCV
+from proteus.mprans import DSW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
+import math
 from proteus import (Domain, Context,
-                     MeshTools as mt)
+                     MeshTools as mt,
+                     WaveTools as wt)
 from proteus.Profiling import logEvent
 import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 
-
 """
-Note that this set up for a solitary wave is from  equation 31
-in the the paper
-A rapid numerical method for solving Serre Green Naghdi
-equations describing long free surface gravity waves by
-Favrie and Gavrilyuk. It assumes the reference height is h1.
+This is the problem of monochromatic waves propagating
+over an elliptic shoal. Details can be found in section 4.5 of
+A discontinuous Galerkin method for a new class of Green Naghdi
+equations on simplicial unstructured meshes by Duran and Marche.
+We use proteus's wave tools feature for defining
+the monochromatic waves at the inlet.
 """
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
-
 opts = Context.Options([
     ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 4.0, "Final time for simulation"),
+    ("final_time", 10.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.33, "Desired CFL restriction"),
-    ("refinement", 4, "Refinement level")
+    ("refinement", 5, "Refinement level")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (12.0, 1.0)
-X_coords = (0.0, 12.0)  # this is domain, used in BCs
+L = (15.0, 1.0)
 domain = RectangularDomain(L=L, x=[0, 0, 0])
+X_coords = (0.0, 15.0)  # this is domain in x direction, used in BCs
 
 # CREATE REFINEMENT #
 refinement = opts.refinement
@@ -48,111 +49,85 @@ nny = old_div((nnx - 1), 10) + 1
 he = old_div(L[0], float(nnx - 1))
 triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 
-###################################
-# SOLITARY WAVE FUCTIONS AND BATH #
-###################################
-h1 = 0.1
-h2 = 0.11
-x0 = 2.0  # initial location of solitary wave
-g = 9.81
-D = np.sqrt(g * h2)
-z = np.sqrt(old_div(3.0 * (h2 - h1), h2 * h1**2))
+###############################
+#  Wave tools set up + bath   #
+###############################
+h0 = 0.38  # depth / still water level
+amp = 0.0232  # amplitude of waves / wave height
+period = 1  # period in seconds
+wave_dir = (1., 0., 0.)  # wave direction
+g_vec = [0, -9.81, 0]  # g vector used for wave tools
 
-
-def soliton(x, t):
-    phase = x - D * t - x0
-    a1 = old_div(z * phase, 2.0)
-    return h1 + (h2 - h1) * old_div(1.0, np.cosh(a1)**2)
-
-
-def u(x, t):
-    D = np.sqrt(g * h2)
-    return D * (1.0 - old_div(h1, soliton(x, t)))
+# define wave here
+wave = wt.MonochromaticWaves(
+    period, amp, h0, h0, np.array(g_vec), wave_dir, "Fenton")
 
 
 def bathymetry_function(X):
+    slope = 1.0 / 20.
     x = X[0]
-    return x * 0.0  # just 0
-
-
-###################################
-#    FOR ANALYTICAL SOLUTIONS     #
-###################################
-class Zero(object):
-    def uOfXT(self, x, t):
-        return 0.0
-
-
-class water_height_at_tfinal(object):
-    def uOfXT(self, X, t):
-        return soliton(X[0], opts.final_time)
+    bath = 0.5 - 0.2 + 0.0 * x
+    # silly hack because X switches from list to array of
+    # length 3 (x,y,z) when called in initial conditions
+    if (isinstance(X, list)):
+        for counter, value in enumerate(X[0]):
+            if value < 10.0:
+                bath[counter] = np.maximum(slope * value, 0.2) - 0.2
+    else:
+        if (x <= 10.):
+            bath = np.maximum(slope * x, 0.2) - 0.2
+    return bath
 
 
 ##############################
-#    INITIAL CONDITIONS      #
+##### INITIAL CONDITIONS #####
 ##############################
-
-
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        return soliton(X[0], 0.0)
+        h = np.maximum(h0 - bathymetry_function(X), 0.0)
+        return h
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        return soliton(X[0], 0.0) * u(X[0], 0.0)
+        return 0.0
 
 
 class y_mom_at_t0(object):
     def uOfXT(self, X, t):
-        h = water_height_at_t0().uOfXT(X, t)
-        return 0. * h
+        return 0.0
 
 
-"""
-heta and hw are needed for the dispersive modified green naghdi equations
-source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
-"""
+# heta and hw are needed for the dispersive modified green naghdi equations
+# source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
+# THE GREEN NAGHDI EQUATIONS' by Guermond, Popov, Tovar
 
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):
-        h = water_height_at_t0().uOfXT(X, 0.0)
-        return h**2
+        return 0.0
 
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        # since there is no bathymatry hw = -h^2 * div(vel) = -D * h1 * h'
-        x = X[0]
-        D = np.sqrt(g * h2)
-        z = np.sqrt(old_div(3.0 * (h2 - h1), h2 * h1**2))
-        phase = x - D * t - x0
-        a1 = old_div(z * phase, 2.0)
-        sechSqd = old_div(1.0, np.cosh(a1)**2)
-        hprime = -2.0 * (h2 - h1) * z * sechSqd * np.tanh(phase)
-        hw = -D * h1 * hprime
-        return hw
+        return 0.0
 
 
 ###############################
-#     BOUNDARY CONDITIONS     #
+##### BOUNDARY CONDITIONS #####
 ###############################
 
 
 def water_height_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
-    elif X[0] == X_coords[1]:
-        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
+    return None
 
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0]:
-        return lambda x, t: x_mom_at_t0().uOfXT(X, 0.0)
+        h = np.maximum(h0 - bathymetry_function(X), 0.0)
+        return lambda X, t: h * wave.u(X, t)[0]
     elif X[0] == X_coords[1]:
-        return lambda x, t: x_mom_at_t0().uOfXT(X, 0.0)
+        return lambda X, t: 0.0
 
 
 def y_mom_DBC(X, flag):
@@ -161,23 +136,17 @@ def y_mom_DBC(X, flag):
 
 def heta_DBC(X, flag):
     if X[0] == X_coords[0]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
-    elif X[0] == X_coords[1]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
+        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)  # FIX FOR MGN, EJT
 
 
 def hw_DBC(X, flag):
     if X[0] == X_coords[0]:
-        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
-    elif X[0] == X_coords[1]:
-        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
+        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)  # FIX FOR MGN, EJT
 
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
-
-
 outputStepping = SWFlowProblem.OutputStepping(
     opts.final_time, dt_output=opts.dt_output)
 initialConditions = {'water_height': water_height_at_t0(),
@@ -190,9 +159,8 @@ boundaryConditions = {'water_height': water_height_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
-
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
-                                              cfl=0.25,
+                                              cfl=0.33,
                                               outputStepping=outputStepping,
                                               structured=True,
                                               he=he,
