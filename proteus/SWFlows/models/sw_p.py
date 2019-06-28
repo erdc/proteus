@@ -66,13 +66,6 @@ dirichletConditions = {0: boundaryConditions['water_height'],
                        1: boundaryConditions['x_mom'],
                        2: boundaryConditions['y_mom']}
 
-# **************************************** #
-# ********** ANALYTICAL SOLUTION ********* #
-# **************************************** #
-analyticalSolution = {0: analyticalSolution['h_exact'],
-                      1: analyticalSolution['hu_exact'],
-                      2: analyticalSolution['hv_exact']}
-
 fluxBoundaryConditions = {0: 'outFlow',
                           1: 'outFlow',
                           2: 'outFlow'}
