@@ -1,4 +1,4 @@
-# Proteus: Computational Methods and Simulation Toolkit [![Build Status](https://travis-ci.com/erdc/proteus.svg?branch=master)](https://travis-ci.com/erdc/proteus) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/erdc/training_proteus/master?filepath=training_proteus%2Findex.ipynb)  [![DOI](https://zenodo.org/badge/2212385.svg)](https://zenodo.org/badge/latestdoi/2212385)
+# Proteus: Computational Methods and Simulation Toolkit [![Build Status](https://travis-ci.com/erdc/proteus.svg?branch=master)](https://travis-ci.com/erdc/proteus) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/erdc/training_proteus/master?filepath=index.ipynb)  [![DOI](https://zenodo.org/badge/2212385.svg)](https://zenodo.org/badge/latestdoi/2212385)
 
 
 Proteus (http://proteustoolkit.org) is a Python package for
