@@ -718,7 +718,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         KE = Norms.scalarDomainIntegral(self.model.q['dV'],
                                         self.model.q['KE'],
                                         self.model.mesh.nElements_owned)
-        logEvent("Pre-step NS, Kinetic Energy = %.15e" % (KE), level=0)
+        logEvent("Pre-step NS, Kinetic Energy = %.15e" % (KE), level=5)
         #import pdb; pdb.set_trace()
         #self.model.q['PE'] = numpy.multiply(self.model.q['x'],self.model.coefficients.g)
         #self.model.q['PE'] = numpy.sum(self.model.q['PE'],2)
@@ -778,7 +778,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         KE = Norms.scalarDomainIntegral(self.model.q['dV'],
                                         self.model.q['KE'],
                                         self.model.mesh.nElements_owned)
-        logEvent("Post-step NS, Kinetic Energy = %.15e" % (KE), level=0)
+        logEvent("Post-step NS, Kinetic Energy = %.15e" % (KE), level=5)
         #import pdb; pdb.set_trace()
         #self.model.q['PE'] = numpy.multiply(self.model.q['x'],self.model.coefficients.g)
         #self.model.q['PE'] = numpy.sum(self.model.q['PE'],2)
@@ -791,11 +791,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #logEvent("Post-step NS, Total Energy = %12.5e" % (PE+KE), level=0)
         if self.comm.isMaster():
             logEvent("wettedAreas\n"+
-                     `self.wettedAreas[:]` +
+                     repr(self.wettedAreas[:]) +
                      "\nForces_p\n" +
-                     `self.netForces_p[:,:]` +
+                     repr(self.netForces_p[:,:]) +
                      "\nForces_v\n" +
-                     `self.netForces_v[:,:]`)
+                     repr(self.netForces_v[:,:]))
             self.timeHistory.write("%21.16e\n" % (t,))
             self.timeHistory.flush()
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))

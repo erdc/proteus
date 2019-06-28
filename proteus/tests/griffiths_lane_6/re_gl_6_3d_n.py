@@ -7,14 +7,14 @@ except:
     from re_gl_6_3d_p import *
 
 #unsteady
-timeIntegration = FLCBDF
-stepController  = FLCBDF_controller
-systemStepControllerType = SplitOperator.Sequential_MinFLCBDFModelStep
+#timeIntegration = FLCBDF
+#stepController  = FLCBDF_controller
+#systemStepControllerType = SplitOperator.Sequential_MinFLCBDFModelStep
 rtol_u[0] = 0.001*he
 atol_u[0] = 0.001*he
 tnList = [0.0,1.0e-5,1.0e5]
-#timeIntegration = BackwardEuler
-#stepController = HeuristicNL_dt_controller
+timeIntegration = BackwardEuler
+stepController = HeuristicNL_dt_controller
 nonlinearIterationsFloor =5
 nonlinearIterationsCeil=10
 #systemStepControllerType = SplitOperator.Sequential_MinModelStep

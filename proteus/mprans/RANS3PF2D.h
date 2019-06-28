@@ -1205,6 +1205,7 @@ namespace proteus
         C = 0.0;
         for (int i = 0; i < nParticles; i++)
           {
+            double* vel_pointer= &particle_velocities[i*sd_offset*nSpace];
             if(use_ball_as_particle==1)
             {
                 get_distance_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s);
@@ -1215,6 +1216,8 @@ namespace proteus
                                          vel[0],vel[1]);
                 center[0] = ball_center[3*i+0];
                 center[1] = ball_center[3*i+1];
+                u_s = vel[0];
+                v_s = vel[1];
             }
             else
             {
@@ -1223,14 +1226,15 @@ namespace proteus
                 phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * 3 + 1];
                 vel[0] = particle_velocities[i * sd_offset * 3 + 0];
                 vel[1] = particle_velocities[i * sd_offset * 3 + 1];
+            	  u_s = vel_pointer[0];
+            	  v_s = vel_pointer[1];
                 center[0] = particle_centroids[3*i+0];
                 center[1] = particle_centroids[3*i+1];
 
             }
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
-            u_s = vel[0];
-            v_s = vel[1];
+
             w_s = 0;
             H_s = smoothedHeaviside(eps_s, phi_s);
             D_s = smoothedDirac(eps_s, phi_s);
@@ -2583,7 +2587,7 @@ namespace proteus
                     nx*=n_fluid_sign;
                     ny*=n_fluid_sign;
                     //double dot_test=std::fabs(nx_tmp*nx+ny_tmp*ny);
-                    //assert(dot_test > 1.0-1.0e-4 && dot_test < 1.0 + 1.0e-4); 
+                    //assert(dot_test > 1.0-1.0e-4 && dot_test < 1.0 + 1.0e-4);
                     cut_cell_boundary_length += DS;
                     p_force_x += sub_p_dof[L]*nx*0.5*DS + sub_p_dof[R]*nx*0.5*DS;
                     p_force_y += sub_p_dof[L]*ny*0.5*DS + sub_p_dof[R]*ny*0.5*DS;

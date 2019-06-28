@@ -17,6 +17,7 @@ from __future__ import print_function
 from builtins import zip
 from builtins import str
 from builtins import range
+from importlib import reload
 import os
 import proteus
 
@@ -215,17 +216,16 @@ log = Profiling.logEvent
 logDir = None
 if opts.dataDir != '':
     if not os.path.exists(opts.dataDir):
-    	try:
-    	     os.mkdir(opts.dataDir)
+        try:
+             os.mkdir(opts.dataDir)
         except os.error:
              print("Failed to create: " + opts.dataDir)
              opts.dataDir=''
     logDir = opts.dataDir
 
 log("Initializing Proteus")
-log("HashDist Version: " + version.hashdist)
-log("HashStack Version: " + version.hashstack)
-log("Proteus Version: " + version.proteus)
+log("Stack Version: {0}".format(version.stack))
+log("Proteus Version: {0}".format(version.proteus))
 
 log("Initializing MPI")
 if opts.petscOptions is not None:

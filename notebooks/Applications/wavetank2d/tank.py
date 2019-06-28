@@ -23,15 +23,15 @@ useRANS = 0 # 0 -- None
             # 2 -- K-Omega
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    logEvent("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    logEvent("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
-    print "INVALID: useMetrics"
+    logEvent("INVALID: useMetrics")
     sys.exit()
 
 #  Discretization
@@ -39,21 +39,21 @@ nd = 2
 if spaceOrder == 1:
     hFactor=1.0
     if useHex:
-	 basis=C0_AffineLinearOnCubeWithNodalBasis
-         elementQuadrature = CubeGaussQuadrature(nd,2)
-         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)
+        basis=C0_AffineLinearOnCubeWithNodalBasis
+        elementQuadrature = CubeGaussQuadrature(nd,2)
+        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)
     else:
-    	 basis=C0_AffineLinearOnSimplexWithNodalBasis
-         elementQuadrature = SimplexGaussQuadrature(nd,3)
-         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+        basis=C0_AffineLinearOnSimplexWithNodalBasis
+        elementQuadrature = SimplexGaussQuadrature(nd,3)
+        elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 elif spaceOrder == 2:
     hFactor=0.5
     if useHex:
-	basis=C0_AffineLagrangeOnCubeWithNodalBasis
+        basis=C0_AffineLagrangeOnCubeWithNodalBasis
         elementQuadrature = CubeGaussQuadrature(nd,4)
         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)
     else:
-	basis=C0_AffineQuadraticOnSimplexWithNodalBasis
+        basis=C0_AffineQuadraticOnSimplexWithNodalBasis
         elementQuadrature = SimplexGaussQuadrature(nd,4)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
@@ -85,7 +85,7 @@ class PointGauges(AV_base):
         self.flags={}
         self.files={}#will be opened  later
         pointFlag=100
-        for name,point in self.locations.iteritems():
+        for name,point in self.locations.items():
             self.flags[name] = pointFlag
             pointFlag += 1
     def attachModel(self,model,ar):
@@ -100,7 +100,7 @@ class PointGauges(AV_base):
         return self
     def calculate(self):
         import numpy as  np
-        for name,flag  in self.flags.iteritems():
+        for name,flag  in self.flags.items():
             vnMask = self.vertexFlags == flag
             if vnMask.any():
                 if not self.files.has_key(name):
@@ -116,7 +116,7 @@ class LineGauges(AV_base):
         self.linepoints={}
         self.files={}#while open later
         pointFlag=1000
-        for name,(pStart,pEnd) in self.endpoints.iteritems():
+        for name,(pStart,pEnd) in self.endpoints.items():
             self.flags[name] = pointFlag
             p0 = np.array(pStart)
             direction = np.array(pEnd) - p0
@@ -136,7 +136,7 @@ class LineGauges(AV_base):
         return self
     def calculate(self):
         import numpy as  np
-        for name,flag  in self.flags.iteritems():
+        for name,flag  in self.flags.items():
             vnMask = self.vertexFlags == flag
             if vnMask.any():
                 if not self.files.has_key(name):
@@ -153,7 +153,7 @@ class LineGauges_phi(AV_base):
         self.linepoints={}
         self.files={}#while open later
         pointFlag=1000
-        for name,(pStart,pEnd) in self.endpoints.iteritems():
+        for name,(pStart,pEnd) in self.endpoints.items():
             self.flags[name] = pointFlag
             p0 = np.array(pStart)
             direction = np.array(pEnd) - p0
@@ -171,7 +171,7 @@ class LineGauges_phi(AV_base):
         return self
     def calculate(self):
         import numpy as  np
-        for name,flag  in self.flags.iteritems():
+        for name,flag  in self.flags.items():
             vnMask = self.vertexFlags == flag
             if vnMask.any():
                 if not self.files.has_key(name):
@@ -241,10 +241,10 @@ else:
 
         regions=[[0.1*L[0] ,0.5*L[1]]]
         regionFlags=[1]
-        #for gaugeName,gaugeCoordinates in pointGauges.locations.iteritems():
+        #for gaugeName,gaugeCoordinates in pointGauges.locations.items():
         #    vertices.append(gaugeCoordinates)
         #    vertexFlags.append(pointGauges.flags[gaugeName])
-        #for gaugeName,gaugeLines in lineGauges.linepoints.iteritems():
+        #for gaugeName,gaugeLines in lineGauges.linepoints.items():
         #    for gaugeCoordinates in gaugeLines:
         #        vertices.append(gaugeCoordinates)
         #        vertexFlags.append(lineGauges.flags[gaugeName])

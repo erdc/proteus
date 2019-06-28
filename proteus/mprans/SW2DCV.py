@@ -1047,7 +1047,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.csrRowIndeces[(0, 0)] // 3 // 3,
-                                                                      old_div(self.csrColumnOffsets[(0, 0)], 3),
+                                                                      self.csrColumnOffsets[(0, 0)] // 3,
                                                                       self.cterm_transpose[d],
                                                                       self.cterm_global_transpose[d])
         #

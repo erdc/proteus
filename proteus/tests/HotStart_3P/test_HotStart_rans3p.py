@@ -1,6 +1,7 @@
 """Tests for 2d flow around a cylinder with a conforming mesh and rans3p"""
 from builtins import range
 from builtins import object
+from importlib import reload
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context

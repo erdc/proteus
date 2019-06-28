@@ -53,7 +53,7 @@ def test_PlaneCouetteFlow():
     assert ux[0, 0, 0] == 0.0
     assert ux[midpoint_x_index, midpoint_y_index, midpoint_z_index] == 0.05294117647058824
     assert ux[-1, -1, -1] == 0.1
-    slice = nPoints_z/2
+    slice = nPoints_z//2
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, slice, 0],
@@ -376,7 +376,7 @@ def test_NonlinearDAE_f():
     assert f[midpoint_x_index, midpoint_y_index, midpoint_z_index][0] == -1.4013840830449829
     if save_plots:
         fig = plt.figure()
-        slice = nPoints_z/2
+        slice = nPoints_z//2
         plt.contourf(x[:, :, slice, 0],
                      x[:, :, slice, 1],
                      f[:, :, slice, 0])
@@ -395,7 +395,7 @@ def test_poissonsEquationExp1D():
         x[i, 0] = i*(1.0/(nPoints-1.0))
     u = np.zeros(x.shape[0], 'd')
     canalyticalSolutions.poissonsEquationExp1D(iwork, rwork, t, x, u)
-    assert u[(nPoints_x+1)/2] == 0.7623027790507058
+    assert u[(nPoints_x+1)//2] == 0.7623027790507058
     if save_plots:
         fig = plt.figure()
         plt.plot(x[:, 0],
@@ -419,7 +419,7 @@ def test_poissonsEquationsExp2D():
             x[i, j, 1] = j*(1.0/(nPoints_y-1.0))
     u = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.poissonsEquationExp2D(iwork, rwork, t, x, u)
-    assert u[(nPoints_x+1)/2, (nPoints_y+1)/2] == 0.5349653114820003
+    assert u[(nPoints_x+1)//2, (nPoints_y+1)//2] == 0.5349653114820003
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, 0],
@@ -472,7 +472,7 @@ def test_diffusionSin1D():
         x[i, 0] = i*(1.0/(nPoints-1.0))
     u = np.zeros(x.shape[0], 'd')
     canalyticalSolutions.diffusionSin1D(iwork, rwork, t, x, u)
-    assert u[(nPoints+1)/2] == 2.4788703515727932
+    assert u[(nPoints+1)//2] == 2.4788703515727932
     if save_plots:
         fig = plt.figure()
         plt.plot(x[:, 0],
@@ -496,7 +496,7 @@ def test_diffusionSin2D():
             x[i, j, 1] = j*(1.0/(nPoints_y-1.0))
     u = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.diffusionSin2D(iwork, rwork, t, x, u)
-    assert u[(nPoints_x+1)/2, (nPoints_y+1)/2] == 9.895915468712143
+    assert u[(nPoints_x+1)//2, (nPoints_y+1)//2] == 9.895915468712143
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, 0],
@@ -544,7 +544,7 @@ def test_STflowSphere_P():
                 x[i, j, k, 2] = k*dz
     p = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.STflowSphere_P(iwork, rwork, t, x, p)
-    slice = nPoints_x/2
+    slice = nPoints_x//2
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[slice, :, :, 1],
@@ -553,14 +553,14 @@ def test_STflowSphere_P():
         plt.title('STflowSphere_P: yz plane')
         plt.savefig("STflowSphere_P_yz.png")
         fig = plt.figure()
-        slice = nPoints_y/2
+        slice = nPoints_y//2
         plt.contourf(x[:, slice, :, 0],
                      x[:, slice, :, 2],
                      p[:, slice, :])
         plt.title('STflowSphere_P: xz plane')
         plt.savefig("STflowSphere_P_xz.png")
         fig = plt.figure()
-        slice = nPoints_z/2
+        slice = nPoints_z//2
         plt.contourf(x[:, :, slice, 0],
                      x[:, :, slice, 1],
                      p[:, :, slice])
@@ -617,7 +617,7 @@ def test_PlanePoiseuilleFlow_u():
     uy = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.PlanePoiseuilleFlow_u(iwork, rwork, t, x, ux)
     assert ux[midpoint_x_index, midpoint_y_index, midpoint_z_index] == 124.5674740484429
-    slice = nPoints_z/2
+    slice = nPoints_z//2
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, slice, 0],
@@ -652,7 +652,7 @@ def test_PoiseuillePipeFlow():
     uy = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.PoiseuillePipeFlow(iwork, rwork, t, x, ux)
     assert ux[midpoint_x_index, midpoint_y_index, midpoint_z_index] == 62.28373702422145
-    slice = nPoints_z/2
+    slice = nPoints_z//2
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, slice, 0],
@@ -687,7 +687,7 @@ def test_PoiseuillePipeFlow_P():
     ux = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.PoiseuillePipeFlow_P(iwork, rwork, t, x, ux)
     assert ux[midpoint_x_index, midpoint_y_index, midpoint_z_index] == 0.9705882352941176
-    slice = nPoints_z/2
+    slice = nPoints_z//2
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, slice, 0],
