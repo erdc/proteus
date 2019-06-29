@@ -32,38 +32,38 @@ class TestTwoPhaseFlow(object):
     # *** 2D tests *** #
     def test_risingBubble(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "-f risingBubble.py -l5 -v -C 'final_time=0.1 dt_output=0.1 refinement=1'")
+                  "risingBubble.py -l5 -v -C 'final_time=0.1 dt_output=0.1 refinement=1'")
         self.compare_vs_saved_files("risingBubble")
 
     def test_damBreak(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "-f damBreak.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1'")
+                  "damBreak.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1'")
         self.compare_vs_saved_files("damBreak")
 
     def test_damBreak_solver_options(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "-f damBreak_solver_options.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.05'")
+                  "damBreak_solver_options.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.05'")
         self.compare_vs_saved_files("damBreak_solver_options")
 
 #    @pytest.mark.skip(reason="long test")
     def test_TwoDimBucklingFlow(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "-f TwoDimBucklingFlow.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.05'")
+                  "TwoDimBucklingFlow.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.05'")
         self.compare_vs_saved_files("TwoDimBucklingFlow")
 
 #    @pytest.mark.skip(reason="long test")
     def test_fillingTank(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "-f fillingTank.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.01'")
+                  "fillingTank.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.01'")
         self.compare_vs_saved_files("fillingTank")
 
     # *** 3D tests *** #
     def test_marin(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "-f marin.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.5'")
+                  "marin.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.5'")
         self.compare_vs_saved_files("marin")
 
     def test_moses(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "-f moses.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.5'")
+                  "moses.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.5'")
         self.compare_vs_saved_files("moses")
