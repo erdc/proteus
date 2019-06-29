@@ -677,8 +677,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
-        #import pdb
-        # pdb.set_trace()
 
         self.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -783,8 +781,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('velocity', 0)],
             self.ebq_global[('totalFlux', 0)],
             self.elementResidual[0])
-        #import pdb
-        # pdb.set_trace()
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
