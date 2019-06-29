@@ -61,14 +61,16 @@ levelNonlinearSolver = Newton
 
 fullNewtonFlag = True
 
-tolFac = 0.0
+tolFac = 1.0e-10
 
-atol = 0.0001*he#0.001*vFine
+#atol = 0.0001*he#0.001*vFine
+atol = 1.e-10
 
-nl_rtol_res = 0.0
-nl_atol_res = atol#0.001*vFine#1.0e-4
+nl_rtol_res = 1.0e-10
+#nl_atol_res = atol#0.001*vFine#1.0e-4
+nl_atol_res = 1.0e-10
 atol_res = {0:atol}
-rtol_res = {0:0.0}
+rtol_res = {0:nl_rtol_res}
 matrix = SparseMatrix
 
 #multilevelLinearSolver =PETSc
