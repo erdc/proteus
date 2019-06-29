@@ -65,9 +65,9 @@ else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
 
-tolFac = 0.0
-linTolFac = 0.0001
-nl_atol_res = 1.0e-5
+tolFac = 1.0e-10
+linTolFac = 0.0
+nl_atol_res = 1.0e-10
 
 maxNonlinearIts = 100
 maxLineSearches =0
