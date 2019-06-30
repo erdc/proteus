@@ -163,7 +163,10 @@ myTpFlowProblem.Parameters.Models.rans2p.n.linearSmootherOptions = (False, # den
                                                                     0,     # num_chebyshev_its
                                                                     True,  # laplace_null_space
                                                                     True)  # velocity_block_preconditioner
-
+prefix = myTpFlowProblem.Parameters.Models.rans2p.n.linear_solver_options_prefix
+myTpFlowProblem.Parameters.Models.rans2p.OptDB.setValue(prefix+'ksp_atol', 1e-20)
+myTpFlowProblem.Parameters.Models.rans2p.OptDB.setValue(prefix+'ksp_rtol', 1e-9)
+myTpFlowProblem.Parameters.Models.rans2p.n.nl_atol_res = 1e-9
 
 myTpFlowProblem.Parameters.mesh.he = he
 myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
