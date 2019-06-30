@@ -44,7 +44,8 @@ class TestCLSVOFWithRans2p(object):
         
     def teardown_method(self,method):
         pass
-    
+
+    @pytest.mark.skip(reason="Not reproducible on both python2 and python3")    
     def test_2D_multiphase(self):
         # RELOAD MODULES
         self.reload_modules()
