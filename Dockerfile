@@ -12,7 +12,7 @@ ENV CXX mpicxx
 ENV F77 mpif77
 ENV F90 mpif90
 
-RUN cd proteus && git pull && make develop
+RUN cd proteus && git checkout master && git pull && make develop
 
 ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
 ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
