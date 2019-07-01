@@ -452,8 +452,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
     def evaluateFunAtQuadraturePoints(self):
         xx = self.model.q['x']
         N_k = self.model.q['x'].shape[1]
-        for e in xrange(self.mesh.elementNodesArray.shape[0]):
-            for k in xrange(N_k):
+        for e in range(self.mesh.elementNodesArray.shape[0]):
+            for k in range(N_k):
                 if self.LS_MODEL is not None:
                     f = min(abs(self.q_phi[e, k]),
                             self.myfunc(xx[e, k], self.t))
@@ -513,9 +513,9 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
 def calculate_areas(x, detJ, weights):
         N_k = len(weights)
         areas = np.zeros(len(x))
-        for e in xrange(len(x)):
+        for e in range(len(x)):
             area = 0
-            for k in xrange(N_k):
+            for k in range(N_k):
                 area += detJ[e, k]*weights[k]
             areas[e] = area
         return area
@@ -523,6 +523,6 @@ def calculate_areas(x, detJ, weights):
 def calculate_area(x, detJ, weights):
         N_k = len(weights)
         area = 0
-        for k in xrange(N_k):
+        for k in range(N_k):
             area += detJ[k]*weights[k]
         return area

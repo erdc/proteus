@@ -3,7 +3,7 @@ from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
 from proteus.mprans import SW2DCV
-import sw_p
+from . import sw_p
 
 # ******************************************** #
 # ********** READ FROM PHYSICS FILE ********** #

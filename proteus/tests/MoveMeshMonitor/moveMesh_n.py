@@ -7,7 +7,7 @@ from proteus import (FemTools,
                      LinearSolvers,
                      StepControl,
                      LinearAlgebraTools)
-import moveMesh_p as physics
+from . import moveMesh_p as physics
 from proteus import Context
 from proteus.mprans import AddedMass
 
