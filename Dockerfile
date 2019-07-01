@@ -2,6 +2,10 @@ FROM erdc/stack_base:python3
 
 MAINTAINER Proteus Project <proteus@googlegroups.com>
 
+USER root
+
+RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+RUN sudo apt-get install nodejs
 
 USER jovyan
 
