@@ -90,4 +90,4 @@ else:
 
 conservativeFlux = {}
 if checkMass:
-    pass#auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex2d"+repr(lRefinement)+"p"+repr(pDegree_ls))]
+    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex2d"+repr(lRefinement)+"p"+repr(pDegree_ls))]

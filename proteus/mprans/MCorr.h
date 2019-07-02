@@ -10,6 +10,11 @@
 
 namespace proteus
 {
+
+  template<int nSpace, int nP, int nQ>
+  //using GeneralizedFunctions = equivalent_polynomials::Simplex<nSpace, nP, nQ>;
+  using GeneralizedFunctions = equivalent_polynomials::Regularized<nSpace, nP, nQ>;
+
   class MCorr_base
   {
   public:
@@ -464,8 +469,8 @@ namespace proteus
     {
     public:
       CompKernelType ck;
-      equivalent_polynomials::Simplex<nSpace,1,nQuadraturePoints_element> eqp;
-      equivalent_polynomials::Simplex<nSpace,1,nDOF_trial_element> eqp_nodes;
+      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> eqp;
+      GeneralizedFunctions<nSpace,1,nDOF_trial_element> eqp_nodes;
     MCorr():ck()
 	{}
       inline double smoothedHeaviside(double eps, double phi)
@@ -521,8 +526,8 @@ namespace proteus
 				  double& r,
 				  double& dr)
       {
-	r = porosity*(eqp.H - H);
-	dr = porosity*eqp.D;
+	r = porosity*(eqp.get_H(epsHeaviside,phi+u) - H);
+	dr = porosity*eqp.get_D(epsDirac,phi+u);
       }
 
       inline void calculateElementResidual(//element
@@ -1957,7 +1962,7 @@ namespace proteus
 		/*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		*globalMass += eqp.H*dV;
+		*globalMass += eqp.get_H(epsHeaviside,q_phi[eN_k])*dV;
 	      }//k
 	  }//elements
       }
@@ -2081,7 +2086,7 @@ namespace proteus
 
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		q_H[eN_k] = q_porosity[eN_k]*eqp.H;
+		q_H[eN_k] = q_porosity[eN_k]*eqp.get_H(epsHeaviside,q_phi[eN_k]);
 	      }//k
 	    // distribute rhs for mass correction
 	    for (int i=0;i<nDOF_trial_element;i++)
@@ -2090,7 +2095,7 @@ namespace proteus
 		int eN_i = eN*nDOF_trial_element + i;
 		int gi = phi_l2g[eN_i];
 		epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
-		H_dof [gi] = eqp_nodes.H;
+		H_dof [gi] = eqp_nodes.get_H(epsHeaviside,phi_dof[gi]);
 	      }
 	  }//elements
       }

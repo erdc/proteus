@@ -8,6 +8,46 @@
 namespace equivalent_polynomials
 {
   template<int nSpace, int nP, int nQ>
+  class Regularized
+  {
+  public:
+    Regularized()
+    {}
+    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    {}
+    inline void set_quad(unsigned int q)
+    {}
+    inline double get_H(double eps, double phi)
+      {
+	double H;
+	if (phi > eps)
+	  H=1.0;
+	else if (phi < -eps)
+	  H=0.0;
+	else if (phi==0.0)
+	  H=0.5;
+	else
+	  H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
+	return H;
+      }
+    inline double get_ImH(double eps, double phi)
+      {
+        return 1.0-get_H(eps,phi);
+      }
+    inline double get_D(double eps, double phi)
+      {
+	double d;
+	if (phi > eps)
+	  d=0.0;
+	else if (phi < -eps)
+	  d=0.0;
+	else
+	  d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
+	return d;
+      }
+  };
+  
+  template<int nSpace, int nP, int nQ>
   class Simplex
   {
   public:
@@ -41,9 +81,9 @@ namespace equivalent_polynomials
         }
     }
     double H, ImH, D;
-    inline double* get_H(){return _H;};
-    inline double* get_ImH(){return _ImH;};
-    inline double* get_D(){return _D;};
+    inline double* get_H(double eps, double phi){return _H;};
+    inline double* get_ImH(double eps, double phi){return _ImH;};
+    inline double* get_D(double eps, double phi){return _D;};
     bool inside_out;
   private:
     static const unsigned int nN=nSpace+1;
