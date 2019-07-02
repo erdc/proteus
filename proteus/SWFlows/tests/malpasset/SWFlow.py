@@ -5,13 +5,14 @@ from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2D
 from proteus.mprans import SW2DCV
+from proteus.mprans import GN_SW2DCV
 from proteus.Domain import RectangularDomain
 from proteus.Domain import Mesh2DMDomain
 import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
-import proteus.SWFlows.SWFlowProblem as SWFlowProblem 
+import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 
 
 # *************************** #
@@ -42,7 +43,7 @@ bathymetry = None
 ##### BOUNDARY CONDITIONS #####
 ###############################
 # REFLECTING BCs
-    
+
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
@@ -64,9 +65,9 @@ class water_height_at_t0(object):
         x2 = 4000.0
         y2 = 5500.0
         m = old_div((y2-y1),(x2-x1))
-        dam2 = m*(x-x1)+y1        
+        dam2 = m*(x-x1)+y1
 
-        if (X[1] <= dam1 and X[1] <= dam2): 
+        if (X[1] <= dam1 and X[1] <= dam2):
             return np.maximum(100.0-X[2],0.)
         else:
             return 0.
@@ -74,7 +75,7 @@ class water_height_at_t0(object):
 class Zero(object):
     """still water conditions"""
     def uOfXT(self,x,t):
-        return 0.0    
+        return 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #

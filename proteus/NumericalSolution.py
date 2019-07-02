@@ -16,7 +16,7 @@ from builtins import object
 from past.utils import old_div
 import os
 import numpy
-from subprocess import check_call
+from subprocess import check_call, check_output
 
 from . import LinearSolvers
 from . import NonlinearSolvers
@@ -288,7 +288,8 @@ class NS_base(object):  # (HasTraits):
                         logEvent("Calling Triangle to generate 2D mesh for "+p.name)
                         tricmd = "triangle -{0} -e {1}.poly".format(n.triangleOptions, fileprefix)
                         logEvent("Calling triangle on rank 0 with command %s" % (tricmd,))
-                        check_call(tricmd, shell=True)
+                        output=check_output(tricmd, shell=True)
+                        logEvent(str(output,'utf-8'))
                         logEvent("Done running triangle")
                         check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
                         check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
@@ -1360,7 +1361,7 @@ class NS_base(object):  # (HasTraits):
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
         else:
-	        domain = p0.domain
+            domain = p0.domain
 
         if (hasattr(domain, 'PUMIMesh') and
             domain.PUMIMesh.adaptMesh() and
@@ -2298,6 +2299,17 @@ class NS_base(object):  # (HasTraits):
                 logEvent("Writing initial phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
             except:
                 pass
+            try:
+                phi_sp = {}
+                phi_sp[0] = model.levelModelList[-1].coefficients.phi_sp
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       phi_sp,
+                                                                       res_name_base='phi_sp')
+                logEvent("Writing initial phi_sp at DOFs for = "+model.name+" at time t="+str(self.tnList[0]),level=3)
+            except:
+                pass
             if 'clsvof' in model.name:
                 vofDOFs = {}
                 vofDOFs[0] = model.levelModelList[-1].vofDOFs
@@ -2420,6 +2432,17 @@ class NS_base(object):  # (HasTraits):
                                                                            phi_s,
                                                                            res_name_base='phi_s')
                     logEvent("Writing phi_s at DOFs for = "+model.name+" at time t="+str(t),level=3)
+                except:
+                    pass
+                try:
+                    phi_sp = {}
+                    phi_sp[0] = model.levelModelList[-1].coefficients.phi_sp
+                    model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                           t,
+                                                                           self.tCount,
+                                                                           phi_sp,
+                                                                           res_name_base='phi_sp')
+                    logEvent("Writing phi_sp at DOFs for = "+model.name+" at time t="+str(t),level=3)
                 except:
                     pass
             if 'clsvof' in model.name and self.fastArchive==False:

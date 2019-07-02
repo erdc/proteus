@@ -1,3 +1,10 @@
+#!python
+# distutils: language = c++
+# cython: profile=True, binding=True, embedsignature=True
+# cython: wraparound=False
+# cython: boundscheck=False
+# cython: initializedcheck=False
+
 import cython
 """
 Module for creating boundary conditions. Imported in SpatialTools.py

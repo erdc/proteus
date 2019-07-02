@@ -7,29 +7,29 @@ all: develop
 
 SHELL=/usr/bin/env bash
 N=1
-PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
+PROTEUS ?= $(shell python3 -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
-PROTEUS_BUILD_CMD = python setup.py build_ext
-PROTEUS_INSTALL_CMD = python setup.py install
-PROTEUS_DEVELOP_BUILD_CMD = python setup.py build_ext -i
-PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
+PROTEUS_BUILD_CMD = python3 setup.py build_ext
+PROTEUS_INSTALL_CMD = pip3 --disable-pip-version-check install -v . #python3 setup.py install
+PROTEUS_DEVELOP_BUILD_CMD = python3 setup.py build_ext -i
+PROTEUS_DEVELOP_CMD = pip3 --disable-pip-version-check install -v -e .
 #
 ifeq (${N}, 1)
-PROTEUS_BUILD_CMD = python -c "print('Letting install handle build_ext')"
-PROTEUS_DEVELOP_BUILD_CMD = python -c "print('Letting install handle build_ext')"
+PROTEUS_BUILD_CMD = python3 -c "print('Letting install handle build_ext')"
+PROTEUS_DEVELOP_BUILD_CMD = python3 -c "print('Letting install handle build_ext')"
 endif
 
 # automatically detect hpcmp machines
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = copper* ]] && echo "copper" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = excalibur* ]] && echo "excalibur" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python -c "import sys; print(sys.platform)")
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = topaz* ]] && echo "topaz" || python3 -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = onyx* ]] && echo "onyx" || python3 -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = copper* ]] && echo "copper" || python3 -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = excalibur* ]] && echo "excalibur" || python3 -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" || python3 -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python3 -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python3 -c "import sys; print(sys.platform)")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
-PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
+PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python3
 PROTEUS_VERSION := $(shell ${VER_CMD})
 TEST_MARKER="' '"
 
@@ -54,7 +54,7 @@ define howto
 	@echo 'export PATH=${PROTEUS_PREFIX}/bin:$${PATH}'
 	@echo ""
 	@echo "You can also invoke the Python interpreter directly:"
-	@echo "${PROTEUS_PREFIX}/bin/python"
+	@echo "${PROTEUS_PREFIX}/bin/python3"
 	@echo ""
 	@echo "You should now verify that the install succeeded by running:"
 	@echo "make test"
@@ -119,11 +119,11 @@ air-water-vv:
 
 bld_cache: stack/hit/bin/hit
 	@echo "Trying to add build cache for your arch"
-	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
+	HASHSTACK_BLD = $(shell lsb_release -ir | python3 -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
 	./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_${HASHSTACK_BLD} --objects="build"
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
-	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
+	python3 stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
 stack/default.yaml: stack/hit/bin/hit
@@ -213,10 +213,10 @@ check:
 
 	@echo "************************"
 	@echo "Hello world Check!"
-	${PROTEUS_PREFIX}/bin/python -c "print('hello world')"
+	${PROTEUS_PREFIX}/bin/python3 -c "print('hello world')"
 	@echo "************************"
 	@echo "Proteus Partition Test"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python3 proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
 	@echo "************************"
@@ -247,7 +247,7 @@ doc:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
-	-pip install sphinx sphinx_rtd_theme breathe==4.11.1 exhale==0.2.0
+	-${PROTEUS_ENV} pip3 install sphinx sphinx_rtd_theme breathe==4.11.1 exhale==0.2.0
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 	@echo "**********************************"
 	@echo "Trying to open the html at"
@@ -264,30 +264,29 @@ test: air-water-vv check
 	@echo "you should install git-lfs or try 'make lfs', passing all tests is needed"
 	@echo "**************************************************************************"
 	@echo "Running basic test suite"
-	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --cov=proteus
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
-	@echo "Running air-water-vv test set 1"
-	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
-	@echo "************************************"
-	@echo "Running air-water-vv test set 2"
-	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+	# @echo "Running air-water-vv test set 1"
+	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
+	# @echo "************************************"
+	# @echo "Running air-water-vv test set 2"
+	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 
 jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip install configparser==3.5.0 ipyparallel==6.1.1 ipython==5.5.0 terminado==0.8.1 jupyter==1.0.0 jupyterlab==0.31.12 ipywidgets==7.1.2 ipyleaflet==0.7.1 jupyter_dashboards==0.7.0 pythreejs==0.4.1 rise==5.2.0 cesiumpy==0.3.3 bqplot==0.10.5 hide_code==0.5.2 ipympl==0.1.0 sympy==1.1.1 transforms3d==0.3.1 ipymesh
+	pip3 install configparser ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet==0.10.3 jupyter_dashboards pythreejs rise cesiumpy bqplot ipympl sympy transforms3d ipymesh voila ipyvolume jupyterlab_latex ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
+	jupyter nbextension enable --py --sys-prefix ipysheet
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
 	jupyter nbextension enable --py --sys-prefix bqplot
 	jupyter nbextension enable --py --sys-prefix pythreejs
 	jupyter nbextension enable --py --sys-prefix ipympl
 	jupyter nbextension enable --py --sys-prefix ipymesh
 	jupyter nbextension enable --py --sys-prefix ipyleaflet
-	jupyter nbextension install --py --sys-prefix hide_code
-	jupyter nbextension enable --py --sys-prefix hide_code
 	jupyter nbextension install --py --sys-prefix rise
 	jupyter nbextension enable --py --sys-prefix rise
 	jupyter dashboards quick-setup --sys-prefix
@@ -295,18 +294,31 @@ jupyter:
 	jupyter nbextension enable --sys-prefix --py ipyparallel
 	jupyter serverextension enable --sys-prefix --py ipyparallel
 	ipython profile create mpi --parallel
+	jupyter nbextension install --sys-prefix --py voila
+	jupyter nbextension enable --sys-prefix --py voila
+	jupyter nbextension install --sys-prefix --py ipyvolume
+	jupyter nbextension enable --sys-prefix --py ipyvolume
+	jupyter serverextension enable --sys-prefix --py jupyterlab_latex
 	printf "\nc.NotebookApp.server_extensions.append('ipyparallel.nbextension')\n" >> ${HOME}/.jupyter/jupyter_notebook_config.py
 	printf "\nc.IPClusterEngines.engine_launcher_class = 'MPI'\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
-	printf "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
-	printf "c.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
-	printf "c.MPIEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
-	jupyter labextension install @jupyter-widgets/jupyterlab-manager@0.34.0
+	printf "c.LocalControllerLauncher.controller_cmd = ['python', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "c.LocalEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "c.MPIEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	jupyter labextension install @jupyter-widgets/jupyterlab-manager
+	jupyter labextension install jupyter-matplotlib
+	jupyter labextension install @jupyterlab/latex
+#	jupyter labextension install jupyterlab-drawio
+	jupyter labextension install @jupyterlab/toc
+	jupyter labextension install @jupyterlab/hub-extension
+	jupyter labextension install ipysheet
+#	jupyter labextension install jupyterlab_voyager
+	jupyter labextension install ipytree
 
 lfs:
-	pip install pyliblzma
-	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
-	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
-	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
+	wget https://github.com/git-lfs/git-lfs/releases/download/v2.7.2/git-lfs-linux-amd64-v2.7.2.tar.gz
+	mkdir git-lfs
+	cd git-lfs && tar xzvf ../git-lfs-linux-amd64-v2.7.2.tar.gz
+	cd git-lfs && PREFIX=${HOME} ./install.sh
 	export PATH=${HOME}/bin:${PATH}
 
 proteus_pkg:

@@ -1,7 +1,11 @@
-from __future__ import division
+#!python
+# distutils: language = c++
+# cython: profile=True, binding=True, embedsignature=True
 # cython: wraparound=False
 # cython: boundscheck=False
 # cython: initializedcheck=False
+
+from __future__ import division
 from builtins import str
 from builtins import range
 from past.utils import old_div
@@ -10,15 +14,25 @@ import cython
 """
 Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 """
-import sys
+import os, sys
 import numpy as np
 from proteus import (AuxiliaryVariables,
-                     BoundaryConditions)
+                     BoundaryConditions,
+                     Comm)
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
 from proteus.Profiling import logEvent
 from math import cos, sin, sqrt, atan2, acos, asin
+from mpi4py import MPI
+from scipy import spatial
+
+__all__ = ['BC_RANS',
+           'RelaxationZone',
+           'RelaxationZoneWaveGenerator',
+           '_cppClass_WavesCharacteristics',
+           'WallFunctions',
+           'kWall']
 
 # needed for sphinx docs
 __all__ = ['BC_RANS',
@@ -270,7 +284,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.us_dirichlet.setConstantBC(0.)
         self.vs_dirichlet.setConstantBC(0.)
         self.ws_dirichlet.setConstantBC(0.)  
-        self.k_dirichlet.setConstantBC(0.)  
+        self.k_dirichlet.setConstantBC(1e-20)
+        self.dissipation_dirichlet.setConstantBC(1e-10) 
         # advective
         self.p_advective.setConstantBC(0.)
         self.pInit_advective.setConstantBC(0.)
@@ -289,7 +304,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.reset()
         self.BC_type = 'FreeSlip'
         # dirichlet
-        self.k_dirichlet.setConstantBC(0.) 
+        self.k_dirichlet.setConstantBC(1e-20)
+        self.dissipation_dirichlet.setConstantBC(1e-10) 
         # advective        
         self.p_advective.setConstantBC(0.)
         self.pInit_advective.setConstantBC(0.)
@@ -377,7 +393,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.vs_diffusive.setConstantBC(0.)
         self.ws_diffusive.setConstantBC(0.)
 
-    def setAtmosphere(self, orientation=None, vof_air=1.):
+    def setAtmosphere(self, orientation=None, vof_air=1.,kInflow=None,dInflow=None):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
@@ -400,13 +416,17 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.pInit_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
         self.vos_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(1e-30)
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
         self.us_dirichlet.setConstantBC(0.)
         self.vs_dirichlet.setConstantBC(0.)
         self.ws_dirichlet.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(1e-20)
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_dirichlet.setConstantBC(1e-10)
+        self.dissipation_diffusive.setConstantBC(0.)
+
         if orientation[0] == 1. or orientation[0] == -1.:
             self.u_diffusive.setConstantBC(0.)
             self.us_diffusive.setConstantBC(0.)
@@ -416,10 +436,15 @@ class BC_RANS(BoundaryConditions.BC_Base):
         if orientation[2] == 1. or orientation[2] == -1.:
             self.w_diffusive.setConstantBC(0.)
             self.ws_diffusive.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(1e-30)
-        self.k_diffusive.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.)
-
+        
+        if kInflow is not None:
+            self.k_dirichlet.setConstantBC(kInflow)
+        else:
+            logEvent("WARNING: Dirichlet condition for k in "+str(self.BC_type)+" has not been set. Ignore if RANS is not used")
+        if dInflow is not None:
+            self.dissipation_dirichlet.setConstantBC(dInflow)
+        else:
+            logEvent("WARNING: Dirichlet condition for dissipation in "+str(self.BC_type)+" has not been set. Ignore if RANS is not used")
     def setRigidBodyMoveMesh(self, body):
         """
         Sets boundary conditions for moving the mesh with a rigid body
@@ -1104,7 +1129,7 @@ class RelaxationZoneWaveGenerator:
             if key > max_key:
                 max_key = key
         self.max_flag = max_key
-        self.zones_array = np.empty(self.max_flag + 1, dtype=object)
+        self.zones_array = np.empty(self.max_flag + 1, dtype=RelaxationZone)
         for key, zone in list(self.zones.items()):
             self.zones_array[key] = zone
 
@@ -1252,18 +1277,6 @@ def __x_to_cpp(x):
     xx[1] = x[1]
     xx[2] = x[2]
     return xx
-
-
-import os
-import sys
-import csv
-import numpy as np
-from mpi4py import MPI
-from scipy import spatial
-from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
-from proteus import SpatialTools as st
-from collections import OrderedDict
-from proteus.mprans import BodyDynamics as bd
 
 
 class WallFunctions(AuxiliaryVariables.AV_base):

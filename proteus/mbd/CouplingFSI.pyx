@@ -106,7 +106,7 @@ cdef class ProtChBody:
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
         self.useIBM = False
         self.Aij_factor = 1.
-        self.boundaryFlags = None
+        self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
     def attachShape(self,
@@ -128,7 +128,7 @@ cdef class ProtChBody:
         if 'ChRigidBody' not in shape.auxiliaryVariables:
             shape.auxiliaryVariables['ChRigidBody'] = self
             if take_shape_name is True:
-                self.setName(shape.name)
+                self.setName(bytes(shape.name,'utf-8'))
         self.nd = shape.Domain.nd
         new_vec = chrono.ChVectorD(shape.barycenter[0],
                                    shape.barycenter[1],
@@ -1207,7 +1207,7 @@ cdef class ProtChBody:
     def _recordValues(self):
         """Records values of body attributes in a csv file.
         """
-        record_file = os.path.join(Profiling.logDir, self.name)
+        record_file = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name),'utf-8')
         t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
@@ -1227,7 +1227,7 @@ cdef class ProtChBody:
             with open(record_file+'.csv', 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
-        for key, val in self.record_dict.iteritems():
+        for key, val in self.record_dict.items():
             if val[1] is not None:
                 values_towrite += [getattr(self, val[0])[val[1]]]
             else:
@@ -1256,7 +1256,7 @@ cdef class ProtChBody:
     def _recordH5(self):
         tCount = self.ProtChSystem.tCount
         self.hdfFileName = self.name
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
         if tCount == 0:
             f = h5py.File(hdfFileName, 'w')
         else:
@@ -1276,7 +1276,7 @@ cdef class ProtChBody:
     def _recordXML(self):
         tCount = self.ProtChSystem.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
-        xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
+        xmlFile = os.path.join(bytes(Profiling.logDir,'utf-8'), self.name)+'.xmf'
         # if tCount == 0:
         root = ET.Element("Xdmf",
                         {"Version": "2.0",
@@ -1329,14 +1329,14 @@ cdef class ProtChBody:
 
         tree = ET.ElementTree(root)
 
-        with open(xmlFile, "w") as f:
+        with open(xmlFile, "wb") as f:
             xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
-            f.write(xmlHeader)
+            f.write(bytes(xmlHeader,"utf-8"))
             indentXML(tree.getroot())
             tree.write(f)
 
         # dump xml str in h5 file
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
         f = h5py.File(hdfFileName, 'a')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
@@ -1377,7 +1377,7 @@ cdef class ProtChBody:
             name of the body
         """
         self.name = name
-        self.thisptr.setName(name)
+        self.thisptr.setName(self.name)
 
 
 cdef class ProtChSystem:
@@ -1410,7 +1410,7 @@ cdef class ProtChSystem:
         self.min_nb_steps = 1  # minimum number of chrono substeps
         self.proteus_dt = 1.
         self.first_step = True  # just to know if first step
-        self.setCouplingScheme("CSS")
+        self.setCouplingScheme(b"CSS")
         self.dt_fluid = 1.
         self.dt_fluid_next = 1.
         self.proteus_dt_next = 1.
@@ -1582,7 +1582,7 @@ cdef class ProtChSystem:
         if not self.initialised:
             self.nBodiesIBM = 0  # will be incremented by bodies calculate_init()
             Profiling.logEvent("Starting init"+str(self.next_sample))
-            self.directory = str(Profiling.logDir)+'/'
+            self.directory = bytes(Profiling.logDir+str("/"),'utf-8')
             self.thisptr.setDirectory(self.directory)
             for s in self.subcomponents:
                 s.calculate_init()
@@ -1989,7 +1989,8 @@ cdef class ProtChMoorings:
                                    )
         self.nodes_function = lambda s: (s, s, s)
         self.nodes_built = False
-        self.setName('mooring')
+        name=b'mooring'
+        self.setName(name)
         self.external_forces_from_ns = True
         self.external_forces_manual = True
         self._record_etas = np.array([0.])
@@ -2027,7 +2028,7 @@ cdef class ProtChMoorings:
         tCount = self.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
         self.hdfFileName = self.name
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         if tCount == 0:
             f = h5py.File(hdfFileName, 'w')
         else:
@@ -2120,7 +2121,7 @@ cdef class ProtChMoorings:
     def _recordXML(self):
         tCount = self.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
-        xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
+        xmlFile = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name)+b'.xmf','utf-8')
         # if tCount == 0:
         root = ET.Element("Xdmf",
                           {"Version": "2.0",
@@ -2147,29 +2148,29 @@ cdef class ProtChMoorings:
                                {"GridType": "Uniform"})
         arTime = ET.SubElement(arGrid,
                                "Time",
-                               {"Value": str(t),
-                                "Name": str(tCount)})
+                               {"Value": "{0:e}".format(t),
+                                "Name": "{0:d}".format(tCount)})
         topology = ET.SubElement(arGrid,
                                 "Topology",
                                 {"Type": Xdmf_ElementTopology,
-                                 "NumberOfElements": str(Xdmf_NumberOfElements)})
+                                 "NumberOfElements": "{0:d}".format(Xdmf_NumberOfElements)})
 
         elements = ET.SubElement(topology,
                                  "DataItem",
                                  {"Format": dataItemFormat,
                                   "DataType": "Int",
-                                  "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
+                                  "Dimensions": "{0:d} {1:d}".format(Xdmf_NumberOfElements,
                                                          Xdmf_NodesPerElement)})
-        elements.text = self.hdfFileName+".h5:/elementsSpatial_Domain"+str(tCount)
+        elements.text = "{0}.h5:/elementsSpatial_Domain{1:d}".format(str(self.hdfFileName,'utf-8'),tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
         nodes = ET.SubElement(geometry,
                               "DataItem",
                               {"Format": dataItemFormat,
                                "DataType": "Float",
                                "Precision": "8",
-                               "Dimensions": "%i %i" % (pos.shape[0],
+                               "Dimensions": "{0:d} {0:d}".format(pos.shape[0],
                                                         pos.shape[1])})
-        nodes.text = self.hdfFileName+".h5:/nodesSpatial_Domain"+str(tCount)
+        nodes.text = "{0}.h5:/nodesSpatial_Domain{1:d}".format(str(self.hdfFileName,'utf-8'),tCount)
         all_names = self._record_names+self._record_etas_names
         for name in all_names:
             attr = ET.SubElement(arGrid,
@@ -2182,22 +2183,22 @@ cdef class ProtChMoorings:
                                  {"Format": dataItemFormat,
                                   "DataType": "Float",
                                   "Precision": "8",
-                                  "Dimensions": "%i" % (pos.shape[0])})
-            data.text = self.hdfFileName+".h5:/"+name+"_t"+str(tCount)
+                                  "Dimensions": "{0:d}".format(pos.shape[0])})
+            data.text = "{0}.h5:/{1}{2:d}".format(str(self.hdfFileName,'utf-8'), name, tCount)
 
         tree = ET.ElementTree(root)
 
-        with open(xmlFile, "w") as f:
+        with open(xmlFile, "wb") as f:
             xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
-            f.write(xmlHeader)
+            f.write(bytes(xmlHeader,"utf-8"))
             indentXML(tree.getroot())
             tree.write(f)
 
         # dump xml str in h5 file
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         f = h5py.File(hdfFileName, 'a')
         datav = ET.tostring(arGrid)
-        dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
+        dset = f.create_dataset('Mesh_Spatial_Domain_{0:d}'.format(tCount),
                                 (1,),
                                 dtype=h5py.special_dtype(vlen=str))
         dset[...] = datav
@@ -2207,7 +2208,7 @@ cdef class ProtChMoorings:
     def _recordValues(self):
         """Records values in csv files
         """
-        self.record_file = os.path.join(Profiling.logDir, self.name)
+        self.record_file = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name),'utf-8')
         def record(record_file, row, mode='a'):
             with open(record_file, mode) as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')

@@ -23,7 +23,7 @@ nd = 2
 
 # use structured mesh
 domain = Domain.RectangularDomain(L=[1.0,1.0], x=[0.,0.])
-fixedNodeMaterialTypes = np.ones(10)
+fixedNodeMaterialTypes = np.zeros(10)
 he = 0.02
 
 center1 = [0.5, 0.5]
@@ -40,7 +40,7 @@ scale = 0.5
 
 from proteus.default_n import *
 
-nn = 32
+nn = 33
 
 
 spaceOrder = 1
@@ -96,7 +96,7 @@ freezeLevelSet = True
 # Time stepping and velocity
 #----------------------------------------------------
 dt_init = 0.001
-T = 0.003
+T = 0.001
 nDTout = 1
 if nDTout > 0:
     dt_out= (T-dt_init)/nDTout
@@ -112,11 +112,11 @@ useRBLES   = 0.0
 
 # Input checks
 if spaceOrder not in [1,2]:
-    print "INVALID: spaceOrder" + spaceOrder
+    print("INVALID: spaceOrder" + spaceOrder)
     sys.exit()
 
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES
+    print("INVALID: useRBLES" + useRBLES)
     sys.exit()
 
 #  Discretization
@@ -138,7 +138,7 @@ elif spaceOrder == 2:
         elementQuadrature = CubeGaussQuadrature(nd,4)
         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)
     else:
-	basis=C0_AffineQuadraticOnSimplexWithNodalBasis
+        basis=C0_AffineQuadraticOnSimplexWithNodalBasis
         elementQuadrature = SimplexGaussQuadrature(nd,4)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
