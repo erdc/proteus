@@ -536,18 +536,32 @@ cdef class ProtChBody:
         Aij[4, :4] *= self.thisptr.free_r.y()
         Aij[4, 5] *= self.thisptr.free_r.y()
         Aij[5, :5] *= self.thisptr.free_r.z()
-        assert Aij.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
-        assert Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
+        assert Aij.shape[0] == Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         cdef double mass = self.ChBody.GetMass()
         cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
-        cdef np.ndarray AM = np.zeros((6,6))  # added mass matrix
         cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
         cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
         cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
+
         # added mass matrix
-        AM += Aij
-        self.Aij[:] = AM
+        # converting from global to local: Rot*Aij*RotT*v
+        cdef ch.ChQuaternion rot = deref(self.thisptr.body).GetRot()
+        cdef ch.ChMatrix33 rotch = ch.ChMatrix33[double](rot)
+        cdef ch.ChMatrix33 rotchT = ch.ChMatrix33[double]()
+        rotchT.CopyFromMatrixT(rotch)
+        cdef np.ndarray rotMarr_big = np.zeros((6, 6))
+        cdef np.ndarray rotMarrT_big = np.zeros((6, 6))
+        for i in range(6):
+            for j in range(6):
+                if i < 3 and j < 3 :
+                    rotMarr_big[i, j] = rotch.GetElement(i, j)
+                    rotMarrT_big[i, j] = rotchT.GetElement(i, j)
+                elif i >=3 and j >= 3:
+                    rotMarr_big[i, j] = rotch.GetElement(i-3, j-3)
+                    rotMarrT_big[i, j] = rotchT.GetElement(i-3, j-3)
+        # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
+        self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
         # mass matrix
         MM[0,0] = mass
         MM[1,1] = mass
@@ -556,10 +570,10 @@ cdef class ProtChBody:
             for j in range(3):
                 MM[i+3, j+3] = iner[i, j]
         # full mass
-        FM += AM
+        FM += self.Aij
         FM += MM
         Profiling.logEvent('Mass Matrix:\n'+str(MM))
-        Profiling.logEvent('Added Mass Matrix:\n'+str(AM))
+        Profiling.logEvent('Added Mass Matrix:\n'+str(self.Aij))
         Profiling.logEvent('Full Mass Matrix:\n'+str(FM))
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
