@@ -547,7 +547,7 @@ EXTENSIONS_TO_BUILD = [
               library_dirs=[PROTEUS_LAPACK_LIB_DIR,
                             PROTEUS_BLAS_LIB_DIR],
               libraries=['m',PROTEUS_LAPACK_LIB,PROTEUS_BLAS_LIB],
-              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
+              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT+["-std=c++11"],
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
     Extension("mprans.cRANS2P",["proteus/mprans/cRANS2P.pyx"],
               depends=["proteus/mprans/RANS2P.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"],

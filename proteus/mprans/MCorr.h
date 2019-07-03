@@ -12,9 +12,8 @@ namespace proteus
 {
 
   template<int nSpace, int nP, int nQ>
-  //using GeneralizedFunctions = equivalent_polynomials::Simplex<nSpace, nP, nQ>;
   using GeneralizedFunctions = equivalent_polynomials::Regularized<nSpace, nP, nQ>;
-
+  //using GeneralizedFunctions = equivalent_polynomials::Simplex<nSpace, nP, nQ>;
   class MCorr_base
   {
   public:
