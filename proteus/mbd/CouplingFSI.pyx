@@ -106,6 +106,7 @@ cdef class ProtChBody:
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
         self.useIBM = False
         self.Aij_factor = 1.
+        self.Aij_updated_global = False
         self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
@@ -545,23 +546,31 @@ cdef class ProtChBody:
         cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
 
         # added mass matrix
-        # converting from global to local: Rot*Aij*RotT*v
-        cdef ch.ChQuaternion rot = deref(self.thisptr.body).GetRot()
-        cdef ch.ChMatrix33 rotch = ch.ChMatrix33[double](rot)
-        cdef ch.ChMatrix33 rotchT = ch.ChMatrix33[double]()
-        rotchT.CopyFromMatrixT(rotch)
-        cdef np.ndarray rotMarr_big = np.zeros((6, 6))
-        cdef np.ndarray rotMarrT_big = np.zeros((6, 6))
-        for i in range(6):
-            for j in range(6):
-                if i < 3 and j < 3 :
-                    rotMarr_big[i, j] = rotch.GetElement(i, j)
-                    rotMarrT_big[i, j] = rotchT.GetElement(i, j)
-                elif i >=3 and j >= 3:
-                    rotMarr_big[i, j] = rotch.GetElement(i-3, j-3)
-                    rotMarrT_big[i, j] = rotchT.GetElement(i-3, j-3)
-        # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
-        self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
+        cdef ch.ChQuaternion rot
+        cdef ch.ChMatrix33 rotch
+        cdef ch.ChMatrix33 rotchT
+        cdef np.ndarray rotMarr_big
+        cdef np.ndarray rotMarrT_big
+        if self.Aij_updated_global is True:
+            # converting from global to local: Rot*Aij*RotT*v
+            rot = deref(self.thisptr.body).GetRot()
+            rotch = ch.ChMatrix33[double](rot)
+            rotchT = ch.ChMatrix33[double]()
+            rotMarr_big = np.zeros((6, 6))
+            rotMarrT_big = np.zeros((6, 6))
+            rotchT.CopyFromMatrixT(rotch)
+            for i in range(6):
+                for j in range(6):
+                    if i < 3 and j < 3 :
+                        rotMarr_big[i, j] = rotch.GetElement(i, j)
+                        rotMarrT_big[i, j] = rotchT.GetElement(i, j)
+                    elif i >=3 and j >= 3:
+                        rotMarr_big[i, j] = rotch.GetElement(i-3, j-3)
+                        rotMarrT_big[i, j] = rotchT.GetElement(i-3, j-3)
+            # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
+            self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
+        else:
+            self.Aij[:] = Aij
         # mass matrix
         MM[0,0] = mass
         MM[1,1] = mass
@@ -685,6 +694,7 @@ cdef class ProtChBody:
                 # getting added mass matrix
                 self.Aij[:] = 0
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
+                self.Aij_updated_global = am.coefficients.updated_global
                 for flag in self.boundaryFlags:
                     if self.useIBM:
                         self.Aij += am.coefficients.particle_Aij[flag]
