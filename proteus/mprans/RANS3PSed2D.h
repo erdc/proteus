@@ -901,13 +901,14 @@ namespace proteus
 				// sigma	  : schmidt number                  closure.sigmaC_
         //
         // The pressure term wasn't originally in this function, but has been set to pass it in now (5/21/19).
-         double otherbit=new_beta * nu_t /closure.sigmaC_;
-         entropyProduction = (vos * new_beta) * (u_f-u)*(u_f-u) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_x*(u_f-u);
-         entropyProduction += (vos * new_beta) * (v_f-v)*(v_f-v) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_y*(v_f-v);
-         entropyProduction += (vos * new_beta) * (w_f-w)*(w_f-w) - (new_beta * nu_t /closure.sigmaC_ - p)*gradC_z*(w_f-w);
+         double first_term = vos * new_beta;
+         double third_term = new_beta * nu_t /closure.sigmaC_;
+         entropyProduction =  first_term * (u_f-u)*(u_f-u) - (third_term - p)*gradC_x*(u_f-u);
+         entropyProduction += first_term * (v_f-v)*(v_f-v) - (third_term - p)*gradC_y*(v_f-v);
+         entropyProduction += first_term * (w_f-w)*(w_f-w) - (third_term - p)*gradC_z*(w_f-w);
       if(entropyProduction<0 && ep_count<1)
         {std::cout<<"The second law of thermodynamics has just been violated!"<<std::endl;
-        std::cout<<"The pressure is "<<p<<" and the other bit is "<<otherbit<<" and the turbulent viscosity is "<<nu_t<<"."<<std::endl;
+        std::cout<<"The first term is "<<first_term << " the pressure is "<<p<<" and the third term is "<<third_term<<"."<<std::endl;
         ep_count=2;}
         //else
         //{std::cout<<"Entropy production is fine!"<<std::endl;}
