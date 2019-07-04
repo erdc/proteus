@@ -12,8 +12,10 @@ namespace proteus
 {
 
   template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::Regularized<nSpace, nP, nQ>;
-  //using GeneralizedFunctions = equivalent_polynomials::Simplex<nSpace, nP, nQ>;
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  //using GeneralizedFunctions = equivalent_polynomials::Regularized<nSpace, nP, nQ>;
+  //using GeneralizedFunctions = equivalent_polynomials::EquivalentPolynomials<nSpace, nP, nQ>;
+
   class MCorr_base
   {
   public:
@@ -69,7 +71,8 @@ namespace proteus
                                    int nExteriorElementBoundaries_global,
                                    int* exteriorElementBoundariesArray,
                                    int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray)=0;
+                                   int* elementBoundaryLocalElementBoundariesArray,
+                                   bool useExact)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -107,7 +110,8 @@ namespace proteus
                                    double* q_H,
                                    double* q_porosity,
                                    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                   double* globalJacobian)=0;
+                                   double* globalJacobian,
+                                   bool useExact)=0;
     virtual void elementSolve(//element
 			      double* mesh_trial_ref,
 			      double* mesh_grad_trial_ref,
@@ -307,7 +311,8 @@ namespace proteus
 			       int* exteriorElementBoundariesArray,
 			       int* elementBoundaryElementsArray,
 			       int* elementBoundaryLocalElementBoundariesArray,
-			       double* globalMass)=0;
+			       double* globalMass,
+                               bool useExact)=0;
     virtual void setMassQuadrature(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
@@ -356,7 +361,8 @@ namespace proteus
                                    int* exteriorElementBoundariesArray,
                                    int* elementBoundaryElementsArray,
                                    int* elementBoundaryLocalElementBoundariesArray,
-                                   double* H_dof)=0;
+                                   double* H_dof,
+                                   bool useExact)=0;
     virtual void FCTStep(int NNZ, //number on non-zero entries on sparsity pattern
                          int numDOFs, //number of DOFs
                          double* lumped_mass_matrix, //lumped mass matrix (as vector)
@@ -409,7 +415,8 @@ namespace proteus
 								double* mesh_grad_trial_ref,
 								double* mesh_dof,
 								int* mesh_l2g,
-								double* dV_ref,
+								double* x_ref,
+                                                                double* dV_ref,
 								double* u_trial_ref,
 								double* u_grad_trial_ref,
 								double* u_test_ref,
@@ -454,7 +461,8 @@ namespace proteus
 								double* rhs_mass_correction,
 								double* lumped_L2p_vof_mass_correction,
 								double* lumped_mass_matrix,
-								int numDOFs)=0;
+								int numDOFs,
+                                                                bool useExact)=0;
   };
 
   template<class CompKernelType,
@@ -468,53 +476,11 @@ namespace proteus
     {
     public:
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> eqp;
-      GeneralizedFunctions<nSpace,1,nDOF_trial_element> eqp_nodes;
+      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf;
+      GeneralizedFunctions<nSpace,1,nDOF_trial_element> gf_nodes;
     MCorr():ck()
 	{}
-      inline double smoothedHeaviside(double eps, double phi)
-      {
-	double H;
-	if (phi > eps)
-	  H=1.0;
-	else if (phi < -eps)
-	  H=0.0;
-	else if (phi==0.0)
-	  H=0.5;
-	else
-	  H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
-	return H;
-      }
 
-      inline double smoothedHeaviside_integral(double eps, double phi)
-      {
-	double HI;
-	if (phi > eps)
-	  {
-	    HI= phi - eps +       0.5*(eps + 0.5*eps*eps/eps - eps*cos(M_PI*eps/eps)/(M_PI*M_PI)) - 0.5*((-eps) + 0.5*(-eps)*(-eps)/eps - eps*cos(M_PI*(-eps)/eps)/(M_PI*M_PI));
-	  }
-	else if (phi < -eps)
-	  {
-	    HI=0.0;
-	  }
-	else
-	  {
-	    HI = 0.5*(phi + 0.5*phi*phi/eps - eps*cos(M_PI*phi/eps)/(M_PI*M_PI)) - 0.5*((-eps) + 0.5*(-eps)*(-eps)/eps - eps*cos(M_PI*(-eps)/eps)/(M_PI*M_PI));
-	  }
-	return HI;
-      }
-
-      inline double smoothedDirac(double eps, double phi)
-      {
-	double d;
-	if (phi > eps)
-	  d=0.0;
-	else if (phi < -eps)
-	  d=0.0;
-	else
-	  d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
-	return d;
-      }
       inline
 	void evaluateCoefficients(const double& epsHeaviside,
 				  const double& epsDirac,
@@ -525,8 +491,8 @@ namespace proteus
 				  double& r,
 				  double& dr)
       {
-	r = porosity*(eqp.get_H(epsHeaviside,phi+u) - H);
-	dr = porosity*eqp.get_D(epsDirac,phi+u);
+	r = porosity*(gf.H(epsHeaviside,phi+u) - H);
+	dr = porosity*gf.D(epsDirac,phi+u);
       }
 
       inline void calculateElementResidual(//element
@@ -601,7 +567,7 @@ namespace proteus
 	      u_grad_test_dV[nDOF_test_element*nSpace],
 	      dV,x,y,z,
 	      G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
-            eqp.set_quad(k);
+            gf.set_quad(k);
 	    //
 	    //compute solution and gradients at quadrature points
 	    //
@@ -745,7 +711,8 @@ namespace proteus
 			     int nExteriorElementBoundaries_global,
 			     int* exteriorElementBoundariesArray,
 			     int* elementBoundaryElementsArray,
-			     int* elementBoundaryLocalElementBoundariesArray)
+			     int* elementBoundaryLocalElementBoundariesArray,
+                             bool useExact)
       {
 	//
 	//loop over elements to compute volume integrals and load them into element and global residual
@@ -757,6 +724,7 @@ namespace proteus
 	//eN_j is the element trial function index
 	//eN_k_j is the quadrature point index for a trial function
 	//eN_k_i is the quadrature point index for a trial function
+        gf.useExact = useExact;
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
 	    //declare local storage for element residual and initialize
@@ -774,7 +742,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            eqp.calculate(element_phi, element_nodes, x_ref);
+            gf.calculate(element_phi, element_nodes, x_ref);
 	    calculateElementResidual(mesh_trial_ref,
 				     mesh_grad_trial_ref,
 				     mesh_dof,
@@ -976,7 +944,7 @@ namespace proteus
 	    int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
 	      eN_k_nSpace = eN_k*nSpace;
 	    //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
-            eqp.set_quad(k);
+            gf.set_quad(k);
 	    //declare local storage
 	    register double u=0.0,
 	      grad_u[nSpace],
@@ -1112,11 +1080,13 @@ namespace proteus
 			     double* q_H,
 			     double* q_porosity,
 			     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-			     double* globalJacobian)
+			     double* globalJacobian,
+                             bool useExact)
       {
 	//
 	//loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
 	//
+        gf.useExact = useExact;
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
 	    register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element];
@@ -1133,7 +1103,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            eqp.calculate(element_phi, element_nodes, x_ref);
+            gf.calculate(element_phi, element_nodes, x_ref);
 	    calculateElementJacobian(mesh_trial_ref,
 				     mesh_grad_trial_ref,
 				     mesh_dof,
@@ -1892,9 +1862,11 @@ namespace proteus
 			 int* exteriorElementBoundariesArray,
 			 int* elementBoundaryElementsArray,
 			 int* elementBoundaryLocalElementBoundariesArray,
-			 double* globalMass)
+			 double* globalMass,
+                         bool useExact)
       {
 	*globalMass = 0.0;
+        gf.useExact=useExact;
 	for(int eN=0;eN<nElements_owned;eN++)
 	  {
 	    double epsHeaviside;
@@ -1913,7 +1885,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            eqp.calculate(element_phi, element_nodes, x_ref);
+            gf.calculate(element_phi, element_nodes, x_ref);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
@@ -1929,7 +1901,7 @@ namespace proteus
 		  //u_grad_test_dV[nDOF_test_element*nSpace],
 		  dV,x,y,z,
 		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
-                eqp.set_quad(k);
+                gf.set_quad(k);
 		//
 		//compute solution and gradients at quadrature points
 		//
@@ -1961,7 +1933,7 @@ namespace proteus
 		/*        dir[I] = q_normal_phi[eN_k_nSpace+I]/norm; */
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		*globalMass += eqp.get_H(epsHeaviside,q_phi[eN_k])*dV;
+		*globalMass += gf.H(epsHeaviside,q_phi[eN_k])*dV;
 	      }//k
 	  }//elements
       }
@@ -2014,8 +1986,11 @@ namespace proteus
 			     int* exteriorElementBoundariesArray,
 			     int* elementBoundaryElementsArray,
 			     int* elementBoundaryLocalElementBoundariesArray,
-			     double* H_dof)
+			     double* H_dof,
+                             bool useExact)
       {
+        gf.useExact=useExact;
+        gf_nodes.useExact=useExact;
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
 	    double epsHeaviside;
@@ -2034,8 +2009,8 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            eqp.calculate(element_phi, element_nodes, x_ref);
-            eqp_nodes.calculate(element_phi, element_nodes, element_nodes);
+            gf.calculate(element_phi, element_nodes, x_ref);
+            gf_nodes.calculate(element_phi, element_nodes, element_nodes);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
@@ -2054,7 +2029,7 @@ namespace proteus
 		//
 		//compute solution and gradients at quadrature points
 		//
-                eqp.set_quad(k);
+                gf.set_quad(k);
 		ck.calculateMapping_element(eN,
 					    k,
 					    mesh_dof,
@@ -2085,16 +2060,16 @@ namespace proteus
 
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		q_H[eN_k] = q_porosity[eN_k]*eqp.get_H(epsHeaviside,q_phi[eN_k]);
+		q_H[eN_k] = q_porosity[eN_k]*gf.H(epsHeaviside,q_phi[eN_k]);
 	      }//k
 	    // distribute rhs for mass correction
 	    for (int i=0;i<nDOF_trial_element;i++)
 	      {
-                eqp_nodes.set_quad(i);
+                gf_nodes.set_quad(i);
 		int eN_i = eN*nDOF_trial_element + i;
 		int gi = phi_l2g[eN_i];
 		epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
-		H_dof [gi] = eqp_nodes.get_H(epsHeaviside,phi_dof[gi]);
+		H_dof [gi] = gf_nodes.H(epsHeaviside,phi_dof[gi]);
 	      }
 	  }//elements
       }
@@ -2436,6 +2411,7 @@ namespace proteus
 							  double* mesh_grad_trial_ref,
 							  double* mesh_dof,
 							  int* mesh_l2g,
+							  double* x_ref,
 							  double* dV_ref,
 							  double* u_trial_ref,
 							  double* u_grad_trial_ref,
@@ -2481,8 +2457,10 @@ namespace proteus
 							  double* rhs_mass_correction,
 							  double* lumped_L2p_vof_mass_correction,
 							  double* lumped_mass_matrix,
-							  int numDOFs)
+							  int numDOFs,
+                                                          bool useExact)
       {
+        gf.useExact=useExact;
 	for(int eN=0;eN<nElements_global;eN++)
 	  {
 	    register double element_rhs_mass_correction[nDOF_test_element];
@@ -2490,6 +2468,20 @@ namespace proteus
 	      element_rhs_mass_correction[i] = 0.;
 	    double epsHeaviside;
 	    //loop over quadrature points and compute integrands
+            double element_phi[nDOF_trial_element];
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
+		element_phi[i] = phi_dof[phi_l2g[eN_i]];
+	      }//i
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
@@ -2506,7 +2498,8 @@ namespace proteus
 		  dV,x,y,z,
 		  u_test_dV[nDOF_test_element],
 		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
-		//
+		gf.set_quad(k);
+                //
 		//compute solution and gradients at quadrature points
 		//
 		ck.calculateMapping_element(eN,
@@ -2543,7 +2536,7 @@ namespace proteus
 
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-		q_H[eN_k] = smoothedHeaviside(epsHeaviside,q_phi[eN_k]);
+		q_H[eN_k] = gf.H(epsHeaviside,q_phi[eN_k]);
 
 		for (int i=0;i<nDOF_trial_element;i++)
 		  element_rhs_mass_correction [i] += q_porosity[eN_k]*q_H[eN_k]*u_test_dV[i];

@@ -221,7 +221,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
-                 nullSpace='NoNullSpace'):
+                 nullSpace='NoNullSpace',
+                 useExact=False):
+        self.useExact=False
         self.use_pseudo_penalty = 0
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
@@ -445,6 +447,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.CLSVOF_model is not None: # use CLSVOF
             # LS part #
             self.q_phi = modelList[self.CLSVOF_model].q[('u', 0)]
+            self.phi_dof = modelList[self.CLSVOF_model].u[0].dof
             self.ebq_phi = None # Not used. What is this for?
             self.ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)]
             self.bc_ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)] #Dirichlet BCs for level set. I don't have it since I impose 1 or -1. Therefore I attach the soln at boundary
@@ -459,6 +462,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else: # use NCLS-RDLS-VOF-MCorr instead
             if self.LS_model is not None:
                 self.q_phi = modelList[self.LS_model].q[('u', 0)]
+                self.phi_dof = modelList[self.LS_model].u[0].dof
                 if ('u', 0) in modelList[self.LS_model].ebq:
                     self.ebq_phi = modelList[self.LS_model].ebq[('u', 0)]
                 else:
@@ -474,6 +478,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
             else:
                 self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
+                self.phi_dof = -numpy.ones_like(self.model.u[0].dof)
                 self.ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.bc_ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
@@ -1508,6 +1513,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.mesh.nodeVelocityArray,
                                       self.MOVING_DOMAIN,
                                       self.mesh.elementNodesArray,
+                                      self.elementQuadraturePoints,
                                       self.elementQuadratureWeights[('u', 0)],
                                       self.u[0].femSpace.psi,
                                       self.u[0].femSpace.grad_psi,
@@ -1588,6 +1594,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.q['rho'],
                                       self.coefficients.q_vf,
                                       self.coefficients.q_phi,
+                                      self.coefficients.phi_dof,
                                       self.coefficients.q_n,
                                       self.coefficients.q_kappa,
                                       self.timeIntegration.m_tmp[1],
@@ -1701,7 +1708,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_penalty_constant,
                                       self.coefficients.phi_s,
                                       self.coefficients.phisField,
-                                      self.coefficients.use_pseudo_penalty)
+                                      self.coefficients.use_pseudo_penalty,
+                                      self.coefficients.useExact)
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         
@@ -1779,6 +1787,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.mesh.nodeVelocityArray,
                                       self.MOVING_DOMAIN,
                                       self.mesh.elementNodesArray,
+                                      self.elementQuadraturePoints,
                                       self.elementQuadratureWeights[('u', 0)],
                                       self.u[0].femSpace.psi,
                                       self.u[0].femSpace.grad_psi,
@@ -1852,6 +1861,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.useVF,
                                       self.coefficients.q_vf,
                                       self.coefficients.q_phi,
+                                      self.coefficients.phi_dof,
                                       self.coefficients.q_n,
                                       self.coefficients.q_kappa,
                                       self.timeIntegration.beta_bdf[1],
@@ -1970,7 +1980,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant,
-                                      self.coefficients.use_pseudo_penalty)
+                                      self.coefficients.use_pseudo_penalty,
+                                      self.coefficients.useExact)
         
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
