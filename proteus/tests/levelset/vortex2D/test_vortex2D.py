@@ -9,7 +9,8 @@ from proteus.iproteus import *
 import os
 import numpy as np
 import tables
-from . import (ls_vortex_2d_p,
+from . import (vortex2D,
+               ls_vortex_2d_p,
                redist_vortex_2d_p,
                vof_vortex_2d_p,
                ls_consrv_vortex_2d_p,
@@ -35,18 +36,19 @@ class TestVortex2D(object):
         self._scriptdir = os.path.dirname(os.path.abspath(__file__))
         
     def teardown_method(self,method):
-        filenames = []
-        for aux_name in self.aux_names:
-            filenames.extend([aux_name+'.'+ext for ext in ['h5','xmf']])
-        filenames.append('proteus.log')
-        for f in filenames:
-            if os.path.exists(f):
-                try:
-                    os.remove(f)
-                except OSError as e:
-                    print ("Error: %s - %s" %(e.filename,e.strerror))
-            else:
-                pass
+        pass
+        # filenames = []
+        # for aux_name in self.aux_names:
+        #     filenames.extend([aux_name+'.'+ext for ext in ['h5','xmf']])
+        # filenames.append('proteus.log')
+        # for f in filenames:
+        #     if os.path.exists(f):
+        #         try:
+        #             os.remove(f)
+        #         except OSError as e:
+        #             print ("Error: %s - %s" %(e.filename,e.strerror))
+        #     else:
+        #         pass
             
     def test_vortex2D(self,use_strong_constraints=False):
         from proteus import default_s
@@ -95,7 +97,6 @@ class TestVortex2D(object):
         
     def test_vortex2D_exactHeaviside(self,use_strong_constraints=False):
         from proteus import default_s
-        import vortex2D
         reload(default_s)
         reload(vortex2D)
         vortex2D.useExact=True
