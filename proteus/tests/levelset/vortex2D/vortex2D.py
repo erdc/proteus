@@ -6,6 +6,7 @@ parallel = False
 linearSmoother = None
 #compute mass balance statistics or not
 checkMass=False#True
+useExact=False
 #number of space dimensions
 nd=2
 #time integration, not relevant if using BDF with cfl timestepping
@@ -14,9 +15,9 @@ atol_u = {0:1.0e-4}
 rtol_res = {0:1.0e-4}
 atol_res = {0:1.0e-4}
 #
-timeIntegration_vof = "vbdf"#vbdf,be,flcbdf,rk
-timeIntegration_ls = "vbdf"#vbdf,be,flcbdf,rk
-timeOrder = 2
+timeIntegration_vof = "be"#vbdf,be,flcbdf,rk
+timeIntegration_ls = "be"#vbdf,be,flcbdf,rk
+timeOrder = 1
 
 runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
@@ -34,7 +35,7 @@ if pDegree_ls == 2:
     vortex_quad_order =4
 else:
     vortex_quad_order = 3
-
+compQuad=False
 #sub-element edge size, used to create composite quadrature rule
 hk = 0.2
 

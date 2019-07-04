@@ -11,47 +11,47 @@ namespace equivalent_polynomials
   class Regularized
   {
   public:
-    Regularized()
+    Regularized(bool useExact=false)
     {}
     inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
     {}
     inline void set_quad(unsigned int q)
     {}
-    inline double get_H(double eps, double phi)
-      {
-	double H;
-	if (phi > eps)
-	  H=1.0;
-	else if (phi < -eps)
-	  H=0.0;
-	else if (phi==0.0)
-	  H=0.5;
-	else
-	  H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
-	return H;
-      }
-    inline double get_ImH(double eps, double phi)
-      {
-        return 1.0-get_H(eps,phi);
-      }
-    inline double get_D(double eps, double phi)
-      {
-	double d;
-	if (phi > eps)
-	  d=0.0;
-	else if (phi < -eps)
-	  d=0.0;
-	else
-	  d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
-	return d;
-      }
+    inline double H(double eps, double phi)
+    {
+      double h;
+      if (phi > eps)
+        h=1.0;
+      else if (phi < -eps)
+        h=0.0;
+      else if (phi==0.0)
+        h=0.5;
+      else
+        h = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
+      return h;
+    }
+    inline double ImH(double eps, double phi)
+    {
+      return 1.0-H(eps,phi);
+    }
+    inline double D(double eps, double phi)
+    {
+      double d;
+      if (phi > eps)
+        d=0.0;
+      else if (phi < -eps)
+        d=0.0;
+      else
+        d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
+      return d;
+    }
   };
   
   template<int nSpace, int nP, int nQ>
   class Simplex
   {
   public:
-    Simplex()
+    Simplex(bool useExact=true)
     {
       if (nSpace == 1)
         assert(nDOF == nP+1);
@@ -63,29 +63,35 @@ namespace equivalent_polynomials
         assert(false);
       _set_Ainv<nSpace,nP>(Ainv);
     }
+    
     inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r);
+
     inline void set_quad(unsigned int q)
     {
       assert(q >= 0);
       assert(q < nQ);
-      D = _D[q];
+      _D_q = _D[q];
       if(inside_out)
         {
-          H   = _ImH[q];
-          ImH = _H[q];
+          _H_q   = _ImH[q];
+          _ImH_q = _H[q];
         }
       else
         {
-          H   = _H[q];
-          ImH = _ImH[q];
+          _H_q   = _H[q];
+          _ImH_q = _ImH[q];
         }
     }
-    double H, ImH, D;
-    inline double* get_H(double eps, double phi){return _H;};
-    inline double* get_ImH(double eps, double phi){return _ImH;};
-    inline double* get_D(double eps, double phi){return _D;};
+    
+    inline double* get_H(){return _H;};
+    inline double* get_ImH(){return _ImH;};
+    inline double* get_D(){return _D;};
+    inline double H(double eps, double phi){return _H_q;};
+    inline double ImH(double eps, double phi){return _ImH_q;};
+    inline double D(double eps, double phi){return _D_q;};
     bool inside_out;
   private:
+    double _H_q, _ImH_q, _D_q;
     static const unsigned int nN=nSpace+1;
     unsigned int root_node, permutation[nN];
     double phi[nN], nodes[nN*3];
@@ -99,7 +105,7 @@ namespace equivalent_polynomials
     inline void _calculate_C();
     double _H[nQ], _ImH[nQ], _D[nQ];
   };
-
+  
   template<int nSpace, int nP, int nQ>
   inline void Simplex<nSpace,nP,nQ>::_calculate_C()
   {
@@ -129,7 +135,7 @@ namespace equivalent_polynomials
           }
       }
   }
-
+  
   template<int nSpace, int nP, int nQ>
   inline int Simplex<nSpace,nP,nQ>::_calculate_permutation(const double* phi_dof, const double* phi_nodes)
   {
@@ -235,7 +241,7 @@ namespace equivalent_polynomials
     inv<nSpace>(Jac, inv_Jac);
     return 0;
   }
-
+  
   template<int nSpace, int nP, int nQ>
   inline void Simplex<nSpace,nP,nQ>::_calculate_cuts()
   {
@@ -262,7 +268,7 @@ namespace equivalent_polynomials
           }
       }
   }
-
+  
   template<int nSpace, int nP, int nQ>
   inline void Simplex<nSpace,nP,nQ>::calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
   {
@@ -327,6 +333,54 @@ namespace equivalent_polynomials
       }
     set_quad(0);
   }
+
+  template<int nSpace, int nP, int nQ>
+  class GeneralizedFunctions_mix
+  {
+  public:
+    Regularized<nSpace, nP, nQ> regularized;
+    Simplex<nSpace, nP, nQ> exact;
+    bool useExact;
+    GeneralizedFunctions_mix(bool useExact=true):
+      useExact(useExact)
+    {}
+    
+    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    {
+      if(useExact)
+        exact.calculate(phi_dof, phi_nodes, xi_r);
+    }
+    
+    inline void set_quad(unsigned int q)
+    {
+      if(useExact)
+        exact.set_quad(q);
+    }
+    
+    inline double H(double eps, double phi)
+    {
+      if(useExact)
+        return exact.H(eps, phi);
+      else
+        return regularized.H(eps, phi);
+    }
+
+    inline double ImH(double eps, double phi)
+    {
+      if(useExact)
+        return exact.ImH(eps, phi);
+      else
+        return regularized.ImH(eps, phi);
+    }
+    
+    inline double D(double eps, double phi)
+    {
+      if(useExact)
+        return exact.D(eps, phi);
+      else
+        return regularized.D(eps, phi);
+    }
+  };
 }//equivalent_polynomials
 
 #endif

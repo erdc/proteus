@@ -1,5 +1,4 @@
 # A type of -*- python -*- file
-from libcpp cimport bool
 import numpy
 cimport numpy
 from proteus import *
@@ -12,7 +11,6 @@ cdef extern from "MCorr.h" namespace "proteus":
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                int * mesh_l2g,
-                               double * x_ref,
                                double * dV_ref,
                                double * u_trial_ref,
                                double * u_grad_trial_ref,
@@ -37,7 +35,6 @@ cdef extern from "MCorr.h" namespace "proteus":
                                double * elementDiameter,
                                double * nodeDiametersArray,
                                double * u_dof,
-                               double * phi_dof,
                                double * q_phi,
                                double * q_normal_phi,
                                double * ebqe_phi,
@@ -54,13 +51,11 @@ cdef extern from "MCorr.h" namespace "proteus":
                                int nExteriorElementBoundaries_global,
                                int * exteriorElementBoundariesArray,
                                int * elementBoundaryElementsArray,
-                               int * elementBoundaryLocalElementBoundariesArray,
-                               bool useExact)
+                               int * elementBoundaryLocalElementBoundariesArray)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                int * mesh_l2g,
-                               double * x_ref,
                                double * dV_ref,
                                double * u_trial_ref,
                                double * u_grad_trial_ref,
@@ -84,14 +79,12 @@ cdef extern from "MCorr.h" namespace "proteus":
                                double * elementDiameter,
                                double * nodeDiametersArray,
                                double * u_dof,
-                               double * phi_dof,
                                double * q_phi,
                                double * q_normal_phi,
                                double * q_H,
                                double * q_porosity,
                                int * csrRowIndeces_u_u, int * csrColumnOffsets_u_u,
-                               double * globalJacobian,
-                               bool useExact)
+                               double * globalJacobian)
         void elementSolve(double * mesh_trial_ref,
                           double * mesh_grad_trial_ref,
                           double * mesh_dof,
@@ -237,7 +230,6 @@ cdef extern from "MCorr.h" namespace "proteus":
                            double * mesh_grad_trial_ref,
                            double * mesh_dof,
                            int * mesh_l2g,
-                           double * x_ref,
                            double * dV_ref,
                            double * u_trial_ref,
                            double * u_grad_trial_ref,
@@ -261,7 +253,6 @@ cdef extern from "MCorr.h" namespace "proteus":
                            double * elementDiameter,
                            double * nodeDiametersArray,
                            double * u_dof,
-                           double * phi_dof,
                            double * q_phi,
                            double * q_normal_phi,
                            double * ebqe_phi,
@@ -279,13 +270,11 @@ cdef extern from "MCorr.h" namespace "proteus":
                            int * exteriorElementBoundariesArray,
                            int * elementBoundaryElementsArray,
                            int * elementBoundaryLocalElementBoundariesArray,
-                           double * globalMass,
-                           bool useExact)
+                           double * globalMass)
         void setMassQuadrature(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                int * mesh_l2g,
-                               double * x_ref,
                                double * dV_ref,
                                double * u_trial_ref,
                                double * u_grad_trial_ref,
@@ -326,8 +315,7 @@ cdef extern from "MCorr.h" namespace "proteus":
                                int * exteriorElementBoundariesArray,
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray,
-                               double * H_dof,
-                               bool useExact)
+                               double * H_dof)
         void FCTStep(int NNZ,
                      int numDOFs,
                      double * lumped_mass_matrix,
@@ -375,7 +363,6 @@ cdef extern from "MCorr.h" namespace "proteus":
                                                             double * mesh_grad_trial_ref,
                                                             double * mesh_dof,
                                                             int * mesh_l2g,
-                                                            double* x_ref,
                                                             double * dV_ref,
                                                             double * u_trial_ref,
                                                             double * u_grad_trial_ref,
@@ -419,8 +406,7 @@ cdef extern from "MCorr.h" namespace "proteus":
                                                             double * rhs_mass_correction,
                                                             double * lumped_L2p_vof_mass_correction,
                                                             double * lumped_mass_matrix,
-                                                            int numDOFs,
-                                                            bool useExact)
+                                                            int numDOFs)
     MCorr_base * newMCorr(int nSpaceIn,
                          int nQuadraturePoints_elementIn,
                          int nDOF_mesh_trial_elementIn,
@@ -456,7 +442,6 @@ cdef class cMCorr_base:
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_l2g,
-                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray u_trial_ref,
                           numpy.ndarray u_grad_trial_ref,
@@ -481,7 +466,6 @@ cdef class cMCorr_base:
                           numpy.ndarray elementDiameter,
                           numpy.ndarray nodeDiametersArray,
                           numpy.ndarray u_dof,
-                          numpy.ndarray phi_dof,
                           numpy.ndarray q_phi,
                           numpy.ndarray q_normal_phi,
                           numpy.ndarray ebqe_phi,
@@ -499,13 +483,11 @@ cdef class cMCorr_base:
                           int nExteriorElementBoundaries_global,
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
-                          numpy.ndarray elementBoundaryLocalElementBoundariesArray,
-                          bool useExact):
+                          numpy.ndarray elementBoundaryLocalElementBoundariesArray):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < int * > mesh_l2g.data,
-                                        < double * > x_ref.data,
                                        < double * > dV_ref.data,
                                        < double * > u_trial_ref.data,
                                        < double * > u_grad_trial_ref.data,
@@ -530,7 +512,6 @@ cdef class cMCorr_base:
                                        < double * > elementDiameter.data,
                                        < double * > nodeDiametersArray.data,
                                        < double * > u_dof.data,
-                                       < double * > phi_dof.data,
                                        < double * > q_phi.data,
                                        < double * > q_normal_phi.data,
                                        < double * > ebqe_phi.data,
@@ -548,15 +529,13 @@ cdef class cMCorr_base:
                                        nExteriorElementBoundaries_global,
                                        < int * > exteriorElementBoundariesArray.data,
                                        < int * > elementBoundaryElementsArray.data,
-                                       < int * > elementBoundaryLocalElementBoundariesArray.data,
-                                       useExact)
+                                       < int * > elementBoundaryLocalElementBoundariesArray.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_l2g,
-                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray u_trial_ref,
                           numpy.ndarray u_grad_trial_ref,
@@ -580,22 +559,19 @@ cdef class cMCorr_base:
                           numpy.ndarray elementDiameter,
                           numpy.ndarray nodeDiametersArray,
                           numpy.ndarray u_dof,
-                          numpy.ndarray phi_dof,
                           numpy.ndarray q_phi,
                           numpy.ndarray q_normal_phi,
                           numpy.ndarray q_H,
                           numpy.ndarray q_porosity,
                           numpy.ndarray csrRowIndeces_u_u,
                           numpy.ndarray csrColumnOffsets_u_u,
-                          globalJacobian,
-                          bool useExact):
+                          globalJacobian):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < int * > mesh_l2g.data,
-                                       < double * > x_ref.data,
                                        < double * > dV_ref.data,
                                        < double * > u_trial_ref.data,
                                        < double * > u_grad_trial_ref.data,
@@ -619,15 +595,13 @@ cdef class cMCorr_base:
                                        < double * > elementDiameter.data,
                                        < double * > nodeDiametersArray.data,
                                        < double * > u_dof.data,
-                                       < double * > phi_dof.data,
                                        < double * > q_phi.data,
                                        < double * > q_normal_phi.data,
                                        < double * > q_H.data,
                                        < double * > q_porosity.data,
                                        < int * > csrRowIndeces_u_u.data,
                                        < int * > csrColumnOffsets_u_u.data,
-                                       < double * > globalJacobian_a.data,
-                                       useExact)
+                                       < double * > globalJacobian_a.data)
     def elementSolve(self,
                      numpy.ndarray mesh_trial_ref,
                      numpy.ndarray mesh_grad_trial_ref,
@@ -925,7 +899,6 @@ cdef class cMCorr_base:
                       numpy.ndarray mesh_grad_trial_ref,
                       numpy.ndarray mesh_dof,
                       numpy.ndarray mesh_l2g,
-                      numpy.ndarray x_ref,
                       numpy.ndarray dV_ref,
                       numpy.ndarray u_trial_ref,
                       numpy.ndarray u_grad_trial_ref,
@@ -949,7 +922,6 @@ cdef class cMCorr_base:
                       numpy.ndarray elementDiameter,
                       numpy.ndarray nodeDiametersArray,
                       numpy.ndarray u_dof,
-                      numpy.ndarray phi_dof,
                       numpy.ndarray q_phi,
                       numpy.ndarray q_normal_phi,
                       numpy.ndarray ebqe_phi,
@@ -967,14 +939,12 @@ cdef class cMCorr_base:
                       int nExteriorElementBoundaries_global,
                       numpy.ndarray exteriorElementBoundariesArray,
                       numpy.ndarray elementBoundaryElementsArray,
-                      numpy.ndarray elementBoundaryLocalElementBoundariesArray,
-                      bool useExact):
+                      numpy.ndarray elementBoundaryLocalElementBoundariesArray):
         cdef double globalMass
         self.thisptr.calculateMass(<double*> mesh_trial_ref.data,
                                    <double*> mesh_grad_trial_ref.data,
                                    <double*> mesh_dof.data,
                                    <int*> mesh_l2g.data,
-                                   <double*> x_ref.data,
                                    <double*> dV_ref.data,
                                    <double*> u_trial_ref.data,
                                    <double*> u_grad_trial_ref.data,
@@ -998,7 +968,6 @@ cdef class cMCorr_base:
                                    <double*> elementDiameter.data,
                                    <double*> nodeDiametersArray.data,
                                    <double*> u_dof.data,
-                                   <double*> phi_dof.data,
                                    <double*> q_phi.data,
                                    <double*> q_normal_phi.data,
                                    <double*> ebqe_phi.data,
@@ -1017,15 +986,13 @@ cdef class cMCorr_base:
                                    <int*> exteriorElementBoundariesArray.data,
                                    <int*> elementBoundaryElementsArray.data,
                                    <int*> elementBoundaryLocalElementBoundariesArray.data,
-                                   &globalMass,
-                                   useExact)
+                                   &globalMass)
         return globalMass
     def setMassQuadrature(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_l2g,
-                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray u_trial_ref,
                           numpy.ndarray u_grad_trial_ref,
@@ -1067,13 +1034,11 @@ cdef class cMCorr_base:
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
-                          numpy.ndarray H_dof,
-                          bool useExact):
+                          numpy.ndarray H_dof):
         self.thisptr.setMassQuadrature(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
                                        <int*> mesh_l2g.data,
-                                       <double*> x_ref.data,
                                        <double*> dV_ref.data,
                                        <double*> u_trial_ref.data,
                                        <double*> u_grad_trial_ref.data,
@@ -1115,8 +1080,7 @@ cdef class cMCorr_base:
                                        <int*> exteriorElementBoundariesArray.data,
                                        <int*> elementBoundaryElementsArray.data,
                                        <int*> elementBoundaryLocalElementBoundariesArray.data,
-                                       <double*> H_dof.data,
-                                       useExact)
+                                       <double*> H_dof.data)
     def FCTStep(self,
                 int NNZ,
                 int numDOFs,
@@ -1214,7 +1178,6 @@ cdef class cMCorr_base:
                                                        numpy.ndarray mesh_grad_trial_ref,
                                                        numpy.ndarray mesh_dof,
                                                        numpy.ndarray mesh_l2g,
-                                                       numpy.ndarray x_ref,
                                                        numpy.ndarray dV_ref,
                                                        numpy.ndarray u_trial_ref,
                                                        numpy.ndarray u_grad_trial_ref,
@@ -1259,13 +1222,11 @@ cdef class cMCorr_base:
                                                        numpy.ndarray rhs_mass_correction,
                                                        numpy.ndarray lumped_L2p_vof_mass_correction,
                                                        numpy.ndarray lumped_mass_matrix,
-                                                       int numDOFs,
-                                                       bool useExact):
+                                                       int numDOFs):
         self.thisptr.setMassQuadratureEdgeBasedStabilizationMethods(<double*> mesh_trial_ref.data,
                                                                     <double*> mesh_grad_trial_ref.data,
                                                                     <double*> mesh_dof.data,
                                                                     <int*> mesh_l2g.data,
-                                                                    <double*> x_ref.data,
                                                                     <double*> dV_ref.data,
                                                                     <double*> u_trial_ref.data,
                                                                     <double*> u_grad_trial_ref.data,
@@ -1310,5 +1271,4 @@ cdef class cMCorr_base:
                                                                     <double*> rhs_mass_correction.data,
                                                                     <double*> lumped_L2p_vof_mass_correction.data,
                                                                     <double*> lumped_mass_matrix.data,
-                                                                    numDOFs,
-                                                                    useExact)
+                                                                    numDOFs)

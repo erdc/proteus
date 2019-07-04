@@ -29,8 +29,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # mql. For edge based stabilization methods
                  useQuadraticRegularization=False,
                  edgeBasedStabilizationMethods=False,
-                 nullSpace='NoNullSpace'):
-
+                 nullSpace='NoNullSpace',
+                 useExact=False):
+        self.useExact=useExact
         self.useQuadraticRegularization = useQuadraticRegularization
         self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
         self.useConstantH = useConstantH
@@ -673,7 +674,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray)
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.coefficients.useExact)
 
         logEvent("Global residual", level=9, data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
@@ -777,7 +779,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_H_vof,
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian)
+            jacobian,
+            self.coefficients.useExact)
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
@@ -1077,7 +1080,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray))
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.coefficients.useExact))
 
     def setMassQuadratureEdgeBasedStabilizationMethods(self):
         # Compute mass matrix
@@ -1139,7 +1143,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.rhs_mass_correction,  # (MQL): compute rhs for L2 projection.
             self.lumped_L2p_vof_mass_correction,
             self.LumpedMassMatrix,
-            self.lumped_L2p_vof_mass_correction.size)
+            self.lumped_L2p_vof_mass_correction.size,
+            self.coefficients.useExact)
 
     def setMassQuadrature(self):
 
@@ -1191,7 +1196,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.coefficients.vofModel.u[0].dof)
+            self.coefficients.vofModel.u[0].dof,
+            self.coefficients.useExact)
 
     def calculateSolutionAtQuadrature(self):
         pass
