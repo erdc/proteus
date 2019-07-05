@@ -1589,7 +1589,7 @@ class ParametersModelRDLS(ParametersModelBase):
         copts.useMetrics = True
         copts.applyRedistancing = True
         copts.backgroundDiffusionFactor = 0.01
-        copts.epsFact = 0.33
+        copts.epsFact = 0.75
         copts.ELLIPTIC_REDISTANCING = 0
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
