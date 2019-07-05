@@ -309,7 +309,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.forceStrongDirichlet = False
         copts.weak_bc_penalty_constant = 1e6
         copts.useRBLES = 0
-        copts.useVF = 1
+        copts.useVF = 0.
         copts.timeOrder = 2
         copts.stokes = False
         copts.eb_adjoint_sigma = 1.
@@ -579,7 +579,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.ns_sed_forceStrongDirichlet = False
         copts.weak_bc_penalty_constant = 1e6
         copts.useRBLES = 0
-        copts.useVF = 1
+        copts.useVF = 0.
         copts.PSTAB = 0
         copts.ARTIFICIAL_VISCOSITY = 3
         copts.INT_BY_PARTS_PRESSURE = 1
