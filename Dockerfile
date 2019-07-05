@@ -1,8 +1,6 @@
-FROM erdc/stack_base:small
+FROM erdc/stack_base:latest
 
 MAINTAINER Proteus Project <proteus@googlegroups.com>
-
-USER root
 
 USER jovyan
 
@@ -18,11 +16,12 @@ RUN cd proteus && CC=gcc CXX=g++ ./linux/bin/pip install matplotlib
 
 ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
 
-RUN cd proteus && make jupyter
+RUN cd proteus && PATH=/usr/bin:/usr/local/bin:$PATH make jupyter
 
 #ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
 #RUN cd proteus && git pull && export PATH=${HOME}/bin:${PATH} && make lfs && git lfs fetch && git lfs checkout
+
 USER root
 
 RUN ipython kernel install
