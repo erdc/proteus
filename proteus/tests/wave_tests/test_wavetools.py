@@ -712,6 +712,59 @@ class CheckRandomWavesFailures(unittest.TestCase):
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
         self.assertTrue(None is None)
 
+
+class VerifyNewWaves(unittest.TestCase):
+    def testRandom(self):
+        from proteus.WaveTools import NewWave,dispersion
+        import random
+        from proteus.WaveTools import fastcos_test as fcos
+        from proteus.WaveTools import coshkzd_test as fcosh
+        from proteus.WaveTools import sinhkzd_test as fsinh
+        # Assinging a random value at a field and getting the expected output
+        Tp = 2.
+        Hs = 0.1
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 1.
+        dir2 = 0.
+        waveDir = np.array([dir1,dir2, 0])
+        N = 32
+        crestFocus = True
+        xfocus = np.array([0.,0.,0.])
+        tfocus = 10.
+        gamma = 3.3
+        TMA = False
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+        Nmax = 1000
+        a= NewWave(Tp,
+                  Hs,
+                  mwl,#m significant wave height
+                  depth ,           #m depth
+                  waveDir,
+                  g,      #peak  frequency
+                  N,
+                  bandFactor,         #accelerationof gravity
+                  spectName ,# random words will result in error and return the available spectra
+                  spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
+                  crestFocus=True,
+                   xfocus=xfocus,
+                   tfocus=tfocus,
+                  fast = True,
+                  Nmax = 1000)
+        eta = np.zeros(3000,)
+        tt = np.linspace(0,30,3000)
+        ii=-1
+        for t in tt:
+            ii+=1
+            eta[ii] = a.eta(xfocus,t)
+
+        np.savetxt(X=eta,fname="eta.txt")
+        imax=np.where(tt>=tfocus)[0][0]
+        self.assertAlmostEqual(eta[imax],max(eta))
+        
 class VerifyRandomWaves(unittest.TestCase):
     def testRandom(self):
         from proteus.WaveTools import RandomWaves,dispersion
@@ -855,7 +908,7 @@ class VerifyRandomWaves(unittest.TestCase):
                 eta_t[i,j] = aa.eta(xi[i],yi[j],0.,0.)
 
 
-        from matplotlib import pyplot as plt
+
         fig = plt.figure(2)
         X,Y = np.meshgrid(xi,yi)
         CS = plt.contourf(X,Y,eta_t)
