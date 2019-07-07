@@ -386,8 +386,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def preStep(self, t, firstStep=False):
         if firstStep:
             # Init boundaryIndex
-            assert (self.model.boundaryIndex is None and self.model.normalx is not None,
-                    "Check boundaryIndex, normalx and normaly")
+            assert self.model.boundaryIndex is None and self.model.normalx is not None , \
+                    "Check boundaryIndex, normalx and normaly"
             self.model.boundaryIndex = []
             for i in range(self.model.normalx.size):
                 if self.model.normalx[i] != 0 or self.model.normaly[i] != 0:
