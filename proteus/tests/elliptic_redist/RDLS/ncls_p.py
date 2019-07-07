@@ -3,7 +3,11 @@ from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
-from .vortex2D import *
+try:
+    from .vortex2D import *
+except:
+    from vortex2D import *
+
 from proteus.mprans import NCLS
 
 LevelModelType = NCLS.LevelModel
@@ -41,14 +45,17 @@ velocityField={0:velx,
 # INITIAL CONDITION #
 #####################
 class init_cond(object):
-    def __init__(self,L,scaling=0.75):
+    def __init__(self,L,scaling=0.75,r=1):
         self.radius=0.15
         self.xc=0.5
         self.yc=0.75
         self.scaling=scaling
+        if r%2 == 0:
+            r+=1
+        self.r = r
     def uOfXT(self,x,t):
         import numpy as np
-        return self.scaling*(self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2))
+        return self.scaling*(self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2))**self.r
 
 class zalesak_disk(object):
     def __init__(self,L,scaling=0.75):
@@ -98,8 +105,8 @@ class zalesak_disk(object):
                 dist = dist_circle
         return self.scaling*dist
     
-analyticalSolution = {0:init_cond(L,scaling=1.0)}
-initialConditions  = {0:init_cond(L,scaling=0.9)}
+analyticalSolution = {0:init_cond(L,scaling=1.0,r=3)}
+initialConditions  = {0:init_cond(L,scaling=1.5)}
 
 # BOUNDARY CONDITIONS #
 def getDBC(x,flag):

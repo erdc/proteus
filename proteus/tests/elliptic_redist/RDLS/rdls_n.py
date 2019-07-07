@@ -1,15 +1,19 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .rdls_p import *
-from .vortex2D import *
+try:
+    from .rdls_p import *
+    from .vortex2D import *
+except:
+    from rdls_p import *
+    from vortex2D import *
 
 timeIntegration = NoIntegration
 stepController = Newton_controller
 
 # About the nonlinear solver
 multilevelNonlinearSolver  = Newton
-levelNonlinearSolver = TwoStageNewton
+levelNonlinearSolver = Newton#TwoStageNewton
 
 tolFac = 0.0
 nl_atol_res = atolRedistance

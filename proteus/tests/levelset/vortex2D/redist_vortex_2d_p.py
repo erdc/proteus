@@ -17,7 +17,8 @@ coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,
                                  epsFact=epsFactRedistance,
                                  nModelId=0,
                                  rdModelId=1,
-                                 useMetrics=useMetrics)
+                                 useMetrics=useMetrics,
+                                 useExact=useExact)
 
 #now define the Dirichlet boundary conditions
 

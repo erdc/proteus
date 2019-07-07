@@ -90,9 +90,10 @@ namespace equivalent_polynomials
     inline double ImH(double eps, double phi){return _ImH_q;};
     inline double D(double eps, double phi){return _D_q;};
     bool inside_out;
+    static const unsigned int nN=nSpace+1;
+    double phi_dof_corrected[nN];
   private:
     double _H_q, _ImH_q, _D_q;
-    static const unsigned int nN=nSpace+1;
     unsigned int root_node, permutation[nN];
     double phi[nN], nodes[nN*3];
     double Jac[nSpace*nSpace], inv_Jac[nSpace*nSpace];
@@ -103,6 +104,7 @@ namespace equivalent_polynomials
     inline int _calculate_permutation(const double* phi_dof, const double* phi_nodes);
     inline void _calculate_cuts();
     inline void _calculate_C();
+    inline void _correct_phi(const double* phi_dof, const double* phi_nodes);
     double _H[nQ], _ImH[nQ], _D[nQ];
   };
   
@@ -144,12 +146,12 @@ namespace equivalent_polynomials
     inside_out=false;
     for (unsigned int i=0; i < nN; i++)
       {
-        if(phi_dof[i] > 0.0)
+        if(phi_dof[i] > 1.0e-16)
           {
             p_i = i;
             pcount  += 1;
           }
-        else if(phi_dof[i] < 0.0)
+        else if(phi_dof[i] < -1.0e-16)
           {
             n_i = i;
             ncount += 1;
@@ -247,7 +249,7 @@ namespace equivalent_polynomials
   {
     for (unsigned int i=0; i < nN-1;i++)
       {
-        if(phi[i+1]*phi[0] < 0.0)
+        if(phi[i+1]*phi[0] < -1.0e-16)
           {
             X_0[i] = 0.5 - 0.5*(phi[i+1] + phi[0])/(phi[i+1]-phi[0]);
             assert(X_0[i] <=1.0);
@@ -259,7 +261,7 @@ namespace equivalent_polynomials
           }
         else
           {
-            assert(phi[i+1] == 0.0);
+            //assert(fabs(phi[i+1]) < 1.0e-16 + fabs(phi[0])*1.0e-16);
             X_0[i] = 1.0;
             for (unsigned int I=0; I < 3; I++)
               {
@@ -270,8 +272,34 @@ namespace equivalent_polynomials
   }
   
   template<int nSpace, int nP, int nQ>
+  inline void Simplex<nSpace,nP,nQ>::_correct_phi(const double* phi_dof, const double* phi_nodes)
+  {
+    register double cut_barycenter[3] ={0.,0.,0.};
+    const double one_by_nNm1 = 1.0/(nN-1.0);
+    for (unsigned int i=0; i < nN-1;i++)
+      {
+        for (unsigned int I=0; I < 3; I++)
+          cut_barycenter[I] += phys_nodes_cut[i*3+I]*one_by_nNm1;
+      }
+    for (unsigned int i=0; i < nN;i++)
+      {
+        phi_dof_corrected[i]=0.0;
+        for (unsigned int I=0; I < 3; I++)
+          {
+            phi_dof_corrected[i] += level_set_normal[I]*(phi_nodes[i*3+I] - cut_barycenter[I]);             
+          }
+        //todo: decide if we should just use a consistant normal
+        if (phi_dof_corrected[i]*phi_dof[i] < 0.0)
+          phi_dof_corrected[i]*=-1.0;
+      }
+  }
+  
+  template<int nSpace, int nP, int nQ>
   inline void Simplex<nSpace,nP,nQ>::calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
   {
+    //initialize phi_dof_corrected -- correction can only be actually computed on cut cells
+    for (unsigned int i=0; i < nN;i++)
+      phi_dof_corrected[i] = phi_dof[i];
     int icase = _calculate_permutation(phi_dof, phi_nodes);//permuation, Jac,inv_Jac...
     if(icase == 1)
       {
@@ -296,6 +324,7 @@ namespace equivalent_polynomials
     _calculate_cuts();//X_0, array of interface cuts on reference simplex
     _calculate_normal<nSpace>(phys_nodes_cut, level_set_normal);//normal to interface
     _calculate_C();//coefficients of equiv poly
+    _correct_phi(phi_dof, phi_nodes);
     //compute the default affine map based on phi_nodes[0]
     double Jac_0[nSpace*nSpace];
     for(unsigned int i=0; i < nN - 1; i++)
@@ -347,8 +376,13 @@ namespace equivalent_polynomials
     
     inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
     {
+      //hack for testing
+      //exact.calculate(phi_dof, phi_nodes, xi_r);
       if(useExact)
         exact.calculate(phi_dof, phi_nodes, xi_r);
+      else//for inexact just copy over local phi_dof
+        for (int i=0; i<exact.nN;i++)
+          exact.phi_dof_corrected[i] = phi_dof[i];
     }
     
     inline void set_quad(unsigned int q)
