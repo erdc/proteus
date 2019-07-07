@@ -29,7 +29,7 @@ make develop
 
 Each test directory in `proteus/SWFlows/tests/` contains a python file named
 `SWFlow.py`. This is the file that sets up the computational domain, initial conditions,
-boundary conditions, and other problem specific options.
+boundary conditions, and other problem specific options. Note that using the filename `SWFlow.py` is not necessary, one can use a different filename if wanted. Thus, in all following instructions, one can replace `SWFlow.py` with `some_filename.py`. 
 
 Each `SWFlow.py` file has its own set of default context options. These include choosing which model to use, final run time of the simulation, refinement level of mesh, etc. For example, in `SWFlows/tests/dam_over_bumps`, we see the following set of default options:
 
