@@ -5,18 +5,20 @@
 #include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
-
+#include "equivalent_polynomials.h"
 #define SINGLE_POTENTIAL 1
 
 namespace proteus
 {
-  inline double heaviside(const double &z){
+  inline double heaviside(const double &z)
+  {
     return (z>0 ? 1. : (z<0 ? 0. : 0.5));
   }
-}
 
-namespace proteus
-{
+  template<int nSpace, int nP, int nQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+
+  
   class RDLS_base
   {
   public:
@@ -27,6 +29,7 @@ namespace proteus
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
                                    int* mesh_l2g,
+                                   double* x_ref,
                                    double* dV_ref,
                                    double* u_trial_ref,
                                    double* u_grad_trial_ref,
@@ -90,12 +93,14 @@ namespace proteus
                                    double* lumped_qx,
                                    double* lumped_qy,
                                    double* lumped_qz,
-                                   double alpha)=0;
+                                   double alpha,
+                                   bool useExact)=0;
     virtual void calculateJacobian(//element
                                    double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
                                    int* mesh_l2g,
+                                   double* x_ref,
                                    double* dV_ref,
                                    double* u_trial_ref,
                                    double* u_grad_trial_ref,
@@ -127,6 +132,7 @@ namespace proteus
                                    double* elementDiameter,
                                    double* nodeDiametersArray,
                                    double* u_dof,
+                                   double* phi_dof,
                                    double* u_weak_internal_bc_dofs,//for freezing level set
                                    double* phi_ls,
                                    double* q_m_betaBDF,
@@ -148,12 +154,14 @@ namespace proteus
                                    // elliptic redistancing
                                    int ELLIPTIC_REDISTANCING,
 				   double backgroundDissipationEllipticRedist,
-                                   double alpha)=0;
+                                   double alpha,
+                                   bool useExact)=0;
     virtual void calculateResidual_ellipticRedist(//element
                                                   double* mesh_trial_ref,
                                                   double* mesh_grad_trial_ref,
                                                   double* mesh_dof,
                                                   int* mesh_l2g,
+                                                  double* x_ref,
                                                   double* dV_ref,
                                                   double* u_trial_ref,
                                                   double* u_grad_trial_ref,
@@ -217,12 +225,14 @@ namespace proteus
                                                   double* lumped_qx,
                                                   double* lumped_qy,
                                                   double* lumped_qz,
-                                                  double alpha)=0;
+                                                  double alpha,
+                                                  bool useExact)=0;
     virtual void calculateJacobian_ellipticRedist(//element
                                                   double* mesh_trial_ref,
                                                   double* mesh_grad_trial_ref,
                                                   double* mesh_dof,
                                                   int* mesh_l2g,
+                                                  double* x_ref,
                                                   double* dV_ref,
                                                   double* u_trial_ref,
                                                   double* u_grad_trial_ref,
@@ -254,6 +264,7 @@ namespace proteus
                                                   double* elementDiameter,
                                                   double* nodeDiametersArray,
                                                   double* u_dof,
+                                                  double* phi_dof,
                                                   double* u_weak_internal_bc_dofs,//for freezing level set
                                                   double* phi_ls,
                                                   double* q_m_betaBDF,
@@ -275,7 +286,8 @@ namespace proteus
                                                   // elliptic redistancing
                                                   int ELLIPTIC_REDISTANCING,
 						  double backgroundDissipationEllipticRedist,
-                                                  double alpha)=0;
+                                                  double alpha,
+                                                  bool useExact)=0;
     virtual void normalReconstruction(double* mesh_trial_ref,
                                       double* mesh_grad_trial_ref,
                                       double* mesh_dof,
@@ -329,38 +341,11 @@ namespace proteus
     public:
       const int nDOF_test_X_trial_element;
       CompKernelType ck;
+      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf,gfu;
     RDLS():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
           {}
-
-      inline
-        double smoothedHeaviside(double eps, double phi)
-      {
-        double H;
-        if (phi > eps)
-          H=1.0;
-        else if (phi < -eps)
-          H=0.0;
-        else if (phi==0.0)
-          H=0.5;
-        else
-          H = 0.5*(1.0 + phi/eps + sin(M_PI*phi/eps)/M_PI);
-        return H;
-      }
-
-      inline
-        double smoothedDirac(double eps, double phi)
-      {
-        double d;
-        if (phi > eps)
-          d=0.0;
-        else if (phi < -eps)
-          d=0.0;
-        else
-          d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
-        return d;
-      }
 
       inline
         void evaluateCoefficients(const double& eps,
@@ -371,15 +356,17 @@ namespace proteus
                                   double& dm,
                                   double& H,
                                   double dH[nSpace],
-                                  double& r)
+                                  double& r,
+                                  double& dr)
       {
         int I;
         double normGradU=0.0,Si=0.0;
         m = u;
         dm=1.0;
         H = 0.0;
-        Si= -1.0+2.0*smoothedHeaviside(eps,u_levelSet);
+        Si= gf.H(eps,u_levelSet) - gf.ImH(eps,u_levelSet);
         r = -Si;
+        dr = 0.0;
         for (I=0; I < nSpace; I++)
           {
             normGradU += grad_u[I]*grad_u[I];
@@ -411,9 +398,6 @@ namespace proteus
         //tau = 1.0/(2.0*nrm_v/h + oneByAbsdt + 1.0e-8);
         //'2'
         tau = 1.0/sqrt(4.0*nrm_v*nrm_v/(h*h) + oneByAbsdt*oneByAbsdt + 1.0e-8);
-        //mwf debug
-        //std::cout<<"tau calc h= "<<h<<" dmt= "<<dmt<<" dH[0]= "<<dH[0]<<" cfl= "<<cfl<<" tau= "<<tau<<std::endl;
-
       }
 
       inline
@@ -436,6 +420,7 @@ namespace proteus
                              double* mesh_grad_trial_ref,
                              double* mesh_dof,
                              int* mesh_l2g,
+                             double* x_ref,
                              double* dV_ref,
                              double* u_trial_ref,
                              double* u_grad_trial_ref,
@@ -499,8 +484,12 @@ namespace proteus
                              double* lumped_qx,
                              double* lumped_qy,
                              double* lumped_qz,
-                             double alpha)
+                             double alpha,
+                             bool useExact)
       {
+        double circbc=0.0,circ=0.0;
+        gf.useExact=useExact;
+        gfu.useExact=useExact;
 #ifdef CKDEBUG
         std::cout<<"stuff"<<"\t"
                  <<alphaBDF<<"\t"
@@ -529,24 +518,40 @@ namespace proteus
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
-            register double elementResidual_u[nDOF_test_element];
+            register int dummy_l2g[nDOF_mesh_trial_element];
+            register double elementResidual_u[nDOF_test_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element];
             double epsilon_redist,h_phi, dir[nSpace], norm;
             for (int i=0;i<nDOF_test_element;i++)
               {
+		register int eN_i=eN*nDOF_trial_element+i;
                 elementResidual_u[i]=0.0;
+		element_u[i] = u_dof[u_l2g[eN_i]];
+		element_phi[i] = phi_dof[u_l2g[eN_i]];
+                dummy_l2g[i] = i;
               }//i
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref);
+            gfu.calculate(element_u, element_nodes, x_ref);
             //loop over quadrature points and compute integrands
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
+                gf.set_quad(k);
+                gfu.set_quad(k);
                 //compute indeces and declare local storage
                 register int eN_k = eN*nQuadraturePoints_element+k,
                   eN_k_nSpace = eN_k*nSpace,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
-                register double u=0.0,grad_u[nSpace],
+                register double u=0.0,grad_u[nSpace],u0=0.0, grad_phi[nSpace],
                   m=0.0,dm=0.0,
                   H=0.0,dH[nSpace],
                   m_t=0.0,dm_t=0.0,
-                  r=0.0,
+                  r=0.0,dr=0.0,
                   dH_tau[nSpace],//dH if not lagging or q_dH_last if lagging tau
                   dH_strong[nSpace],//dH if not lagging or q_dH_last if lagging strong residual and adjoint
                   pdeResidual_u=0.0,
@@ -583,12 +588,16 @@ namespace proteus
                 dV = fabs(jacDet)*dV_ref[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
 
-
-
                 //get the trial function gradients
                 ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
                 //get the solution
                 ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+                ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref[k*nDOF_trial_element],u0);
+                /* //cek debug */
+                /* double u0_test; */
+                /* ck.valFromDOF(phi_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u0_test); */
+                /* if (u0 != u0_test) */
+                /*   std::cout<<"eN "<<eN<<" k "<<k<<" u0 "<<u0<<" u0_test "<<u0_test<<std::endl; */
                 //get the solution gradients
                 ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
                 //precalculate test function products with integration weights
@@ -616,14 +625,15 @@ namespace proteus
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
                 evaluateCoefficients(epsilon_redist,
-                                     phi_ls[eN_k],
+                                     u0,
                                      u,
                                      grad_u,
                                      m,
                                      dm,
                                      H,
                                      dH,
-                                     r);
+                                     r,
+                                     dr);
                 //TODO allow not lagging of subgrid error etc,
                 //remove conditional?
                 //default no lagging
@@ -741,10 +751,16 @@ namespace proteus
 #ifdef CKDEBUG
                     std::cout<<"shock capturing input  nu_sc "<<nu_sc<<'\t'<<grad_u[0]<<'\t'<<grad_u[1]<<'\t'<<grad_u[1]<<'\t'<<u_grad_test_dV[i_nSpace]<<std::endl;
 #endif
+                    //std::cout<<element_phi[i]<<'\t'<<element_nodes[i*3+0]<<'\t'<<element_nodes[i*3+1]<<std::endl;
+                    //std::cout<<"eN_k "<<eN_k<<" D "<<gf.D(epsilon_redist,phi_ls[eN_k])<<std::endl;
+                    circbc += ck.Reaction_weak(gf.D(epsilon_redist,phi_ls[eN_k]), u_test_dV[i]);
+                    circ += ck.Reaction_weak(gfu.D(epsilon_redist,u), u_test_dV[i]);
                     elementResidual_u[i] += ck.Mass_weak(m_t,u_test_dV[i]) +
 		      ck.Hamiltonian_weak(H,u_test_dV[i]) +
                       ck.Reaction_weak(r,u_test_dV[i]) +
-		      ck.SubgridError(subgridError_u,Lstar_u[i]) +
+                      (weakDirichletFactor/elementDiameter[eN])*ck.Reaction_weak(gf.D(epsilon_redist,phi_ls[eN_k])*(u-u0),
+                                                                                 u_test_dV[i]) +
+                      ck.SubgridError(subgridError_u,Lstar_u[i]) +
 		      ck.NumericalDiffusion(nu_sc,grad_u,&u_grad_test_dV[i_nSpace]);
 #ifdef CKDEBUG
                     std::cout<<ck.Mass_weak(m_t,u_test_dV[i])<<'\t'
@@ -794,6 +810,7 @@ namespace proteus
         //ebNE is the Exterior element boundary INdex
         //ebN is the element boundary INdex
         //eN is the element index
+        gf.useExact=false;//not yet implemented for boundaries
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray[ebNE],
@@ -801,7 +818,6 @@ namespace proteus
               ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
               eN_nDOF_trial_element = eN*nDOF_trial_element;
             register double elementResidual_u[nDOF_test_element];
-
             double epsilon_redist, h_phi;
             for (int i=0;i<nDOF_test_element;i++)
               {
@@ -820,6 +836,7 @@ namespace proteus
                   H_ext=0.0,
                   dH_ext[nSpace],
                   r_ext=0.0,
+                  dr_ext=0.0,
                   flux_ext=0.0,
                   bc_u_ext=0.0,
                   bc_grad_u_ext[nSpace],
@@ -828,6 +845,7 @@ namespace proteus
                   bc_H_ext=0.0,
                   bc_dH_ext[nSpace],
                   bc_r_ext=0.0,
+                  bc_dr_ext=0.0,
                   jac_ext[nSpace*nSpace],
                   jacDet_ext,
                   jacInv_ext[nSpace*nSpace],
@@ -903,7 +921,8 @@ namespace proteus
                                      dm_ext,
                                      H_ext,
                                      dH_ext,
-                                     r_ext);
+                                     r_ext,
+                                     dr_ext);
                 evaluateCoefficients(epsilon_redist,
                                      ebqe_phi_ls_ext[ebNE_kb],
                                      bc_u_ext,
@@ -912,7 +931,13 @@ namespace proteus
                                      bc_dm_ext,
                                      bc_H_ext,
                                      bc_dH_ext,
-                                     bc_r_ext);
+                                     bc_r_ext,
+                                     bc_dr_ext);
+                if(!useExact)
+                  {
+                    dr_ext=0.0;
+                    bc_dr_ext=0.0;
+                  }
                 //save for other models?
                 ebqe_u[ebNE_kb] = u_ext;
 
@@ -948,7 +973,8 @@ namespace proteus
                 globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
               }//i
           }//ebNE
-
+        gf.useExact = useExact;//just to be safe
+        std::cout<<"Circ Res"<<circbc<<'\t'<<circ<<std::endl;
       }
 
       //for now assumes that using time integration
@@ -959,6 +985,7 @@ namespace proteus
                              double* mesh_grad_trial_ref,
                              double* mesh_dof,
                              int* mesh_l2g,
+                             double* x_ref,
                              double* dV_ref,
                              double* u_trial_ref,
                              double* u_grad_trial_ref,
@@ -990,6 +1017,7 @@ namespace proteus
                              double* elementDiameter,
                              double* nodeDiametersArray,
                              double* u_dof,
+                             double* phi_dof,
                              double* u_weak_internal_bc_dofs,//for freezing level set
                              double* phi_ls,
                              double* q_m_betaBDF,
@@ -1011,8 +1039,11 @@ namespace proteus
                              // elliptic redistancing
                              int ELLIPTIC_REDISTANCING,
 			     double backgroundDissipationEllipticRedist,
-                             double alpha)
+                             double alpha,
+                             bool useExact)
       {
+        double circ=0.0;
+        gf.useExact=useExact;
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
         //
@@ -1024,25 +1055,40 @@ namespace proteus
           lag_shockCapturingScale = 0.0;
         for(int eN=0;eN<nElements_global;eN++)
           {
-            register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+            register int dummy_l2g[nDOF_mesh_trial_element];
+            register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element],element_phi[nDOF_trial_element];
             double epsilon_redist,h_phi, dir[nSpace], norm;
             for (int i=0;i<nDOF_test_element;i++)
-              for (int j=0;j<nDOF_trial_element;j++)
-                {
-                  elementJacobian_u_u[i][j]=0.0;
-                }
+              {
+		register int eN_i=eN*nDOF_trial_element+i;
+                element_phi[i] = phi_dof[u_l2g[eN_i]];
+                dummy_l2g[i] = i;
+                for (int j=0;j<nDOF_trial_element;j++)
+                  {
+                    elementJacobian_u_u[i][j]=0.0;
+                  }
+              }
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref);            
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
+                gf.set_quad(k);
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
                   eN_k_nSpace = eN_k*nSpace,
                   eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
                 //declare local storage
-                register double u=0.0,
+                register double u=0.0,u0=0.0,
                   grad_u[nSpace],
                   m=0.0,dm=0.0,
                   H=0.0,dH[nSpace],
-                  m_t=0.0,dm_t=0.0,r=0.0,
+                  m_t=0.0,dm_t=0.0,r=0.0,dr=0.0,
                   dH_tau[nSpace],//dH or dH_last if lagging for tau formula
                   dH_strong[nSpace],//dH or dH_last if lagging for strong residual and adjoint
                   dpdeResidual_u_u[nDOF_trial_element],
@@ -1085,6 +1131,12 @@ namespace proteus
                 ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
                 //get the solution
                 ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+                ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref[k*nDOF_trial_element],u0);
+                /* double u0_test=0; */
+                /* ck.valFromDOF(phi_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u0_test); */
+                /* if (u0 != u0_test) */
+                /*   std::cout<<"JAC eN "<<eN<<" k "<<k<<" u0 "<<u0<<" u0_test "<<u0_test<<std::endl; */
+
                 //get the solution gradients
                 ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
                 //precalculate test function products with integration weights
@@ -1111,14 +1163,15 @@ namespace proteus
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
                 evaluateCoefficients(epsilon_redist,
-                                     phi_ls[eN_k],
+                                     u0,
                                      u,
                                      grad_u,
                                      m,
                                      dm,
                                      H,
                                      dH,
-                                     r);
+                                     r,
+                                     dr);
                 //TODO allow not lagging of subgrid error etc
                 //remove conditional?
                 //default no lagging
@@ -1178,7 +1231,6 @@ namespace proteus
                     int j_nSpace = j*nSpace;
                     dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
                       ck.HamiltonianJacobian_strong(dH_strong,&u_grad_trial[j_nSpace]);
-
                   }
                 //tau and tau*Res
                 calculateSubgridError_tau(elementDiameter[eN],
@@ -1205,18 +1257,22 @@ namespace proteus
                   {
                     //int eN_k_i=eN_k*nDOF_test_element+i;
                     //int eN_k_i_nSpace=eN_k_i*nSpace;
+                    circ += ck.Reaction_weak(gf.D(epsilon_redist, phi_ls[eN_k]), u_test_dV[i]);
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
                         //int eN_k_j=eN_k*nDOF_trial_element+j;
                         //int eN_k_j_nSpace = eN_k_j*nSpace;
                         int j_nSpace = j*nSpace;
                         int i_nSpace = i*nSpace;
-
+                        //std::cout<<element_phi[i]<<'\t'<<element_nodes[i*3+0]<<'\t'<<element_nodes[i*3+1]<<std::endl;
+                        //std::cout<<"eN_k "<<eN_k<<" D-J "<<gf.D(epsilon_redist,phi_ls[eN_k])<<std::endl;
                         elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
                           ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
+                          (weakDirichletFactor/elementDiameter[eN])*ck.ReactionJacobian_weak(gf.D(epsilon_redist,phi_ls[eN_k]),
+                                                                                             u_trial_ref[k*nDOF_trial_element+j],
+                                                                                             u_test_dV[i]) +
                           ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
                           ck.NumericalDiffusionJacobian(nu_sc,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
-
                       }//j
                   }//i
               }//k
@@ -1259,6 +1315,7 @@ namespace proteus
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
+        gf.useExact=false;//exact Heaviside integration not implemented for boundaries yet
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray[ebNE];
@@ -1279,7 +1336,7 @@ namespace proteus
                   dm_ext=0.0,
                   H_ext=0.0,
                   dH_ext[nSpace],
-                  r_ext=0.0,
+                  r_ext=0.0,dr_ext=0.0,
                   //              flux_ext=0.0,
                   dflux_u_u_ext=0.0,
                   bc_u_ext=0.0,
@@ -1288,7 +1345,7 @@ namespace proteus
                   bc_dm_ext=0.0,
                   bc_H_ext=0.0,
                   bc_dH_ext[nSpace],
-                  bc_r_ext=0.0,
+                  bc_r_ext=0.0,bc_dr_ext=0.0,
                   fluxJacobian_u_u[nDOF_trial_element],
                   jac_ext[nSpace*nSpace],
                   jacDet_ext,
@@ -1361,7 +1418,8 @@ namespace proteus
                                      dm_ext,
                                      H_ext,
                                      dH_ext,
-                                     r_ext);
+                                     r_ext,
+                                     dr_ext);
                 evaluateCoefficients(epsilon_redist,
                                      ebqe_phi_ls_ext[ebNE_kb],
                                      bc_u_ext,
@@ -1370,7 +1428,8 @@ namespace proteus
                                      bc_dm_ext,
                                      bc_H_ext,
                                      bc_dH_ext,
-                                     bc_r_ext);
+                                     bc_r_ext,
+                                     bc_dr_ext);
                 //
                 //calculate the numerical fluxes
                 //
@@ -1404,6 +1463,7 @@ namespace proteus
                   }//i
               }//kb
           }//ebNE
+        gf.useExact = useExact;//just to be safe
       }//computeJacobian
 
       void calculateResidual_ellipticRedist(//element
@@ -1411,6 +1471,7 @@ namespace proteus
                                             double* mesh_grad_trial_ref,
                                             double* mesh_dof,
                                             int* mesh_l2g,
+                                            double* x_ref,
                                             double* dV_ref,
                                             double* u_trial_ref,
                                             double* u_grad_trial_ref,
@@ -1474,8 +1535,10 @@ namespace proteus
                                             double* lumped_qx,
                                             double* lumped_qy,
                                             double* lumped_qz,
-                                            double alpha)
+                                            double alpha,
+                                            bool useExact)
       {
+        gf.useExact=useExact;
         //
         //loop over elements to compute volume integrals and load them into element and global residual
         //
@@ -1489,15 +1552,26 @@ namespace proteus
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
-            register double elementResidual_u[nDOF_test_element];
+            register double elementResidual_u[nDOF_test_element],element_phi[nDOF_trial_element];
             double epsilon_redist,h_phi, norm;
             for (int i=0;i<nDOF_test_element;i++)
               {
+		register int eN_i=eN*nDOF_trial_element+i;
                 elementResidual_u[i]=0.0;
+                element_phi[i] = phi_dof[u_l2g[eN_i]];
               }//i
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref);                        
             //loop over quadrature points and compute integrands
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
+                gf.set_quad(k);
                 //compute indeces and declare local storage
                 register int eN_k = eN*nQuadraturePoints_element+k,
                   eN_k_nSpace = eN_k*nSpace,
@@ -1592,10 +1666,10 @@ namespace proteus
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
                                                  +(1.0-useMetrics)*elementDiameter[eN]);
-                delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
+                delta = gf.D(epsilon_redist,phi_ls[eN_k]);
 
 		// COMPUTE STRONG RESIDUAL //
-		double Si = -1.0+2.0*smoothedHeaviside(epsilon_redist,phi_ls[eN_k]);
+		double Si = -1.0+2.0*heaviside(phi_ls[eN_k]);
 		double residualEikonal = Si*(norm_grad_u-1.0);
 		double backgroundDissipation = backgroundDissipationEllipticRedist*elementDiameter[eN];
 
@@ -1715,6 +1789,7 @@ namespace proteus
                                             double* mesh_grad_trial_ref,
                                             double* mesh_dof,
                                             int* mesh_l2g,
+                                            double* x_ref,
                                             double* dV_ref,
                                             double* u_trial_ref,
                                             double* u_grad_trial_ref,
@@ -1746,6 +1821,7 @@ namespace proteus
                                             double* elementDiameter,
                                             double* nodeDiametersArray,
                                             double* u_dof,
+                                            double* phi_dof,
                                             double* u_weak_internal_bc_dofs,//for freezing level set
                                             double* phi_ls,
                                             double* q_m_betaBDF,
@@ -1767,22 +1843,37 @@ namespace proteus
                                             // elliptic redistancing
                                             int ELLIPTIC_REDISTANCING,
 					    double backgroundDissipationEllipticRedist,
-                                            double alpha)
+                                            double alpha,
+                                            bool useExact)
       {
+        gf.useExact=useExact;
         //
         //loop over elements
         //
         for(int eN=0;eN<nElements_global;eN++)
           {
-            register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+            register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element],element_phi[nDOF_trial_element];
             double epsilon_redist,h_phi, norm;
             for (int i=0;i<nDOF_test_element;i++)
-              for (int j=0;j<nDOF_trial_element;j++)
-                {
-                  elementJacobian_u_u[i][j]=0.0;
-                }
+              {
+		register int eN_i=eN*nDOF_trial_element+i;
+                element_phi[i] = phi_dof[u_l2g[eN_i]];
+                for (int j=0;j<nDOF_trial_element;j++)
+                  {
+                    elementJacobian_u_u[i][j]=0.0;
+                  }
+              }
+            double element_nodes[nDOF_mesh_trial_element*3];
+	    for (int i=0;i<nDOF_mesh_trial_element;i++)
+	      {
+		register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
+                gf.set_quad(k);
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
                   eN_k_nSpace = eN_k*nSpace,
                   eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
@@ -1855,10 +1946,10 @@ namespace proteus
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
                                                  +(1.0-useMetrics)*elementDiameter[eN]);
-                delta = smoothedDirac(epsilon_redist,phi_ls[eN_k]);
+                delta = gf.D(epsilon_redist,phi_ls[eN_k]);
 
 		// COMPUTE STRONG Jacobian //
-		double Si = -1.0+2.0*smoothedHeaviside(epsilon_redist,phi_ls[eN_k]);
+		double Si = -1.0+2.0*heaviside(phi_ls[eN_k]);
 		double dH[nSpace];
 		for (int I=0; I<nSpace;I++)
 		  dH[I] = Si*grad_u[I]/norm_grad_u;
@@ -2058,7 +2149,7 @@ namespace proteus
         *global_D_err = 0.0;
         //////////////////////
         // ** LOOP IN CELLS //
-        //////////////////////
+        //////////////////////        
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for local contributions and initialize

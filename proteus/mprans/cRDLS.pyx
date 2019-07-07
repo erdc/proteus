@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+from libcpp cimport bool
 import numpy
 cimport numpy
 from proteus import *
@@ -11,6 +12,7 @@ cdef extern from "RDLS.h" namespace "proteus":
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                int * mesh_l2g,
+                               double * x_ref,
                                double * dV_ref,
                                double * u_trial_ref,
                                double * u_grad_trial_ref,
@@ -69,11 +71,13 @@ cdef extern from "RDLS.h" namespace "proteus":
                                double * lumped_qx,
                                double * lumped_qy,
                                double * lumped_qz,
-                               double alpha)
+                               double alpha,
+                               bool useExact)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                int * mesh_l2g,
+                               double * x_ref,
                                double * dV_ref,
                                double * u_trial_ref,
                                double * u_grad_trial_ref,
@@ -103,6 +107,7 @@ cdef extern from "RDLS.h" namespace "proteus":
                                double * elementDiameter,
                                double * nodeDiametersArray,
                                double * u_dof,
+                               double * phi_dof,
                                double * u_weak_internal_bc_dofs,
                                double * phi_ls,
                                double * q_m_betaBDF,
@@ -123,11 +128,13 @@ cdef extern from "RDLS.h" namespace "proteus":
                                int * csrColumnOffsets_eb_u_u,
                                int ELLIPTIC_REDISTANCING,
                                double backgroundDissipationEllipticRedist,
-                               double alpha)
+                               double alpha,
+                               bool useExact)
         void calculateResidual_ellipticRedist(double * mesh_trial_ref,
                                               double * mesh_grad_trial_ref,
                                               double * mesh_dof,
                                               int * mesh_l2g,
+                                              double * x_ref,
                                               double * dV_ref,
                                               double * u_trial_ref,
                                               double * u_grad_trial_ref,
@@ -186,11 +193,13 @@ cdef extern from "RDLS.h" namespace "proteus":
                                               double * lumped_qx,
                                               double * lumped_qy,
                                               double * lumped_qz,
-                                              double alpha)
+                                              double alpha,
+                                              bool useExact)
         void calculateJacobian_ellipticRedist(double * mesh_trial_ref,
                                               double * mesh_grad_trial_ref,
                                               double * mesh_dof,
                                               int * mesh_l2g,
+                                              double * x_ref,
                                               double * dV_ref,
                                               double * u_trial_ref,
                                               double * u_grad_trial_ref,
@@ -220,6 +229,7 @@ cdef extern from "RDLS.h" namespace "proteus":
                                               double * elementDiameter,
                                               double * nodeDiametersArray,
                                               double * u_dof,
+                                              double * phi_dof,
                                               double * u_weak_internal_bc_dofs,
                                               double * phi_ls,
                                               double * q_m_betaBDF,
@@ -240,7 +250,8 @@ cdef extern from "RDLS.h" namespace "proteus":
                                               int * csrColumnOffsets_eb_u_u,
                                               int ELLIPTIC_REDISTANCING,
                                               double backgroundDissipationEllipticRedist,
-                                              double alpha)
+                                              double alpha,
+                                              bool useExact)
         void normalReconstruction(double* mesh_trial_ref,
                                   double* mesh_grad_trial_ref,
                                   double* mesh_dof,
@@ -312,6 +323,7 @@ cdef class cRDLS_base:
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_l2g,
+                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray u_trial_ref,
                           numpy.ndarray u_grad_trial_ref,
@@ -370,11 +382,13 @@ cdef class cRDLS_base:
                           numpy.ndarray lumped_qx,
                           numpy.ndarray lumped_qy,
                           numpy.ndarray lumped_qz,
-                          double alpha):
+                          double alpha,
+                          bool useExact):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                         < double * > mesh_grad_trial_ref.data,
                                         < double * > mesh_dof.data,
                                         < int * > mesh_l2g.data,
+                                        < double * > x_ref.data,
                                         < double * > dV_ref.data,
                                         < double * > u_trial_ref.data,
                                         < double * > u_grad_trial_ref.data,
@@ -433,13 +447,15 @@ cdef class cRDLS_base:
                                         < double * > lumped_qx.data,
                                         < double * > lumped_qy.data,
                                         < double * > lumped_qz.data,
-                                        alpha)
+                                        alpha,
+                                        useExact)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_l2g,
+                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray u_trial_ref,
                           numpy.ndarray u_grad_trial_ref,
@@ -469,6 +485,7 @@ cdef class cRDLS_base:
                           numpy.ndarray elementDiameter,
                           numpy.ndarray nodeDiametersArray,
                           numpy.ndarray u_dof,
+                          numpy.ndarray phi_dof,
                           numpy.ndarray u_weak_internal_bc_dofs,
                           numpy.ndarray phi_ls,
                           numpy.ndarray q_m_betaBDF,
@@ -489,13 +506,15 @@ cdef class cRDLS_base:
                           numpy.ndarray csrColumnOffsets_eb_u_u,
                           int ELLIPTIC_REDISTANCING,
                           double backgroundDissipationEllipticRedist,
-                          double alpha):
+                          double alpha,
+                          bool useExact):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
                                         < double * > mesh_grad_trial_ref.data,
                                         < double * > mesh_dof.data,
                                         < int * > mesh_l2g.data,
+                                        < double * > x_ref.data,
                                         < double * > dV_ref.data,
                                         < double * > u_trial_ref.data,
                                         < double * > u_grad_trial_ref.data,
@@ -525,6 +544,7 @@ cdef class cRDLS_base:
                                         < double * > elementDiameter.data,
                                         < double * > nodeDiametersArray.data,
                                         < double * > u_dof.data,
+                                        < double * > phi_dof.data,
                                         < double * > u_weak_internal_bc_dofs.data,
                                         < double * > phi_ls.data,
                                         < double * > q_m_betaBDF.data,
@@ -545,13 +565,15 @@ cdef class cRDLS_base:
                                         < int * > csrColumnOffsets_eb_u_u.data,
                                         ELLIPTIC_REDISTANCING,
                                         backgroundDissipationEllipticRedist,
-                                        alpha)
+                                        alpha,
+                                        useExact)
 
     def calculateResidual_ellipticRedist(self,
                                          numpy.ndarray mesh_trial_ref,
                                          numpy.ndarray mesh_grad_trial_ref,
                                          numpy.ndarray mesh_dof,
                                          numpy.ndarray mesh_l2g,
+                                         numpy.ndarray x_ref,
                                          numpy.ndarray dV_ref,
                                          numpy.ndarray u_trial_ref,
                                          numpy.ndarray u_grad_trial_ref,
@@ -610,11 +632,13 @@ cdef class cRDLS_base:
                                          numpy.ndarray lumped_qx,
                                          numpy.ndarray lumped_qy,
                                          numpy.ndarray lumped_qz,
-                                         double alpha):
+                                         double alpha,
+                                         bool useExact):
         self.thisptr.calculateResidual_ellipticRedist( < double*> mesh_trial_ref.data,
                                                        < double * > mesh_grad_trial_ref.data,
                                                        < double * > mesh_dof.data,
                                                        < int * > mesh_l2g.data,
+                                                       < double * > x_ref.data,
                                                        < double * > dV_ref.data,
                                                        < double * > u_trial_ref.data,
                                                        < double * > u_grad_trial_ref.data,
@@ -673,13 +697,15 @@ cdef class cRDLS_base:
                                                        < double * > lumped_qx.data,
                                                        < double * > lumped_qy.data,
                                                        < double * > lumped_qz.data,
-                                                       alpha)
+                                                       alpha,
+                                                       useExact)
 
     def calculateJacobian_ellipticRedist(self,
                                          numpy.ndarray mesh_trial_ref,
                                          numpy.ndarray mesh_grad_trial_ref,
                                          numpy.ndarray mesh_dof,
                                          numpy.ndarray mesh_l2g,
+                                         numpy.ndarray x_ref,
                                          numpy.ndarray dV_ref,
                                          numpy.ndarray u_trial_ref,
                                          numpy.ndarray u_grad_trial_ref,
@@ -709,6 +735,7 @@ cdef class cRDLS_base:
                                          numpy.ndarray elementDiameter,
                                          numpy.ndarray nodeDiametersArray,
                                          numpy.ndarray u_dof,
+                                         numpy.ndarray phi_dof,
                                          numpy.ndarray u_weak_internal_bc_dofs,
                                          numpy.ndarray phi_ls,
                                          numpy.ndarray q_m_betaBDF,
@@ -729,13 +756,15 @@ cdef class cRDLS_base:
                                          numpy.ndarray csrColumnOffsets_eb_u_u,
                                          int ELLIPTIC_REDISTANCING,
                                          double backgroundDissipationEllipticRedist,
-                                         double alpha):
+                                         double alpha,
+                                         bool useExact):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian_ellipticRedist(< double*> mesh_trial_ref.data,
                                                       < double * > mesh_grad_trial_ref.data,
                                                       < double * > mesh_dof.data,
                                                       < int * > mesh_l2g.data,
+                                                      < double * > x_ref.data,
                                                       < double * > dV_ref.data,
                                                       < double * > u_trial_ref.data,
                                                       < double * > u_grad_trial_ref.data,
@@ -765,6 +794,7 @@ cdef class cRDLS_base:
                                                       < double * > elementDiameter.data,
                                                       < double * > nodeDiametersArray.data,
                                                       < double * > u_dof.data,
+                                                      < double * > phi_dof.data,
                                                       < double * > u_weak_internal_bc_dofs.data,
                                                       < double * > phi_ls.data,
                                                       < double * > q_m_betaBDF.data,
@@ -785,7 +815,8 @@ cdef class cRDLS_base:
                                                       < int * > csrColumnOffsets_eb_u_u.data,
                                                       ELLIPTIC_REDISTANCING,
                                                       backgroundDissipationEllipticRedist,
-                                                      alpha)
+                                                      alpha,
+                                                      useExact)
     def normalReconstruction(self,
                              numpy.ndarray mesh_trial_ref,
                              numpy.ndarray mesh_grad_trial_ref,

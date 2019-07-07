@@ -167,7 +167,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
                  # NULLSpace info
-                 nullSpace='NoNullSpace'): #penalization param for elliptic re-distancing
+                 nullSpace='NoNullSpace', #penalization param for elliptic re-distancing
+                 useExact=False):
+        self.useExact=useExact
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         variableNames = ['phid']
@@ -833,7 +835,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         # create storage for enforcing weak dirichlet boundary conditions around zero level set contour
-        self.freezeLevelSet = 1  # True
+        self.freezeLevelSet = 0  # True
         self.u_dof_last = numpy.zeros(self.u[0].dof.shape, 'd')
         self.weakDirichletConditionFlags = numpy.zeros(self.u[0].dof.shape, 'i')
         self.dofFlag_element = numpy.zeros((self.nDOF_trial_element[0],), 'i')
@@ -1012,6 +1014,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.elementNodesArray,
+            self.elementQuadraturePoints,
             self.elementQuadratureWeights[('u', 0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
@@ -1075,7 +1078,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qx,
             self.lumped_qy,
             self.lumped_qz,
-            old_div(self.coefficients.alpha,self.elementDiameter.min()))
+            self.coefficients.alpha/self.elementDiameter.min(),
+            self.coefficients.useExact)
 
 
 
@@ -1124,6 +1128,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.elementNodesArray,
+            self.elementQuadraturePoints,
             self.elementQuadratureWeights[('u', 0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
@@ -1154,6 +1159,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,  # self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.coefficients.dof_u0,
             self.u_dof_last,
             self.coefficients.q_u0,
             beta_bdf[0],
@@ -1175,7 +1181,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # elliptic re-distancing
             self.coefficients.ELLIPTIC_REDISTANCING,
             self.coefficients.backgroundDissipationEllipticRedist,
-            self.coefficients.alpha/self.elementDiameter.min())
+            self.coefficients.alpha/self.elementDiameter.min(),
+            self.coefficients.useExact)
 
         # FREEZING INTERFACE #
         if self.coefficients.freeze_interface_within_elliptic_redist==True:

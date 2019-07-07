@@ -2,8 +2,12 @@ from __future__ import print_function
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .ncls_p import *
-from .vortex2D import *
+try:
+    from .ncls_p import *
+    from .vortex2D import *
+except:
+    from ncls_p import *
+    from vortex2D import *
 nd = 2
 
 # About time integration 
