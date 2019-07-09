@@ -655,6 +655,7 @@ cdef class ProtChBody:
         Fx, Fy, Fz = self.F_prot
         rx, ry, rz = self.barycenter0-pyvec2array(self.ChBody.GetPos())
         Mp = np.array([ry*Fz-rz*Fy, -(rx*Fz-rz*Fx), (rx*Fy-ry*Fx)])
+        M += Mp
         return M
 
     def getRotationMatrix(self):
