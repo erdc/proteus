@@ -2303,10 +2303,10 @@ namespace proteus
               {
                 //phi_solid_nodes is updated in PreStep
               }
-            double element_phi[nDOF_trial_element], element_phi_s[nDOF_trial_element];
-	    for (int j=0;j<nDOF_trial_element;j++)
+            double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
+	    for (int j=0;j<nDOF_mesh_trial_element;j++)
 	      {
-		register int eN_j = eN*nDOF_trial_element+j;
+		register int eN_j = eN*nDOF_mesh_trial_element+j;
 		element_phi[j] = phi_nodes[p_l2g[eN_j]];
 		element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
 	      }
@@ -4141,10 +4141,10 @@ namespace proteus
                   elementJacobian_w_v[i][j]=0.0;
                   elementJacobian_w_w[i][j]=0.0;
                 }
-            double element_phi[nDOF_trial_element], element_phi_s[nDOF_trial_element];
-            for (int j=0;j<nDOF_trial_element;j++)
+            double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
+            for (int j=0;j<nDOF_mesh_trial_element;j++)
               {
-                register int eN_j = eN*nDOF_trial_element+j;
+                register int eN_j = eN*nDOF_mesh_trial_element+j;
                 element_phi[j] = phi_nodes[p_l2g[eN_j]];
                 element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
               }

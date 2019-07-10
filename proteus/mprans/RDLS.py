@@ -286,7 +286,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.rdModel.updateTimeHistory(t, resetFromDOF=True)
             copyInstructions = {'copy_uList': True,
                                 'uList_model': self.nModelId}
-            copyInstructions = {'reset_uList': True}
+            copyInstructions = {'reset_uList': False}
             return copyInstructions
         else:
             return {}

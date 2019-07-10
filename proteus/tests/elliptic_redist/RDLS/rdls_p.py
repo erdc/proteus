@@ -20,6 +20,7 @@ coefficients = RDLS.Coefficients(applyRedistancing=True,
                                  useMetrics=useMetrics,
                                  ELLIPTIC_REDISTANCING=ct.ELLIPTIC_REDISTANCING,
                                  backgroundDissipationEllipticRedist=1.0,
+                                 backgroundDiffusionFactor=0.01,
                                  alpha=1E9,
                                  useExact=useExact,
                                  weakDirichletFactor=weakDirichletFactor)
@@ -38,7 +39,7 @@ def setNoZeroLSweakDirichletBCs(RDLSvt):
     assert hasattr(RDLSvt, 'dofFlag_element')
     RDLSvt.freezeLevelSet = 0
 
-if False:#not useExact:
+if True:#not useExact:
     if LevelModelType == RDLS.LevelModel:
         weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCsSimple}
     else:
