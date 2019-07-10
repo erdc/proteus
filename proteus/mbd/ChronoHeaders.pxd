@@ -51,15 +51,13 @@ cdef extern from "ProtChMoorings.h":
                           int col,
                           double element)
 
-    cdef cppclass ChMatrix33[double]:
+    cdef cppclass ChMatrix33[double](ChMatrix):
         ChVector Get_A_Xaxis()
         ChVector Get_A_Yaxis()
         ChVector Get_A_Zaxis()
-        double GetElement(int row,
-                          int col)
-        void SetElement(int row,
-                        int col,
-                        double elem)
+        void CopyFromMatrixT(ChMatrix matra)
+        ChMatrix33()
+        ChMatrix33(ChQuaternion quat)
 
     cdef cppclass ChMatrixDynamic[double](ChMatrix):
         ChMatrixDynamic()
