@@ -2639,20 +2639,20 @@ namespace proteus
               }//i
             //Use for plotting result
             if(use_ball_as_particle==1)
-            {
+              {
                 for (int I=0;I<nDOF_mesh_trial_element;I++)
-                    get_distance_to_ball(nParticles, ball_center, ball_radius,
-                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
-                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
-                                                mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
-                                                phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
-            }
-            double element_phi[nDOF_trial_element], element_phi_s[nDOF_trial_element];
-	    for (int j=0;j<nDOF_trial_element;j++)
+                  get_distance_to_ball(nParticles, ball_center, ball_radius,
+                                       mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+0],
+                                       mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+1],
+                                       mesh_dof[3*mesh_l2g[eN*nDOF_mesh_trial_element+I]+2],
+                                       phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]]);
+              }
+            double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
+	    for (int j=0;j<nDOF_mesh_trial_element;j++)
 	      {
-		register int eN_j = eN*nDOF_trial_element+j;
-		element_phi[j] = phi_nodes[p_l2g[eN_j]];
-		element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
+		register int eN_j = eN*nDOF_mesh_trial_element+j;
+		element_phi[j] = phi_nodes[mesh_l2g[eN_j]];
+		element_phi_s[j] = phi_solid_nodes[mesh_l2g[eN_j]];
 	      }
             double element_nodes[nDOF_mesh_trial_element*3];
 	    for (int i=0;i<nDOF_mesh_trial_element;i++)
@@ -4735,10 +4735,10 @@ namespace proteus
                   elementJacobian_w_v[i][j]=0.0;
                   elementJacobian_w_w[i][j]=0.0;
                 }
-            double element_phi[nDOF_trial_element], element_phi_s[nDOF_trial_element];
-            for (int j=0;j<nDOF_trial_element;j++)
+            double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
+            for (int j=0;j<nDOF_mesh_trial_element;j++)
               {
-                register int eN_j = eN*nDOF_trial_element+j;
+                register int eN_j = eN*nDOF_mesh_trial_element+j;
                 element_phi[j] = phi_nodes[p_l2g[eN_j]];
                 element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
               }

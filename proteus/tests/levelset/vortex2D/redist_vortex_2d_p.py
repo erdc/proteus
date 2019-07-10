@@ -18,7 +18,8 @@ coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,
                                  nModelId=0,
                                  rdModelId=1,
                                  useMetrics=useMetrics,
-                                 useExact=useExact)
+                                 weakDirichletFactor=1000.0,
+                                 useExact=True)
 
 #now define the Dirichlet boundary conditions
 
@@ -35,6 +36,15 @@ else:
 
 #weakDirichletConditions = {0:coefficients.setZeroLSweakDirichletBCs2}
 #weakDirichletConditions = None
+def setNoZeroLSweakDirichletBCs(RDLSvt):
+    assert hasattr(RDLSvt, 'freezeLevelSet')
+    assert hasattr(RDLSvt, 'u_dof_last')
+    assert hasattr(RDLSvt, 'weakDirichletConditionFlags')
+    assert hasattr(RDLSvt.coefficients, 'epsFact')
+    assert hasattr(RDLSvt, 'dofFlag_element')
+    RDLSvt.freezeLevelSet = 0
+
+weakDirichletConditions = {0: setNoZeroLSweakDirichletBCs}
 
 
 initialConditions  = ls_vortex_2d_p.initialConditions

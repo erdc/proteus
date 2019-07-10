@@ -25,8 +25,12 @@ namespace equivalent_polynomials
     level_set_normal[1] = - level_set_tangent[0];
     double norm = std::sqrt(level_set_normal[0]*level_set_normal[0] +
                             level_set_normal[1]*level_set_normal[1]);
-    for(unsigned int I=0; I < nSpace; I++)
-      level_set_normal[I] /=  norm;
+    if (norm > 0.0)
+      for(unsigned int I=0; I < nSpace; I++)
+        level_set_normal[I] /=  norm;
+    else
+      for(unsigned int I=0; I < nSpace; I++)
+        level_set_normal[I] =0.0;
   }
 
   template<>
@@ -48,8 +52,12 @@ namespace equivalent_polynomials
     double norm = std::sqrt(level_set_normal[0]*level_set_normal[0] +
                             level_set_normal[1]*level_set_normal[1] +
                             level_set_normal[2]*level_set_normal[2]);
-    for(unsigned int I=0; I < nSpace; I++)
-      level_set_normal[I] /=  norm;
+    if (norm > 0.0)
+      for(unsigned int I=0; I < nSpace; I++)
+        level_set_normal[I] /=  norm;
+    else
+      for(unsigned int I=0; I < nSpace; I++)
+        level_set_normal[I] =0.0;
   }
 
   template<int nP>

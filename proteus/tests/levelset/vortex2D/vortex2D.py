@@ -6,7 +6,7 @@ parallel = False
 linearSmoother = None
 #compute mass balance statistics or not
 checkMass=False#True
-useExact=False
+useExact=True
 #number of space dimensions
 nd=2
 #time integration, not relevant if using BDF with cfl timestepping
@@ -35,6 +35,7 @@ if pDegree_ls == 2:
     vortex_quad_order =4
 else:
     vortex_quad_order = 3
+vortex_quad_order = 5
 compQuad=False
 #sub-element edge size, used to create composite quadrature rule
 hk = 0.2
@@ -74,12 +75,12 @@ onlyVOF=False#True
 #eps
 epsFactHeaviside=epsFactDirac=epsFact_vof=1.5*hk
 epsFactRedistance=0.33
-epsFactDiffusion=10.0
+epsFactDiffusion=1000.0
 #
 if useMetrics:
     shockCapturingFactor_vof=0.5
     shockCapturingFactor_ls=0.5
-    shockCapturingFactor_rd=0.5
+    shockCapturingFactor_rd=0.75
     lag_shockCapturing_vof=True
     lag_shockCapturing_ls=True
     lag_shockCapturing_rd=False
@@ -92,7 +93,7 @@ else:
     lag_shockCapturing_rd=False
 
 #use absolute tolerances on al models
-atolRedistance = max(1.0e-12,0.1*he)
+atolRedistance = max(1.0e-12,0.001*he)
 atolConservation = max(1.0e-12,0.001*he**2)
 atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
 atolLevelSet     = max(1.0e-12,0.001*he**2)

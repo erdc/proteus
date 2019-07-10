@@ -80,8 +80,8 @@ else:
     lag_shockCapturing_rd=False
 
 #use absolute tolerances on al models
-atolRedistance = 1.0e-8#max(1.0e-12,0.1*he)
-atolLevelSet     = 1.0e-8#max(1.0e-12,0.001*he**2)
+atolRedistance = 1.0e-10#max(1.0e-12,0.1*he)
+atolLevelSet     = 1.0e-10#max(1.0e-12,0.001*he**2)
 
 linearSolverConvergenceTest = 'r-true' 
 fmmFlag=0

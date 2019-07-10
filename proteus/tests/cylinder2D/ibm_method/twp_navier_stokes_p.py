@@ -12,7 +12,10 @@ LevelModelType = RANS3PF.LevelModel
 if useOnlyVF:
     LS_model = None
 else:
-    LS_model = 2
+    if sedimentDynamics:
+        LS_model = 2
+    else:
+        LS_model = None
 if useRANS >= 1:
     Closure_0_model = 5; Closure_1_model=6
     if useOnlyVF:

@@ -132,7 +132,8 @@ namespace equivalent_polynomials
             C_ImH[i] += Ainv[i*nDOF + j]*b_ImH[j];
             for (unsigned  int I=0; I < nSpace; I++)
               {
-                C_D[i]   -= Ainv[i*nDOF + j]*b_dH[j*nSpace+I]/Jt_dphi_dx[I];
+                if (fabs(Jt_dphi_dx[I]) > 0.0)
+                  C_D[i]   -= Ainv[i*nDOF + j]*b_dH[j*nSpace+I]/(Jt_dphi_dx[I]);
               }
           }
       }
@@ -146,12 +147,12 @@ namespace equivalent_polynomials
     inside_out=false;
     for (unsigned int i=0; i < nN; i++)
       {
-        if(phi_dof[i] > 1.0e-16)
+        if(phi_dof[i] > 0.0)
           {
             p_i = i;
             pcount  += 1;
           }
-        else if(phi_dof[i] < -1.0e-16)
+        else if(phi_dof[i] < 0.0)
           {
             n_i = i;
             ncount += 1;
@@ -249,7 +250,7 @@ namespace equivalent_polynomials
   {
     for (unsigned int i=0; i < nN-1;i++)
       {
-        if(phi[i+1]*phi[0] < -1.0e-16)
+        if(phi[i+1]*phi[0] < 0.0)
           {
             X_0[i] = 0.5 - 0.5*(phi[i+1] + phi[0])/(phi[i+1]-phi[0]);
             assert(X_0[i] <=1.0);
@@ -261,7 +262,7 @@ namespace equivalent_polynomials
           }
         else
           {
-            //assert(fabs(phi[i+1]) < 1.0e-16 + fabs(phi[0])*1.0e-16);
+            assert(phi[i+1] == 0.0);
             X_0[i] = 1.0;
             for (unsigned int I=0; I < 3; I++)
               {
@@ -278,13 +279,13 @@ namespace equivalent_polynomials
     const double one_by_nNm1 = 1.0/(nN-1.0);
     for (unsigned int i=0; i < nN-1;i++)
       {
-        for (unsigned int I=0; I < 3; I++)
+        for (unsigned int I=0; I < nSpace; I++)
           cut_barycenter[I] += phys_nodes_cut[i*3+I]*one_by_nNm1;
       }
     for (unsigned int i=0; i < nN;i++)
       {
         phi_dof_corrected[i]=0.0;
-        for (unsigned int I=0; I < 3; I++)
+        for (unsigned int I=0; I < nSpace; I++)
           {
             phi_dof_corrected[i] += level_set_normal[I]*(phi_nodes[i*3+I] - cut_barycenter[I]);             
           }
@@ -377,12 +378,14 @@ namespace equivalent_polynomials
     inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
     {
       //hack for testing
-      //exact.calculate(phi_dof, phi_nodes, xi_r);
-      if(useExact)
-        exact.calculate(phi_dof, phi_nodes, xi_r);
-      else//for inexact just copy over local phi_dof
-        for (int i=0; i<exact.nN;i++)
-          exact.phi_dof_corrected[i] = phi_dof[i];
+      exact.calculate(phi_dof, phi_nodes, xi_r);
+      /* if(useExact) */
+      /*   exact.calculate(phi_dof, phi_nodes, xi_r); */
+      /* else//for inexact just copy over local phi_dof */
+      /*   for (int i=0; i<exact.nN;i++) */
+      /*     exact.phi_dof_corrected[i] = phi_dof[i]; */
+      /* for (int i=0; i<exact.nN;i++) */
+      /*   exact.phi_dof_corrected[i] = phi_dof[i]; */
     }
     
     inline void set_quad(unsigned int q)
