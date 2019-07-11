@@ -7,14 +7,13 @@ try:
     from .risingBubble import *
 except:
     from risingBubble import *
-from proteus.mprans import RDLS as RDLS3P
-#from proteus.mprans import RDLS3P
+from proteus.mprans import RDLS
 """
 The redistancing equation in the sloshbox test problem.
 """
 
-LevelModelType = RDLS3P.LevelModel
-coefficients = RDLS3P.Coefficients(applyRedistancing=applyRedistancing,
+LevelModelType = RDLS.LevelModel
+coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,
                                    epsFact=epsFact_redistance,
                                    nModelId=LS_model,
                                    rdModelId=RD_model,
@@ -26,7 +25,7 @@ def getDBC_rd(x,flag):
     pass
 
 dirichletConditions     = {0:getDBC_rd}
-weakDirichletConditions = {0:RDLS3P.setZeroLSweakDirichletBCsSimple}
+weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCsSimple}
 
 advectiveFluxBoundaryConditions =  {}
 diffusiveFluxBoundaryConditions = {0:{}}

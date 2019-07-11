@@ -97,7 +97,7 @@ class TestCLSVOF_with_RANS3PF(object):
             (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
         expected.close()
         actual.close()
-
+    @pytest.mark.skip(reason="in development")
     def test_3D_falling_bubble(self):
         # Set parameters for this test
         parameters.ct.test_case=2
