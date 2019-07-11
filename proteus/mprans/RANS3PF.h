@@ -2321,6 +2321,7 @@ namespace proteus
               elementResidual_v[nDOF_test_element],
               mom_u_source_i[nDOF_test_element],
               mom_v_source_i[nDOF_test_element],
+              mom_w_source_i[nDOF_test_element],
               betaDrag_i[nDOF_test_element],
               vos_i[nDOF_test_element],
               phisErrorElement[nDOF_test_element],
@@ -2344,6 +2345,7 @@ namespace proteus
                 elementResidual_v[i]=0.0;
                 mom_u_source_i[i]=0.0;
                 mom_v_source_i[i]=0.0;
+                mom_w_source_i[i]=0.0;
                 betaDrag_i[i]=0.0;
                 vos_i[i]=0.0;
                 phisErrorElement[i]=0.0;
@@ -3359,6 +3361,7 @@ namespace proteus
                       //surface tension
                       ck.NumericalDiffusion(delta*sigma*dV,v3,vel_tgrad_test_i) +  //exp.
                       ck.NumericalDiffusion(dt*delta*sigma*dV,tgrad_w,vel_tgrad_test_i); //imp.
+                    mom_w_source_i[i] += ck.Reaction_weak(mom_w_source,vel_test_dV[i]);
 
 		    if (ARTIFICIAL_VISCOSITY==4)
 		      {
@@ -3479,6 +3482,7 @@ namespace proteus
                 globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=element_active*elementResidual_w[i];
                 ncDrag[offset_u+stride_u*vel_l2g[eN_i]]+=mom_u_source_i[i];
                 ncDrag[offset_v+stride_v*vel_l2g[eN_i]]+=mom_v_source_i[i];
+                ncDrag[offset_w+stride_w*vel_l2g[eN_i]]+=mom_w_source_i[i];
                 betaDrag[vel_l2g[eN_i]] += betaDrag_i[i];
                 vos_vel_nodes[vel_l2g[eN_i]] += vos_i[i];
 
@@ -6970,7 +6974,7 @@ namespace proteus
                                                           isAdvectiveFluxBoundary_w[ebNE_kb],
                                                           dmom_u_ham_grad_p_ext[0],//=1/rho
                                                           normal,
-                                                          porosity_ext*dmom_u_acc_u_ext, //multiply by rho. mql. CHECK.
+                                                          dmom_u_acc_u_ext,
                                                           bc_p_ext,
                                                           bc_u_ext,
                                                           bc_v_ext,
