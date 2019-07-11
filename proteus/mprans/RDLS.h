@@ -598,6 +598,8 @@ namespace proteus
                 //get the solution
                 ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref[k*nDOF_trial_element],u0);
+                if (freezeLevelSet)
+                  u0 = phi_ls[eN_k];
                 /* double DX=(x-0.5),DY=(y-0.75); */
                 /* double radius = std::sqrt(DX*DX+DY*DY); */
                 /* double theta = std::atan2(DY,DX); */
@@ -748,15 +750,19 @@ namespace proteus
                 std::cout<<"q_numDiff_u[eN_k] "<<q_numDiff_u[eN_k]<<" q_numDiff_u_last[eN_k] "<<q_numDiff_u_last[eN_k]<<" lag "<<lag_shockCapturingScale<<std::endl;
 #endif
                 nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
-                double epsilon_background_diffusion = 3.0*h_phi;//2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-                if (fabs(u0) >  epsilon_background_diffusion)
-                  nu_sc += backgroundDiffusionFactor*h_phi;
-                //
+                /* double epsilon_background_diffusion = 3.0*h_phi;//2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]); */
+                /* if (fabs(u0) >  epsilon_background_diffusion) */
+                /*   nu_sc += backgroundDiffusionFactor*h_phi; */
+                
+                double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                if (fabs(phi_ls[eN_k]) >  epsilon_background_diffusion)
+                  nu_sc += backgroundDiffusionFactor*elementDiameter[eN];                //
                 //update element residual
                 //
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     register int i_nSpace = i*nSpace;
+                    double FREEZE=double(freezeLevelSet);
                     //register int eN_k_i=eN_k*nDOF_test_element+i;
                     //register int eN_k_i_nSpace = eN_k_i*nSpace;
 
@@ -769,7 +775,7 @@ namespace proteus
                     elementResidual_u[i] += ck.Mass_weak(m_t,u_test_dV[i]) +
 		      ck.Hamiltonian_weak(H,u_test_dV[i]) +
                       ck.Reaction_weak(r,u_test_dV[i]) +
-                      (weakDirichletFactor/elementDiameter[eN])*ck.Reaction_weak(gf.D(epsilon_redist,u0)*(u0-u),
+                      (1.0-FREEZE)*(weakDirichletFactor/elementDiameter[eN])*ck.Reaction_weak(gf.D(epsilon_redist,u0)*(u0-u),
                                                                                  u_test_dV[i]) +
                       ck.SubgridError(subgridError_u,Lstar_u[i]) +
 		      ck.NumericalDiffusion(nu_sc,grad_u,&u_grad_test_dV[i_nSpace]);
@@ -787,20 +793,19 @@ namespace proteus
             //apply weak constraints for unknowns near zero level set
             //
             //
-            /* if (freezeLevelSet) */
-            /*   { */
-            /*     for (int j = 0; j < nDOF_trial_element; j++) */
-            /*       { */
-            /*         const int eN_j = eN*nDOF_trial_element+j; */
-            /*         const int J = u_l2g[eN_j]; */
-            /*         //if (weakDirichletConditionFlags[J] == 1) */
-            /*         //if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist) */
-            /*         if (fabs(gf.exact.phi_dof_corrected[j]) < h_phi) */
-            /*           { */
-            /*             elementResidual_u[j] = (u_dof[J]-gf.exact.phi_dof_corrected[j])*weakDirichletFactor*h_phi; */
-            /*           } */
-            /*       }//j */
-            /*   }//freeze */
+            if (freezeLevelSet)
+              {
+                for (int j = 0; j < nDOF_trial_element; j++)
+                  {
+                    const int eN_j = eN*nDOF_trial_element+j;
+                    const int J = u_l2g[eN_j];
+                    //if (weakDirichletConditionFlags[J] == 1)
+                    if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
+                      {
+                        elementResidual_u[j] = (u_dof[J]-gf.exact.phi_dof_corrected[j])*weakDirichletFactor*h_phi;
+                      }
+                  }//j
+              }//freeze
 
             //
             //load element into global residual and save element residual
@@ -1140,6 +1145,8 @@ namespace proteus
                 //get the solution
                 ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
                 ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref[k*nDOF_trial_element],u0);
+                if (freezeLevelSet)
+                  u0 = phi_ls[eN_k];
                 /* double DX=(x-0.5),DY=(y-0.75); */
                 /* double radius = std::sqrt(DX*DX+DY*DY); */
                 /* double theta = std::atan2(DY,DX); */
@@ -1263,9 +1270,12 @@ namespace proteus
                   dsubgridError_u_u[j] =  -tau*dpdeResidual_u_u[j];
 
                 nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
-                double epsilon_background_diffusion = 3.0*epsFact_redist*h_phi;
-                if (fabs(u0) >  epsilon_background_diffusion)
-                  nu_sc += backgroundDiffusionFactor*h_phi;
+                /* double epsilon_background_diffusion = 3.0*epsFact_redist*h_phi; */
+                /* if (fabs(u0) >  epsilon_background_diffusion) */
+                /*   nu_sc += backgroundDiffusionFactor*h_phi; */
+                double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                if (fabs(phi_ls[eN_k]) >  epsilon_background_diffusion)
+                  nu_sc += backgroundDiffusionFactor*elementDiameter[eN];                //
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     //int eN_k_i=eN_k*nDOF_test_element+i;
@@ -1277,11 +1287,12 @@ namespace proteus
                         //int eN_k_j_nSpace = eN_k_j*nSpace;
                         int j_nSpace = j*nSpace;
                         int i_nSpace = i*nSpace;
+                        double FREEZE=double(freezeLevelSet);
                         //std::cout<<element_phi[i]<<'\t'<<element_nodes[i*3+0]<<'\t'<<element_nodes[i*3+1]<<std::endl;
                         //std::cout<<"eN_k "<<eN_k<<" D-J "<<gf.D(epsilon_redist,phi_ls[eN_k])<<std::endl;
                         elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
                           ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
-                          (weakDirichletFactor/elementDiameter[eN])*ck.ReactionJacobian_weak(-gf.D(epsilon_redist,u0),
+                          (1.0-FREEZE)*(weakDirichletFactor/elementDiameter[eN])*ck.ReactionJacobian_weak(-gf.D(epsilon_redist,u0),
                                                                                              u_trial_ref[k*nDOF_trial_element+j],
                                                                                              u_test_dV[i]) +
                           ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
@@ -1294,22 +1305,22 @@ namespace proteus
             //
 
             //now try to account for weak dirichlet conditions in interior (frozen level set values)
-            /* if (freezeLevelSet) */
-            /*   { */
-            /*     //assume correspondence between dof and equations */
-            /*     for (int j = 0; j < nDOF_trial_element; j++) */
-            /*       { */
-            /*         const int J = u_l2g[eN*nDOF_trial_element+j]; */
-            /*         //if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist) */
-            /*         //if (weakDirichletConditionFlags[J] == 1) */
-            /*         if (fabs(gf.exact.phi_dof_corrected[j]) < epsilon_redist) */
-            /*           { */
-            /*             for (int jj=0; jj < nDOF_trial_element; jj++) */
-            /*               elementJacobian_u_u[j][jj] = 0.0; */
-            /*             elementJacobian_u_u[j][j] = weakDirichletFactor*h_phi; */
-            /*           } */
-            /*       } */
-            /*   } */
+            if (freezeLevelSet)
+              {
+                //assume correspondence between dof and equations
+                for (int j = 0; j < nDOF_trial_element; j++)
+                  {
+                    const int J = u_l2g[eN*nDOF_trial_element+j];
+                    if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
+                    //if (weakDirichletConditionFlags[J] == 1)
+                    //if (fabs(gf.exact.phi_dof_corrected[j]) < epsilon_redist)
+                      {
+                        for (int jj=0; jj < nDOF_trial_element; jj++)
+                          elementJacobian_u_u[j][jj] = 0.0;
+                        elementJacobian_u_u[j][j] = weakDirichletFactor*h_phi;
+                      }
+                  }
+              }
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
