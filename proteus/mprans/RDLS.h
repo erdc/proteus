@@ -802,7 +802,7 @@ namespace proteus
                     //if (weakDirichletConditionFlags[J] == 1)
                     if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
                       {
-                        elementResidual_u[j] = (u_dof[J]-gf.exact.phi_dof_corrected[j])*weakDirichletFactor*h_phi;
+                        elementResidual_u[j] = (u_dof[J]-u_weak_internal_bc_dofs[J])*weakDirichletFactor*elementDiameter[eN];
                       }
                   }//j
               }//freeze
@@ -1317,7 +1317,7 @@ namespace proteus
                       {
                         for (int jj=0; jj < nDOF_trial_element; jj++)
                           elementJacobian_u_u[j][jj] = 0.0;
-                        elementJacobian_u_u[j][j] = weakDirichletFactor*h_phi;
+                        elementJacobian_u_u[j][j] = weakDirichletFactor*elementDiameter[eN];
                       }
                   }
               }
