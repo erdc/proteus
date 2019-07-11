@@ -835,9 +835,9 @@ namespace proteus
 
         if (MATERIAL_PARAMETERS_AS_FUNCTION==0)
           {
-            rho = rho_0*gf.ImH(eps_rho,phi)+rho_1*gf.ImH(eps_rho,phi);
-            nu_t= nu_t0*gf.ImH(eps_mu,phi)+nu_t1*gf.ImH(eps_mu,phi);
-            nu  = nu_0*gf.ImH(eps_mu,phi)+nu_1*gf.ImH(eps_mu,phi);
+            rho = rho_0*gf.ImH(eps_rho,phi)+rho_1*gf.H(eps_rho,phi);
+            nu_t= nu_t0*gf.ImH(eps_mu,phi)+nu_t1*gf.H(eps_mu,phi);
+            nu  = nu_0*gf.ImH(eps_mu,phi)+nu_1*gf.H(eps_mu,phi);
             nu += nu_t;
             mu  = rho_0*nu_0*gf.ImH(eps_mu,phi)+rho_1*nu_1*gf.H(eps_mu,phi);
           }
