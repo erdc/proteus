@@ -284,9 +284,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.rdModel.timeIntegration.updateTimeHistory(resetFromDOF=True)
             self.rdModel.timeIntegration.resetTimeHistory(resetFromDOF=True)
             self.rdModel.updateTimeHistory(t, resetFromDOF=True)
-            copyInstructions = {'copy_uList': False,
+            # copyInstructions = {'copy_uList': False,
+            #                     'uList_model': self.nModelId}
+            # copyInstructions = {'reset_uList': False}
+            copyInstructions = {'copy_uList': True,
                                 'uList_model': self.nModelId}
-            copyInstructions = {'reset_uList': False}
+            copyInstructions = {'reset_uList': True}
             return copyInstructions
         else:
             return {}
