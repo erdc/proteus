@@ -1645,17 +1645,17 @@ namespace proteus
         if (isFluxBoundary_u == 1)
           {
             flux_umom = bc_flux_umom;
-	    velocity[0] = bc_flux_umom/porosity;
+	    //velocity[0] = bc_flux_umom/porosity;
           }
         if (isFluxBoundary_v == 1)
           {
             flux_vmom = bc_flux_vmom;
-	    velocity[1] = bc_flux_umom/porosity;
+	    //velocity[1] = bc_flux_umom/porosity;
           }
         if (isFluxBoundary_w == 1)
           {
             flux_wmom = bc_flux_wmom;
-	    velocity[2] = bc_flux_umom/porosity;
+	    //velocity[2] = bc_flux_umom/porosity;
           }
       }
 
@@ -3891,7 +3891,7 @@ namespace proteus
                     //hack: this won't work for two-phase flow, need mixture viscosity
                     double visco = nu_0*rho_0;
                     double C_adim = C_sbm*visco/h_penalty;
-                    double beta_adim = beta_sbm*visco/h_penalty;
+                    double beta_adim = beta_sbm*h_penalty*visco;
 
                     const double grad_u_d[3] = {get_dot_product(distance,grad_u_ext),
                                                 get_dot_product(distance,grad_v_ext),
@@ -6272,7 +6272,7 @@ namespace proteus
                     //hack: this won't work for two-phase flow, need mixture viscosity
                     double visco = nu_0*rho_0;
                     double C_adim = C_sbm*visco/h_penalty;
-                    double beta_adim = beta_sbm*visco/h_penalty;
+                    double beta_adim = beta_sbm*h_penalty*visco;
 
                     double res[3];
                     const double zero_vec[3]={0.,0.,0.};
