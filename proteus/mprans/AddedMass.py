@@ -63,6 +63,7 @@ class Coefficients(TC_base):
         TODO
         """
         self.solve_rate = solve_rate
+        self.updated_global = False
         self.next_solve = 0.
         self.nullSpace = nullSpace
         assert(nd in [2, 3])
