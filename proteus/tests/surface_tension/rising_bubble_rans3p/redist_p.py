@@ -14,12 +14,13 @@ The redistancing equation in the sloshbox test problem.
 
 LevelModelType = RDLS.LevelModel
 coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,
-                                   epsFact=epsFact_redistance,
-                                   nModelId=LS_model,
-                                   rdModelId=RD_model,
-                                   useMetrics=useMetrics,
-                                   ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING,
-                                   alpha=alpha_REDISTANCING)
+                                 epsFact=epsFact_redistance,
+                                 nModelId=LS_model,
+                                 rdModelId=RD_model,
+                                 useMetrics=useMetrics,
+                                 ELLIPTIC_REDISTANCING=ELLIPTIC_REDISTANCING,
+                                 alpha=alpha_REDISTANCING,
+                                 copyList=rdls_copyList)
 
 def getDBC_rd(x,flag):
     pass

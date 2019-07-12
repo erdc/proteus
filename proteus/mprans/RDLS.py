@@ -168,7 +168,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  outputQuantDOFs=False,
                  # NULLSpace info
                  nullSpace='NoNullSpace', #penalization param for elliptic re-distancing
-                 useExact=False):
+                 useExact=False,
+                 copyList=True):
+        self.copyList=copyList
         self.useExact=useExact
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
@@ -287,9 +289,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #copyInstructions = {'copy_uList': False,
             #                     'uList_model': self.nModelId}
             #copyInstructions = {'reset_uList': False}
-            copyInstructions = {'copy_uList': True,
+            copyInstructions = {'copy_uList': self.copyList,
                                 'uList_model': self.nModelId}
-            copyInstructions = {'reset_uList': True}
+            copyInstructions = {'reset_uList': self.copyList}
             return copyInstructions
         else:
             return {}
