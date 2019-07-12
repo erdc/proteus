@@ -630,7 +630,7 @@ namespace proteus
               1.00),
         nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck(),
-        C_sbm(10.0),
+        C_sbm(2.0),
         beta_sbm(0.0)
           {/*        std::cout<<"Constructing cppRANS3PF<CompKernelTemplate<"
                      <<0<<","
@@ -2398,7 +2398,7 @@ namespace proteus
                       {
                         _distance[I] = phi_solid_nodes[mesh_l2g[eN*nDOF_mesh_trial_element+I]];
                       }
-                    if ( _distance[I] > 0)//fully in fluid
+                    if ( _distance[I] >= 0)//fully in fluid
                       pos_counter++;
                   }
                 if (pos_counter == 3)//surrogate face
@@ -4571,7 +4571,7 @@ namespace proteus
                                                dmom_u_ham_grad_p_ext[0],//=1/rho,
                                                bc_dmom_u_ham_grad_p_ext[0],//=1/bc_rho,
                                                normal,
-                                               dmom_u_acc_u_ext,
+                                               porosity_ext*ebqe_rho[ebNE_kb],//dmom_u_acc_u_ext,
                                                bc_p_ext,
                                                bc_u_ext,
                                                bc_v_ext,
@@ -6979,7 +6979,7 @@ namespace proteus
                                                           isAdvectiveFluxBoundary_w[ebNE_kb],
                                                           dmom_u_ham_grad_p_ext[0],//=1/rho
                                                           normal,
-                                                          dmom_u_acc_u_ext,
+                                                          porosity_ext*rhoSave,//dmom_u_acc_u_ext,
                                                           bc_p_ext,
                                                           bc_u_ext,
                                                           bc_v_ext,
