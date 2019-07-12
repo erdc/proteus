@@ -804,10 +804,12 @@ namespace proteus
 				  // int by parts pressure
 				  int INT_BY_PARTS_PRESSURE)
       {
-        double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
+        double rho,nu,mu,H_rho,ImH_rho,d_rho,H_mu,ImH_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
         H_rho = (1.0-useVF)*gf.H(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+        ImH_rho = (1.0-useVF)*gf.ImH(eps_rho,phi) + useVF*(1.0-fmin(1.0,fmax(0.0,vf)));
         d_rho = (1.0-useVF)*gf.D(eps_rho,phi);
         H_mu = (1.0-useVF)*gf.H(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+        ImH_mu = (1.0-useVF)*gf.ImH(eps_mu,phi) + useVF*(1.0-fmin(1.0,fmax(0.0,vf)));
         d_mu = (1.0-useVF)*gf.D(eps_mu,phi);
 
         //calculate eddy viscosity
@@ -840,11 +842,11 @@ namespace proteus
 
         if (MATERIAL_PARAMETERS_AS_FUNCTION==0)
           {
-            rho = rho_0*gf.ImH(eps_rho,phi)+rho_1*gf.H(eps_rho,phi);
-            nu_t= nu_t0*gf.H(eps_rho,phi)+nu_t1*gf.H(eps_rho,phi);
-            nu  = nu_0*gf.ImH(eps_rho,phi)+nu_1*gf.H(eps_rho,phi);
+            rho = rho_0*ImH_rho+rho_1*H_rho;
+            nu_t= nu_t0*ImH_mu+nu_t1*H_mu;
+            nu  = nu_0*ImH_mu+nu_1*H_mu;
             nu += nu_t;
-            mu  = rho_0*nu_0*gf.ImH(eps_rho,phi)+rho_1*nu_1*gf.H(eps_rho,phi);
+            mu  = rho_0*nu_0*ImH_mu+rho_1*nu_1*H_mu;
           }
         else // set the material parameters by a function. To check convergence
           {
@@ -1064,11 +1066,12 @@ namespace proteus
 					       double gradC_y,
 					       double gradC_z)
       {
-        double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+        double rho, mu,nu,H_mu,ImH_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
         H_mu = (1.0-useVF)*gf.H(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
-        nu  = nu_0*gf.ImH(eps_mu,phi)+nu_1*gf.H(eps_mu,phi);
-        rho  = rho_0*gf.ImH(eps_mu,phi)+rho_1*gf.H(eps_mu,phi);
-        mu  = rho_0*nu_0*gf.ImH(eps_mu,phi)+rho_1*nu_1*gf.H(eps_mu,phi);
+        ImH_mu = (1.0-useVF)*gf.ImH(eps_mu,phi)+useVF*(1.0-fmin(1.0,fmax(0.0,vf)));
+        nu  = nu_0*ImH_mu+nu_1*H_mu;
+        rho  = rho_0*ImH_mu+rho_1*H_mu;
+        mu  = rho_0*nu_0*ImH_mu+rho_1*nu_1*H_mu;
         viscosity = nu;
         uc = sqrt(u*u+v*v*+w*w);
         duc_du = u/(uc+1.0e-12);
@@ -1166,16 +1169,17 @@ namespace proteus
                                            double *particle_netMoments,
                                            double *particle_surfaceArea)
       {
-        double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s;
+        double C, rho, mu, nu, H_mu, ImH_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s;
         double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
         double phi_s_normal[2]={0.0};
         double fluid_outward_normal[2];
         double vel[2];
         double center[2];
         H_mu = (1.0 - useVF) * gf.H(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
-        nu = nu_0 * gf.ImH(eps_mu, phi) + nu_1 * H_mu;
-        rho = rho_0 * gf.ImH(eps_mu, phi) + rho_1 * H_mu;
-        mu = rho_0 * nu_0 * gf.ImH(eps_mu, phi) + rho_1 * nu_1 * H_mu;
+        ImH_mu = (1.0 - useVF) * gf.ImH(eps_mu, phi) + useVF * (1.0-fmin(1.0, fmax(0.0, vf)));
+        nu = nu_0 * ImH_mu + nu_1 * H_mu;
+        rho = rho_0 * ImH_mu + rho_1 * H_mu;
+        mu = rho_0 * nu_0 * ImH_mu + rho_1 * nu_1 * H_mu;
         C = 0.0;
         for (int i = 0; i < nParticles; i++)
           {
@@ -1325,15 +1329,16 @@ namespace proteus
                                              double* particle_netForces,
                                              double* particle_netMoments)
       {
-        double C, rho, mu, nu, H_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
+        double C, rho, mu, nu, H_mu, ImH_mu, uc, duc_du, duc_dv, duc_dw, H_s, D_s, phi_s, u_s, v_s, w_s, force_x, force_y, r_x, r_y;
         double phi_s_normal[2];
         double fluid_outward_normal[2];
         double vel[2];
         double center[2];
         H_mu = (1.0 - useVF) * gf.H(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
-        nu = nu_0 * gf.ImH(eps_mu, phi) + nu_1 * H_mu;
-        rho = rho_0 * gf.ImH(eps_mu, phi) + rho_1 * H_mu;
-        mu = rho_0 * nu_0 * gf.ImH(eps_mu, phi) + rho_1 * nu_1 * H_mu;
+        ImH_mu = (1.0 - useVF) * gf.ImH(eps_mu, phi) + useVF * (1.0-fmin(1.0, fmax(0.0, vf)));
+        nu = nu_0 * ImH_mu + nu_1 * H_mu;
+        rho = rho_0 * ImH_mu + rho_1 * H_mu;
+        mu = rho_0 * nu_0 * ImH_mu + rho_1 * nu_1 * H_mu;
         C = 0.0;
         for (int i = 0; i < nParticles; i++)
         {
@@ -1450,13 +1455,14 @@ namespace proteus
 
         */
         assert (turbulenceClosureModel >=3);
-        double rho,nu,H_mu,nu_t=0.0,nu_t_keps =0.0, nu_t_komega=0.0;
+        double rho,nu,H_mu,ImH_mu,nu_t=0.0,nu_t_keps =0.0, nu_t_komega=0.0;
         double isKEpsilon = 1.0;
         if (turbulenceClosureModel == 4)
           isKEpsilon = 0.0;
         H_mu = (1.0-useVF)*gf.H(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
-        nu  = nu_0*gf.ImH(eps_mu,phi)+nu_1*H_mu;
-        rho  = rho_0*gf.ImH(eps_mu,phi)+rho_1*H_mu;
+        ImH_mu = (1.0-useVF)*gf.ImH(eps_mu,phi)+useVF*(1.0-fmin(1.0,fmax(0.0,vf)));
+        nu  = nu_0*ImH_mu+nu_1*H_mu;
+        rho  = rho_0*ImH_mu+rho_1*H_mu;
 
         const double twoThirds = 2.0/3.0; const double div_zero = 1.0e-2*fmin(nu_0,nu_1);
         mom_u_source += twoThirds*turb_grad_0[0];
