@@ -18,8 +18,9 @@ coefficients = RDLS.Coefficients(applyRedistancing=applyRedistancing,
                                  nModelId=0,
                                  rdModelId=1,
                                  useMetrics=useMetrics,
-                                 weakDirichletFactor=1000.0,
-                                 useExact=True)
+                                 backgroundDiffusionFactor=0.01,
+                                 weakDirichletFactor=1.0e3,
+                                 useExact=useExact)
 
 #now define the Dirichlet boundary conditions
 
@@ -28,23 +29,21 @@ def getDBC(x,flag):
 
 dirichletConditions = {0:getDBC}
 
-if LevelModelType == RDLS.LevelModel:
-    #weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCs}
-    weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCsSimple}
+if True:#not useExact:
+    if LevelModelType == RDLS.LevelModel:
+        #weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCs}
+        weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCsSimple}
+    else:
+        weakDirichletConditions = {0:coefficients.setZeroLSweakDirichletBCs}
 else:
-    weakDirichletConditions = {0:coefficients.setZeroLSweakDirichletBCs}
-
-#weakDirichletConditions = {0:coefficients.setZeroLSweakDirichletBCs2}
-#weakDirichletConditions = None
-def setNoZeroLSweakDirichletBCs(RDLSvt):
-    assert hasattr(RDLSvt, 'freezeLevelSet')
-    assert hasattr(RDLSvt, 'u_dof_last')
-    assert hasattr(RDLSvt, 'weakDirichletConditionFlags')
-    assert hasattr(RDLSvt.coefficients, 'epsFact')
-    assert hasattr(RDLSvt, 'dofFlag_element')
-    RDLSvt.freezeLevelSet = 0
-
-weakDirichletConditions = {0: setNoZeroLSweakDirichletBCs}
+    def setNoZeroLSweakDirichletBCs(RDLSvt):
+        assert hasattr(RDLSvt, 'freezeLevelSet')
+        assert hasattr(RDLSvt, 'u_dof_last')
+        assert hasattr(RDLSvt, 'weakDirichletConditionFlags')
+        assert hasattr(RDLSvt.coefficients, 'epsFact')
+        assert hasattr(RDLSvt, 'dofFlag_element')
+        RDLSvt.freezeLevelSet = 0
+    weakDirichletConditions = {0: setNoZeroLSweakDirichletBCs}
 
 
 initialConditions  = ls_vortex_2d_p.initialConditions

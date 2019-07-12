@@ -15,7 +15,7 @@ if redist_Newton:
     stepController = Newton_controller
     tolFac = 0.0
     nl_atol_res = atolRedistance
-    maxNonlinearIts = 25
+    maxNonlinearIts = 100
     maxLineSearches = 0
     useEisenstatWalker = True
     linTolFac = 0.0

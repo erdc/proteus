@@ -13,7 +13,10 @@ stepController = Newton_controller
 
 # About the nonlinear solver
 multilevelNonlinearSolver  = Newton
-levelNonlinearSolver = Newton#TwoStageNewton
+if ct.ELLIPTIC_REDISTANCING > 0:
+    levelNonlinearSolver = TwoStageNewton
+else:
+    levelNonlinearSolver = Newton
 
 tolFac = 0.0
 nl_atol_res = atolRedistance

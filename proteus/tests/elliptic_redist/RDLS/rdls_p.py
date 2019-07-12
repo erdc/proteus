@@ -39,7 +39,7 @@ def setNoZeroLSweakDirichletBCs(RDLSvt):
     assert hasattr(RDLSvt, 'dofFlag_element')
     RDLSvt.freezeLevelSet = 0
 
-if True:#not useExact:
+if not useExact:
     if LevelModelType == RDLS.LevelModel:
         weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCsSimple}
     else:
