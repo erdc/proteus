@@ -75,7 +75,7 @@ if useMetrics:
     lag_shockCapturing_rd=False
 else:
     shockCapturingFactor_ls=0.0
-    shockCapturingFactor_rd=0.5
+    shockCapturingFactor_rd=0.9
     lag_shockCapturing_ls=True
     lag_shockCapturing_rd=False
 
