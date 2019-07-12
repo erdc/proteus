@@ -6299,10 +6299,11 @@ namespace proteus
                             // Classical Nitsche
                             // (1)
                             globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
-                                    phi_i*phi_j*C_adim;
+                              phi_i*phi_j*C_adim;
                             globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
-                                    phi_i*phi_j*C_adim;
-
+                              phi_i*phi_j*C_adim;
+                            globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] +=
+                              phi_i*phi_j*C_adim;
                             // (2)
                             get_symmetric_gradient_dot_vec(grad_phi_j,zero_vec,zero_vec,normal,res);
                             globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] -=
