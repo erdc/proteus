@@ -106,6 +106,7 @@ cdef class ProtChBody:
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
         self.useIBM = False
         self.Aij_factor = 1.
+        self.Aij_updated_global = False
         self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
@@ -536,18 +537,40 @@ cdef class ProtChBody:
         Aij[4, :4] *= self.thisptr.free_r.y()
         Aij[4, 5] *= self.thisptr.free_r.y()
         Aij[5, :5] *= self.thisptr.free_r.z()
-        assert Aij.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
-        assert Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
+        assert Aij.shape[0] == Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         cdef double mass = self.ChBody.GetMass()
         cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
-        cdef np.ndarray AM = np.zeros((6,6))  # added mass matrix
         cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
         cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
         cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
+
         # added mass matrix
-        AM += Aij
-        self.Aij[:] = AM
+        cdef ch.ChQuaternion rot
+        cdef ch.ChMatrix33 rotch
+        cdef ch.ChMatrix33 rotchT
+        cdef np.ndarray rotMarr_big
+        cdef np.ndarray rotMarrT_big
+        if self.Aij_updated_global is True:
+            # converting from global to local: Rot*Aij*RotT*v
+            rot = deref(self.thisptr.body).GetRot()
+            rotch = ch.ChMatrix33[double](rot)
+            rotchT = ch.ChMatrix33[double]()
+            rotMarr_big = np.zeros((6, 6))
+            rotMarrT_big = np.zeros((6, 6))
+            rotchT.CopyFromMatrixT(rotch)
+            for i in range(6):
+                for j in range(6):
+                    if i < 3 and j < 3 :
+                        rotMarr_big[i, j] = rotch.GetElement(i, j)
+                        rotMarrT_big[i, j] = rotchT.GetElement(i, j)
+                    elif i >=3 and j >= 3:
+                        rotMarr_big[i, j] = rotch.GetElement(i-3, j-3)
+                        rotMarrT_big[i, j] = rotchT.GetElement(i-3, j-3)
+            # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
+            self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
+        else:
+            self.Aij[:] = Aij
         # mass matrix
         MM[0,0] = mass
         MM[1,1] = mass
@@ -556,10 +579,10 @@ cdef class ProtChBody:
             for j in range(3):
                 MM[i+3, j+3] = iner[i, j]
         # full mass
-        FM += AM
+        FM += self.Aij
         FM += MM
         Profiling.logEvent('Mass Matrix:\n'+str(MM))
-        Profiling.logEvent('Added Mass Matrix:\n'+str(AM))
+        Profiling.logEvent('Added Mass Matrix:\n'+str(self.Aij))
         Profiling.logEvent('Full Mass Matrix:\n'+str(FM))
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
@@ -628,13 +651,12 @@ cdef class ProtChBody:
                 M += self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netMoments[flag]
             else:
                 M += self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[flag]
-        M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
         rx, ry, rz = self.barycenter0-pyvec2array(self.ChBody.GetPos())
         Mp = np.array([ry*Fz-rz*Fy, -(rx*Fz-rz*Fx), (rx*Fy-ry*Fx)])
-        M_t += Mp
-        return M_t
+        M += Mp
+        return M
 
     def getRotationMatrix(self):
         """Gives current rotation (matrix) of body
@@ -671,6 +693,7 @@ cdef class ProtChBody:
                 # getting added mass matrix
                 self.Aij[:] = 0
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
+                self.Aij_updated_global = am.coefficients.updated_global
                 for flag in self.boundaryFlags:
                     if self.useIBM:
                         self.Aij += am.coefficients.particle_Aij[flag]
