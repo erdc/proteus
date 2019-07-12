@@ -600,6 +600,7 @@ namespace proteus
                 ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref[k*nDOF_trial_element],u0);
                 if (freezeLevelSet)
                   u0 = phi_ls[eN_k];
+                //u0 = phi_ls[eN_k];//cek debug
                 /* double DX=(x-0.5),DY=(y-0.75); */
                 /* double radius = std::sqrt(DX*DX+DY*DY); */
                 /* double theta = std::atan2(DY,DX); */
@@ -775,8 +776,8 @@ namespace proteus
                     elementResidual_u[i] += ck.Mass_weak(m_t,u_test_dV[i]) +
 		      ck.Hamiltonian_weak(H,u_test_dV[i]) +
                       ck.Reaction_weak(r,u_test_dV[i]) +
-                      (1.0-FREEZE)*(weakDirichletFactor/elementDiameter[eN])*ck.Reaction_weak(gf.D(epsilon_redist,u0)*(u0-u),
-                                                                                 u_test_dV[i]) +
+                      (1.0-FREEZE)*(weakDirichletFactor/h_phi)*ck.Reaction_weak(gf.D(epsilon_redist,u0)*(u0-u),
+                                                                                              u_test_dV[i]) +
                       ck.SubgridError(subgridError_u,Lstar_u[i]) +
 		      ck.NumericalDiffusion(nu_sc,grad_u,&u_grad_test_dV[i_nSpace]);
 #ifdef CKDEBUG
@@ -1147,6 +1148,7 @@ namespace proteus
                 ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref[k*nDOF_trial_element],u0);
                 if (freezeLevelSet)
                   u0 = phi_ls[eN_k];
+                //u0 = phi_ls[eN_k];//cek debug
                 /* double DX=(x-0.5),DY=(y-0.75); */
                 /* double radius = std::sqrt(DX*DX+DY*DY); */
                 /* double theta = std::atan2(DY,DX); */
@@ -1292,7 +1294,7 @@ namespace proteus
                         //std::cout<<"eN_k "<<eN_k<<" D-J "<<gf.D(epsilon_redist,phi_ls[eN_k])<<std::endl;
                         elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
                           ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
-                          (1.0-FREEZE)*(weakDirichletFactor/elementDiameter[eN])*ck.ReactionJacobian_weak(-gf.D(epsilon_redist,u0),
+                          (1.0-FREEZE)*(weakDirichletFactor/h_phi)*ck.ReactionJacobian_weak(-gf.D(epsilon_redist,u0),
                                                                                              u_trial_ref[k*nDOF_trial_element+j],
                                                                                              u_test_dV[i]) +
                           ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +

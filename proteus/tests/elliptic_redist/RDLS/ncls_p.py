@@ -56,8 +56,9 @@ class init_cond(object):
     def uOfXT(self,x,t):
         import numpy as np
         theta = math.atan2(x[1]-self.yc,x[0]-self.xc)
-        k=10.0
-        return self.scaling*(self.radius+(0.015/2.)*math.cos(k*theta) - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2))**self.r    
+        C=0.0
+        k=10
+        return self.scaling*(self.radius+(C*self.radius)*math.cos(k*theta) - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2))**self.r    
         #return self.scaling*(-1.0*(x[1] - .75 - 1.0e-8))**self.r
         #n=[1.,1.]
         #return self.scaling*((x[0]-self.xc)*n[0] + (x[1] - self.yc)*n[1])*self.r
@@ -111,7 +112,7 @@ class zalesak_disk(object):
         return self.scaling*dist
     
 analyticalSolution = {0:init_cond(L,scaling=1.0,r=1)}
-initialConditions  = {0:init_cond(L,scaling=10.0,r=3)}
+initialConditions  = {0:init_cond(L,scaling=0.9,r=1)}
 
 # BOUNDARY CONDITIONS #
 def getDBC(x,flag):

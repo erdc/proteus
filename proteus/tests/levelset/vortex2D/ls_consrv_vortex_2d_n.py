@@ -71,7 +71,7 @@ nonlinearSmoother = NLGaussSeidel
 fullNewtonFlag = True
 
 tolFac = 0.0
-maxLineSearches =0
+#maxLineSearches =0
 
 nl_atol_res = atolConservation
 useEisenstatWalker = True

@@ -40,8 +40,8 @@ useHex=False#True
 
 # quadrature order
 #vortex_quad_order = 2*pDegree_ls+1
-vortex_quad_order = 2*(2*pDegree_ls)
-
+#vortex_quad_order = 2*(2*pDegree_ls)
+vortex_quad_order = 2*pDegree_ls+1
 #parallel partitioning info
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
@@ -67,10 +67,10 @@ else:
 epsFactHeaviside=epsFactDirac=1.5
 epsFactRedistance=0.33
 
-useMetrics=1.0
+useMetrics=0.0
 if useMetrics:
-    shockCapturingFactor_ls=0.0
-    shockCapturingFactor_rd=0.9
+    shockCapturingFactor_ls=0.5
+    shockCapturingFactor_rd=0.5
     lag_shockCapturing_ls=True
     lag_shockCapturing_rd=False
 else:
@@ -80,8 +80,10 @@ else:
     lag_shockCapturing_rd=False
 
 #use absolute tolerances on al models
-atolRedistance = 1.0e-10#max(1.0e-12,0.1*he)
-atolLevelSet     = 1.0e-10#max(1.0e-12,0.001*he**2)
+#atolRedistance = 1.0e-10#max(1.0e-12,0.1*he)
+#atolLevelSet     = 1.0e-10#max(1.0e-12,0.001*he**2)
+atolRedistance = max(1.0e-12,0.1*he)
+atolLevelSet     = max(1.0e-12,0.001*he**2)
 
 linearSolverConvergenceTest = 'r-true' 
 fmmFlag=0
