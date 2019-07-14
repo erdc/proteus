@@ -1230,6 +1230,7 @@ cdef class ProtChBody:
     def _recordValues(self):
         """Records values of body attributes in a csv file.
         """
+        Profiling.logEvent('recording values file of '+str(self.name))
         record_file = os.path.join(Profiling.logDir, self.name)
         t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
@@ -1275,15 +1276,19 @@ cdef class ProtChBody:
             with open(record_file+'_Aij.csv', 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(values_towrite)
+        Profiling.logEvent('finished recording values file of '+str(self.name))
 
     def _recordH5(self):
+        Profiling.logEvent('recording h5 file of '+str(self.name))
         tCount = self.ProtChSystem.tCount
         self.hdfFileName = self.name
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
         if tCount == 0:
-            f = h5py.File(hdfFileName, 'w')
+            f = h5py.File(hdfFileName, 'w', libver='latest')
+            # f = h5py.File(hdfFileName, 'w')
         else:
-            f = h5py.File(hdfFileName, 'a')
+            f = h5py.File(hdfFileName, 'a', libver='latest')
+            # f = h5py.File(hdfFileName, 'a')
         poss, element_connection = self.getTriangleMeshInfo()
         pos = np.zeros_like(poss)
         self.thisptr.updateTriangleMeshVisualisationPos()
@@ -1295,8 +1300,10 @@ cdef class ProtChBody:
         dset[...] = pos
         dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')
         dset[...] = element_connection
+        Profiling.logEvent('finished recording h5 file of '+str(self.name))
 
     def _recordXML(self):
+        Profiling.logEvent('recording xml file of '+str(self.name))
         tCount = self.ProtChSystem.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
@@ -1360,7 +1367,8 @@ cdef class ProtChBody:
 
         # dump xml str in h5 file
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
-        f = h5py.File(hdfFileName, 'a')
+        f = h5py.File(hdfFileName, 'a', libver='latest')
+        # f = h5py.File(hdfFileName, 'a')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
                                 (1,),
@@ -1368,6 +1376,7 @@ cdef class ProtChBody:
         dset[0] = datav
         # close file
         f.close()
+        Profiling.logEvent('finished recording xml file of '+str(self.name))
 
 
     def addPrismaticLinksWithSpring(self, np.ndarray pris1,
@@ -1586,6 +1595,7 @@ cdef class ProtChSystem:
         self.record_values = False
         self.first_step = False  # first step passed
         self.tCount += 1
+        Profiling.logEvent("Chrono poststep finished")
 
     def calculate_init(self):
         """Does chrono system initialisation
@@ -2047,14 +2057,17 @@ cdef class ProtChMoorings:
                                         'sz'+str(eta)]
 
     def _recordH5(self):
+        Profiling.logEvent('recording h5 file of '+str(self.name))
         tCount = self.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
         self.hdfFileName = self.name
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
         if tCount == 0:
-            f = h5py.File(hdfFileName, 'w')
+            f = h5py.File(hdfFileName, 'w', libver='latest')
+            # f = h5py.File(hdfFileName, 'w')
         else:
-            f = h5py.File(hdfFileName, 'a')
+            f = h5py.File(hdfFileName, 'a', libver='latest')
+            # f = h5py.File(hdfFileName, 'a')
         pos = self.getNodesPosition()
         element_connection = np.array([[i, i+1] for i in range(len(pos)-1)])
         dset = f.create_dataset('nodesSpatial_Domain'+str(tCount), pos.shape)
@@ -2139,8 +2152,10 @@ cdef class ProtChMoorings:
         dset[...] = datav[:,2]
         # close file
         f.close()
+        Profiling.logEvent('finished recording h5 file of '+str(self.name))
 
     def _recordXML(self):
+        Profiling.logEvent('recording xml file of '+str(self.name))
         tCount = self.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
         xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
@@ -2218,7 +2233,8 @@ cdef class ProtChMoorings:
 
         # dump xml str in h5 file
         hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
-        f = h5py.File(hdfFileName, 'a')
+        f = h5py.File(hdfFileName, 'a', libver='latest')
+        # f = h5py.File(hdfFileName, 'a')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
                                 (1,),
@@ -2226,10 +2242,12 @@ cdef class ProtChMoorings:
         dset[...] = datav
         # close file
         f.close()
+        Profiling.logEvent('finished recording xmf file of '+str(self.name))
 
     def _recordValues(self):
         """Records values in csv files
         """
+        Profiling.logEvent('recording values file of '+str(self.name))
         self.record_file = os.path.join(Profiling.logDir, self.name)
         def record(record_file, row, mode='a'):
             with open(record_file, mode) as csvfile:
@@ -2324,6 +2342,7 @@ cdef class ProtChMoorings:
         # accelerations = self.fluid_acceleration_array
         # row = (accelerations.flatten('C')).tolist()
         # record(self.record_file+file_name, row)
+        Profiling.logEvent('finished recording values file of '+str(self.name))
 
     def getTensionBack(self):
         """
