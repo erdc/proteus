@@ -1471,7 +1471,7 @@ class ParametersModelVOF(ParametersModelBase):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'gmres')
         self.OptDB.setValue(prefix+'pc_type', 'hypre')
-        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
         self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
         self.OptDB.setValue(prefix+'ksp_knoll', 1)
         self.OptDB.setValue(prefix+'ksp_max_it', 2000)
@@ -1574,7 +1574,7 @@ class ParametersModelNCLS(ParametersModelBase):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'gmres')
         self.OptDB.setValue(prefix+'pc_type', 'hypre')
-        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
         self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
         self.OptDB.setValue(prefix+'ksp_knoll', 1)
         self.OptDB.setValue(prefix+'ksp_max_it', 2000)
@@ -1669,7 +1669,7 @@ class ParametersModelRDLS(ParametersModelBase):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'gmres')
         self.OptDB.setValue(prefix+'pc_type', 'asm')
-        self.OptDB.setValue(prefix+'pc_pc_asm_type', 'basic')
+        self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
         self.OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
         self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
         self.OptDB.setValue(prefix+'ksp_knoll', 1)
@@ -1772,8 +1772,10 @@ class ParametersModelMCorr(ParametersModelBase):
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'cg')
-        self.OptDB.setValue(prefix+'pc_type', 'hypre')
-        self.OptDB.setValue(prefix+'pc_pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'pc_type', 'asm')
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'basic')
+        # self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        # self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
         self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelAddedMass(ParametersModelBase):
@@ -1859,8 +1861,10 @@ class ParametersModelAddedMass(ParametersModelBase):
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'cg')
-        self.OptDB.setValue(prefix+'pc_type', 'hypre')
-        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'pc_type', 'asm')
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'basic')
+        # self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        # self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
         self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
