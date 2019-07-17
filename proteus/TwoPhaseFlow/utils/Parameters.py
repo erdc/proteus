@@ -1773,7 +1773,7 @@ class ParametersModelMCorr(ParametersModelBase):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'cg')
         self.OptDB.setValue(prefix+'pc_type', 'asm')
-        self.OptDB.setValue(prefix+'pc_hypre_type', 'basic')
+        self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
         # self.OptDB.setValue(prefix+'pc_type', 'hypre')
         # self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
         self.OptDB.setValue(prefix+'ksp_max_it', 2000)
@@ -1862,7 +1862,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         prefix = self.n.linear_solver_options_prefix
         self.OptDB.setValue(prefix+'ksp_type', 'cg')
         self.OptDB.setValue(prefix+'pc_type', 'asm')
-        self.OptDB.setValue(prefix+'pc_hypre_type', 'basic')
+        self.OptDB.setValue(prefix+'pc_asm_type', 'basic')
         # self.OptDB.setValue(prefix+'pc_type', 'hypre')
         # self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
         self.OptDB.setValue(prefix+'ksp_max_it', 2000)
