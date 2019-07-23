@@ -887,8 +887,8 @@ void cppCable::setDragForce() {
     double dot = u_rel^t_dir;
     Va = t_dir*dot;
     Vn = u_rel-Va;
-    Fd_a = 0.5*rho_f*Cd_axial*d*Va.Length()*Va;//(force per unit length)
-    Fd_n = 0.5*rho_f*Cd_normal*M_PI*d*Vn.Length()*Vn;//(force per unit length)
+    Fd_a = 0.5*rho_f*Cd_axial*M_PI*d*Va.Length()*Va;//(force per unit length)
+    Fd_n = 0.5*rho_f*Cd_normal*d*Vn.Length()*Vn;//(force per unit length)
     Fd = Fd_a + Fd_n;
     forces_drag[i]->Set(Fd);
   }
