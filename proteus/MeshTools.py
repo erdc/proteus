@@ -4483,7 +4483,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
 
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0,EB=False):
         Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Triangle",tCount,EB=EB)
-        Mesh.writeMeshXdmf_errorHack(self,ar,name,t,init,meshChanged,"Triangle",tCount,EB=EB)
+        #Mesh.writeMeshXdmf_errorHack(self,ar,name,t,init,meshChanged,"Triangle",tCount,EB=EB)
     def writeMeshEnsight(self,filename,description=None):
         base=1
         #write the casefile
