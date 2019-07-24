@@ -114,7 +114,7 @@ int MeshAdaptPUMIDrvr::transferFieldToProteus(const char* name, double* outArray
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p, double deltaT, double interfaceBandSize)
+int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p, double deltaT, double deltaT_next,double T_simulation,double interfaceBandSize)
 /**
  * @brief Transfer material properties to the MeshAdaptPUMI class
  * 
@@ -127,8 +127,16 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
  */
 { 
   nsd = m->getDimension();
-  rho[0] = rho_p[0]; rho[1] = rho_p[1];
-  nu[0] = nu_p[0]; nu[1] = nu_p[1];
+  //rho = &(rho_p[0]);
+  //nu=&(nu_p[0]);
+
+  rho = (double*) calloc(m->count(m->getDimension()),sizeof(double));
+  nu = (double*) calloc(m->count(m->getDimension()),sizeof(double));
+  for(int eID = 0; eID<m->count(m->getDimension()); eID++)
+  {
+    rho[eID] = rho_p[eID];
+    nu[eID] = nu_p[eID];
+  }  
   if(nsd==2){
     g[0] = g_p[0]; g[1] = g_p[1];
   }
@@ -137,8 +145,44 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
   }
   N_interface_band = interfaceBandSize;
   delta_T = deltaT;
+  delta_T_next = deltaT_next;
+  T_current = T_simulation;
   return 0;
 }
+
+int MeshAdaptPUMIDrvr::transferElementFieldToProteus(const char* name, double* outArray,
+    int nVar, int nN)
+/**
+ * @brief Convert PUMI fields to something Proteus can understand
+ * 
+ * Copies the PUMI apf field with name into an outArray.
+ *
+ * \param name is the desired name associated with the apf field
+ * \param outArray is the Proteus field that will be output
+ *
+ * The remainder of the parameters might be irrelevant.
+ */
+
+{
+  assert(nN == static_cast<int>(m->count(2)));
+  apf::Field* f = m->findField(name);
+  if (!f)
+    fprintf(stderr, "couldn't find field \"%s\"\n", name);
+  assert(f);
+  assert(apf::countComponents(f) == nVar);
+  apf::NewArray<double> tmp(nVar);
+  apf::MeshEntity* v;
+  apf::MeshIterator* it = m->begin(2);
+  while ((v = m->iterate(it))) {
+    int i = localNumber(v);
+    apf::getComponents(f, v, 0, &tmp[0]);
+    for(int j = 0; j < nVar; j++)
+      outArray[i * nVar + j] = tmp[j];
+  }
+  m->end(it);
+  return 0;
+}
+
 
 /*
 int MeshAdaptPUMIDrvr::transferBCtagsToProteus(int* tagArray,int idx, int* ebN, int*eN_global,double* fluxBC)

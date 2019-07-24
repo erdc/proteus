@@ -21,20 +21,14 @@ class SubgridError(proteus.SubgridError.SGE_base):
 
 
 class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
-    def __init__(self, coefficients, nd, shockCapturingFactor=0.25, lag=True, nStepsToDelay=1):
+    def __init__(self, coefficients, nd, shockCapturingFactor=0.25, lag=True, nStepsToDelay=None):
         proteus.ShockCapturing.ShockCapturing_base.__init__(self, coefficients, nd, shockCapturingFactor, lag)
         self.nStepsToDelay = nStepsToDelay
         self.nSteps = 0
-        #if self.lag:
-        #    logEvent("VOF.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
-            #self.nStepsToDelay = 1
-            #self.lag = False
         if self.lag:
             logEvent("VOF.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
-            #Ensure nStepsToDelay value makes sense by throwing an error
-            if(self.nStepsToDelay is None or self.nStepsToDelay < 1):
-                sys.exit("VOF.ShockCapturing: nStepsToDelay cannot be None or < 1 with lagging, please specify an integer: nStepsToDelay>=1")
-
+            self.nStepsToDelay = 1
+            self.lag = False
 
     def initializeElementQuadrature(self, mesh, t, cq):
         self.mesh = mesh
@@ -45,31 +39,17 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             self.numDiff_last.append(cq[('numDiff', ci, ci)])
 
     def updateShockCapturingHistory(self):
-        #self.nSteps += 1
-        #if self.lag:
-        #    for ci in range(self.nc):
-        #        self.numDiff_last[ci][:] = self.numDiff[ci]
-        #if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-        #    logEvent("VOF.ShockCapturing: switched to lagged shock capturing")
-        #    self.lag = True
-        #    self.numDiff_last = []
-        #    for ci in range(self.nc):
-        #        self.numDiff_last.append(self.numDiff[ci].copy())
+        self.nSteps += 1
         if self.lag:
-            if self.nSteps > self.nStepsToDelay:
-                #numDiff_last is a different object
-                #update the values of numDiff_last based on numDiff, 
-                for ci in range(self.nc):
-                    self.numDiff_last[ci][:] = self.numDiff[ci]
-            elif self.nSteps == self.nStepsToDelay:
-                logEvent("VOF.ShockCapturing: switched to lagged shock capturing")
-                #if lagging, then create a separate object identical to numDiff 
-                for ci in range(self.nc):
-                    self.numDiff_last[ci] = self.numDiff[ci].copy()
-            else:
-                pass
-            self.nSteps += 1
-            logEvent("VOF: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+            for ci in range(self.nc):
+                self.numDiff_last[ci][:] = self.numDiff[ci]
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
+            logEvent("VOF.ShockCapturing: switched to lagged shock capturing")
+            self.lag = True
+            self.numDiff_last = []
+            for ci in range(self.nc):
+                self.numDiff_last.append(self.numDiff[ci].copy())
+        logEvent("VOF: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
 
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):

@@ -34,7 +34,8 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int updateMaterialArrays2(Mesh&)
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
-        int transferPropertiesToPUMI(double*, double*,double*,double,double)
+        int transferElementFieldToProteus(char*, double*, int, int)
+        int transferPropertiesToPUMI(double*, double*,double*,double,double,double,double)
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
@@ -112,11 +113,20 @@ cdef class MeshAdaptPUMI:
     def transferFieldToProteus(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
         outArray = np.ascontiguousarray(outArray)
         return self.thisptr.transferFieldToProteus(name, &outArray[0,0], outArray.shape[1], outArray.shape[0])
-    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu, np.ndarray[np.double_t,ndim=1,mode="c"] g, double deltaT, double interfaceBandSize):
+    def transferElementFieldToProteus(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
+        outArray = np.ascontiguousarray(outArray)
+        return self.thisptr.transferElementFieldToProteus(name, &outArray[0,0], outArray.shape[1], outArray.shape[0])
+    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu, np.ndarray[np.double_t,ndim=1,mode="c"] g, double deltaT,double deltaT_next, double T_simulation,double interfaceBandSize):
         rho = np.ascontiguousarray(rho)
         nu = np.ascontiguousarray(nu)
         g = np.ascontiguousarray(g)
-        return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0],deltaT,interfaceBandSize)
+        #cdef double* rho_transfer = <double*> rho.data
+        #cdef double* nu_transfer = <double*> nu.data
+        #cdef double* g_transfer = <double*> g.data
+        #return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0],deltaT,T_simulation,interfaceBandSize)
+        #return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0],deltaT,T_simulation,interfaceBandSize)
+        #return self.thisptr.transferPropertiesToPUMI(rho_transfer,nu_transfer,g_transfer,deltaT,T_simulation,interfaceBandSize)
+        return self.thisptr.transferPropertiesToPUMI(<double*> rho.data,<double*>nu.data,<double*>g.data,deltaT,deltaT_next,T_simulation,interfaceBandSize)
     def transferModelInfo(self, np.ndarray[int,ndim=1,mode="c"] numModelEntities,
                                 np.ndarray[int,ndim=2,mode="c"] edges,
                                 np.ndarray[int,ndim=2,mode="c"] faces,

@@ -44,6 +44,23 @@ double MeshAdaptPUMIDrvr::getMPvalue(double field_val,double val_0, double val_1
  * \param val_1 value of property for second phase
  */
 {
+
+/*
+  double H;
+  if (u > eps)
+    H=1.0;
+  else if (u < -eps)
+    H=0.0;
+  else if (u==0.0)
+    H=0.5;
+  else
+    H = 0.5*(1.0 + u/eps + sin(M_PI*u/eps)/M_PI);
+*/
+  if(field_val > 1.0)
+    field_val = 1.0;
+  else if(field_val < 0.0)
+    field_val = 0.0;
+
   return val_0*(1-field_val)+val_1*field_val;
 }
 

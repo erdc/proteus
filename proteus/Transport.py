@@ -5349,6 +5349,9 @@ class OneLevelTransport(NonlinearEquation):
         functions by their space
 
         """
+        if(self.name == 'twp_navier_stokes_p0'): #hack for size gauges
+            self.coefficients.nc = self.coefficients.nc+1;
+            self.u[self.coefficients.nc-1].femSpace.mesh = self.u[self.coefficients.nc-2].femSpace.mesh
         for ci in range(self.coefficients.nc):
             femSpaceType_ci = self.u[ci].femSpace.__class__
             alreadyWritten = femSpaceType_ci in femSpaceWritten
@@ -5372,6 +5375,10 @@ class OneLevelTransport(NonlinearEquation):
                                                                                         t,init=False,meshChanged=meshChanged,tCount=tCount)
 
             self.u[ci].femSpace.writeFunctionXdmf(archive,self.u[ci],tCount)
+ 
+        if(self.name == 'twp_navier_stokes_p0'):
+            self.coefficients.nc = self.coefficients.nc-1;
+
         if writeVectors and self.coefficients.vectorComponents is not None:
             c0 = self.coefficients.vectorComponents[0]
             self.u[c0].femSpace.writeVectorFunctionXdmf(archive,

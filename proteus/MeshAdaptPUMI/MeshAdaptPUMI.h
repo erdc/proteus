@@ -49,13 +49,15 @@ class MeshAdaptPUMIDrvr{
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double interfaceBandSize);
+  int transferElementFieldToProteus(const char* name, double* outArray, int nVar, int nN);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double deltaT_next,double T_simulation,double interfaceBandSize);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 
   //MeshAdapt functions
   int willAdapt();
   int willErrorAdapt();
+  int willErrorAdapt_reference();
   int willInterfaceAdapt();
   int adaptPUMIMesh(const char* input);
   int calculateSizeField(double L_band);
@@ -64,11 +66,15 @@ class MeshAdaptPUMIDrvr{
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
-  int gradeMesh();
+  int gradeMesh(double gradationFactor);
+  int setSphereSizeField();
+  int loadMeshForAnalytic(const char* meshFile,double* boxDim,double* sphereCenter, double radius);
+  gmi_model* createSphereInBox(int boxDim,apf::Vector3 sphereCenter,double radius);
 
   //Quality Check Functions
   double getMinimumQuality();
   double getTotalMass();
+  double getTotalLinearMomentum();
 
   //Functions that help facilitate computations
   double getMPvalue(double field_val,double val_0, double val_1); //get the multiphase value of physical properties
@@ -135,16 +141,26 @@ class MeshAdaptPUMIDrvr{
   apf::Mesh2* m;
   int comm_size, comm_rank;
 
-  double rho[2], nu[2];
+  //double rho[2];
+  //double nu[2];
+  double* rho;
+  double* nu;
   double g[3];
   double delta_T;
+  double delta_T_next;
+  double T_current; //for error trigger
+  double T_reference; //for error trigger
   apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
   apf::Field* vmsErrH1; //error field for VMS
+  apf::Field* nuErr; //error field for VMS
+  apf::Field* strongResidual; //error field for VMS
   apf::Field* errRho_reg; //error-density field from ERM
   apf::Field* errRel_reg; //relative error field from ERM
+  apf::Field* error_reference;
+  apf::Field* error_reference_instantaneous;
   /* this field stores isotropic size */
   apf::Field* size_iso;
   /* these fields store anisotropic size and metric tensor */
@@ -171,12 +187,16 @@ class MeshAdaptPUMIDrvr{
       apf::MeshEntity* ent);
   void volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
+  static void minToEntity(apf::Field* ef, apf::Field* vf,
+      apf::MeshEntity* ent);
 
   bool has_gBC; //boolean for having global boundary conditions
   double target_error; //computed from get_local_error()
   int target_element_count; //How many elements in the mesh are desired?
   double domainVolume; //Volume of the domain
   double THRESHOLD; //threshold of error before adapt
+  void getSolutionCorrection(apf::Mesh*m);
+  void getPatchRelaxation(apf::MeshEntity *vert);
 };
 
 
