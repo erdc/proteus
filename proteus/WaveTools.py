@@ -1251,9 +1251,10 @@ class NewWave(object):
         for ii in range(self.N):
             self.tanhF[ii] = float(np.tanh(self.ki[ii]*self.depth) )
 
-        m0 = np.sum(returnRectangles(self.Si_Jm,wim))
-        An = np.sqrt(2*m0*np.log(Nmax))
-        self.ai = An*returnRectangles(self.Si_Jm,wim)/m0
+        mm = np.sum(returnRectangles(self.Si_Jm,wim))
+        m0 = Hs*Hs/16.
+        An = np.sqrt(2.*m0*np.log(Nmax))
+        self.ai = An*returnRectangles(self.Si_Jm,wim)/mm
         self.kDir = np.zeros((len(self.ki),3),)
         for ii in range(3):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii]
