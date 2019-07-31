@@ -714,7 +714,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
 
 
 class VerifyNewWaves(unittest.TestCase):
-    def testRandom(self):
+    def testNewWave(self):
         from proteus.WaveTools import NewWave,dispersion
         import random
         from proteus.WaveTools import fastcos_test as fcos
@@ -738,7 +738,7 @@ class VerifyNewWaves(unittest.TestCase):
         TMA = False
         spectName = "JONSWAP"
         bandFactor = 2.0
-        Nmax = 1000
+        Nmax = 10000
         a= NewWave(Tp,
                   Hs,
                   mwl,#m significant wave height
@@ -752,8 +752,9 @@ class VerifyNewWaves(unittest.TestCase):
                   crestFocus=True,
                    xfocus=xfocus,
                    tfocus=tfocus,
-                  fast = True,
-                  Nmax = 1000)
+                   Nmax = Nmax,
+                   fast = True)
+
         eta = np.zeros(3000,)
         tt = np.linspace(0,30,3000)
         ii=-1
@@ -764,7 +765,8 @@ class VerifyNewWaves(unittest.TestCase):
         np.savetxt(X=eta,fname="eta.txt")
         imax=np.where(tt>=tfocus)[0][0]
         self.assertAlmostEqual(eta[imax],max(eta))
-        
+        self.assertAlmostEqual(max(eta),0.107290525)
+         
 class VerifyRandomWaves(unittest.TestCase):
     def testRandom(self):
         from proteus.WaveTools import RandomWaves,dispersion
