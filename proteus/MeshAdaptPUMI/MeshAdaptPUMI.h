@@ -155,6 +155,9 @@ class MeshAdaptPUMIDrvr{
   apf::Field* size_scale;
   apf::Field* size_frame;
 
+  double xyz_offset_ssf[3];	// For getting sphere coordinates for setSphereSizeField
+  double sphereRadius_ssf;  // For getting the radius for setSphereSizeField
+	
   //queue for size fields
   std::queue<apf::Field*> sizeFieldList;
   void isotropicIntersect();

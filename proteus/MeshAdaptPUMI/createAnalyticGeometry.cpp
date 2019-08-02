@@ -605,10 +605,17 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   boxLength = boxDim[0];
   boxWidth = boxDim[1];
   boxHeight = boxDim[2];
+
   xyz_offset[0] = sphereCenter[0];
   xyz_offset[1] = sphereCenter[1];
   xyz_offset[2] = sphereCenter[2];
-  
+
+  xyz_offset_ssf[0] = sphereCenter[0];
+  xyz_offset_ssf[1] = sphereCenter[1];
+  xyz_offset_ssf[2] = sphereCenter[2];
+
+	
+	
   lion_set_verbosity(1);
 
   //create the analytic model 
@@ -646,6 +653,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   ma::Input* in = ma::configure(m,size_iso);
   in->maximumIterations = 10;
   in->shouldSnap = true;
+  //in->shouldSnap = false;
   in->shouldTransferParametric = true;
   in->shouldFixShape = true;
   in->debugFolder="./debug_fine";
@@ -692,6 +700,11 @@ void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
   xyz_offset[0] = sphereCenter[0];
   xyz_offset[1] = sphereCenter[1];
   xyz_offset[2] = sphereCenter[2];
+
+  xyz_offset_ssf[0] = sphereCenter[0];
+  xyz_offset_ssf[1] = sphereCenter[1];
+  xyz_offset_ssf[2] = sphereCenter[2];
+
 }
 
 
