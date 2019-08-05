@@ -608,12 +608,12 @@ namespace proteus
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    boundaryIntegral[i]=0;
-	    boundaryIntegralLowOrder[i]=0;	    
-	    fluxCorrection[i]=0;
+	    boundaryIntegralLowOrder[i]=0;
 	    lowOrderSolution[i]=0;
 	    uDot[i]=0;
 	    highOrderAdvection[i]=0;
-	    flux_i[i]=0;
+	    fluxCorrection[i]=0; // for debugging
+	    flux_i[i]=0; // for debugging
 	  }
 
 	///////////////////
@@ -752,6 +752,7 @@ namespace proteus
 		    ith_dissipative_term += dij*(solnj-solni);
 		    // compute anti-dissipative term of the flux_qij
 		    flux_qij[ij] = -dij*(solnj-solni);
+		    flux_i[i] += -dij*(solnj-solni);
 		  }
 		else
 		  {
@@ -1036,9 +1037,6 @@ namespace proteus
 		    int jacIndex = csrRowIndeces_CellLoops[eN_i]+csrColumnOffsets_CellLoops[eN_i_j];
 		    flux_qij[jacIndex] += element_flux_qij[eN_i_j];
 		  }
-		
-		// for debugging //
-
 	      }
 	  }
 	///////////////////////////////////////////////////////
@@ -1050,19 +1048,21 @@ namespace proteus
 	///////////////////////////
 	// * Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0
 	// * Check that sum_j(element_flux_qij) = element_flux_i
+	// * Check that sum_j(flux_qij) = flux_i
+	// * Check that sum_i(sum_j(flux_qij)) = 0
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
 	    double sumi_element_flux_i = 0;
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
-		double sumj_element_flux_qij=0;		
+		double sumj_element_flux_qij=0;
 		int eN_i = eN*nDOF_test_element+i;
 		
 		for(int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_j = eN*nDOF_test_element+j;
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
-		    sumj_element_flux_qij += element_flux_qij[eN_i_j]; 
+		    sumj_element_flux_qij += element_flux_qij[eN_i_j];
 		  }
 		// Check that sum_j(element_flux_qij) = element_flux_i
 		if (fabs(element_flux_i[eN_i]-sumj_element_flux_qij)>1E-13)
@@ -1080,6 +1080,31 @@ namespace proteus
 		std::cout << fabs(sumi_element_flux_i) << std::endl;
 		abort();
 	      }
+	  }
+	double sumi_sumj_flux_qij = 0;
+	ij=0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double sumj_flux_qij=0; 
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+		sumj_flux_qij += flux_qij[ij];
+		ij+=1;
+	      }
+	    if (fabs(sumj_flux_qij - flux_i[i])>1E-10)
+	      {
+	    	std::cout << "fabs(sumj_flux_qij - flux_i[i]) > 1E-13" << std::endl;
+	    	std::cout << fabs(sumj_flux_qij - flux_i[i]) << std::endl;
+	    	abort();
+	      }
+	    sumi_sumj_flux_qij += sumj_flux_qij;
+	  }
+	if (fabs(sumi_sumj_flux_qij)>1E-13)
+	  {
+	    std::cout << "|sum_i(sum_j(flux_qij))| > 1E-13" << std::endl;
+	    std::cout << fabs(sumi_sumj_flux_qij) << std::endl;
+	    abort();
 	  }
 	//////////////////////////////////////////
 	// *** END OF Section for debugging *** //
