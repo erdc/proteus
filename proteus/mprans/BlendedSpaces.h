@@ -72,12 +72,37 @@ namespace proteus
 				   double* alpha_dof,
 				   double* aux_test_ref,
 				   double* aux_grad_test_ref,
+				   double* aux_test_trace_ref,
 				   double* dLow,
 				   double epsilon,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE,
                                    // AUX QUANTITIES OF INTEREST
-                                   double* quantDOFs)=0;
+                                   double* quantDOFs,
+				   // FOR highOrderLim
+				   double* flux_qij,
+				   double* element_flux_qij,
+				   double* element_MC,
+				   double* vVector,
+				   double* element_flux_i,
+				   double* intBernMat,
+				   double* edge_based_cfl,
+				   // velocity at dofs
+				   double* u_vel_dofs,
+				   double* v_vel_dofs,
+				   // lumped mass matrices
+				   double* QL_ML,
+				   double* QH_ML,
+				   // inverse of dissipative mass matrix
+				   double* element_ML_minus_MC,
+				   double* inv_element_ML_minus_MC,
+				   // C-matrices
+				   double* Cx,
+				   double* Cy,
+				   double* CTx,
+				   double* CTy,
+				   double* CTxElem,
+				   double* CTyElem)=0;
     virtual void calculateJacobian(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -320,12 +345,37 @@ namespace proteus
 			     double* alpha_dof,
 			     double* aux_test_ref,
 			     double* aux_grad_test_ref,
+			     double* aux_test_trace_ref,
 			     double* dLow,
 			     double epsilon,
 			     // Type of problem to solve
 			     int PROBLEM_TYPE,
-			     // AUX QUANTITIES OF INTEREST
-			     double* quantDOFs)
+			     // AUX QUANTITIES OF INTEREST			     
+			     double* quantDOFs,
+			     // For highOrderLim
+			     double* flux_qij,
+			     double* element_flux_qij,
+			     double* element_MC,
+			     double* vVector,
+			     double* element_flux_i,
+			     double* intBernMat,
+			     double* edge_based_cfl,
+			     // velocity at dofs
+			     double* u_vel_dofs,
+			     double* v_vel_dofs,
+			     // lumped mass matrices
+			     double* QL_ML,
+			     double* QH_ML,
+			     // inverse of dissipative mass matrix
+			     double* element_ML_minus_MC,
+			     double* inv_element_ML_minus_MC,
+			     // C-matrices
+			     double* Cx,
+			     double* Cy,
+			     double* CTx,
+			     double* CTy,
+			     double* CTxElem,
+			     double* CTyElem)
       {
 	//
 	//loop over elements to compute volume integrals and load them into element and global res.
@@ -338,98 +388,409 @@ namespace proteus
 	//eN_k_j is the quadrature point index for a trial function
 	//eN_k_i is the quadrature point index for a trial function
 
-	register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
-	for (int i=0; i<NNZ; i++)
+	//register double TransportMatrix[NNZ], TransposeTransportMatrix[NNZ];
+	//for (int i=0; i<NNZ; i++)
+	//{
+	//  TransportMatrix[i] = 0.;
+	//  TransposeTransportMatrix[i] = 0.;
+	//}
+
+	/* for(int eN=0;eN<nElements_global;eN++) //loop in cells */
+	/*   { */
+	/*     //declare local storage for element residual and initialize */
+	/*     register double elementResidual_u[nDOF_test_element]; */
+	/*     //register double  elementTransport[nDOF_test_element][nDOF_trial_element]; */
+	/*     //register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element]; */
+	/*     for (int i=0;i<nDOF_test_element;i++) */
+	/*       { */
+	/* 	elementResidual_u[i]=0.0; */
+	/* 	//for (int j=0;j<nDOF_trial_element;j++) */
+	/* 	//{ */
+	/* 	//  elementTransport[i][j]=0.0; */
+	/* 	//  elementTransposeTransport[i][j]=0.0; */
+	/* 	//} */
+	/*       }//i */
+
+	/*     /////////////////////////////////////////////////////////////////// */
+	/*     // ***** COMPUTE BLENDING SHAPE FUNCTIONS FOR CURRENT CELL ***** // */
+	/*     ////////////////////////////////////////////////////////////////// */
+	/*     /\* register double *\/ */
+	/*     /\*   blended_test_ref[nQuadraturePoints_element*nDOF_trial_element], *\/ */
+	/*     /\*   blended_grad_test_ref[nQuadraturePoints_element*nDOF_trial_element*nSpace]; *\/ */
+	/*     /\* for  (int k=0;k<nQuadraturePoints_element;k++) *\/ */
+	/*     /\*   { *\/ */
+	/*     /\* 	register int eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace; *\/ */
+	/*     /\* 	int counter = k*nDOF_trial_element*nSpace; *\/ */
+	/*     /\* 	int eN_nDOF_trial_element = eN*nDOF_trial_element; *\/ */
+	/*     /\* 	// COMPUTE ALPHA AND ITS GRADIENT AT CURRENT QUAD POINT // *\/ */
+	/*     /\* 	double *\/ */
+	/*     /\* 	  alpha=0, grad_alpha[nSpace], grad_alpha_referenceElement[nSpace], *\/ */
+	/*     /\* 	  aux_grad_phi[nDOF_trial_element*nSpace], *\/ */
+	/*     /\* 	  jac[nSpace*nSpace],jacDet,jacInv[nSpace*nSpace],x,y,z; *\/ */
+	/*     /\* 	// compute jacInv *\/ */
+	/*     /\* 	ck.calculateMapping_element(eN, *\/ */
+	/*     /\* 				    k, *\/ */
+	/*     /\* 				    mesh_dof, *\/ */
+	/*     /\* 				    mesh_l2g, *\/ */
+	/*     /\* 				    mesh_trial_ref, *\/ */
+	/*     /\* 				    mesh_grad_trial_ref, *\/ */
+	/*     /\* 				    jac,jacDet,jacInv, *\/ */
+	/*     /\* 				    x,y,z); *\/ */
+	/*     /\* 	if (ALPHA_VIA_LINEAR_SPACE==1) *\/ */
+	/*     /\* 	  { *\/ */
+	/*     /\* 	    // COMPUTE ALPHA VIA LINEAR SPACE // *\/ */
+	/*     /\* 	    ck.gradTrialFromRef(&aux_grad_test_ref[k*nDOF_trial_element*nSpace], *\/ */
+	/*     /\* 				jacInv,aux_grad_phi); //assume trial=test space *\/ */
+	/*     /\* 	    ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element], *\/ */
+	/*     /\* 			  &aux_test_ref[k*nDOF_trial_element],alpha); *\/ */
+	/*     /\* 	  } *\/ */
+	/*     /\* 	else *\/ */
+	/*     /\* 	  { *\/ */
+	/*     /\* 	    // COMPUTE ALPHA VIA HIGH ORDER SPACE // *\/ */
+	/*     /\* 	    ck.gradTrialFromRef(&u_grad_test_ref[k*nDOF_trial_element*nSpace], *\/ */
+	/*     /\* 				jacInv,aux_grad_phi); //assume trial=test space *\/ */
+	/*     /\* 	    ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element], *\/ */
+	/*     /\* 			  &u_test_ref[k*nDOF_trial_element],alpha); *\/ */
+	/*     /\* 	  } *\/ */
+	/*     /\* 	// compute grad_alpha from DOFs *\/ */
+	/*     /\* 	ck.gradFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element], *\/ */
+	/*     /\* 		       aux_grad_phi,grad_alpha); //This grad_alpha is NOT at the ref element *\/ */
+	/*     /\* 	Mult(jac,grad_alpha,grad_alpha_referenceElement); // send grad alpha to ref element *\/ */
+
+	/*     /\* 	// Loop in local shape functions *\/ */
+	/*     /\* 	for(int i=0;i<nDOF_test_element;i++) *\/ */
+	/*     /\* 	  { *\/ */
+	/*     /\* 	    double phiH_i = u_test_ref[k*nDOF_trial_element+i]; *\/ */
+	/*     /\* 	    double phiL_i = aux_test_ref[k*nDOF_trial_element+i]; *\/ */
+	/*     /\* 	    blended_test_ref[k*nDOF_trial_element+i] = alpha*phiH_i + (1.0-alpha)*phiL_i; *\/ */
+
+	/*     /\* 	    for (int I=0;I<nSpace;I++) *\/ */
+	/*     /\* 	      { *\/ */
+	/*     /\* 		double grad_phiH_i = u_grad_test_ref[counter]; *\/ */
+	/*     /\* 		double grad_phiL_i = aux_grad_test_ref[counter]; *\/ */
+
+	/*     /\* 		blended_grad_test_ref[counter] = *\/ */
+	/*     /\* 		  alpha*grad_phiH_i + (1-alpha)*grad_phiL_i *\/ */
+	/*     /\* 		  + grad_alpha_referenceElement[I]*(phiH_i-phiL_i); *\/ */
+	/*     /\* 		// update counter *\/ */
+	/*     /\* 		counter++; *\/ */
+	/*     /\* 	      } *\/ */
+	/*     /\* 	  } *\/ */
+	/*     /\*   } //k *\/ */
+	/*     //////////////////////////////////////////////////////////////////////////// */
+	/*     // ***** END OF COMPUTING BLENDING SHAPE FUNCTIONS FOR CURRENT CELL ***** // */
+	/*     //////////////////////////////////////////////////////////////////////////// */
+
+	/*     //loop over quadrature points and compute integrands */
+	/*     for  (int k=0;k<nQuadraturePoints_element;k++) */
+	/*       { */
+	/* 	//compute indeces and declare local storage */
+	/* 	register int eN_k = eN*nQuadraturePoints_element+k, */
+	/* 	  eN_k_nSpace = eN_k*nSpace, */
+	/* 	  eN_nDOF_trial_element = eN*nDOF_trial_element; */
+	/* 	register double */
+	/* 	  u=0.0,grad_u[nSpace],D_times_grad_u[nSpace],DTensor[nSpace*nSpace], */
+	/* 	  D_times_u_grad_trial_j[nSpace], D_times_u_grad_trial_i[nSpace], */
+	/* 	  jac[nSpace*nSpace], */
+	/* 	  jacDet, */
+	/* 	  jacInv[nSpace*nSpace], */
+	/* 	  u_grad_trial[nDOF_trial_element*nSpace], */
+	/* 	  u_test_dV[nDOF_trial_element], */
+	/* 	  u_grad_test_dV[nDOF_test_element*nSpace], */
+	/* 	  dV,x,y,z; */
+	/* 	ck.calculateMapping_element(eN, */
+	/* 				    k, */
+	/* 				    mesh_dof, */
+	/* 				    mesh_l2g, */
+	/* 				    mesh_trial_ref, */
+	/* 				    mesh_grad_trial_ref, */
+	/* 				    jac, */
+	/* 				    jacDet, */
+	/* 				    jacInv, */
+	/* 				    x,y,z); */
+	/* 	//get the physical integration weight */
+ 	/* 	dV = fabs(jacDet)*dV_ref[k]; */
+	/* 	//get the trial function gradients based on the blended functions */
+	/* 	ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace], */
+	/* 			    jacInv, */
+	/* 			    u_grad_trial); // high-order space */
+	/* 	//get the solution based on the blended functions */
+	/* 	ck.valFromDOF(u_dof, */
+	/* 		      &u_l2g[eN_nDOF_trial_element], */
+	/* 		      &u_trial_ref[k*nDOF_trial_element], */
+	/* 		      u); // from high-order space */
+	/* 	//get the solution gradients */
+	/* 	ck.gradFromDOF(u_dof, */
+	/* 		       &u_l2g[eN_nDOF_trial_element], */
+	/* 		       u_grad_trial, */
+	/* 		       grad_u); // from high-order space */
+	/* 	//precalculate test function products with integration weights */
+	/* 	for (int j=0;j<nDOF_trial_element;j++) */
+	/* 	  { */
+	/* 	    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV; */
+	/* 	    for (int I=0;I<nSpace;I++) */
+	/* 	      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV; */
+
+	/* 	  } */
+
+	/* 	//save solution */
+	/* 	q_u[eN_k] = u; */
+	/* 	// save grad */
+	/* 	for(int I=0;I<nSpace;I++) */
+	/* 	  q_grad_u[eN_k_nSpace+I]=grad_u[I]; */
+
+	/* 	// coefficient of steady advection - diffusion */
+	/* 	double velocityBeta[2]; */
+	/* 	velocityBeta[0] = velocity[eN_k_nSpace+0]; */
+	/* 	velocityBeta[1] = velocity[eN_k_nSpace+1]; */
+
+	/* 	for(int i=0;i<nDOF_test_element;i++) */
+	/* 	  { */
+	/* 	    register int i_nSpace=i*nSpace; */
+	/* 	    // STEADY ADVECTION-DIFFUSION // */
+		    
+	/* 	    elementResidual_u[i] += */
+	/* 	      // ADVECTION */
+	/* 	      ck.NumericalDiffusion(1.0,velocityBeta,grad_u)*u_test_dV[i] */
+	/* 	      // DISSIPATION */
+	/* 	      +epsilon*ck.NumericalDiffusion(1.0, */
+	/* 					     grad_u, */
+	/* 					     &u_grad_test_dV[i_nSpace]); */
+	/* 	    // j-th LOOP // To construct transport matrices */
+	/* 	    //for(int j=0;j<nDOF_trial_element;j++) */
+	/* 	    //{ */
+	/* 	    //	int j_nSpace = j*nSpace; */
+	/* 	    //	elementTransport[i][j] += // int[(vel.grad_wj)*wi*dx] */
+	/* 		  //	  ck.Advection_strong(velocityBeta, */
+	/* 	    //		      &u_grad_test_dV[j_nSpace]) */
+	/* 	    //	  *blended_test_ref[k*nDOF_trial_element+i]; */
+			
+	/* 	    //	elementTransposeTransport[i][j] += // int[(vel.grad_wi)*wj*dx] */
+	/* 		  //	  ck.Advection_strong(velocityBeta, */
+	/* 	    //		      &u_grad_test_dV[i_nSpace]) */
+	/* 	    //	  *blended_test_ref[k*nDOF_trial_element+j]; */
+	/* 	    //} */
+	/* 	  }//i */
+	/*       } */
+	/*     // */
+	/*     //load element into global residual and save element residual */
+	/*     // */
+	/*     //for(int i=0;i<nDOF_test_element;i++) */
+	/*     //{ */
+	/*     //	register int eN_i=eN*nDOF_test_element+i; */
+	/*     //	globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i]; */
+	/*     //	// distribute transport matrices */
+	/*       //	for (int j=0;j<nDOF_trial_element;j++) */
+	/*     //  { */
+	/*     //	    int eN_i_j = eN_i*nDOF_trial_element+j; */
+	/*     //	    TransportMatrix[csrRowIndeces_CellLoops[eN_i] + */
+	/*     //			    csrColumnOffsets_CellLoops[eN_i_j]] */
+	/*     //	      += elementTransport[i][j]; */
+	/*     //	    TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + */
+	/*     //				     csrColumnOffsets_CellLoops[eN_i_j]] */
+	/*     //	      += elementTransposeTransport[i][j]; */
+	/*     //	  }//j */
+	/*     //}//i */
+	/*   }//elements */
+
+
+	///////////////////////
+	// Auxiliary vectors //
+	///////////////////////
+	register double boundaryIntegralLowOrder[numDOFs];
+	register double boundaryIntegral[numDOFs];
+	
+	register double fluxCorrection[numDOFs];
+	register double highOrderAdvection[numDOFs];
+	register double lowOrderSolution[numDOFs];
+	register double uDot[numDOFs];
+	register double flux_i[numDOFs];
+	for (int i=0; i<numDOFs; i++)
 	  {
-	    TransportMatrix[i] = 0.;
-	    TransposeTransportMatrix[i] = 0.;
+	    boundaryIntegral[i]=0;
+	    boundaryIntegralLowOrder[i]=0;	    
+	    fluxCorrection[i]=0;
+	    lowOrderSolution[i]=0;
+	    uDot[i]=0;
+	    highOrderAdvection[i]=0;
+	    flux_i[i]=0;
 	  }
 
-	for(int eN=0;eN<nElements_global;eN++)
+	///////////////////
+	// BOUNDARY TERM //
+	///////////////////
+	// * Compute boundary integrals 
+	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	  {
-	    //declare local storage for element residual and initialize
-	    register double elementResidual_u[nDOF_test_element];
-	    register double  elementTransport[nDOF_test_element][nDOF_trial_element];
-	    register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
+	    register int ebN = exteriorElementBoundariesArray[ebNE];
+	    register int eN  = elementBoundaryElementsArray[ebN*2+0],
+	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+	      eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    register double elementBoundaryFluxLowOrder[nDOF_test_element],
+	      elementBoundaryFluxHighOrder[nDOF_test_element];
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
-		elementResidual_u[i]=0.0;
-		for (int j=0;j<nDOF_trial_element;j++)
-		  {
-		    elementTransport[i][j]=0.0;
-		    elementTransposeTransport[i][j]=0.0;
-		  }
-	      }//i
-
-	    ///////////////////////////////////////////////////////////////////
-	    // ***** COMPUTE BLENDING SHAPE FUNCTIONS FOR CURRENT CELL ***** //
-	    //////////////////////////////////////////////////////////////////
-	    register double
-	      blended_test_ref[nQuadraturePoints_element*nDOF_trial_element],
-	      blended_grad_test_ref[nQuadraturePoints_element*nDOF_trial_element*nSpace];
-	    for  (int k=0;k<nQuadraturePoints_element;k++)
+		elementBoundaryFluxLowOrder[i]=0.0;
+		elementBoundaryFluxHighOrder[i]=0.0;
+	      }
+	    // loop on quad points
+	    for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
 	      {
-		register int eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
-		int counter = k*nDOF_trial_element*nSpace;
-		int eN_nDOF_trial_element = eN*nDOF_trial_element;
-		// COMPUTE ALPHA AND ITS GRADIENT AT CURRENT QUAD POINT //
-		double
-		  alpha=0, grad_alpha[nSpace], grad_alpha_referenceElement[nSpace],
-		  aux_grad_phi[nDOF_trial_element*nSpace],
-		  jac[nSpace*nSpace],jacDet,jacInv[nSpace*nSpace],x,y,z;
-		// compute jacInv
-		ck.calculateMapping_element(eN,
-					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
-					    jac,jacDet,jacInv,
-					    x,y,z);
-		if (ALPHA_VIA_LINEAR_SPACE==1)
+		register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+		  ebNE_kb_nSpace = ebNE_kb*nSpace,
+		  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+		  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+		register double
+		  uExt=0.,
+		  jac_ext[nSpace*nSpace],
+		  jacDet_ext,
+		  jacInv_ext[nSpace*nSpace],
+		  boundaryJac[nSpace*(nSpace-1)],
+		  metricTensor[(nSpace-1)*(nSpace-1)],
+		  metricTensorDetSqrt,
+		  dS,
+		  u_test_dS[nDOF_test_element],
+		  normal[nSpace],x_ext,y_ext,z_ext;
+		// calculate mappings
+		ck.calculateMapping_elementBoundary(eN,
+						    ebN_local,
+						    kb,
+						    ebN_local_kb,
+						    mesh_dof,
+						    mesh_l2g,
+						    mesh_trial_trace_ref,
+						    mesh_grad_trial_trace_ref,
+						    boundaryJac_ref,
+						    jac_ext,
+						    jacDet_ext,
+						    jacInv_ext,
+						    boundaryJac,
+						    metricTensor,
+						    metricTensorDetSqrt,
+						    normal_ref,
+						    normal,
+						    x_ext,y_ext,z_ext);
+		dS = ((1.0)*metricTensorDetSqrt )*dS_ref[kb];
+		ck.valFromDOF(u_dof_old,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+			      uExt);
+		//precalculate test function products with integration weights
+		for (int j=0;j<nDOF_trial_element;j++)
+		  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		
+		//calculate flow
+		double flow = 0.;
+		for (int I=0; I < nSpace; I++)
+		  flow += normal[I]*ebqe_velocity_ext[ebNE_kb_nSpace+I];
+
+		for (int i=0;i<nDOF_test_element;i++)
 		  {
-		    // COMPUTE ALPHA VIA LINEAR SPACE //
-		    ck.gradTrialFromRef(&aux_grad_test_ref[k*nDOF_trial_element*nSpace],
-					jacInv,aux_grad_phi); //assume trial=test space
-		    ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-				  &aux_test_ref[k*nDOF_trial_element],alpha);
+		    int eN_i = eN*nDOF_test_element+i;
+		    int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
+		    double uni = u_dof_old[gi];
+		    double uiInlet = 0.0;
+		    // low order part
+		    double auxLowOrder = (flow >= 0 ? 0. : 1.) * (uni-uiInlet)*flow*u_test_dS[i];
+		    elementBoundaryFluxLowOrder[i] += auxLowOrder;
+		    // high order part
+		    double auxHighOrder = (flow >= 0 ? 0. : 1.)*(uExt-uni)*flow*u_test_dS[i];
+		    elementBoundaryFluxHighOrder[i] += auxHighOrder;
+		  }
+	      }//kb
+	    // save to the corresponding vectors
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		int eN_i = eN*nDOF_test_element+i;
+		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
+		boundaryIntegralLowOrder[gi] += elementBoundaryFluxLowOrder[i];		
+		element_flux_i[eN_i] = elementBoundaryFluxHighOrder[i]; 
+		flux_i[gi] += elementBoundaryFluxHighOrder[i];
+		fluxCorrection[gi] += elementBoundaryFluxHighOrder[i];
+	      }
+	  }//ebNE
+	///////////////////////////
+	// END OF BOUNDARY TERMS //
+	///////////////////////////
+	
+	////////////////////////
+	// FIRST LOOP IN DOFs //
+	////////////////////////
+	// * Compute the low order solution
+	// * Compute (lagged) edge_based_cfl
+	// * Compute the dissipative part of the global flux_qij
+	// * Compute uDot (which we might use depending on the high-order stabilization)
+	int ij=0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	    double u_veli = u_vel_dofs[i];
+	    double v_veli = v_vel_dofs[i];
+	    double ith_dissipative_term = 0;
+	    double dLii = 0.;
+	    //int ii=0;
+	    double ith_flux_term = 0;
+	    
+	    // loop over the sparsity pattern of the i-th DOF
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+		double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		double u_velj = u_vel_dofs[j];
+		double v_velj = v_vel_dofs[j];
+		double dij = 0;
+
+		ith_flux_term += Cx[ij]*(u_velj*solnj) + Cy[ij]*(v_velj*solnj);
+		
+		if (i != j)
+		  {
+		    dij = fmax(fmax(fabs(Cx[ij]*u_veli + Cy[ij]*v_veli),
+				    fabs(Cx[ij]*u_velj + Cy[ij]*v_velj)),
+			       fmax(fabs(CTx[ij]*u_veli + CTy[ij]*v_veli),
+				    fabs(CTx[ij]*u_velj + CTy[ij]*v_velj)));
+		    dLii -= dij;
+		    ith_dissipative_term += dij*(solnj-solni);
+		    // compute anti-dissipative term of the flux_qij
+		    flux_qij[ij] = -dij*(solnj-solni);
 		  }
 		else
 		  {
-		    // COMPUTE ALPHA VIA HIGH ORDER SPACE //
-		    ck.gradTrialFromRef(&u_grad_test_ref[k*nDOF_trial_element*nSpace],
-					jacInv,aux_grad_phi); //assume trial=test space
-		    ck.valFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-				  &u_test_ref[k*nDOF_trial_element],alpha);
+		    flux_qij[ij] = 0;
 		  }
-		// compute grad_alpha from DOFs
-		ck.gradFromDOF(alpha_dof,&u_l2g[eN_nDOF_trial_element],
-			       aux_grad_phi,grad_alpha); //This grad_alpha is NOT at the ref element
-		Mult(jac,grad_alpha,grad_alpha_referenceElement); // send grad alpha to ref element
+		ij+=1;
+	      }
+	    double QH_mi = QH_ML[i];
+	      
+	    // compute edge based cfl
+	    edge_based_cfl[i] = 2*fabs(dLii)/QH_mi;
 
-		// Loop in local shape functions
-		for(int i=0;i<nDOF_test_element;i++)
-		  {
-		    double phiH_i = u_test_ref[k*nDOF_trial_element+i];
-		    double phiL_i = aux_test_ref[k*nDOF_trial_element+i];
-		    blended_test_ref[k*nDOF_trial_element+i] = alpha*phiH_i + (1.0-alpha)*phiL_i;
-
-		    for (int I=0;I<nSpace;I++)
-		      {
-			double grad_phiH_i = u_grad_test_ref[counter];
-			double grad_phiL_i = aux_grad_test_ref[counter];
-
-			blended_grad_test_ref[counter] =
-			  alpha*grad_phiH_i + (1-alpha)*grad_phiL_i
-			  + grad_alpha_referenceElement[I]*(phiH_i-phiL_i);
-			// update counter
-			counter++;
-		      }
-		  }
-	      } //k
-	    ////////////////////////////////////////////////////////////////////////////
-	    // ***** END OF COMPUTING BLENDING SHAPE FUNCTIONS FOR CURRENT CELL ***** //
-	    ////////////////////////////////////////////////////////////////////////////
+	    // compute low order solution //
+	    lowOrderSolution[i] = solni - dt/QH_mi * (ith_flux_term
+						      - ith_dissipative_term
+						      - boundaryIntegralLowOrder[i]);
+	    // compute uDot //
+	    // Note: we don't always use this. It depends on the form of the high-order stabilization
+	    uDot[i] = -1.0/QH_mi * (ith_flux_term
+				    - ith_dissipative_term
+				    - boundaryIntegralLowOrder[i]);
+	  }
+	///////////////////////////////
+	// END OF FIRST LOOP IN DOFs //
+	///////////////////////////////
+	
+	/////////////////////////////
+	// FIRST LOOP ON INTEGRALS //
+	/////////////////////////////
+	// * Compute the high order flux term.
+	//    This is needed if the high-order stabilization is based on uDot=-1/mi*high_order_flux
+	for(int eN=0;eN<nElements_global;eN++) //loop in cells
+	  {
+	    //declare local storage for element residual and initialize
+	    register double elementResidual_u[nDOF_test_element];
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		elementResidual_u[i]=0.0;
+	      }//i
 
 	    //loop over quadrature points and compute integrands
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -439,8 +800,96 @@ namespace proteus
 		  eN_k_nSpace = eN_k*nSpace,
 		  eN_nDOF_trial_element = eN*nDOF_trial_element;
 		register double
-		  u=0.0,grad_u[nSpace],D_times_grad_u[nSpace],DTensor[nSpace*nSpace],
-		  D_times_u_grad_trial_j[nSpace], D_times_u_grad_trial_i[nSpace],
+		  un=0.0,
+		  jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  u_grad_trial[nDOF_trial_element*nSpace],
+		  u_grad_test_dV[nDOF_test_element*nSpace],
+		  dV,x,y,z;
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		//get the physical integration weight
+ 		dV = fabs(jacDet)*dV_ref[k];
+		//get the trial function gradients based on the blended functions
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				    jacInv,
+				    u_grad_trial); // high-order space
+		//get the solution based on the blended functions
+		ck.valFromDOF(u_dof_old,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      un); // from high-order space
+		//precalculate test function products with integration weights
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    for (int I=0;I<nSpace;I++)
+		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
+		  }
+
+		// coefficient of steady advection - diffusion
+		double velocityBeta[2];
+		velocityBeta[0] = velocity[eN_k_nSpace+0];
+		velocityBeta[1] = velocity[eN_k_nSpace+1];
+		
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    register int i_nSpace=i*nSpace;
+		    elementResidual_u[i] += un*ck.NumericalDiffusion(1.0,
+								     velocityBeta,
+								     &u_grad_test_dV[i_nSpace]);
+		  }//i
+	      }
+	    //
+	    //load element into global residual and save element residual
+	    //
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
+		highOrderAdvection[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
+	      }//i
+	  }//elements
+	////////////////////////////////////
+	// END OF FIRST LOOP IN INTEGRALS //
+	////////////////////////////////////
+	
+	for (int i=0; i<numDOFs; i++)
+	  uDot[i] = 1.0/QH_ML[i] * (highOrderAdvection[i]
+				    + boundaryIntegralLowOrder[i]);
+
+	//////////////////////////////
+	// SECOND LOOP ON INTEGRALS //
+	//////////////////////////////
+	// * Compute element based part of element_flux_i
+	// * Compute flux_i=\sum_e element_flux_i(el) (only for debugging)
+	// * Compute element inegrals of fluxCorrection as a global vector (only for debugging)
+	for(int eN=0;eN<nElements_global;eN++) //loop in cells
+	  {
+	    //declare local storage for element residual and initialize
+	    register double elementFlux[nDOF_test_element], elementMass[nDOF_test_element];
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		elementFlux[i]=0.0;
+		elementMass[i]=0.0;
+	      }//i
+
+	    //loop over quadrature points and compute integrands
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace,
+		  eN_nDOF_trial_element = eN*nDOF_trial_element;
+		register double
+		  un=0.0,uhDot=0.0, 
 		  jac[nSpace*nSpace],
 		  jacDet,
 		  jacInv[nSpace*nSpace],
@@ -461,177 +910,265 @@ namespace proteus
 		//get the physical integration weight
  		dV = fabs(jacDet)*dV_ref[k];
 		//get the trial function gradients based on the blended functions
-		ck.gradTrialFromRef(&blended_grad_test_ref[k*nDOF_trial_element*nSpace],
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
 				    jacInv,
-				    u_grad_trial);
+				    u_grad_trial); // high-order space
 		//get the solution based on the blended functions
-		ck.valFromDOF(u_dof,
+		ck.valFromDOF(u_dof_old,
 			      &u_l2g[eN_nDOF_trial_element],
-			      &blended_test_ref[k*nDOF_trial_element],
-			      u);
-		//get the solution gradients
-		ck.gradFromDOF(u_dof,
-			       &u_l2g[eN_nDOF_trial_element],
-			       u_grad_trial,
-			       grad_u);
-		//multiply D times grad_u
-		if (PROBLEM_TYPE==2)
-		  {
-		    calculateDTensor(DTensor);
-		    Mult(DTensor,grad_u,D_times_grad_u);
-		  }
+			      &u_trial_ref[k*nDOF_trial_element],
+			      un); // from high-order space
+		ck.valFromDOF(uDot,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      uhDot); // from high-order space
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
-		    u_test_dV[j] = blended_test_ref[k*nDOF_trial_element+j]*dV;
+		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 		    for (int I=0;I<nSpace;I++)
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
-
 		  }
 
 		//save solution
-		q_u[eN_k] = u;
+		//q_u[eN_k] = u;
 		// save grad
-		for(int I=0;I<nSpace;I++)
-		  q_grad_u[eN_k_nSpace+I]=grad_u[I];
+		//for(int I=0;I<nSpace;I++)
+		//q_grad_u[eN_k_nSpace+I]=grad_u[I];
 
 		// coefficient of steady advection - diffusion
 		double velocityBeta[2];
 		velocityBeta[0] = velocity[eN_k_nSpace+0];
 		velocityBeta[1] = velocity[eN_k_nSpace+1];
-
+		
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
 		    register int i_nSpace=i*nSpace;
-
-		    if (PROBLEM_TYPE==0)
-		      {
-			// poisson equation //
-			elementResidual_u[i] +=
-			  ck.NumericalDiffusion(1.0,grad_u,&u_grad_test_dV[i_nSpace])
-			  - force[eN_k]*u_test_dV[i];
-		      }
-		    else if (PROBLEM_TYPE==1)
-		      {
-			// STEADY ADVECTION-DIFFUSION //
-			elementResidual_u[i] +=
-			  // ADVECTION
-			  ck.NumericalDiffusion(1.0,velocityBeta,grad_u)*u_test_dV[i]
-			  // DISSIPATION
-			  +epsilon*ck.NumericalDiffusion(1.0,
-							 grad_u,
-							 &u_grad_test_dV[i_nSpace]);
-			// j-th LOOP // To construct transport matrices
-			for(int j=0;j<nDOF_trial_element;j++)
-			  {
-			    int j_nSpace = j*nSpace;
-			    elementTransport[i][j] += // int[(vel.grad_wj)*wi*dx]
-			      ck.Advection_strong(velocityBeta,
-						  &u_grad_test_dV[j_nSpace])
-			      *blended_test_ref[k*nDOF_trial_element+i];
-
-			    elementTransposeTransport[i][j] += // int[(vel.grad_wi)*wj*dx]
-			      ck.Advection_strong(velocityBeta,
-						  &u_grad_test_dV[i_nSpace])
-			      *blended_test_ref[k*nDOF_trial_element+j];
-			  }
-		      }
-		    else // PROBLEM_TYPE==2
-		      {
-			// poisson equation //
-			elementResidual_u[i] += (ck.NumericalDiffusion(1.0,
-								       D_times_grad_u,
-								       &u_grad_test_dV[i_nSpace])
-						 - force[eN_k]*u_test_dV[i]);
-			Mult(DTensor,&u_grad_trial[i_nSpace],D_times_u_grad_trial_i);
-			// j-th LOOP // To construct transport matrices
-			for(int j=0;j<nDOF_trial_element;j++)
-			  {
-			    int j_nSpace = j*nSpace;
-			    Mult(DTensor,&u_grad_trial[j_nSpace],D_times_u_grad_trial_j);
-			    elementTransport[i][j] += // int[(D*grad_wj).grad_wi*dx]
-			      ck.NumericalDiffusion(1.0,
-						    D_times_u_grad_trial_j,
-						    &u_grad_test_dV[i_nSpace]);
-			    elementTransposeTransport[i][j] += // int[(D*grad_wi).grad_wj*dx]
-			      ck.NumericalDiffusion(1.0,
-						    D_times_u_grad_trial_i,
-						    &u_grad_test_dV[j_nSpace]);
-			  }
-		      }
+		    elementFlux[i] += -uhDot*u_test_dV[i]
+		      + un*ck.NumericalDiffusion(1.0,velocityBeta,&u_grad_test_dV[i_nSpace]);
+		    elementMass[i] += u_test_dV[i];
 		  }//i
-	      }
+	      } //quad points
 	    //
-	    //load element into global residual and save element residual
+	    //load elements into global vectors
 	    //
 	    for(int i=0;i<nDOF_test_element;i++)
-	      {
-		register int eN_i=eN*nDOF_test_element+i;
-		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
-		if (PROBLEM_TYPE==1 || PROBLEM_TYPE==2)
-		  {
-		    // distribute transport matrices
-		    for (int j=0;j<nDOF_trial_element;j++)
-		      {
-			int eN_i_j = eN_i*nDOF_trial_element+j;
-			TransportMatrix[csrRowIndeces_CellLoops[eN_i] +
-					csrColumnOffsets_CellLoops[eN_i_j]]
-			  += elementTransport[i][j];
-			TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] +
-						 csrColumnOffsets_CellLoops[eN_i_j]]
-			  += elementTransposeTransport[i][j];
-		      }
-		  }//j
-	      }//i
+	    {
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*r_l2g[eN_i];
+
+	      // flux correction (only for debugging)
+	      fluxCorrection[gi] += elementFlux[i];
+
+	      double solni = u_dof_old[gi];
+	      double u_veli = u_vel_dofs[gi];
+	      double v_veli = v_vel_dofs[gi];
+	      
+	      double qi = elementFlux[i] + elementMass[i]*uDot[gi];
+	      
+	      // for flux of low-order method
+	      for(int j=0;j<nDOF_trial_element;j++)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element+j;
+		  int eN_j = eN*nDOF_test_element+j;
+		  int gj = offset_u+stride_u*r_l2g[eN_j];		  
+		  double solnj = u_dof_old[gj];
+		  double u_velj = u_vel_dofs[gj];
+		  double v_velj = v_vel_dofs[gj];
+		  // low-order flux part of qi
+		  qi -= (CTxElem[eN_i_j]*(u_velj*solnj) + CTyElem[eN_i_j]*(v_velj*solnj));
+		}
+	      element_flux_i[eN_i] += qi;
+	      flux_i[gi] += qi;
+	    }
 	  }//elements
-
-	if (PROBLEM_TYPE==1 or PROBLEM_TYPE==2)
+	/////////////////////////////////////
+	// END OF SECOND LOOP IN INTEGRALS //
+	/////////////////////////////////////
+      
+	//////////////////////////////
+	// compute element vector v //
+	//////////////////////////////
+	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
-	    // LOOP in DOFs //
-	    int ij=0;
-	    for (int i=0; i<numDOFs; i++)
+	    for(int i=0;i<nDOF_test_element;i++)
 	      {
-		double solni = u_dof[i]; // solution at time tn for the ith DOF
-		double ith_dissipative_term = 0;
-		double dLii = 0.;
-		int ii=0;
-		double alphai = alpha_dof[i];
-
-		// loop over the sparsity pattern of the i-th DOF
-		for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		int eN_i = eN*nDOF_test_element+i;
+		for(int j=0;j<nDOF_test_element;j++)
 		  {
-		    int j = colind[offset];
-		    double solnj = u_dof[j]; // solution at time tn for the jth DOF
-		    double alphaj = alpha_dof[j];
-		    double dij;
-
-		    if (i != j)
-		      {
-			if (PROBLEM_TYPE==1)
-			  dij = fmax(fabs((1-alphai)*TransportMatrix[ij]),
-				     fabs((1-alphaj)*TransposeTransportMatrix[ij]));
-			else
-			  dij = fmax(0,fmax((1-alphai)*TransportMatrix[ij],
-					    (1-alphaj)*TransposeTransportMatrix[ij]));
-			dLow[ij] = dij;
-			//dissipative terms
-			ith_dissipative_term += dij*(solnj-solni);
-			dLii -= dij;
-		      }
-		    else
-		      {
-			ii=ij; // save index for diagonal entry to update matrix later
-		      }
-		    //update ij
-		    ij+=1;
+		    int eN_j = eN*nDOF_test_element+j;
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    vVector[eN_i] += inv_element_ML_minus_MC[eN_i_j]*element_flux_i[eN_j];
 		  }
-		dLow[ii] = dLii;
-		// update residual
-		globalResidual[i] += -ith_dissipative_term;
+	      }
+	    // substract mean
+	    double mean = 0;
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+	    	int eN_i = eN*nDOF_test_element+i;
+	    	mean += vVector[eN_i]/nDOF_test_element;
+	      }
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+	    	int eN_i = eN*nDOF_test_element+i;
+	    	vVector[eN_i] -= mean;
 	      }
 	  }
+	////////////////////////////////////////
+	// end of computation of the vector v //
+	////////////////////////////////////////
 
-	// NO LOOP IN BOUNDARIES //
+	//////////////////////////////////////////////////////////
+	// compute the element_flux_qij and the global flux_qij //
+	//////////////////////////////////////////////////////////
+	for(int eN=0;eN<nElements_global;eN++) //loop in cells
+	  {
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		int eN_i = eN*nDOF_test_element+i;
+		for(int j=0;j<nDOF_trial_element;j++)
+		  {
+		    int eN_j = eN*nDOF_test_element+j;
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    
+		    element_flux_qij[eN_i_j] = element_MC[eN_i_j]*(vVector[eN_i]-vVector[eN_j]);
+		    
+		    int jacIndex = csrRowIndeces_CellLoops[eN_i]+csrColumnOffsets_CellLoops[eN_i_j];
+		    flux_qij[jacIndex] += element_flux_qij[eN_i_j];
+		  }
+		
+		// for debugging //
+
+	      }
+	  }
+	///////////////////////////////////////////////////////
+	// End of computation of element and global flux_qij //
+	///////////////////////////////////////////////////////
+
+	///////////////////////////
+	// *** for debugging *** //
+	///////////////////////////
+	// * Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0
+	// * Check that sum_j(element_flux_qij) = element_flux_i
+	for(int eN=0;eN<nElements_global;eN++) //loop in cells
+	  {
+	    double sumi_element_flux_i = 0;
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		double sumj_element_flux_qij=0;		
+		int eN_i = eN*nDOF_test_element+i;
+		
+		for(int j=0;j<nDOF_trial_element;j++)
+		  {
+		    int eN_j = eN*nDOF_test_element+j;
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    sumj_element_flux_qij += element_flux_qij[eN_i_j]; 
+		  }
+		// Check that sum_j(element_flux_qij) = element_flux_i
+		if (fabs(element_flux_i[eN_i]-sumj_element_flux_qij)>1E-13)
+		  {
+		    std::cout << "|element_flux_i - sum_j(element_flux_qij)| > 1E-13" << std::endl;
+		    std::cout << fabs(element_flux_i[eN_i]-sumj_element_flux_qij) << std::endl;
+		    abort();
+		  }
+		sumi_element_flux_i += sumj_element_flux_qij;
+	      }
+	    // Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0
+	    if (fabs(sumi_element_flux_i)>1E-13)
+	      {
+		std::cout << "|sum_i(element_flux_i)| > 1E-13" << std::endl;
+		std::cout << fabs(sumi_element_flux_i) << std::endl;
+		abort();
+	      }
+	  }
+	//////////////////////////////////////////
+	// *** END OF Section for debugging *** //
+	//////////////////////////////////////////
+	
+	/////////////////////////
+	// SECOND LOOP IN DOFs //
+	/////////////////////////
+	// * Compute the final solution and get the solution at DOFs (for visualization)
+	ij = 0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	    double u_veli = u_vel_dofs[i];
+	    double v_veli = v_vel_dofs[i];
+	    //
+	    double ith_advection_fluxCorrection = 0;
+	    double ith_dissipative_fluxCorrection = 0;
+
+	    double ith_galerkin_fluxCorrection = 0;
+	    
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+		double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		double u_velj = u_vel_dofs[j];
+		double v_velj = v_vel_dofs[j];
+		double dij = 0;
+
+		ith_advection_fluxCorrection += CTx[ij]*(u_velj*solnj) + CTy[ij]*(v_velj*solnj);
+
+		ith_galerkin_fluxCorrection += flux_qij[ij];
+		
+		if (i != j)
+		  {
+		    dij = fmax(fmax(fabs(Cx[ij]*u_veli + Cy[ij]*v_veli),
+				    fabs(Cx[ij]*u_velj + Cy[ij]*v_velj)),
+			       fmax(fabs(CTx[ij]*u_veli + CTy[ij]*v_veli),
+				    fabs(CTx[ij]*u_velj + CTy[ij]*v_velj)));
+		    ith_dissipative_fluxCorrection += dij*(solnj-solni);
+		  }
+		ij+=1;
+	      }
+	    double mi = QH_ML[i];
+
+	    //fluxCorrection[i] = dt/mi*(flux_i[i] - ith_dissipative_fluxCorrection);
+	    //double check_diff = (fluxCorrection[i] + mi*uDot[i] - flux_i[i]);
+	    double check_diff = fluxCorrection[i]+mi*uDot[i]-ith_advection_fluxCorrection-flux_i[i];
+	    //double check_diff = ith_advection_fluxCorrection - flux_i[i];
+	    	    
+	    fluxCorrection[i] += (mi*uDot[i]
+				  - ith_dissipative_fluxCorrection
+				  - ith_advection_fluxCorrection);
+
+	    //fluxCorrection[i] = -ith_dissipative_fluxCorrection;
+	    check_diff = fabs(ith_galerkin_fluxCorrection - fluxCorrection[i]);
+
+	    //if (check_diff > 1.0E-14)
+	    //{
+	    //std::cout << check_diff << std::endl;
+	    	//abort();
+	    //}
+	    
+	    
+	    // COMPUTE SOLUTION //
+	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxCorrection[i];
+	    globalResidual[i] = lowOrderSolution[i];// + dt/mi*ith_galerkin_fluxCorrection;
+
+	    //globalResidual[i] = solni - dt/mi * (ith_advection_fluxCorrection
+	    //					 - ith_dissipative_fluxCorrection
+	    //					 + boundaryIntegral[i]);
+	    
+	  }
+	////////////////////////////////
+	// END OF SECOND LOOP IN DOFs //
+	////////////////////////////////
+
+	
+	ij=0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    quantDOFs[i] = 0;
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+		quantDOFs[i] += intBernMat[ij]*lowOrderSolution[j];
+		ij+=1;
+	      }
+	  }
       }
 
       void calculateJacobian(//element
@@ -821,7 +1358,6 @@ namespace proteus
 		  {
 		    for(int j=0;j<nDOF_trial_element;j++)
 		      {
-
 			int j_nSpace = j*nSpace;
 			int i_nSpace = i*nSpace;
 
