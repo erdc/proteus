@@ -599,12 +599,13 @@ namespace proteus
 	///////////////////////
 	register double boundaryIntegralLowOrder[numDOFs];
 	register double boundaryIntegral[numDOFs];
-	
 	register double fluxCorrection[numDOFs];
 	register double highOrderAdvection[numDOFs];
 	register double lowOrderSolution[numDOFs];
 	register double uDot[numDOFs];
 	register double flux_i[numDOFs];
+	register double umax[numDOFs];
+	register double umin[numDOFs];
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    boundaryIntegral[i]=0;
@@ -616,6 +617,14 @@ namespace proteus
 	    flux_i[i]=0; // for debugging
 	  }
 
+	register double wij[NNZ], wji[NNZ], dLij[NNZ];
+	for (int i=0; i<NNZ; i++)
+	  {
+	    dLij[i] = 0.0;
+	    wij[i] = 0.0;
+	    wji[i] = 0.0;
+	  }
+	    
 	///////////////////
 	// BOUNDARY TERM //
 	///////////////////
@@ -720,6 +729,7 @@ namespace proteus
 	// * Compute (lagged) edge_based_cfl
 	// * Compute the dissipative part of the global flux_qij
 	// * Compute uDot (which we might use depending on the high-order stabilization)
+	// * Compute umax and umin
 	int ij=0;
 	for (int i=0; i<numDOFs; i++)
 	  {
@@ -730,6 +740,13 @@ namespace proteus
 	    double dLii = 0.;
 	    //int ii=0;
 	    double ith_flux_term = 0;
+
+	    // for the computation of the local bounds
+	    double umaxi = u_dof_old[i];
+	    double umini = u_dof_old[i];
+
+	    double fxi = u_veli*solni;
+	    double fyi = v_veli*solni;
 	    
 	    // loop over the sparsity pattern of the i-th DOF
 	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
@@ -740,6 +757,9 @@ namespace proteus
 		double v_velj = v_vel_dofs[j];
 		double dij = 0;
 
+		double fxj = u_velj*solnj;
+		double fyj = v_velj*solnj;
+		
 		ith_flux_term += Cx[ij]*(u_velj*solnj) + Cy[ij]*(v_velj*solnj);
 		
 		if (i != j)
@@ -753,11 +773,25 @@ namespace proteus
 		    // compute anti-dissipative term of the flux_qij
 		    flux_qij[ij] = -dij*(solnj-solni);
 		    flux_i[i] += -dij*(solnj-solni);
+
+		    // computation of the local bounds
+		    umaxi = fmax(solnj,umaxi);
+		    umini = fmin(solnj,umini);
+
+		    // save dij
+		    dLij[ij] = dij;
 		  }
 		else
 		  {
-		    flux_qij[ij] = 0;
+		    flux_qij[ij] = 0.0;
+		    dLij[ij] = 0.0; // Not true but irrelevant
 		  }
+		// compute wij elements
+		wij[ij] = (2*dij*(solni+solnj)/2.0 
+			   -(Cx[ij]*(fxj-fxi) + Cy[ij]*(fyj-fyi)));
+		// compute wji elements
+		wji[ij] = (2*dij*(solni+solnj)/2.0 
+			   -(CTx[ij]*(fxi-fxj) + CTy[ij]*(fyi-fyj)));
 		ij+=1;
 	      }
 	    double QH_mi = QH_ML[i];
@@ -774,6 +808,10 @@ namespace proteus
 	    uDot[i] = -1.0/QH_mi * (ith_flux_term
 				    - ith_dissipative_term
 				    - boundaryIntegralLowOrder[i]);
+
+	    // computation of the local bounds
+	    umax[i] = umaxi;
+	    umin[i] = umini;
 	  }
 	///////////////////////////////
 	// END OF FIRST LOOP IN DOFs //
@@ -1163,17 +1201,35 @@ namespace proteus
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double ith_galerkin_fluxCorrection = 0.;
+	    double ith_limited_fluxCorrection = 0.;
 	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
 	      {
+		int j = colind[offset];
+		double fij = flux_qij[ij];
+		double dij = dLij[ij];
+		
+		double fStarij = 0.0;
+		if (i!=j)
+		  {
+		    if (fij > 0)
+		      fStarij = fmin(fij,fmin(2*dij*umax[i] - wij[ij], wji[ij] - 2*dij*umin[j]));
+		    else
+		      fStarij = fmax(fij,fmax(2*dij*umin[i] - wij[ij], wji[ij] - 2*dij*umax[j]));
+		  }
+
+		// compute Galerkin and limited flux
 		ith_galerkin_fluxCorrection += flux_qij[ij];
+		ith_limited_fluxCorrection += fStarij;
+		
 		ij+=1;
 	      }
 	    double mi = QH_ML[i];
 	    
 	    // COMPUTE SOLUTION //
+	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxCorrection[i]; // for debugging
 	    //globalResidual[i] = lowOrderSolution[i];
-	    globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_galerkin_fluxCorrection;
-	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxCorrection[i];
+	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_galerkin_fluxCorrection;
+	    globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_limited_fluxCorrection;
 	  }
 	//////////////////////////////
 	// END OF LAST LOOP IN DOFs //
