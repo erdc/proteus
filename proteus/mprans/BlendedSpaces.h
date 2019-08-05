@@ -862,9 +862,9 @@ namespace proteus
 	// END OF FIRST LOOP IN INTEGRALS //
 	////////////////////////////////////
 	
-	for (int i=0; i<numDOFs; i++)
-	  uDot[i] = 1.0/QH_ML[i] * (highOrderAdvection[i]
-				    + boundaryIntegralLowOrder[i]);
+	//for (int i=0; i<numDOFs; i++)
+	//uDot[i] = 1.0/QH_ML[i] * (highOrderAdvection[i]
+	//			    + boundaryIntegralLowOrder[i]);
 
 	//////////////////////////////
 	// SECOND LOOP ON INTEGRALS //
@@ -1043,12 +1043,13 @@ namespace proteus
 	// End of computation of element and global flux_qij //
 	///////////////////////////////////////////////////////
 
-	///////////////////////////
-	// *** for debugging *** //
-	///////////////////////////
+	/////////////////////////////////////////
+	// ********** for debugging ********** //
+	/////////////////////////////////////////
 	// * Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0
 	// * Check that sum_j(element_flux_qij) = element_flux_i
 	// * Check that sum_j(flux_qij) = flux_i
+	// * Check that fluxCorrection[i] = flux_i
 	// * Check that sum_i(sum_j(flux_qij)) = 0
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
@@ -1065,10 +1066,12 @@ namespace proteus
 		    sumj_element_flux_qij += element_flux_qij[eN_i_j];
 		  }
 		// Check that sum_j(element_flux_qij) = element_flux_i
-		if (fabs(element_flux_i[eN_i]-sumj_element_flux_qij)>1E-13)
+		if (fabs(element_flux_i[eN_i]-sumj_element_flux_qij) > 1E-13)
 		  {
-		    std::cout << "|element_flux_i - sum_j(element_flux_qij)| > 1E-13" << std::endl;
-		    std::cout << fabs(element_flux_i[eN_i]-sumj_element_flux_qij) << std::endl;
+		    std::cout << "|element_flux_i - sum_j(element_flux_qij)| > 1E-13 ... "
+			      << "\t" 
+			      << fabs(element_flux_i[eN_i]-sumj_element_flux_qij)
+			      << std::endl;
 		    abort();
 		  }
 		sumi_element_flux_i += sumj_element_flux_qij;
@@ -1076,8 +1079,10 @@ namespace proteus
 	    // Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0
 	    if (fabs(sumi_element_flux_i)>1E-13)
 	      {
-		std::cout << "|sum_i(element_flux_i)| > 1E-13" << std::endl;
-		std::cout << fabs(sumi_element_flux_i) << std::endl;
+		std::cout << "|sum_i(element_flux_i)| > 1E-13 ... "
+			  << "\t"
+			  << fabs(sumi_element_flux_i)
+			  << std::endl;
 		abort();
 	      }
 	  }
@@ -1085,47 +1090,13 @@ namespace proteus
 	ij=0;
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    double sumj_flux_qij=0; 
-	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
-	      {
-		int j = colind[offset];
-		sumj_flux_qij += flux_qij[ij];
-		ij+=1;
-	      }
-	    if (fabs(sumj_flux_qij - flux_i[i])>1E-10)
-	      {
-	    	std::cout << "fabs(sumj_flux_qij - flux_i[i]) > 1E-13" << std::endl;
-	    	std::cout << fabs(sumj_flux_qij - flux_i[i]) << std::endl;
-	    	abort();
-	      }
-	    sumi_sumj_flux_qij += sumj_flux_qij;
-	  }
-	if (fabs(sumi_sumj_flux_qij)>1E-13)
-	  {
-	    std::cout << "|sum_i(sum_j(flux_qij))| > 1E-13" << std::endl;
-	    std::cout << fabs(sumi_sumj_flux_qij) << std::endl;
-	    abort();
-	  }
-	//////////////////////////////////////////
-	// *** END OF Section for debugging *** //
-	//////////////////////////////////////////
-	
-	/////////////////////////
-	// SECOND LOOP IN DOFs //
-	/////////////////////////
-	// * Compute the final solution and get the solution at DOFs (for visualization)
-	ij = 0;
-	for (int i=0; i<numDOFs; i++)
-	  {
 	    double solni = u_dof_old[i]; // solution at time tn for the ith DOF
 	    double u_veli = u_vel_dofs[i];
 	    double v_veli = v_vel_dofs[i];
-	    //
-	    double ith_advection_fluxCorrection = 0;
-	    double ith_dissipative_fluxCorrection = 0;
-
-	    double ith_galerkin_fluxCorrection = 0;
 	    
+	    double sumj_flux_qij=0;
+	    double ith_advection_fluxCorrection = 0.;
+	    double ith_dissipative_fluxCorrection = 0.;
 	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
 	      {
 		int j = colind[offset];
@@ -1133,56 +1104,84 @@ namespace proteus
 		double u_velj = u_vel_dofs[j];
 		double v_velj = v_vel_dofs[j];
 		double dij = 0;
-
-		ith_advection_fluxCorrection += CTx[ij]*(u_velj*solnj) + CTy[ij]*(v_velj*solnj);
-
-		ith_galerkin_fluxCorrection += flux_qij[ij];
 		
-		if (i != j)
-		  {
-		    dij = fmax(fmax(fabs(Cx[ij]*u_veli + Cy[ij]*v_veli),
-				    fabs(Cx[ij]*u_velj + Cy[ij]*v_velj)),
-			       fmax(fabs(CTx[ij]*u_veli + CTy[ij]*v_veli),
-				    fabs(CTx[ij]*u_velj + CTy[ij]*v_velj)));
-		    ith_dissipative_fluxCorrection += dij*(solnj-solni);
-		  }
+		sumj_flux_qij += flux_qij[ij];
+
+		// compute ith advective and dissipative terms (to add to fluxCorrection[i])
+		ith_advection_fluxCorrection += CTx[ij]*(u_velj*solnj) + CTy[ij]*(v_velj*solnj);
+		dij = fmax(fmax(fabs(Cx[ij]*u_veli + Cy[ij]*v_veli),
+				fabs(Cx[ij]*u_velj + Cy[ij]*v_velj)),
+			   fmax(fabs(CTx[ij]*u_veli + CTy[ij]*v_veli),
+				fabs(CTx[ij]*u_velj + CTy[ij]*v_velj)));
+		ith_dissipative_fluxCorrection += dij*(solnj-solni);
+
+		// update index
+		ij+=1;
+	      }
+	    // * Check that sum_j(flux_qij) = flux_i
+	    if (fabs(sumj_flux_qij - flux_i[i])>1E-10)
+	      {
+	    	std::cout << "|sumj_flux_qij - flux_i[i]| > 1E-10 ..."
+			  << "\t" 
+			  << fabs(sumj_flux_qij - flux_i[i])
+			  << std::endl;
+	    	abort();
+	      }
+	    double mi = QH_ML[i];
+	    fluxCorrection[i] += (mi*uDot[i]
+				  - ith_advection_fluxCorrection
+				  - ith_dissipative_fluxCorrection);
+	    // * Check that fluxCorrection[i] = flux_i
+	    if (fabs(flux_i[i]-fluxCorrection[i])>1E-10)
+	      {
+		std::cout << "|flux_i[i] - fluxCorrection[i]| > 1E-10 ... "
+			  << "\t" 
+			  << fabs(flux_i[i]-fluxCorrection[i])
+			  << std::endl;
+		abort();
+	      }
+	    sumi_sumj_flux_qij += sumj_flux_qij;
+	  }
+	// * Check that sum_i(sum_j(flux_qij)) = 0
+	if (fabs(sumi_sumj_flux_qij)>1E-13)
+	  {
+	    std::cout << "|sum_i(sum_j(flux_qij))| > 1E-13 ... "
+		      << "\t"
+		      << fabs(sumi_sumj_flux_qij)
+		      << std::endl;
+	    abort();
+	  }
+	//////////////////////////////////////////
+	// *** END OF Section for debugging *** //
+	//////////////////////////////////////////
+	
+	///////////////////////
+	// LAST LOOP IN DOFs //
+	///////////////////////
+	// * Compute the final solution and get the solution at DOFs (for visualization)
+	ij = 0;
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double ith_galerkin_fluxCorrection = 0.;
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		ith_galerkin_fluxCorrection += flux_qij[ij];
 		ij+=1;
 	      }
 	    double mi = QH_ML[i];
-
-	    //fluxCorrection[i] = dt/mi*(flux_i[i] - ith_dissipative_fluxCorrection);
-	    //double check_diff = (fluxCorrection[i] + mi*uDot[i] - flux_i[i]);
-	    double check_diff = fluxCorrection[i]+mi*uDot[i]-ith_advection_fluxCorrection-flux_i[i];
-	    //double check_diff = ith_advection_fluxCorrection - flux_i[i];
-	    	    
-	    fluxCorrection[i] += (mi*uDot[i]
-				  - ith_dissipative_fluxCorrection
-				  - ith_advection_fluxCorrection);
-
-	    //fluxCorrection[i] = -ith_dissipative_fluxCorrection;
-	    check_diff = fabs(ith_galerkin_fluxCorrection - fluxCorrection[i]);
-
-	    //if (check_diff > 1.0E-14)
-	    //{
-	    //std::cout << check_diff << std::endl;
-	    	//abort();
-	    //}
-	    
 	    
 	    // COMPUTE SOLUTION //
+	    //globalResidual[i] = lowOrderSolution[i];
+	    globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_galerkin_fluxCorrection;
 	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxCorrection[i];
-	    globalResidual[i] = lowOrderSolution[i];// + dt/mi*ith_galerkin_fluxCorrection;
-
-	    //globalResidual[i] = solni - dt/mi * (ith_advection_fluxCorrection
-	    //					 - ith_dissipative_fluxCorrection
-	    //					 + boundaryIntegral[i]);
-	    
 	  }
-	////////////////////////////////
-	// END OF SECOND LOOP IN DOFs //
-	////////////////////////////////
+	//////////////////////////////
+	// END OF LAST LOOP IN DOFs //
+	//////////////////////////////
 
-	
+	///////////////////////////////////////////////
+	// CONVERT BERNSTEIN DOFs TO SOLUTION VALUES //
+	///////////////////////////////////////////////
 	ij=0;
 	for (int i=0; i<numDOFs; i++)
 	  {
