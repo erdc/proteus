@@ -190,6 +190,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
 
     def __init__(self,
+                 GET_POINT_VALUES=1,
                  ME_model=0,
                  epsFact=0.0,
                  forceStrongConditions=0,
@@ -199,6 +200,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  epsilon=0.01,
                  PROBLEM_TYPE=0):
 
+        self.GET_POINT_VALUES=GET_POINT_VALUES
         self.PROBLEM_TYPE=PROBLEM_TYPE
         self.epsilon=epsilon
         self.variableNames = ['u']
@@ -256,7 +258,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.model.hasVelocityFieldAsFunction:
             self.model.updateVelocityFieldAsFunction()
 
-        self.model.updateFluxJacobianAtDOFs()
+        self.model.updateVelocityAtDOFs()
         
         copyInstructions = {}
         return copyInstructions
@@ -765,7 +767,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateCoefficients(self):
         pass
 
-    def updateFluxJacobianAtDOFs(self):
+    def updateVelocityAtDOFs(self):
         if self.x is None:
             self.x = numpy.zeros(self.u[0].dof.shape,'d')
             self.y = numpy.zeros(self.u[0].dof.shape,'d')
@@ -793,15 +795,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getIntBernMat(self):
         degree = self.u[0].femSpace.order if hasattr(self.u[0].femSpace,'order') else 1.0
         if degree==2:
-            #localCoord = {0: [-1.0,-1.0],
-            #              1: [ 1.0,-1.0],
-            #              2: [ 1.0, 1.0],
-            #              3: [-1.0, 1.0],
-            #              4: [ 0.0,-1.0],
-            #              5: [ 1.0, 0.0],
-            #              6: [ 0.0, 1.0],
-            #              7: [-1.0, 0.0],
-            #              8: [ 0.0, 0.0]}
             localCoord = {0: [-1.0,-1.0],
                           1: [-1.0, 1.0],
                           2: [ 1.0, 1.0],
@@ -888,14 +881,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #
         #
         # check partition of unity
-        
-        #for index in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
-        #    pu = 0
-        #    coord = localCoord[index]
-        #    for node in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
-        #        pu+=self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.basis[node](coord)
-        #    print (coord,pu)
-        #input("finished checking partition of unity")
+        #
+        if False:
+            for index in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                pu = 0
+                coord = localCoord[index]
+                for node in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                    pu+=self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.basis[node](coord)
+                print (coord,pu)
+            input("finished checking partition of unity")
+        #
     #
     
     def updateBlendingFunction(self):
@@ -1150,11 +1145,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        err_msg="Trace of lumped mass matrix should be the domain volume", verbose=True)
         # END OF COMPUTING LUMPED MASS MATRIX #    
         ######################################
-        # COMPUTE THE INVERSE OF ML_minus_MC #
+        # COMPUTE THE INVERSE OF ML_minus_MC # using the linear space
         ######################################
-        self.element_ML_minus_MC = np.zeros((self.mesh.nElements_global,
-                                             self.nDOF_test_element[0],
-                                             self.nDOF_trial_element[0]), 'd')
+        element_ML_minus_MC = np.zeros((self.mesh.nElements_global,
+                                        self.nDOF_test_element[0],
+                                        self.nDOF_trial_element[0]), 'd')
         self.inv_element_ML_minus_MC = np.zeros((self.mesh.nElements_global,
                                                  self.nDOF_test_element[0],
                                                  self.nDOF_trial_element[0]), 'd')
@@ -1163,19 +1158,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 lumpedElementMassMatrix = sum(self.elementMassMatrix[eN][i])
                 for j in range(self.nDOF_trial_element[0]):
                     if i==j:
-                        self.element_ML_minus_MC[eN][i][j] = lumpedElementMassMatrix - self.elementMassMatrix[eN][i][j]
+                        element_ML_minus_MC[eN][i][j] = lumpedElementMassMatrix - self.elementMassMatrix[eN][i][j]
                     else:
-                        self.element_ML_minus_MC[eN][i][j] = - self.elementMassMatrix[eN][i][j]
+                        element_ML_minus_MC[eN][i][j] = - self.elementMassMatrix[eN][i][j]
                     #
                 #
             #
-            self.element_ML_minus_MC[eN][0][:]=0
-            self.element_ML_minus_MC[eN][0][0]=1
-            self.inv_element_ML_minus_MC[eN] = np.linalg.inv(self.element_ML_minus_MC[eN])
+            element_ML_minus_MC[eN][0][:]=0
+            element_ML_minus_MC[eN][0][0]=1
+            self.inv_element_ML_minus_MC[eN] = np.linalg.inv(element_ML_minus_MC[eN])
         ###############################################
         # END OF COMPUTING THE INVERSE OF ML_minus_MC #
         ###############################################
-
         
     def compute_c_matrices(self,use_Q1_lagrange=True):
         self.cterm = {}
@@ -1208,9 +1202,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                q_det_J)
         else:
             self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
-                                                               q_J,
-                                                               q_inverse_J,
-                                                               q_det_J)
+                                                             q_J,
+                                                             q_inverse_J,
+                                                             q_det_J)
         #
         q_abs_det_J = np.abs(q_det_J)
         # SHAPE FUNCTIONS
@@ -1309,18 +1303,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, self.CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, self.CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         #
-                
-    def getResidual(self, u, r):
-        import pdb
-        import copy
 
-        ## COMPUTE C MATRICES ##
+    def compute_matrices(self):
         if self.cterm_global is None:
+            self.dLow = np.zeros(self.nnz,'d')
             self.compute_c_matrices()
-            self.getIntBernMat()
+            if self.coefficients.GET_POINT_VALUES==1:
+                self.getIntBernMat()
             self.compute_QH_lumped_mass_matrix()
             self.compute_QL_lumped_mass_matrix()
-            self.updateFluxJacobianAtDOFs()
+            self.updateVelocityAtDOFs()
             self.element_flux_i = np.zeros((self.mesh.nElements_global,
                                             self.nDOF_test_element[0]),'d')
             self.vVector = np.zeros((self.mesh.nElements_global,
@@ -1329,79 +1321,81 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                               self.nDOF_test_element[0],
                                               self.nDOF_trial_element[0]), 'd')
             self.flux_qij = np.zeros(len(self.Cx),'d')
-        #
-
-        # compare lumped mass matrices ? #
-        if False:
-            for i in range(self.nFreeDOF_global[0]):
-                print self.QL_ML[i], self.QH_ML[i]
-            print "TOTAL MASS (low-order, high-order): ", self.QL_ML.sum(), self.QH_ML.sum()
-        #
-        # Print matrix? #
-        if False:
-            ij=0
-            for i in range(self.nFreeDOF_global[0]):
-                for j in range(self.nFreeDOF_global[0]):
-                    print "%8.4e" % self.Cx[ij], '\t',
-                    ij+=1
-                #
-                print 
+    
+            ## FOR DEBUGGING ##
+            # compare lumped mass matrices ? #
+            if False:
+                for i in range(self.nFreeDOF_global[0]):
+                    print self.QL_ML[i], self.QH_ML[i]
+                print "TOTAL MASS (low-order, high-order): ", self.QL_ML.sum(), self.QH_ML.sum()
             #
+            # Print matrix? #
+            if False:
+                ij=0
+                for i in range(self.nFreeDOF_global[0]):
+                    for j in range(self.nFreeDOF_global[0]):
+                        print "%8.4e" % self.Cx[ij], '\t',
+                        ij+=1
+                    #
+                    print 
+                #
+            #
+            # END OF DEBUGGING #
         #
-        # END OF PRINTING MATRIX #
+    #
+    
+    def getResidual(self, u, r):
+        import pdb
+        import copy
         
-        # END OF COMPUTING C MATRICES #
-            
+        ## COMPUTE C MATRICES ##
+        self.compute_matrices()
+       
         """
         Calculate the element residuals and add in to the global residual
         """
-        if self.boundaryValues is None:
-            self.getBoundaryValues()
+        #if self.boundaryValues is None:
+        #    self.getBoundaryValues()
         # JACOBIANS (FOR ELEMENT TRANSFORMATION)
-        self.q[('J')] = np.zeros((self.mesh.nElements_global,
-                                  self.nQuadraturePoints_element,
-                                  self.nSpace_global,
-                                  self.nSpace_global),
-                                 'd')
-        self.q[('inverse(J)')] = np.zeros((self.mesh.nElements_global,
-                                           self.nQuadraturePoints_element,
-                                           self.nSpace_global,
-                                           self.nSpace_global),
-                                          'd')
-        self.q[('det(J)')] = np.zeros((self.mesh.nElements_global,
-                                       self.nQuadraturePoints_element),
-                                      'd')
-        self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
-                                                         self.q['J'],
-                                                         self.q['inverse(J)'],
-                                                         self.q['det(J)'])
-        self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
+        #self.q[('J')] = np.zeros((self.mesh.nElements_global,
+        #                          self.nQuadraturePoints_element,
+        #                          self.nSpace_global,
+        #                          self.nSpace_global),
+        #                         'd')
+        #self.q[('inverse(J)')] = np.zeros((self.mesh.nElements_global,
+        #                                   self.nQuadraturePoints_element,
+        #                                   self.nSpace_global,
+        #                                   self.nSpace_global),
+        #                                  'd')
+        #self.q[('det(J)')] = np.zeros((self.mesh.nElements_global,
+        #                               self.nQuadraturePoints_element),
+        #                              'd')
+        #self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+        #                                                 self.q['J'],
+        #                                                 self.q['inverse(J)'],
+        #                                                 self.q['det(J)'])
+        #self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
 
+        
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = numpy.copy(self.u[0].dof)
-
-        # This is dummy. I just care about the csr structure of the sparse matrix
-        if self.dLow is None:
-            self.dLow = np.zeros(self.nnz,'d')
         #
         
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
-        # cek can put in logic to skip of BC's don't depend on t or u
-        # Dirichlet boundary conditions
-        # if hasattr(self.numericalFlux,'setDirichletValues'):
-        self.numericalFlux.setDirichletValues(self.ebqe)
-        # flux boundary conditions
-        for t, g in list(self.fluxBoundaryConditionsObjectsDict[0].advectiveFluxBoundaryConditionsDict.items()):
-            self.ebqe[('advectiveFlux_bc', 0)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
-            self.ebqe[('advectiveFlux_bc_flag', 0)][t[0], t[1]] = 1
 
-        if self.forceStrongConditions:
-            for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
-                self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN], self.timeIntegration.t)
+        # boundary conditions #
+        #self.numericalFlux.setDirichletValues(self.ebqe)
+        #for t, g in list(self.fluxBoundaryConditionsObjectsDict[0].advectiveFluxBoundaryConditionsDict.items()):
+        #    self.ebqe[('advectiveFlux_bc', 0)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
+        #    self.ebqe[('advectiveFlux_bc_flag', 0)][t[0], t[1]] = 1
+
+        #if self.forceStrongConditions:
+        #    for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
+        #        self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN], self.timeIntegration.t)
 
         self.calculateResidual = self.blendedSpaces.calculateResidual
         self.calculateJacobian = self.blendedSpaces.calculateJacobian
@@ -1412,7 +1406,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         self.flux_qij.fill(0.0)
         self.element_flux_i.fill(0.0)
-        
+
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1479,6 +1473,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.PROBLEM_TYPE,
             self.quantDOFs,
             # For highOrderLim
+            self.coefficients.GET_POINT_VALUES,
             self.flux_qij,
             self.element_flux_qij,
             self.elementMassMatrix,
@@ -1490,10 +1485,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u_vel_dofs,
             self.v_vel_dofs,
             # lumped mass matrices
-            self.QL_ML,
+            #self.QL_ML,
             self.QH_ML,
             # inverse of dissipative mass matrix
-            self.element_ML_minus_MC,
             self.inv_element_ML_minus_MC,
             # C-matrices
             self.Cx,
