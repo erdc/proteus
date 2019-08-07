@@ -690,6 +690,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.element_flux_i = None
         self.vVector = None
+
+        self.xGradRHS = None
+        self.yGradRHS = None
     #
     
     def getMetricsAtEOS(self):
@@ -877,7 +880,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.intBernMat[ij] = v
                     #print (i,j, v, coord)
                 #
-                #input("stop")
             #
         #
         # check partition of unity
@@ -1321,7 +1323,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                               self.nDOF_test_element[0],
                                               self.nDOF_trial_element[0]), 'd')
             self.flux_qij = np.zeros(len(self.Cx),'d')
-    
+            self.xGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
+            self.yGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
+            
             ## FOR DEBUGGING ##
             # compare lumped mass matrices ? #
             if False:
@@ -1398,6 +1402,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #        self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN], self.timeIntegration.t)
 
         self.calculateResidual = self.blendedSpaces.calculateResidual
+        #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
         self.calculateJacobian = self.blendedSpaces.calculateJacobian
 
         # init to zero some vectors
@@ -1406,7 +1411,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         self.flux_qij.fill(0.0)
         self.element_flux_i.fill(0.0)
-
+        self.xGradRHS.fill(0.0)
+        self.yGradRHS.fill(0.0)
+        
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1495,7 +1502,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.CTx,
             self.CTy,
             self.cterm_transpose[0],
-            self.cterm_transpose[1])
+            self.cterm_transpose[1],
+            self.xGradRHS,
+            self.yGradRHS)
 
         #import pdb; pdb.set_trace()
         if self.forceStrongConditions:
