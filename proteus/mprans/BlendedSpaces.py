@@ -1323,8 +1323,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                               self.nDOF_test_element[0],
                                               self.nDOF_trial_element[0]), 'd')
             self.flux_qij = np.zeros(len(self.Cx),'d')
+            self.dLowElem = np.zeros(len(self.Cx),'d')
             self.xGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
             self.yGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
+            
             
             ## FOR DEBUGGING ##
             # compare lumped mass matrices ? #
@@ -1401,8 +1403,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #    for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
         #        self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN], self.timeIntegration.t)
 
-        self.calculateResidual = self.blendedSpaces.calculateResidual
-        #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
+        #self.calculateResidual = self.blendedSpaces.calculateResidual
+        self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
         self.calculateJacobian = self.blendedSpaces.calculateJacobian
 
         # init to zero some vectors
@@ -1501,8 +1503,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.Cy,
             self.CTx,
             self.CTy,
+            self.cterm[0],
+            self.cterm[1],
             self.cterm_transpose[0],
             self.cterm_transpose[1],
+            self.dLowElem,
             self.xGradRHS,
             self.yGradRHS)
 

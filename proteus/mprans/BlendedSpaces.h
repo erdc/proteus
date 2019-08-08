@@ -126,8 +126,11 @@ namespace proteus
 				   double* Cy,
 				   double* CTx,
 				   double* CTy,
+				   double* CxElem,
+				   double* CyElem,
 				   double* CTxElem,
 				   double* CTyElem,
+				   double* dLowElem,
 				   double* xGradRHS,
 				   double* yGradRHS)=0;
     virtual void calculateResidualEntropyVisc(//element
@@ -216,8 +219,11 @@ namespace proteus
 				   double* Cy,
 				   double* CTx,
 				   double* CTy,
+				   double* CxElem,
+				   double* CyElem,				   
 				   double* CTxElem,
 				   double* CTyElem,
+				   double* dLowElem,
 				   double* xGradRHS,
 				   double* yGradRHS)=0;
     virtual void calculateRHSGradientReconstruction(//element
@@ -306,8 +312,11 @@ namespace proteus
 						    double* Cy,
 						    double* CTx,
 						    double* CTy,
+						    double* CxElem,
+						    double* CyElem,
 						    double* CTxElem,
 						    double* CTyElem,
+						    double* dLowElem,
 						    double* xGradRHS,
 						    double* yGradRHS)=0;    
     virtual void calculateJacobian(//element
@@ -580,8 +589,11 @@ namespace proteus
 			     double* Cy,
 			     double* CTx,
 			     double* CTy,
+			     double* CxElem,
+			     double* CyElem,
 			     double* CTxElem,
 			     double* CTyElem,
+			     double* dLowElem,
 			     double* xGradRHS,
 			     double* yGradRHS)
       {
@@ -766,8 +778,8 @@ namespace proteus
 		    dLowii -= dij;
 		    ith_dissipative_term += dij*(solnj-solni);
 		    // compute anti-dissipative term of the flux_qij
-		    flux_qij[ij] = -dij*(solnj-solni);
-
+		    //flux_qij[ij] = -dij*(solnj-solni); //TMP
+		    
 		    // computation of the local bounds
 		    umaxi = fmax(solnj,umaxi);
 		    umini = fmin(solnj,umini);
@@ -1012,6 +1024,12 @@ namespace proteus
 		  double v_velj = v_vel_dofs[gj];
 		  // low-order flux part of qi
 		  qi -= (CTxElem[eN_i_j]*(u_velj*solnj) + CTyElem[eN_i_j]*(v_velj*solnj));
+
+		  // dissipative matrix dLowElem
+		  dLowElem[eN_i_j] = fmax(fmax(fabs(CxElem[eN_i_j]*u_veli+CyElem[eN_i_j]*v_veli),
+					       fabs(CxElem[eN_i_j]*u_velj+CyElem[eN_i_j]*v_velj)),
+					  fmax(fabs(CTxElem[eN_i_j]*u_veli+CTyElem[eN_i_j]*v_veli),
+					       fabs(CTxElem[eN_i_j]*u_velj+CTyElem[eN_i_j]*v_velj)));
 		}
 	      element_flux_i[eN_i] += qi;
 	    }
@@ -1060,12 +1078,19 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
+		int gi = offset_u+stride_u*r_l2g[eN_i];
+		double solni = u_dof_old[gi];
+		
 		for(int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_j = eN*nDOF_test_element+j;
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    int gj = offset_u+stride_u*r_l2g[eN_j];
+		    double solnj = u_dof_old[gj];
 		    
 		    element_flux_qij[eN_i_j] = element_MC[eN_i_j]*(vVector[eN_i]-vVector[eN_j]);
+		    element_flux_qij[eN_i_j] += -dLowElem[eN_i_j]*(solnj-solni); //TMP
+
 		    
 		    int jacIndex = csrRowIndeces_CellLoops[eN_i]+csrColumnOffsets_CellLoops[eN_i_j];
 		    flux_qij[jacIndex] += element_flux_qij[eN_i_j];
@@ -1223,11 +1248,11 @@ namespace proteus
 	    double mi = QH_ML[i];
 
 	    // COMPUTE SOLUTION //
-	    globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxCorrection[i]; // for debugging
+	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxCorrection[i]; // for debugging
 	    //globalResidual[i] = lowOrderSolution[i];
 
 	    
-	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_galerkin_fluxCorrection;
+	    globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_galerkin_fluxCorrection;
 	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_limited_fluxCorrection;
 	  }
 	//////////////////////////////
@@ -1343,8 +1368,11 @@ namespace proteus
 					double* Cy,
 					double* CTx,
 					double* CTy,
+					double* CxElem,
+					double* CyElem,
 					double* CTxElem,
 					double* CTyElem,
+					double* dLowElem,
 					double* xGradRHS,
 					double* yGradRHS)
       {
@@ -1503,7 +1531,7 @@ namespace proteus
 	      }
 	    // compute DenEntVisc
 	    ith_DenEntVisc = fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15;
-	    EntVisc[i] = fabs(ith_NumEntVisc)/ith_DenEntVisc;
+	    EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,2.0);
 	    
 	    // compute edge based cfl
 	    double QH_mi = QH_ML[i];
@@ -1648,11 +1676,33 @@ namespace proteus
 
 	    //globalResidual[i] = consistentTimeDerivative[i] + dt*(-highOrderAdvection[i]
 	    //							  + boundaryIntegral[i]
-	    //							  - ith_EntVisc_dissipative_term);
+	    //							  -ith_EntVisc_dissipative_term);
 	  }
 	//////////////////////////////
 	// END OF LAST LOOP IN DOFs //
 	//////////////////////////////
+
+	///////////////////////////////////////////////
+	// CONVERT BERNSTEIN DOFs TO SOLUTION VALUES //
+	///////////////////////////////////////////////
+	if (GET_POINT_VALUES==1)
+	  {
+	    ij=0;
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		quantDOFs[i] = 0;
+		for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		  {
+		    int j = colind[offset];
+		    quantDOFs[i] += intBernMat[ij]*globalResidual[j];
+		    ij+=1;
+		  }
+		//std::cout << quantDOFs[i]
+		//	  << "\t"
+		//	  << globalResidual[i]
+		//	  << std::endl;
+	      }
+	  }	
       }
 	    
       void calculateRHSGradientReconstruction(//element
@@ -1741,8 +1791,11 @@ namespace proteus
 					      double* Cy,
 					      double* CTx,
 					      double* CTy,
+					      double* CxElem,
+					      double* CyElem,
 					      double* CTxElem,
 					      double* CTyElem,
+					      double* dLowElem,
 					      // gradient reconstruction
 					      double* xGradRHS,
 					      double* yGradRHS)
