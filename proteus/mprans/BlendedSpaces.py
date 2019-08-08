@@ -1323,7 +1323,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                               self.nDOF_test_element[0],
                                               self.nDOF_trial_element[0]), 'd')
             self.flux_qij = np.zeros(len(self.Cx),'d')
-            self.dLowElem = np.zeros(len(self.Cx),'d')
+            self.dLowElem = np.zeros((self.mesh.nElements_global,
+                                      self.nDOF_test_element[0],
+                                      self.nDOF_trial_element[0]), 'd')
             self.xGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
             self.yGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
             
@@ -1415,6 +1417,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.element_flux_i.fill(0.0)
         self.xGradRHS.fill(0.0)
         self.yGradRHS.fill(0.0)
+        self.edge_based_cfl.fill(0.0)
         
         self.calculateResidual(  # element
             self.timeIntegration.dt,

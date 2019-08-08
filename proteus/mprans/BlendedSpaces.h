@@ -8,7 +8,7 @@
 
 #define ALPHA_VIA_LINEAR_SPACE 1
 #define DO_CHECKS 0
-#define uDOT_VIA_HIGH_ORDER_GALERKIN 1
+#define uDOT_VIA_HIGH_ORDER_GALERKIN 0
 
 namespace proteus
 {
@@ -27,18 +27,24 @@ namespace proteus
     ///////////////////////
     // Auxiliary vectors //
     ///////////////////////
+    // low order vectors //
     std::valarray<double> lowOrderSolution;
-    std::valarray<double> boundaryIntegralLowOrder;
-    std::valarray<double> boundaryIntegral;
+    std::valarray<double> lowOrderDissipativeTerm;
+    std::valarray<double> lowOrderFluxTerm;
+    std::valarray<double> lowOrderBoundaryIntegral;
+    // high order vectors //
+    std::valarray<double> highOrderBoundaryIntegral;
+    std::valarray<double> highOrderFluxTerm;
+    std::valarray<double> consistentTimeDerivative;
+    // for entropy viscosity //
+    std::valarray<double> EntVisc;
+    // For limiting //
     std::valarray<double> umax;
     std::valarray<double> umin;
-    // for entropy viscosity
-    std::valarray<double> EntVisc;
-    // for debugging
-    std::valarray<double> highOrderAdvection;
-    std::valarray<double> consistentTimeDerivative;
+    std::valarray<double> wBarij, wBarji;
+    std::valarray<double> fluxStar;    
+    // for debugging //    
     std::valarray<double> fluxCorrection;
-    std::valarray<double> wij, wji;
     virtual ~BlendedSpaces_base(){}
     virtual void calculateResidual(//element
                                    double dt,
@@ -584,6 +590,9 @@ namespace proteus
 			     double* QH_ML,
 			     // inverse of dissipative mass matrix
 			     double* inv_element_ML_minus_MC,
+			     // low order vectors
+			     //
+			     //double* lowOrderDissipativeTerm,
 			     // C-matrices
 			     double* Cx,
 			     double* Cy,
@@ -608,34 +617,36 @@ namespace proteus
 	//eN_k_j is the quadrature point index for a trial function
 	//eN_k_i is the quadrature point index for a trial function
 
-	////////////////////////////////
-	// Zero out auxiliary vectors //
-	////////////////////////////////
-	lowOrderSolution.resize(numDOFs,0.0);
-	boundaryIntegralLowOrder.resize(numDOFs,0.0);
-	boundaryIntegral.resize(numDOFs,0.0);
-	umax.resize(numDOFs,0.0);
-	umin.resize(numDOFs,0.0);
-
-	// for debugging
-	highOrderAdvection.resize(numDOFs,0.0);
-	fluxCorrection.resize(numDOFs,0.0);
-	
 	register double uDot[numDOFs];
 	for (int i=0; i<numDOFs; i++)
 	  uDot[i]=0.0;
 	
-	wij.resize(NNZ,0.0);
-	wji.resize(NNZ,0.0);
-	for (int i=0; i<NNZ; i++)
-	  {
-	    wij[i] = 0.0;
-	    wji[i] = 0.0;
-	  }
-
-	///////////////////
-	// BOUNDARY TERM //
-	///////////////////
+	//////////////////////////////////////////////////////
+	// ********** Zero out auxiliary vectors ********** //
+	//////////////////////////////////////////////////////
+	// low order vectors //
+	lowOrderDissipativeTerm.resize(numDOFs,0.0);
+	lowOrderFluxTerm.resize(numDOFs,0.0);	
+	lowOrderBoundaryIntegral.resize(numDOFs,0.0);
+	lowOrderSolution.resize(numDOFs,0.0);
+	
+	// high order vectors //
+	highOrderFluxTerm.resize(numDOFs,0.0);
+	
+	// limited flux correction //
+	umax.resize(numDOFs,0.0);
+	umin.resize(numDOFs,0.0);
+	fluxStar.resize(numDOFs,0.0);
+	wBarij.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
+	wBarji.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
+	
+	// for debugging //
+	fluxCorrection.resize(numDOFs,0.0);	
+	int ij=0;
+	
+	/////////////////////////////////////////
+	// ********** BOUNDARY TERM ********** //
+	/////////////////////////////////////////
 	// * Compute boundary integrals 
 	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	  {
@@ -720,115 +731,23 @@ namespace proteus
 	      {
 		int eN_i = eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
-		boundaryIntegralLowOrder[gi] += elementBoundaryFluxLowOrder[i];		
+		lowOrderBoundaryIntegral[gi] += elementBoundaryFluxLowOrder[i];
 		element_flux_i[eN_i] = elementBoundaryFluxHighOrder[i]; 
 		fluxCorrection[gi] += elementBoundaryFluxHighOrder[i];
 	      }
 	  }//ebNE
-	///////////////////////////
-	// END OF BOUNDARY TERMS //
-	///////////////////////////
-	
-	////////////////////////
-	// FIRST LOOP IN DOFs //
-	////////////////////////
-	// * Compute the low order solution
-	// * Compute (lagged) edge_based_cfl
-	// * Compute the dissipative part of the global flux_qij
-	// * Compute uDot (which we might use depending on the high-order stabilization)
-	// * Compute umax and umin
-	int ij=0;
-	for (int i=0; i<numDOFs; i++)
-	  {
-	    double solni = u_dof_old[i]; // solution at time tn for the ith DOF
-	    double u_veli = u_vel_dofs[i];
-	    double v_veli = v_vel_dofs[i];
-	    double ith_dissipative_term = 0;
-	    double dLowii = 0.;
-	    //int ii=0;
-	    double ith_flux_term = 0;
+	/////////////////////////////////////////////////
+	// ********** END OF BOUNDARY TERMS ********** //
+	/////////////////////////////////////////////////	
 
-	    // for the computation of the local bounds
-	    double umaxi = u_dof_old[i];
-	    double umini = u_dof_old[i];
-
-	    double fxi = u_veli*solni;
-	    double fyi = v_veli*solni;
-
-	    // loop over the sparsity pattern of the i-th DOF
-	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
-	      {
-		int j = colind[offset];
-		double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-		double u_velj = u_vel_dofs[j];
-		double v_velj = v_vel_dofs[j];
-		double dij = 0;
-
-		double fxj = u_velj*solnj;
-		double fyj = v_velj*solnj;
-		
-		ith_flux_term += Cx[ij]*(u_velj*solnj) + Cy[ij]*(v_velj*solnj);
-		
-		if (i != j)
-		  {
-		    dij = fmax(fmax(fabs(Cx[ij]*u_veli + Cy[ij]*v_veli),
-				    fabs(Cx[ij]*u_velj + Cy[ij]*v_velj)),
-			       fmax(fabs(CTx[ij]*u_veli + CTy[ij]*v_veli),
-				    fabs(CTx[ij]*u_velj + CTy[ij]*v_velj)));
-		    dLowii -= dij;
-		    ith_dissipative_term += dij*(solnj-solni);
-		    // compute anti-dissipative term of the flux_qij
-		    //flux_qij[ij] = -dij*(solnj-solni); //TMP
-		    
-		    // computation of the local bounds
-		    umaxi = fmax(solnj,umaxi);
-		    umini = fmin(solnj,umini);
-
-		    // save dij
-		    dLow[ij] = dij;
-		  }
-		else
-		  {
-		    flux_qij[ij] = 0.0;
-		    dLow[ij] = 0.0; // Not true but irrelevant due to (solnj-solni)
-		  }
-		// compute wij elements
-		wij[ij] = (2*dij*(solni+solnj)/2.0 
-			   -(Cx[ij]*(fxj-fxi) + Cy[ij]*(fyj-fyi)));
-		// compute wji elements
-		wji[ij] = (2*dij*(solni+solnj)/2.0 
-			   -(CTx[ij]*(fxi-fxj) + CTy[ij]*(fyi-fyj)));
-
-		// update index
-		ij+=1;
-	      }
-	    // computation of the local bounds
-	    umax[i] = umaxi;
-	    umin[i] = umini;
-	    
-	    double QH_mi = QH_ML[i];
-	    // compute edge based cfl
-	    edge_based_cfl[i] = 2*fabs(dLowii)/QH_mi;
-	    
-	    // compute low order solution //
-	    lowOrderSolution[i] = solni - dt/QH_mi * (ith_flux_term
-						      - ith_dissipative_term
-						      - boundaryIntegralLowOrder[i]);
-	    // compute uDot //
-	    // Note: we don't always use this. It depends on the form of the high-order stabilization
-	    uDot[i] = -1.0/QH_mi * (ith_flux_term
-				    - ith_dissipative_term
-				    - boundaryIntegralLowOrder[i]);
-	  }      
-	///////////////////////////////
-	// END OF FIRST LOOP IN DOFs //
-	///////////////////////////////
- 
-	/////////////////////////////
-	// FIRST LOOP ON INTEGRALS // Compute uDot via high order galerkin (with lumped m.mat)
-	/////////////////////////////
+	///////////////////////////////////////////////////
+	// ********** FIRST LOOP ON INTEGRALS ********** // 
+	///////////////////////////////////////////////////
 	// * Compute the high order flux term.
 	//    Used if the high-order stabilization is based on uDot=-1/mi*high_order_flux
+	// * Compute first part of (lagged) edge_based_cfl = sum_el(dLowElemii)
+	// * Compute dLowElem matrix
+	// * Compute and save wBarij and wBarji
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
 	    //declare local storage for element residual and initialize
@@ -900,24 +819,141 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
-		highOrderAdvection[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
+		int gi = offset_u+stride_u*r_l2g[eN_i];
+		
+		// compute high order advection term
+		highOrderFluxTerm[gi] += elementResidual_u[i];
+		
+		// solution, velocity and fluxes at node i (within the element eN)
+		double solni = u_dof_old[gi];
+		double u_veli = u_vel_dofs[gi];
+		double v_veli = v_vel_dofs[gi];
+
+		double fxi = u_veli*solni;
+		double fyi = v_veli*solni;
+		    
+		// for edge_based_cfl
+		double dLowElemii = 0.;
+
+		// loop in j
+		for(int j=0;j<nDOF_trial_element;j++)
+		  {
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    int eN_j = eN*nDOF_test_element+j;
+		    int gj = offset_u+stride_u*r_l2g[eN_j];
+		    
+		    // solution, velocity and fluxes at node j (within the element eN)
+		    double solnj = u_dof_old[gj];
+		    double u_velj = u_vel_dofs[gj];
+		    double v_velj = v_vel_dofs[gj];
+
+		    double fxj = u_velj*solnj;
+		    double fyj = v_velj*solnj;
+		    
+		    // compute low order flux term
+		    lowOrderFluxTerm[gi] += (CxElem[eN_i_j]*fxj + CyElem[eN_i_j]*fyj);
+
+		    double dLowElemij=0;
+		    if (i != j)
+		      {
+			dLowElemij=
+			  fmax(fmax(fabs(CxElem[eN_i_j]*u_veli + CyElem[eN_i_j]*v_veli),
+				    fabs(CxElem[eN_i_j]*u_velj + CyElem[eN_i_j]*v_velj)),
+			       fmax(fabs(CTxElem[eN_i_j]*u_veli + CTyElem[eN_i_j]*v_veli),
+				    fabs(CTxElem[eN_i_j]*u_velj + CTyElem[eN_i_j]*v_velj)));
+			dLowElemii -= dLowElemij;
+
+			// save anti-dissipative flux into element_flux_qij
+			element_flux_qij[eN_i_j] = -dLowElemij*(solnj-solni);
+			
+			// compute low order dissipative term 
+			lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
+
+			// compute wBar states (wBar = 2*dij*uBar)
+			wBarij[eN_i_j]=(2.0*dLowElemij*(solnj+solni)/2.0
+					- (CxElem[eN_i_j]*(fxj-fxi) + CyElem[eN_i_j]*(fyj-fyi)));
+			wBarji[eN_i_j]=(2.0*dLowElemij*(solnj+solni)/2.0 
+					- (CTxElem[eN_i_j]*(fxi-fxj) + CTyElem[eN_i_j]*(fyi-fyj)));
+
+			// save low order matrix
+			dLowElem[eN_i_j] = dLowElemij;
+		      }
+		    else
+		      {
+			dLowElem[eN_i_j] = 0; // not true but irrelevant since we know that fii=0
+		      }
+		  }//j
+		// No need to compute diagonal entry of wBarij and wBarji since fStarij=0 when i=j
+		
+		// compute dLowii and store it in edge_based_cfl
+		edge_based_cfl[gi] += dLowElemii;
 	      }//i
 	  }//elements
 	////////////////////////////////////
 	// END OF FIRST LOOP IN INTEGRALS //
 	////////////////////////////////////
-	if (uDOT_VIA_HIGH_ORDER_GALERKIN==1)
-	  {	
-	    for (int i=0; i<numDOFs; i++)
-	      uDot[i] = 1.0/QH_ML[i] * (highOrderAdvection[i]
-					+ boundaryIntegralLowOrder[i]);
+ 
+	////////////////////////
+	// FIRST LOOP IN DOFs //
+	////////////////////////
+	// * Compute edge_based_cfl = 2|dLowii|/mi
+	// * Compute umax and umin
+	// * Compute the low order solution
+	// * Compute uDot (depending on uDOT_VIA_HIGH_ORDER_GALERKIN)
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double mi = QH_ML[i];
+	    // compute edge_based_cfl
+	    edge_based_cfl[i] = 2*fabs(edge_based_cfl[i])/mi;
+
+	    // solution at node i
+	    double solni = u_dof_old[i];
+	    
+	    // for the computation of the local bounds
+	    double umaxi = solni;
+	    double umini = solni;
+	    
+	    // loop over the sparsity pattern of the i-th DOF
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+		// solution at node j 
+		double solnj = u_dof_old[j];
+
+		// computation of local bounds
+		if (i != j)
+		  {
+		    umaxi = fmax(solnj,umaxi);
+		    umini = fmin(solnj,umini);
+		  }
+	      }
+	    // Save local bounds 
+	    umax[i] = umaxi;
+	    umin[i] = umini;
+
+	    // compute and save low order solution 
+	    lowOrderSolution[i] = solni - dt/mi * (lowOrderFluxTerm[i] 
+						   - lowOrderDissipativeTerm[i]
+						   - lowOrderBoundaryIntegral[i]);
+	    // compute uDot 
+	    if (uDOT_VIA_HIGH_ORDER_GALERKIN==1)
+	      uDot[i] = -1.0/mi * (-highOrderFluxTerm[i]
+				   - lowOrderBoundaryIntegral[i]);
+	    else
+	      uDot[i] = -1.0/mi * (lowOrderFluxTerm[i]
+				   - lowOrderDissipativeTerm[i]
+				   - lowOrderBoundaryIntegral[i]);
 	  }
+	///////////////////////////////
+	// END OF FIRST LOOP IN DOFs //
+	///////////////////////////////
 	
 	//////////////////////////////
 	// SECOND LOOP ON INTEGRALS //
 	//////////////////////////////
-	// * Compute element based part of element_flux_i
+	// * Compute element based part of element_flux_i and substract low-order flux 
 	// * Compute element inegrals of fluxCorrection as a global vector (only for debugging)
+	// * Compute vVector = inv(element_ML_minus_MC)*element_flux_i
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
 	    //declare local storage for element residual and initialize
@@ -1000,17 +1036,19 @@ namespace proteus
 	    //load elements into global vectors
 	    //
 	    for(int i=0;i<nDOF_test_element;i++)
-	    {
+	      {
 	      int eN_i=eN*nDOF_test_element+i;
 	      int gi = offset_u+stride_u*r_l2g[eN_i];
 
-	      // flux correction (only for debugging)
+	      // flux correction (only for debugging) //
 	      fluxCorrection[gi] += elementFlux[i];
 
+	      // solution and velocity at node i
 	      double solni = u_dof_old[gi];
 	      double u_veli = u_vel_dofs[gi];
 	      double v_veli = v_vel_dofs[gi];
-	      
+
+	      // first part of vector qi
 	      double qi = elementFlux[i] + elementMass[i]*uDot[gi];
 	      
 	      // for flux of low-order method
@@ -1018,31 +1056,22 @@ namespace proteus
 		{
 		  int eN_i_j = eN_i*nDOF_trial_element+j;
 		  int eN_j = eN*nDOF_test_element+j;
-		  int gj = offset_u+stride_u*r_l2g[eN_j];		  
+		  int gj = offset_u+stride_u*r_l2g[eN_j];
+
+		  // solution and velocity at node j
 		  double solnj = u_dof_old[gj];
 		  double u_velj = u_vel_dofs[gj];
 		  double v_velj = v_vel_dofs[gj];
+		  
 		  // low-order flux part of qi
 		  qi -= (CTxElem[eN_i_j]*(u_velj*solnj) + CTyElem[eN_i_j]*(v_velj*solnj));
-
-		  // dissipative matrix dLowElem
-		  dLowElem[eN_i_j] = fmax(fmax(fabs(CxElem[eN_i_j]*u_veli+CyElem[eN_i_j]*v_veli),
-					       fabs(CxElem[eN_i_j]*u_velj+CyElem[eN_i_j]*v_velj)),
-					  fmax(fabs(CTxElem[eN_i_j]*u_veli+CTyElem[eN_i_j]*v_veli),
-					       fabs(CTxElem[eN_i_j]*u_velj+CTyElem[eN_i_j]*v_velj)));
 		}
 	      element_flux_i[eN_i] += qi;
 	    }
-	  }//elements
-	/////////////////////////////////////
-	// END OF SECOND LOOP IN INTEGRALS //
-	/////////////////////////////////////
-	
-	//////////////////////////////
-	// compute element vector v //
-	//////////////////////////////
-	for(int eN=0;eN<nElements_global;eN++) //loop in cells
-	  {
+	    //////////////////////////////
+	    // compute element vector v //
+	    //////////////////////////////
+	    double mean = 0;
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
@@ -1051,209 +1080,101 @@ namespace proteus
 		    int eN_j = eN*nDOF_test_element+j;
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
 		    vVector[eN_i] += inv_element_ML_minus_MC[eN_i_j]*element_flux_i[eN_j];
+		    mean += inv_element_ML_minus_MC[eN_i_j]*element_flux_i[eN_j];
 		  }
 	      }
+	    mean /= nDOF_test_element;
 	    // substract mean
-	    double mean = 0;
-	    for(int i=0;i<nDOF_test_element;i++)
-	      {
-	    	int eN_i = eN*nDOF_test_element+i;
-	    	mean += vVector[eN_i]/nDOF_test_element;
-	      }
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 	    	int eN_i = eN*nDOF_test_element+i;
 	    	vVector[eN_i] -= mean;
 	      }
-	  }
-	////////////////////////////////////////
-	// end of computation of the vector v //
-	////////////////////////////////////////
-
-	//////////////////////////////////////////////////////////
-	// compute the element_flux_qij and the global flux_qij //
-	//////////////////////////////////////////////////////////
+	    // end of computation of the vector v //
+	  }//elements
+	/////////////////////////////////////
+	// END OF SECOND LOOP IN INTEGRALS //
+	/////////////////////////////////////
+	
+	/////////////////////////
+	// THIRD LOOP IN CELLS //
+	/////////////////////////
+	// * compute elementFlux_ij
+	// * compute elementFluxStar_ij and fluxStar_i = sum_el sum_j elementFluxStar_ij
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i];
-		double solni = u_dof_old[gi];
+
+		// get bounds at node i
+		double umini = umin[gi];
+		double umaxi = umax[gi];
 		
 		for(int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_j = eN*nDOF_test_element+j;
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
 		    int gj = offset_u+stride_u*r_l2g[eN_j];
-		    double solnj = u_dof_old[gj];
-		    
-		    element_flux_qij[eN_i_j] = element_MC[eN_i_j]*(vVector[eN_i]-vVector[eN_j]);
-		    element_flux_qij[eN_i_j] += -dLowElem[eN_i_j]*(solnj-solni); //TMP
 
-		    
-		    int jacIndex = csrRowIndeces_CellLoops[eN_i]+csrColumnOffsets_CellLoops[eN_i_j];
-		    flux_qij[jacIndex] += element_flux_qij[eN_i_j];
-		  }
-	      }
-	  }
-	///////////////////////////////////////////////////////
-	// End of computation of element and global flux_qij //
-	///////////////////////////////////////////////////////
+		    // get bounds at node j
+		    double uminj = umin[gj];
+		    double umaxj = umax[gj];
 
-	if (DO_CHECKS==1)
-	  {
-	    /////////////////////////////////////////
-	    // ********** for debugging ********** //
-	    /////////////////////////////////////////
-	    // * Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0
-	    // * Check that sum_j(element_flux_qij) = element_flux_i
-	    // * Check that sum_j(flux_qij) = fluxCorrection[i]
-	    // * Check that sum_i(sum_j(flux_qij)) = 0
-	    for(int eN=0;eN<nElements_global;eN++) //loop in cells
-	      {
-		double sumi_element_flux_i = 0;
-		for(int i=0;i<nDOF_test_element;i++)
-		  {
-		    double sumj_element_flux_qij=0;
-		    int eN_i = eN*nDOF_test_element+i;
-		    
-		    for(int j=0;j<nDOF_trial_element;j++)
+		    element_flux_qij[eN_i_j] += element_MC[eN_i_j]*(vVector[eN_i]-vVector[eN_j]);
+
+		    // compute element flux star
+		    double fij = element_flux_qij[eN_i_j];
+		    double dij = dLowElem[eN_i_j];
+		    double wij = wBarij[eN_i_j];
+		    double wji = wBarji[eN_i_j];
+
+		    if (i!=j)
 		      {
-			int eN_j = eN*nDOF_test_element+j;
-			int eN_i_j = eN_i*nDOF_trial_element+j;
-			sumj_element_flux_qij += element_flux_qij[eN_i_j];
+			if (fij > 0)
+			  {
+			    //fluxStar[gi] += fij;
+			    fluxStar[gi]+=fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+			    //fluxStar[gi]+=fmin(fij,fmax(0,fmin(2*dij*umaxi-wij,wji-2*dij*uminj)));
+			  }
+			else
+			  {
+			    //fluxStar[gi] += fij;
+			    fluxStar[gi]+=fmax(fij,fmax(2*dij*umini-wij,wij-2*dij*umaxj));
+			    //fluxStar[gi]+=fmax(fij,fmin(0,fmax(2*dij*umini-wij,wij-2*dij*umaxj)));
+			  }
 		      }
-		    // Check that sum_j(element_flux_qij) = element_flux_i
-		    if (fabs(element_flux_i[eN_i]-sumj_element_flux_qij) > 1E-13)
-		      {
-			std::cout << "|element_flux_i - sum_j(element_flux_qij)| > 1E-13 ... "
-				  << "\t" 
-				  << fabs(element_flux_i[eN_i]-sumj_element_flux_qij)
-				  << std::endl;
-			abort();
-		      }
-		    sumi_element_flux_i += sumj_element_flux_qij;
-		  }
-		// Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0
-		if (fabs(sumi_element_flux_i)>1E-13)
-		  {
-		    std::cout << "|sum_i(element_flux_i)| > 1E-13 ... "
-			      << "\t"
-			      << fabs(sumi_element_flux_i)
-			      << std::endl;
-		    abort();
-		  }
-	      }
-	    double sumi_sumj_flux_qij = 0;
-	    ij=0;
-	    for (int i=0; i<numDOFs; i++)
-	      {
-		double solni = u_dof_old[i]; // solution at time tn for the ith DOF
-		double u_veli = u_vel_dofs[i];
-		double v_veli = v_vel_dofs[i];
-		
-		double sumj_flux_qij=0;
-		double ith_advection_fluxCorrection = 0.;
-		double ith_dissipative_fluxCorrection = 0.;
-		for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
-		  {
-		    int j = colind[offset];
-		    double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-		    double u_velj = u_vel_dofs[j];
-		    double v_velj = v_vel_dofs[j];
-		    double dij = 0;
-		    
-		    sumj_flux_qij += flux_qij[ij];
-		    
-		    // compute ith advective and dissipative terms (to add to fluxCorrection[i])
-		    ith_advection_fluxCorrection += CTx[ij]*(u_velj*solnj) + CTy[ij]*(v_velj*solnj);
-		    dij = fmax(fmax(fabs(Cx[ij]*u_veli + Cy[ij]*v_veli),
-				    fabs(Cx[ij]*u_velj + Cy[ij]*v_velj)),
-			       fmax(fabs(CTx[ij]*u_veli + CTy[ij]*v_veli),
-				    fabs(CTx[ij]*u_velj + CTy[ij]*v_velj)));
-		    ith_dissipative_fluxCorrection += dij*(solnj-solni);
-		    
-		    // update index
-		    ij+=1;
-		  }
-		double mi = QH_ML[i];
-		fluxCorrection[i] += (mi*uDot[i]
-				      - ith_advection_fluxCorrection
-				      - ith_dissipative_fluxCorrection);
-		// * Check that sum_j(flux_qij) = fluxCorrection[i]
-		if (fabs(sumj_flux_qij - fluxCorrection[i])>1E-10)
-		  {
-		    std::cout << "|sumj_flux_qij - fluxCorrection[i]| > 1E-10 ..."
-			      << "\t" 
-			      << fabs(sumj_flux_qij - fluxCorrection[i])
-			      << std::endl;
-		    abort();
-		  }
-		sumi_sumj_flux_qij += sumj_flux_qij;
-	      }
-	    // * Check that sum_i(sum_j(flux_qij)) = 0
-	    if (fabs(sumi_sumj_flux_qij)>1E-13)
-	      {
-		std::cout << "|sum_i(sum_j(flux_qij))| > 1E-13 ... "
-			  << "\t"
-			  << fabs(sumi_sumj_flux_qij)
-			  << std::endl;
-		abort();
-	      }
-	    //////////////////////////////////////////
-	    // *** END OF Section for debugging *** //
-	    //////////////////////////////////////////
-	  }
-	
+		  } //j
+	      } //i
+	  } //element
+	////////////////////////////////
+	// END OF THIRD LOOP IN CELLS //
+	////////////////////////////////
+
 	///////////////////////
 	// LAST LOOP IN DOFs //
 	///////////////////////
-	// * Compute the final solution and get the solution at DOFs (for visualization)
-	ij = 0;
+	// * Compute the final solution 
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double ith_galerkin_fluxCorrection = 0.;
-	    double ith_limited_fluxCorrection = 0.;
-	    double ith_flux_term = 0.;
 	    double solni=u_dof_old[i];
-	    
-	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
-	      {
-		int j = colind[offset];
-		double fij = flux_qij[ij];
-		double dij = dLow[ij];
-		
-		double fStarij = 0.0;
-		if (i!=j)
-		  {
-		    if (fij > 0)
-		      fStarij = fmin(fij,fmin(2*dij*umax[i] - wij[ij], wji[ij] - 2*dij*umin[j]));
-		    else
-		      fStarij = fmax(fij,fmax(2*dij*umin[i] - wij[ij], wji[ij] - 2*dij*umax[j]));
-		  }
-
-		// compute Galerkin and limited flux
-		ith_galerkin_fluxCorrection += flux_qij[ij];
-		ith_limited_fluxCorrection += fStarij;
-
-		// compute high-order solution with entropy viscosity //
-		double solnj = u_dof_old[j];
-		double u_velj = u_vel_dofs[j];
-		double v_velj = v_vel_dofs[j];
-		ith_flux_term += Cx[ij]*(u_velj*solnj) + Cy[ij]*(v_velj*solnj);
-		
-		ij+=1;
-	      }
 	    double mi = QH_ML[i];
+	    
+	    // compute Galerkin and limited flux
+	    ith_galerkin_fluxCorrection =
+	      fluxCorrection[i] + (mi*uDot[i]                       
+				   +lowOrderFluxTerm[i]             
+				   -lowOrderDissipativeTerm[i]      
+				   -lowOrderBoundaryIntegral[i]);
+
+	    
 
 	    // COMPUTE SOLUTION //
-	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxCorrection[i]; // for debugging
+	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_galerkin_fluxCorrection;
 	    //globalResidual[i] = lowOrderSolution[i];
-
-	    
-	    globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_galerkin_fluxCorrection;
-	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_limited_fluxCorrection;
+	    globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxStar[i];
 	  }
 	//////////////////////////////
 	// END OF LAST LOOP IN DOFs //
@@ -1274,14 +1195,116 @@ namespace proteus
 		    quantDOFs[i] += intBernMat[ij]*globalResidual[j];
 		    ij+=1;
 		  }
-		//std::cout << quantDOFs[i]
-		//	  << "\t"
-		//	  << globalResidual[i]
-		//	  << std::endl;
 	      }
 	  }
       }
 
+	/* if (DO_CHECKS==1) */
+	/*   { */
+	/*     ///////////////////////////////////////// */
+	/*     // ********** for debugging ********** // */
+	/*     ///////////////////////////////////////// */
+	/*     // * Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0 */
+	/*     // * Check that sum_j(element_flux_qij) = element_flux_i */
+	/*     // * Check that sum_j(flux_qij) = fluxCorrection[i] */
+	/*     // * Check that sum_i(sum_j(flux_qij)) = 0 */
+	/*     for(int eN=0;eN<nElements_global;eN++) //loop in cells */
+	/*       { */
+	/* 	double sumi_element_flux_i = 0; */
+	/* 	for(int i=0;i<nDOF_test_element;i++) */
+	/* 	  { */
+	/* 	    double sumj_element_flux_qij=0; */
+	/* 	    int eN_i = eN*nDOF_test_element+i; */
+		    
+	/* 	    for(int j=0;j<nDOF_trial_element;j++) */
+	/* 	      { */
+	/* 		int eN_j = eN*nDOF_test_element+j; */
+	/* 		int eN_i_j = eN_i*nDOF_trial_element+j; */
+	/* 		sumj_element_flux_qij += element_flux_qij[eN_i_j]; */
+	/* 	      } */
+	/* 	    // Check that sum_j(element_flux_qij) = element_flux_i */
+	/* 	    if (fabs(element_flux_i[eN_i]-sumj_element_flux_qij) > 1E-13) */
+	/* 	      { */
+	/* 		std::cout << "|element_flux_i - sum_j(element_flux_qij)| > 1E-13 ... " */
+	/* 			  << "\t"  */
+	/* 			  << fabs(element_flux_i[eN_i]-sumj_element_flux_qij) */
+	/* 			  << std::endl; */
+	/* 		abort(); */
+	/* 	      } */
+	/* 	    sumi_element_flux_i += sumj_element_flux_qij; */
+	/* 	  } */
+	/* 	// Check that element_flux_i is massless; i.e., that sum_i(element_flux_i)=0 */
+	/* 	if (fabs(sumi_element_flux_i)>1E-13) */
+	/* 	  { */
+	/* 	    std::cout << "|sum_i(element_flux_i)| > 1E-13 ... " */
+	/* 		      << "\t" */
+	/* 		      << fabs(sumi_element_flux_i) */
+	/* 		      << std::endl; */
+	/* 	    abort(); */
+	/* 	  } */
+	/*       } */
+	/*     double sumi_sumj_flux_qij = 0; */
+	/*     ij=0; */
+	/*     for (int i=0; i<numDOFs; i++) */
+	/*       { */
+	/* 	double solni = u_dof_old[i]; // solution at time tn for the ith DOF */
+	/* 	double u_veli = u_vel_dofs[i]; */
+	/* 	double v_veli = v_vel_dofs[i]; */
+		
+	/* 	double sumj_flux_qij=0; */
+	/* 	double ith_advection_fluxCorrection = 0.; */
+	/* 	double ith_dissipative_fluxCorrection = 0.; */
+	/* 	for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++) */
+	/* 	  { */
+	/* 	    int j = colind[offset]; */
+	/* 	    double solnj = u_dof_old[j]; // solution at time tn for the jth DOF */
+	/* 	    double u_velj = u_vel_dofs[j]; */
+	/* 	    double v_velj = v_vel_dofs[j]; */
+	/* 	    double dij = 0; */
+		    
+	/* 	    sumj_flux_qij += flux_qij[ij]; */
+		    
+	/* 	    // compute ith advective and dissipative terms (to add to fluxCorrection[i]) */
+	/* 	    ith_advection_fluxCorrection += CTx[ij]*(u_velj*solnj) + CTy[ij]*(v_velj*solnj); */
+	/* 	    dij = fmax(fmax(fabs(Cx[ij]*u_veli + Cy[ij]*v_veli), */
+	/* 			    fabs(Cx[ij]*u_velj + Cy[ij]*v_velj)), */
+	/* 		       fmax(fabs(CTx[ij]*u_veli + CTy[ij]*v_veli), */
+	/* 			    fabs(CTx[ij]*u_velj + CTy[ij]*v_velj))); */
+	/* 	    ith_dissipative_fluxCorrection += dij*(solnj-solni); */
+		    
+	/* 	    // update index */
+	/* 	    ij+=1; */
+	/* 	  } */
+	/* 	double mi = QH_ML[i]; */
+	/* 	fluxCorrection[i] += (mi*uDot[i] */
+	/* 			      - ith_advection_fluxCorrection */
+	/* 			      - ith_dissipative_fluxCorrection); */
+	/* 	// * Check that sum_j(flux_qij) = fluxCorrection[i] */
+	/* 	if (fabs(sumj_flux_qij - fluxCorrection[i])>1E-10) */
+	/* 	  { */
+	/* 	    std::cout << "|sumj_flux_qij - fluxCorrection[i]| > 1E-10 ..." */
+	/* 		      << "\t"  */
+	/* 		      << fabs(sumj_flux_qij - fluxCorrection[i]) */
+	/* 		      << std::endl; */
+	/* 	    abort(); */
+	/* 	  } */
+	/* 	sumi_sumj_flux_qij += sumj_flux_qij; */
+	/*       } */
+	/*     // * Check that sum_i(sum_j(flux_qij)) = 0 */
+	/*     if (fabs(sumi_sumj_flux_qij)>1E-13) */
+	/*       { */
+	/* 	std::cout << "|sum_i(sum_j(flux_qij))| > 1E-13 ... " */
+	/* 		  << "\t" */
+	/* 		  << fabs(sumi_sumj_flux_qij) */
+	/* 		  << std::endl; */
+	/* 	abort(); */
+	/*       } */
+	/*     ////////////////////////////////////////// */
+	/*     // *** END OF Section for debugging *** // */
+	/*     ////////////////////////////////////////// */
+	/*   } */
+
+      
       void calculateResidualEntropyVisc(//element
 					double dt,
 					double* mesh_trial_ref,
@@ -1379,11 +1402,11 @@ namespace proteus
 	////////////////////////////////
 	// Zero out auxiliary vectors //
 	////////////////////////////////
-	boundaryIntegral.resize(numDOFs,0.0);
+	highOrderBoundaryIntegral.resize(numDOFs,0.0);
 
 	// for entropy viscosity
 	EntVisc.resize(numDOFs,0.0);
-	highOrderAdvection.resize(numDOFs,0.0);
+	highOrderFluxTerm.resize(numDOFs,0.0);
 	consistentTimeDerivative.resize(numDOFs,0.0);
 	    
 	///////////////////
@@ -1463,7 +1486,7 @@ namespace proteus
 	      {
 		int eN_i = eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
-		boundaryIntegral[gi] += elementBoundaryFluxHighOrder[i];
+		highOrderBoundaryIntegral[gi] += elementBoundaryFluxHighOrder[i];
 	      }
 	  }//ebNE
 	///////////////////////////
@@ -1631,7 +1654,7 @@ namespace proteus
 		int gi = offset_u+stride_u*r_l2g[eN_i];
 		
 		consistentTimeDerivative[gi] += elementTimeDerivative[i];
-		highOrderAdvection[gi] += elementFluxTerm[i];
+		highOrderFluxTerm[gi] += elementFluxTerm[i];
 	      }//i
 	  }//elements
 	////////////////////////////////////
@@ -1670,12 +1693,12 @@ namespace proteus
 
 	    //globalResidual[i] = solni - dt/mi*(ith_flux_term
 	    //				       -ith_EntVisc_dissipative_term);
-	    globalResidual[i] = solni - dt/mi*(-highOrderAdvection[i]
-	    				       + boundaryIntegral[i]
+	    globalResidual[i] = solni - dt/mi*(-highOrderFluxTerm[i]
+	    				       + highOrderBoundaryIntegral[i]
 	    				       - ith_EntVisc_dissipative_term);
 
-	    //globalResidual[i] = consistentTimeDerivative[i] + dt*(-highOrderAdvection[i]
-	    //							  + boundaryIntegral[i]
+	    //globalResidual[i] = consistentTimeDerivative[i] + dt*(-highOrderFluxTerm[i]
+	    //							  + highOrderBoundaryIntegral[i]
 	    //							  -ith_EntVisc_dissipative_term);
 	  }
 	//////////////////////////////
