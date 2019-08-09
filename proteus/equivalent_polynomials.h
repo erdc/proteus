@@ -291,7 +291,9 @@ namespace equivalent_polynomials
           }
         //todo: decide if we should just use a consistant normal
         if (phi_dof_corrected[i]*phi_dof[i] < 0.0)
-          phi_dof_corrected[i]*=-1.0;
+          {
+            phi_dof_corrected[i]*=-1.0;
+          }
       }
   }
   
