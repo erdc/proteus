@@ -693,6 +693,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.xGradRHS = None
         self.yGradRHS = None
+
+        self.EntVisc = None
+        self.uHDot = None
     #
     
     def getMetricsAtEOS(self):
@@ -1328,7 +1331,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.nDOF_trial_element[0]), 'd')
             self.xGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
             self.yGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
+
+            self.EntVisc = numpy.zeros(self.u[0].dof.shape, 'd')
+            self.uHDot = numpy.zeros(self.u[0].dof.shape, 'd')
             
+            self.calculateResidual = self.blendedSpaces.calculateResidual
+            #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
+            self.calculateJacobian = self.blendedSpaces.calculateJacobian
+
             
             ## FOR DEBUGGING ##
             # compare lumped mass matrices ? #
@@ -1404,10 +1414,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #if self.forceStrongConditions:
         #    for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
         #        self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN], self.timeIntegration.t)
-
-        #self.calculateResidual = self.blendedSpaces.calculateResidual
-        self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
-        self.calculateJacobian = self.blendedSpaces.calculateJacobian
 
         # init to zero some vectors
         self.dLow.fill(0.0)
@@ -1501,6 +1507,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.QH_ML,
             # inverse of dissipative mass matrix
             self.inv_element_ML_minus_MC,
+            self.uHDot,
+            self.EntVisc,
             # C-matrices
             self.Cx,
             self.Cy,

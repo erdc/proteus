@@ -36,8 +36,6 @@ namespace proteus
     std::valarray<double> highOrderBoundaryIntegral;
     std::valarray<double> highOrderFluxTerm;
     std::valarray<double> consistentTimeDerivative;
-    // for entropy viscosity //
-    std::valarray<double> EntVisc;
     // For limiting //
     std::valarray<double> umax;
     std::valarray<double> umin;
@@ -127,6 +125,9 @@ namespace proteus
 				   double* QH_ML,
 				   // inverse of dissipative mass matrix
 				   double* inv_element_ML_minus_MC,
+				   // high order stab
+				   double* uHDot,
+				   double* EntVisc,
 				   // C-matrices
 				   double* Cx,
 				   double* Cy,
@@ -220,6 +221,9 @@ namespace proteus
 				   double* QH_ML,
 				   // inverse of dissipative mass matrix
 				   double* inv_element_ML_minus_MC,
+				   // high order stab
+				   double* uHDot,
+				   double* EntVisc,
 				   // C-matrices
 				   double* Cx,
 				   double* Cy,
@@ -313,6 +317,9 @@ namespace proteus
 						    double* QH_ML,
 						    // inverse of dissipative mass matrix
 						    double* inv_element_ML_minus_MC,
+						    // high order stab
+						    double* uHDot,
+						    double* EntVisc,
 						    // C-matrices
 						    double* Cx,
 						    double* Cy,
@@ -590,9 +597,9 @@ namespace proteus
 			     double* QH_ML,
 			     // inverse of dissipative mass matrix
 			     double* inv_element_ML_minus_MC,
-			     // low order vectors
-			     //
-			     //double* lowOrderDissipativeTerm,
+			     // high order stab
+			     double* uHDot,
+			     double* EntVisc,
 			     // C-matrices
 			     double* Cx,
 			     double* Cy,
@@ -864,7 +871,8 @@ namespace proteus
 			dLowElemii -= dLowElemij;
 
 			// save anti-dissipative flux into element_flux_qij
-			element_flux_qij[eN_i_j] = -dLowElemij*(solnj-solni);
+			element_flux_qij[eN_i_j] =
+			  (dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
 			
 			// compute low order dissipative term 
 			lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
@@ -930,7 +938,7 @@ namespace proteus
 	    // Save local bounds 
 	    umax[i] = umaxi;
 	    umin[i] = umini;
-
+	    
 	    // compute and save low order solution 
 	    lowOrderSolution[i] = solni - dt/mi * (lowOrderFluxTerm[i] 
 						   - lowOrderDissipativeTerm[i]
@@ -943,6 +951,7 @@ namespace proteus
 	      uDot[i] = -1.0/mi * (lowOrderFluxTerm[i]
 				   - lowOrderDissipativeTerm[i]
 				   - lowOrderBoundaryIntegral[i]);
+	    uDot[i] = uHDot[i];
 	  }
 	///////////////////////////////
 	// END OF FIRST LOOP IN DOFs //
@@ -1111,7 +1120,7 @@ namespace proteus
 		// get bounds at node i
 		double umini = umin[gi];
 		double umaxi = umax[gi];
-		
+
 		for(int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_j = eN*nDOF_test_element+j;
@@ -1134,15 +1143,21 @@ namespace proteus
 		      {
 			if (fij > 0)
 			  {
-			    //fluxStar[gi] += fij;
-			    fluxStar[gi]+=fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
-			    //fluxStar[gi]+=fmin(fij,fmax(0,fmin(2*dij*umaxi-wij,wji-2*dij*uminj)));
+			    //if (2*dij*umaxi-wij < -1E-14)
+			    //{
+			    //	std::cout << 2*dij*umaxi-wij << std::endl;
+			    //	abort();
+			    //}
+			    
+			    //fluxStar[gi] = 0; // low-order method
+			    fluxStar[gi] += fij; // high-order entropy viscosity
+			    //fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj)); 
 			  }
 			else
 			  {
-			    //fluxStar[gi] += fij;
-			    fluxStar[gi]+=fmax(fij,fmax(2*dij*umini-wij,wij-2*dij*umaxj));
-			    //fluxStar[gi]+=fmax(fij,fmin(0,fmax(2*dij*umini-wij,wij-2*dij*umaxj)));
+			    //fluxStar[gi] = 0;
+			    fluxStar[gi] += fij;
+			    //fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
 			  }
 		      }
 		  } //j
@@ -1386,6 +1401,9 @@ namespace proteus
 					double* QH_ML,
 					// inverse of dissipative mass matrix
 					double* inv_element_ML_minus_MC,
+					// high order stab
+					double* uHDot,
+					double* EntVisc,
 					// C-matrices
 					double* Cx,
 					double* Cy,
@@ -1405,7 +1423,6 @@ namespace proteus
 	highOrderBoundaryIntegral.resize(numDOFs,0.0);
 
 	// for entropy viscosity
-	EntVisc.resize(numDOFs,0.0);
 	highOrderFluxTerm.resize(numDOFs,0.0);
 	consistentTimeDerivative.resize(numDOFs,0.0);
 	    
@@ -1637,7 +1654,8 @@ namespace proteus
 		
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
-		    elementTimeDerivative[i] += (unp1-un)*u_test_dV[i];
+		    //elementTimeDerivative[i] += (unp1-un)*u_test_dV[i];
+		    elementTimeDerivative[i] += unp1*u_test_dV[i];
 		    
 		    register int i_nSpace=i*nSpace;
 		    elementFluxTerm[i] += un*ck.NumericalDiffusion(1.0,
@@ -1693,13 +1711,18 @@ namespace proteus
 
 	    //globalResidual[i] = solni - dt/mi*(ith_flux_term
 	    //				       -ith_EntVisc_dissipative_term);
-	    globalResidual[i] = solni - dt/mi*(-highOrderFluxTerm[i]
-	    				       + highOrderBoundaryIntegral[i]
-	    				       - ith_EntVisc_dissipative_term);
+	    //globalResidual[i] = solni - dt/mi*(-highOrderFluxTerm[i]
+	    //				       + highOrderBoundaryIntegral[i]
+	    //				       - ith_EntVisc_dissipative_term);
 
 	    //globalResidual[i] = consistentTimeDerivative[i] + dt*(-highOrderFluxTerm[i]
 	    //							  + highOrderBoundaryIntegral[i]
-	    //							  -ith_EntVisc_dissipative_term);
+	    //							  - ith_EntVisc_dissipative_term);
+
+	    globalResidual[i] = consistentTimeDerivative[i] + (-highOrderFluxTerm[i]
+							       + highOrderBoundaryIntegral[i]);
+							       //-ith_EntVisc_dissipative_term);
+	    
 	  }
 	//////////////////////////////
 	// END OF LAST LOOP IN DOFs //
@@ -1809,6 +1832,9 @@ namespace proteus
 					      double* QH_ML,
 					      // inverse of dissipative mass matrix
 					      double* inv_element_ML_minus_MC,
+					      // high order stab
+					      double* uHDot,
+					      double* EntVisc,
 					      // C-matrices
 					      double* Cx,
 					      double* Cy,

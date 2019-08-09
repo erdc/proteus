@@ -1099,8 +1099,30 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
         logEvent(memory("Newton","Newton"),level=4)
 
         # Nonlinear solved finished.
-        # L2 projection of corrected VOF solution at quad points
+        # L2 projection of corrected VOF solution at quad points        
+#
 
+class highOrderLimSolver(Newton):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        #################
+        # COMPUTE uHDot # using consistent mass matrix (and no stabilization)
+        #################
+        # also compute self.F.EntVisc
+        self.F.calculateResidual = self.F.blendedSpaces.calculateResidualEntropyVisc
+        Newton.solve(self,u,r,b,par_u,par_r)
+        self.F.uHDot[:] = self.F.u[0].dof
+        #self.F.u[0].dof[:] = self.F.u_dof_old
+
+        ######################
+        # CALCULATE SOLUTION #
+        ######################
+        self.F.calculateResidual = self.F.blendedSpaces.calculateResidual
+        self.computeResidual(u,r,b)
+        u[:] = r
+        self.F.u[0].dof[:]=u
+        #self.computeResidual(u,r,b)
+#
+    
 class myLinearSolver(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         symmetrize = True
@@ -3261,6 +3283,8 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
         levelNonlinearSolverType = NewtonWithL2ProjectionForMassCorrection
     elif (levelNonlinearSolverType == CLSVOFNewton):
         levelNonlinearSolverType = CLSVOFNewton
+    elif (levelNonlinearSolverType == highOrderLimSolver):
+        levelNonlinearSolverType = highOrderLimSolver
     elif (levelNonlinearSolverType == myLinearSolver):
         levelNonlinearSolverType = myLinearSolver
     elif (multilevelNonlinearSolverType == Newton or
