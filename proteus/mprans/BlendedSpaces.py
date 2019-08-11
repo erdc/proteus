@@ -696,6 +696,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.EntVisc = None
         self.uHDot = None
+
+        self.numIterationsList = []
+        self.numIterations = numpy.zeros(1)
     #
     
     def getMetricsAtEOS(self):
@@ -1311,6 +1314,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def compute_matrices(self):
         if self.cterm_global is None:
+            self.file=open("numIterations.txt",'w')
+            
             self.dLow = np.zeros(self.nnz,'d')
             self.compute_c_matrices()
             if self.coefficients.GET_POINT_VALUES==1:
@@ -1520,7 +1525,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.cterm_transpose[1],
             self.dLowElem,
             self.xGradRHS,
-            self.yGradRHS)
+            self.yGradRHS,
+            self.numIterations)
 
         #import pdb; pdb.set_trace()
         if self.forceStrongConditions:

@@ -52,11 +52,9 @@ namespace proteus
     std::valarray<double> fluxCorrection;
 
     // NEW METHOD //
-    std::valarray<double> sumEl_miEl_times_pos_uiEl;
-    std::valarray<double> sumEl_miEl_times_neg_uiEl;
-
-    std::valarray<double> alpha_pos;
-    std::valarray<double> alpha_neg;
+    std::valarray<double> Ppos, Pneg;
+    std::valarray<double> Rpos, Rneg;
+    std::valarray<double> fluxToCheckConvergence;
     
     virtual ~BlendedSpaces_base(){}
     virtual void calculateResidual(//element
@@ -154,7 +152,8 @@ namespace proteus
 				   double* CTyElem,
 				   double* dLowElem,
 				   double* xGradRHS,
-				   double* yGradRHS)=0;
+				   double* yGradRHS,
+				   double* numIterations)=0;
     virtual void calculateResidualEntropyVisc(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -250,7 +249,8 @@ namespace proteus
 				   double* CTyElem,
 				   double* dLowElem,
 				   double* xGradRHS,
-				   double* yGradRHS)=0;
+				   double* yGradRHS,
+				   double* numIterations)=0;
     virtual void calculateRHSGradientReconstruction(//element
 						    double dt,
 						    double* mesh_trial_ref,
@@ -346,7 +346,8 @@ namespace proteus
 						    double* CTyElem,
 						    double* dLowElem,
 						    double* xGradRHS,
-						    double* yGradRHS)=0;    
+						    double* yGradRHS,
+						    double* numIterations)=0;    
     virtual void calculateJacobian(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -531,116 +532,85 @@ namespace proteus
 	MULT(RLeft,aux,DTensor);
       }
 
-      inline void compute_sumEl_miEl_times_uiEl(int nElements_global,
-						int offset_u,
-						int stride_u,
-						int* r_l2g,
-						double* QH_ML,
-						double* element_flux_i,
-						double dt)
+      inline void compute_R_vectors(int nElements_global,
+				    int offset_u,
+				    int stride_u,
+				    int* r_l2g,
+				    int numDOFs,
+				    double* QH_ML,
+				    double* element_flux_i,
+				    double dt)
       {
+	// compute Ppos and Pneg vectors
+	Ppos.resize(numDOFs,0.0);
+	Pneg.resize(numDOFs,0.0);
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i];
-
-		double mi = QH_ML[gi];
+		
 		double fiEl = element_flux_i[eN_i];
-		double miEl = elementML[eN_i];
+		Ppos[gi] += fmax(0.0,fiEl);
+		Pneg[gi] += fmin(0.0,fiEl);
+	      }
+	  }
 
-		double uiEl = lowOrderSolution[gi] + dt/miEl*fiEl;
-		element_u_i[eN_i] = uiEl;
-
-		sumEl_miEl_times_pos_uiEl[gi] += miEl*fmax(0.0,uiEl);
-		sumEl_miEl_times_neg_uiEl[gi] += miEl*fmin(0.0,uiEl);		  
-	      }	    
-	  }	
-      }
-      
-      inline void compute_alpha_vectors(int numDOFs,
-					double* QH_ML)
-      {
+	// compute the Rpos and Rneg vectors
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double umaxi = umax[i];
 	    double umini = umin[i];
-	    
 	    double mi = QH_ML[i];
-	    double uHi = 1.0/mi*(sumEl_miEl_times_pos_uiEl[i]+sumEl_miEl_times_neg_uiEl[i]);
-	    
+	    double uLowi = lowOrderSolution[i];
+
+	    double uHi = uLowi + dt/mi*(Ppos[i]+Pneg[i]);
+
 	    if (umini <= uHi && uHi <= umaxi)
 	      {
-		alpha_pos[i] = 1.0;
-		alpha_neg[i] = 1.0;
+		Rpos[i]=1.0;
+		Rneg[i]=1.0;
 	      }
 	    else if (uHi > umaxi)
 	      {
-		alpha_neg[i] = 1.0;
-
-		if (sumEl_miEl_times_pos_uiEl[i]==0)
-		  alpha_pos[i]=0.0;
+		Rneg[i] = 1.0;
+		
+		if (Ppos[i] == 0)
+		  Rpos[i]=1.0;
 		else
-		  alpha_pos[i] =
-		    (mi*umaxi-sumEl_miEl_times_neg_uiEl[i])/(sumEl_miEl_times_pos_uiEl[i]);
-		alpha_pos[i] = fmax(0.0,alpha_pos[i]);
+		  Rpos[i] = mi*(umaxi-uLowi)/dt/Ppos[i];
+		Rpos[i] = fmin(1.0,fmax(0.0,Rpos[i]));
 
-		//if (alpha_pos[i] > 1.0 || alpha_pos[i] < 0.0)
+		//if (Rpos[i] > 1.0 || Rpos[i] < 0.0)
 		//{
-		//  std::cout << "alpha_pos[i] > 1.0 || alpha_pos[i] < 0.0" << std::endl;
-		//  std::cout << alpha_pos[i] << std::endl;
+		//  std::cout << "Rpos[i] > 1.0 || Rpos[i] < 0.0" << std::endl;
+		//  std::cout << Rpos[i] << std::endl;
+		//  std::cout << umaxi-uLowi << "\t"
+		//	      << mi*(umaxi-uLowi) << "\t"
+		//	      << dt*Ppos[i] << std::endl;
 		//  abort();
 		//}
 	      }
 	    else
 	      {
-		alpha_pos[i] = 1.0;
+		Rpos[i] = 1.0;
 		
-		if (sumEl_miEl_times_neg_uiEl[i]==0)
-		  alpha_neg[i]=0;
+		if (Pneg[i]==0)
+		  Rneg[i]=1.0;
 		else
-		  alpha_neg[i] =
-		    (mi*umini-sumEl_miEl_times_pos_uiEl[i])/(sumEl_miEl_times_neg_uiEl[i]);
-		alpha_neg[i] = fmax(0.0,alpha_neg[i]);
-
-		//if (alpha_neg[i] > 1.0 || alpha_neg[i] < 0.0)
-		//{
-		//  std::cout << "alpha_neg[i] > 1.0 || alpha_neg[i] < 0.0" << std::endl;
-		//  std::cout << lowOrderSolution[i] << std::endl;
-		//  std::cout << uHi - umini << std::endl;
-		//  std::cout << 1-alpha_neg[i] << std::endl;
-		//  std::cout << mi*umini << "\t"
-		//	      << mi << "\t"
-		//	      << umini << "\t"
-		//	      << sumEl_miEl_times_pos_uiEl[i] << "\t"
-		//	      << sumEl_miEl_times_neg_uiEl[i] << "\t"
-		//	      << std::endl;
-		//  std::cout <<  mi*umini-sumEl_miEl_times_pos_uiEl[i] << std::endl;
-		//  abort();
-		//}
+		  Rneg[i] = mi*(umini-uLowi)/dt/Pneg[i];
+		
+		Rneg[i] = fmin(1.0,fmax(0.0,Rneg[i]));
 	      }
 	  }
       }
-
-      inline void update_element_flux_i_from_elementFluxStar(int nElements_global,
-							     double* element_flux_i)
-      {
-	for(int eN=0;eN<nElements_global;eN++) //loop in cells
-	  {
-	    for(int i=0;i<nDOF_test_element;i++)
-	      {
-		int eN_i = eN*nDOF_test_element+i;
-		element_flux_i[eN_i] = elementFluxStar[eN_i];
-	      }
-	  }
-      }
-      
+            
       inline void compute_element_flux_star(int nElements_global,
 					    int offset_u,
 					    int stride_u,
 					    int* r_l2g,
-					    double dt,
+					    double* element_flux_i,
 					    bool correct_mass)
       {
 	// * compute elementFlux_ij
@@ -653,14 +623,10 @@ namespace proteus
 	      {
 		int eN_i = eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i];
-
-		double uLowi = lowOrderSolution[gi];
-		double uiEl = element_u_i[eN_i];
-		double miEl = elementML[eN_i];
-		double uTildeiEl = alpha_pos[gi]*fmax(0,uiEl) + alpha_neg[gi]*fmin(0,uiEl);
-
-		double fluxTildeiEl = miEl*(uTildeiEl - uLowi)/dt;
-	       
+		
+		double fiEl = element_flux_i[eN_i];
+		double fluxTildeiEl = Rpos[gi]*fmax(0.0,fiEl) + Rneg[gi]*fmin(0.0,fiEl);
+  
 		posMassElementFluxStar += fmax(0.0,fluxTildeiEl);
 		negMassElementFluxStar += fmin(0.0,fluxTildeiEl);
 
@@ -691,22 +657,64 @@ namespace proteus
 		      }
 		  }
 	      }
-	    // Compute fluxStar based on limited flux
-	    //for(int i=0;i<nDOF_test_element;i++)
-	    //{
-	    //	int eN_i = eN*nDOF_test_element+i;
-	    //	int gi = offset_u+stride_u*r_l2g[eN_i];
-	    //	fluxStar[gi] += elementFluxStar[eN_i];
-	    //	newMass += elementFluxStar[eN_i];
-	    //}
-	    // check that the limited fluxes are still massless in every element
-	    //if (false)
-	    //if (fabs(newMass) > 1E-14)
-	    //	{
-	    //	  std::cout << fabs(newMass) << std::endl;
-	    //	  abort();
-	    //	}
+	    // check mass
+	    if (true)
+	      {
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    int eN_i = eN*nDOF_test_element+i;
+		    newMass += elementFluxStar[eN_i];
+		  }
+		if (fabs(newMass) > 1E-14)
+		  {
+		    std::cout << "Loss in mass at some element: " << std::endl;
+		    std::cout << fabs(newMass) << std::endl;
+		    abort();
+		  }
+	      }
 	  }
+      }
+
+      inline void update_element_flux_i_from_elementFluxStar(int nElements_global,
+							     int numDOFs,
+							     int offset_u,
+							     int stride_u,
+							     int* r_l2g,
+							     double* element_flux_i)
+      {
+	fluxToCheckConvergence.resize(numDOFs,0.0);
+	for(int eN=0;eN<nElements_global;eN++) //loop in cells
+	  {
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		int eN_i = eN*nDOF_test_element+i;
+		int gi = offset_u+stride_u*r_l2g[eN_i];
+		
+		element_flux_i[eN_i] = elementFluxStar[eN_i];
+		fluxToCheckConvergence[gi] += elementFluxStar[eN_i];
+	      }
+	  }
+      }
+      
+      inline bool has_iterative_process_converged(int numDOFs,
+						  double* QH_ML,
+						  double dt)
+      {
+	bool converged=true;
+	double tol=1E-14;
+	
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double mi = QH_ML[i];
+	    double umini = umin[i];
+	    double umaxi = umax[i];
+	    
+	    double uHi = lowOrderSolution[i] + dt/mi*fluxToCheckConvergence[i];
+	    
+	    if (uHi > umaxi+tol || uHi < umini-tol)
+	      converged = false;
+	  }
+	return converged;
       }
       
       void calculateResidual(//element
@@ -804,7 +812,8 @@ namespace proteus
 			     double* CTyElem,
 			     double* dLowElem,
 			     double* xGradRHS,
-			     double* yGradRHS)
+			     double* yGradRHS,
+			     double* numIterations)
       {
 	//
 	//loop over elements to compute volume integrals and load them into element and global res.
@@ -847,12 +856,15 @@ namespace proteus
 
 	element_u_i.resize(nElements_global*nDOF_test_element,0.0);
 
-	sumEl_miEl_times_pos_uiEl.resize(numDOFs,0.0);
-	sumEl_miEl_times_neg_uiEl.resize(numDOFs,0.0);
+	
+	Rpos.resize(numDOFs,0.0);
+	Rneg.resize(numDOFs,0.0);
 
-	alpha_pos.resize(numDOFs,0.0);
-	alpha_neg.resize(numDOFs,0.0);	
-		
+	Ppos.resize(numDOFs,0.0);
+	Pneg.resize(numDOFs,0.0);
+
+
+	
 	// for debugging //
 	fluxCorrection.resize(numDOFs,0.0);	
 	int ij=0;
@@ -1355,135 +1367,122 @@ namespace proteus
 
 
 	// NEW METHOD //
-	double tol=1E-3;
-	int num_iterations=100;
-	//bool continue_cycle=true;
-	for (int iter=0; iter<num_iterations; iter++)
-	  //while(continue_cycle)
+	int num_iterations=0;
+	int max_num_iterations=100;
+	bool converged=false;
+	bool finish_iterations=false;
+	while(finish_iterations==false)
 	  {
+	    num_iterations++;
 	    //continue_cycle=false;
-	    sumEl_miEl_times_pos_uiEl.resize(numDOFs,0.0);
-	    sumEl_miEl_times_neg_uiEl.resize(numDOFs,0.0);
-	    compute_sumEl_miEl_times_uiEl(nElements_global,
-					  offset_u,
-					  stride_u,
-					  r_l2g,
-					  QH_ML,
-					  element_flux_i,
-					  dt);
-	    compute_alpha_vectors(numDOFs,QH_ML);
+	    compute_R_vectors(nElements_global,
+			      offset_u,
+			      stride_u,
+			      r_l2g,
+			      numDOFs,
+			      QH_ML,
+			      element_flux_i,
+			      dt);
 	    compute_element_flux_star(nElements_global,
 				      offset_u,
 				      stride_u,
 				      r_l2g,
-				      dt,
+				      element_flux_i,
 				      true);
 	    update_element_flux_i_from_elementFluxStar(nElements_global,
+						       numDOFs,
+						       offset_u,
+						       stride_u,
+						       r_l2g,
 						       element_flux_i);
-
-	    // Compute fluxStar based on limited flux //
-	    //for(int eN=0;eN<nElements_global;eN++) //loop in cells
-	    //{
-	    //  for(int i=0;i<nDOF_test_element;i++)
-	    //    {
-	    //	    int eN_i = eN*nDOF_test_element+i;
-	    //	    int gi = offset_u+stride_u*r_l2g[eN_i];
-	    //	    fluxStar[gi] += elementFluxStar[eN_i];
-	    //    }
-	    // }
-	    //for (int i=0; i<numDOFs; i++)
-	    //{
-	    //	double mi = QH_ML[i];
-	    //	globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxStar[i];
-	    //
-	    //	if (globalResidual[i]>1000+tol || globalResidual[i]<-1000-tol)		  
-	    //	  continue_cycle = true;
-	    //}
-	    //num_iterations++;
-	    //if (num_iterations==2000)
-	    //{
-	    //	continue_cycle=false;
-	    //}
+	    converged = has_iterative_process_converged(numDOFs,QH_ML,dt);
+	    if (num_iterations >= max_num_iterations || converged)
+	      finish_iterations = true;		
 	  }
-	//std::cout << "********** Num of iterations: " << num_iterations << std::endl;
-
-	//// Dmitri's monolithic element based method ///////
-	for(int eN=0;eN<nElements_global;eN++) //loop in cells
+	std::cout << "***** ... NUM of ITERATIONS: " << num_iterations << std::endl;
+	numIterations[0] = num_iterations;
+	
+	if (converged==false)
 	  {
-	    double posMassElementFluxStar = 0;
-	    double negMassElementFluxStar = 0;
-	    for(int i=0;i<nDOF_test_element;i++)
+	    //// Dmitri's monolithic element based method ///////
+	    for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	      {
-		int eN_i = eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i];
-		
-		// get bounds at node i
-		double umaxi = umax[gi];
-		double umini = umin[gi];
-
-		// element flux at node i and element El
-		double fiEl = element_flux_i[eN_i];
-
-		double miEl = elementML[eN_i];
-		double uLowi = lowOrderSolution[gi];
-		double uiEl = uLowi + dt/miEl*fiEl;
-		
-		if (fiEl>0)
-		  {
-		    //elementFluxStar[eN_i] = 0;
-		    //elementFluxStar[eN_i] = fiEl;
-		    elementFluxStar[eN_i] = fmin(fiEl, dLowEl[eN_i]*umaxi - wBarEl[eN_i]);
-		  }
-		else
-		  {
-		    //elementFluxStar[eN_i] = 0;
-		    //elementFluxStar[eN_i] = fiEl;
-		    elementFluxStar[eN_i] = fmax(fiEl, dLowEl[eN_i]*umini - wBarEl[eN_i]);
-		  }
-		posMassElementFluxStar += fmax(0.0,elementFluxStar[eN_i]);
-		negMassElementFluxStar += fmin(0.0,elementFluxStar[eN_i]);
-	      } //i
-	    // fix mass //
-	    if (true)
-	      {
-		if (posMassElementFluxStar+negMassElementFluxStar > 1E-15)
-		  {
-		    // scale down the positive fluxes
-		    double alpha = -negMassElementFluxStar / posMassElementFluxStar;
-		    for(int i=0;i<nDOF_test_element;i++)
-		      {
-			int eN_i = eN*nDOF_test_element+i;
-			elementFluxStar[eN_i] *= (elementFluxStar[eN_i] > 0 ? alpha : 1.0);
-		      }
-		  }
-		else if (posMassElementFluxStar+negMassElementFluxStar < -1E-15)
-		  {
-		    double alpha = -posMassElementFluxStar / negMassElementFluxStar;
-		    for(int i=0;i<nDOF_test_element;i++)
-		      {
-			int eN_i = eN*nDOF_test_element+i;
-			elementFluxStar[eN_i] *= (elementFluxStar[eN_i] < 0 ? alpha : 1.0);
-		      }
-		  }
-	      }
-	    // check that the limited fluxes are still massless in every element
-	    if (true)
-	      {
-		double newMass = 0.0;
+		double posMassElementFluxStar = 0;
+		double negMassElementFluxStar = 0;
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
 		    int eN_i = eN*nDOF_test_element+i;
-		    newMass += elementFluxStar[eN_i];
-		  }
-		if (fabs(newMass) > 1E-14)
+		    int gi = offset_u+stride_u*r_l2g[eN_i];
+		    
+		    // get bounds at node i
+		    double umaxi = umax[gi];
+		    double umini = umin[gi];
+		    
+		    // element flux at node i and element El
+		    double fiEl = element_flux_i[eN_i];
+		    
+		    double miEl = elementML[eN_i];
+		    double uLowi = lowOrderSolution[gi];
+		    double uiEl = uLowi + dt/miEl*fiEl;
+		    
+		    if (fiEl>0)
+		      {
+			//elementFluxStar[eN_i] = 0;
+			//elementFluxStar[eN_i] = fiEl;
+			elementFluxStar[eN_i] = fmin(fiEl, dLowEl[eN_i]*umaxi - wBarEl[eN_i]);
+		      }
+		    else
+		      {
+			//elementFluxStar[eN_i] = 0;
+			//elementFluxStar[eN_i] = fiEl;
+			elementFluxStar[eN_i] = fmax(fiEl, dLowEl[eN_i]*umini - wBarEl[eN_i]);
+		      }
+		    posMassElementFluxStar += fmax(0.0,elementFluxStar[eN_i]);
+		    negMassElementFluxStar += fmin(0.0,elementFluxStar[eN_i]);
+		  } //i
+		// fix mass //
+		if (true)
 		  {
-		    std::cout << fabs(newMass) << std::endl;
-		    abort();
+		    if (posMassElementFluxStar+negMassElementFluxStar > 1E-15)
+		      {
+			// scale down the positive fluxes
+			double alpha = -negMassElementFluxStar / posMassElementFluxStar;
+			for(int i=0;i<nDOF_test_element;i++)
+			  {
+			    int eN_i = eN*nDOF_test_element+i;
+			    elementFluxStar[eN_i] *= (elementFluxStar[eN_i] > 0 ? alpha : 1.0);
+			  }
+		      }
+		    else if (posMassElementFluxStar+negMassElementFluxStar < -1E-15)
+		      {
+			double alpha = -posMassElementFluxStar / negMassElementFluxStar;
+			for(int i=0;i<nDOF_test_element;i++)
+			  {
+			    int eN_i = eN*nDOF_test_element+i;
+			    elementFluxStar[eN_i] *= (elementFluxStar[eN_i] < 0 ? alpha : 1.0);
+			  }
+		      }
 		  }
-	      }
-	  } //element
+		// check that the limited fluxes are still massless in every element
+		if (true)
+		  {
+		    double newMass = 0.0;
+		    for(int i=0;i<nDOF_test_element;i++)
+		      {
+			int eN_i = eN*nDOF_test_element+i;
+			newMass += elementFluxStar[eN_i];
+		      }
+		    if (fabs(newMass) > 1E-14)
+		      {
+			std::cout << fabs(newMass) << std::endl;
+			abort();
+		      }
+		  }
+	      } //element
+	  }
 	/////////////////////////////////////////////////////
-		
+
+	
 	// Compute fluxStar based on limited flux
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
@@ -1786,7 +1785,8 @@ namespace proteus
 					double* CTyElem,
 					double* dLowElem,
 					double* xGradRHS,
-					double* yGradRHS)
+					double* yGradRHS,
+					double* numIterations)
       {
 	////////////////////////////////
 	// Zero out auxiliary vectors //
@@ -2218,7 +2218,8 @@ namespace proteus
 					      double* dLowElem,
 					      // gradient reconstruction
 					      double* xGradRHS,
-					      double* yGradRHS)
+					      double* yGradRHS,
+					      double* numIterations)
       {
 	///////////////////////
 	// LOOP ON INTEGRALS //
