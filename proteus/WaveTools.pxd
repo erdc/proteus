@@ -35,6 +35,10 @@ ctypedef void (*cfvel) (MonochromaticWaves, double*, double* , double )
 
 
 cdef class  SolitaryWave:
+    cdef double U,ramp
+    cdef public:
+        double mwl
+cdef class  SolitaryWave:
     cdef double H,gAbs,K,depth,d2,d3
     cdef public:
         double mwl,c
