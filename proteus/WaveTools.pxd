@@ -35,7 +35,8 @@ ctypedef void (*cfvel) (MonochromaticWaves, double*, double* , double )
 
 
 cdef class  SteadyCurrent:
-    cdef double U,ramp
+    cdef double ramp
+    cdef np.ndarray U
     cdef public:
         double mwl
 cdef class  SolitaryWave:
