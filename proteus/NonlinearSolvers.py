@@ -1104,8 +1104,6 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
 
 class highOrderLimSolver(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        self.F.file=open("numIterations.txt",'a')
-
         #################
         # COMPUTE uHDot # using consistent mass matrix (and no stabilization)
         #################
@@ -1115,8 +1113,6 @@ class highOrderLimSolver(Newton):
         self.F.uHDot[:] = self.F.u[0].dof
         #self.F.u[0].dof[:] = self.F.u_dof_old
 
-        
-        
         ######################
         # CALCULATE SOLUTION #
         ######################
@@ -1125,10 +1121,6 @@ class highOrderLimSolver(Newton):
         u[:] = r
         self.F.u[0].dof[:]=u
         #self.computeResidual(u,r,b)
-
-        #self.F.numIterationsList.append(self.F.numIterations[0])
-        self.F.file.write(str(self.F.numIterations[0])+',')
-        self.F.file.close()
 #
     
 class myLinearSolver(Newton):

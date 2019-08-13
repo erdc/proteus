@@ -8,7 +8,8 @@
 
 #define ALPHA_VIA_LINEAR_SPACE 1
 #define DO_CHECKS 0
-#define uDOT_VIA_HIGH_ORDER_GALERKIN 0
+#define ZALESAK_FCT 0
+#define USE_ELEMENT_BASED_FIJ 1
 
 namespace proteus
 {
@@ -40,22 +41,9 @@ namespace proteus
     std::valarray<double> umax;
     std::valarray<double> umin;
     std::valarray<double> wBarij, wBarji;
-    std::valarray<double> fluxStar;
-
-    std::valarray<double> dLowEl;
-    std::valarray<double> element_u_i;
-    
-    std::valarray<double> wBarEl;
-    std::valarray<double> elementFluxStar;
-    std::valarray<double> elementML;
-    // for debugging //    
-    std::valarray<double> fluxCorrection;
-
-    // NEW METHOD //
-    std::valarray<double> Ppos, Pneg;
+    std::valarray<double> fluxStar;    
+    // for Zalesak's FCT //
     std::valarray<double> Rpos, Rneg;
-    std::valarray<double> fluxToCheckConvergence;
-    
     virtual ~BlendedSpaces_base(){}
     virtual void calculateResidual(//element
                                    double dt,
@@ -151,9 +139,9 @@ namespace proteus
 				   double* CTxElem,
 				   double* CTyElem,
 				   double* dLowElem,
+				   double* QL_sparsity,
 				   double* xGradRHS,
-				   double* yGradRHS,
-				   double* numIterations)=0;
+				   double* yGradRHS)=0;
     virtual void calculateResidualEntropyVisc(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -248,9 +236,9 @@ namespace proteus
 				   double* CTxElem,
 				   double* CTyElem,
 				   double* dLowElem,
+				   double* QL_sparsity,
 				   double* xGradRHS,
-				   double* yGradRHS,
-				   double* numIterations)=0;
+				   double* yGradRHS)=0;
     virtual void calculateRHSGradientReconstruction(//element
 						    double dt,
 						    double* mesh_trial_ref,
@@ -345,9 +333,9 @@ namespace proteus
 						    double* CTxElem,
 						    double* CTyElem,
 						    double* dLowElem,
+						    double* QL_sparsity,
 						    double* xGradRHS,
-						    double* yGradRHS,
-						    double* numIterations)=0;    
+						    double* yGradRHS)=0;    
     virtual void calculateJacobian(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -532,191 +520,6 @@ namespace proteus
 	MULT(RLeft,aux,DTensor);
       }
 
-      inline void compute_R_vectors(int nElements_global,
-				    int offset_u,
-				    int stride_u,
-				    int* r_l2g,
-				    int numDOFs,
-				    double* QH_ML,
-				    double* element_flux_i,
-				    double dt)
-      {
-	// compute Ppos and Pneg vectors
-	Ppos.resize(numDOFs,0.0);
-	Pneg.resize(numDOFs,0.0);
-	for(int eN=0;eN<nElements_global;eN++) //loop in cells
-	  {
-	    for(int i=0;i<nDOF_test_element;i++)
-	      {
-		int eN_i = eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i];
-		
-		double fiEl = element_flux_i[eN_i];
-		Ppos[gi] += fmax(0.0,fiEl);
-		Pneg[gi] += fmin(0.0,fiEl);
-	      }
-	  }
-
-	// compute the Rpos and Rneg vectors
-	for (int i=0; i<numDOFs; i++)
-	  {
-	    double umaxi = umax[i];
-	    double umini = umin[i];
-	    double mi = QH_ML[i];
-	    double uLowi = lowOrderSolution[i];
-
-	    double uHi = uLowi + dt/mi*(Ppos[i]+Pneg[i]);
-
-	    if (umini <= uHi && uHi <= umaxi)
-	      {
-		Rpos[i]=1.0;
-		Rneg[i]=1.0;
-	      }
-	    else if (uHi > umaxi)
-	      {
-		Rneg[i] = 1.0;
-		
-		if (Ppos[i] == 0)
-		  Rpos[i]=1.0;
-		else
-		  Rpos[i] = mi*(umaxi-uLowi)/dt/Ppos[i];
-		Rpos[i] = fmin(1.0,fmax(0.0,Rpos[i]));
-
-		//if (Rpos[i] > 1.0 || Rpos[i] < 0.0)
-		//{
-		//  std::cout << "Rpos[i] > 1.0 || Rpos[i] < 0.0" << std::endl;
-		//  std::cout << Rpos[i] << std::endl;
-		//  std::cout << umaxi-uLowi << "\t"
-		//	      << mi*(umaxi-uLowi) << "\t"
-		//	      << dt*Ppos[i] << std::endl;
-		//  abort();
-		//}
-	      }
-	    else
-	      {
-		Rpos[i] = 1.0;
-		
-		if (Pneg[i]==0)
-		  Rneg[i]=1.0;
-		else
-		  Rneg[i] = mi*(umini-uLowi)/dt/Pneg[i];
-		
-		Rneg[i] = fmin(1.0,fmax(0.0,Rneg[i]));
-	      }
-	  }
-      }
-            
-      inline void compute_element_flux_star(int nElements_global,
-					    int offset_u,
-					    int stride_u,
-					    int* r_l2g,
-					    double* element_flux_i,
-					    bool correct_mass)
-      {
-	// * compute elementFlux_ij
-	// * compute elementFluxStar_ij and fluxStar_i = sum_el sum_j elementFluxStar_ij
-	for(int eN=0;eN<nElements_global;eN++) //loop in cells
-	  {
-	    double posMassElementFluxStar = 0;
-	    double negMassElementFluxStar = 0;
-	    for(int i=0;i<nDOF_test_element;i++)
-	      {
-		int eN_i = eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i];
-		
-		double fiEl = element_flux_i[eN_i];
-		double fluxTildeiEl = Rpos[gi]*fmax(0.0,fiEl) + Rneg[gi]*fmin(0.0,fiEl);
-  
-		posMassElementFluxStar += fmax(0.0,fluxTildeiEl);
-		negMassElementFluxStar += fmin(0.0,fluxTildeiEl);
-
-		elementFluxStar[eN_i] = fluxTildeiEl;
-	      } //i
-	    //std::cout << posMassElementFluxStar + negMassElementFluxStar << std::endl;
-	    // fix mass
-	    double newMass = 0.0;
-	    if (correct_mass) //correct mass
-	      {
-		if (posMassElementFluxStar+negMassElementFluxStar > 0)
-		  {
-		    // scale down the positive fluxes
-		    double alpha = -negMassElementFluxStar / posMassElementFluxStar;
-		    for(int i=0;i<nDOF_test_element;i++)
-		      {
-			int eN_i = eN*nDOF_test_element+i;
-			elementFluxStar[eN_i] *= (elementFluxStar[eN_i] > 0 ? alpha : 1.0);
-		      }
-		  }
-		else if (posMassElementFluxStar+negMassElementFluxStar < 0)
-		  {
-		    double alpha = -posMassElementFluxStar / negMassElementFluxStar;
-		    for(int i=0;i<nDOF_test_element;i++)
-		      {
-			int eN_i = eN*nDOF_test_element+i;
-			elementFluxStar[eN_i] *= (elementFluxStar[eN_i] < 0 ? alpha : 1.0);
-		      }
-		  }
-	      }
-	    // check mass
-	    if (true)
-	      {
-		for(int i=0;i<nDOF_test_element;i++)
-		  {
-		    int eN_i = eN*nDOF_test_element+i;
-		    newMass += elementFluxStar[eN_i];
-		  }
-		if (fabs(newMass) > 1E-14)
-		  {
-		    std::cout << "Loss in mass at some element: " << std::endl;
-		    std::cout << fabs(newMass) << std::endl;
-		    abort();
-		  }
-	      }
-	  }
-      }
-
-      inline void update_element_flux_i_from_elementFluxStar(int nElements_global,
-							     int numDOFs,
-							     int offset_u,
-							     int stride_u,
-							     int* r_l2g,
-							     double* element_flux_i)
-      {
-	fluxToCheckConvergence.resize(numDOFs,0.0);
-	for(int eN=0;eN<nElements_global;eN++) //loop in cells
-	  {
-	    for(int i=0;i<nDOF_test_element;i++)
-	      {
-		int eN_i = eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i];
-		
-		element_flux_i[eN_i] = elementFluxStar[eN_i];
-		fluxToCheckConvergence[gi] += elementFluxStar[eN_i];
-	      }
-	  }
-      }
-      
-      inline bool has_iterative_process_converged(int numDOFs,
-						  double* QH_ML,
-						  double dt)
-      {
-	bool converged=true;
-	double tol=1E-14;
-	
-	for (int i=0; i<numDOFs; i++)
-	  {
-	    double mi = QH_ML[i];
-	    double umini = umin[i];
-	    double umaxi = umax[i];
-	    
-	    double uHi = lowOrderSolution[i] + dt/mi*fluxToCheckConvergence[i];
-	    
-	    if (uHi > umaxi+tol || uHi < umini-tol)
-	      converged = false;
-	  }
-	return converged;
-      }
-      
       void calculateResidual(//element
 			     double dt,
 			     double* mesh_trial_ref,
@@ -811,9 +614,9 @@ namespace proteus
 			     double* CTxElem,
 			     double* CTyElem,
 			     double* dLowElem,
+			     double* QL_sparsity,
 			     double* xGradRHS,
-			     double* yGradRHS,
-			     double* numIterations)
+			     double* yGradRHS)
       {
 	//
 	//loop over elements to compute volume integrals and load them into element and global res.
@@ -826,10 +629,6 @@ namespace proteus
 	//eN_k_j is the quadrature point index for a trial function
 	//eN_k_i is the quadrature point index for a trial function
 
-	register double uDot[numDOFs];
-	for (int i=0; i<numDOFs; i++)
-	  uDot[i]=0.0;
-	
 	//////////////////////////////////////////////////////
 	// ********** Zero out auxiliary vectors ********** //
 	//////////////////////////////////////////////////////
@@ -839,36 +638,20 @@ namespace proteus
 	lowOrderBoundaryIntegral.resize(numDOFs,0.0);
 	lowOrderSolution.resize(numDOFs,0.0);
 	
-	// high order vectors //
-	highOrderFluxTerm.resize(numDOFs,0.0);
-	
 	// limited flux correction //
 	umax.resize(numDOFs,0.0);
 	umin.resize(numDOFs,0.0);
+	
 	fluxStar.resize(numDOFs,0.0);
+
 	wBarij.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
 	wBarji.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
-
-	dLowEl.resize(nElements_global*nDOF_test_element,0.0);
-	wBarEl.resize(nElements_global*nDOF_test_element,0.0);
-	elementFluxStar.resize(nElements_global*nDOF_test_element,0.0);
-	elementML.resize(nElements_global*nDOF_test_element,0.0);
-
-	element_u_i.resize(nElements_global*nDOF_test_element,0.0);
-
-	
-	Rpos.resize(numDOFs,0.0);
-	Rneg.resize(numDOFs,0.0);
-
-	Ppos.resize(numDOFs,0.0);
-	Pneg.resize(numDOFs,0.0);
-
-
 	
 	// for debugging //
-	fluxCorrection.resize(numDOFs,0.0);	
-	int ij=0;
+	Rpos.resize(numDOFs,0.0);
+	Rneg.resize(numDOFs,0.0);
 	
+	int ij=0;	
 	/////////////////////////////////////////
 	// ********** BOUNDARY TERM ********** //
 	/////////////////////////////////////////
@@ -958,7 +741,6 @@ namespace proteus
 		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 		lowOrderBoundaryIntegral[gi] += elementBoundaryFluxLowOrder[i];
 		element_flux_i[eN_i] = elementBoundaryFluxHighOrder[i]; 
-		fluxCorrection[gi] += elementBoundaryFluxHighOrder[i];
 	      }
 	  }//ebNE
 	/////////////////////////////////////////////////
@@ -968,21 +750,21 @@ namespace proteus
 	///////////////////////////////////////////////////
 	// ********** FIRST LOOP ON INTEGRALS ********** // 
 	///////////////////////////////////////////////////
-	// * Compute the high order flux term.
-	//    Used if the high-order stabilization is based on uDot=-1/mi*high_order_flux
-	// * Compute lowOrderFluxTerm
-	// * Compute dLowElem matrix
-	// * Compute lowOrderDissipativeTerm
 	// * Compute first part of (lagged) edge_based_cfl = sum_el(dLowElemii)
-	// * Compute and save wBarij and wBarji // NO MORE!
+	// * Compute dLowElem matrix
+	// * Compute and save wBarij and wBarji
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
 	    //declare local storage for element residual and initialize
-	    register double elementResidual_u[nDOF_test_element];
+	    register double
+	      elementMass[nDOF_test_element],
+	      elementFluxCorrection[nDOF_test_element];
+	      
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
-		elementResidual_u[i]=0.0;
-	      }//i
+		elementMass[i] = 0.0;
+		elementFluxCorrection[i] = 0.0;
+	      }
 	    
 	    //loop over quadrature points and compute integrands
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -992,10 +774,11 @@ namespace proteus
 		  eN_k_nSpace = eN_k*nSpace,
 		  eN_nDOF_trial_element = eN*nDOF_trial_element;
 		register double
-		  un=0.0,
+		  un=0.0, uhDot=0.0,
 		  jac[nSpace*nSpace],
 		  jacDet,
 		  jacInv[nSpace*nSpace],
+		  u_test_dV[nDOF_trial_element],
 		  u_grad_trial[nDOF_trial_element*nSpace],
 		  u_grad_test_dV[nDOF_test_element*nSpace],
 		  dV,x,y,z;
@@ -1020,9 +803,14 @@ namespace proteus
 			      &u_l2g[eN_nDOF_trial_element],
 			      &u_trial_ref[k*nDOF_trial_element],
 			      un); // from high-order space
+		ck.valFromDOF(uHDot,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      uhDot); // from high-order space
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
+		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
 		    for (int I=0;I<nSpace;I++)
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 		  }
@@ -1035,9 +823,9 @@ namespace proteus
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
 		    register int i_nSpace=i*nSpace;
-		    elementResidual_u[i] += un*ck.NumericalDiffusion(1.0,
-								     velocityBeta,
-								     &u_grad_test_dV[i_nSpace]);
+		    elementMass[i] += u_test_dV[i];
+		    elementFluxCorrection[i] += -uhDot*u_test_dV[i]
+		      +un*ck.NumericalDiffusion(1.0,velocityBeta,&u_grad_test_dV[i_nSpace]);
 		  }//i
 	      }
 	    //
@@ -1048,9 +836,6 @@ namespace proteus
 		register int eN_i=eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i];
 		
-		// compute high order advection term
-		highOrderFluxTerm[gi] += elementResidual_u[i];
-		
 		// solution, velocity and fluxes at node i (within the element eN)
 		double solni = u_dof_old[gi];
 		double u_veli = u_vel_dofs[gi];
@@ -1058,7 +843,10 @@ namespace proteus
 
 		double fxi = u_veli*solni;
 		double fyi = v_veli*solni;
-		    
+
+		// first part of vector qi
+		double qi = elementFluxCorrection[i] + elementMass[i]*uHDot[gi];
+	      
 		// for edge_based_cfl
 		double dLowElemii = 0.;
 
@@ -1077,9 +865,13 @@ namespace proteus
 		    double fxj = u_velj*solnj;
 		    double fyj = v_velj*solnj;
 		    
+		    // low-order flux part of qi
+		    qi -= (CTxElem[eN_i_j]*fxj + CTyElem[eN_i_j]*fyj);
+		    
 		    // compute low order flux term
 		    lowOrderFluxTerm[gi] += (CxElem[eN_i_j]*fxj + CyElem[eN_i_j]*fyj);
 
+		    int jacIndex=csrRowIndeces_CellLoops[eN_i]+csrColumnOffsets_CellLoops[eN_i_j];
 		    double dLowElemij=0;
 		    if (i != j)
 		      {
@@ -1089,33 +881,37 @@ namespace proteus
 			       fmax(fabs(CTxElem[eN_i_j]*u_veli + CTyElem[eN_i_j]*v_veli),
 				    fabs(CTxElem[eN_i_j]*u_velj + CTyElem[eN_i_j]*v_velj)));
 			dLowElemii -= dLowElemij;
+			if (USE_ELEMENT_BASED_FIJ==1)
+			  {
+			    // save anti-dissipative flux into element_flux_qij
+			    element_flux_qij[eN_i_j] =
+			      (dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
+			      //(fmin(dLowElemij,fmax(EntVisc[gi],EntVisc[gj])) - dLowElemij)*(solnj-solni);
 
-			// save anti-dissipative flux into element_flux_qij
-			element_flux_qij[eN_i_j] =
-			  (dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
-			
-			// compute low order dissipative term 
-			lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
-			
-			// compute wBar states (wBar = 2*dij*uBar)
-			wBarij[eN_i_j]=(2.0*dLowElemij*(solnj+solni)/2.0
-					- (CxElem[eN_i_j]*(fxj-fxi) + CyElem[eN_i_j]*(fyj-fyi)));
-			wBarji[eN_i_j]=(2.0*dLowElemij*(solnj+solni)/2.0 
-					- (CTxElem[eN_i_j]*(fxi-fxj) + CTyElem[eN_i_j]*(fyi-fyj)));
-			
+			    // compute low order dissipative term 
+			    lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
+			    flux_qij[jacIndex] +=
+			      (dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
+
+			    // compute wBar states (wBar = 2*dij*uBar)
+			    wBarij[eN_i_j]=
+			      (2.0*dLowElemij*(solnj+solni)/2.0
+			       -(CxElem[eN_i_j]*(fxj-fxi) + CyElem[eN_i_j]*(fyj-fyi)));
+			    wBarji[eN_i_j]=
+			      (2.0*dLowElemij*(solnj+solni)/2.0 
+			       -(CTxElem[eN_i_j]*(fxi-fxj) + CTyElem[eN_i_j]*(fyi-fyj)));
+			  }
 			// save low order matrix
 			dLowElem[eN_i_j] = dLowElemij;
-
-			dLowEl[eN_i] += 2*dLowElemij;
-			wBarEl[eN_i] += wBarij[eN_i_j];
 		      }
 		    else
 		      {
 			dLowElem[eN_i_j] = 0; // not true but irrelevant since we know that fii=0
+			flux_qij[jacIndex] = 0;
 		      }
 		  }//j
+		element_flux_i[eN_i] += qi;
 		// No need to compute diagonal entry of wBarij and wBarji since fStarij=0 when i=j
-		
 		// compute dLowii and store it in edge_based_cfl
 		edge_based_cfl[gi] += dLowElemii;
 	      }//i
@@ -1130,7 +926,7 @@ namespace proteus
 	// * Compute edge_based_cfl = 2|dLowii|/mi
 	// * Compute umax and umin
 	// * Compute the low order solution
-	// * Compute uDot (depending on uDOT_VIA_HIGH_ORDER_GALERKIN)
+	ij=0;
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double mi = QH_ML[i];
@@ -1143,7 +939,9 @@ namespace proteus
 	    // for the computation of the local bounds
 	    double umaxi = solni;
 	    double umini = solni;
-	    
+
+	    if (USE_ELEMENT_BASED_FIJ==0)
+	      lowOrderDissipativeTerm[i] = 0;
 	    // loop over the sparsity pattern of the i-th DOF
 	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
 	      {
@@ -1151,43 +949,35 @@ namespace proteus
 		// solution at node j 
 		double solnj = u_dof_old[j];
 
-		// computation of local bounds
-		if (i != j)
+		if (QL_sparsity[ij]==1)
 		  {
+		    // computation of local bounds
 		    umaxi = fmax(solnj,umaxi);
 		    umini = fmin(solnj,umini);
 		  }
+		if (i != j)
+		  {
+		    if (USE_ELEMENT_BASED_FIJ==0)
+		      {
+			lowOrderDissipativeTerm[i] += dLow[ij]*(solnj-solni);		
+			flux_qij[ij] =
+			  (dLow[ij]*fmax(EntVisc[i],EntVisc[j]) - dLow[ij])*(solnj-solni);
+		      }
+		  }
+		else
+		  {
+		    flux_qij[ij] = 0.0;
+		  }
+		ij+=1;
 	      }
-	    umax[i] = fmax(0.0,fmin(1.0, umaxi));
-	    umin[i] = fmax(0.0,fmin(1.0, umini));
-
-	    //if (umini < 0)
-	    //{
-	    //	std::cout << "++++++++++++++++++++... umini = " 
-	    //		  << umini
-	    //		  << std::endl;
-	    //}
-
-	    //if (umaxi > 1.0)
-	    //{
-	    //std::cout << "++++++++++++++++++++... umaxi = " 
-	    //		  << umaxi
-	    //		  << std::endl;
-	    //}
+	    // Save local bounds 
+	    umax[i] = fmax(0.0,fmin(1.0,umaxi));
+	    umin[i] = fmax(0.0,fmin(1.0,umini));
 	    
 	    // compute and save low order solution 
 	    lowOrderSolution[i] = solni - dt/mi * (lowOrderFluxTerm[i] 
 						   - lowOrderDissipativeTerm[i]
 						   - lowOrderBoundaryIntegral[i]);
-	    // compute uDot 
-	    if (uDOT_VIA_HIGH_ORDER_GALERKIN==1)
-	      uDot[i] = -1.0/mi * (-highOrderFluxTerm[i]
-				   - lowOrderBoundaryIntegral[i]);
-	    else
-	      uDot[i] = -1.0/mi * (lowOrderFluxTerm[i]
-				   - lowOrderDissipativeTerm[i]
-				   - lowOrderBoundaryIntegral[i]);
-	    uDot[i] = uHDot[i];
 	  }
 	///////////////////////////////
 	// END OF FIRST LOOP IN DOFs //
@@ -1196,375 +986,205 @@ namespace proteus
 	//////////////////////////////
 	// SECOND LOOP ON INTEGRALS //
 	//////////////////////////////
-	// * Compute element based part of element_flux_i and substract low-order flux 
-	// * Compute element inegrals of fluxCorrection as a global vector (only for debugging)
-	// * Finish computation of element_flux_i
-	
-	// * Compute vVector = inv(element_ML_minus_MC)*element_flux_i // NO MORE!
+	// * Compute vVector = inv(element_ML_minus_MC)*element_flux_i
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
-	    //declare local storage for element residual and initialize
-	    register double elementFlux[nDOF_test_element], elementMass[nDOF_test_element];
-	    for (int i=0;i<nDOF_test_element;i++)
-	      {
-		elementFlux[i]=0.0;
-		elementMass[i]=0.0;
-	      }//i
-
-	    //loop over quadrature points and compute integrands
-	    for  (int k=0;k<nQuadraturePoints_element;k++)
-	      {
-		//compute indeces and declare local storage
-		register int eN_k = eN*nQuadraturePoints_element+k,
-		  eN_k_nSpace = eN_k*nSpace,
-		  eN_nDOF_trial_element = eN*nDOF_trial_element;
-		register double
-		  un=0.0,uhDot=0.0, 
-		  jac[nSpace*nSpace],
-		  jacDet,
-		  jacInv[nSpace*nSpace],
-		  u_grad_trial[nDOF_trial_element*nSpace],
-		  u_test_dV[nDOF_trial_element],
-		  u_grad_test_dV[nDOF_test_element*nSpace],
-		  dV,x,y,z;
-		ck.calculateMapping_element(eN,
-					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
-					    jac,
-					    jacDet,
-					    jacInv,
-					    x,y,z);
-		//get the physical integration weight
- 		dV = fabs(jacDet)*dV_ref[k];
-		//get the trial function gradients based on the blended functions
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
-				    jacInv,
-				    u_grad_trial); // high-order space
-		//get the solution based on the blended functions
-		ck.valFromDOF(u_dof_old,
-			      &u_l2g[eN_nDOF_trial_element],
-			      &u_trial_ref[k*nDOF_trial_element],
-			      un); // from high-order space
-		ck.valFromDOF(uDot,
-			      &u_l2g[eN_nDOF_trial_element],
-			      &u_trial_ref[k*nDOF_trial_element],
-			      uhDot); // from high-order space
-		//precalculate test function products with integration weights
-		for (int j=0;j<nDOF_trial_element;j++)
-		  {
-		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-		    for (int I=0;I<nSpace;I++)
-		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
-		  }
-
-		//save solution
-		//q_u[eN_k] = u;
-		// save grad
-		//for(int I=0;I<nSpace;I++)
-		//q_grad_u[eN_k_nSpace+I]=grad_u[I];
-
-		// coefficient of steady advection - diffusion
-		double velocityBeta[2];
-		velocityBeta[0] = velocity[eN_k_nSpace+0];
-		velocityBeta[1] = velocity[eN_k_nSpace+1];
-		
-		for(int i=0;i<nDOF_test_element;i++)
-		  {
-		    register int i_nSpace=i*nSpace;
-		    elementFlux[i] += -uhDot*u_test_dV[i]
-		      + un*ck.NumericalDiffusion(1.0,velocityBeta,&u_grad_test_dV[i_nSpace]);
-		    elementMass[i] += u_test_dV[i];
-		  }//i
-	      } //quad points
-	    //
-	    //load elements into global vectors
-	    //
+	    // compute element vector v //
+	    double mean = 0;
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
-	      int eN_i=eN*nDOF_test_element+i;
-	      int gi = offset_u+stride_u*r_l2g[eN_i];
-
-	      // flux correction (only for debugging) //
-	      fluxCorrection[gi] += elementFlux[i];
-
-	      // solution and velocity at node i
-	      double solni = u_dof_old[gi];
-	      double u_veli = u_vel_dofs[gi];
-	      double v_veli = v_vel_dofs[gi];
-
-	      // first part of vector qi
-	      double qi = elementFlux[i] + elementMass[i]*uDot[gi];
-	      elementML[eN_i] = elementMass[i];
-	      
-	      // for flux of low-order method
-	      for(int j=0;j<nDOF_trial_element;j++)
-		{
-		  int eN_i_j = eN_i*nDOF_trial_element+j;
-		  int eN_j = eN*nDOF_test_element+j;
-		  int gj = offset_u+stride_u*r_l2g[eN_j];
-
-		  // solution and velocity at node j
-		  double solnj = u_dof_old[gj];
-		  double u_velj = u_vel_dofs[gj];
-		  double v_velj = v_vel_dofs[gj];
-		  
-		  // low-order flux part of qi
-		  qi -= (CTxElem[eN_i_j]*(u_velj*solnj) + CTyElem[eN_i_j]*(v_velj*solnj));
-		}
-	      element_flux_i[eN_i] += qi;
-	    }
-	    //////////////////////////////////////////
-	    // Finish computation of element_flux_i //
-	    //////////////////////////////////////////
-	    double mass = 0;
+		int eN_i = eN*nDOF_test_element+i;
+		for(int j=0;j<nDOF_test_element;j++)
+		  {
+		    int eN_j = eN*nDOF_test_element+j;
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+		    vVector[eN_i] += inv_element_ML_minus_MC[eN_i_j]*element_flux_i[eN_j];
+		    mean += inv_element_ML_minus_MC[eN_i_j]*element_flux_i[eN_j];
+		  }
+	      }
+	    mean /= nDOF_test_element;
+	    // substract mean
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 	    	int eN_i = eN*nDOF_test_element+i;
-	    	for(int j=0;j<nDOF_test_element;j++)
-	    	  {
-	    	    int eN_j = eN*nDOF_test_element+j;
-	    	    int eN_i_j = eN_i*nDOF_trial_element+j;
-	    	    element_flux_i[eN_i] += element_flux_qij[eN_i_j];
-	    	  }
-		mass += element_flux_i[eN_i];
+	    	vVector[eN_i] -= mean;
 	      }
-	    if (fabs(mass)>1E-14)
-	      {
-		std::cout << "mass: " << fabs(mass) << std::endl;
-		abort();
-	      }
-	    
-	    //////////////////////////////
-	    // compute element vector v //
-	    //////////////////////////////
-	    //double mean = 0;
-	    //for(int i=0;i<nDOF_test_element;i++)
-	    //{
-	    //	int eN_i = eN*nDOF_test_element+i;
-	    //	for(int j=0;j<nDOF_test_element;j++)
-	    //	  {
-	    //	    int eN_j = eN*nDOF_test_element+j;
-	    //	    int eN_i_j = eN_i*nDOF_trial_element+j;
-	    //	    vVector[eN_i] += inv_element_ML_minus_MC[eN_i_j]*element_flux_i[eN_j];
-	    //	    mean += inv_element_ML_minus_MC[eN_i_j]*element_flux_i[eN_j];
-	    //	  }
-	    //}
-	    //mean /= nDOF_test_element;
-	    // substract mean
-	    //for(int i=0;i<nDOF_test_element;i++)
-	    //{
-	    //	int eN_i = eN*nDOF_test_element+i;
-	    //	vVector[eN_i] -= mean;
-	    //}
 	    // end of computation of the vector v //
 	  }//elements
 	/////////////////////////////////////
 	// END OF SECOND LOOP IN INTEGRALS //
 	/////////////////////////////////////
 
-
-	// NEW METHOD //
-	int num_iterations=0;
-	int max_num_iterations=100;
-	bool converged=false;
-	bool finish_iterations=false;
-	while(finish_iterations==false)
-	  {
-	    num_iterations++;
-	    //continue_cycle=false;
-	    compute_R_vectors(nElements_global,
-			      offset_u,
-			      stride_u,
-			      r_l2g,
-			      numDOFs,
-			      QH_ML,
-			      element_flux_i,
-			      dt);
-	    compute_element_flux_star(nElements_global,
-				      offset_u,
-				      stride_u,
-				      r_l2g,
-				      element_flux_i,
-				      true);
-	    update_element_flux_i_from_elementFluxStar(nElements_global,
-						       numDOFs,
-						       offset_u,
-						       stride_u,
-						       r_l2g,
-						       element_flux_i);
-	    converged = has_iterative_process_converged(numDOFs,QH_ML,dt);
-	    if (num_iterations >= max_num_iterations || converged)
-	      finish_iterations = true;		
-	  }
-	std::cout << "***** ... NUM of ITERATIONS: " << num_iterations << std::endl;
-	numIterations[0] = num_iterations;
-	
-	if (converged==false)
-	  {
-	    //// Dmitri's monolithic element based method ///////
-	    for(int eN=0;eN<nElements_global;eN++) //loop in cells
-	      {
-		double posMassElementFluxStar = 0;
-		double negMassElementFluxStar = 0;
-		for(int i=0;i<nDOF_test_element;i++)
-		  {
-		    int eN_i = eN*nDOF_test_element+i;
-		    int gi = offset_u+stride_u*r_l2g[eN_i];
-		    
-		    // get bounds at node i
-		    double umaxi = umax[gi];
-		    double umini = umin[gi];
-		    
-		    // element flux at node i and element El
-		    double fiEl = element_flux_i[eN_i];
-		    
-		    double miEl = elementML[eN_i];
-		    double uLowi = lowOrderSolution[gi];
-		    double uiEl = uLowi + dt/miEl*fiEl;
-		    
-		    if (fiEl>0)
-		      {
-			//elementFluxStar[eN_i] = 0;
-			//elementFluxStar[eN_i] = fiEl;
-			elementFluxStar[eN_i] = fmin(fiEl, dLowEl[eN_i]*umaxi - wBarEl[eN_i]);
-		      }
-		    else
-		      {
-			//elementFluxStar[eN_i] = 0;
-			//elementFluxStar[eN_i] = fiEl;
-			elementFluxStar[eN_i] = fmax(fiEl, dLowEl[eN_i]*umini - wBarEl[eN_i]);
-		      }
-		    posMassElementFluxStar += fmax(0.0,elementFluxStar[eN_i]);
-		    negMassElementFluxStar += fmin(0.0,elementFluxStar[eN_i]);
-		  } //i
-		// fix mass //
-		if (true)
-		  {
-		    if (posMassElementFluxStar+negMassElementFluxStar > 1E-15)
-		      {
-			// scale down the positive fluxes
-			double alpha = -negMassElementFluxStar / posMassElementFluxStar;
-			for(int i=0;i<nDOF_test_element;i++)
-			  {
-			    int eN_i = eN*nDOF_test_element+i;
-			    elementFluxStar[eN_i] *= (elementFluxStar[eN_i] > 0 ? alpha : 1.0);
-			  }
-		      }
-		    else if (posMassElementFluxStar+negMassElementFluxStar < -1E-15)
-		      {
-			double alpha = -posMassElementFluxStar / negMassElementFluxStar;
-			for(int i=0;i<nDOF_test_element;i++)
-			  {
-			    int eN_i = eN*nDOF_test_element+i;
-			    elementFluxStar[eN_i] *= (elementFluxStar[eN_i] < 0 ? alpha : 1.0);
-			  }
-		      }
-		  }
-		// check that the limited fluxes are still massless in every element
-		if (true)
-		  {
-		    double newMass = 0.0;
-		    for(int i=0;i<nDOF_test_element;i++)
-		      {
-			int eN_i = eN*nDOF_test_element+i;
-			newMass += elementFluxStar[eN_i];
-		      }
-		    if (fabs(newMass) > 1E-14)
-		      {
-			std::cout << fabs(newMass) << std::endl;
-			abort();
-		      }
-		  }
-	      } //element
-	  }
-	/////////////////////////////////////////////////////
-
-	
-	// Compute fluxStar based on limited flux
+	////////////////////////////////////////
+	// put element_flux_qij into flux_qij //
+	////////////////////////////////////////
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i];
-	    	fluxStar[gi] += elementFluxStar[eN_i];
+		for(int j=0;j<nDOF_trial_element;j++)
+		  {
+		    int eN_j = eN*nDOF_test_element+j;
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
+
+		    if (USE_ELEMENT_BASED_FIJ==1)
+		      element_flux_qij[eN_i_j] += element_MC[eN_i_j]*(vVector[eN_i]-vVector[eN_j]);
+		    else
+		      {
+			int jacIndex =
+			  csrRowIndeces_CellLoops[eN_i]+csrColumnOffsets_CellLoops[eN_i_j];
+			flux_qij[jacIndex] += element_MC[eN_i_j]*(vVector[eN_i]-vVector[eN_j]);
+		      }
+		  }
 	      }
 	  }
 	
+	/////////////////////////////////////////////
+	// compute Rpos and Rneg for Zalesak's FCT //
+	/////////////////////////////////////////////
+	if (ZALESAK_FCT==1)
+	  {
+	    ij=0;
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		double Pposi = 0;
+		double Pnegi = 0;
+		for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		  {
+		    double fij = flux_qij[ij];
+		    Pposi += dt*fmax(fij,0);
+		    Pnegi += dt*fmin(fij,0);
+		    
+		    // update ij
+		    ij+=1;
+		  }
+		double mi = QH_ML[i];
+		double umaxi = umax[i];
+		double umini = umin[i];
+		double solLi = lowOrderSolution[i];
+		double Qposi = mi*(umaxi-solLi);
+		double Qnegi = mi*(umini-solLi);
+		
+		Rpos[i] = ((Pposi==0) ? 1.0 : fmin(1.0,Qposi/Pposi));
+		Rneg[i] = ((Pnegi==0) ? 1.0 : fmin(1.0,Qnegi/Pnegi));
+	      }
+	  }
+	//////////////////////////////////////////////////////
+	// end of computing Rpos and Rneg for Zalesak's FCT //
+	//////////////////////////////////////////////////////
 
-	///////////////////////
-	// LAST LOOP IN DOFs //
-	///////////////////////
-	// * Compute the final solution 
+	if (USE_ELEMENT_BASED_FIJ==1)
+	  {
+	    /////////////////////////
+	    // * compute elementFluxStar_ij and fluxStar_i = sum_el(sum_j(elementFluxStar_ij))
+	    for(int eN=0;eN<nElements_global;eN++) //loop in cells
+	      {
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    int eN_i = eN*nDOF_test_element+i;
+		    int gi = offset_u+stride_u*r_l2g[eN_i];
+
+		    // get bounds at node i
+		    double umini = umin[gi];
+		    double umaxi = umax[gi];
+		    
+		    for(int j=0;j<nDOF_trial_element;j++)
+		      {
+			int eN_j = eN*nDOF_test_element+j;
+			int eN_i_j = eN_i*nDOF_trial_element+j;
+			int gj = offset_u+stride_u*r_l2g[eN_j];
+			
+			// get bounds at node j
+			double uminj = umin[gj];
+			double umaxj = umax[gj];
+			
+			// compute element flux star
+			double fij = element_flux_qij[eN_i_j];
+			double dij = dLowElem[eN_i_j];
+			double wij = wBarij[eN_i_j];
+			double wji = wBarji[eN_i_j];
+			
+			if (i!=j)
+			  {
+			    if (fij > 0)
+			      {
+				//fluxStar[gi] = 0; // low-order method
+				//fluxStar[gi] += fij; // high-order entropy viscosity
+				fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+			      }
+			    else
+			      {
+				//fluxStar[gi] = 0;
+				//fluxStar[gi] += fij;
+				fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+			      }
+			  }
+		      } //j
+		  } //i
+	      } //element
+	  }
+	else
+	  {	    
+	    ij=0;
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		double solni=u_dof_old[i];
+		double mi = QH_ML[i];
+		double umaxi=umax[i];
+		double umini=umin[i];
+		
+		double fxi=u_vel_dofs[i]*solni;
+		double fyi=v_vel_dofs[i]*solni;
+		
+		for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		  {
+		    int j = colind[offset];
+		    double umaxj=umax[j];
+		    double uminj=umin[j];
+		    double solnj=u_dof_old[j];
+		    
+		    double fxj=u_vel_dofs[j]*solnj;
+		    double fyj=v_vel_dofs[j]*solnj;
+		    
+		    double fij = flux_qij[ij];
+		    
+		    double dij=dLow[ij];
+		    double wij=(2.0*dij*(solnj+solni)/2.0-(Cx[ij]*(fxj-fxi) + Cy[ij]*(fyj-fyi)));
+		    double wji=(2.0*dij*(solnj+solni)/2.0-(CTx[ij]*(fxi-fxj) + CTy[ij]*(fyi-fyj)));
+		
+		    // zalesak's limiting
+		    //fluxStar[i] += fij;
+		    //fluxStar[i] += (fij > 0 ? fmin(Rpos[i],Rneg[j]) : fmin(Rneg[i],Rpos[j]))*fij;
+		
+		    if (fij>0)
+		      {
+			// monolithic convex limiting
+			fluxStar[i] += fij;
+			//fluxStar[i] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+		      }
+		    else
+		      {
+			fluxStar[i] += fij;
+			//fluxStar[i] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+		      }
+		    // update ij
+		    ij+=1;
+		  }
+	      }
+	  }
+
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    double ith_galerkin_fluxCorrection = 0.;
-	    double solni=u_dof_old[i];
 	    double mi = QH_ML[i];
-	    
-	    // compute Galerkin and limited flux
-	    ith_galerkin_fluxCorrection =
-	      fluxCorrection[i] + (mi*uDot[i]                       
-				   +lowOrderFluxTerm[i]             
-				   -lowOrderDissipativeTerm[i]      
-				   -lowOrderBoundaryIntegral[i]);
-
-	    
-
 	    // COMPUTE SOLUTION //
-	    //globalResidual[i] = lowOrderSolution[i] + dt/mi*ith_galerkin_fluxCorrection;
 	    //globalResidual[i] = lowOrderSolution[i];
 	    globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxStar[i];
-	    
-	    //globalResidual[i] = fmax(fmin(globalResidual[i],umax[i]),umin[i]);
-
-	    
-	    //globalResidual[i] = fmax(fmin(globalResidual[i],1),0);	    
-	    //globalResidual[i]=0;
 	  }
 	//////////////////////////////
 	// END OF LAST LOOP IN DOFs //
 	//////////////////////////////
 
-	// NEW METHOD //
-	/* if (false) */
-	/*   { */
-	/*     for(int eN=0;eN<nElements_global;eN++) //loop in cells */
-	/*       { */
-	/* 	for(int i=0;i<nDOF_test_element;i++) */
-	/* 	  { */
-	/* 	    int eN_i = eN*nDOF_test_element+i; */
-	/* 	    int gi = offset_u+stride_u*r_l2g[eN_i]; */
-		    
-	/* 	    double mi = QH_ML[gi]; */
-	/* 	    double uiEl = element_u_i[eN_i]; */
-	/* 	    double miEl = elementML[eN_i]; */
-		    
-	/* 	    //globalResidual[gi] += miEl*uiEl; */
-	/* 	    //globalResidual[gi] = (sumEl_miEl_times_pos_uiEl[gi] */
-	/* 	    //+ sumEl_miEl_times_neg_uiEl[gi]); */
-	/* 	    globalResidual[gi] = (alpha_pos[gi]*sumEl_miEl_times_pos_uiEl[gi] */
-	/* 	    			  + alpha_neg[gi]*sumEl_miEl_times_neg_uiEl[gi]); */
-		    
-	/* 	  } */
-	/*       } */
-	    
-	/*     for (int i=0; i<numDOFs; i++) */
-	/*       { */
-	/* 	double mi = QH_ML[i]; */
-	/* 	globalResidual[i] /= mi; */
-	
-	/* 	// for global clipping  */
-	/* 	//double umaxi = umax[i]; */
-	/* 	//double umini = umin[i]; */
-
-	/* 	//globalResidual[i] = fmax(fmin(globalResidual[i],umaxi),umini); */
-	/*       } */
-	/*   } */
-		
 	///////////////////////////////////////////////
 	// CONVERT BERNSTEIN DOFs TO SOLUTION VALUES //
 	///////////////////////////////////////////////
@@ -1784,9 +1404,9 @@ namespace proteus
 					double* CTxElem,
 					double* CTyElem,
 					double* dLowElem,
+					double* QL_sparsity,
 					double* xGradRHS,
-					double* yGradRHS,
-					double* numIterations)
+					double* yGradRHS)
       {
 	////////////////////////////////
 	// Zero out auxiliary vectors //
@@ -1924,7 +1544,7 @@ namespace proteus
 		else
 		  {
 		    dLow[ij] = 0.0; // Not true but irrelevant due to use of ...(solnj-solni)
-		  }		
+		  }
 		// For entropy viscosity production
 		double fxj = u_velj*solnj;
 		double fyj = v_velj*solnj;
@@ -1946,7 +1566,7 @@ namespace proteus
 	    
 	    // compute edge based cfl
 	    double QH_mi = QH_ML[i];
-	    edge_based_cfl[i] = 2*fabs(dLowii)/QH_mi;
+	    //edge_based_cfl[i] = 2*fabs(dLowii)/QH_mi;
 	  }
 	///////////////////////////////
 	// END OF FIRST LOOP IN DOFs //
@@ -2216,10 +1836,10 @@ namespace proteus
 					      double* CTxElem,
 					      double* CTyElem,
 					      double* dLowElem,
+					      double* QL_sparsity,
 					      // gradient reconstruction
 					      double* xGradRHS,
-					      double* yGradRHS,
-					      double* numIterations)
+					      double* yGradRHS)
       {
 	///////////////////////
 	// LOOP ON INTEGRALS //

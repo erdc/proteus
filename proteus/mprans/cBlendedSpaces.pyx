@@ -88,9 +88,9 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
                                double* CTxElem,
                                double* CTyElem,
                                double* dLowElem,
+                               double* QL_sparsity,
                                double* xGradRHS,
-                               double* yGradRHS,
-                               double* numIterations)
+                               double* yGradRHS)
         void calculateResidualEntropyVisc(double dt,
                                double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -172,9 +172,9 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
                                           double* CTxElem,
                                           double* CTyElem,
                                           double* dLowElem,
+                                          double* QL_sparsity,
                                           double* xGradRHS,
-                                          double* yGradRHS,
-                                          double* numIterations)
+                                          double* yGradRHS)
         void calculateRHSGradientReconstruction(double dt,
                                double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -256,9 +256,9 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
                                                 double* CTxElem,
                                                 double* CTyElem,
                                                 double* dLowElem,
+                                                double* QL_sparsity,
                                                 double* xGradRHS,
-                                                double* yGradRHS,
-                                                double* numIterations)        
+                                                double* yGradRHS)        
         void calculateJacobian(double dt,
                                double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -448,9 +448,9 @@ cdef class cBlendedSpaces_base:
                           numpy.ndarray CTxElem,
                           numpy.ndarray CTyElem,
                           numpy.ndarray dLowElem,
+                          numpy.ndarray QL_sparsity,
                           numpy.ndarray xGradRHS,
-                          numpy.ndarray yGradRHS,
-                          numpy.ndarray numIterations):
+                          numpy.ndarray yGradRHS):
         self.thisptr.calculateResidual(dt,
                                        < double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -533,9 +533,9 @@ cdef class cBlendedSpaces_base:
 				       < double*> CTxElem.data,
 				       < double*> CTyElem.data,
                                        <double* > dLowElem.data,
+                                       <double*> QL_sparsity.data,
                                        <double* > xGradRHS.data,
-                                       <double* > yGradRHS.data,
-                                       <double*> numIterations.data)
+                                       <double* > yGradRHS.data)
     def calculateResidualEntropyVisc(self,
                           double dt,
                           numpy.ndarray mesh_trial_ref,
@@ -618,9 +618,9 @@ cdef class cBlendedSpaces_base:
                                      numpy.ndarray CTxElem,
                                      numpy.ndarray CTyElem,
                                      numpy.ndarray dLowElem,
+                                     numpy.ndarray QL_sparsity,
                                      numpy.ndarray xGradRHS,
-                                     numpy.ndarray yGradRHS,
-                                     numpy.ndarray numIterations):
+                                     numpy.ndarray yGradRHS):
         self.thisptr.calculateResidualEntropyVisc(dt,
                                        < double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -703,9 +703,9 @@ cdef class cBlendedSpaces_base:
 				                  < double*> CTxElem.data,
 				                  < double*> CTyElem.data,
                                                   <double*> dLowElem.data,
+                                                  <double*> QL_sparsity.data,
                                                   <double*> xGradRHS.data,
-                                                  <double*> yGradRHS.data,
-                                                  <double*> numIterations.data)
+                                                  <double*> yGradRHS.data)
     def calculateRHSGradientReconstruction(self,
                           double dt,
                           numpy.ndarray mesh_trial_ref,
@@ -788,9 +788,9 @@ cdef class cBlendedSpaces_base:
                                            numpy.ndarray CTxElem,
                                            numpy.ndarray CTyElem,
                                            numpy.ndarray dLowElem,
+                                           numpy.ndarray QL_sparsity,
                                            numpy.ndarray xGradRHS,
-                                           numpy.ndarray yGradRHS,
-                                           numpy.ndarray numIterations):
+                                           numpy.ndarray yGradRHS):
         self.thisptr.calculateRHSGradientReconstruction(dt,
                                        < double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -873,9 +873,9 @@ cdef class cBlendedSpaces_base:
 				                        < double*> CTxElem.data,
 				                        < double*> CTyElem.data,
                                                         <double*> dLowElem.data,
+                                                        <double*> QL_sparsity.data,
                                                         <double*> xGradRHS.data,
-                                                        <double*> yGradRHS.data,
-                                                        <double*> numIterations.data)
+                                                        <double*> yGradRHS.data)        
     def calculateJacobian(self,
                           double dt,
                           numpy.ndarray mesh_trial_ref,
