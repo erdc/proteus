@@ -138,6 +138,10 @@ namespace proteus
 				   double* CyElem,
 				   double* CTxElem,
 				   double* CTyElem,
+				   double* PrCxElem,
+				   double* PrCyElem,
+				   double* PrCTxElem,
+				   double* PrCTyElem,
 				   double* dLowElem,
 				   double* QL_sparsity,
 				   double* xGradRHS,
@@ -235,6 +239,10 @@ namespace proteus
 				   double* CyElem,				   
 				   double* CTxElem,
 				   double* CTyElem,
+				   double* PrCxElem,
+				   double* PrCyElem,
+				   double* PrCTxElem,
+				   double* PrCTyElem,
 				   double* dLowElem,
 				   double* QL_sparsity,
 				   double* xGradRHS,
@@ -332,6 +340,10 @@ namespace proteus
 						    double* CyElem,
 						    double* CTxElem,
 						    double* CTyElem,
+						    double* PrCxElem,
+						    double* PrCyElem,
+						    double* PrCTxElem,
+						    double* PrCTyElem,
 						    double* dLowElem,
 						    double* QL_sparsity,
 						    double* xGradRHS,
@@ -613,6 +625,10 @@ namespace proteus
 			     double* CyElem,
 			     double* CTxElem,
 			     double* CTyElem,
+			     double* PrCxElem,
+			     double* PrCyElem,
+			     double* PrCTxElem,
+			     double* PrCTyElem,
 			     double* dLowElem,
 			     double* QL_sparsity,
 			     double* xGradRHS,
@@ -867,28 +883,31 @@ namespace proteus
 		    
 		    // low-order flux part of qi
 		    qi -= (CTxElem[eN_i_j]*fxj + CTyElem[eN_i_j]*fyj);
+		    qi += ((PrCxElem[eN_i_j]-CxElem[eN_i_j])*fxj +
+		    	   (PrCyElem[eN_i_j]-CyElem[eN_i_j])*fyj);
 		    
 		    // compute low order flux term
-		    lowOrderFluxTerm[gi] += (CxElem[eN_i_j]*fxj + CyElem[eN_i_j]*fyj);
+		    lowOrderFluxTerm[gi] += (PrCxElem[eN_i_j]*fxj + PrCyElem[eN_i_j]*fyj);
 
 		    int jacIndex=csrRowIndeces_CellLoops[eN_i]+csrColumnOffsets_CellLoops[eN_i_j];
 		    double dLowElemij=0;
 		    if (i != j)
 		      {
 			dLowElemij=
-			  fmax(fmax(fabs(CxElem[eN_i_j]*u_veli + CyElem[eN_i_j]*v_veli),
-				    fabs(CxElem[eN_i_j]*u_velj + CyElem[eN_i_j]*v_velj)),
-			       fmax(fabs(CTxElem[eN_i_j]*u_veli + CTyElem[eN_i_j]*v_veli),
-				    fabs(CTxElem[eN_i_j]*u_velj + CTyElem[eN_i_j]*v_velj)));
+			  fmax(fmax(fabs(PrCxElem[eN_i_j]*u_veli + PrCyElem[eN_i_j]*v_veli),
+				    fabs(PrCxElem[eN_i_j]*u_velj + PrCyElem[eN_i_j]*v_velj)),
+			       fmax(fabs(PrCTxElem[eN_i_j]*u_veli + PrCTyElem[eN_i_j]*v_veli),
+				    fabs(PrCTxElem[eN_i_j]*u_velj + PrCTyElem[eN_i_j]*v_velj)));
 			dLowElemii -= dLowElemij;
 			if (USE_ELEMENT_BASED_FIJ==1)
 			  {
 			    // save anti-dissipative flux into element_flux_qij
 			    element_flux_qij[eN_i_j] =
-			      (dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
-			      //(fmin(dLowElemij,fmax(EntVisc[gi],EntVisc[gj])) - dLowElemij)*(solnj-solni);
+			      (- dLowElemij)*(solnj-solni);
+			    //(dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
+			    //(fmin(dLowElemij,fmax(EntVisc[gi],EntVisc[gj])) - dLowElemij)*(solnj-solni);
 
-			    // compute low order dissipative term 
+			    // compute low order dissipative term
 			    lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
 			    flux_qij[jacIndex] +=
 			      (dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
@@ -896,10 +915,10 @@ namespace proteus
 			    // compute wBar states (wBar = 2*dij*uBar)
 			    wBarij[eN_i_j]=
 			      (2.0*dLowElemij*(solnj+solni)/2.0
-			       -(CxElem[eN_i_j]*(fxj-fxi) + CyElem[eN_i_j]*(fyj-fyi)));
+			       -(PrCxElem[eN_i_j]*(fxj-fxi) + PrCyElem[eN_i_j]*(fyj-fyi)));
 			    wBarji[eN_i_j]=
-			      (2.0*dLowElemij*(solnj+solni)/2.0 
-			       -(CTxElem[eN_i_j]*(fxi-fxj) + CTyElem[eN_i_j]*(fyi-fyj)));
+			      (2.0*dLowElemij*(solnj+solni)/2.0
+			       -(PrCTxElem[eN_i_j]*(fxi-fxj) + PrCTyElem[eN_i_j]*(fyi-fyj)));
 			  }
 			// save low order matrix
 			dLowElem[eN_i_j] = dLowElemij;
@@ -1403,6 +1422,10 @@ namespace proteus
 					double* CyElem,
 					double* CTxElem,
 					double* CTyElem,
+					double* PrCxElem,
+					double* PrCyElem,
+					double* PrCTxElem,
+					double* PrCTyElem,
 					double* dLowElem,
 					double* QL_sparsity,
 					double* xGradRHS,
@@ -1835,6 +1858,10 @@ namespace proteus
 					      double* CyElem,
 					      double* CTxElem,
 					      double* CTyElem,
+					      double* PrCxElem,
+					      double* PrCyElem,
+					      double* PrCTxElem,
+					      double* PrCTyElem,
 					      double* dLowElem,
 					      double* QL_sparsity,
 					      // gradient reconstruction

@@ -1088,16 +1088,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # END OF COMPUTING LUMPED MASS MATRIX #
         # COMPUTE PRECONDITIONED C MATRICES #
         QH_ML_eN = np.zeros(self.nDOF_test_element[0])
-        self.prec_Cx = np.zeros((self.mesh.nElements_global,
+        self.prCxElem = np.zeros((self.mesh.nElements_global,
                                  self.nDOF_test_element[0],
                                  self.nDOF_trial_element[0]), 'd')
-        self.prec_Cy = np.zeros((self.mesh.nElements_global,
+        self.prCyElem = np.zeros((self.mesh.nElements_global,
                                  self.nDOF_test_element[0],
                                  self.nDOF_trial_element[0]), 'd')
-        self.prec_CTx = np.zeros((self.mesh.nElements_global,
+        self.prCTxElem = np.zeros((self.mesh.nElements_global,
                                   self.nDOF_test_element[0],
                                   self.nDOF_trial_element[0]), 'd')
-        self.prec_CTy = np.zeros((self.mesh.nElements_global,
+        self.prCTyElem = np.zeros((self.mesh.nElements_global,
                                   self.nDOF_test_element[0],
                                   self.nDOF_trial_element[0]), 'd')
         for eN in range(len(QH_elementMassMatrix)):
@@ -1110,17 +1110,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #                             np.linalg.inv(QH_elementMassMatrix[eN]))
             #RightPreconditioner_eN=np.dot(QH_elementMassMatrix[eN],
             #                              np.linalg.inv(QH_elementMassMatrix[eN]))
-            self.prec_Cx[eN] = np.dot(LeftPreconditioner_eN,self.cterm[0][eN])
-            self.prec_Cy[eN] = np.dot(LeftPreconditioner_eN,self.cterm[1][eN])
-            self.prec_CTx[eN]= np.dot(self.cterm_transpose[0][eN],RightPreconditioner_eN)
-            self.prec_CTy[eN]= np.dot(self.cterm_transpose[1][eN],RightPreconditioner_eN)
-        import pdb; pdb.set_trace()
+            self.prCxElem[eN] = np.dot(LeftPreconditioner_eN,self.cterm[0][eN])
+            self.prCyElem[eN] = np.dot(LeftPreconditioner_eN,self.cterm[1][eN])
+            self.prCTxElem[eN]= np.dot(self.cterm_transpose[0][eN],RightPreconditioner_eN)
+            self.prCTyElem[eN]= np.dot(self.cterm_transpose[1][eN],RightPreconditioner_eN)
+        #import pdb; pdb.set_trace()
         #
         # assemble global C matrices
-        self.cterm[0] = self.prec_Cx
-        self.cterm[1] = self.prec_Cy
-        self.cterm_transpose[0] = self.prec_CTx
-        self.cterm_transpose[1] = self.prec_CTy
         for d in range(self.nSpace_global):  # spatial dimensions
             cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global[d])
             cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global_transpose[d])
@@ -1588,14 +1584,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.Cy,
             self.CTx,
             self.CTy,
-            self.prec_Cx, 
-            self.prec_Cy, 
-            self.prec_CTx,
-            self.prec_CTy,
-            #self.cterm[0],
-            #self.cterm[1],
-            #self.cterm_transpose[0],
-            #self.cterm_transpose[1],
+            self.cterm[0], #CxElem
+            self.cterm[1], #CyElem
+            self.cterm_transpose[0], #CTxElem
+            self.cterm_transpose[1], #CTyElem
+            self.prCxElem, 
+            self.prCyElem, 
+            self.prCTxElem,
+            self.prCTyElem,
             self.dLowElem,
             self.QL_sparsity,
             self.xGradRHS,
