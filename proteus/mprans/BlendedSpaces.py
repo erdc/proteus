@@ -1407,7 +1407,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             
             self.calculateResidual = self.blendedSpaces.calculateResidual
             #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
-            self.calculateJacobian = self.blendedSpaces.calculateJacobian
+            self.calculateJacobian = self.blendedSpaces.calculateMassMatrix
 
             
             ## FOR DEBUGGING ##
