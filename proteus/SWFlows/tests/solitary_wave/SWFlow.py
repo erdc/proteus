@@ -55,19 +55,17 @@ h1 = 0.1
 h2 = 0.11
 x0 = 2.0  # initial location of solitary wave
 g = 9.81
-D = np.sqrt(g * h2)
-z = np.sqrt(old_div(3.0 * (h2 - h1), h2 * h1**2))
-
+c = np.sqrt(g * h2)
+r = np.sqrt(old_div(3.0 * (h2 - h1), 4 * h2 * h1**2))
 
 def soliton(x, t):
-    phase = x - D * t - x0
-    a1 = old_div(z * phase, 2.0)
-    return h1 + (h2 - h1) * old_div(1.0, np.cosh(a1)**2)
+    phase = x - c * t - x0
+    return h1 + (h2 - h1) * old_div(1.0, np.cosh(r * phase)**2)
 
 
 def u(x, t):
-    D = np.sqrt(g * h2)
-    return D * (1.0 - old_div(h1, soliton(x, t)))
+    h = soliton(x,t)
+    return c * (1.0 - old_div(h1, h))
 
 
 def bathymetry_function(X):
@@ -100,7 +98,8 @@ class water_height_at_t0(object):
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        return soliton(X[0], 0.0) * u(X[0], 0.0)
+        h = soliton(X[0], 0.0)
+        return h * u(X[0], 0.0)
 
 
 class y_mom_at_t0(object):
@@ -124,15 +123,13 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        # since there is no bathymatry hw = -h^2 * div(vel) = -D * h1 * h'
+        # since there is no bathymatry
+        # hw = -h^2 * div(vel) = h^2 * (-c * h1 * h'/h^2) = -c * h1 * h'
         x = X[0]
-        D = np.sqrt(g * h2)
-        z = np.sqrt(old_div(3.0 * (h2 - h1), h2 * h1**2))
-        phase = x - D * t - x0
-        a1 = old_div(z * phase, 2.0)
-        sechSqd = old_div(1.0, np.cosh(a1)**2)
-        hprime = -2.0 * (h2 - h1) * z * sechSqd * np.tanh(phase)
-        hw = -D * h1 * hprime
+        phase = x - c * t - x0
+        sechSqd = old_div(1.0, np.cosh(r * phase)**2)
+        hprime = -2.0 * (h2 - h1) * r * sechSqd * np.tanh(r * phase)
+        hw = -c * h1 * hprime
         return hw
 
 
