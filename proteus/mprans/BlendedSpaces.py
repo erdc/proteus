@@ -251,6 +251,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #if self.model.hasForceFieldAsFunction:
         #    self.model.updateForceFieldAsFunction()
 
+        if self.model.hasInletFunction:
+            self.model.update_uInlet_dofs()
+        #
+        
         # COMPUTE BLENDING FUNCTION (if given by user)
         #if self.model.hasBlendingFunction:
         #    self.model.updateBlendingFunction()
@@ -608,6 +612,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.velocityFieldAsFunction = options.velocityFieldAsFunction
             self.hasVelocityFieldAsFunction = True
 
+        # uInlet
+        self.hasInletFunction = False
+        if ('uInletFunction') in dir (options):
+            self.uInletFunction = options.uInletFunction
+            self.hasInletFunction = True
+            
         #Blending function
         self.hasBlendingFunction = False
         if ('blendingFunction') in dir (options):
@@ -632,6 +642,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # mql. For edge based stabilization
         self.dLow=None
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.quantDOFs2 = numpy.zeros(self.u[0].dof.shape, 'd')
         self.boundaryValues = None
         self.isBoundary = None
 
@@ -698,7 +709,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.EntVisc = None
         self.uHDot = None
         self.QL_NNZ = 0
-        self.QL_sparsity=None
+        self.Q1_sparsity=None
+        self.uInlet_dofs=None
     #
     
     def getMetricsAtEOS(self):
@@ -900,7 +912,30 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             input("finished checking partition of unity")
         #
     #
-    
+
+    def update_uInlet_dofs(self):
+        input("wait")
+        self.quantDOFs2[:] = 0
+        # DO FINITE ELEMENT INTERPOLATION #
+        logEvent("Computing boundary data via FE interpolation", level=2)
+        self.x = numpy.zeros(self.u[0].dof.shape,'d')
+        self.y = numpy.zeros(self.u[0].dof.shape,'d')
+        self.z = numpy.zeros(self.u[0].dof.shape,'d')
+        for eN in range(self.mesh.nElements_global):
+            for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                gi = self.offset[0]+self.stride[0]*self.u[0].femSpace.dofMap.l2g[eN,i]
+                self.x[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
+                self.y[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
+                self.z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
+                
+        X = {0:self.x,
+             1:self.y,
+             2:self.z}
+        t = self.timeIntegration.t
+
+        self.uInletDOFs[:] = self.uInletFunction[0](X,t)
+        self.uInletDOFs2[:] = self.uInletFunction[0](X,t)
+            
     def updateBlendingFunction(self):
         # DO LUMPED L2 PROJECTION #
         self.blendingFunctionViaLumpedL2Projection=False
@@ -1202,13 +1237,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                   self.elementMassMatrix,
                                                                   self.QL_MC_global)
         self.QL_ML = np.zeros((self.nFreeDOF_global[0],), 'd')
-        self.QL_sparsity = np.zeros(self.Cx.shape,'d')
+        self.Q1_sparsity = np.zeros(self.Cx.shape,'d')
         ij=0
         for i in range(self.nFreeDOF_global[0]):
             self.QL_ML[i] = self.QL_MC_a[rowptr[i]:rowptr[i + 1]].sum()
             for j in range(self.rowptr[i], self.rowptr[i+1]):
                 if self.QL_MC_a[ij]>1E-10:
-                    self.QL_sparsity[ij]=1.0
+                    self.Q1_sparsity[ij]=1.0
                     self.QL_NNZ+=1
                 #
                 ij+=1
@@ -1409,6 +1444,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
             self.calculateJacobian = self.blendedSpaces.calculateMassMatrix
 
+            self.uInlet_dofs=np.zeros(self.u[0].dof.shape,'d')
             
             ## FOR DEBUGGING ##
             # compare lumped mass matrices ? #
@@ -1561,6 +1597,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.PROBLEM_TYPE,
             self.quantDOFs,
             # For highOrderLim
+            self.uInlet_dofs,
             self.coefficients.GET_POINT_VALUES,
             self.flux_qij,
             self.element_flux_qij,
@@ -1593,7 +1630,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.prCTxElem,
             self.prCTyElem,
             self.dLowElem,
-            self.QL_sparsity,
+            self.Q1_sparsity,
             self.xGradRHS,
             self.yGradRHS)
 
