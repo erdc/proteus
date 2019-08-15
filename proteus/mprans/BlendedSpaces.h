@@ -11,7 +11,7 @@
 #define ZALESAK_FCT 0
 #define USE_Q1_STENCIL 1
 
-#define PROBLEM 0
+#define PROBLEM 1
 // 0: linear advection
 // 1: burgers
 
@@ -32,14 +32,14 @@ namespace proteus
     if (PROBLEM==0)
       return u_vel*ENTROPY(soln);
     else
-      return 1.0*ENTROPY(soln);
+      return soln*soln*soln/3.0;
   }
   inline double yEntFlux(const double& v_vel, const double& soln)
   {
     if (PROBLEM==0)
       return v_vel*ENTROPY(soln);
     else
-      return 1.0*ENTROPY(soln);
+      return soln*soln*soln/3.0;
   }
   //////////////////////
   // PROBLEM ORIENTED //
@@ -49,29 +49,36 @@ namespace proteus
   {
     if (PROBLEM==0)
       return u_vel*soln;
-    else
+    else if (PROBLEM==1)
       return 0.5*soln*soln;
+    else return 0;
   }
   inline double yFlux(const double& v_vel, const double& soln)
   {
     if (PROBLEM==0)
       return v_vel*soln;
-    else
+    else if (PROBLEM==1)
       return 0.5*soln*soln;
+    else
+      return 0;
   }
   inline double xFluxJacobian(const double& u_vel, const double& soln)
   {
     if (PROBLEM==0)
       return u_vel;
-    else
+    else if (PROBLEM==1)
       return soln;
+    else
+      return 0;
   }
   inline double yFluxJacobian(const double& v_vel, const double& soln)
   {
     if (PROBLEM==0)
       return v_vel;
-    else
+    else if (PROBLEM==1)
       return soln;
+    else
+      return 0;
   }
 
   inline double compute_dij(const double& solni, const double& solnj,
@@ -85,11 +92,13 @@ namespace proteus
     		     fabs(Cx*u_velj + Cy*v_velj)),
     		fmax(fabs(CTx*u_veli + CTy*v_veli),
     		     fabs(CTx*u_velj + CTy*v_velj)));
-    else
+    else if (PROBLEM==1)
       {
 	double lambda = fmax(fabs(solni),fabs(solnj));
 	return fmax(fabs(Cx+Cy), fabs(CTx+CTy))*lambda;
-      }		       
+      }
+    else
+      return 0.;
   }
 			    
     
@@ -312,109 +321,6 @@ namespace proteus
 				   double* CTy,
 				   double* CxElem,
 				   double* CyElem,				   
-				   double* CTxElem,
-				   double* CTyElem,
-				   double* PrCxElem,
-				   double* PrCyElem,
-				   double* PrCTxElem,
-				   double* PrCTyElem,
-				   double* dLowElem,
-				   double* Q1_sparsity,
-				   double* xGradRHS,
-				   double* yGradRHS)=0;
-    virtual void calculateFluxes(//element
-				 double dt,
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   int* mesh_l2g,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
-                                   //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
-                                   //physics
-                                   int nElements_global,
-                                   int* u_l2g,
-                                   int* r_l2g,
-                                   double* elementDiameter,
-                                   double* u_dof,
-                                   double* u_dof_old,
-                                   double* velocity,
-                                   double* q_u,
-				   double* q_grad_u,
-                                   int offset_u, int stride_u,
-                                   double* globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_velocity_ext,
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_bc_u_ext,
-                                   int* isFluxBoundary_u,
-                                   double* ebqe_bc_flux_u_ext,
-                                   double* ebqe_phi,double epsFact,
-                                   double* ebqe_u,
-                                   double* ebqe_flux,
-                                   // PARAMETERS FOR EDGE VISCOSITY
-                                   int numDOFs,
-                                   int NNZ,
-                                   int* rowptr,
-                                   int* colind,
-                                   int* csrRowIndeces_CellLoops,
-                                   int* csrColumnOffsets_CellLoops,
-                                   int* csrColumnOffsets_eb_CellLoops,
-				   // FOR BLENDING SPACES
-				   double* force,
-				   double* alpha_dof,
-				   double* aux_test_ref,
-				   double* aux_grad_test_ref,
-				   double* aux_test_trace_ref,
-				   double* dLow,
-				   double epsilon,
-				   // Type of problem to solve
-				   int PROBLEM_TYPE,
-                                   // AUX QUANTITIES OF INTEREST
-                                   double* quantDOFs,				  
-				   // FOR highOrderLim
-				   // for boundary
-				   double* uInlet_dofs,
-				   int GET_POINT_VALUES,
-				   double* flux_qij,
-				   double* element_flux_qij,
-				   double* element_MC,
-				   double* vVector,
-				   double* element_flux_i,
-				   double* intBernMat,
-				   double* edge_based_cfl,
-				   // velocity at dofs
-				   double* u_vel_dofs,
-				   double* v_vel_dofs,
-				   // lumped mass matrices
-				   double* QH_ML,
-				   // inverse of dissipative mass matrix
-				   double* inv_element_ML_minus_MC,
-				   // high order stab
-				   double* uHDot,
-				   double* EntVisc,
-				   // C-matrices
-				   double* Cx,
-				   double* Cy,
-				   double* CTx,
-				   double* CTy,
-				   double* CxElem,
-				   double* CyElem,
 				   double* CTxElem,
 				   double* CTyElem,
 				   double* PrCxElem,
@@ -913,7 +819,6 @@ namespace proteus
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 		  }
 		
-		// coefficient of steady advection - diffusion
 		double flux[2];
 		flux[0] = xFlux(velocity[eN_k_nSpace+0],un);
 		flux[1] = yFlux(velocity[eN_k_nSpace+1],un);
@@ -984,8 +889,8 @@ namespace proteus
 
 			// save anti-dissipative flux into element_flux_qij
 			element_flux_qij[eN_i_j] =
-			  (- dLowElemij)*(solnj-solni);
-			//(dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
+			  //(- dLowElemij)*(solnj-solni);
+			  (dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
 			
 			// compute low order dissipative term
 			lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
@@ -1158,14 +1063,14 @@ namespace proteus
 			if (fij > 0)
 			  {
 			    //fluxStar[gi] = 0; // low-order method
-			    fluxStar[gi] += fij; // high-order entropy viscosity
-			    //fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+			    //fluxStar[gi] += fij; // high-order entropy viscosity
+			    fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
 			  }
 			else
 			  {
 			    //fluxStar[gi] = 0;
-			    fluxStar[gi] += fij;
-			    //fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+			    //fluxStar[gi] += fij;
+			    fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
 			  }
 		      }
 		  } //j
@@ -1308,7 +1213,7 @@ namespace proteus
 	////////////////////////////////
 	// Zero out auxiliary vectors //
 	////////////////////////////////
-	highOrderBoundaryIntegral.resize(numDOFs,0.0);
+	//highOrderBoundaryIntegral.resize(numDOFs,0.0);
 
 	// for entropy viscosity
 	highOrderFluxTerm.resize(numDOFs,0.0);
@@ -1318,82 +1223,90 @@ namespace proteus
 	// BOUNDARY TERM //
 	///////////////////
 	// * Compute boundary integrals 
-	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
-	  {
-	    register int ebN = exteriorElementBoundariesArray[ebNE];
-	    register int eN  = elementBoundaryElementsArray[ebN*2+0],
-	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
-	      eN_nDOF_trial_element = eN*nDOF_trial_element;
-	    register double elementBoundaryFluxHighOrder[nDOF_test_element];
-	    for (int i=0;i<nDOF_test_element;i++)
-	      elementBoundaryFluxHighOrder[i]=0.0;
-	    // loop on quad points
-	    for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
-	      {
-		register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
-		  ebNE_kb_nSpace = ebNE_kb*nSpace,
-		  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
-		  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-		register double
-		  uExt=0.,
-		  jac_ext[nSpace*nSpace],
-		  jacDet_ext,
-		  jacInv_ext[nSpace*nSpace],
-		  boundaryJac[nSpace*(nSpace-1)],
-		  metricTensor[(nSpace-1)*(nSpace-1)],
-		  metricTensorDetSqrt,
-		  dS,
-		  u_test_dS[nDOF_test_element],
-		  normal[nSpace],x_ext,y_ext,z_ext;
-		// calculate mappings
-		ck.calculateMapping_elementBoundary(eN,
-						    ebN_local,
-						    kb,
-						    ebN_local_kb,
-						    mesh_dof,
-						    mesh_l2g,
-						    mesh_trial_trace_ref,
-						    mesh_grad_trial_trace_ref,
-						    boundaryJac_ref,
-						    jac_ext,
-						    jacDet_ext,
-						    jacInv_ext,
-						    boundaryJac,
-						    metricTensor,
-						    metricTensorDetSqrt,
-						    normal_ref,
-						    normal,
-						    x_ext,y_ext,z_ext);
-		dS = ((1.0)*metricTensorDetSqrt )*dS_ref[kb];
-		ck.valFromDOF(u_dof_old,
-			      &u_l2g[eN_nDOF_trial_element],
-			      &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
-			      uExt);
-		//precalculate test function products with integration weights
-		for (int j=0;j<nDOF_trial_element;j++)
-		  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+	/* for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) */
+	/*   { */
+	/*     register int ebN = exteriorElementBoundariesArray[ebNE]; */
+	/*     register int eN  = elementBoundaryElementsArray[ebN*2+0], */
+	/*       ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0], */
+	/*       eN_nDOF_trial_element = eN*nDOF_trial_element; */
+	/*     register double elementBoundaryFluxHighOrder[nDOF_test_element]; */
+	/*     for (int i=0;i<nDOF_test_element;i++) */
+	/*       elementBoundaryFluxHighOrder[i]=0.0; */
+	/*     // loop on quad points */
+	/*     for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) */
+	/*       { */
+	/* 	register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
+	/* 	  ebNE_kb_nSpace = ebNE_kb*nSpace, */
+	/* 	  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb, */
+	/* 	  ebN_local_kb_nSpace = ebN_local_kb*nSpace; */
+	/* 	register double */
+	/* 	  uExt=0., uInlet=0., */
+	/* 	  jac_ext[nSpace*nSpace], */
+	/* 	  jacDet_ext, */
+	/* 	  jacInv_ext[nSpace*nSpace], */
+	/* 	  boundaryJac[nSpace*(nSpace-1)], */
+	/* 	  metricTensor[(nSpace-1)*(nSpace-1)], */
+	/* 	  metricTensorDetSqrt, */
+	/* 	  dS, */
+	/* 	  u_test_dS[nDOF_test_element], */
+	/* 	  normal[nSpace],x_ext,y_ext,z_ext; */
+	/* 	// calculate mappings */
+	/* 	ck.calculateMapping_elementBoundary(eN, */
+	/* 					    ebN_local, */
+	/* 					    kb, */
+	/* 					    ebN_local_kb, */
+	/* 					    mesh_dof, */
+	/* 					    mesh_l2g, */
+	/* 					    mesh_trial_trace_ref, */
+	/* 					    mesh_grad_trial_trace_ref, */
+	/* 					    boundaryJac_ref, */
+	/* 					    jac_ext, */
+	/* 					    jacDet_ext, */
+	/* 					    jacInv_ext, */
+	/* 					    boundaryJac, */
+	/* 					    metricTensor, */
+	/* 					    metricTensorDetSqrt, */
+	/* 					    normal_ref, */
+	/* 					    normal, */
+	/* 					    x_ext,y_ext,z_ext); */
+	/* 	dS = ((1.0)*metricTensorDetSqrt )*dS_ref[kb]; */
+	/* 	ck.valFromDOF(u_dof_old, */
+	/* 		      &u_l2g[eN_nDOF_trial_element], */
+	/* 		      &u_trial_trace_ref[ebN_local_kb*nDOF_test_element], */
+	/* 		      uExt); */
+	/* 	ck.valFromDOF(uInlet_dofs, */
+	/* 		      &u_l2g[eN_nDOF_trial_element], */
+	/* 		      &u_trial_trace_ref[ebN_local_kb*nDOF_test_element], */
+	/* 		      uInlet); */
+	/* 	//precalculate test function products with integration weights */
+	/* 	for (int j=0;j<nDOF_trial_element;j++) */
+	/* 	  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS; */
 		
-		//calculate flow
-		double flow = 0.;
-		for (int I=0; I < nSpace; I++)
-		  flow += normal[I]*ebqe_velocity_ext[ebNE_kb_nSpace+I];
-
-		for (int i=0;i<nDOF_test_element;i++)
-		  {
-		    int eN_i = eN*nDOF_test_element+i;
-		    // high order flux
-		    double auxHighOrder = (flow >= 0 ? 1. : 0.)*uExt*flow*u_test_dS[i];
-		    elementBoundaryFluxHighOrder[i] += auxHighOrder;
-		  }
-	      }//kb
-	    // save to the corresponding vectors
-	    for (int i=0;i<nDOF_test_element;i++)
-	      {
-		int eN_i = eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
-		highOrderBoundaryIntegral[gi] += elementBoundaryFluxHighOrder[i];
-	      }
-	  }//ebNE
+	/* 	//calculate flow */
+	/* 	double flow = 0.; */
+	/* 	double fluxJacobian[2]; */
+	/* 	fluxJacobian[0] = xFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+0],uExt); */
+	/* 	fluxJacobian[1] = yFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+1],uExt); */
+		
+	/* 	for (int I=0; I < nSpace; I++) */
+	/* 	  flow += normal[I]*fluxJacobian[I]; */
+		
+	/* 	for (int i=0;i<nDOF_test_element;i++) */
+	/* 	  { */
+	/* 	    int eN_i = eN*nDOF_test_element+i; */
+	/* 	    // high order flux */
+	/* 	    double auxHighOrder = (flow >= 0 ? uExt : uInlet)*flow*u_test_dS[i]; */
+	/* 	    elementBoundaryFluxHighOrder[i] += auxHighOrder; */
+	/* 	  } */
+	/*       }//kb */
+	/*     // save to the corresponding vectors */
+	/*     for (int i=0;i<nDOF_test_element;i++) */
+	/*       { */
+	/* 	int eN_i = eN*nDOF_test_element+i; */
+	/* 	int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index */
+	/* 	highOrderBoundaryIntegral[gi] += elementBoundaryFluxHighOrder[i]; */
+	/*       } */
+	/*   }//ebNE */
 	///////////////////////////
 	// END OF BOUNDARY TERMS //
 	///////////////////////////
@@ -1493,7 +1406,7 @@ namespace proteus
 		  eN_k_nSpace = eN_k*nSpace,
 		  eN_nDOF_trial_element = eN*nDOF_trial_element;
 		register double
-		  un=0.0,
+		  un=0.0, grad_un[nSpace],
 		  uDot=0.0,
 		  jac[nSpace*nSpace],
 		  jacDet,
@@ -1523,6 +1436,10 @@ namespace proteus
 			      &u_l2g[eN_nDOF_trial_element],
 			      &u_trial_ref[k*nDOF_trial_element],
 			      un); // from high-order space
+		ck.gradFromDOF(u_dof_old,
+			       &u_l2g[eN_nDOF_trial_element],
+			       u_grad_trial,
+			       grad_un);
 		ck.valFromDOF(u_dof,
 			      &u_l2g[eN_nDOF_trial_element],
 			      &u_trial_ref[k*nDOF_trial_element],
@@ -1534,19 +1451,18 @@ namespace proteus
 		    for (int I=0;I<nSpace;I++)
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 		  }
-		
-		// coefficient of steady advection - diffusion
-		double velocityBeta[2];
-		velocityBeta[0] = velocity[eN_k_nSpace+0];
-		velocityBeta[1] = velocity[eN_k_nSpace+1];
-		
+
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
 		    elementTimeDerivative[i] += uDot*u_test_dV[i]; 
 		    register int i_nSpace=i*nSpace;
-		    elementFluxTerm[i] += un*ck.NumericalDiffusion(1.0,
-								    velocityBeta,
-								    &u_grad_test_dV[i_nSpace]);
+		    if (PROBLEM==0)
+		      elementFluxTerm[i] += (velocity[eN_k_nSpace+0]*grad_un[0]
+					     +velocity[eN_k_nSpace+1]*grad_un[1])*u_test_dV[i];
+		    else if (PROBLEM==1)
+		      elementFluxTerm[i] += (grad_un[0]+grad_un[1])*u_test_dV[i];
+		    else
+		      elementFluxTerm[i] += 0;
 		  }//i
 	      }
 	    //
@@ -1587,7 +1503,6 @@ namespace proteus
 		    double fyj = yFlux(v_velj,solnj);
 
 		    // For entropy viscosity //
-		    
 		    double x_EntFluxj = xEntFlux(u_velj,solnj) - xEntFlux(u_veli,solni);
 		    double y_EntFluxj = yEntFlux(v_velj,solnj) - yEntFlux(v_veli,solni);
 		    ith_NumEntVisc += (PrCxElem[eN_i_j]*(x_EntFluxj-DEnti*fxj) +
@@ -1611,8 +1526,7 @@ namespace proteus
 	// * Compute the final solution and get the solution at DOFs (for visualization)
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    globalResidual[i] = consistentTimeDerivative[i] + (-highOrderFluxTerm[i]
-							       + highOrderBoundaryIntegral[i]);
+	    globalResidual[i] = consistentTimeDerivative[i] + highOrderFluxTerm[i];
 	  }
 	//////////////////////////////
 	// END OF LAST LOOP IN DOFs //
