@@ -6,14 +6,11 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define ALPHA_VIA_LINEAR_SPACE 1
-#define DO_CHECKS 0
-#define ZALESAK_FCT 0
 #define USE_Q1_STENCIL 1
-
-#define PROBLEM 1
+#define PROBLEM 2
 // 0: linear advection
 // 1: burgers
+// 2: KPP
 
 namespace proteus
 {
@@ -31,15 +28,21 @@ namespace proteus
   {
     if (PROBLEM==0)
       return u_vel*ENTROPY(soln);
-    else
+    else if (PROBLEM==1)
       return soln*soln*soln/3.0;
+    else
+      //return soln*soln*soln/3.0;
+      return soln*std::sin(soln)+std::cos(soln)-1;
   }
   inline double yEntFlux(const double& v_vel, const double& soln)
   {
     if (PROBLEM==0)
       return v_vel*ENTROPY(soln);
-    else
+    else if (PROBLEM==1)
       return soln*soln*soln/3.0;
+    else
+      //return soln*soln*soln/3.0;
+      return soln*std::cos(soln)-std::sin(soln);
   }
   //////////////////////
   // PROBLEM ORIENTED //
@@ -51,7 +54,7 @@ namespace proteus
       return u_vel*soln;
     else if (PROBLEM==1)
       return 0.5*soln*soln;
-    else return 0;
+    else return std::sin(soln);
   }
   inline double yFlux(const double& v_vel, const double& soln)
   {
@@ -60,7 +63,7 @@ namespace proteus
     else if (PROBLEM==1)
       return 0.5*soln*soln;
     else
-      return 0;
+      return std::cos(soln);
   }
   inline double xFluxJacobian(const double& u_vel, const double& soln)
   {
@@ -69,7 +72,7 @@ namespace proteus
     else if (PROBLEM==1)
       return soln;
     else
-      return 0;
+      return std::cos(soln);
   }
   inline double yFluxJacobian(const double& v_vel, const double& soln)
   {
@@ -78,7 +81,7 @@ namespace proteus
     else if (PROBLEM==1)
       return soln;
     else
-      return 0;
+      return -std::sin(soln);
   }
 
   inline double compute_dij(const double& solni, const double& solnj,
@@ -98,7 +101,10 @@ namespace proteus
 	return fmax(fabs(Cx+Cy), fabs(CTx+CTy))*lambda;
       }
     else
-      return 0.;
+      {
+	double lambda = 1;
+	return fmax(fabs(Cx+Cy), fabs(CTx+CTy))*lambda;
+      }
   }
 			    
     
@@ -193,7 +199,7 @@ namespace proteus
                                    double* quantDOFs,				  
 				   // FOR highOrderLim
 				   // for boundary
-				   double* uInlet_dofs,
+				   double* ebqe_uInlet,
 				   int GET_POINT_VALUES,
 				   double* flux_qij,
 				   double* element_flux_qij,
@@ -295,7 +301,7 @@ namespace proteus
                                    // AUX QUANTITIES OF INTEREST
                                    double* quantDOFs,
 				   // FOR highOrderLim
-				   double* uInlet_dofs,
+				   double* ebqe_uInlet,
 				   int GET_POINT_VALUES,
 				   double* flux_qij,
 				   double* element_flux_qij,
@@ -581,7 +587,7 @@ namespace proteus
 			     // AUX QUANTITIES OF INTEREST			     
 			     double* quantDOFs,
 			     // For highOrderLim
-			     double* uInlet_dofs,
+			     double* ebqe_uInlet,
 			     int GET_POINT_VALUES,
 			     double* flux_qij,
 			     double* element_flux_qij,
@@ -718,6 +724,7 @@ namespace proteus
 		//calculate flow
 		double flow = 0.;
 		double fluxJacobian[2];
+		double uInlet = ebqe_uInlet[ebNE_kb];
 		fluxJacobian[0] = xFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+0],uExt);
 		fluxJacobian[1] = yFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+1],uExt);
 		
@@ -729,9 +736,10 @@ namespace proteus
 		    int eN_i = eN*nDOF_test_element+i;
 		    int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 		    double uni = u_dof_old[gi];
-		    double uiInlet = uInlet_dofs[gi];
+		    //double uInlet = ebqe_uInlet[gi];
+		    
 		    // low order part
-		    double auxLowOrder = (flow >= 0 ? 0. : 1.)*(uni-uiInlet)*flow*u_test_dS[i];
+		    double auxLowOrder = (flow >= 0 ? 0. : 1.)*(uni-uInlet)*flow*u_test_dS[i];
 		    elementBoundaryFluxLowOrder[i] += auxLowOrder;
 		    // high order part
 		    double auxHighOrder = (flow >= 0 ? 0. : 1.)*(uExt-uni)*flow*u_test_dS[i];
@@ -1173,7 +1181,7 @@ namespace proteus
 					// AUX QUANTITIES OF INTEREST			     
 					double* quantDOFs,
 					// For highOrderLim
-					double* uInlet_dofs,
+					double* ebqe_uInlet,
 					int GET_POINT_VALUES,
 					double* flux_qij,
 					double* element_flux_qij,
@@ -1460,9 +1468,9 @@ namespace proteus
 		      elementFluxTerm[i] += (velocity[eN_k_nSpace+0]*grad_un[0]
 					     +velocity[eN_k_nSpace+1]*grad_un[1])*u_test_dV[i];
 		    else if (PROBLEM==1)
-		      elementFluxTerm[i] += (grad_un[0]+grad_un[1])*u_test_dV[i];
-		    else
-		      elementFluxTerm[i] += 0;
+		      elementFluxTerm[i] += un*(grad_un[0]+grad_un[1])*u_test_dV[i];
+		    else // KPP
+		      elementFluxTerm[i] += (std::cos(un)-std::sin(un))*u_test_dV[i];
 		  }//i
 	      }
 	    //
@@ -1503,8 +1511,8 @@ namespace proteus
 		    double fyj = yFlux(v_velj,solnj);
 
 		    // For entropy viscosity //
-		    double x_EntFluxj = xEntFlux(u_velj,solnj) - xEntFlux(u_veli,solni);
-		    double y_EntFluxj = yEntFlux(v_velj,solnj) - yEntFlux(v_veli,solni);
+		    double x_EntFluxj = xEntFlux(u_velj,solnj);// - xEntFlux(u_veli,solni);
+		    double y_EntFluxj = yEntFlux(v_velj,solnj);// - yEntFlux(v_veli,solni);
 		    ith_NumEntVisc += (PrCxElem[eN_i_j]*(x_EntFluxj-DEnti*fxj) +
 				       PrCyElem[eN_i_j]*(y_EntFluxj-DEnti*fyj));
 		    // aux parts to compute DenEntVisc
@@ -1512,7 +1520,7 @@ namespace proteus
 		    DenEntViscPart2 += PrCxElem[eN_i_j]*fxj + PrCyElem[eN_i_j]*fyj;
 		  }//j
 		// compute DenEntVisc //
-		ith_DenEntVisc=fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15;
+		ith_DenEntVisc=(fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
 		EntVisc[gi] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0);
 	      }//i
 	  }//elements

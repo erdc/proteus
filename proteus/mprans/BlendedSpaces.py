@@ -252,7 +252,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #    self.model.updateForceFieldAsFunction()
 
         if self.model.hasInletFunction:
-            self.model.update_uInlet_dofs()
+            self.model.update_uInlet_at_quad_points()
         #
         
         # COMPUTE BLENDING FUNCTION (if given by user)
@@ -710,7 +710,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.uHDot = None
         self.QL_NNZ = 0
         self.Q1_sparsity=None
-        self.uInletDOFs=None
+        self.uInlet_at_quad_points=None
     #
     
     def getMetricsAtEOS(self):
@@ -913,30 +913,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
     #
 
-    def update_uInlet_dofs(self):        
+    def update_uInlet_at_quad_points(self):        
         # DO FINITE ELEMENT INTERPOLATION #
-        logEvent("Computing boundary data via FE interpolation", level=2)
-        if self.x is None:
-            self.x = numpy.zeros(self.u[0].dof.shape,'d')
-            self.y = numpy.zeros(self.u[0].dof.shape,'d')
-            self.z = numpy.zeros(self.u[0].dof.shape,'d')
-            for eN in range(self.mesh.nElements_global):
-                for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
-                    gi = self.offset[0]+self.stride[0]*self.u[0].femSpace.dofMap.l2g[eN,i]
-                    self.x[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
-                    self.y[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
-                    self.z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
-                #
-            #
-        #
-        X = {0:self.x,
-             1:self.y,
-             2:self.z}
-        t = self.timeIntegration.t
-
-        self.uInletDOFs[:] = self.uInletFunction[0](X,t)
-        self.quantDOFs2[:] = self.uInletDOFs
+        logEvent("Computing boundary data at quad points", level=2)
+        nElements = self.ebqe['x'][:,:,0].shape[0]
+        nQuad = self.ebqe['x'][:,:,0].shape[1]
         
+        ebqe_X = {0: self.ebqe['x'][:, :, 0].ravel(),
+                  1: self.ebqe['x'][:, :, 1].ravel(),
+                  2: self.ebqe['x'][:, :, 2].ravel()}
+        t = self.timeIntegration.t
+        
+        self.uInlet_at_quad_points[:] = np.reshape(self.uInletFunction[0](ebqe_X,t),(nElements,nQuad))
+    #
+    
     def updateBlendingFunction(self):
         # DO LUMPED L2 PROJECTION #
         self.blendingFunctionViaLumpedL2Projection=False
@@ -1445,7 +1435,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
             self.calculateJacobian = self.blendedSpaces.calculateMassMatrix
 
-            self.uInletDOFs=np.zeros(self.u[0].dof.shape,'d')
+            self.uInlet_at_quad_points=numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                                    self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
             
             ## FOR DEBUGGING ##
             # compare lumped mass matrices ? #
@@ -1598,7 +1589,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.PROBLEM_TYPE,
             self.quantDOFs,
             # For highOrderLim
-            self.uInletDOFs,
+            self.uInlet_at_quad_points,
             self.coefficients.GET_POINT_VALUES,
             self.flux_qij,
             self.element_flux_qij,
@@ -1635,6 +1626,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.xGradRHS,
             self.yGradRHS)
 
+        self.quantDOFs2[:] = self.EntVisc
         #import pdb; pdb.set_trace()
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
