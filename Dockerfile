@@ -18,9 +18,7 @@ ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
 
 RUN cd proteus && PATH=/usr/bin:/usr/local/bin:$PATH make jupyter
 
-#ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
-
-#RUN cd proteus && git pull && export PATH=${HOME}/bin:${PATH} && make lfs && git lfs fetch && git lfs checkout
+ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
 USER root
 
