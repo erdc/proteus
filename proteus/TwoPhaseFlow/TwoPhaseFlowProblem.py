@@ -34,7 +34,7 @@ class TwoPhaseFlowProblem:
                  # AUXILIARY VARIABLES #
                  auxVariables=None,
                  # OTHERS #
-                 useSuperlu=False,
+                 useSuperlu=True,
                  fastArchive=False):
         # ***** SET OF ASSERTS ***** #
         if ns_model is not None:
