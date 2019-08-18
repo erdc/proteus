@@ -7,7 +7,8 @@
 #include "ModelFactory.h"
 
 #define USE_Q1_STENCIL 1
-#define PROBLEM 2
+#define USE_MACRO_CELL 1
+#define PROBLEM 0
 // 0: linear advection
 // 1: burgers
 // 2: KPP
@@ -421,6 +422,42 @@ namespace proteus
 				       double* global_Omega2,
 				       double* global_L2_sH,
 				       double* global_L2_1msH)=0;
+    virtual void calculateSmoothnessIndicator(//element
+					      double* mesh_trial_ref,
+					      double* mesh_grad_trial_ref,
+					      double* mesh_dof,
+					      int* mesh_l2g,
+					      double* dV_ref,
+					      double* u_trial_ref,
+					      double* u_grad_trial_ref,
+					      double* u_test_ref,
+					      double* u_grad_test_ref,
+					      double* u_hess_trial_ref,
+					      //physics
+					      int nElements_global,
+					      int* u_l2g,
+					      int* r_l2g,
+					      double* u_dof,
+					      int offset_u, int stride_u,
+					      // for smoothness indicator
+					      double* is_dof_external,
+					      double* is_dof_internal,
+					      double* num_hi,
+					      double* den_hi,
+					      double* global_hi,
+					      double* element_He,
+					      // for loops in DOFs
+					      double he,
+					      double* xCoord_dof,
+					      double* yCoord_dof,
+					      double* zCoord_dof,
+					      double* gamma_dof,
+					      double* beta_dof,
+					      int numDOFs,
+					      int NNZ,
+					      int* rowptr,
+					      int* colind
+					      )=0;
   };
 
   template<class CompKernelType,
@@ -1808,6 +1845,316 @@ namespace proteus
               }//elements
           }
       }
+
+      void calculateSmoothnessIndicator(//element
+					double* mesh_trial_ref,
+					double* mesh_grad_trial_ref,
+					double* mesh_dof,
+					int* mesh_l2g,
+					double* dV_ref,
+					double* u_trial_ref,
+					double* u_grad_trial_ref,
+					double* u_test_ref,
+					double* u_grad_test_ref,
+					double* u_hess_trial_ref,
+					//physics
+					int nElements_global,
+					int* u_l2g,
+					int* r_l2g,
+					double* u_dof,
+					int offset_u, int stride_u,
+					double* is_dof_external,
+					double* is_dof_internal,
+					double* num_hi,
+					double* den_hi,
+					double* global_hi,
+					double* element_He,
+					// for loops in DOFs
+					double he,
+					double* xCoord_dof,
+					double* yCoord_dof,
+					double* zCoord_dof,
+					double* gamma_dof,
+					double* beta_dof,
+					int numDOFs,
+					int NNZ,
+					int* rowptr,
+					int* colind)
+      {
+	//
+	//loop over elements to compute volume integrals and load them into element and global res.
+	//
+	//eN is the element index
+	//eN_k is the quadrature point index for a scalar
+	//eN_k_nSpace is the quadrature point index for a vector
+	//eN_i is the element test function index
+	//eN_j is the element trial function index
+	//eN_k_j is the quadrature point index for a trial function
+	//eN_k_i is the quadrature point index for a trial function
+
+	register int first_adjacent_dof_to_middle_dof[numDOFs];
+	register int second_adjacent_dof_to_middle_dof[numDOFs];
+
+	register double lumped_mass_matrix[numDOFs];
+	for (int i=0; i<numDOFs; i++)
+	  lumped_mass_matrix[i]=0;
+
+	int nSpace2 = nSpace*nSpace;
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    //declare local storage for element residual and initialize
+	    register double element_mass_matrix[nDOF_test_element], element_hi[nDOF_test_element];
+	    double det_hess_Ke=0, area_Ke=0;
+	    double hess_u0=0, hess_u1=0, hess_u2=0, hess_u3=0;
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+	  	element_mass_matrix[i]=0.0;
+	   	element_hi[i]=0.0;
+	      }
+	    //loop over quadrature points and compute integrands
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace,
+		  eN_nDOF_trial_element = eN*nDOF_trial_element;
+		register double
+		  u=0.0,grad_u[nSpace],hess_u[nSpace2],
+		  det_hess_u=0.,
+		  jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  u_grad_trial[nDOF_trial_element*nSpace],
+		  u_hess_trial[nDOF_trial_element*nSpace2],
+		  u_test_dV[nDOF_trial_element],
+		  dV,x,y,z;
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		//get the physical integration weight
+ 		dV = fabs(jacDet)*dV_ref[k];
+		//get the trial function gradients based on the blended functions
+		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+				    jacInv,
+				    u_grad_trial);
+		ck.hessTrialFromRef(&u_hess_trial_ref[k*nDOF_trial_element*nSpace2],
+				    jacInv,
+				    u_hess_trial);
+		//get the solution based on the blended functions
+		ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      u);
+		//get the solution gradients
+		ck.gradFromDOF(u_dof,
+			       &u_l2g[eN_nDOF_trial_element],
+			       u_grad_trial,
+			       grad_u);
+		ck.hessFromDOF(u_dof,
+			       &u_l2g[eN_nDOF_trial_element],
+			       u_hess_trial,
+			       hess_u);
+		//precalculate test function products with integration weights
+		for (int j=0;j<nDOF_trial_element;j++)
+		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+		// compute the determinan of the hessian
+		//det_hess_u = fabs(hess_u[0]*hess_u[3] - hess_u[2]*hess_u[1]);
+		det_hess_u = hess_u[0]*hess_u[3] - hess_u[2]*hess_u[1];
+
+		hess_u0 += hess_u[0]*dV;
+		hess_u1 += hess_u[1]*dV;
+		hess_u2 += hess_u[2]*dV;
+		hess_u3 += hess_u[3]*dV;
+
+		// to compute average of det of hessian in cell Ke
+		det_hess_Ke += det_hess_u*dV;
+		area_Ke += dV;
+
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    register int i_nSpace=i*nSpace;
+		    element_mass_matrix[i] += u_test_dV[i];
+		    element_hi[i] += det_hess_u*u_test_dV[i];
+		  }//i
+	      }
+	    // compute average of det of hessian in cell Ke
+	    element_He[eN] = det_hess_Ke/area_Ke;
+
+	    hess_u0 /= area_Ke;
+	    hess_u1 /= area_Ke;
+	    hess_u2 /= area_Ke;
+	    hess_u3 /= area_Ke;
+
+	    //uncomment if H_e is to be computed as the determinant of DG0 projected 2nd derivatives
+	    //element_He[eN] = fabs(hess_u0*hess_u3 - hess_u2*hess_u1);
+	    //
+	    //load element into global residual and save element residual
+	    //
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
+		int gi = offset_u+stride_u*r_l2g[eN_i];
+		lumped_mass_matrix[offset_u+stride_u*r_l2g[eN_i]] += element_mass_matrix[i];
+		global_hi[offset_u+stride_u*r_l2g[eN_i]] += element_hi[i];
+
+		num_hi[offset_u+stride_u*r_l2g[eN_i]] += element_He[eN];
+		den_hi[offset_u+stride_u*r_l2g[eN_i]] += 1;
+
+
+		if (i<4)
+		  is_dof_external[gi] = 1;
+		else if (i==8)
+		  is_dof_internal[gi] = 1;
+		else //if (i>=4 && i<8) // middle dof
+		  {
+		    int gj1 = 0, gj2 = 0;
+		    if (i==4)
+		      {
+			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+0];
+			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+1];
+		      }
+		    else if (i==5)
+		      {
+			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+1];
+			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+3];
+		      }
+		    else if (i==6)
+		      {
+			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+3];
+			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+2];
+		      }
+		    else
+		      {
+			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+2];
+			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+0];
+		      }
+
+		    first_adjacent_dof_to_middle_dof[gi]  = gj1;
+		    second_adjacent_dof_to_middle_dof[gi] = gj2;
+		  }
+	      }//i
+	  }//elements
+	// finish the computation of global_hi
+	for (int i=0; i<numDOFs; i++)
+	  global_hi[i] = num_hi[i]/den_hi[i];
+
+	register double min_hiHe[numDOFs];
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    min_hiHe[i] = 1E100;
+	  }
+	// Loop in cells to compute min(hi*He)
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    double He = element_He[eN];
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
+		register int gi = offset_u+stride_u*r_l2g[eN_i];
+		double hi = global_hi[gi];
+		min_hiHe[gi] = fmin(min_hiHe[gi], hi*He);
+	      }
+	  }
+
+	// compute beta
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double eps = 1E-10;
+	    // Compute beta
+	    double beta_numerator = 0;
+	    double beta_denominator = 0;
+	    double uGi = u_dof[i];
+
+	    double xi=xCoord_dof[i];
+	    double yi=yCoord_dof[i];
+	    double he_diag = 1.1*std::sqrt(2)*he;
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+
+		double xj=xCoord_dof[j];
+		double yj=yCoord_dof[j];
+		double dist_ij = std::sqrt(std::pow(xi-xj,2) + std::pow(yi-yj,2));
+
+		//if (dist_ij <= he_diag)
+		//{
+		double uGj = u_dof[j];
+		beta_numerator += uGj - uGi;
+		beta_denominator += fabs(uGj - uGi);
+		//}
+	      }
+	    beta_dof[i] =  1.0-std::pow(fabs(beta_numerator+eps)/(beta_denominator+eps),2);
+	  }
+	// compute gamma
+	if (USE_MACRO_CELL==1)
+	  {
+	    // compute gamma in DOFs owned by big Q1 mesh
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		if (is_dof_external[i] == 1) // if dof is in big Q1 mesh
+		  {
+		    double eps = 1E-10;
+		    double C = 3.0;
+		    double hi2 = global_hi[i] * global_hi[i];
+		    gamma_dof[i] = fmax(0, fmin(hi2, C*min_hiHe[i]))/(hi2+eps);
+		    //gamma_dof[i] = (fmax(0, fmin(hi2, C*min_hiHe[i])) + eps)/(hi2+eps);
+		    //gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C*min_hiHe[i]))/hi2;
+		  }
+		else
+		  {
+		    gamma_dof[i] = 0;
+		  }
+	      }
+	    // make average to "interpolate" gamma from big Q1 mesh to finer mesh
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		if (is_dof_internal[i] == 1) // dof is internal
+		  {
+		    double num_external_dofs = 0; // this should be 4
+		    // loop on its support
+		    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		      {
+			int j = colind[offset];
+			if (is_dof_external[j] == 1) // external j-dof
+			  {
+			    num_external_dofs += 1;
+			    gamma_dof[i] += gamma_dof[j];
+			  }
+		      }
+		    // normalize
+		    gamma_dof[i] /= num_external_dofs;
+		  }
+		else if (is_dof_external[i] == 0) // this is a middle dof
+		  {
+		    int gj1 = first_adjacent_dof_to_middle_dof[i];
+		    int gj2 = second_adjacent_dof_to_middle_dof[i];
+		    gamma_dof[i] = 0.5*(gamma_dof[gj1] + gamma_dof[gj2]);
+		  }
+	      }
+	  }
+	else
+	  {
+	    // compute gamma in DOFs owned by big Q1 mesh
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		double eps = 1E-10;
+		double C = 3.0;
+		double hi2 = global_hi[i] * global_hi[i];
+		gamma_dof[i] = fmax(0, fmin(hi2, C*min_hiHe[i]))/(hi2+eps);
+		//gamma_dof[i] = (fmax(0, fmin(hi2, C*min_hiHe[i])) + eps)/(hi2+eps);
+		//gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C*min_hiHe[i]))/hi2;
+	      }
+	  }
+      }
+	    
     };//BlendedSpaces
 
   inline BlendedSpaces_base* newBlendedSpaces(int nSpaceIn,

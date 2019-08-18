@@ -632,6 +632,7 @@ class BernsteinOnCube(LocalFunctionSpace):
         self.referenceElement = ReferenceCube(nd)
         LocalFunctionSpace.__init__(self,(order+1)**nd,self.referenceElement)
         self.gradientList=[]
+        self.basisHessians=[]
         self.order = order
 
         # Generate equi distance nodes for generation of basis
@@ -645,7 +646,7 @@ class BernsteinOnCube(LocalFunctionSpace):
         # Define 1D functions using definition via binomial coefficients
         self.fun=[]
         self.dfun=[]
-        #self.dfun2=[]
+        self.dfun2=[]
 
         for k in range(order+1):
             self.fun.append(lambda x,n=order,k=k:
@@ -654,11 +655,15 @@ class BernsteinOnCube(LocalFunctionSpace):
                              #-2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
                              # Rule out the cases when 1-x or 1+x = 0. This is to avoid warnings due to division by zero
                              0. if 1-x == 0. or 1+x == 0. else -2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
+
+            
+            (2**(-n)*(x+1)**(k-2)*(1-x)**(n-k)*(4*k**2-4*k*n*x-4*k*n+4*k*x+n**2*x**2+2*n**2*x+n**2-n*x**2-2*n*x-n))/(x-1)**2
             #self.dfun2.append(lambda x,n=order,k=k: ...)
 
         # Define multi-dimensional stuff
         basis= []
         basisGradients = []
+        basisHessians = []
         if nd == 1:
             basis = self.fun
             basisGradients = self.dfun
@@ -671,6 +676,11 @@ class BernsteinOnCube(LocalFunctionSpace):
                     basisGradients.append(lambda xi,i=i,j=j:
                                           numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
                                                        self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+                    basisHessians.append(lambda xi, i=i, j=j:
+                                         numpy.array([[self.ddfun[i](xi[0])*self.fun[j](xi[1]),
+                                                       self.dfun[i](xi[0])*self.dfun[j](xi[1])],
+                                                      [self.dfun[i](xi[0])*self.dfun[j](xi[1]),
+                                                       self.fun[i](xi[0])*self.ddfun[j](xi[1])]]))
             #Define numbering for arbitrary order (see above)
             funMap=np.zeros((order+1)**2,'i')
             for i in range(order+1):
@@ -695,8 +705,17 @@ class BernsteinOnCube(LocalFunctionSpace):
                     else: #middle columns
                         vec[k] = (2*nd)*(order-1)+2*nd-1+i+(k-1)*(order-1)
                 #print vec
-                funMap[i*(order+1):(i+1)*(order+1)]=vec[:]
-                #print funMap
+                funMap[i*(order+1):(i+1)*(order+1)]=vec[:]                
+#                if order==2:
+#                    funMap=[0,4,1,  7,8,5,   3,6,2]
+#                elif order==3:
+#                    funMap=[0,4,5,1,  11,12,13,6,  10,14,15,7,  3,9,8,2]
+#                elif order==4:
+#                    funMap=[0,4,5,6,1,  15,16,17,18,7,  14,19,20,21,8,  13,22,23,24,9,  3,12,11,10,2]
+#                else:
+#                    raise NotImplementedError
+            #print (funMap)
+            #input("wait")
         elif nd == 3:
             for k in range(order+1):
                 for j in range(order+1):
@@ -725,9 +744,14 @@ class BernsteinOnCube(LocalFunctionSpace):
         for i in range(self.dim):
             self.basis.append(basis[invMap[i]])
             self.basisGradients.append(basisGradients[invMap[i]])
+            self.basisHessians.append(basisHessians[invMap[i]])
         # Get boundary data
         self.defineTraceFunctions()
+#
 
+#######################################################################
+##### ***** LINEAR SPACES ON HIGHER ORDER MESHES/STRUCTURES ***** #####
+#######################################################################
 class LinearOnQuadraticCube(LocalFunctionSpace):
     """
     Linear basis on a reference 'quadratic' cube
@@ -795,6 +819,7 @@ class LinearOnQuadraticCube(LocalFunctionSpace):
                                                        self. fun[i](xi[0])*self.dfun[j](xi[1])]))
             #Define numbering for arbitrary order (see above)
             funMap=[0,7,3,  4,8,6,   1,5,2]
+            #funMap=[0,4,1,  7,8,5,   3,6,2]
         elif nd == 3:
             raise NotImplementedError
 
@@ -808,6 +833,212 @@ class LinearOnQuadraticCube(LocalFunctionSpace):
             self.basisGradients.append(basisGradients[invMap[i]])
         # Get boundary data
         self.defineTraceFunctions()
+
+class LinearOnCubicCube(LocalFunctionSpace):
+    """
+    Linear basis on a reference 'cubic' cube
+
+    ##############
+    # *** 2D *** #
+    ##############
+    ###########
+    # Order=3 #
+    ###########
+    3-6-2
+    | | |
+    7-8-5
+    | | |
+    0-4-1
+    ###########
+    # Order=3 #
+    ###########
+    3--9--8--2
+    |  |  |  |
+    10-14-15-7
+    |  |  |  |
+    11-12-13-6
+    |  |  |  |
+    0--4--5--1
+    """
+    from math import factorial
+
+    def nChooseK(self,n,k):
+        return factorial(n)/factorial(k)/factorial(n-k)
+
+    def __init__(self,nd=3, order=3):
+        self.referenceElement = ReferenceCube(nd)
+        LocalFunctionSpace.__init__(self,(order+1)**nd,self.referenceElement)
+        self.gradientList=[]
+        self.order = order
+
+        # Generate equi distance nodes for generation of basis
+        # Should use Gauss Labatto points
+
+        self.nodes=[]
+
+        self.quadrature = LobattoEdgeAlt(order=order)
+        for i in range(order+1):
+            self.nodes.append(self.quadrature.points[i][0])
+        # Define 1D functions using definition via binomial coefficients
+        self.fun=[]
+        self.dfun=[]
+        #self.dfun2=[]
+
+        #basis functions
+        self.fun.append(lambda x,n=order,k=0: -3./2*x-1./2 if x<=-1./3 else 0.)
+        self.fun.append(lambda x,n=order,k=1: 3./2*(x+1) if x<=-1./3 else (-3./2*x+1./2 if x<=1./3 else 0))
+        self.fun.append(lambda x,n=order,k=2: 0. if x<=-1./3 else (3./2*x+1./2 if x<=1./3 else -3./2*x+3./2))        
+        self.fun.append(lambda x,n=order,k=3: 0. if x<=1./3 else 3./2*x-1./2)
+        
+        #grad of basis functions
+        self.dfun.append(lambda x,n=order,k=0: -3./2 if x<=-1./3 else 0.)
+        self.dfun.append(lambda x,n=order,k=1: 3./2 if x<=-1./3 else (-3./2 if x<=1./3 else 0))
+        self.dfun.append(lambda x,n=order,k=2: 0. if x<=-1./3 else (3./2 if x<=1./3 else -3./2))
+        self.dfun.append(lambda x,n=order,k=3: 0. if x<=1./3 else 3./2)
+
+        # Define multi-dimensional stuff
+        basis= []
+        basisGradients = []
+        if nd == 1:
+            basis = self.fun
+            basisGradients = self.dfun
+            funMap=[0,2,3,1]
+        elif nd == 2:
+            #Define the basis and its gradient via tensor products
+            for j in range(order+1):
+                for i in range(order+1):
+                    basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
+                    basisGradients.append(lambda xi,i=i,j=j:
+                                          numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                       self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+            #Define numbering for arbitrary order (see above)
+            #funMap=[0,11,10,3,  4,12,14,9,  5,13,15,8, 1,6,7,2]
+            funMap=[0,4,5,1,  11,12,13,6,  10,14,15,7,  3,9,8,2]
+        elif nd == 3:
+            raise NotImplementedError
+
+        # Reorder local functions
+        invMap=numpy.zeros((self.dim),'i')
+        for i in range(self.dim):
+            invMap[funMap[i]] = i
+
+        for i in range(self.dim):
+            self.basis.append(basis[invMap[i]])
+            self.basisGradients.append(basisGradients[invMap[i]])
+        # Get boundary data
+        self.defineTraceFunctions()
+#
+
+class LinearOnQuarticCube(LocalFunctionSpace):
+    """
+    Linear basis on a reference 'quartic' cube
+
+    ##############
+    # *** 2D *** #
+    ##############
+    ###########
+    # Order=3 #
+    ###########
+    3-6-2
+    | | |
+    7-8-5
+    | | |
+    0-4-1
+    ###########
+    # Order=3 #
+    ###########
+    3--9--8--2
+    |  |  |  |
+    10-14-15-7
+    |  |  |  |
+    11-12-13-6
+    |  |  |  |
+    0--4--5--1
+    ###########
+    # Order=4 #
+    ###########
+    3---12--11--10--2
+    |   |   |   |   |
+    13--22--23--24--9
+    |   |   |   |   |
+    14--19--20--21--8
+    |   |   |   |   |
+    15--16--17--18--7
+    |   |   |   |   |
+    0---4---5---6---1
+    """
+    from math import factorial
+
+    def nChooseK(self,n,k):
+        return factorial(n)/factorial(k)/factorial(n-k)
+
+    def __init__(self,nd=3, order=4):
+        self.referenceElement = ReferenceCube(nd)
+        LocalFunctionSpace.__init__(self,(order+1)**nd,self.referenceElement)
+        self.gradientList=[]
+        self.order = order
+
+        # Generate equi distance nodes for generation of basis
+        # Should use Gauss Labatto points
+
+        self.nodes=[]
+
+        self.quadrature = LobattoEdgeAlt(order=order)
+        for i in range(order+1):
+            self.nodes.append(self.quadrature.points[i][0])
+        # Define 1D functions using definition via binomial coefficients
+        self.fun=[]
+        self.dfun=[]
+
+        #basis functions
+        self.fun.append(lambda x,n=order, k=0: -2*x-1 if x<=-1./2 else 0.) 
+        self.fun.append(lambda x,n=order, k=0:  2*x+2 if x<=-1./2 else (-2*x if x<=0. else 0))
+        self.fun.append(lambda x,n=order, k=0:  2*x+1 if (x>=-1./2 and x<=0) else (-2*x+1 if (x>=0 and x<=1./2) else 0))        
+        self.fun.append(lambda x,n=order, k=0:  2*x   if (x>=0 and x<=1./2) else (-2*x+2 if (x>=1./2 and x<=1.0) else 0))
+        self.fun.append(lambda x,n=order, k=0:  2*x-1 if x>=1./2 else 0)
+
+        #grad of basis functions
+        self.dfun.append(lambda x,n=order, k=0: -2 if x<=-1./2 else 0.) 
+        self.dfun.append(lambda x,n=order, k=0:  2 if x<=-1./2 else (-2 if x<=0. else 0))
+        self.dfun.append(lambda x,n=order, k=0:  2 if (x>=-1./2 and x<=0) else (-2 if (x>=0 and x<=1./2) else 0))        
+        self.dfun.append(lambda x,n=order, k=0:  2 if (x>=0 and x<=1./2) else (-2 if (x>=1./2 and x<=1.0) else 0))
+        self.dfun.append(lambda x,n=order, k=0:  2 if x>=1./2 else 0)
+
+        # Define multi-dimensional stuff
+        basis= []
+        basisGradients = []
+        if nd == 1:
+            basis = self.fun
+            basisGradients = self.dfun
+            funMap=[0,2,3,4,1]
+        elif nd == 2:
+            #Define the basis and its gradient via tensor products
+            for j in range(order+1):
+                for i in range(order+1):
+                    basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
+                    basisGradients.append(lambda xi,i=i,j=j:
+                                          numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                       self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+            #Define numbering for arbitrary order (see above)
+            #funMap=[0,11,10,3,  4,12,14,9,  5,13,15,8, 1,6,7,2]
+            #funMap=[0,4,5,1,  11,12,13,6,  10,14,15,7,  3,9,8,2]
+            funMap=[0,4,5,6,1,  15,16,17,18,7,  14,19,20,21,8,  13,22,23,24,9,  3,12,11,10,2]
+        elif nd == 3:
+            raise NotImplementedError
+
+        # Reorder local functions
+        invMap=numpy.zeros((self.dim),'i')
+        for i in range(self.dim):
+            invMap[funMap[i]] = i
+
+        for i in range(self.dim):
+            self.basis.append(basis[invMap[i]])
+            self.basisGradients.append(basisGradients[invMap[i]])
+        # Get boundary data
+        self.defineTraceFunctions()        
+##############################################################################
+##### ***** END OF LINEAR SPACES ON HIGHER ORDER MESHES/STRUCTURES ***** ##### 
+##############################################################################
 
 class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
     """
@@ -2003,6 +2234,20 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
     def __init__(self,referenceElement):
         from .RefUtils import fact
         from .RefUtils import q2refNodes
+
+        my_q2refNodes = np.zeros([9,2],'d')
+        #my_q2refNodes[0] = [-1.0,-1.0]
+        #my_q2refNodes[1] = [ 1.0,-1.0]
+        #my_q2refNodes[2] = [ 1.0, 1.0]
+        #my_q2refNodes[3] = [-1.0, 1.0]
+        
+        #my_q2refNodes[4] = [ 0.0,-1.0]
+        #my_q2refNodes[5] = [ 1.0, 0.0]
+        #my_q2refNodes[6] = [ 0.0, 1.0]
+        #my_q2refNodes[7] = [-1.0, 0.0]
+        
+        #my_q2refNodes[8] = [ 0.0, 0.0]
+        my_q2refNodes[:] = q2refNodes[1]
         sdim  = referenceElement.dim
         if sdim==2:
             self.nInterpNodes = 9
@@ -2014,7 +2259,7 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         if sdim==2:
             for k in range(self.nInterpNodes):
                 for I in range(sdim):
-                    self.quadraturePointArray[k,I] = q2refNodes[1][k,I]
+                    self.quadraturePointArray[k,I] = my_q2refNodes[k,I]
         elif sdim==3:
             for k in range(self.nInterpNodes):
                 for I in range(sdim):
@@ -2057,6 +2302,202 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         interpolationValues = finiteElementFunction.dof
 
 #end interp conditions
+
+############## CUBIC #######################
+class CubicLagrangeCubeNodalInterpolationConditions(InterpolationConditions):
+    """
+    Obtains the DOF from the function values at vertices and
+    midpoints of edges (whole element is considered an edge in 1d)
+    """
+    from .RefUtils import q2quadrilateralLocalBoundaryLookup
+    from .RefUtils import q2hexahedronLocalBoundaryLookup
+    from math import fmod
+    def __init__(self,referenceElement):
+        from .RefUtils import fact
+        from .RefUtils import q2refNodes
+
+        q3refNodes = np.zeros([16,2],'d')
+        q3refNodes[0] = [-1.0,-1.0]
+        q3refNodes[1] = [ 1.0,-1.0]
+        q3refNodes[2] = [ 1.0, 1.0]
+        q3refNodes[3] = [-1.0, 1.0]
+        
+        q3refNodes[4] = [-1./3.,-1.0]
+        q3refNodes[5] = [ 1./3.,-1.0]
+        
+        q3refNodes[6] = [ 1.0,-1./3.]
+        q3refNodes[7] = [ 1.0, 1./3.]
+        
+        q3refNodes[8] = [ 1./3., 1.0]
+        q3refNodes[9] = [-1./3., 1.0]
+
+        q3refNodes[10] = [-1.0, 1./3.]
+        q3refNodes[11] = [-1.0,-1./3.]
+        
+        q3refNodes[12] = [-1./3.,-1./3.]
+        q3refNodes[13] = [ 1./3.,-1./3.]
+
+        q3refNodes[14] = [-1./3., 1./3.]
+        q3refNodes[15] = [ 1./3., 1./3.]
+        
+        sdim  = referenceElement.dim
+
+        assert sdim==2, "Implemented only for 2D"
+
+        if sdim==2:
+            self.nInterpNodes = 16
+
+        InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
+        self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
+        #self.nQuadraturePoints = len(self.quadraturePointArray)
+        #if sdim==2:
+        for k in range(self.nInterpNodes):
+            for I in range(sdim):
+                self.quadraturePointArray[k,I] = q3refNodes[k,I]
+        self.nQuadraturePoints = len(self.quadraturePointArray)
+        self.nQuadraturePoints = self.quadraturePointArray.shape[0]
+        for i in range(self.nQuadraturePoints):
+            self.functionals.append(lambda f,i=i: f(self.quadraturePointArray[i,:]))
+            self.functionalsQuadrature.append(lambda fList, i=i: fList[i])
+        #end for
+        #for c based projection from interpolation conditions
+        self.functionals_quadrature_map = numpy.arange(len(self.functionalsQuadrature),dtype='i')
+
+   #end init
+
+    def definedOnLocalElementBoundary(self,k,ebN_local):
+        input(":P")
+        if self.referenceElement.dim == 1:
+            if k <= self.referenceElement.dim:
+                return k != ebN_local
+        elif self.referenceElement.dim == 2:
+            return ebN_local in self.q2quadrilateralLocalBoundaryLookup[k]
+        elif self.referenceElement.dim == 3:
+            return ebN_local in self.q2hexahedronLocalBoundaryLookup[k]
+        else:
+            return False
+    def quadrature2Node_element(self,k):
+        if k <= self.referenceElement.dim**2:
+                return k
+        else:
+            return None
+    def projectFiniteElementFunctionFromInterpolationConditions_opt(self,finiteElementFunction,interpolationValues):
+        """
+        Allow the interpolation conditions to control projection of a (global) finite element function from
+        an array of interpolation values in order to take advantage of specific structure, otherwise
+        can just use functionals interface
+        """
+        cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
+                                                              finiteElementFunction.femSpace.dofMap.l2g,
+                                                              self.functionals_quadrature_map,
+                                                              interpolationValues,
+                                                              finiteElementFunction.dof)
+        interpolationValues = finiteElementFunction.dof
+
+#
+############## QUARTIC #######################
+class QuarticLagrangeCubeNodalInterpolationConditions(InterpolationConditions):
+    """
+    Obtains the DOF from the function values at vertices and
+    midpoints of edges (whole element is considered an edge in 1d)
+    """
+    from .RefUtils import q2quadrilateralLocalBoundaryLookup
+    from .RefUtils import q2hexahedronLocalBoundaryLookup
+    from math import fmod
+    def __init__(self,referenceElement):
+        from .RefUtils import fact
+        from .RefUtils import q2refNodes
+
+        q4refNodes = np.zeros([25,2],'d')
+        q4refNodes[0] = [-1.0,-1.0]
+        q4refNodes[1] = [ 1.0,-1.0]
+        q4refNodes[2] = [ 1.0, 1.0]
+        q4refNodes[3] = [-1.0, 1.0]
+        
+        q4refNodes[4] = [-1./2.,-1.0]
+        q4refNodes[5] = [    0.,-1.0]
+        q4refNodes[6] = [ 1./2.,-1.0]
+        
+        q4refNodes[7] = [ 1.0,-1./2.]
+        q4refNodes[8] = [ 1.0,    0.]
+        q4refNodes[9] = [ 1.0, 1./2.]
+
+        q4refNodes[10] = [ 1./2., 1.0]
+        q4refNodes[11] = [    0., 1.0]
+        q4refNodes[12] = [-1./2., 1.0]
+
+        q4refNodes[13] = [-1.0, 1./2.]
+        q4refNodes[14] = [-1.0,    0.]
+        q4refNodes[15] = [-1.0,-1./2.]
+        
+        q4refNodes[16] = [-1./2.,-1./2.]
+        q4refNodes[17] = [    0.,-1./2.]
+        q4refNodes[18] = [ 1./2.,-1./2.]
+
+        q4refNodes[19] = [-1./2., 0.]
+        q4refNodes[20] = [    0., 0.]
+        q4refNodes[21] = [ 1./2., 0.]
+
+        q4refNodes[22] = [-1./2., 1./2.]
+        q4refNodes[23] = [    0., 1./2.]
+        q4refNodes[24] = [ 1./2., 1./2.]
+        
+        sdim  = referenceElement.dim
+
+        assert sdim==2, "Implemented only for 2D"
+
+        if sdim==2:
+            self.nInterpNodes = 25
+
+        InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
+        self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
+        #self.nQuadraturePoints = len(self.quadraturePointArray)
+        #if sdim==2:
+        for k in range(self.nInterpNodes):
+            for I in range(sdim):
+                self.quadraturePointArray[k,I] = q4refNodes[k,I]
+        self.nQuadraturePoints = len(self.quadraturePointArray)
+        self.nQuadraturePoints = self.quadraturePointArray.shape[0]
+        for i in range(self.nQuadraturePoints):
+            self.functionals.append(lambda f,i=i: f(self.quadraturePointArray[i,:]))
+            self.functionalsQuadrature.append(lambda fList, i=i: fList[i])
+        #end for
+        #for c based projection from interpolation conditions
+        self.functionals_quadrature_map = numpy.arange(len(self.functionalsQuadrature),dtype='i')
+
+   #end init
+
+    def definedOnLocalElementBoundary(self,k,ebN_local):
+        input(":P")
+        if self.referenceElement.dim == 1:
+            if k <= self.referenceElement.dim:
+                return k != ebN_local
+        elif self.referenceElement.dim == 2:
+            return ebN_local in self.q2quadrilateralLocalBoundaryLookup[k]
+        elif self.referenceElement.dim == 3:
+            return ebN_local in self.q2hexahedronLocalBoundaryLookup[k]
+        else:
+            return False
+    def quadrature2Node_element(self,k):
+        if k <= self.referenceElement.dim**2:
+                return k
+        else:
+            return None
+    def projectFiniteElementFunctionFromInterpolationConditions_opt(self,finiteElementFunction,interpolationValues):
+        """
+        Allow the interpolation conditions to control projection of a (global) finite element function from
+        an array of interpolation values in order to take advantage of specific structure, otherwise
+        can just use functionals interface
+        """
+        cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
+                                                              finiteElementFunction.femSpace.dofMap.l2g,
+                                                              self.functionals_quadrature_map,
+                                                              interpolationValues,
+                                                              finiteElementFunction.dof)
+        interpolationValues = finiteElementFunction.dof
+#
+#end interp conditions
+############################################
 
 class FaceBarycenterInterpolationConditions(InterpolationConditions):
     """
@@ -2433,6 +2874,7 @@ class ElementBoundaryDOFMap(DOFMap):
         self.max_dof_neighbors = 2*(mesh.nElementBoundaries_element-1)+1
     #end init
 #end ElementBoundaryDOFMap
+
 class QuadraticLagrangeCubeDOFMap(DOFMap):
     """
     DOF mapping for quadratic lagrange finite element functions on
@@ -2556,6 +2998,254 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
                                                                                              self.lagrangeNodesArray)
             assert self.nDOF == self.nDOF_subdomain
 #QuadraticDOFMap
+
+# ************************************************************** #
+##### ********** New Maps for higher order spaces ********** #####
+# ************************************************************** #
+class CubicLagrangeCubeDOFMap(DOFMap):
+    """
+    DOF mapping for quadratic lagrange finite element functions on
+    unit cubes
+
+    The mapping associates local degree of freedom with global vertex
+    number for iloc 0<= iloc<= space dim global edge number for
+    spacedim < iloc
+
+    total dimension is number of vertices + number of edges
+    """
+    # TODO fix
+    # lagrangeNodesArray to hold all the nodes for parallel in 3d
+    # determine if really need to call updateAfterParallelPartitioning
+    # after __init__ or not
+    def __init__(self,mesh,localFunctionSpace,nd):
+        if nd == 1:
+            raise NotImplementedError
+            #ndof += mesh.nElements_global
+        elif nd == 2:
+            ndof = mesh.nNodes_global
+            ndof += 2*mesh.nElementBoundaries_global
+            ndof += 4*mesh.nElements_global
+        else:
+            raise NotImplementedError
+
+        DOFMap.__init__(self,ndof)
+        #holds lagrange nodes for all points
+        self.nd = nd
+        self.lagrangeNodesArray = numpy.zeros((ndof,3),'d')
+        self.l2g = numpy.zeros((mesh.nElements_global,
+                                localFunctionSpace.dim),
+                               'i')
+        self.nd = nd
+        #do simplest numbering first, which is to assign first d+1
+        #unknowns the corresponding global node number.
+        #
+        #In 1d, extra unknown can be associated with global element number
+        #In 2d, extra unknowns can be associated with element boundaries array (edges)
+        #In 3d, extra unknowns have to be associated with edge
+
+        self.updateAfterParallelPartitioning(mesh.globalMesh)
+
+        maxSeen = max(self.l2g.flat)
+        assert maxSeen < self.nDOF,('QuadDOF max(l2g)= %d ndof= %d' % (maxSeen,self.nDOF))
+        #save for parallel mappings
+    #end init
+    def updateAfterParallelPartitioning(self,globalMesh):
+        """
+        Fix self.nDOF_all_processes,self.nDOF_subdomain, self.max_dof_neighbors
+        """
+        if self.nd==2:
+            # start with the vertex DoFs
+            for i,node in enumerate(globalMesh.nodeArray):
+                self.lagrangeNodesArray[i] = node
+            #
+            # edge_indicator = numpy.zeros(globalMesh.nElementBoundaries_global,'i')
+            # for i,edge_list in enumerate(globalMesh.elementBoundariesArray):
+            #     #print (edge_list)
+            #     for j,edge in enumerate(edge_list):
+            #         if edge_indicator[edge]==0:
+            #             #print (edge)
+            #             edge_indicator[edge]=1
+            #             node1 = globalMesh.elementNodesArray[i][j]
+            #             node2 = globalMesh.elementNodesArray[i][(j+1)%4]
+            #             p1 = globalMesh.nodeArray[node1]
+            #             p2 = globalMesh.nodeArray[node2]
+            #             edge0_coordinate = [0.,0.,0.]
+            #             edge0_coordinate[0] = p1[0]+1./3*(p2[0]-p1[0])
+            #             edge0_coordinate[1] = p1[1]+1./3*(p2[1]-p1[1])
+            #             #
+            #             edge1_coordinate = [0.,0.,0.]
+            #             edge1_coordinate[0] = p1[0]+2./3*(p2[0]-p1[0])
+            #             edge1_coordinate[1] = p1[1]+2./3*(p2[1]-p1[1])
+            #             self.lagrangeNodesArray[len(globalMesh.nodeArray)+ 0 + 2*edge] = edge0_coordinate
+            #             self.lagrangeNodesArray[len(globalMesh.nodeArray)+ 1 + 2*edge] = edge1_coordinate
+            #             #len(globalMesh.nodeArray)+edge
+            #             #print (i,edge,edge0_coordinate)                        
+            #         else:
+            #             pass
+            #         #
+            #     #
+            # #
+            #next fill up the edge DoF
+            edge_indicator = numpy.zeros(globalMesh.nElementBoundaries_global,'i')            
+            for i,edge_list in enumerate(globalMesh.elementBoundariesArray):
+                #print (edge_list)
+                for j,edge in enumerate(edge_list):                    
+                    if edge_indicator[edge]==0:
+                        #print (edge)
+                        edge_indicator[edge]=1
+                        node1 = globalMesh.elementNodesArray[i][j]
+                        node2 = globalMesh.elementNodesArray[i][(j+1)%4]
+                        p1 = globalMesh.nodeArray[node1]
+                        p2 = globalMesh.nodeArray[node2]
+                        edge0_coordinate = [0.,0.,0.]
+                        edge0_coordinate[0] = p1[0]+1./3*(p2[0]-p1[0])
+                        edge0_coordinate[1] = p1[1]+1./3*(p2[1]-p1[1])
+                        #
+                        self.lagrangeNodesArray[len(globalMesh.nodeArray)+edge] = edge0_coordinate
+                        #len(globalMesh.nodeArray)+edge
+                        #print (i,edge,edge0_coordinate)
+                    else:
+                        pass
+            #            
+            edge_indicator[:] = 0
+            for i,edge_list in enumerate(globalMesh.elementBoundariesArray):
+                for j,edge in enumerate(edge_list):
+                    if edge_indicator[edge]==0:                        
+                        edge_indicator[edge]=1
+                        node1 = globalMesh.elementNodesArray[i][j]
+                        node2 = globalMesh.elementNodesArray[i][(j+1)%4]
+                        p1 = globalMesh.nodeArray[node1]
+                        p2 = globalMesh.nodeArray[node2]
+                        #
+                        edge1_coordinate = [0.,0.,0.]
+                        edge1_coordinate[0] = p1[0]+2./3*(p2[0]-p1[0])
+                        edge1_coordinate[1] = p1[1]+2./3*(p2[1]-p1[1])
+                        #
+                        self.lagrangeNodesArray[len(globalMesh.nodeArray)+globalMesh.nElementBoundaries_global+edge] = edge1_coordinate
+                    else:
+                        pass
+            #fill up the DoF for the center of the elements
+            for i,element in enumerate(globalMesh.elementNodesArray):
+                p1 = globalMesh.nodeArray[element[0]]
+                p2x = globalMesh.nodeArray[element[-1]]
+                p2y = globalMesh.nodeArray[element[1]]
+                # internal point 0
+                el_coord0 = [0.,0.,0.]
+                el_coord0[0] = p1[0] + 1./3*(p2x[0]-p1[0])
+                el_coord0[1] = p1[1] + 1./3*(p2y[1]-p1[1])
+                # internal point 1
+                el_coord1 = [0.,0.,0.]
+                el_coord1[0] = p1[0] + 2./3*(p2x[0]-p1[0])
+                el_coord1[1] = p1[1] + 1./3*(p2y[1]-p1[1])
+                # internal point 2
+                el_coord2 = [0.,0.,0.]
+                el_coord2[0] = p1[0] + 1./3*(p2x[0]-p1[0])
+                el_coord2[1] = p1[1] + 2./3*(p2y[1]-p1[1])
+                # internal point 3
+                el_coord3 = [0.,0.,0.]
+                el_coord3[0] = p1[0] + 2./3*(p2x[0]-p1[0])
+                el_coord3[1] = p1[1] + 2./3*(p2y[1]-p1[1])
+                #
+                self.lagrangeNodesArray[globalMesh.nNodes_global +
+                                        2*globalMesh.nElementBoundaries_global + 0 + 4*i] = el_coord0
+                self.lagrangeNodesArray[globalMesh.nNodes_global +
+                                        2*globalMesh.nElementBoundaries_global + 1 + 4*i] = el_coord1
+                self.lagrangeNodesArray[globalMesh.nNodes_global +
+                                        2*globalMesh.nElementBoundaries_global + 2 + 4*i] = el_coord2
+                self.lagrangeNodesArray[globalMesh.nNodes_global +
+                                        2*globalMesh.nElementBoundaries_global + 3 + 4*i] = el_coord3
+                #
+            #
+            # populate the l2g vector
+            edge_indicator2 = numpy.zeros(globalMesh.nElementBoundaries_global,'i')
+            for i in range(globalMesh.nElements_global):
+                # start by looping over element's vertices
+                self.l2g[i][0] = globalMesh.elementNodesArray[i][0]
+                self.l2g[i][1] = globalMesh.elementNodesArray[i][3]
+                self.l2g[i][2] = globalMesh.elementNodesArray[i][2]
+                self.l2g[i][3] = globalMesh.elementNodesArray[i][1]
+                #
+                # self.l2g[i][5] = globalMesh.nNodes_global + 0 + 2*globalMesh.elementBoundariesArray[i][3]
+                # self.l2g[i][4] = globalMesh.nNodes_global + 1 + 2*globalMesh.elementBoundariesArray[i][3]
+
+                # self.l2g[i][7] = globalMesh.nNodes_global + 0 + 2*globalMesh.elementBoundariesArray[i][2]
+                # self.l2g[i][6] = globalMesh.nNodes_global + 1 + 2*globalMesh.elementBoundariesArray[i][2]
+
+                # self.l2g[i][9] = globalMesh.nNodes_global + 0 + 2*globalMesh.elementBoundariesArray[i][1]
+                # self.l2g[i][8] = globalMesh.nNodes_global + 1 + 2*globalMesh.elementBoundariesArray[i][1]
+
+                # self.l2g[i][11] = globalMesh.nNodes_global + 0 + 2*globalMesh.elementBoundariesArray[i][0]
+                # self.l2g[i][10] = globalMesh.nNodes_global + 1 + 2*globalMesh.elementBoundariesArray[i][0]                
+                #
+                #
+                if edge_indicator2[globalMesh.elementBoundariesArray[i][3]]==1:
+                    self.l2g[i][5] = globalMesh.elementBoundariesArray[i][3]+globalMesh.nNodes_global
+                    self.l2g[i][4] = (globalMesh.elementBoundariesArray[i][3]
+                                      +globalMesh.nNodes_global
+                                      +globalMesh.nElementBoundaries_global)
+                else:
+                    self.l2g[i][4] = globalMesh.elementBoundariesArray[i][3]+globalMesh.nNodes_global
+                    self.l2g[i][5] = (globalMesh.elementBoundariesArray[i][3]
+                                      +globalMesh.nNodes_global
+                                      +globalMesh.nElementBoundaries_global)
+                #
+                if edge_indicator2[globalMesh.elementBoundariesArray[i][2]]==1:                    
+                    self.l2g[i][7] = globalMesh.elementBoundariesArray[i][2]+globalMesh.nNodes_global
+                    self.l2g[i][6] = (globalMesh.elementBoundariesArray[i][2]
+                                      +globalMesh.nNodes_global
+                                      +globalMesh.nElementBoundaries_global)
+                #
+                else:
+                    self.l2g[i][6] = globalMesh.elementBoundariesArray[i][2]+globalMesh.nNodes_global
+                    self.l2g[i][7] = (globalMesh.elementBoundariesArray[i][2]
+                                      +globalMesh.nNodes_global
+                                      +globalMesh.nElementBoundaries_global)
+                if edge_indicator2[globalMesh.elementBoundariesArray[i][1]]==1:
+                    self.l2g[i][9] = globalMesh.elementBoundariesArray[i][1]+globalMesh.nNodes_global
+                    self.l2g[i][8] = (globalMesh.elementBoundariesArray[i][1]
+                                      +globalMesh.nNodes_global
+                                      +globalMesh.nElementBoundaries_global)
+                else:
+                    self.l2g[i][8] = globalMesh.elementBoundariesArray[i][1]+globalMesh.nNodes_global
+                    self.l2g[i][9] = (globalMesh.elementBoundariesArray[i][1]
+                                      +globalMesh.nNodes_global
+                                      +globalMesh.nElementBoundaries_global)
+                if edge_indicator2[globalMesh.elementBoundariesArray[i][0]]==1:
+                    self.l2g[i][11] = globalMesh.elementBoundariesArray[i][0]+globalMesh.nNodes_global
+                    self.l2g[i][10] = (globalMesh.elementBoundariesArray[i][0]
+                                       +globalMesh.nNodes_global
+                                       +globalMesh.nElementBoundaries_global)
+                else:
+                    self.l2g[i][10] = globalMesh.elementBoundariesArray[i][0]+globalMesh.nNodes_global
+                    self.l2g[i][11] = (globalMesh.elementBoundariesArray[i][0]
+                                       +globalMesh.nNodes_global
+                                       +globalMesh.nElementBoundaries_global)
+                #
+                globalMesh.elementBoundariesArray[i][:]=1
+                # internal
+                self.l2g[i][len(globalMesh.elementNodesArray[i]) + 2*len(globalMesh.elementBoundariesArray[0]) + 0] = globalMesh.nNodes_global + 2*globalMesh.nElementBoundaries_global + 4*i + 0
+                self.l2g[i][len(globalMesh.elementNodesArray[i]) + 2*len(globalMesh.elementBoundariesArray[0]) + 1] = globalMesh.nNodes_global + 2*globalMesh.nElementBoundaries_global + 4*i + 1
+                self.l2g[i][len(globalMesh.elementNodesArray[i]) + 2*len(globalMesh.elementBoundariesArray[0]) + 2] = globalMesh.nNodes_global + 2*globalMesh.nElementBoundaries_global + 4*i + 2
+                self.l2g[i][len(globalMesh.elementNodesArray[i]) + 2*len(globalMesh.elementBoundariesArray[0]) + 3] = globalMesh.nNodes_global + 2*globalMesh.nElementBoundaries_global + 4*i + 3
+                # subdomain2global is just the identity mapping in the serial case
+
+                edge_indicator2[globalMesh.elementBoundariesArray[i][3]]=1
+                edge_indicator2[globalMesh.elementBoundariesArray[i][2]]=1
+                edge_indicator2[globalMesh.elementBoundariesArray[i][1]]=1
+                edge_indicator2[globalMesh.elementBoundariesArray[i][0]]=1
+                print (self.l2g[i])
+                import pdb; pdb.set_trace()
+            #            
+            self.subdomain2global = np.arange(self.nDOF,dtype='i')
+            self.dof_offsets_subdomain_owned = numpy.zeros(len(globalMesh.nodeOffsets_subdomain_owned),'i')
+            self.dof_offsets_subdomain_owned[1] = self.nDOF
+            self.nDOF_all_processes = self.nDOF
+            self.nDOF_subdomain = self.nDOF
+            self.max_dof_neighbors = globalMesh.max_nNodeNeighbors_node
+        elif self.nd==3:
+            raise NotImplementedError
+#### END OF New Maps for higher order spaces ####
+
 
 class QuadraticLagrangeDOFMap(DOFMap):
     """
@@ -4618,29 +5308,30 @@ Q1 = C0_AffineLinearOnCubeWithNodalBasis
 Q2 = LagrangeCubeFactory(2)
 
 class C0_BernsteinOnCube(C0_AffineLinearOnSimplexWithNodalBasis):
-    """
-    The standard linear CG space.
-    Globally C0
-    Each geometric element is the image of the reference cube under
-    a n-linear(non-affine) mapping. The Bernstein basis is used on the reference cube.
-    """
-    def __init__(self,mesh,nd=3,order=2):
-        assert False, "Bernstein polynomials are not interpolatory. Remove this assert to use p2 Lagrange interpolatory conditions"
-        localFunctionSpace = BernsteinOnCube(nd,order=2)
-        # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve.
-        interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
-        ParametricFiniteElementSpace.__init__(self,
-                                              ReferenceFiniteElement(localFunctionSpace,
-                                                                     interpolationConditions),
-                                              ParametricMaps(mesh,
-                                                         localFunctionSpace.referenceElement,
-                                                         LagrangeOnCubeWithNodalBasis(nd,order=mesh.px)),
-                                              QuadraticLagrangeCubeDOFMap(mesh))
+     """
+     The standard linear CG space.
+     Globally C0
+     Each geometric element is the image of the reference cube under
+     a n-linear(non-affine) mapping. The Bernstein basis is used on the reference cube.
+     """
+     def __init__(self,mesh,nd=3,order=2):
+         assert False, "Bernstein polynomials are not interpolatory. Remove this assert to use p2 Lagrange interpolatory conditions"
+         localFunctionSpace = BernsteinOnCube(nd,order=2)
+         # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve.
+         interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+         ParametricFiniteElementSpace.__init__(self,
+                                               ReferenceFiniteElement(localFunctionSpace,
+                                                                      interpolationConditions),
+                                               ParametricMaps(mesh,
+                                                          localFunctionSpace.referenceElement,
+                                                          LagrangeOnCubeWithNodalBasis(nd,order=mesh.px)),
+                                               QuadraticLagrangeCubeDOFMap(mesh))
 
-        print("C0_BernsteinOnCubeWithNodalBasis")
-        print(mesh.px)
+         print("C0_BernsteinOnCubeWithNodalBasis")
+         print(mesh.px)
 
-class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
+# ***** QUADRATIC BERNSTEIN ON CUBE ***** #
+class C0_AffineQuadraticBernsteinOnCube(ParametricFiniteElementSpace):
     """
     Bernstein CG space.
     Globally C0
@@ -4654,14 +5345,13 @@ class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
 
         if self.order==2:
             localFunctionSpace = BernsteinOnCube(nd,order=2)
-            # NOTE: Bernstein polynomials ARE NOT INTERPOLATORY but we use them as control points to create a bezier curve.
+            # NOTE: B.poly ARE NOT INTERP. but we use them as control points to create a bezier curve
             interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
-        #elif self.order==1:
-            #localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=1)
-            #interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         else:
-            raise NotImplementedError ("Lagrange factory only implemented for Q2"
-                                       "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
+            raise NotImplementedError ("Only implemented for Q2 elements. "
+                                       "For Q1 use C0_AffineLinearOnCubeWithNodalBasis. "
+                                       "For Q3 use C0_AffineCubicBernsteinOnCube. "
+                                       "For Q4 use C0_AffineQuarticBernsteinOnCube. ")
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
                                                                      interpolationConditions),
@@ -4692,36 +5382,91 @@ class C0_AffineBernsteinOnCube(ParametricFiniteElementSpace):
         self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
+# ***** END OF QUADRATIC BERNSTEIN ON CUBE ***** #
 
-# Bernstein Factory On Cube
-#def BernsteinCubeFactory(OrderIn):
-#    class BernsteinCubeOrderN(C0_AffineBernsteinOnCube):
-#        def __init__(self,mesh,nd):
-#            C0_AffineBernsteinOnCube.__init__(self,mesh,nd,order=OrderIn)
-#    return BernsteinCubeOrderN
-
-# TODO - migrate Q1 to an instance of BernsteinCubeFactor
-#Q1 = C0_AffineLinearOnCubeWithNodalBasis
-#Q2 = BernsteinCubeFactory(2)
-
-# ***** LINEAR SPACE ON QUADRATIC SPACE/MESH *****#
-class C0_AffineLinearOnQuadraticCube(C0_AffineLagrangeOnCubeWithNodalBasis):
+# ***** CUBIC BERNSTEIN ON CUBE ***** #
+class C0_AffineCubicBernsteinOnCube(ParametricFiniteElementSpace):
     """
-    Linear on Quadratice Cube FE Space. It is basically linear FE Space
+    Bernstein CG space.
     Globally C0
     Each geometric element is the image of the reference simplex under
-    a linear affine mapping.
+    a linear affine mapping. The Bernstein basis is used on the reference simplex.
     """
-    def __init__(self,mesh,nd=3,order=2):
+    def __init__(self,mesh,nd=3,order=3):
         self.order = order
         localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
         #todo fix these interpolation conditions to work on Cube
-        if self.order==2:
-            localFunctionSpace = LinearOnQuadraticCube(nd,order=2)
-            interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+
+        if self.order==3:
+            localFunctionSpace = BernsteinOnCube(nd,order=3)
+            # NOTE: B.poly ARE NOT INTERP. but we use them as control points to create a bezier curve
+            interpolationConditions = CubicLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        else:
+            raise NotImplementedError ("Only implemented for Q3 elements. "
+                                       "For Q1 use C0_AffineLinearOnCubeWithNodalBasis. "
+                                       "For Q2 use C0_AffineQuadraticBernsteinOnCube. "
+                                       "For Q4 use C0_AffineQuarticBernsteinOnCube. ")
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnCubeWithNodalBasis(nd)),
+                                              CubicLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+
+        for i in range(localFunctionSpace.dim):
+            for j in range(localFunctionSpace.dim):
+                x_j = interpolationConditions.quadraturePointArray[j]
+                psi_ij = localFunctionSpace.basis[i](x_j)
+                #print i,j,x_j,psi_ij
+        #for archiving
+        from . import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
+
+    def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):        
+        if self.order == 3:
+            return self.XdmfWriter.writeMeshXdmf_C0Q3Lagrange(ar,
+                                                              name,
+                                                              mesh=self.mesh,
+                                                              spaceDim=self.nSpace_global,
+                                                              dofMap=self.dofMap,
+                                                              t=t,
+                                                              init=init,
+                                                              meshChanged=meshChanged,
+                                                              arGrid=arGrid,
+                                                              tCount=tCount)
         else:
             raise NotImplementedError ("Lagrange factory only implemented for Q2"
                                        "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
+
+    def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
+        self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
+    def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
+        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
+# ***** END OF CUBIC BERNSTEIN ON CUBE ***** #
+
+# ***** QUARTIC BERNSTEIN ON CUBE ***** #
+class C0_AffineQuarticBernsteinOnCube(ParametricFiniteElementSpace):
+    """
+    Bernstein CG space.
+    Globally C0
+    Each geometric element is the image of the reference simplex under
+    a linear affine mapping. The Bernstein basis is used on the reference simplex.
+    """
+    def __init__(self,mesh,nd=3,order=4):
+        self.order = order
+        localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
+        #todo fix these interpolation conditions to work on Cube
+
+        if self.order==4:
+            localFunctionSpace = BernsteinOnCube(nd,order=4)
+            # NOTE: B.poly ARE NOT INTERP. but we use them as control points to create a bezier curve
+            interpolationConditions = QuarticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        else:
+            raise NotImplementedError ("Only implemented for Q4 elements. "
+                                       "For Q1 use C0_AffineLinearOnCubeWithNodalBasis. "
+                                       "For Q2 use C0_AffineQuadraticBernsteinOnCube. "
+                                       "For Q3 use C0_AffineCubicBernsteinOnCube. ")
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
                                                                      interpolationConditions),
@@ -4739,7 +5484,158 @@ class C0_AffineLinearOnQuadraticCube(C0_AffineLagrangeOnCubeWithNodalBasis):
         from . import Archiver
         self.XdmfWriter=Archiver.XdmfWriter()
 
+    def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):        
+        if self.order == 2:
+            return self.XdmfWriter.writeMeshXdmf_C0Q2Lagrange(ar,
+                                                              name,
+                                                              mesh=self.mesh,
+                                                              spaceDim=self.nSpace_global,
+                                                              dofMap=self.dofMap,
+                                                              t=t,
+                                                              init=init,
+                                                              meshChanged=meshChanged,
+                                                              arGrid=arGrid,
+                                                              tCount=tCount)
+        else:
+            raise NotImplementedError ("Lagrange factory only implemented for Q2"
+                                       "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
+
+    def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
+        self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
+    def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
+        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
+# ***** END OF QUARTIC BERNSTEIN ON CUBE ***** #
+
+# Bernstein Factory On Cube
+#def BernsteinCubeFactory(OrderIn):
+#    class BernsteinCubeOrderN(C0_AffineBernsteinOnCube):
+#        def __init__(self,mesh,nd):
+#            C0_AffineBernsteinOnCube.__init__(self,mesh,nd,order=OrderIn)
+#    return BernsteinCubeOrderN
+
+# TODO - migrate Q1 to an instance of BernsteinCubeFactor
+#Q1 = C0_AffineLinearOnCubeWithNodalBasis
+#Q2 = BernsteinCubeFactory(2)
+
+# *************************************************************** #
+# *************************************************************** #
+# ********** LINEAR SPACES ON HIGH-ORDER SPACES/MESHES ********** #
+# *************************************************************** #
+# *************************************************************** #
+# ***** LINEAR SPACE ON QUADRATIC SPACE/MESH *****#
+class C0_AffineLinearOnQuadraticCube(C0_AffineLagrangeOnCubeWithNodalBasis):
+    """
+    Linear on Quadratice Cube FE Space. It is basically linear FE Space
+    Globally C0
+    Each geometric element is the image of the reference simplex under
+    a linear affine mapping.
+    """
+    def __init__(self,mesh,nd=3,order=2):
+        self.order = order
+        localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
+        #todo fix these interpolation conditions to work on Cube
+        if self.order==2:
+            localFunctionSpace = LinearOnQuadraticCube(nd,order=2)
+            interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        else:
+            raise NotImplementedError ("Only implemented for Q2 elements. "
+                                       "For Q1 use C0_AffineLinearOnCubeWithNodalBasis. "
+                                       "For Q3 use C0_AffineLinearOnCubicCube. "
+                                       "For Q4 use C0_AffineLinearOnQuarticCube. ")
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnCubeWithNodalBasis(nd)),
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+
+        for i in range(localFunctionSpace.dim):
+            for j in range(localFunctionSpace.dim):
+                x_j = interpolationConditions.quadraturePointArray[j]
+                psi_ij = localFunctionSpace.basis[i](x_j)
+         #for archiving
+        from . import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
 ###### END OF LINEAR SPACE ON QUADRATIC SPACE/MESH ######
+
+# ***** LINEAR SPACE ON CUBIC SPACE/MESH *****#
+class C0_AffineLinearOnCubicCube(C0_AffineLagrangeOnCubeWithNodalBasis):
+    """
+    Linear on Cubic Cube FE Space. It is basically linear FE Space Globally C0
+    Each geometric element is the image of the reference simplex under
+    a linear affine mapping.
+    """
+    def __init__(self,mesh,nd=3,order=3):
+        self.order = order
+        localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
+        #todo fix these interpolation conditions to work on Cube
+        if self.order==3:
+            localFunctionSpace = LinearOnCubicCube(nd,order=3)
+            interpolationConditions = CubicLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        else:
+            raise NotImplementedError ("Only implemented for Q3 elements. "
+                                       "For Q1 use C0_AffineLinearOnCubeWithNodalBasis. "
+                                       "For Q2 use C0_AffineLinearOnQuadraticCube. "
+                                       "For Q4 use C0_AffineLinearOnQuarticCube. ")
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnCubeWithNodalBasis(nd)),
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+
+        for i in range(localFunctionSpace.dim):
+            for j in range(localFunctionSpace.dim):
+                x_j = interpolationConditions.quadraturePointArray[j]
+                psi_ij = localFunctionSpace.basis[i](x_j)
+        #for archiving
+        from . import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
+###### END OF LINEAR SPACE ON CUBIC SPACE/MESH ######
+
+# ***** LINEAR SPACE ON QUARTIC SPACE/MESH *****#
+class C0_AffineLinearOnQuarticCube(C0_AffineLagrangeOnCubeWithNodalBasis):
+    """
+    Linear on Quartic Cube FE Space. It is basically linear FE Space Globally C0
+    Each geometric element is the image of the reference simplex under
+    a linear affine mapping.
+    """
+    def __init__(self,mesh,nd=3,order=4):
+        self.order = order
+        localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
+        #todo fix these interpolation conditions to work on Cube
+        if self.order==4:
+            localFunctionSpace = LinearOnQuarticCube(nd,order=4)
+            interpolationConditions = QuarticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        else:
+            raise NotImplementedError ("Only implemented for Q3 elements. "
+                                       "For Q1 use C0_AffineLinearOnCubeWithNodalBasis. "
+                                       "For Q2 use C0_AffineLinearOnQuadraticCube. "
+                                       "For Q3 use C0_AffineLinearOnCubicCube. ")
+            raise NotImplementedError 
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnCubeWithNodalBasis(nd)),
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+
+        for i in range(localFunctionSpace.dim):
+            for j in range(localFunctionSpace.dim):
+                x_j = interpolationConditions.quadraturePointArray[j]
+                psi_ij = localFunctionSpace.basis[i](x_j)
+        #for archiving
+        from . import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
+###### END OF LINEAR SPACE ON QUARTIC SPACE/MESH ######
+# ************************************************************************** #
+# ************************************************************************** #
+# ********** END OF ... LINEAR SPACES ON HIGH-ORDER SPACES/MESHES ********** #
+# ************************************************************************** #
+# ************************************************************************** #
 
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
     def __init__(self,mesh,nd=3,k=0):

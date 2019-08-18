@@ -557,6 +557,26 @@ namespace proteus
 			  abort();
 			}
 		    }
+		  else if (nDOF_trial_elementIn == 16) //3rd order polynomials
+		    {
+		      if (nQuadraturePoints_elementIn == 64) //n_quad=64 
+			{
+		          if (nQuadraturePoints_elementBoundaryIn == 8)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,16,16>,2,64,4,16,16,8>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else
+			{
+			  NO_INSTANCE;
+			  abort();
+			}
+		    }
 		  else //higher-order polynomials
 		    {
 		      NO_INSTANCE;
@@ -802,6 +822,16 @@ namespace proteus
                               abort();
                             }
                         }
+		      else if (nQuadraturePoints_elementIn == 9) // Q1 FE-space
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 3)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,2,9,4,4,4,3>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
                       else
                         {
                           NO_INSTANCE;
@@ -847,7 +877,19 @@ namespace proteus
 		  //// high order hexes
 		  if (nDOF_trial_elementIn == 9) //2nd order polynomials
 		    {
-		      if (nQuadraturePoints_elementIn == 36) //order=2. use n_quad=(2*order+2)^nd
+		      if (nQuadraturePoints_elementIn == 16) //order=2 with 16 quad points
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 4)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,16,4,9,9,4>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 36) //order=2. use n_quad=(2*order+2)^nd
 			{
 			  if (nQuadraturePoints_elementBoundaryIn == 6)
 			    {
@@ -872,6 +914,82 @@ namespace proteus
 			    }
 			}
 		      else //other quad rules
+			{
+			  NO_INSTANCE;
+			  abort();
+			}
+		    }
+		  else if (nDOF_trial_elementIn == 16) //3rd order polynomials
+		    {
+		      if (nQuadraturePoints_elementIn == 36) //n_quad=36
+			{
+		          if (nQuadraturePoints_elementBoundaryIn ==6)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,16,16>,2,36,4,16,16,6>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 64) //n_quad=64 
+			{
+		          if (nQuadraturePoints_elementBoundaryIn == 8)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,16,16>,2,64,4,16,16,8>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 81) //n_quad=81
+			{
+		          if (nQuadraturePoints_elementBoundaryIn == 9)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,16,16>,2,81,4,16,16,9>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}		      
+		      else
+			{
+			  NO_INSTANCE;
+			  abort();
+			}
+		    }
+		  else if (nDOF_trial_elementIn == 25) //4th order polynomials
+		    {
+		      if (nQuadraturePoints_elementIn == 64) //n_quad=64
+			{
+		          if (nQuadraturePoints_elementBoundaryIn ==8)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,25,25>,2,64,4,25,25,8>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else if (nQuadraturePoints_elementIn == 144) //n_quad=144 
+			{
+		          if (nQuadraturePoints_elementBoundaryIn == 12)
+			    {
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,25,25>,2,144,4,25,25,12>());
+			    }
+			  else
+			    {
+			      NO_INSTANCE;
+			      abort();
+			    }
+			}
+		      else
 			{
 			  NO_INSTANCE;
 			  abort();

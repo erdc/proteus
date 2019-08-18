@@ -63,6 +63,9 @@ class GaussEdge(Q_base):
         [p7,w7]=numpy.polynomial.legendre.leggauss(7); p7=0.5*(p7+1); w7=0.5*w7
         [p8,w8]=numpy.polynomial.legendre.leggauss(8); p8=0.5*(p8+1); w8=0.5*w8
         [p9,w9]=numpy.polynomial.legendre.leggauss(9); p9=0.5*(p9+1); w9=0.5*w9
+        [p10,w10]=numpy.polynomial.legendre.leggauss(10); p10=0.5*(p10+1); w10=0.5*w10
+        [p11,w11]=numpy.polynomial.legendre.leggauss(11); p11=0.5*(p11+1); w11=0.5*w11
+        [p12,w12]=numpy.polynomial.legendre.leggauss(12); p12=0.5*(p12+1); w12=0.5*w12
         #mwf for convenience, see Ern and Guermond
         a1 = 0.5*sqrt(old_div((15.0+2.0*sqrt(30)),35.0))
         a2 = 0.5*sqrt(old_div((15.0-2.0*sqrt(30)),35.0))
@@ -112,7 +115,40 @@ class GaussEdge(Q_base):
              EVec(p9[5]),
              EVec(p9[6]),
              EVec(p9[7]),
-             EVec(p9[8]))
+             EVec(p9[8])),
+            (EVec(p10[0]), #n=10
+             EVec(p10[1]),
+             EVec(p10[2]),
+             EVec(p10[3]),
+             EVec(p10[4]),
+             EVec(p10[5]),
+             EVec(p10[6]),
+             EVec(p10[7]),
+             EVec(p10[8]),
+             EVec(p10[9])),
+            (EVec(p11[0]), #n=11
+             EVec(p11[1]),
+             EVec(p11[2]),
+             EVec(p11[3]),
+             EVec(p11[4]),
+             EVec(p11[5]),
+             EVec(p11[6]),
+             EVec(p11[7]),
+             EVec(p11[8]),
+             EVec(p11[9]),
+             EVec(p11[10])),
+            (EVec(p12[0]), #n=12
+             EVec(p12[1]),
+             EVec(p12[2]),
+             EVec(p12[3]),
+             EVec(p12[4]),
+             EVec(p12[5]),
+             EVec(p12[6]),
+             EVec(p12[7]),
+             EVec(p12[8]),
+             EVec(p12[9]),
+             EVec(p12[10]),
+             EVec(p12[11]))
             )
         self.weightsAll=(
             (1.0,), #n=1
@@ -130,7 +166,10 @@ class GaussEdge(Q_base):
             (w6[0],w6[1],w6[2],w6[3],w6[4],w6[5]), #n=6
             (w7[0],w7[1],w7[2],w7[3],w7[4],w7[5],w7[6]), #n=7
             (w8[0],w8[1],w8[2],w8[3],w8[4],w8[5],w8[6],w8[7]), #n=8
-            (w9[0],w9[1],w9[2],w9[3],w9[4],w9[5],w9[6],w9[7],w9[8]) #n=9
+            (w9[0],w9[1],w9[2],w9[3],w9[4],w9[5],w9[6],w9[7],w9[8]), #n=9
+            (w10[0],w10[1],w10[2],w10[3],w10[4],w10[5],w10[6],w10[7],w10[8],w10[9]), #n=10
+            (w11[0],w11[1],w11[2],w11[3],w11[4],w11[5],w11[6],w11[7],w11[8],w11[9],w11[10]), #n=11
+            (w12[0],w12[1],w12[2],w12[3],w12[4],w12[5],w12[6],w12[7],w12[8],w12[9],w12[10],w12[11]) #n=12
             )
         self.setOrder(order)
 

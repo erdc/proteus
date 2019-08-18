@@ -4273,7 +4273,7 @@ class OneLevelTransport(NonlinearEquation):
         columnIndecesDict={}#replace with C++ map (this  collects column indeces for each row)
         logEvent("Building sparse matrix structure",level=2)
         self.sparsityInfo = cmeshTools.SparsityInfo()
-        useC=True
+        useC=True #CHECK!
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]: #if we make stencil an array this can pass to C++
                 if useC:
@@ -4312,7 +4312,10 @@ class OneLevelTransport(NonlinearEquation):
                 else:
                     for eN in range(self.mesh.nElements_global):
                         for ii in range(self.l2g[ci]['nFreeDOF'][eN]): #l2g is an array
+                            #print (self.l2g[0]['freeGlobal'])
+                            #import pdb; pdb.set_trace()
                             I = self.offset[ci]+self.stride[ci]*self.l2g[ci]['freeGlobal'][eN,ii] #offset  and stride can be arrays
+                            #print (I,len(columnIndecesDict))
                             if I not in columnIndecesDict:
                                 columnIndecesDict[I]=set() #use C++ set
                             for jj in range(self.l2g[cj]['nFreeDOF'][eN]):

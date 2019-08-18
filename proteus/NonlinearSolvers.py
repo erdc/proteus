@@ -1113,6 +1113,8 @@ class highOrderLimSolver(Newton):
         self.F.uHDot[:] = self.F.u[0].dof
         #self.F.u[0].dof[:] = self.F.u_dof_old
 
+        self.F.getSmoothnessIndicator(u)
+        
         ######################
         # CALCULATE SOLUTION #
         ######################

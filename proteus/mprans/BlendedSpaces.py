@@ -638,7 +638,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hasForceFieldAsFunction = True
         self.q['force'] = numpy.zeros((self.mesh.nElements_global,
                                            self.nQuadraturePoints_element),'d')
-
+        # For smoothness indicators #
+        self.is_dof_external = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.is_dof_internal = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.is_boundary = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.is_cell_boundary = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.num_hi = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.den_hi = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.hi = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.gamma_dof = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.beta_dof = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.element_He = numpy.zeros(self.mesh.nElements_global, 'd')
+        
         # mql. For edge based stabilization
         self.dLow=None
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
@@ -711,6 +722,47 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.QL_NNZ = 0
         self.Q1_sparsity=None
         self.uInlet_at_quad_points=None
+    #
+
+    def getSmoothnessIndicator(self,u):
+        self.num_hi[:]=0
+        self.den_hi[:]=0
+        self.is_dof_external[:]=0
+        self.is_dof_internal[:]=0
+        
+        self.blendedSpaces.calculateSmoothnessIndicator(  # element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u', 0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.Hessian_psi,
+            # physics
+            self.mesh.nElements_global,
+            self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
+            u,
+            self.offset[0], self.stride[0],
+            self.is_dof_external,
+            self.is_dof_internal,
+            self.num_hi,
+            self.den_hi,
+            self.hi,
+            self.element_He,
+            self.coefficients.he,
+            self.xCoord_dof,
+            self.yCoord_dof,
+            self.zCoord_dof,
+            self.gamma_dof,
+            self.beta_dof,
+            len(self.rowptr)-1, # num of DOFs
+            self.nnz,
+            self.rowptr,
+            self.colind)
     #
     
     def getMetricsAtEOS(self):
