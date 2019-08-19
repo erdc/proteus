@@ -314,10 +314,10 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.epsFact_viscosity = epsFact
         copts.epsFact_density = epsFact
         copts.forceStrongDirichlet = False
-        copts.weak_bc_penalty_constant = 1e6
+        copts.weak_bc_penalty_constant = 100.0
         copts.useRBLES = 0
-        copts.useVF = 1
-        copts.timeOrder = 2
+        copts.useVF = 0
+        copts.timeOrder = 1
         copts.stokes = False
         copts.eb_adjoint_sigma = 1.
         copts.Closure_0_model = None
@@ -588,9 +588,9 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.epsFact_density = epsFact
         copts.forceStrongDirichlet = False
         copts.ns_sed_forceStrongDirichlet = False
-        copts.weak_bc_penalty_constant = 1e6
+        copts.weak_bc_penalty_constant = 100.0
         copts.useRBLES = 0
-        copts.useVF = 1
+        copts.useVF = 0
         copts.PSTAB = 0
         copts.ARTIFICIAL_VISCOSITY = 3
         copts.INT_BY_PARTS_PRESSURE = 1

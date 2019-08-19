@@ -26,7 +26,7 @@ class TwoPhaseFlowProblem:
                  nny=None,
                  nnz=None,
                  domain=None,
-                 triangleFlag=1,
+                 triangleFlag=0,
                  # INITIAL CONDITIONS #
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
