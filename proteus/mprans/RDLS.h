@@ -821,173 +821,73 @@ namespace proteus
                 globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
               }//i
           }//elements
-        /* //cek todo, really should get rid of the exterior boundary integrals if we're not going to use them */
-        /* // */
-        /* //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals */
-        /* // */
-        /* //ebNE is the Exterior element boundary INdex */
-        /* //ebN is the element boundary INdex */
-        /* //eN is the element index */
-        /* gf.useExact=false;//not yet implemented for boundaries */
-        /* for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) */
-        /*   { */
-        /*     register int ebN = exteriorElementBoundariesArray[ebNE], */
-        /*       eN  = elementBoundaryElementsArray[ebN*2+0], */
-        /*       ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0], */
-        /*       eN_nDOF_trial_element = eN*nDOF_trial_element; */
-        /*     register double elementResidual_u[nDOF_test_element]; */
-        /*     double epsilon_redist, h_phi; */
-        /*     for (int i=0;i<nDOF_test_element;i++) */
-        /*       { */
-        /*         elementResidual_u[i]=0.0; */
-        /*       } */
-        /*     for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) */
-        /*       { */
-        /*         register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
-        /*           ebNE_kb_nSpace = ebNE_kb*nSpace, */
-        /*           ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb, */
-        /*           ebN_local_kb_nSpace = ebN_local_kb*nSpace; */
-        /*         register double u_ext=0.0, */
-        /*           grad_u_ext[nSpace], */
-        /*           m_ext=0.0, */
-        /*           dm_ext=0.0, */
-        /*           H_ext=0.0, */
-        /*           dH_ext[nSpace], */
-        /*           r_ext=0.0, */
-        /*           dr_ext=0.0, */
-        /*           flux_ext=0.0, */
-        /*           bc_u_ext=0.0, */
-        /*           bc_grad_u_ext[nSpace], */
-        /*           bc_m_ext=0.0, */
-        /*           bc_dm_ext=0.0, */
-        /*           bc_H_ext=0.0, */
-        /*           bc_dH_ext[nSpace], */
-        /*           bc_r_ext=0.0, */
-        /*           jac_ext[nSpace*nSpace], */
-        /*           jacDet_ext, */
-        /*           jacInv_ext[nSpace*nSpace], */
-        /*           boundaryJac[nSpace*(nSpace-1)], */
-        /*           metricTensor[(nSpace-1)*(nSpace-1)], */
-        /*           metricTensorDetSqrt, */
-        /*           dS, */
-        /*           u_test_dS[nDOF_test_element], */
-        /*           u_grad_trial_trace[nDOF_trial_element*nSpace], */
-        /*           normal[nSpace],x_ext,y_ext,z_ext, */
-        /*           G[nSpace*nSpace],G_dd_G,tr_G, dir[nSpace],norm; */
-        /*         ck.calculateMapping_elementBoundary(eN, */
-        /*                                             ebN_local, */
-        /*                                             kb, */
-        /*                                             ebN_local_kb, */
-        /*                                             mesh_dof, */
-        /*                                             mesh_l2g, */
-        /*                                             mesh_trial_trace_ref, */
-        /*                                             mesh_grad_trial_trace_ref, */
-        /*                                             boundaryJac_ref, */
-        /*                                             jac_ext, */
-        /*                                             jacDet_ext, */
-        /*                                             jacInv_ext, */
-        /*                                             boundaryJac, */
-        /*                                             metricTensor, */
-        /*                                             metricTensorDetSqrt, */
-        /*                                             normal_ref, */
-        /*                                             normal, */
-        /*                                             x_ext,y_ext,z_ext); */
-        /*         dS = metricTensorDetSqrt*dS_ref[kb]; */
-        /*         //get the metric tensor */
-        /*         //cek todo use symmetry */
-        /*         ck.calculateG(jacInv_ext,G,G_dd_G,tr_G); */
-
-
-        /*         //compute shape and solution information */
-        /*         //shape */
-        /*         ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace); */
-        /*         //solution and gradients */
-        /*         ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext); */
-        /*         ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext); */
-        /*         //precalculate test function products with integration weights */
-        /*         for (int j=0;j<nDOF_trial_element;j++) */
-        /*           { */
-        /*             u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS; */
-        /*           } */
-
-        /*         norm = 1.0e-8; */
-        /*         for (int I=0;I<nSpace;I++) */
-        /*           norm += grad_u_ext[I]*grad_u_ext[I]; */
-        /*         norm = sqrt(norm); */
-        /*         for (int I=0;I<nSpace;I++) */
-        /*           dir[I] = grad_u_ext[I]/norm; */
-
-        /*         ck.calculateGScale(G,dir,h_phi); */
-
-        /*         epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]); */
-
-        /*         // */
-        /*         //load the boundary values */
-        /*         // */
-        /*         bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext; */
-
-        /*         // */
-        /*         //calculate the pde coefficients using the solution and the boundary values for the solution */
-        /*         // */
-
-        /*         evaluateCoefficients(epsilon_redist, */
-        /*                              ebqe_phi_ls_ext[ebNE_kb], */
-        /*                              u_ext, */
-        /*                              grad_u_ext, */
-        /*                              m_ext, */
-        /*                              dm_ext, */
-        /*                              H_ext, */
-        /*                              dH_ext, */
-        /*                              r_ext); */
-        /*         evaluateCoefficients(epsilon_redist, */
-        /*                              ebqe_phi_ls_ext[ebNE_kb], */
-        /*                              bc_u_ext, */
-        /*                              bc_grad_u_ext, */
-        /*                              bc_m_ext, */
-        /*                              bc_dm_ext, */
-        /*                              bc_H_ext, */
-        /*                              bc_dH_ext, */
-        /*                              bc_r_ext); */
-        /*         if(!useExact) */
-        /*           { */
-        /*             dr_ext=0.0; */
-        /*           } */
-        /*         //save for other models? */
-        /*         ebqe_u[ebNE_kb] = u_ext; */
-
-        /*         for (int I=0;I<nSpace;I++) */
-        /*           ebqe_n[ebNE_kb_nSpace+I] = dir[I]; */
-        /*         // */
-        /*         //calculate the numerical fluxes */
-        /*         // */
-        /*         //DoNothing for now */
-        /*         // */
-        /*         //update residuals */
-        /*         // */
-        /*         //          if (kb >= 0) */
-        /*         //            { */
-        /*         //              std::cout<<"RDLSV2 res ebNE= "<<ebNE<<" ebN= "<<ebN<<" kb= "<<kb<<" ebNE_kb= "<<ebNE_kb <<" u_ext= "<<u_ext<<" m_ext= "<<m_ext */
-        /*         //                       <<std::endl; */
-        /*         //            } */
-        /*         for (int i=0;i<nDOF_test_element;i++) */
-        /*           { */
-        /*             //int ebNE_kb_i = ebNE_kb*nDOF_test_element+i; */
-        /*             //mwf debug */
-        /*             assert(flux_ext == 0.0); */
-        /*             elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]); */
-        /*           }//i */
-        /*       }//kb */
-        /*     // */
-        /*     //update the element and global residual storage */
-        /*     // */
-        /*     for (int i=0;i<nDOF_test_element;i++) */
-        /*       { */
-        /*         int eN_i = eN*nDOF_test_element+i; */
-
-        /*         globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i]; */
-        /*       }//i */
-        /*   }//ebNE */
-        /* gf.useExact = useExact;//just to be safe */
+        //
+        //loop over exterior element boundaries
+        //
+        //ebNE is the Exterior element boundary INdex
+        //ebN is the element boundary INdex
+        //eN is the element index
+        for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+          {
+            register int ebN = exteriorElementBoundariesArray[ebNE],
+              eN  = elementBoundaryElementsArray[ebN*2+0],
+              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+              eN_nDOF_trial_element = eN*nDOF_trial_element;
+            double epsilon_redist, h_phi;
+            for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+              {
+                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                  ebNE_kb_nSpace = ebNE_kb*nSpace,
+                  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+                  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+                register double u_ext=0.0,
+                  grad_u_ext[nSpace],
+                  jac_ext[nSpace*nSpace],
+                  jacDet_ext,
+                  jacInv_ext[nSpace*nSpace],
+                  boundaryJac[nSpace*(nSpace-1)],
+                  metricTensor[(nSpace-1)*(nSpace-1)],
+                  metricTensorDetSqrt,
+                  u_test_dS[nDOF_test_element],
+                  u_grad_trial_trace[nDOF_trial_element*nSpace],
+                  normal[nSpace],x_ext,y_ext,z_ext,
+                  dir[nSpace],norm;
+                ck.calculateMapping_elementBoundary(eN,
+                                                    ebN_local,
+                                                    kb,
+                                                    ebN_local_kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac_ext,
+                                                    jacDet_ext,
+                                                    jacInv_ext,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x_ext,y_ext,z_ext);
+                //compute shape and solution information
+                //shape
+		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+                //solution and gradients
+                ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+                ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+                norm = 1.0e-8;
+                for (int I=0;I<nSpace;I++)
+                  norm += grad_u_ext[I]*grad_u_ext[I];
+                norm = sqrt(norm);
+                for (int I=0;I<nSpace;I++)
+                  dir[I] = grad_u_ext[I]/norm;
+                //save for other models
+                ebqe_u[ebNE_kb] = u_ext;
+                for (int I=0;I<nSpace;I++)
+                  ebqe_n[ebNE_kb_nSpace+I] = dir[I];
+              }//kb
+          }//ebNE
         //std::cout<<"Circ Res"<<circbc<<'\t'<<circ<<std::endl;
       }
 

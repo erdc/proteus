@@ -196,7 +196,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  turbulenceClosureModel=0,  # 0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
                  barycenters=None,
-                 NONCONSERVATIVE_FORM=0.0,
+                 NONCONSERVATIVE_FORM=1.0,
                  MOMENTUM_SGE=1.0,
                  PRESSURE_SGE=1.0,
                  VELOCITY_SGE=1.0,
