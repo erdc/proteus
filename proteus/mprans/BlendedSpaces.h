@@ -8,11 +8,13 @@
 
 #define USE_Q1_STENCIL 1
 #define USE_MACRO_CELL 1
-#define PROBLEM 0
-// 0: linear advection
-// 1: burgers
-// 2: KPP
-
+#define ELEMENT_BASED_ENTROPY_RESIDUAL 0
+#define C_GAMMA 1.0
+#define METHOD 3
+// 0: low-order
+// 1: high-order non-limited
+// 2: limiting without gamma indicator
+// 3: limiting with gamma indicator
 namespace proteus
 {
   // ENTROPY FUNCTION AND ITS DERIVATIVE //
@@ -25,61 +27,59 @@ namespace proteus
     return soln;
   }
   // ENTROPY FLUX //
-  inline double xEntFlux(const double& u_vel, const double& soln)
+  inline double xEntFlux(const double& u_vel, const double& soln, const int& PROBLEM_TYPE)
   {
-    if (PROBLEM==0)
+    if (PROBLEM_TYPE==0)
       return u_vel*ENTROPY(soln);
-    else if (PROBLEM==1)
+    else if (PROBLEM_TYPE==1)
       return soln*soln*soln/3.0;
     else
-      //return soln*soln*soln/3.0;
       return soln*std::sin(soln)+std::cos(soln)-1;
   }
-  inline double yEntFlux(const double& v_vel, const double& soln)
+  inline double yEntFlux(const double& v_vel, const double& soln, const int& PROBLEM_TYPE)
   {
-    if (PROBLEM==0)
+    if (PROBLEM_TYPE==0)
       return v_vel*ENTROPY(soln);
-    else if (PROBLEM==1)
+    else if (PROBLEM_TYPE==1)
       return soln*soln*soln/3.0;
     else
-      //return soln*soln*soln/3.0;
       return soln*std::cos(soln)-std::sin(soln);
   }
   //////////////////////
   // PROBLEM ORIENTED //
   //////////////////////
   // FLUX //
-  inline double xFlux(const double& u_vel, const double& soln)
+  inline double xFlux(const double& u_vel, const double& soln, const int& PROBLEM_TYPE)
   {
-    if (PROBLEM==0)
+    if (PROBLEM_TYPE==0)
       return u_vel*soln;
-    else if (PROBLEM==1)
+    else if (PROBLEM_TYPE==1)
       return 0.5*soln*soln;
     else return std::sin(soln);
   }
-  inline double yFlux(const double& v_vel, const double& soln)
+  inline double yFlux(const double& v_vel, const double& soln, const int& PROBLEM_TYPE)
   {
-    if (PROBLEM==0)
+    if (PROBLEM_TYPE==0)
       return v_vel*soln;
-    else if (PROBLEM==1)
+    else if (PROBLEM_TYPE==1)
       return 0.5*soln*soln;
     else
       return std::cos(soln);
   }
-  inline double xFluxJacobian(const double& u_vel, const double& soln)
+  inline double xFluxJacobian(const double& u_vel, const double& soln, const int& PROBLEM_TYPE)
   {
-    if (PROBLEM==0)
+    if (PROBLEM_TYPE==0)
       return u_vel;
-    else if (PROBLEM==1)
+    else if (PROBLEM_TYPE==1)
       return soln;
     else
       return std::cos(soln);
   }
-  inline double yFluxJacobian(const double& v_vel, const double& soln)
+  inline double yFluxJacobian(const double& v_vel, const double& soln, const int& PROBLEM_TYPE)
   {
-    if (PROBLEM==0)
+    if (PROBLEM_TYPE==0)
       return v_vel;
-    else if (PROBLEM==1)
+    else if (PROBLEM_TYPE==1)
       return soln;
     else
       return -std::sin(soln);
@@ -89,14 +89,14 @@ namespace proteus
 			    const double& u_veli, const double& v_veli,
 			    const double& u_velj, const double& v_velj,
 			    const double& Cx, const double& Cy,
-			    const double& CTx, const double& CTy)
+			    const double& CTx, const double& CTy, const int& PROBLEM_TYPE)
   {
-    if (PROBLEM==0)
+    if (PROBLEM_TYPE==0)
     return fmax(fmax(fabs(Cx*u_veli + Cy*v_veli),
     		     fabs(Cx*u_velj + Cy*v_velj)),
     		fmax(fabs(CTx*u_veli + CTy*v_veli),
     		     fabs(CTx*u_velj + CTy*v_velj)));
-    else if (PROBLEM==1)
+    else if (PROBLEM_TYPE==1)
       {
 	double lambda = fmax(fabs(solni),fabs(solnj));
 	return fmax(fabs(Cx+Cy), fabs(CTx+CTy))*lambda;
@@ -123,13 +123,15 @@ namespace proteus
     std::valarray<double> lowOrderBoundaryIntegral;
     // high order vectors //
     std::valarray<double> highOrderBoundaryIntegral;
-    std::valarray<double> highOrderFluxTerm;
-    std::valarray<double> consistentTimeDerivative;
     // For limiting //
     std::valarray<double> umax;
     std::valarray<double> umin;
     std::valarray<double> wBarij, wBarji;
-    std::valarray<double> fluxStar;    
+    std::valarray<double> fluxStar;
+    // for smoothness indicator //
+    std::valarray<double> element_He;
+    std::valarray<double> global_hi;
+    std::valarray<double> min_hiHe;
     // for Zalesak's FCT //
     std::valarray<double> Rpos, Rneg;
     virtual ~BlendedSpaces_base(){}
@@ -144,6 +146,7 @@ namespace proteus
                                    double* u_grad_trial_ref,
                                    double* u_test_ref,
                                    double* u_grad_test_ref,
+				   double* u_hess_trial_ref,
                                    //element boundary
                                    double* mesh_trial_trace_ref,
                                    double* mesh_grad_trial_trace_ref,
@@ -193,11 +196,10 @@ namespace proteus
 				   double* aux_grad_test_ref,
 				   double* aux_test_trace_ref,
 				   double* dLow,
-				   double epsilon,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE,
                                    // AUX QUANTITIES OF INTEREST
-                                   double* quantDOFs,				  
+                                   double* quantDOFs,
 				   // FOR highOrderLim
 				   // for boundary
 				   double* ebqe_uInlet,
@@ -217,13 +219,27 @@ namespace proteus
 				   // inverse of dissipative mass matrix
 				   double* inv_element_ML_minus_MC,
 				   // high order stab
+				   double umaxG,
+				   double uminG,
 				   double* uHDot,
+				   double omega,
 				   double* EntVisc,
+				   // for smoothness indicator
+				   double* gamma_dof,
+				   int* first_adjacent_dof_to_middle_dof,
+				   int* second_adjacent_dof_to_middle_dof,
+				   double* is_dof_external,
+				   double* is_dof_internal,
+				   double* den_hi,
 				   // C-matrices
 				   double* Cx,
 				   double* Cy,
 				   double* CTx,
 				   double* CTy,
+				   double* PrCx,
+				   double* PrCy,
+				   double* PrCTx,
+				   double* PrCTy,
 				   double* CxElem,
 				   double* CyElem,
 				   double* CTxElem,
@@ -247,6 +263,7 @@ namespace proteus
                                    double* u_grad_trial_ref,
                                    double* u_test_ref,
                                    double* u_grad_test_ref,
+				   double* u_hess_trial_ref,
                                    //element boundary
                                    double* mesh_trial_trace_ref,
                                    double* mesh_grad_trial_trace_ref,
@@ -296,7 +313,6 @@ namespace proteus
 				   double* aux_grad_test_ref,
 				   double* aux_test_trace_ref,
 				   double* dLow,
-				   double epsilon,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE,
                                    // AUX QUANTITIES OF INTEREST
@@ -319,13 +335,27 @@ namespace proteus
 				   // inverse of dissipative mass matrix
 				   double* inv_element_ML_minus_MC,
 				   // high order stab
+				   double umaxG,
+				   double uminG,
 				   double* uHDot,
+				   double omega,
 				   double* EntVisc,
+				   // for smoothness indicator
+				   double* gamma_dof,
+				   int* first_adjacent_dof_to_middle_dof,
+				   int* second_adjacent_dof_to_middle_dof,
+				   double* is_dof_external,
+				   double* is_dof_internal,
+				   double* den_hi,
 				   // C-matrices
 				   double* Cx,
 				   double* Cy,
 				   double* CTx,
 				   double* CTy,
+				   double* PrCx,
+				   double* PrCy,
+				   double* PrCTx,
+				   double* PrCTy,
 				   double* CxElem,
 				   double* CyElem,				   
 				   double* CTxElem,
@@ -386,7 +416,6 @@ namespace proteus
 				   double* aux_test_ref,
 				   double* aux_grad_test_ref,
 				   double* dLow,
-				   double epsilon,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE)=0;
     virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
@@ -422,42 +451,6 @@ namespace proteus
 				       double* global_Omega2,
 				       double* global_L2_sH,
 				       double* global_L2_1msH)=0;
-    virtual void calculateSmoothnessIndicator(//element
-					      double* mesh_trial_ref,
-					      double* mesh_grad_trial_ref,
-					      double* mesh_dof,
-					      int* mesh_l2g,
-					      double* dV_ref,
-					      double* u_trial_ref,
-					      double* u_grad_trial_ref,
-					      double* u_test_ref,
-					      double* u_grad_test_ref,
-					      double* u_hess_trial_ref,
-					      //physics
-					      int nElements_global,
-					      int* u_l2g,
-					      int* r_l2g,
-					      double* u_dof,
-					      int offset_u, int stride_u,
-					      // for smoothness indicator
-					      double* is_dof_external,
-					      double* is_dof_internal,
-					      double* num_hi,
-					      double* den_hi,
-					      double* global_hi,
-					      double* element_He,
-					      // for loops in DOFs
-					      double he,
-					      double* xCoord_dof,
-					      double* yCoord_dof,
-					      double* zCoord_dof,
-					      double* gamma_dof,
-					      double* beta_dof,
-					      int numDOFs,
-					      int NNZ,
-					      int* rowptr,
-					      int* colind
-					      )=0;
   };
 
   template<class CompKernelType,
@@ -569,6 +562,7 @@ namespace proteus
 			     double* u_grad_trial_ref,
 			     double* u_test_ref,
 			     double* u_grad_test_ref,
+			     double* u_hess_trial_ref,
 			     //element boundary
 			     double* mesh_trial_trace_ref,
 			     double* mesh_grad_trial_trace_ref,
@@ -618,7 +612,6 @@ namespace proteus
 			     double* aux_grad_test_ref,
 			     double* aux_test_trace_ref,
 			     double* dLow,
-			     double epsilon,
 			     // Type of problem to solve
 			     int PROBLEM_TYPE,
 			     // AUX QUANTITIES OF INTEREST			     
@@ -641,13 +634,27 @@ namespace proteus
 			     // inverse of dissipative mass matrix
 			     double* inv_element_ML_minus_MC,
 			     // high order stab
+			     double umaxG,
+			     double uminG,
 			     double* uHDot,
+			     double omega,
 			     double* EntVisc,
+			     // for smoothness indicator
+			     double* gamma_dof,
+			     int* first_adjacent_dof_to_middle_dof,
+			     int* second_adjacent_dof_to_middle_dof,
+			     double* is_dof_external,
+			     double* is_dof_internal,
+			     double* den_hi,
 			     // C-matrices
 			     double* Cx,
 			     double* Cy,
 			     double* CTx,
 			     double* CTy,
+			     double* PrCx,
+			     double* PrCy,
+			     double* PrCTx,
+			     double* PrCTy,
 			     double* CxElem,
 			     double* CyElem,
 			     double* CTxElem,
@@ -762,8 +769,8 @@ namespace proteus
 		double flow = 0.;
 		double fluxJacobian[2];
 		double uInlet = ebqe_uInlet[ebNE_kb];
-		fluxJacobian[0] = xFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+0],uExt);
-		fluxJacobian[1] = yFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+1],uExt);
+		fluxJacobian[0] = xFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+0],uExt,PROBLEM_TYPE);
+		fluxJacobian[1] = yFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+1],uExt,PROBLEM_TYPE);
 		
 		for (int I=0; I < nSpace; I++)
 		  flow += normal[I]*fluxJacobian[I];
@@ -865,8 +872,8 @@ namespace proteus
 		  }
 		
 		double flux[2];
-		flux[0] = xFlux(velocity[eN_k_nSpace+0],un);
-		flux[1] = yFlux(velocity[eN_k_nSpace+1],un);
+		flux[0] = xFlux(velocity[eN_k_nSpace+0],un,PROBLEM_TYPE);
+		flux[1] = yFlux(velocity[eN_k_nSpace+1],un,PROBLEM_TYPE);
 		
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
@@ -889,8 +896,8 @@ namespace proteus
 		double u_veli = u_vel_dofs[gi];
 		double v_veli = v_vel_dofs[gi];
 		    
-		double fxi = xFlux(u_veli,solni);
-		double fyi = yFlux(v_veli,solni);
+		double fxi = xFlux(u_veli,solni,PROBLEM_TYPE);
+		double fyi = yFlux(v_veli,solni,PROBLEM_TYPE);
 
 		// first part of vector qi
 		double qi = elementFluxCorrection[i] + elementMass[i]*uHDot[gi];
@@ -910,8 +917,8 @@ namespace proteus
 		    double u_velj = u_vel_dofs[gj];
 		    double v_velj = v_vel_dofs[gj];
 		    
-		    double fxj = xFlux(u_velj,solnj);
-		    double fyj = yFlux(v_velj,solnj);
+		    double fxj = xFlux(u_velj,solnj,PROBLEM_TYPE);
+		    double fyj = yFlux(v_velj,solnj,PROBLEM_TYPE);
 		    
 		    // low-order flux part of qi
 		    qi -= (CTxElem[eN_i_j]*fxj + CTyElem[eN_i_j]*fyj);
@@ -929,13 +936,13 @@ namespace proteus
 						 u_veli,v_veli,
 						 u_velj,v_velj,
 						 PrCxElem[eN_i_j], PrCyElem[eN_i_j],
-						 PrCTxElem[eN_i_j], PrCTyElem[eN_i_j]);
+						 PrCTxElem[eN_i_j], PrCTyElem[eN_i_j],
+						 PROBLEM_TYPE);
 			dLowElemii -= dLowElemij;
 
 			// save anti-dissipative flux into element_flux_qij
 			element_flux_qij[eN_i_j] =
-			  //(- dLowElemij)*(solnj-solni);
-			  (dLowElemij*fmax(EntVisc[gi],EntVisc[gj]) - dLowElemij)*(solnj-solni);
+			  (fmax(EntVisc[gi],EntVisc[gj])-1.0)*dLowElemij*(solnj-solni);
 			
 			// compute low order dissipative term
 			lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
@@ -1010,8 +1017,6 @@ namespace proteus
 		ij+=1;
 	      }
 	    // Save local bounds 
-	    //umax[i] = fmax(0.0,fmin(1.0,umaxi));
-	    //umin[i] = fmax(0.0,fmin(1.0,umini));
 	    umax[i] = umaxi;
 	    umin[i] = umini;
 	    
@@ -1105,17 +1110,36 @@ namespace proteus
 		    
 		    if (i!=j)
 		      {
+			double gammaij = fmin(gamma_dof[i], gamma_dof[j]);
 			if (fij > 0)
 			  {
-			    //fluxStar[gi] = 0; // low-order method
-			    //fluxStar[gi] += fij; // high-order entropy viscosity
-			    fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+			    if (METHOD==0)
+			      fluxStar[gi] += 0; // low-order method
+			    else if (METHOD==1)
+			      fluxStar[gi] += fij; // high-order entropy viscosity
+			    else if (METHOD==2)
+				fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+			    else
+			      {
+				double fijStarLoc=fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+				double fijStarGlob=fmin(fij,fmin(2*dij*umaxG-wij,wji-2*dij*uminG));
+				fluxStar[gi] += fmin(fijStarGlob, fmax(fijStarLoc,gammaij*fij));
+			      }
 			  }
 			else
 			  {
-			    //fluxStar[gi] = 0;
-			    //fluxStar[gi] += fij;
-			    fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+			    if (METHOD==0)
+			      fluxStar[gi] = 0;
+			    else if (METHOD==1)
+			      fluxStar[gi] += fij;
+			    else if (METHOD==2)
+			      fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+			    else
+			      {
+				double fijStarLoc =fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+				double fijStarGlob=fmax(fij,fmax(2*dij*uminG-wij,wji-2*dij*umaxG));
+				fluxStar[gi] += fmax(fijStarGlob, fmin(fijStarLoc,gammaij*fij));
+			      }
 			  }
 		      }
 		  } //j
@@ -1163,6 +1187,7 @@ namespace proteus
 					double* u_grad_trial_ref,
 					double* u_test_ref,
 					double* u_grad_test_ref,
+					double* u_hess_trial_ref,
 					//element boundary
 					double* mesh_trial_trace_ref,
 					double* mesh_grad_trial_trace_ref,
@@ -1212,7 +1237,6 @@ namespace proteus
 					double* aux_grad_test_ref,
 					double* aux_test_trace_ref,
 					double* dLow,
-					double epsilon,
 					// Type of problem to solve
 					int PROBLEM_TYPE,
 					// AUX QUANTITIES OF INTEREST			     
@@ -1235,13 +1259,27 @@ namespace proteus
 					// inverse of dissipative mass matrix
 					double* inv_element_ML_minus_MC,
 					// high order stab
+					double umaxG,
+					double uminG,
 					double* uHDot,
+					double omega,
 					double* EntVisc,
+					// for smoothness indicator
+					double* gamma_dof,
+					int* first_adjacent_dof_to_middle_dof,
+					int* second_adjacent_dof_to_middle_dof,
+					double* is_dof_external,
+					double* is_dof_internal,
+					double* den_hi,
 					// C-matrices
 					double* Cx,
 					double* Cy,
 					double* CTx,
 					double* CTy,
+					double* PrCx,
+					double* PrCy,
+					double* PrCTx,
+					double* PrCTy,
 					double* CxElem,
 					double* CyElem,
 					double* CTxElem,
@@ -1261,9 +1299,10 @@ namespace proteus
 	//highOrderBoundaryIntegral.resize(numDOFs,0.0);
 
 	// for entropy viscosity
-	highOrderFluxTerm.resize(numDOFs,0.0);
-	consistentTimeDerivative.resize(numDOFs,0.0);
-	    
+	element_He.resize(nElements_global,0.0);
+	global_hi.resize(numDOFs,0.0);
+	min_hiHe.resize(numDOFs,1E100);
+  
 	///////////////////
 	// BOUNDARY TERM //
 	///////////////////
@@ -1330,8 +1369,8 @@ namespace proteus
 	/* 	//calculate flow */
 	/* 	double flow = 0.; */
 	/* 	double fluxJacobian[2]; */
-	/* 	fluxJacobian[0] = xFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+0],uExt); */
-	/* 	fluxJacobian[1] = yFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+1],uExt); */
+	/* 	fluxJacobian[0] = xFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+0],uExt,PROBLEM_TYPE); */
+	/* 	fluxJacobian[1] = yFluxJacobian(ebqe_velocity_ext[ebNE_kb_nSpace+1],uExt,PROBLEM_TYPE); */
 		
 	/* 	for (int I=0; I < nSpace; I++) */
 	/* 	  flow += normal[I]*fluxJacobian[I]; */
@@ -1356,86 +1395,16 @@ namespace proteus
 	// END OF BOUNDARY TERMS //
 	///////////////////////////
 	
-	////////////////////////
-	// FIRST LOOP IN DOFs //
-	////////////////////////
-	// * Compute (lagged) edge_based_cfl
-	// * Compute EntVisc
-	// * Compute dLow[ij]
-	/* int ij=0; */
-	/* for (int i=0; i<numDOFs; i++) */
-	/*   { */
-	/*     double solni = u_dof_old[i]; // solution at time tn for the ith DOF */
-	/*     double u_veli = u_vel_dofs[i]; */
-	/*     double v_veli = v_vel_dofs[i]; */
-	/*     double dLowii = 0.; */
-
-	/*     // for entropy viscosity */
-	/*     double DEnti = DENTROPY(solni); */
-	/*     double DenEntViscPart1 = 0.; */
-	/*     double DenEntViscPart2 = 0.; */
-	/*     double ith_NumEntVisc = 0.; */
-	/*     double ith_DenEntVisc = 0.; */
-	    
-	/*     // loop over the sparsity pattern of the i-th DOF */
-	/*     for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++) */
-	/*       { */
-	/* 	int j = colind[offset]; */
-	/* 	double solnj = u_dof_old[j]; // solution at time tn for the jth DOF */
-	/* 	double u_velj = u_vel_dofs[j]; */
-	/* 	double v_velj = v_vel_dofs[j]; */
-	/* 	double dij = 0; */
-		
-	/* 	if (i != j) */
-	/* 	  { */
-	/* 	    dij = fmax(fmax(fabs(Cx[ij]*u_veli + Cy[ij]*v_veli), */
-	/* 			    fabs(Cx[ij]*u_velj + Cy[ij]*v_velj)), */
-	/* 		       fmax(fabs(CTx[ij]*u_veli + CTy[ij]*v_veli), */
-	/* 			    fabs(CTx[ij]*u_velj + CTy[ij]*v_velj))); */
-	/* 	    dLowii -= dij; */
-	/* 	    // save dij */
-	/* 	    dLow[ij] = dij; */
-	/* 	  } */
-	/* 	else */
-	/* 	  { */
-	/* 	    dLow[ij] = 0.0; // Not true but irrelevant due to use of ...(solnj-solni) */
-	/* 	  } */
-	/* 	// For entropy viscosity production */
-	/* 	double fxj = u_velj*solnj; */
-	/* 	double fyj = v_velj*solnj; */
-		
-	/* 	double x_EntFluxj = u_velj*ENTROPY(solnj) - u_veli*ENTROPY(solni); */
-	/* 	double y_EntFluxj = v_velj*ENTROPY(solnj) - v_veli*ENTROPY(solni); */
-	/* 	ith_NumEntVisc += Cx[ij]*(x_EntFluxj-DEnti*fxj) + Cy[ij]*(y_EntFluxj-DEnti*fyj); */
-
-	/* 	// aux parts to compute DenEntVisc */
-	/* 	DenEntViscPart1 += Cx[ij]*x_EntFluxj + Cy[ij]*y_EntFluxj; */
-	/* 	DenEntViscPart2 += Cx[ij]*fxj + Cy[ij]*fyj; */
-
-	/* 	//update index  */
-	/* 	ij+=1; */
-	/*       } */
-	/*     // compute DenEntVisc */
-	/*     ith_DenEntVisc = fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15; */
-	/*     EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0); */
-	    
-	/*     // compute edge based cfl */
-	/*     double QH_mi = QH_ML[i]; */
-	/*     //edge_based_cfl[i] = 2*fabs(dLowii)/QH_mi; */
-	/*   } */
-	///////////////////////////////
-	// END OF FIRST LOOP IN DOFs //
-	///////////////////////////////
- 
 	/////////////////////////////
 	// FIRST LOOP ON INTEGRALS // Compute uDot via high order galerkin (with lumped m.mat)
 	/////////////////////////////
-	// * Compute the high order flux term.
-	//    Used if the high-order stabilization is based on uDot=-1/mi*high_order_flux
+	int nSpace2 = nSpace*nSpace;
 	for(int eN=0;eN<nElements_global;eN++) //loop in cells
 	  {
 	    //declare local storage for element residual and initialize
-	    register double elementTimeDerivative[nDOF_test_element],
+	    double det_hess_Ke=0, area_Ke=0;
+	    register double
+	      elementTimeDerivative[nDOF_test_element],
 	      elementFluxTerm[nDOF_test_element];
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
@@ -1451,7 +1420,7 @@ namespace proteus
 		  eN_k_nSpace = eN_k*nSpace,
 		  eN_nDOF_trial_element = eN*nDOF_trial_element;
 		register double
-		  un=0.0, grad_un[nSpace],
+		  un=0.0, grad_un[nSpace], hess_un[nSpace2], det_hess_un=0.,
 		  uDot=0.0,
 		  jac[nSpace*nSpace],
 		  jacDet,
@@ -1459,6 +1428,7 @@ namespace proteus
 		  u_test_dV[nDOF_test_element],
 		  u_grad_trial[nDOF_trial_element*nSpace],
 		  u_grad_test_dV[nDOF_test_element*nSpace],
+		  u_hess_trial[nDOF_trial_element*nSpace2],
 		  dV,x,y,z;
 		ck.calculateMapping_element(eN,
 					    k,
@@ -1476,6 +1446,9 @@ namespace proteus
 		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
 				    jacInv,
 				    u_grad_trial); // high-order space
+		ck.hessTrialFromRef(&u_hess_trial_ref[k*nDOF_trial_element*nSpace2],
+				    jacInv,
+				    u_hess_trial);
 		//get the solution based on the blended functions
 		ck.valFromDOF(u_dof_old,
 			      &u_l2g[eN_nDOF_trial_element],
@@ -1485,6 +1458,10 @@ namespace proteus
 			       &u_l2g[eN_nDOF_trial_element],
 			       u_grad_trial,
 			       grad_un);
+		ck.hessFromDOF(u_dof_old,
+			       &u_l2g[eN_nDOF_trial_element],
+			       u_hess_trial,
+			       hess_un);
 		ck.valFromDOF(u_dof,
 			      &u_l2g[eN_nDOF_trial_element],
 			      &u_trial_ref[k*nDOF_trial_element],
@@ -1501,81 +1478,207 @@ namespace proteus
 		  {
 		    elementTimeDerivative[i] += uDot*u_test_dV[i]; 
 		    register int i_nSpace=i*nSpace;
-		    if (PROBLEM==0)
+		    if (PROBLEM_TYPE==0)
 		      elementFluxTerm[i] += (velocity[eN_k_nSpace+0]*grad_un[0]
 					     +velocity[eN_k_nSpace+1]*grad_un[1])*u_test_dV[i];
-		    else if (PROBLEM==1)
+		    else if (PROBLEM_TYPE==1)
 		      elementFluxTerm[i] += un*(grad_un[0]+grad_un[1])*u_test_dV[i];
 		    else // KPP
 		      elementFluxTerm[i] += (std::cos(un)-std::sin(un))*u_test_dV[i];
 		  }//i
-	      }
+		// To compute smoothness indicator based on 2nd derivative //
+		det_hess_un = hess_un[0]*hess_un[3] - hess_un[2]*hess_un[1];
+		det_hess_Ke += det_hess_un*dV;
+		area_Ke += dV;
+	      }//kb
 	    //
 	    //load element into global residual and save element residual
 	    //
+	    element_He[eN] = det_hess_Ke/area_Ke;
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i];
-		
-		consistentTimeDerivative[gi] += elementTimeDerivative[i];
-		highOrderFluxTerm[gi] += elementFluxTerm[i];
+		// residual of uDot
+		globalResidual[gi] += elementTimeDerivative[i] + elementFluxTerm[i];
+		// global hi (to compute smoothness indicator)
+		global_hi[gi] += element_He[eN]/den_hi[gi];
+	      } //i
+	  } //elements
 
-		// for entropy viscosity //
-		double solni = u_dof_old[gi];
-		double u_veli = u_vel_dofs[gi];
-		double v_veli = v_vel_dofs[gi];
-		double DEnti = DENTROPY(solni);
-		double DenEntViscPart1 = 0.;
-		double DenEntViscPart2 = 0.;
-		double ith_NumEntVisc = 0.;
-		double ith_DenEntVisc = 0.;
-		///////////////////////////
-
-		// loop in j
-		for(int j=0;j<nDOF_trial_element;j++)
-		  {
-		    int eN_i_j = eN_i*nDOF_trial_element+j;
-		    int eN_j = eN*nDOF_test_element+j;
-		    int gj = offset_u+stride_u*r_l2g[eN_j];
-		    
-		    // solution, velocity and fluxes at node j (within the element eN)
-		    double solnj = u_dof_old[gj];
-		    double u_velj = u_vel_dofs[gj];
-		    double v_velj = v_vel_dofs[gj];
-
-		    double fxj = xFlux(u_velj,solnj);
-		    double fyj = yFlux(v_velj,solnj);
-
-		    // For entropy viscosity //
-		    double x_EntFluxj = xEntFlux(u_velj,solnj);// - xEntFlux(u_veli,solni);
-		    double y_EntFluxj = yEntFlux(v_velj,solnj);// - yEntFlux(v_veli,solni);
-		    ith_NumEntVisc += (PrCxElem[eN_i_j]*(x_EntFluxj-DEnti*fxj) +
-				       PrCyElem[eN_i_j]*(y_EntFluxj-DEnti*fyj));
-		    // aux parts to compute DenEntVisc
-		    DenEntViscPart1 += PrCxElem[eN_i_j]*x_EntFluxj + PrCyElem[eN_i_j]*y_EntFluxj;
-		    DenEntViscPart2 += PrCxElem[eN_i_j]*fxj + PrCyElem[eN_i_j]*fyj;
-		  }//j
-		// compute DenEntVisc //
-		ith_DenEntVisc=(fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
-		EntVisc[gi] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0);
-	      }//i
-	  }//elements
-	////////////////////////////////////
-	// END OF FIRST LOOP IN INTEGRALS //
-	////////////////////////////////////
- 
-	///////////////////////
-	// LAST LOOP IN DOFs //
-	///////////////////////
-	// * Compute the final solution and get the solution at DOFs (for visualization)
+	///////////////////
+	// LOOP IN CELLS // to compute min(hi*He)
+	///////////////////
+	for(int eN=0;eN<nElements_global;eN++)
+	  {
+	    double He = element_He[eN];
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
+		register int gi = offset_u+stride_u*r_l2g[eN_i];
+		double hi = global_hi[gi];
+		min_hiHe[gi] = fmin(min_hiHe[gi], hi*He);
+	      }
+	  }
+	
+	// ***************************** //
+	// ***** Entropy viscosity ***** //
+	// ***************************** //
+	int ij=0;
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    globalResidual[i] = consistentTimeDerivative[i] + highOrderFluxTerm[i];
+	    double solni = u_dof_old[i];
+	    double u_veli = u_vel_dofs[i];
+	    double v_veli = v_vel_dofs[i];
+	    double DEnti = DENTROPY(solni);
+	    double DenEntViscPart1 = 0.;
+	    double DenEntViscPart2 = 0.;
+	    double ith_NumEntVisc = 0.;
+	    double ith_DenEntVisc = 0.;	      
+	    // loop on the support of ith shape function
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];			
+		// solution, velocity and fluxes at node j
+		double solnj = u_dof_old[j];
+		double u_velj = u_vel_dofs[j];
+		double v_velj = v_vel_dofs[j];
+		
+		double fxj = xFlux(u_velj,solnj,PROBLEM_TYPE);
+		double fyj = yFlux(v_velj,solnj,PROBLEM_TYPE);
+		
+		// For entropy viscosity //
+		double x_EntFluxj=xEntFlux(u_velj,solnj,PROBLEM_TYPE);// - xEntFlux(u_veli,solni,PROBLEM_TYPE);
+		double y_EntFluxj=yEntFlux(v_velj,solnj,PROBLEM_TYPE);// - yEntFlux(v_veli,solni,PROBLEM_TYPE);
+		ith_NumEntVisc += (PrCx[ij]*(x_EntFluxj-DEnti*fxj) +
+				   PrCy[ij]*(y_EntFluxj-DEnti*fyj));
+		// aux parts to compute DenEntVisc
+		DenEntViscPart1 += PrCx[ij]*x_EntFluxj + PrCy[ij]*y_EntFluxj;
+		DenEntViscPart2 += PrCx[ij]*fxj + PrCy[ij]*fyj;
+		
+		ij+=1;
+	      } //j
+	    ith_DenEntVisc = (fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
+	    EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0);
+	    EntVisc[i] = 1-omega + omega*EntVisc[i];	    
+	    // ***** End of entropy viscosity ***** //
 	  }
-	//////////////////////////////
-	// END OF LAST LOOP IN DOFs //
-	//////////////////////////////
+	
+	// *************************** //
+	// ***** Gamma indicator ***** //
+	// *************************** //
+	if (USE_MACRO_CELL==1)
+	  {
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		// compute gamma in DOFs owned by big Q1 mesh
+		if (is_dof_external[i] == 1) // if dof is in corner of macro cell 
+		  {
+		    double eps = 1E-10;
+		    double hi2 = global_hi[i] * global_hi[i];
+		    gamma_dof[i] = fmax(0, fmin(hi2,C_GAMMA*min_hiHe[i]))/(hi2+eps);
+		    //gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
+		    //gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/hi2;
+		  }// i
+		else
+		  {
+		    gamma_dof[i] = 0;
+		  }
+	      } //i
+	    // make average to "interpolate" gamma from big Q1 mesh to finer mesh
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		if (is_dof_internal[i] == 1) // dof is internal
+		  {
+		    double num_external_dofs = 0; // this should be 4
+		    // loop on its support
+		    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		      {
+			int j = colind[offset];
+			if (is_dof_external[j] == 1) // external j-dof
+			  {
+			    num_external_dofs += 1;
+			    gamma_dof[i] += gamma_dof[j];
+			  }
+		      }
+		    // normalize
+		    gamma_dof[i] /= num_external_dofs;
+		  }
+		else if (is_dof_external[i] == 0) // this is a middle dof
+		  {
+		    int gj1 = first_adjacent_dof_to_middle_dof[i];
+		    int gj2 = second_adjacent_dof_to_middle_dof[i];
+		    gamma_dof[i] = 0.5*(gamma_dof[gj1] + gamma_dof[gj2]);
+		  }
+	      }
+	  }
+	else
+	  {
+	    // compute gamma in DOFs owned by big Q1 mesh
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		double eps = 1E-10;
+		double hi2 = global_hi[i] * global_hi[i];
+		gamma_dof[i] = fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/(hi2+eps);
+		//gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
+		//gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/hi2;
+	      }
+	  }
+	//////////
+	
+	//////////////////////
+	// ENTROPY RESIDUAL // (based on elements)
+	//////////////////////
+	if (ELEMENT_BASED_ENTROPY_RESIDUAL==1)
+	  {
+	    for(int eN=0;eN<nElements_global;eN++)
+	      {
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    int eN_i = eN*nDOF_test_element+i;
+		    int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
+		    
+		    // for entropy viscosity //
+		    double solni = u_dof_old[gi];
+		    double u_veli = u_vel_dofs[gi];
+		    double v_veli = v_vel_dofs[gi];
+		    double DEnti = DENTROPY(solni);
+		    double DenEntViscPart1 = 0.;
+		    double DenEntViscPart2 = 0.;
+		    double ith_NumEntVisc = 0.;
+		    double ith_DenEntVisc = 0.;
+		    ///////////////////////////
+		    
+		    // loop in j
+		    for(int j=0;j<nDOF_trial_element;j++)
+		      {
+			int eN_i_j = eN_i*nDOF_trial_element+j;
+			int eN_j = eN*nDOF_test_element+j;
+			int gj = offset_u+stride_u*r_l2g[eN_j];
+			
+			// solution, velocity and fluxes at node j (within the element eN)
+			double solnj = u_dof_old[gj];
+			double u_velj = u_vel_dofs[gj];
+			double v_velj = v_vel_dofs[gj];
+			
+			double fxj = xFlux(u_velj,solnj,PROBLEM_TYPE);
+			double fyj = yFlux(v_velj,solnj,PROBLEM_TYPE);
+			
+			// For entropy viscosity //
+			double x_EntFluxj = xEntFlux(u_velj,solnj,PROBLEM_TYPE);// - xEntFlux(u_veli,solni,PROBLEM_TYPE);
+			double y_EntFluxj = yEntFlux(v_velj,solnj,PROBLEM_TYPE);// - yEntFlux(v_veli,solni,PROBLEM_TYPE);
+			ith_NumEntVisc += (PrCxElem[eN_i_j]*(x_EntFluxj-DEnti*fxj) +
+					   PrCyElem[eN_i_j]*(y_EntFluxj-DEnti*fyj));
+			// aux parts to compute DenEntVisc
+			DenEntViscPart1 += PrCxElem[eN_i_j]*x_EntFluxj + PrCyElem[eN_i_j]*y_EntFluxj;
+			DenEntViscPart2 += PrCxElem[eN_i_j]*fxj + PrCyElem[eN_i_j]*fyj;
+		      }//j
+		    // compute DenEntVisc //
+		    ith_DenEntVisc=(fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
+		    EntVisc[gi] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0);
+		  }//i
+	      }//elements
+	  }
       }
       
       void calculateMassMatrix(//element
@@ -1626,7 +1729,6 @@ namespace proteus
 			       double* aux_test_ref,
 			       double* aux_grad_test_ref,
 			       double* dLow,
-			       double epsilon,
 			       // Type of problem to solve
 			       int PROBLEM_TYPE)
       {
@@ -1846,315 +1948,6 @@ namespace proteus
           }
       }
 
-      void calculateSmoothnessIndicator(//element
-					double* mesh_trial_ref,
-					double* mesh_grad_trial_ref,
-					double* mesh_dof,
-					int* mesh_l2g,
-					double* dV_ref,
-					double* u_trial_ref,
-					double* u_grad_trial_ref,
-					double* u_test_ref,
-					double* u_grad_test_ref,
-					double* u_hess_trial_ref,
-					//physics
-					int nElements_global,
-					int* u_l2g,
-					int* r_l2g,
-					double* u_dof,
-					int offset_u, int stride_u,
-					double* is_dof_external,
-					double* is_dof_internal,
-					double* num_hi,
-					double* den_hi,
-					double* global_hi,
-					double* element_He,
-					// for loops in DOFs
-					double he,
-					double* xCoord_dof,
-					double* yCoord_dof,
-					double* zCoord_dof,
-					double* gamma_dof,
-					double* beta_dof,
-					int numDOFs,
-					int NNZ,
-					int* rowptr,
-					int* colind)
-      {
-	//
-	//loop over elements to compute volume integrals and load them into element and global res.
-	//
-	//eN is the element index
-	//eN_k is the quadrature point index for a scalar
-	//eN_k_nSpace is the quadrature point index for a vector
-	//eN_i is the element test function index
-	//eN_j is the element trial function index
-	//eN_k_j is the quadrature point index for a trial function
-	//eN_k_i is the quadrature point index for a trial function
-
-	register int first_adjacent_dof_to_middle_dof[numDOFs];
-	register int second_adjacent_dof_to_middle_dof[numDOFs];
-
-	register double lumped_mass_matrix[numDOFs];
-	for (int i=0; i<numDOFs; i++)
-	  lumped_mass_matrix[i]=0;
-
-	int nSpace2 = nSpace*nSpace;
-	for(int eN=0;eN<nElements_global;eN++)
-	  {
-	    //declare local storage for element residual and initialize
-	    register double element_mass_matrix[nDOF_test_element], element_hi[nDOF_test_element];
-	    double det_hess_Ke=0, area_Ke=0;
-	    double hess_u0=0, hess_u1=0, hess_u2=0, hess_u3=0;
-	    for (int i=0;i<nDOF_test_element;i++)
-	      {
-	  	element_mass_matrix[i]=0.0;
-	   	element_hi[i]=0.0;
-	      }
-	    //loop over quadrature points and compute integrands
-	    for  (int k=0;k<nQuadraturePoints_element;k++)
-	      {
-		//compute indeces and declare local storage
-		register int eN_k = eN*nQuadraturePoints_element+k,
-		  eN_k_nSpace = eN_k*nSpace,
-		  eN_nDOF_trial_element = eN*nDOF_trial_element;
-		register double
-		  u=0.0,grad_u[nSpace],hess_u[nSpace2],
-		  det_hess_u=0.,
-		  jac[nSpace*nSpace],
-		  jacDet,
-		  jacInv[nSpace*nSpace],
-		  u_grad_trial[nDOF_trial_element*nSpace],
-		  u_hess_trial[nDOF_trial_element*nSpace2],
-		  u_test_dV[nDOF_trial_element],
-		  dV,x,y,z;
-		ck.calculateMapping_element(eN,
-					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
-					    jac,
-					    jacDet,
-					    jacInv,
-					    x,y,z);
-		//get the physical integration weight
- 		dV = fabs(jacDet)*dV_ref[k];
-		//get the trial function gradients based on the blended functions
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
-				    jacInv,
-				    u_grad_trial);
-		ck.hessTrialFromRef(&u_hess_trial_ref[k*nDOF_trial_element*nSpace2],
-				    jacInv,
-				    u_hess_trial);
-		//get the solution based on the blended functions
-		ck.valFromDOF(u_dof,
-			      &u_l2g[eN_nDOF_trial_element],
-			      &u_trial_ref[k*nDOF_trial_element],
-			      u);
-		//get the solution gradients
-		ck.gradFromDOF(u_dof,
-			       &u_l2g[eN_nDOF_trial_element],
-			       u_grad_trial,
-			       grad_u);
-		ck.hessFromDOF(u_dof,
-			       &u_l2g[eN_nDOF_trial_element],
-			       u_hess_trial,
-			       hess_u);
-		//precalculate test function products with integration weights
-		for (int j=0;j<nDOF_trial_element;j++)
-		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-
-		// compute the determinan of the hessian
-		//det_hess_u = fabs(hess_u[0]*hess_u[3] - hess_u[2]*hess_u[1]);
-		det_hess_u = hess_u[0]*hess_u[3] - hess_u[2]*hess_u[1];
-
-		hess_u0 += hess_u[0]*dV;
-		hess_u1 += hess_u[1]*dV;
-		hess_u2 += hess_u[2]*dV;
-		hess_u3 += hess_u[3]*dV;
-
-		// to compute average of det of hessian in cell Ke
-		det_hess_Ke += det_hess_u*dV;
-		area_Ke += dV;
-
-		for(int i=0;i<nDOF_test_element;i++)
-		  {
-		    register int i_nSpace=i*nSpace;
-		    element_mass_matrix[i] += u_test_dV[i];
-		    element_hi[i] += det_hess_u*u_test_dV[i];
-		  }//i
-	      }
-	    // compute average of det of hessian in cell Ke
-	    element_He[eN] = det_hess_Ke/area_Ke;
-
-	    hess_u0 /= area_Ke;
-	    hess_u1 /= area_Ke;
-	    hess_u2 /= area_Ke;
-	    hess_u3 /= area_Ke;
-
-	    //uncomment if H_e is to be computed as the determinant of DG0 projected 2nd derivatives
-	    //element_He[eN] = fabs(hess_u0*hess_u3 - hess_u2*hess_u1);
-	    //
-	    //load element into global residual and save element residual
-	    //
-	    for(int i=0;i<nDOF_test_element;i++)
-	      {
-		register int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i];
-		lumped_mass_matrix[offset_u+stride_u*r_l2g[eN_i]] += element_mass_matrix[i];
-		global_hi[offset_u+stride_u*r_l2g[eN_i]] += element_hi[i];
-
-		num_hi[offset_u+stride_u*r_l2g[eN_i]] += element_He[eN];
-		den_hi[offset_u+stride_u*r_l2g[eN_i]] += 1;
-
-
-		if (i<4)
-		  is_dof_external[gi] = 1;
-		else if (i==8)
-		  is_dof_internal[gi] = 1;
-		else //if (i>=4 && i<8) // middle dof
-		  {
-		    int gj1 = 0, gj2 = 0;
-		    if (i==4)
-		      {
-			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+0];
-			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+1];
-		      }
-		    else if (i==5)
-		      {
-			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+1];
-			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+3];
-		      }
-		    else if (i==6)
-		      {
-			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+3];
-			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+2];
-		      }
-		    else
-		      {
-			gj1 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+2];
-			gj2 = offset_u+stride_u*r_l2g[eN*nDOF_test_element+0];
-		      }
-
-		    first_adjacent_dof_to_middle_dof[gi]  = gj1;
-		    second_adjacent_dof_to_middle_dof[gi] = gj2;
-		  }
-	      }//i
-	  }//elements
-	// finish the computation of global_hi
-	for (int i=0; i<numDOFs; i++)
-	  global_hi[i] = num_hi[i]/den_hi[i];
-
-	register double min_hiHe[numDOFs];
-	for (int i=0; i<numDOFs; i++)
-	  {
-	    min_hiHe[i] = 1E100;
-	  }
-	// Loop in cells to compute min(hi*He)
-	for(int eN=0;eN<nElements_global;eN++)
-	  {
-	    double He = element_He[eN];
-	    for(int i=0;i<nDOF_test_element;i++)
-	      {
-		register int eN_i=eN*nDOF_test_element+i;
-		register int gi = offset_u+stride_u*r_l2g[eN_i];
-		double hi = global_hi[gi];
-		min_hiHe[gi] = fmin(min_hiHe[gi], hi*He);
-	      }
-	  }
-
-	// compute beta
-	for (int i=0; i<numDOFs; i++)
-	  {
-	    double eps = 1E-10;
-	    // Compute beta
-	    double beta_numerator = 0;
-	    double beta_denominator = 0;
-	    double uGi = u_dof[i];
-
-	    double xi=xCoord_dof[i];
-	    double yi=yCoord_dof[i];
-	    double he_diag = 1.1*std::sqrt(2)*he;
-	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
-	      {
-		int j = colind[offset];
-
-		double xj=xCoord_dof[j];
-		double yj=yCoord_dof[j];
-		double dist_ij = std::sqrt(std::pow(xi-xj,2) + std::pow(yi-yj,2));
-
-		//if (dist_ij <= he_diag)
-		//{
-		double uGj = u_dof[j];
-		beta_numerator += uGj - uGi;
-		beta_denominator += fabs(uGj - uGi);
-		//}
-	      }
-	    beta_dof[i] =  1.0-std::pow(fabs(beta_numerator+eps)/(beta_denominator+eps),2);
-	  }
-	// compute gamma
-	if (USE_MACRO_CELL==1)
-	  {
-	    // compute gamma in DOFs owned by big Q1 mesh
-	    for (int i=0; i<numDOFs; i++)
-	      {
-		if (is_dof_external[i] == 1) // if dof is in big Q1 mesh
-		  {
-		    double eps = 1E-10;
-		    double C = 3.0;
-		    double hi2 = global_hi[i] * global_hi[i];
-		    gamma_dof[i] = fmax(0, fmin(hi2, C*min_hiHe[i]))/(hi2+eps);
-		    //gamma_dof[i] = (fmax(0, fmin(hi2, C*min_hiHe[i])) + eps)/(hi2+eps);
-		    //gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C*min_hiHe[i]))/hi2;
-		  }
-		else
-		  {
-		    gamma_dof[i] = 0;
-		  }
-	      }
-	    // make average to "interpolate" gamma from big Q1 mesh to finer mesh
-	    for (int i=0; i<numDOFs; i++)
-	      {
-		if (is_dof_internal[i] == 1) // dof is internal
-		  {
-		    double num_external_dofs = 0; // this should be 4
-		    // loop on its support
-		    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
-		      {
-			int j = colind[offset];
-			if (is_dof_external[j] == 1) // external j-dof
-			  {
-			    num_external_dofs += 1;
-			    gamma_dof[i] += gamma_dof[j];
-			  }
-		      }
-		    // normalize
-		    gamma_dof[i] /= num_external_dofs;
-		  }
-		else if (is_dof_external[i] == 0) // this is a middle dof
-		  {
-		    int gj1 = first_adjacent_dof_to_middle_dof[i];
-		    int gj2 = second_adjacent_dof_to_middle_dof[i];
-		    gamma_dof[i] = 0.5*(gamma_dof[gj1] + gamma_dof[gj2]);
-		  }
-	      }
-	  }
-	else
-	  {
-	    // compute gamma in DOFs owned by big Q1 mesh
-	    for (int i=0; i<numDOFs; i++)
-	      {
-		double eps = 1E-10;
-		double C = 3.0;
-		double hi2 = global_hi[i] * global_hi[i];
-		gamma_dof[i] = fmax(0, fmin(hi2, C*min_hiHe[i]))/(hi2+eps);
-		//gamma_dof[i] = (fmax(0, fmin(hi2, C*min_hiHe[i])) + eps)/(hi2+eps);
-		//gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C*min_hiHe[i]))/hi2;
-	      }
-	  }
-      }
-	    
     };//BlendedSpaces
 
   inline BlendedSpaces_base* newBlendedSpaces(int nSpaceIn,

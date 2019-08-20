@@ -481,6 +481,7 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         self.referenceElement = ReferenceCube(nd)
         LocalFunctionSpace.__init__(self,(order+1)**nd,self.referenceElement)
         self.gradientList=[]
+        self.basisHessians=[]
         self.order = order
 
         # Generate equi distance nodes for generation of lagrange basis
@@ -521,10 +522,14 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
                     fc=fc+1
             self. fun.append(lambda xi,fc=fc, den=den:   old_div(fun[fc](xi),den))
             self.dfun.append(lambda xi,fc=fc, den=den:  old_div(dfun[fc](xi),den))
-
+            
+        ddfun = [lambda xi: 1, lambda xi: -2, lambda xi: 1]
+        self.ddfun = [lambda xi: 1, lambda xi: -2, lambda xi: 1]
+        
         # Define multi-dimensional stuff
         basis= []
         basisGradients = []
+        basisHessians = []
         if nd == 1:
             basis = self.fun
             basisGradients = self.dfun
@@ -535,6 +540,10 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
                     basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
                     basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
                                                                               self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+                    basisHessians.append(lambda xi, i=i, j=j: numpy.array([[self.ddfun[i](xi[0])*self.fun[j](xi[1]),
+                                                                            self.dfun[i](xi[0])*self.dfun[j](xi[1])],
+                                                                           [self.dfun[i](xi[0])*self.dfun[j](xi[1]),
+                                                                            self.fun[i](xi[0])*self.ddfun[j](xi[1])]]))
             funMap=[0,7,3,  4,8,6,   1,5,2]
         elif nd == 3:
             for k in range(order+1):
@@ -566,6 +575,7 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         for i in range(self.dim):
             self.basis.append(basis[invMap[i]])
             self.basisGradients.append(basisGradients[invMap[i]])
+            self.basisHessians.append(basisHessians[invMap[i]])
         # Get boundary data
         self.defineTraceFunctions()
 
@@ -647,6 +657,7 @@ class BernsteinOnCube(LocalFunctionSpace):
         self.fun=[]
         self.dfun=[]
         self.dfun2=[]
+        self.ddfun=[]
 
         for k in range(order+1):
             self.fun.append(lambda x,n=order,k=k:
@@ -655,12 +666,12 @@ class BernsteinOnCube(LocalFunctionSpace):
                              #-2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
                              # Rule out the cases when 1-x or 1+x = 0. This is to avoid warnings due to division by zero
                              0. if 1-x == 0. or 1+x == 0. else -2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
-
-            
-            (2**(-n)*(x+1)**(k-2)*(1-x)**(n-k)*(4*k**2-4*k*n*x-4*k*n+4*k*x+n**2*x**2+2*n**2*x+n**2-n*x**2-2*n*x-n))/(x-1)**2
-            #self.dfun2.append(lambda x,n=order,k=k: ...)
-
+            nChooseK = lambda n,k: 1.0*math.factorial(order)/math.factorial(k)/math.factorial(order-k)
+            self.ddfun.append(lambda x,n=order,k=k:
+                              nChooseK(n,k)*(2**(-n)*(x+1)**(k-2)*(1-x)**(n-k)*(4*k**2-4*k*n*x-4*k*n+4*k*x+n**2*x**2+2*n**2*x+n**2-n*x**2-2*n*x-n))/(x-1)**2)
+        #
         # Define multi-dimensional stuff
+        #import pdb; pdb.set_trace()
         basis= []
         basisGradients = []
         basisHessians = []

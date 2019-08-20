@@ -197,13 +197,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  forceStrongConditions=0,
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
-                 #NULLSPACE INFO
-                 epsilon=0.01,
-                 PROBLEM_TYPE=0):
+                 PROBLEM_TYPE=0,
+                 omega=1.0,
+                 updateVelocityInTime=False):
 
+        self.omega=omega
+        self.updateVelocityInTime=updateVelocityInTime
         self.GET_POINT_VALUES=GET_POINT_VALUES
         self.PROBLEM_TYPE=PROBLEM_TYPE
-        self.epsilon=epsilon
         self.variableNames = ['u']
         nc = 1
         mass = {0: {0: 'linear'}}
@@ -248,9 +249,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
-        #if self.model.hasForceFieldAsFunction:
-        #    self.model.updateForceFieldAsFunction()
-
         if self.model.hasInletFunction:
             self.model.update_uInlet_at_quad_points()
         #
@@ -259,11 +257,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #if self.model.hasBlendingFunction:
         #    self.model.updateBlendingFunction()
 
-        # COMPUTE NEW VELOCITY (if given by user) #
+        # COMPUTE NEW VELOCITY (if given by user) #        
         if self.model.hasVelocityFieldAsFunction:
-            self.model.updateVelocityFieldAsFunction()
-
-        self.model.updateVelocityAtDOFs()
+            if firstStep == True or self.updateVelocityInTime == True:
+                self.model.updateVelocityFieldAsFunction()
+                self.model.updateVelocityAtDOFs()
+        #
         
         copyInstructions = {}
         return copyInstructions
@@ -647,13 +646,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.den_hi = numpy.zeros(self.u[0].dof.shape, 'd')
         self.hi = numpy.zeros(self.u[0].dof.shape, 'd')
         self.gamma_dof = numpy.zeros(self.u[0].dof.shape, 'd')
-        self.beta_dof = numpy.zeros(self.u[0].dof.shape, 'd')
-        self.element_He = numpy.zeros(self.mesh.nElements_global, 'd')
+        self.first_adjacent_dof_to_middle_dof = numpy.zeros(self.u[0].dof.shape, 'i')
+        self.second_adjacent_dof_to_middle_dof = numpy.zeros(self.u[0].dof.shape, 'i')
         
         # mql. For edge based stabilization
         self.dLow=None
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
         self.quantDOFs2 = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.quantDOFs3 = numpy.zeros(self.u[0].dof.shape, 'd')
         self.boundaryValues = None
         self.isBoundary = None
 
@@ -669,8 +669,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.Q2mesh_dof[gi][2] = self.u[0].femSpace.interpolationPoints[eN,i,2]
 
         # mql. METRICS #
-        self.exactSolution = options.exactSolution
-        self.exactGrad = options.exactGrad
+        if ('exactSolution') in dir(options):
+            self.exactSolution = options.exactSolution
+            self.exactGrad = options.exactGrad
+        else:
+            self.exactSolution = None
+            self.exactGrad = None
+        #
         self.global_L2 = 0.0
         self.global_H1 = 0.0
         self.global_L2_Omega1 = 0.0
@@ -688,6 +693,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                 'global_H1_Omega2'+","+
                                 'global_L2_sH'+","
                                 'global_L2_1msH'+"\n")
+
+        self.cterm_global = None
         # Stuff for highOrderLim implementation #
         self.QL_MC_a = None
         self.QL_ML = None  # lumped mass matrix with low order space
@@ -697,17 +704,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.QH_ML = None  # lumped mass matrix with high order space
         self.QH_MC_global = None  # consistent mass matrix with high order space
 
-        self.cterm_global = None
-        self.cterm_transpose_global = None
-
         # for flux Jacobian at DOFs
         self.x = None
         self.y = None
         self.z = None
         self.u_vel_dofs = None
         self.v_vel_dofs = None
-
-        self.velFunction = options.velFunction
 
         self.intBernMat = None
 
@@ -717,6 +719,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.xGradRHS = None
         self.yGradRHS = None
 
+        self.umaxG = None
+        self.uminG = None
         self.EntVisc = None
         self.uHDot = None
         self.QL_NNZ = 0
@@ -724,47 +728,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.uInlet_at_quad_points=None
     #
 
-    def getSmoothnessIndicator(self,u):
-        self.num_hi[:]=0
-        self.den_hi[:]=0
-        self.is_dof_external[:]=0
-        self.is_dof_internal[:]=0
-        
-        self.blendedSpaces.calculateSmoothnessIndicator(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.Hessian_psi,
-            # physics
-            self.mesh.nElements_global,
-            self.u[0].femSpace.dofMap.l2g,
-            self.l2g[0]['freeGlobal'],
-            u,
-            self.offset[0], self.stride[0],
-            self.is_dof_external,
-            self.is_dof_internal,
-            self.num_hi,
-            self.den_hi,
-            self.hi,
-            self.element_He,
-            self.coefficients.he,
-            self.xCoord_dof,
-            self.yCoord_dof,
-            self.zCoord_dof,
-            self.gamma_dof,
-            self.beta_dof,
-            len(self.rowptr)-1, # num of DOFs
-            self.nnz,
-            self.rowptr,
-            self.colind)
-    #
-    
     def getMetricsAtEOS(self):
         """
         Calculate some metrics at EOS (End Of Simulation)
@@ -861,8 +824,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              2:self.z}
         t = self.timeIntegration.t
         
-        self.u_vel_dofs[:] = self.velFunction[0](X,t)
-        self.v_vel_dofs[:] = self.velFunction[1](X,t)
+        self.u_vel_dofs[:] = self.velocityFieldAsFunction[0](X,t)
+        self.v_vel_dofs[:] = self.velocityFieldAsFunction[1](X,t)
     #
 
     def getIntBernMat(self):
@@ -964,7 +927,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             input("finished checking partition of unity")
         #
     #
-
+    
     def update_uInlet_at_quad_points(self):        
         # DO FINITE ELEMENT INTERPOLATION #
         logEvent("Computing boundary data at quad points", level=2)
@@ -1164,7 +1127,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.mesh.volume,
                                        err_msg="Trace of lumped mass matrix should be the domain volume", verbose=True)
         # END OF COMPUTING LUMPED MASS MATRIX #
-        # COMPUTE PRECONDITIONED C MATRICES #
+        ##########################################################
+        # COMPUTE (ELEMENT AND GLOBAL) PRECONDITIONED C MATRICES #
+        ##########################################################
         QH_ML_eN = np.zeros(self.nDOF_test_element[0])
         self.prCxElem = np.zeros((self.mesh.nElements_global,
                                  self.nDOF_test_element[0],
@@ -1184,43 +1149,63 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #
             LeftPreconditioner_eN=np.dot(np.diag(QH_ML_eN),np.linalg.inv(QH_elementMassMatrix[eN]))
             RightPreconditioner_eN=np.dot(np.matrix.transpose(np.linalg.inv(QH_elementMassMatrix[eN])),np.diag(QH_ML_eN))
-            #LeftPreconditioner_eN=np.dot(QH_elementMassMatrix[eN],
-            #                             np.linalg.inv(QH_elementMassMatrix[eN]))
-            #RightPreconditioner_eN=np.dot(QH_elementMassMatrix[eN],
-            #                              np.linalg.inv(QH_elementMassMatrix[eN]))
             self.prCxElem[eN] = np.dot(LeftPreconditioner_eN,self.cterm[0][eN])
             self.prCyElem[eN] = np.dot(LeftPreconditioner_eN,self.cterm[1][eN])
             self.prCTxElem[eN]= np.dot(self.cterm_transpose[0][eN],RightPreconditioner_eN)
             self.prCTyElem[eN]= np.dot(self.cterm_transpose[1][eN],RightPreconditioner_eN)
-        #import pdb; pdb.set_trace()
         #
+        self.pr_cterm[0] = self.prCxElem
+        self.pr_cterm[1] = self.prCyElem
+        self.pr_cterm_transpose[0] = self.prCTxElem
+        self.pr_cterm_transpose[1] = self.prCTyElem
+        self.pr_cterm_a = {}
+        self.pr_cterm_a_transpose = {}
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
         # assemble global C matrices
         for d in range(self.nSpace_global):  # spatial dimensions
-            cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global[d])
-            cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global_transpose[d])
+            # assemble global preconditioned C matrices
+            self.pr_cterm_a[d] = nzval.copy()
+            self.pr_cterm_a_transpose[d] = nzval.copy()
+            self.pr_cterm_global[d] = SparseMat(self.nFreeDOF_global[0],
+                                                self.nFreeDOF_global[0],
+                                                nnz,
+                                                self.pr_cterm_a[d],
+                                                colind,
+                                                rowptr)
+            self.pr_cterm_global_transpose[d] = SparseMat(self.nFreeDOF_global[0],
+                                                          self.nFreeDOF_global[0],
+                                                          nnz,
+                                                          self.pr_cterm_a_transpose[d],
+                                                          colind,
+                                                          rowptr)
+            cfemIntegrals.zeroJacobian_CSR(self.nnz, self.pr_cterm_global[d])
+            cfemIntegrals.zeroJacobian_CSR(self.nnz, self.pr_cterm_global_transpose[d])
             cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.csrRowIndeces[(0, 0)],
                                                                       self.csrColumnOffsets[(0, 0)],
-                                                                      self.cterm[d],
-                                                                      self.cterm_global[d])
+                                                                      self.pr_cterm[d],
+                                                                      self.pr_cterm_global[d])
             cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.csrRowIndeces[(0, 0)],
                                                                       self.csrColumnOffsets[(0, 0)],
-                                                                      self.cterm_transpose[d],
-                                                                      self.cterm_global_transpose[d])
+                                                                      self.pr_cterm_transpose[d],
+                                                                      self.pr_cterm_global_transpose[d])
         #
-        rowptr, colind, self.Cx = self.cterm_global[0].getCSRrepresentation()
-        rowptr, colind, self.Cy = self.cterm_global[1].getCSRrepresentation()
-        rowptr, colind, self.CTx = self.cterm_global_transpose[0].getCSRrepresentation()
-        rowptr, colind, self.CTy = self.cterm_global_transpose[1].getCSRrepresentation()
-        #import pdb; pdb.set_trace()
-            
+        rowptr, colind, self.prCx = self.pr_cterm_global[0].getCSRrepresentation()
+        rowptr, colind, self.prCy = self.pr_cterm_global[1].getCSRrepresentation()
+        rowptr, colind, self.prCTx = self.pr_cterm_global_transpose[0].getCSRrepresentation()
+        rowptr, colind, self.prCTy = self.pr_cterm_global_transpose[1].getCSRrepresentation()
+        ###################################################################
+        # END OF COMPUTING (ELEMENT AND GLOBAL) PRECONDITIONED C MATRICES #
+        ###################################################################
+    #
+    
     def compute_QL_lumped_mass_matrix(self):
         # assume a linear mass term
         dm = np.ones(self.q[('u', 0)].shape, 'd')
@@ -1328,9 +1313,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.cterm = {}
         self.cterm_a = {}
         self.cterm_global = {}
-        self.cterm_transpose = {}
+        self.cterm_transpose = {}        
         self.cterm_a_transpose = {}
         self.cterm_global_transpose = {}
+        #
+        self.pr_cterm_global = {}
+        self.pr_cterm_global_transpose = {}
+        self.pr_cterm = {}
+        self.pr_cterm_transpose = {}
+        #
+        
         rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
         nnz = nzval.shape[-1]  # number of non-zero entries in sparse matrix
         di = self.q[('grad(u)', 0)].copy()  # direction of derivative
@@ -1416,14 +1408,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                 q_grad_w_times_dV_f,
                                                                 q_w,
                                                                 self.cterm[d])  # int[(di*grad(wj))*wi*dV]
-            #cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
-            #                                                          self.l2g[0]['freeLocal'],
-            #                                                          self.l2g[0]['nFreeDOF'],
-            #                                                          self.l2g[0]['freeLocal'],
-            #                                                          self.csrRowIndeces[(0, 0)],
-            #                                                          self.csrColumnOffsets[(0, 0)],
-            #                                                          self.cterm[d],
-            #                                                          self.cterm_global[d])
+            cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.csrRowIndeces[(0, 0)],
+                                                                      self.csrColumnOffsets[(0, 0)],
+                                                                      self.cterm[d],
+                                                                      self.cterm_global[d])
             # C Transpose matrices
             self.cterm_transpose[d] = np.zeros((self.mesh.nElements_global,
                                                 self.nDOF_test_element[0],
@@ -1442,20 +1434,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                               q_w,
                                                               q_grad_w_times_dV_f,
                                                               self.cterm_transpose[d])  # -int[(-di*grad(wi))*wj*dV]
-            #cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
-            #                                                          self.l2g[0]['freeLocal'],
-            #                                                          self.l2g[0]['nFreeDOF'],
-            #                                                          self.l2g[0]['freeLocal'],
-            #                                                          self.csrRowIndeces[(0, 0)],
-            #                                                          self.csrColumnOffsets[(0, 0)],
-            #                                                          self.cterm_transpose[d],
-            #                                                          self.cterm_global_transpose[d])
-        #import pdb; pdb.set_trace()
-        #rowptr, colind, self.Cx = self.cterm_global[0].getCSRrepresentation()
-        #rowptr, colind, self.Cy = self.cterm_global[1].getCSRrepresentation()
-        #rowptr, colind, self.CTx = self.cterm_global_transpose[0].getCSRrepresentation()
-        #rowptr, colind, self.CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+            cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.csrRowIndeces[(0, 0)],
+                                                                      self.csrColumnOffsets[(0, 0)],
+                                                                      self.cterm_transpose[d],
+                                                                      self.cterm_global_transpose[d])
         #
+        rowptr, colind, self.Cx = self.cterm_global[0].getCSRrepresentation()
+        rowptr, colind, self.Cy = self.cterm_global[1].getCSRrepresentation()
+        rowptr, colind, self.CTx = self.cterm_global_transpose[0].getCSRrepresentation()
+        rowptr, colind, self.CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+    #
 
     def compute_matrices(self):
         if self.cterm_global is None:
@@ -1465,7 +1457,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.compute_QL_lumped_mass_matrix()
             if self.coefficients.GET_POINT_VALUES==1:
                 self.getIntBernMat()
-            self.updateVelocityAtDOFs()
+            #
+            if self.hasVelocityFieldAsFunction:
+                self.updateVelocityFieldAsFunction()
+                self.updateVelocityAtDOFs()
+            else:
+                self.u_vel_dofs = np.zeros(self.u[0].dof.shape,'d')
+                self.v_vel_dofs = np.zeros(self.u[0].dof.shape,'d')
+            #
             self.element_flux_i = np.zeros((self.mesh.nElements_global,
                                             self.nDOF_test_element[0]),'d')
             self.vVector = np.zeros((self.mesh.nElements_global,
@@ -1489,6 +1488,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
             self.uInlet_at_quad_points=numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                     self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+            self.getAdjacent_DoFs_to_middle_dof()
             
             ## FOR DEBUGGING ##
             # compare lumped mass matrices ? #
@@ -1511,7 +1511,42 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # END OF DEBUGGING #
         #
     #
-    
+
+    def getAdjacent_DoFs_to_middle_dof(self):
+        for eN in range(self.mesh.nElements_global):
+            for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                offset_u = self.offset[0]; stride_u = self.stride[0]
+                l2g = self.l2g[0]['freeGlobal']
+                gi = offset_u + stride_u*l2g[eN,i]
+                
+                self.den_hi[gi] += 1
+                
+                if i<4:
+                    self.is_dof_external[gi] = 1;
+                elif i==8:
+                    self.is_dof_internal[gi] = 1;
+                else: # i>=4 and i<=7
+		    gj1 = 0
+                    gj2 = 0
+		    if i==4:
+			gj1 = offset_u+stride_u*l2g[eN,0]
+			gj2 = offset_u+stride_u*l2g[eN,1]
+		    elif i==5:
+			gj1 = offset_u+stride_u*l2g[eN,1]
+			gj2 = offset_u+stride_u*l2g[eN,3]
+		    elif i==6:
+			gj1 = offset_u+stride_u*l2g[eN,3]
+			gj2 = offset_u+stride_u*l2g[eN,2]
+		    else:
+			gj1 = offset_u+stride_u*l2g[eN,2]
+			gj2 = offset_u+stride_u*l2g[eN,0]
+                    #
+		    self.first_adjacent_dof_to_middle_dof[gi]  = gj1;
+		    self.second_adjacent_dof_to_middle_dof[gi] = gj2;
+                #
+            #
+        #
+        
     def getResidual(self, u, r):
         import pdb
         import copy
@@ -1522,48 +1557,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-        #if self.boundaryValues is None:
-        #    self.getBoundaryValues()
-        # JACOBIANS (FOR ELEMENT TRANSFORMATION)
-        #self.q[('J')] = np.zeros((self.mesh.nElements_global,
-        #                          self.nQuadraturePoints_element,
-        #                          self.nSpace_global,
-        #                          self.nSpace_global),
-        #                         'd')
-        #self.q[('inverse(J)')] = np.zeros((self.mesh.nElements_global,
-        #                                   self.nQuadraturePoints_element,
-        #                                   self.nSpace_global,
-        #                                   self.nSpace_global),
-        #                                  'd')
-        #self.q[('det(J)')] = np.zeros((self.mesh.nElements_global,
-        #                               self.nQuadraturePoints_element),
-        #                              'd')
-        #self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
-        #                                                 self.q['J'],
-        #                                                 self.q['inverse(J)'],
-        #                                                 self.q['det(J)'])
-        #self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
-
-        
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = numpy.copy(self.u[0].dof)
+            self.umaxG = self.u_dof_old.max()
+            self.uminG = self.u_dof_old.min()
         #
         
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
-
-        # boundary conditions #
-        #self.numericalFlux.setDirichletValues(self.ebqe)
-        #for t, g in list(self.fluxBoundaryConditionsObjectsDict[0].advectiveFluxBoundaryConditionsDict.items()):
-        #    self.ebqe[('advectiveFlux_bc', 0)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
-        #    self.ebqe[('advectiveFlux_bc_flag', 0)][t[0], t[1]] = 1
-
-        #if self.forceStrongConditions:
-        #    for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
-        #        self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN], self.timeIntegration.t)
 
         # init to zero some vectors
         #self.dLow.fill(0.0)
@@ -1586,6 +1590,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.Hessian_psi,
             # element boundary
             self.u[0].femSpace.elementMaps.psi_trace,
             self.u[0].femSpace.elementMaps.grad_psi_trace,
@@ -1637,7 +1642,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.aux[0].femSpace.grad_psi,
             self.aux[0].femSpace.psi_trace,
             self.dLow,
-            self.coefficients.epsilon,
             self.coefficients.PROBLEM_TYPE,
             self.quantDOFs,
             # For highOrderLim
@@ -1658,13 +1662,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.QH_ML,
             # inverse of dissipative mass matrix
             self.inv_element_ML_minus_MC,
+            self.umaxG,
+            self.uminG,
             self.uHDot,
+            self.coefficients.omega,
             self.EntVisc,
+            # for smoothness indicator
+            self.gamma_dof,
+            self.first_adjacent_dof_to_middle_dof,
+            self.second_adjacent_dof_to_middle_dof,
+            self.is_dof_external,
+	    self.is_dof_internal,
+	    self.den_hi,
             # C-matrices
             self.Cx,
             self.Cy,
             self.CTx,
             self.CTy,
+            self.prCx,
+            self.prCy,
+            self.prCTx,
+            self.prCTy,
             self.cterm[0], #CxElem
             self.cterm[1], #CyElem
             self.cterm_transpose[0], #CTxElem
@@ -1678,7 +1696,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.xGradRHS,
             self.yGradRHS)
 
+        #self.gamma_dof[:]=1.0
         self.quantDOFs2[:] = self.EntVisc
+        self.quantDOFs3[:] = self.gamma_dof
         #import pdb; pdb.set_trace()
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
@@ -1736,7 +1756,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.aux[0].femSpace.psi,
             self.aux[0].femSpace.grad_psi,
             self.dLow,
-            self.coefficients.epsilon,
             self.coefficients.PROBLEM_TYPE)
 
         # Load the Dirichlet conditions directly into residual
@@ -1773,6 +1792,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisHessianValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t, self.q)
 
         #mql. compute shape function of aux FE space

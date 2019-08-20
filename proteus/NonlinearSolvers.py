@@ -471,7 +471,7 @@ class Newton(NonlinearSolver):
         self.etaLast = eta
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
-    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None,linear=False):
         r""" Solves the non-linear system :math:`F(u) = b`.
 
         Parameters
@@ -541,7 +541,11 @@ class Newton(NonlinearSolver):
             u-=self.du
             if par_u is not None:
                 par_u.scatter_forward_insert()
-            self.computeResidual(u,r,b)
+            if linear:
+                r[:]=0
+                self.computeRates = False
+            else:
+                self.computeResidual(u,r,b)
             if par_r is not None:
                 #no overlap
                 if not self.par_fullOverlap:
@@ -1109,12 +1113,9 @@ class highOrderLimSolver(Newton):
         #################
         # also compute self.F.EntVisc
         self.F.calculateResidual = self.F.blendedSpaces.calculateResidualEntropyVisc
-        Newton.solve(self,u,r,b,par_u,par_r)
-        self.F.uHDot[:] = self.F.u[0].dof
-        #self.F.u[0].dof[:] = self.F.u_dof_old
+        Newton.solve(self,u,r,b,par_u,par_r,linear=True)
+        self.F.uHDot[:] = u #self.F.u[0].dof
 
-        self.F.getSmoothnessIndicator(u)
-        
         ######################
         # CALCULATE SOLUTION #
         ######################
