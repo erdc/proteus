@@ -14,7 +14,7 @@ except:
 
 test_case=1
 AUTOMATED_TEST = True
-
+rdls_copyList=False
 # ----- PARAMETERS FOR ELLIPTIC REDISTANCING ----- #
 EXPLICIT_VOF=True
 EXPLICIT_NCLS=True
