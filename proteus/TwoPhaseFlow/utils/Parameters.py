@@ -310,13 +310,14 @@ class ParametersModelRANS2P(ParametersModelBase):
                                                     Problem=Problem)
         self.timeDiscretization = 'be'
         copts = self.p.CoefficientsOptions
+        copts.NONCONSERVATIVE_FORM = 1.
         copts.useMetrics = 1.
         copts.epsFact_viscosity = epsFact
         copts.epsFact_density = epsFact
         copts.forceStrongDirichlet = False
         copts.weak_bc_penalty_constant = 100.0
         copts.useRBLES = 0
-        copts.useVF = 0
+        copts.useVF = 0.0
         copts.timeOrder = 1
         copts.stokes = False
         copts.eb_adjoint_sigma = 1.
@@ -391,6 +392,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = RANS2P.Coefficients(
+            NONCONSERVATIVE_FORM=copts.NONCONSERVATIVE_FORM,
             epsFact=copts.epsFact_viscosity,
             sigma=pparams.surf_tension_coeff,
             rho_0=pparams.densityA,
@@ -1025,7 +1027,7 @@ class ParametersModelKappa(ParametersModelBase):
         self.p.LevelModelType = Kappa.LevelModel
         # NUMERICAL FLUX
         self.n.numericalFluxType = Kappa.NumericalFlux
-        self.n.conservativeFlux = {0:'pwl-bdm-opt'}
+        self.n.conservativeFlux = None
        # LINEAR ALGEBRA
         self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
