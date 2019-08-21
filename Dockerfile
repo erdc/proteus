@@ -11,7 +11,7 @@ ENV CXX mpicxx
 ENV F77 mpif77
 ENV F90 mpif90
 
-RUN cd proteus && git checkout add_eqp && git pull && make N=4 develop
+RUN cd proteus && git checkout master && git pull && make N=4 develop
 RUN cd proteus && CC=gcc CXX=g++ ./linux/bin/pip install matplotlib
 
 ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
