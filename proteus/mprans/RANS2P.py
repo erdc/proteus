@@ -196,7 +196,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  turbulenceClosureModel=0,  # 0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
                  barycenters=None,
-                 NONCONSERVATIVE_FORM=0.0,
+                 NONCONSERVATIVE_FORM=1.0,
                  MOMENTUM_SGE=1.0,
                  PRESSURE_SGE=1.0,
                  VELOCITY_SGE=1.0,
@@ -795,12 +795,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #logEvent("Post-step NS, Potential Energy = %12.5e" % (PE), level=0)
         #logEvent("Post-step NS, Total Energy = %12.5e" % (PE+KE), level=0)
         if self.comm.isMaster():
-            logEvent("wettedAreas\n"+
-                     repr(self.wettedAreas[:]) +
-                     "\nForces_p\n" +
-                     repr(self.netForces_p[:,:]) +
-                     "\nForces_v\n" +
-                     repr(self.netForces_v[:,:]))
+            # logEvent("wettedAreas\n"+
+            #          repr(self.wettedAreas[:]) +
+            #          "\nForces_p\n" +
+            #          repr(self.netForces_p[:,:]) +
+            #          "\nForces_v\n" +
+            #          repr(self.netForces_v[:,:]))
             self.timeHistory.write("%21.16e\n" % (t,))
             self.timeHistory.flush()
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
