@@ -2,8 +2,13 @@ from __future__ import print_function
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .ls_vortex_2d_p import *
-from .vortex2D import *
+try:
+    from .ls_vortex_2d_p import *
+    from .vortex2D import *
+except:
+    from ls_vortex_2d_p import *
+    from vortex2D import *
+    
 nd = 2
 
 if timeIntegration_ls == "be":
@@ -42,8 +47,11 @@ else:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
         print("pDegree_ls = %s not recognized " % pDegree_ls)
-    base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
-    elementQuadrature = CompositeTriangle(base_quad_rule,hk)
+    if compQuad:
+        base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
+        elementQuadrature = CompositeTriangle(base_quad_rule,hk)
+    else:
+        elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
 
 subgridError = None
