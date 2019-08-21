@@ -3,15 +3,19 @@ from __future__ import division
 from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
-from .redist_vortex_2d_p import *
-from .vortex2D import *
+try:
+    from .redist_vortex_2d_p import *
+    from .vortex2D import *
+except:
+    from redist_vortex_2d_p import *
+    from vortex2D import *
 
 if redist_Newton:
     timeIntegration = NoIntegration
     stepController = Newton_controller
     tolFac = 0.0
     nl_atol_res = atolRedistance
-    maxNonlinearIts = 25
+    maxNonlinearIts = 100
     maxLineSearches = 0
     useEisenstatWalker = True
     linTolFac = 0.0
@@ -49,9 +53,11 @@ if cDegree_ls==0:
             femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
         elif pDegree_ls==2:
             femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
-        base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
-        elementQuadrature = CompositeTriangle(base_quad_rule,hk)
-        #elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
+        if compQuad:
+            base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
+            elementQuadrature = CompositeTriangle(base_quad_rule,hk)
+        else:
+            elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
     if LevelModelType == RDLS.LevelModel:
         subgridError = HamiltonJacobi_ASGS_opt(coefficients,nd,stabFlag='2',lag=False)

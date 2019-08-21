@@ -226,8 +226,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_radius=None,
                  ball_velocity=None,
                  ball_angular_velocity=None,
-                 particles=None
-                 ):
+                 particles=None,
+                 useExact=False):
+        self.useExact=useExact
         self.outputQuantDOFs=outputQuantDOFs
         self.INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE
         self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
@@ -602,6 +603,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.CLSVOF_model is not None: # use CLSVOF
             # LS part #
             self.q_phi = modelList[self.CLSVOF_model].q[('u', 0)]
+            self.phi_dof = modelList[self.CLSVOF_model].u[0].dof
             self.ebq_phi = None # Not used. What is this for?
             self.ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)]
             self.bc_ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)] #Dirichlet BCs for level set. I don't have it since I impose 1 or -1. Therefore I attach the soln at boundary
@@ -616,6 +618,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else: # use NCLS-RDLS-VOF-MCORR instead
             if self.LS_model is not None: #LEVEL SET MODEL
                 self.q_phi = modelList[self.LS_model].q[('u', 0)]
+                self.phi_dof = modelList[self.LS_model].u[0].dof
                 if ('u', 0) in modelList[self.LS_model].ebq:
                     self.ebq_phi = modelList[self.LS_model].ebq[('u', 0)]
                 else:
@@ -633,6 +636,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
             else:
                 self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 0)].shape, 'd')
+                self.phi_dof = 10.0 * numpy.ones((self.model.mesh.nNodes_global,), 'd')
                 self.ebqe_phi = 10.0 * \
                                 numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
                 self.bc_ebqe_phi = 10.0 * \
@@ -2292,6 +2296,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN,
             self.coefficients.PSTAB,
             self.mesh.elementNodesArray,
+            self.elementQuadraturePoints,
             self.elementQuadratureWeights[('u', 0)],
             self.pressureModel.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,#: dim of FE space of pressure
             self.pressureModel.u[0].femSpace.psi,
@@ -2384,6 +2389,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.useVF,
             self.coefficients.q_vf,
             self.coefficients.q_phi,
+            self.coefficients.phi_dof,
             self.coefficients.q_n,
             self.coefficients.q_kappa,
             self.timeIntegration.m_tmp[0],
@@ -2544,7 +2550,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.rowptr_1D,
             self.colind_1D,
             self.isBoundary_1D,
-            self.coefficients.INT_BY_PARTS_PRESSURE)
+            self.coefficients.INT_BY_PARTS_PRESSURE,
+            self.coefficients.useExact)
 
         r*=self.isActiveDOF
 #         print "***********",np.amin(r),np.amax(r),np.amin(self.isActiveDOF),np.amax(self.isActiveDOF)
@@ -2620,6 +2627,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN,
             self.coefficients.PSTAB,
             self.mesh.elementNodesArray,
+            self.elementQuadraturePoints,
             self.elementQuadratureWeights[('u', 0)],
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
@@ -2706,6 +2714,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.useVF,
             self.coefficients.q_vf,
             self.coefficients.q_phi,
+            self.coefficients.phi_dof,
             self.coefficients.q_n,
             self.coefficients.q_kappa,
             self.timeIntegration.beta_bdf[0],
@@ -2855,7 +2864,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stride[2],
             self.rowptr_1D,
             self.colind_1D,
-            self.coefficients.INT_BY_PARTS_PRESSURE)
+            self.coefficients.INT_BY_PARTS_PRESSURE,
+            self.coefficients.useExact)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(

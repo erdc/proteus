@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+from libcpp cimport bool
 import numpy
 cimport numpy
 from proteus import *
@@ -19,6 +20,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double* mesh_velocity_dof,
                                double MOVING_DOMAIN,
                                int * mesh_l2g,
+                               double * x_ref,
                                double * dV_ref,
                                double * p_trial_ref,
                                double * p_grad_trial_ref,
@@ -97,6 +99,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double * rho,
                                double * vf,
                                double * phi,
+                               double * phi_nodes,
                                double * normal_phi,
                                double * kappa_phi,
                                double * q_mom_u_acc,
@@ -204,7 +207,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double particle_penalty_constant,
                                double* phi_solid_nodes,
                                double* distance_to_solids,
-                               int use_pseudo_penalty)
+                               int use_pseudo_penalty,
+                               bool useExact)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
@@ -216,6 +220,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double* mesh_velocity_dof,
                                double MOVING_DOMAIN,
                                int * mesh_l2g,
+                               double * x_ref,
                                double * dV_ref,
                                double * p_trial_ref,
                                double * p_grad_trial_ref,
@@ -285,6 +290,7 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double useVF,
                                double * vf,
                                double * phi,
+                               double * phi_nodes,
                                double * normal_phi,
                                double * kappa_phi,
                                double * q_mom_u_acc_beta_bdf, double * q_mom_v_acc_beta_bdf, double * q_mom_w_acc_beta_bdf,
@@ -399,7 +405,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double particle_alpha,
                                double particle_beta,
                                double particle_penalty_constant,
-                               int use_pseudo_penalty)
+                               int use_pseudo_penalty,
+                               bool useExact)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -569,6 +576,7 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray mesh_velocity_dof,
                           double MOVING_DOMAIN,
                           numpy.ndarray mesh_l2g,
+                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray p_trial_ref,
                           numpy.ndarray p_grad_trial_ref,
@@ -647,6 +655,7 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray rho,
                           numpy.ndarray vf,
                           numpy.ndarray phi,
+                          numpy.ndarray phi_nodes,
                           numpy.ndarray normal_phi,
                           numpy.ndarray kappa_phi,
                           numpy.ndarray q_mom_u_acc,
@@ -754,7 +763,8 @@ cdef class cRANS2P2D_base:
                           double particle_penalty_constant,
                           numpy.ndarray phi_solid_nodes,
                           numpy.ndarray distance_to_solids,
-                          int use_pseudo_penalty):
+                          int use_pseudo_penalty,
+                          bool useExact):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
@@ -767,6 +777,7 @@ cdef class cRANS2P2D_base:
                                        <double*> mesh_velocity_dof.data,
                                        MOVING_DOMAIN,
                                        < int * > mesh_l2g.data,
+                                       < double * > x_ref.data,
                                        < double * > dV_ref.data,
                                        < double * > p_trial_ref.data,
                                        < double * > p_grad_trial_ref.data,
@@ -845,6 +856,7 @@ cdef class cRANS2P2D_base:
                                        < double * > rho.data,
                                        < double * > vf.data,
                                        < double * > phi.data,
+                                       < double * > phi_nodes.data,
                                        < double * > normal_phi.data,
                                        < double * > kappa_phi.data,
                                        < double * > q_mom_u_acc.data,
@@ -952,7 +964,8 @@ cdef class cRANS2P2D_base:
                                        particle_penalty_constant,
                                        < double * > phi_solid_nodes.data,
                                        < double * > distance_to_solids.data,
-                                       use_pseudo_penalty)
+                                       use_pseudo_penalty,
+                                       useExact)
 
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
@@ -966,6 +979,7 @@ cdef class cRANS2P2D_base:
                           numpy.ndarray mesh_velocity_dof,
                           double MOVING_DOMAIN,
                           numpy.ndarray mesh_l2g,
+                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray p_trial_ref,
                           numpy.ndarray p_grad_trial_ref,
@@ -1035,6 +1049,7 @@ cdef class cRANS2P2D_base:
                           double useVF,
                           numpy.ndarray vf,
                           numpy.ndarray phi,
+                          numpy.ndarray phi_nodes,
                           numpy.ndarray normal_phi,
                           numpy.ndarray kappa_phi,
                           numpy.ndarray q_mom_u_acc_beta_bdf, numpy.ndarray q_mom_v_acc_beta_bdf, numpy.ndarray q_mom_w_acc_beta_bdf,
@@ -1149,7 +1164,8 @@ cdef class cRANS2P2D_base:
                           double particle_alpha,
                           double particle_beta,
                           double particle_penalty_constant,
-                          int use_pseudo_penalty):
+                          int use_pseudo_penalty,
+                          bool useExact):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
@@ -1163,6 +1179,7 @@ cdef class cRANS2P2D_base:
                                        <double*> mesh_velocity_dof.data,
                                        MOVING_DOMAIN,
                                        < int * > mesh_l2g.data,
+                                       < double * > x_ref.data,
                                        < double * > dV_ref.data,
                                        < double * > p_trial_ref.data,
                                        < double * > p_grad_trial_ref.data,
@@ -1232,6 +1249,7 @@ cdef class cRANS2P2D_base:
                                        useVF,
                                        < double * > vf.data,
                                        < double * > phi.data,
+                                       < double * > phi_nodes.data,
                                        < double * > normal_phi.data,
                                        < double * > kappa_phi.data,
                                        < double * > q_mom_u_acc_beta_bdf.data, < double * > q_mom_v_acc_beta_bdf.data, < double * > q_mom_w_acc_beta_bdf.data,
@@ -1346,7 +1364,8 @@ cdef class cRANS2P2D_base:
                                        particle_alpha,
                                        particle_beta,
                                        particle_penalty_constant,
-                                       use_pseudo_penalty)
+                                       use_pseudo_penalty,
+                                       useExact)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
