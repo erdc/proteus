@@ -198,10 +198,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
                  PROBLEM_TYPE=0,
-                 omega=1.0,
                  updateVelocityInTime=False):
 
-        self.omega=omega
         self.updateVelocityInTime=updateVelocityInTime
         self.GET_POINT_VALUES=GET_POINT_VALUES
         self.PROBLEM_TYPE=PROBLEM_TYPE
@@ -1665,7 +1663,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.umaxG,
             self.uminG,
             self.uHDot,
-            self.coefficients.omega,
             self.EntVisc,
             # for smoothness indicator
             self.gamma_dof,

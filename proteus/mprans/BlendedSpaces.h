@@ -222,7 +222,6 @@ namespace proteus
 				   double umaxG,
 				   double uminG,
 				   double* uHDot,
-				   double omega,
 				   double* EntVisc,
 				   // for smoothness indicator
 				   double* gamma_dof,
@@ -338,7 +337,6 @@ namespace proteus
 				   double umaxG,
 				   double uminG,
 				   double* uHDot,
-				   double omega,
 				   double* EntVisc,
 				   // for smoothness indicator
 				   double* gamma_dof,
@@ -637,7 +635,6 @@ namespace proteus
 			     double umaxG,
 			     double uminG,
 			     double* uHDot,
-			     double omega,
 			     double* EntVisc,
 			     // for smoothness indicator
 			     double* gamma_dof,
@@ -1262,7 +1259,6 @@ namespace proteus
 					double umaxG,
 					double uminG,
 					double* uHDot,
-					double omega,
 					double* EntVisc,
 					// for smoothness indicator
 					double* gamma_dof,
@@ -1560,7 +1556,7 @@ namespace proteus
 	      } //j
 	    ith_DenEntVisc = (fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
 	    EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0);
-	    EntVisc[i] = 1-omega + omega*EntVisc[i];	    
+	    EntVisc[i] = EntVisc[i];	    
 	    // ***** End of entropy viscosity ***** //
 	  }
 	
