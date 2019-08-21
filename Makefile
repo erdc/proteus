@@ -98,6 +98,8 @@ distclean: clean
 	-rm -rf ${PROTEUS_PREFIX}
 	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a proteus/MeshAdaptPUMI/*.so
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
+	-rm -rf build proteus/richards/*.pyc proteus/richards/*.so proteus/richards/*.a
+	-rm -rf build proteus/elastoplastic/*.pyc proteus/elastoplastic/*.so proteus/elastoplastic/*.a
 	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
 stack/hit/bin/hit:
@@ -277,12 +279,11 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip3 install configparser ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet==0.10.3 jupyter_dashboards pythreejs rise cesiumpy bqplot ipympl sympy transforms3d ipymesh voila ipyvolume jupyterlab_latex ipysheet xonsh[ptk,linux,proctitle] ipytree
+	pip3 install configparser ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume jupyterlab_latex ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix ipysheet
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
-	jupyter nbextension enable --py --sys-prefix bqplot
 	jupyter nbextension enable --py --sys-prefix pythreejs
 	jupyter nbextension enable --py --sys-prefix ipympl
 	jupyter nbextension enable --py --sys-prefix ipymesh

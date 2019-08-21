@@ -2,9 +2,13 @@ from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from math import *
-from .vortex2D import *
+try:
+    from .vortex2D import *
+    from . import ncls_p
+except:
+    from vortex2D import *
+    import ncls_p
 from proteus.mprans import RDLS
-from . import ncls_p
 
 name = soname+"_rdls"
 LevelModelType = RDLS.LevelModel
@@ -16,7 +20,10 @@ coefficients = RDLS.Coefficients(applyRedistancing=True,
                                  useMetrics=useMetrics,
                                  ELLIPTIC_REDISTANCING=ct.ELLIPTIC_REDISTANCING,
                                  backgroundDissipationEllipticRedist=1.0,
-                                 alpha=1E9)
+                                 backgroundDiffusionFactor=0.01,
+                                 alpha=1E9,
+                                 useExact=useExact,
+                                 weakDirichletFactor=weakDirichletFactor)
                                  
 #now define the Dirichlet boundary conditions
 def getDBC(x,flag):
@@ -24,10 +31,21 @@ def getDBC(x,flag):
 
 dirichletConditions = {0:getDBC}
 
-if LevelModelType == RDLS.LevelModel:
-    weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCsSimple}
+def setNoZeroLSweakDirichletBCs(RDLSvt):
+    assert hasattr(RDLSvt, 'freezeLevelSet')
+    assert hasattr(RDLSvt, 'u_dof_last')
+    assert hasattr(RDLSvt, 'weakDirichletConditionFlags')
+    assert hasattr(RDLSvt.coefficients, 'epsFact')
+    assert hasattr(RDLSvt, 'dofFlag_element')
+    RDLSvt.freezeLevelSet = 0
+
+if not useExact:
+    if LevelModelType == RDLS.LevelModel:
+        weakDirichletConditions = {0:RDLS.setZeroLSweakDirichletBCsSimple}
+    else:
+        weakDirichletConditions = {0:coefficients.setZeroLSweakDirichletBCs}
 else:
-    weakDirichletConditions = {0:coefficients.setZeroLSweakDirichletBCs}
+    weakDirichletConditions = {0:setNoZeroLSweakDirichletBCs}
 
 #weakDirichletConditions = {0:coefficients.setZeroLSweakDirichletBCs2}
 #weakDirichletConditions = None
