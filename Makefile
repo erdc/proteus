@@ -308,11 +308,11 @@ jupyter:
 	jupyter labextension install @jupyter-widgets/jupyterlab-manager
 	jupyter labextension install jupyter-matplotlib
 	jupyter labextension install @jupyterlab/latex
-#	jupyter labextension install jupyterlab-drawio
+	jupyter labextension install jupyterlab-drawio
 	jupyter labextension install @jupyterlab/toc
 	jupyter labextension install @jupyterlab/hub-extension
 	jupyter labextension install ipysheet
-#	jupyter labextension install jupyterlab_voyager
+	jupyter labextension install jupyterlab_voyager
 	jupyter labextension install ipytree
 
 lfs:
