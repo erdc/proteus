@@ -7,8 +7,8 @@
 #include "ModelFactory.h"
 
 #define USE_Q1_STENCIL 1
-#define USE_MACRO_CELL 1
-#define ELEMENT_BASED_ENTROPY_RESIDUAL 0
+#define USE_MACRO_CELL 1 // for computation of gamma indicator
+#define ELEMENT_BASED_ENTROPY_RESIDUAL 0 // for entropy residual 
 #define C_GAMMA 1.0
 #define METHOD 3
 // 0: low-order
@@ -1550,11 +1550,11 @@ namespace proteus
 		// For entropy viscosity //
 		double x_EntFluxj=xEntFlux(u_velj,solnj,PROBLEM_TYPE);// - xEntFlux(u_veli,solni,PROBLEM_TYPE);
 		double y_EntFluxj=yEntFlux(v_velj,solnj,PROBLEM_TYPE);// - yEntFlux(v_veli,solni,PROBLEM_TYPE);
-		ith_NumEntVisc += (PrCx[ij]*(x_EntFluxj-DEnti*fxj) +
-				   PrCy[ij]*(y_EntFluxj-DEnti*fyj));
+		ith_NumEntVisc += (Cx[ij]*(x_EntFluxj-DEnti*fxj) +
+				   Cy[ij]*(y_EntFluxj-DEnti*fyj));
 		// aux parts to compute DenEntVisc
-		DenEntViscPart1 += PrCx[ij]*x_EntFluxj + PrCy[ij]*y_EntFluxj;
-		DenEntViscPart2 += PrCx[ij]*fxj + PrCy[ij]*fyj;
+		DenEntViscPart1 += Cx[ij]*x_EntFluxj + Cy[ij]*y_EntFluxj;
+		DenEntViscPart2 += Cx[ij]*fxj + Cy[ij]*fyj;
 		
 		ij+=1;
 	      } //j
