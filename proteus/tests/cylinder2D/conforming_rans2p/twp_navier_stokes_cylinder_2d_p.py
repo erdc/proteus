@@ -17,6 +17,7 @@ name="rans2p"
 bcsTimeDependent = True
 LevelModelType = RANS2P.LevelModel
 coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
+                                   NONCONSERVATIVE_FORM=0.0,
                                    rho_0=rho,
                                    nu_0=nu,
                                    rho_1=rho,

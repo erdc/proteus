@@ -310,13 +310,18 @@ class ParametersModelRANS2P(ParametersModelBase):
                                                     Problem=Problem)
         self.timeDiscretization = 'be'
         copts = self.p.CoefficientsOptions
+        copts.NONCONSERVATIVE_FORM = 1.
         copts.useMetrics = 1.
         copts.epsFact_viscosity = epsFact
         copts.epsFact_density = epsFact
         copts.forceStrongDirichlet = False
         copts.weak_bc_penalty_constant = 100.0
         copts.useRBLES = 0
+<<<<<<< HEAD
         copts.useVF = 0
+=======
+        copts.useVF = 0.0
+>>>>>>> 1.7.x
         copts.timeOrder = 1
         copts.stokes = False
         copts.eb_adjoint_sigma = 1.
@@ -391,6 +396,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = RANS2P.Coefficients(
+            NONCONSERVATIVE_FORM=copts.NONCONSERVATIVE_FORM,
             epsFact=copts.epsFact_viscosity,
             sigma=pparams.surf_tension_coeff,
             rho_0=pparams.densityA,
@@ -1559,11 +1565,18 @@ class ParametersModelNCLS(ParametersModelBase):
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['ncls']}
         # BOUNDARY CONDITIONS
+<<<<<<< HEAD
         BC = self._Problem.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
                 if 'ncls_DBC' in BC:
                     self.p.dirichletConditions = {0: BC['ncls_DBC']}
+=======
+        if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
+            if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+                if 'phi_DBC' in BC:
+                    self.p.dirichletConditions = {0: BC['phi_DBC']}
+>>>>>>> 1.7.x
                 else:
                     self.p.dirichletCondtions = {0: lambda x,t: None}
             else:
