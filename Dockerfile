@@ -11,7 +11,7 @@ ENV CXX mpicxx
 ENV F77 mpif77
 ENV F90 mpif90
 
-RUN cd proteus && git checkout add_eqp && git pull && make N=4 develop
+RUN cd proteus && git checkout 1.7.x && git pull && make N=4 develop
 RUN cd proteus && CC=gcc CXX=g++ ./linux/bin/pip install matplotlib
 
 ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
@@ -21,6 +21,15 @@ RUN cd proteus && PATH=/usr/bin:/usr/local/bin:$PATH make jupyter
 ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
 USER root
+
+CMD ["start-notebook.sh"]
+
+# Add local files as late as possible to avoid cache busting
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start.sh /usr/local/bin/start.sh
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-notebook.sh /usr/local/bin/start-notebook.sh
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-singleuser.sh /usr/local/bin/start-singleuser.sh
+
+RUN chmod a+rx /usr/local/bin/*
 
 RUN ipython kernel install
 
