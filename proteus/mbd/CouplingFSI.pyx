@@ -2637,7 +2637,7 @@ cdef class ProtChMoorings:
         # get pointers to access elements in python
         cdef int elemN
         self.elements = []
-        for elemN in range(self.thisptr.nb_elems_tot-1):
+        for elemN in range(self.thisptr.nb_elems_tot):
             if self.beam_type == "BeamEuler":
                 elem = chrono_fea.ChElementBeamEuler()
             elif self.beam_type == "CableANCF":
@@ -2850,7 +2850,6 @@ cdef class ProtChMoorings:
                     vel_arr[:] = 0
             self.fluid_velocity_array[i] = vel_arr
             vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
-            fluid_velocity.push_back(vel)
             if self.fluid_velocity_function is not None and fluid_velocity_array is None:
                 vel_arr = self.fluid_velocity_function(coords, self.ProtChSystem.t)
                 vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
