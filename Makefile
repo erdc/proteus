@@ -277,11 +277,10 @@ test: air-water-vv check
 
 jupyter:
 	@echo "************************************"
-	@echo "Enabling jupyter notebook/lab/widgets"
+	@echo "Enabling jupyter notebook/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip3 install configparser ipyparallel ipython terminado jupyter jupyterlab ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume jupyterlab_latex ipysheet xonsh[ptk,linux,proctitle] ipytree
+	pip3 install configparser ipyparallel ipython terminado jupyter ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
-	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix ipysheet
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
 	jupyter nbextension enable --py --sys-prefix pythreejs
@@ -299,12 +298,20 @@ jupyter:
 	jupyter nbextension enable --sys-prefix --py voila
 	jupyter nbextension install --sys-prefix --py ipyvolume
 	jupyter nbextension enable --sys-prefix --py ipyvolume
-	jupyter serverextension enable --sys-prefix --py jupyterlab_latex
 	printf "\nc.NotebookApp.server_extensions.append('ipyparallel.nbextension')\n" >> ${HOME}/.jupyter/jupyter_notebook_config.py
 	printf "\nc.IPClusterEngines.engine_launcher_class = 'MPI'\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalControllerLauncher.controller_cmd = ['python', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	cd linux/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+
+jupyterlab:
+	@echo "************************************"
+	@echo "Enabling jupyter lab"
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
+	pip3 install jupyterlab jupyterlab_latex
+	jupyter serverextension enable --py jupyterlab --sys-prefix
+	jupyter serverextension enable --sys-prefix --py jupyterlab_latex
 	jupyter labextension install @jupyter-widgets/jupyterlab-manager
 	jupyter labextension install jupyter-matplotlib
 	jupyter labextension install @jupyterlab/latex

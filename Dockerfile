@@ -22,6 +22,15 @@ ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
 USER root
 
+CMD ["start-notebook.sh"]
+
+# Add local files as late as possible to avoid cache busting
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start.sh /usr/local/bin/start.sh
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-notebook.sh /usr/local/bin/start-notebook.sh
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-singleuser.sh /usr/local/bin/start-singleuser.sh
+
+RUN chmod a+rx /usr/local/bin/*
+
 RUN ipython kernel install
 
 USER $NB_USER
