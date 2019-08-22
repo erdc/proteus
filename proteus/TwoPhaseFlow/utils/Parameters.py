@@ -317,11 +317,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.forceStrongDirichlet = False
         copts.weak_bc_penalty_constant = 100.0
         copts.useRBLES = 0
-<<<<<<< HEAD
-        copts.useVF = 0
-=======
         copts.useVF = 0.0
->>>>>>> 1.7.x
         copts.timeOrder = 1
         copts.stokes = False
         copts.eb_adjoint_sigma = 1.
@@ -1031,7 +1027,7 @@ class ParametersModelKappa(ParametersModelBase):
         self.p.LevelModelType = Kappa.LevelModel
         # NUMERICAL FLUX
         self.n.numericalFluxType = Kappa.NumericalFlux
-        self.n.conservativeFlux = {0:'pwl-bdm-opt'}
+        self.n.conservativeFlux = None
        # LINEAR ALGEBRA
         self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
@@ -1565,18 +1561,11 @@ class ParametersModelNCLS(ParametersModelBase):
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['ncls']}
         # BOUNDARY CONDITIONS
-<<<<<<< HEAD
         BC = self._Problem.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
                 if 'ncls_DBC' in BC:
                     self.p.dirichletConditions = {0: BC['ncls_DBC']}
-=======
-        if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
-            if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
-                if 'phi_DBC' in BC:
-                    self.p.dirichletConditions = {0: BC['phi_DBC']}
->>>>>>> 1.7.x
                 else:
                     self.p.dirichletCondtions = {0: lambda x,t: None}
             else:
