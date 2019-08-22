@@ -64,7 +64,10 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
                                double* aux_test_trace_ref,
 			       double* dLow,
                                int PROBLEM_TYPE,
+                               int METHOD,
                                double * quantDOFs,
+                               double * quantDOFs4,
+                               double * quantDOFs5,
                                double* ebqe_uInlet,
                                int GET_POINT_VALUES,
                                double* flux_qij,
@@ -106,6 +109,7 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
 			       double* PrCTyElem,
                                double* dLowElem,
                                double* QL_sparsity,
+                               double* qNorm,
                                double* xGradRHS,
                                double* yGradRHS)
         void calculateResidualEntropyVisc(double dt,
@@ -165,7 +169,10 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
                                double* aux_test_trace_ref,
 			       double* dLow,
                                int PROBLEM_TYPE,
+                                          int METHOD,
                                           double * quantDOFs,
+                                          double * quantDOFs4,
+                                          double * quantDOFs5,
                                           double* ebqe_uInlet,
                                int GET_POINT_VALUES,
                                double* flux_qij,
@@ -207,6 +214,7 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
 				          double* PrCTyElem,
                                           double* dLowElem,
                                           double* QL_sparsity,
+                                          double* qNorm,
                                           double* xGradRHS,
                                           double* yGradRHS)
         void calculateMassMatrix(double dt,
@@ -252,8 +260,7 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
 			       double* alpha_dof,
 			       double* aux_test_ref,
 			       double* aux_grad_test_ref,
-			       double* dLow,
-                               int PROBLEM_TYPE)
+			       double* dLow)
         void calculateMetricsAtEOS(double* mesh_trial_ref,
                                    double* mesh_grad_trial_ref,
                                    double* mesh_dof,
@@ -373,7 +380,10 @@ cdef class cBlendedSpaces_base:
                           numpy.ndarray aux_test_trace_ref,
                           numpy.ndarray dLow,
                           int PROBLEM_TYPE,
+                          int METHOD,
                           numpy.ndarray quantDOFs,
+                          numpy.ndarray quantDOFs4,
+                          numpy.ndarray quantDOFs5,
                           numpy.ndarray ebqe_uInlet,
                           int GET_POINT_VALUES,
                           numpy.ndarray flux_qij,
@@ -415,6 +425,7 @@ cdef class cBlendedSpaces_base:
                           numpy.ndarray PrCTyElem,
                           numpy.ndarray dLowElem,
                           numpy.ndarray QL_sparsity,
+                          numpy.ndarray qNorm,
                           numpy.ndarray xGradRHS,
                           numpy.ndarray yGradRHS):
         self.thisptr.calculateResidual(dt,
@@ -475,7 +486,10 @@ cdef class cBlendedSpaces_base:
                                        <double*> aux_test_trace_ref.data,
 				       <double*> dLow.data,
                                        PROBLEM_TYPE,
+                                       METHOD,
                                        < double * > quantDOFs.data,
+                                       < double * > quantDOFs4.data,
+                                       < double * > quantDOFs5.data,
                                        <double*> ebqe_uInlet.data,
                                        GET_POINT_VALUES,
                                        < double*> flux_qij.data,
@@ -517,6 +531,7 @@ cdef class cBlendedSpaces_base:
 				       < double*> PrCTyElem.data,
                                        <double* > dLowElem.data,
                                        <double*> QL_sparsity.data,
+                                       <double*> qNorm.data,
                                        <double* > xGradRHS.data,
                                        <double* > yGradRHS.data)
     def calculateResidualEntropyVisc(self,
@@ -577,7 +592,10 @@ cdef class cBlendedSpaces_base:
                           numpy.ndarray aux_test_trace_ref,
                           numpy.ndarray dLow,
                           int PROBLEM_TYPE,
+                                     int METHOD,
                                      numpy.ndarray quantDOFs,
+                                     numpy.ndarray quantDOFs4,
+                                     numpy.ndarray quantDOFs5,
                                      numpy.ndarray ebqe_uInlet,
                           int GET_POINT_VALUES,
                           numpy.ndarray flux_qij,
@@ -619,6 +637,7 @@ cdef class cBlendedSpaces_base:
                                      numpy.ndarray PrCTyElem,
                                      numpy.ndarray dLowElem,
                                      numpy.ndarray QL_sparsity,
+                                     numpy.ndarray qNorm,
                                      numpy.ndarray xGradRHS,
                                      numpy.ndarray yGradRHS):
         self.thisptr.calculateResidualEntropyVisc(dt,
@@ -679,7 +698,10 @@ cdef class cBlendedSpaces_base:
                                        <double*> aux_test_trace_ref.data,
 				       <double*> dLow.data,
                                        PROBLEM_TYPE,
+                                                  METHOD,
                                                   < double * > quantDOFs.data,
+                                                  < double * > quantDOFs4.data,
+                                                  < double * > quantDOFs5.data,
                                                   <double*> ebqe_uInlet.data,
                                        GET_POINT_VALUES,
                                        < double*> flux_qij.data,
@@ -721,6 +743,7 @@ cdef class cBlendedSpaces_base:
 				                  < double*> PrCTyElem.data,
                                                   <double*> dLowElem.data,
                                                   <double*> QL_sparsity.data,
+                                                  <double*> qNorm.data,
                                                   <double*> xGradRHS.data,
                                                   <double*> yGradRHS.data)
     def calculateMassMatrix(self,
@@ -765,8 +788,7 @@ cdef class cBlendedSpaces_base:
 			  numpy.ndarray alpha_dof,
 			  numpy.ndarray aux_test_ref,
 			  numpy.ndarray aux_grad_test_ref,
-			  numpy.ndarray dLow,
-                          int PROBLEM_TYPE):
+			  numpy.ndarray dLow):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateMassMatrix(dt,
@@ -812,8 +834,7 @@ cdef class cBlendedSpaces_base:
 				       <double*> alpha_dof.data,
 			 	       <double*> aux_test_ref.data,
 			 	       <double*> aux_grad_test_ref.data,
-				       <double*> dLow.data,
-                                       PROBLEM_TYPE)
+				       <double*> dLow.data)
     def calculateMetricsAtEOS(self,
                               numpy.ndarray mesh_trial_ref,
                               numpy.ndarray mesh_grad_trial_ref,

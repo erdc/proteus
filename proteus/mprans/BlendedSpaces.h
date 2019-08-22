@@ -9,12 +9,13 @@
 #define USE_Q1_STENCIL 1
 #define USE_MACRO_CELL 1 // for computation of gamma indicator
 #define ELEMENT_BASED_ENTROPY_RESIDUAL 0 // for entropy residual 
-#define C_GAMMA 1.0
-#define METHOD 3
+#define C_GAMMA 5.0
+// METHOD 4
 // 0: low-order
 // 1: high-order non-limited
 // 2: limiting without gamma indicator
-// 3: limiting with gamma indicator
+// 3: limiting with gamma indicator based on DK and CL
+// 4: limiting with gamma indicator based on MQL, DK and CK
 namespace proteus
 {
   // ENTROPY FUNCTION AND ITS DERIVATIVE //
@@ -134,6 +135,8 @@ namespace proteus
     std::valarray<double> min_hiHe;
     // for Zalesak's FCT //
     std::valarray<double> Rpos, Rneg;
+
+    std::valarray<double> weighted_lumped_mass_matrix;
     virtual ~BlendedSpaces_base(){}
     virtual void calculateResidual(//element
                                    double dt,
@@ -198,8 +201,11 @@ namespace proteus
 				   double* dLow,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE,
+				   int METHOD,
                                    // AUX QUANTITIES OF INTEREST
                                    double* quantDOFs,
+				   double* quantDOFs4,
+				   double* quantDOFs5,
 				   // FOR highOrderLim
 				   // for boundary
 				   double* ebqe_uInlet,
@@ -249,6 +255,7 @@ namespace proteus
 				   double* PrCTyElem,
 				   double* dLowElem,
 				   double* Q1_sparsity,
+				   double* qNorm,
 				   double* xGradRHS,
 				   double* yGradRHS)=0;
     virtual void calculateResidualEntropyVisc(//element
@@ -314,8 +321,11 @@ namespace proteus
 				   double* dLow,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE,
+				   int METHOD,
                                    // AUX QUANTITIES OF INTEREST
                                    double* quantDOFs,
+				   double* quantDOFs4,
+				   double* quantDOFs5,
 				   // FOR highOrderLim
 				   double* ebqe_uInlet,
 				   int GET_POINT_VALUES,
@@ -364,6 +374,7 @@ namespace proteus
 				   double* PrCTyElem,
 				   double* dLowElem,
 				   double* Q1_sparsity,
+				   double* qNorm,
 				   double* xGradRHS,
 				   double* yGradRHS)=0;
     virtual void calculateMassMatrix(//element
@@ -413,9 +424,7 @@ namespace proteus
 				   double* alpha_dof,
 				   double* aux_test_ref,
 				   double* aux_grad_test_ref,
-				   double* dLow,
-				   // Type of problem to solve
-				   int PROBLEM_TYPE)=0;
+				   double* dLow)=0;
     virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
                                        double* mesh_trial_ref,
                                        double* mesh_grad_trial_ref,
@@ -612,8 +621,11 @@ namespace proteus
 			     double* dLow,
 			     // Type of problem to solve
 			     int PROBLEM_TYPE,
+			     int METHOD,
 			     // AUX QUANTITIES OF INTEREST			     
 			     double* quantDOFs,
+			     double* quantDOFs4,
+			     double* quantDOFs5,
 			     // For highOrderLim
 			     double* ebqe_uInlet,
 			     int GET_POINT_VALUES,
@@ -662,6 +674,7 @@ namespace proteus
 			     double* PrCTyElem,
 			     double* dLowElem,
 			     double* Q1_sparsity,
+			     double* qNorm,
 			     double* xGradRHS,
 			     double* yGradRHS)
       {
@@ -1108,6 +1121,9 @@ namespace proteus
 		    if (i!=j)
 		      {
 			double gammaij = fmin(gamma_dof[i], gamma_dof[j]);
+			if (METHOD==4)
+			  gammaij = fmax(qNorm[i], qNorm[j]);
+			
 			if (fij > 0)
 			  {
 			    if (METHOD==0)
@@ -1116,7 +1132,7 @@ namespace proteus
 			      fluxStar[gi] += fij; // high-order entropy viscosity
 			    else if (METHOD==2)
 				fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
-			    else
+			    else // METHOD==3 or 4
 			      {
 				double fijStarLoc=fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
 				double fijStarGlob=fmin(fij,fmin(2*dij*umaxG-wij,wji-2*dij*uminG));
@@ -1131,7 +1147,7 @@ namespace proteus
 			      fluxStar[gi] += fij;
 			    else if (METHOD==2)
 			      fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
-			    else
+			    else // METHOD==3 or 4
 			      {
 				double fijStarLoc =fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
 				double fijStarGlob=fmax(fij,fmax(2*dij*uminG-wij,wji-2*dij*umaxG));
@@ -1236,8 +1252,11 @@ namespace proteus
 					double* dLow,
 					// Type of problem to solve
 					int PROBLEM_TYPE,
+					int METHOD,
 					// AUX QUANTITIES OF INTEREST			     
 					double* quantDOFs,
+					double* quantDOFs4,
+					double* quantDOFs5,
 					// For highOrderLim
 					double* ebqe_uInlet,
 					int GET_POINT_VALUES,
@@ -1286,6 +1305,7 @@ namespace proteus
 					double* PrCTyElem,
 					double* dLowElem,
 					double* Q1_sparsity,
+					double* qNorm,
 					double* xGradRHS,
 					double* yGradRHS)
       {
@@ -1298,7 +1318,15 @@ namespace proteus
 	element_He.resize(nElements_global,0.0);
 	global_hi.resize(numDOFs,0.0);
 	min_hiHe.resize(numDOFs,1E100);
-  
+
+	weighted_lumped_mass_matrix.resize(numDOFs,0.0);
+
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    xGradRHS[i]=0.0;
+	    yGradRHS[i]=0.0;
+	    qNorm[i] = 0.0;
+	  }
 	///////////////////
 	// BOUNDARY TERM //
 	///////////////////
@@ -1400,12 +1428,18 @@ namespace proteus
 	    //declare local storage for element residual and initialize
 	    double det_hess_Ke=0, area_Ke=0;
 	    register double
+	      element_weighted_lumped_mass_matrix[nDOF_test_element],
+	      element_rhs_qx[nDOF_test_element],
+	      element_rhs_qy[nDOF_test_element],
 	      elementTimeDerivative[nDOF_test_element],
 	      elementFluxTerm[nDOF_test_element];
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		elementTimeDerivative[i]=0.0;
 		elementFluxTerm[i]=0.0;
+		element_rhs_qx[i]=0.0;
+		element_rhs_qy[i]=0.0;
+		element_weighted_lumped_mass_matrix[i]=0.0;
 	      }
 	    
 	    //loop over quadrature points and compute integrands
@@ -1416,6 +1450,7 @@ namespace proteus
 		  eN_k_nSpace = eN_k*nSpace,
 		  eN_nDOF_trial_element = eN*nDOF_trial_element;
 		register double
+		  rhsx=0.0, rhsy=0.0, norm_grad_un=0.0,
 		  un=0.0, grad_un[nSpace], hess_un[nSpace2], det_hess_un=0.,
 		  uDot=0.0,
 		  jac[nSpace*nSpace],
@@ -1470,8 +1505,19 @@ namespace proteus
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
 		  }
 
+		rhsx = grad_un[0];
+                rhsy = grad_un[1];
+		norm_grad_un=0.0;
+                for (int I=0;I<nSpace; I++)
+                  norm_grad_un += grad_un[I]*grad_un[I];
+                norm_grad_un = std::sqrt(norm_grad_un+1E-5);
+		
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
+		    element_weighted_lumped_mass_matrix[i] += norm_grad_un*u_test_dV[i];
+                    element_rhs_qx[i] += rhsx*u_test_dV[i];
+                    element_rhs_qy[i] += rhsy*u_test_dV[i];
+		    
 		    elementTimeDerivative[i] += uDot*u_test_dV[i]; 
 		    register int i_nSpace=i*nSpace;
 		    if (PROBLEM_TYPE==0)
@@ -1492,16 +1538,29 @@ namespace proteus
 	    //
 	    element_He[eN] = det_hess_Ke/area_Ke;
 	    for(int i=0;i<nDOF_test_element;i++)
-	      {
+	      {		
 		register int eN_i=eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i];
+
+		weighted_lumped_mass_matrix[gi] += element_weighted_lumped_mass_matrix[i];
+		xGradRHS[gi] += element_rhs_qx[i];
+		yGradRHS[gi] += element_rhs_qy[i];
+		
 		// residual of uDot
 		globalResidual[gi] += elementTimeDerivative[i] + elementFluxTerm[i];
 		// global hi (to compute smoothness indicator)
-		global_hi[gi] += element_He[eN]/den_hi[gi];
+		global_hi[gi] += element_He[eN];
 	      } //i
 	  } //elements
 
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    global_hi[i] /= den_hi[i];
+	    xGradRHS[i] /= weighted_lumped_mass_matrix[i];
+	    yGradRHS[i] /= weighted_lumped_mass_matrix[i];	    
+	    qNorm[i] = std::sqrt(xGradRHS[i]*xGradRHS[i] + yGradRHS[i]*yGradRHS[i]);
+	  }
+	
 	///////////////////
 	// LOOP IN CELLS // to compute min(hi*He)
 	///////////////////
@@ -1516,7 +1575,13 @@ namespace proteus
 		min_hiHe[gi] = fmin(min_hiHe[gi], hi*He);
 	      }
 	  }
-	
+
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    quantDOFs4[i] = global_hi[i]*global_hi[i];
+	    quantDOFs5[i] = min_hiHe[i];
+	  }
+	  
 	// ***************************** //
 	// ***** Entropy viscosity ***** //
 	// ***************************** //
@@ -1724,9 +1789,7 @@ namespace proteus
 			       double* alpha_dof,
 			       double* aux_test_ref,
 			       double* aux_grad_test_ref,
-			       double* dLow,
-			       // Type of problem to solve
-			       int PROBLEM_TYPE)
+			       double* dLow)
       {
 	//
 	//loop over elements

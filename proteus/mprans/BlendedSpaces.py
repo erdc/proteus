@@ -198,8 +198,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
                  PROBLEM_TYPE=0,
+                 METHOD=4,
                  updateVelocityInTime=False):
 
+        self.METHOD=METHOD
+        # METHOD 4
+        #   0: low-order
+        #   1: high-order non-limited
+        #   2: limiting without gamma indicator
+        #   3: limiting with gamma indicator based on DK and CL
+        #   4: limiting with gamma indicator based on MQL, DK and CK
+        #
         self.updateVelocityInTime=updateVelocityInTime
         self.GET_POINT_VALUES=GET_POINT_VALUES
         self.PROBLEM_TYPE=PROBLEM_TYPE
@@ -652,6 +661,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
         self.quantDOFs2 = numpy.zeros(self.u[0].dof.shape, 'd')
         self.quantDOFs3 = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.quantDOFs4 = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.quantDOFs5 = numpy.zeros(self.u[0].dof.shape, 'd')
         self.boundaryValues = None
         self.isBoundary = None
 
@@ -716,6 +727,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.xGradRHS = None
         self.yGradRHS = None
+        self.qNorm = None
 
         self.umaxG = None
         self.uminG = None
@@ -1476,6 +1488,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.nDOF_trial_element[0]), 'd')
             self.xGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
             self.yGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
+            self.qNorm = numpy.zeros(self.u[0].dof.shape, 'd')
 
             self.EntVisc = numpy.zeros(self.u[0].dof.shape, 'd')
             self.uHDot = numpy.zeros(self.u[0].dof.shape, 'd')
@@ -1573,8 +1586,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         self.flux_qij.fill(0.0)
         self.element_flux_i.fill(0.0)
-        self.xGradRHS.fill(0.0)
-        self.yGradRHS.fill(0.0)
         self.edge_based_cfl.fill(0.0)
         
         self.calculateResidual(  # element
@@ -1642,6 +1653,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dLow,
             self.coefficients.PROBLEM_TYPE,
             self.quantDOFs,
+            self.quantDOFs4,
+            self.quantDOFs5,
             # For highOrderLim
             self.uInlet_at_quad_points,
             self.coefficients.GET_POINT_VALUES,
@@ -1690,12 +1703,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.prCTyElem,
             self.dLowElem,
             self.Q1_sparsity,
+            self.qNorm,
             self.xGradRHS,
             self.yGradRHS)
 
         #self.gamma_dof[:]=1.0
         self.quantDOFs2[:] = self.EntVisc
         self.quantDOFs3[:] = self.gamma_dof
+        self.quantDOFs4[:] = self.xGradRHS
+        #self.quantDOFs5[:] = self.yGradRHS
+        self.quantDOFs5[:] = 1.0 - self.qNorm
         #import pdb; pdb.set_trace()
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
@@ -1752,8 +1769,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.blendingFunctionDOFs, #alpha
             self.aux[0].femSpace.psi,
             self.aux[0].femSpace.grad_psi,
-            self.dLow,
-            self.coefficients.PROBLEM_TYPE)
+            self.dLow)
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:

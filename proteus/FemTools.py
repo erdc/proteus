@@ -666,9 +666,8 @@ class BernsteinOnCube(LocalFunctionSpace):
                              #-2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
                              # Rule out the cases when 1-x or 1+x = 0. This is to avoid warnings due to division by zero
                              0. if 1-x == 0. or 1+x == 0. else -2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
-            nChooseK = lambda n,k: 1.0*math.factorial(order)/math.factorial(k)/math.factorial(order-k)
             self.ddfun.append(lambda x,n=order,k=k:
-                              nChooseK(n,k)*(2**(-n)*(x+1)**(k-2)*(1-x)**(n-k)*(4*k**2-4*k*n*x-4*k*n+4*k*x+n**2*x**2+2*n**2*x+n**2-n*x**2-2*n*x-n))/(x-1)**2)
+                              self.nChooseK(n,k)*(2**(-n)*(x+1)**(k-2)*(1-x)**(n-k)*(4*k**2-4*k*n*x-4*k*n+4*k*x+n**2*x**2+2*n**2*x+n**2-n*x**2-2*n*x-n))/(x-1)**2)
         #
         # Define multi-dimensional stuff
         #import pdb; pdb.set_trace()
