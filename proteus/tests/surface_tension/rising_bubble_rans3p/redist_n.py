@@ -6,7 +6,7 @@ try:
 except:
     from redist_p import *
     from risingBubble import *
-
+from proteus.mprans import RDLS
 tolFac = 0.0
 nl_atol_res = rd_nl_atol_res
 
@@ -24,7 +24,7 @@ if redist_Newton:
     useEisenstatWalker = False
 else:
     timeIntegration = BackwardEuler_cfl
-    stepController = RDLS3P.PsiTC
+    stepController = RDLS.PsiTC
     runCFL=2.0
     psitc['nStepsForce']=3
     psitc['nStepsMax']=50
@@ -44,8 +44,8 @@ femSpaces = {0:pbasis}
 massLumping       = False
 numericalFluxType = DoNothing
 conservativeFlux  = None
-subgridError      = RDLS3P.SubgridError(coefficients,nd)
-shockCapturing    = RDLS3P.ShockCapturing(coefficients,nd,shockCapturingFactor=rd_shockCapturingFactor,lag=rd_lag_shockCapturing)
+subgridError      = RDLS.SubgridError(coefficients,nd)
+shockCapturing    = RDLS.ShockCapturing(coefficients,nd,shockCapturingFactor=rd_shockCapturingFactor,lag=rd_lag_shockCapturing)
 
 fullNewtonFlag = True
 multilevelNonlinearSolver  = Newton

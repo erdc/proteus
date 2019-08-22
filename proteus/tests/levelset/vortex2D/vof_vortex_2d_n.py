@@ -1,8 +1,12 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .vof_vortex_2d_p import *
-from .vortex2D import *
+try:
+    from .vof_vortex_2d_p import *
+    from .vortex2D import *
+except:
+    from vof_vortex_2d_p import *
+    from vortex2D import *
 
 multilevelNonlinearSolver  = NLNI
 levelNonlinearSolver = Newton
@@ -63,9 +67,11 @@ if useHex:
     elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
 else:
-    base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
-    elementQuadrature = CompositeTriangle(base_quad_rule,hk)
-    #elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
+    if compQuad:
+        base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
+        elementQuadrature = CompositeTriangle(base_quad_rule,hk)
+    else:
+        elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
 
 #elementQuadrature = SimplexLobattoQuadrature(nd,1)
