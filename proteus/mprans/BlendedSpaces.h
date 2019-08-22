@@ -1556,7 +1556,22 @@ namespace proteus
 	    yGradRHS[i] /= weighted_lumped_mass_matrix[i];	    
 	    qNorm[i] = std::sqrt(xGradRHS[i]*xGradRHS[i] + yGradRHS[i]*yGradRHS[i]);
 	    qNorm[i] = 1.0 - (qNorm[i] < 0.99 ? 0.0 : 1.0);
-	    //qNorm[i] = qNorm[i] > 0.01 ? 1.0 : 0.0;
+
+	    /*
+	    double solni = u_dof_old[i];
+	    double num_betai = 0;
+	    double den_betai = 0;
+	    
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+		double solnj = u_dof_old[j];
+
+		num_betai += solni-solnj;
+		den_betai += fabs(solni-solnj);
+	      }
+	    qNorm[i] = qNorm[i]*std::pow(fabs(num_betai)/(den_betai+1E-10),2.0);
+	    */
 	  }
 	
 	///////////////////
