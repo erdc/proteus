@@ -164,6 +164,74 @@ These are not hard and fast rules, and there is no time table for releases.
 References
 ==========
 
+* `An Unstructured Finite Element Model for Incompressible Two-Phase
+  Flow Based on a Monolithic Conservative Level Set Method
+  <https://arxiv.org/abs/1903.06919>`_
+  (2019) M. Quezada de Luna, J. H. Collins, and C.E. Kees.
+* Preconditioners for Two-Phase Incompressible Navier-Stokes
+  Flow (2019) N. Bootland, C.E. Kees, A. Wathen,
+  A. Bentley *SIAM Journal on Scientific Computing*, In Press.
+* `Modeling Sediment Transport in Three-Phase Surface Water Systems
+  <https://doi.org/10.1080/00221686.2019.1581673>`_ (2019)
+  C.T. Miller, W.G. Gray, C.E. Kees, I.V. Rybak, B.J. Shepherd,
+  *Journal of Hydraulic Engineering*
+* `Fast Random Wave Generation in Numerical Tanks
+  <https://doi.org/10.1680/jencm.17.00016>`_ (2019) A. Dimakopoulos, T. de
+  Lataillade, C.E. Kees, *Proceedings of the Institution of Civil
+  Engineers - Engineering and Computational Mechanics*, 1-29.
+* `A Partition of Unity Approach to Adaptivity and Limiting in
+  Continuous Finite Element Methods
+  <https://doi.org/10.1016/j.camwa.2019.03.021>`_ (2019) D. Kuzmin, M. Quezada
+  de Luna, C.E. Kees, *Computers and Mathematics with Applications*.
+* `Simulating Oscillatory and Sliding Displacements of Caisson
+  Breakwaters Using a Coupled Approach
+  <https://doi.org/10.1061/(ASCE)WW.1943-5460.0000504>`_ (2019) G. Cozzuto,
+  A. Dimakopoulos, T. de Lataillade, P.O. Morillas, and C.E. Kees,
+  *Journal of Waterway, Port, Coastal, and Ocean Engineering*.
+* `A Monolithic Conservative Level Set Method with Built-In
+  Redistancing
+  <https://doi.org/10.1016/j.jcp.2018.11.044>`_ (2019) M. Quezada de
+  Luna, D. Kuzmin, C.E. Kees, *Journal of Computational Physics*, 379,
+  262-278.
+* `Computational Model for Wave Attenuation by Flexible Vegetation
+  <https://doi.org/10.1061/(ASCE)WW.1943-5460.0000487>`_ (2018)
+  S.A. Mattis, C.E. Kees, M.V. Wei, A. Dimakopoulos, and C.N. Dawson,
+  *Journal of Waterway, Port, Coastal, and Ocean Engineering* 145(1),
+  p.04018033.
+* `Well-Balanced Second-Order Finite Element Approximation of the
+  Shallow Water Equations with Friction
+  <https://doi.org/10.1137/17M1156162>`_ (2018) J.L. Guermond, M.Q. de
+  Luna, B. Popov, C.E. Kees, and M.W. Farthing *SIAM Journal on
+  Scientific Computing* 40(6), A3873-A3901.
+* `Dual-Scale Galerkin Methods for Darcy Flow
+  <https://doi.org/10.1016/j.jcp.2017.10.047>`_ (2018) G. Wang, G. Scovazzi, L. Nouveau,
+  C.E. Kees, Simone Rossi, O. Colomes, and A. Main (2018) *Journal of
+  Computational Physics* 354, 111-134.
+* `Implementation details of the level set two-phase Navier-Stokes equations in Proteus <https://www.clemson.edu/science/departments/math-stat/documents/technical-reports/TR2017_10_ab.nb.aw.ck.pdf>`_ (2017) A. Bentley, N. Bootland, A. Wathen, C. Kees, *Technical-Report-TR2017-10-ab.nb.aw.ck*.
+* `Evaluation of Galerkin and Petrov-Galerkin Model Reduction for
+  Finite Element Approximations of the Shallow Water Equations
+  <https://doi.org/10.1016/j.cma.2017.01.027>`_ (2017) A. Lozovsky, M. W. Farthing,
+  and C.E. Kees, *Computational Methods in Applied Mechanics and
+  Engineering* 318, 537-571.
+* `POD-Based Model Reduction for Stabilized Finite Element
+  Approximations of Shallow Water Flows
+  <https://doi.org/10.1016/j.cam.2016.01.029>`_ (2016) A. Lozovskiy,
+  M.W. Farthing, C.E. Kees, E. Gildin *Journal of Computational and
+  Applied Mathematics*, 302, 50-70.
+* `An Immersed Structure Approach for Fluid-Vegetation Interaction
+  <https://doi.org/10.1016/j.advwatres.2015.02.014>`_ (2015)
+  S.A. Mattis, C.N. Dawson, C.E. Kees, M.W. Farthing, *Advances in
+  Water Resources*, 80,1-16.
+* `Finite Element Methods for Variable Density Flow And Solute
+  Transport <https://doi.org/10.1007/s10596-012-9330-2>`_ (2013)
+  T.J. Povich, C.N. Dawson, M.W. Farthing, C.E. Kees *Computational
+  Geosciences* 17(3), 529-549.
+* `Numerical simulation of water resources problems: Models, methods,
+  and trends
+  <https://doi.org/10.1016/j.advwatres.2012.05.008>`_ (2013)
+  Cass T. Miller, Clint N. Dawson, Matthew W. Farthing, Thomas Y. Hou,
+  Jingfang Huang, Christopher E. Kees, C.T. Kelley, and Hans Petter
+  Langtangen *Advances in Water Resources*, 51, 405-437,
 * `Numerical modeling of drag for flow through vegetated domains and
   porous structures
   <http://dx.doi.org/10.1016/j.advwatres.2012.01.002>`_ (2012)
