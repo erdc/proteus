@@ -1027,7 +1027,7 @@ class ParametersModelKappa(ParametersModelBase):
         self.p.LevelModelType = Kappa.LevelModel
         # NUMERICAL FLUX
         self.n.numericalFluxType = Kappa.NumericalFlux
-        self.n.conservativeFlux = None
+        self.n.conservativeFlux = {0:'pwl-bdm-opt'}
        # LINEAR ALGEBRA
         self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
@@ -1561,10 +1561,18 @@ class ParametersModelNCLS(ParametersModelBase):
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['ncls']}
         # BOUNDARY CONDITIONS
+<<<<<<< HEAD
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
                 if 'phi_DBC' in BC:
                     self.p.dirichletConditions = {0: BC['phi_DBC']}
+=======
+        BC = self._Problem.boundaryConditions
+        if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
+            if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+                if 'ncls_DBC' in BC:
+                    self.p.dirichletConditions = {0: BC['ncls_DBC']}
+>>>>>>> origin/add_eqp_haydel
                 else:
                     self.p.dirichletCondtions = {0: lambda x,t: None}
             else:
