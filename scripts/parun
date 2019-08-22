@@ -337,8 +337,8 @@ if len(args) < 1 and not opts.TwoPhaseFlow:
 log("Importing input modules")
 
 if opts.SWEs:
-    path_models = proteus.__path__[0]+"/SWFlows/models/"
-    path_utils = proteus.__path__[0]+"/SWFlows/utils/"
+    path_models = proteus.__path__[0]+"/SWFlow/models/"
+    path_utils = proteus.__path__[0]+"/SWFlow/utils/"
     log(path_models)
     log(path_utils)
     assert args[0][-3:] == '.py', "Please profile a Python main script ending in .py"
