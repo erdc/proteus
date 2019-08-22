@@ -201,6 +201,7 @@ namespace proteus
 				   double* dLow,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE,
+				   int ONE_DIM_PROBLEM,
 				   int METHOD,
                                    // AUX QUANTITIES OF INTEREST
                                    double* quantDOFs,
@@ -321,6 +322,7 @@ namespace proteus
 				   double* dLow,
 				   // Type of problem to solve
 				   int PROBLEM_TYPE,
+				   int ONE_DIM_PROBLEM,
 				   int METHOD,
                                    // AUX QUANTITIES OF INTEREST
                                    double* quantDOFs,
@@ -438,26 +440,15 @@ namespace proteus
                                        int nElements_global,
                                        int nElements_owned,
                                        int* u_l2g,
-                                       double* elementDiameter,
-				       double* meshSize,
-                                       double* nodeDiametersArray,
-                                       double epsFactHeaviside,
-                                       double* q_uh,
-				       double* q_grad_uh,
+                                       double* u_dof,
                                        double* u_exact,
 				       double* gradx_u_exact,
 				       double* gracy_u_exact,
                                        int offset_u, int stride_u,
-                                       double* global_L2,
-                                       double* global_H1,
-                                       double* global_L2_Omega1,
-                                       double* global_H1_Omega1,
-                                       double* global_Omega1,
-                                       double* global_L2_Omega2,
-                                       double* global_H1_Omega2,
-				       double* global_Omega2,
-				       double* global_L2_sH,
-				       double* global_L2_1msH)=0;
+                                       double* global_L1,
+				       double* global_L2,
+				       double* global_LInf,
+                                       double* global_H1)=0;
   };
 
   template<class CompKernelType,
@@ -621,6 +612,7 @@ namespace proteus
 			     double* dLow,
 			     // Type of problem to solve
 			     int PROBLEM_TYPE,
+			     int ONE_DIM_PROBLEM,
 			     int METHOD,
 			     // AUX QUANTITIES OF INTEREST			     
 			     double* quantDOFs,
@@ -1123,7 +1115,6 @@ namespace proteus
 			double gammaij = fmin(gamma_dof[i], gamma_dof[j]);
 			if (METHOD==4)
 			  gammaij = fmax(qNorm[i], qNorm[j]);
-			
 			if (fij > 0)
 			  {
 			    if (METHOD==0)
@@ -1252,6 +1243,7 @@ namespace proteus
 					double* dLow,
 					// Type of problem to solve
 					int PROBLEM_TYPE,
+					int ONE_DIM_PROBLEM,
 					int METHOD,
 					// AUX QUANTITIES OF INTEREST			     
 					double* quantDOFs,
@@ -1529,7 +1521,11 @@ namespace proteus
 		      elementFluxTerm[i] += (std::cos(un)-std::sin(un))*u_test_dV[i];
 		  }//i
 		// To compute smoothness indicator based on 2nd derivative //
-		det_hess_un = hess_un[0]*hess_un[3] - hess_un[2]*hess_un[1];
+		
+		if (ONE_DIM_PROBLEM==1)
+		  det_hess_un = hess_un[0];
+		else
+		  det_hess_un = hess_un[0]*hess_un[3] - hess_un[2]*hess_un[1];
 		det_hess_Ke += det_hess_un*dV;
 		area_Ke += dV;
 	      }//kb
@@ -1559,6 +1555,8 @@ namespace proteus
 	    xGradRHS[i] /= weighted_lumped_mass_matrix[i];
 	    yGradRHS[i] /= weighted_lumped_mass_matrix[i];	    
 	    qNorm[i] = std::sqrt(xGradRHS[i]*xGradRHS[i] + yGradRHS[i]*yGradRHS[i]);
+	    qNorm[i] = 1.0 - (qNorm[i] < 0.99 ? 0.0 : 1.0);
+	    //qNorm[i] = qNorm[i] > 0.01 ? 1.0 : 0.0;
 	  }
 	
 	///////////////////
@@ -1873,49 +1871,30 @@ namespace proteus
                                  int nElements_global,
                                  int nElements_owned,
                                  int* u_l2g,
-                                 double* elementDiameter,
-				 double* meshSize,
-                                 double* nodeDiametersArray,
-                                 double epsFactHeaviside,
-                                 double* q_uh,
-				 double* q_grad_uh,
-                                 double* u_exact,
+                                 double* u_dof,
+				 double* u_exact,
 				 double* gradx_u_exact,
 				 double* grady_u_exact,
                                  int offset_u, int stride_u,
+				 double* global_L1,
 				 double* global_L2,
-				 double* global_H1,
-                                 double* global_L2_Omega1,
-				 double* global_H1_Omega1,
-                                 double* global_Omega1,
-                                 double* global_L2_Omega2,
-				 double* global_H1_Omega2,
-                                 double* global_Omega2,
-				 double* global_L2_sH,
-				 double* global_L2_1msH)
+				 double* global_LInf,
+				 double* global_H1)
       {
+	*global_L1 = 0.0;
 	*global_L2 = 0.0;
+	*global_LInf = 0.0;
 	*global_H1 = 0.0;
-        *global_L2_Omega1 = 0.0;
-	*global_H1_Omega1 = 0.0;
-	*global_Omega1 = 0.0;
-        *global_L2_Omega2 = 0.0;
-	*global_H1_Omega2 = 0.0;
-	*global_Omega2 = 0.0;
-	*global_L2_sH = 0.0;
-	*global_L2_1msH = 0.0;
         //////////////////////
         // ** LOOP IN CELLS //
         //////////////////////
+	double error_LInf = 0.0;
         for(int eN=0;eN<nElements_global;eN++)
           {
             if (eN<nElements_owned) // just consider the locally owned cells
               {
                 //declare local storage for local contributions and initialize
-                double cell_L2 = 0., cell_H1 = 0.,
-		  cell_L2_Omega1 = 0., cell_H1_Omega1 = 0., cell_Omega1 = 0.,
-		  cell_L2_Omega2 = 0., cell_H1_Omega2 = 0., cell_Omega2 = 0.,
-		  cell_L2_sH = 0., cell_L2_1msH = 0.;
+                double cell_L1 = 0., cell_L2 = 0., cell_H1 = 0.;
 
                 //loop over quadrature points and compute integrands
                 for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -1930,7 +1909,7 @@ namespace proteus
 		      uh, grad_uh[nSpace],
                       //for general use
                       jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-                      dV,x,y,z,h_phi;
+                      dV,x,y,z;
                     //get the physical integration weight
                     ck.calculateMapping_element(eN,
                                                 k,
@@ -1942,69 +1921,37 @@ namespace proteus
                                                 jacDet,
                                                 jacInv,
                                                 x,y,z);
-                    ck.calculateH_element(eN,
-                                          k,
-                                          nodeDiametersArray,
-                                          mesh_l2g,
-                                          mesh_trial_ref,
-                                          h_phi);
                     dV = fabs(jacDet)*dV_ref[k];
+		    ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+					jacInv,
+					u_grad_trial); // high-order space
 		    // load exact solution and its gradient
 		    u = u_exact[eN_k];
 		    gradx_u = gradx_u_exact[eN_k];
 		    grady_u = grady_u_exact[eN_k];
                     // get numerical solution
-		    uh = q_uh[eN_k];
-                    // get gradients of numerical solution
-		    grad_uh[0] = q_grad_uh[eN_k_nSpace+0];
-		    grad_uh[1] = q_grad_uh[eN_k_nSpace+1];
+		    ck.valFromDOF(u_dof,
+				  &u_l2g[eN_nDOF_trial_element],
+				  &u_trial_ref[k*nDOF_trial_element],
+				  uh); // from high-order space
+		    ck.gradFromDOF(u_dof,
+				   &u_l2g[eN_nDOF_trial_element],
+				   u_grad_trial,
+				   grad_uh);
 		    // Norms in whole domain //
 		    cell_L2 += std::pow(u-uh,2)*dV;
 		    cell_H1 += (std::pow(u-uh,2) +
 		    		(std::pow(grad_uh[0] - gradx_u,2.0) +
 		    		 std::pow(grad_uh[1] - grady_u,2.0)) )*dV;
-
-		    // Norms in Omega 1 //
-		    if (x < 0.5 - meshSize[0])
-		      //if (x < 0.5 - 0.25)
-		      {
-			cell_L2_Omega1 += std::pow(u-uh,2)*dV;
-			cell_H1_Omega1 += (std::pow(u-uh,2) +
-					   (std::pow(grad_uh[0] - gradx_u,2) +
-					    std::pow(grad_uh[1] - grady_u,2)) )*dV;
-			cell_Omega1 += dV;
-		      }
-		    if (x > 0.5 + meshSize[0])
-		      //if (x > 0.5 + 0.25)
-		      {
-			cell_L2_Omega2 += std::pow(u-uh,2)*dV;
-			cell_H1_Omega2 += (std::pow(u-uh,2) +
-					   (std::pow(grad_uh[0] - gradx_u,2) +
-					    std::pow(grad_uh[1] - grady_u,2)) )*dV;
-			cell_Omega2 += dV;
-		      }
-		    //double epsHeaviside = epsFactHeaviside*elementDiameter[eN]/2.0;
-		    double epsHeaviside = 0.1;
-		    double sH = smoothedHeaviside(epsHeaviside,x-0.75);
-		    //double epsHeaviside = meshSize[0];
-		    //double sH = smoothedHeaviside(epsHeaviside,x-0.5-4*epsHeaviside);
-		    //double sH = Heaviside(x-0.75);
-		    cell_L2_sH += std::pow((u-uh)*sH,2)*dV;
-		    cell_L2_1msH += std::pow(sH,2)*dV;
-		    //cell_L2_1msH += std::pow(u-uh,2)*(1.0-sH)*dV;
+		    cell_L1 += fabs(u-uh)*dV;
+		    error_LInf = fmax(fabs(u-uh), error_LInf);
                   }
 		*global_L2 += cell_L2;
 		*global_H1 += cell_H1;
-		*global_L2_Omega1 += cell_L2_Omega1;
-		*global_H1_Omega1 += cell_H1_Omega1;
-		*global_Omega1 += cell_Omega1;
-		*global_L2_Omega2 += cell_L2_Omega2;
-		*global_H1_Omega2 += cell_H1_Omega2;
-		*global_Omega2 += cell_Omega2;
-		*global_L2_sH += cell_L2_sH;
-		*global_L2_1msH += cell_L2_1msH;
+		*global_L1 += cell_L1;		
               }//elements
           }
+	*global_LInf = error_LInf;
       }
 
     };//BlendedSpaces

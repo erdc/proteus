@@ -198,10 +198,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
                  PROBLEM_TYPE=0,
+                 ONE_DIM_PROBLEM=0,
                  METHOD=4,
                  updateVelocityInTime=False):
 
         self.METHOD=METHOD
+        self.ONE_DIM_PROBLEM=ONE_DIM_PROBLEM
         # METHOD 4
         #   0: low-order
         #   1: high-order non-limited
@@ -277,25 +279,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         print "********************... ", self.model.u[0].dof.min(), self.model.u[0].dof.max()
         print "********************... ", len(self.model.u[0].dof)
-        #tolerance = 1.0E-10
-        #MIN=-1.0
-        #MAX=1.0
-        #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof > MAX+tolerance) - 1.0*(self.model.u[0].dof < MIN-tolerance)
-        #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof < MIN-tolerance)
-        #self.model.quantDOFs[:] = 1.0*(self.model.u[0].dof >= MAX+tolerance)
-
-        # COMPUTE NORMS #
-        #self.model.getMetricsAtEOS()
-        #self.model.metricsAtEOS.write(repr(np.sqrt(self.model.global_L2))+","+
-        #                              repr(np.sqrt(self.model.global_H1))+","+
-        #                              repr(np.sqrt(self.model.global_L2_Omega1))+","+
-        #                              repr(np.sqrt(self.model.global_H1_Omega1))+","+
-        #                              repr(np.sqrt(self.model.global_L2_Omega2))+","+
-        #                              repr(np.sqrt(self.model.global_H1_Omega2))+","+
-        #                              repr(np.sqrt(self.model.global_L2_sH))+","+
-        #                              repr(np.sqrt(self.model.global_L2_1msH))+"\n")
-        #self.model.metricsAtEOS.flush()
-
+        
         copyInstructions = {}
         return copyInstructions
 
@@ -678,30 +662,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.Q2mesh_dof[gi][2] = self.u[0].femSpace.interpolationPoints[eN,i,2]
 
         # mql. METRICS #
+        self.hasExactSolution = False
+        self.exactSolution = None
+        self.exactGrad = None
         if ('exactSolution') in dir(options):
+            self.hasExactSolution = True
             self.exactSolution = options.exactSolution
             self.exactGrad = options.exactGrad
-        else:
-            self.exactSolution = None
-            self.exactGrad = None
         #
+        self.global_L1 = 0.0
         self.global_L2 = 0.0
+        self.global_LInf = 0.0
         self.global_H1 = 0.0
-        self.global_L2_Omega1 = 0.0
-        self.global_H1_Omega1 = 0.0
-        self.global_L2_Omega2 = 0.0
-        self.global_H1_Omega2 = 0.0
-        self.global_L2_sH = 0.0
-        self.global_L2_1msH = 0.0
         self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
-        self.metricsAtEOS.write('global_L2'+","+
-                                'global_H1'+","+
-                                'global_L2_Omega1'+","+
-                                'global_H1_Omega1'+","+
-                                'global_L2_Omega2'+","+
-                                'global_H1_Omega2'+","+
-                                'global_L2_sH'+","
-                                'global_L2_1msH'+"\n")
+        self.metricsAtEOS.write('global_L1'+","+
+                                'global_L2'+","+
+                                'global_Linf'+","
+                                'global_H1'+"\n")
 
         self.cterm_global = None
         # Stuff for highOrderLim implementation #
@@ -748,22 +725,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         X = {0:self.q[('x')][:,:,0],
              1:self.q[('x')][:,:,1],
              2:self.q[('x')][:,:,2]}
-        u_exact[:] = self.exactSolution[0](X,0)
-        gradx_u_exact[:] = self.exactGrad[0](X,0)
-        grady_u_exact[:] = self.exactGrad[1](X,0)
-
-        meshSize = np.zeros(1)
-        meshSize[0] = 1.0/(np.sqrt(self.u[0].dof.size)-1)
-        (global_L2,
-         global_H1,
-         global_L2_Omega1,
-         global_H1_Omega1,
-         global_Omega1,
-         global_L2_Omega2,
-         global_H1_Omega2,
-         global_Omega2,
-         global_L2_sH,
-         global_L2_1msH) = self.blendedSpaces.calculateMetricsAtEOS(#element
+        u_exact[:] = self.exactSolution[0](X,self.timeIntegration.t)
+        gradx_u_exact[:] = self.exactGrad[0](X,self.timeIntegration.t)
+        grady_u_exact[:] = self.exactGrad[1](X,self.timeIntegration.t)
+        
+        (global_L1,
+         global_L2,
+         global_LInf,
+         global_H1) = self.blendedSpaces.calculateMetricsAtEOS(#element
              self.u[0].femSpace.elementMaps.psi,
              self.u[0].femSpace.elementMaps.grad_psi,
              self.mesh.nodeArray,
@@ -776,39 +745,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.mesh.nElements_global,
              self.mesh.nElements_owned,
              self.u[0].femSpace.dofMap.l2g,
-             self.mesh.elementDiametersArray,
-             meshSize,
-             self.mesh.nodeDiametersArray,
-             2.0, #epsFactHeaviside
-             self.q[('u',0)],
-             self.q[('grad(u)',0)],
+             self.u[0].dof,
              u_exact,
              gradx_u_exact,
              grady_u_exact,
              self.offset[0],self.stride[0])
 
-
         from proteus.flcbdfWrappers import globalSum
+        from proteus.flcbdfWrappers import globalMax
         # Interface metrics
         relative_norms=False
+        self.global_L1 = globalSum(global_L1)
         self.global_L2 = globalSum(global_L2)
-        self.global_H1 = globalSum(global_H1)
-        self.global_L2_sH = globalSum(global_L2_sH)
-        if relative_norms:
+        self.global_LInf = globalMax(global_LInf)
+        self.global_H1 = globalSum(global_H1)        
+    #
+    
+    def runAtEOS(self):
+        # COMPUTE NORMS #
+        if self.hasExactSolution:
+            self.getMetricsAtEOS()
+            self.metricsAtEOS.write(repr(self.global_L1)+","+
+                                    repr(np.sqrt(self.global_L2))+","+
+                                    repr(self.global_LInf)+","+
+                                    repr(np.sqrt(self.global_H1))+"\n")
+            self.metricsAtEOS.flush()
         #
-            self.global_L2_Omega1 = globalSum(global_L2_Omega1)/globalSum(global_Omega1)
-            self.global_H1_Omega1 = globalSum(global_H1_Omega1)/globalSum(global_Omega1)
-            self.global_L2_Omega2 = globalSum(global_L2_Omega2)/globalSum(global_Omega2)
-            self.global_H1_Omega2 = globalSum(global_H1_Omega2)/globalSum(global_Omega2)
-            self.global_L2_1msH = globalSum(global_L2_sH)/globalSum(global_L2_1msH)
-        #
-        else:
-            self.global_L2_Omega1 = globalSum(global_L2_Omega1)
-            self.global_H1_Omega1 = globalSum(global_H1_Omega1)
-            self.global_L2_Omega2 = globalSum(global_L2_Omega2)
-            self.global_H1_Omega2 = globalSum(global_H1_Omega2)
-            self.global_L2_1msH = globalSum(global_L2_1msH)
-        #
+    #
 
     def calculateCoefficients(self):
         pass
@@ -1652,6 +1615,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.aux[0].femSpace.psi_trace,
             self.dLow,
             self.coefficients.PROBLEM_TYPE,
+            self.coefficients.ONE_DIM_PROBLEM,
+            self.coefficients.METHOD,
             self.quantDOFs,
             self.quantDOFs4,
             self.quantDOFs5,
@@ -1710,9 +1675,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.gamma_dof[:]=1.0
         self.quantDOFs2[:] = self.EntVisc
         self.quantDOFs3[:] = self.gamma_dof
-        self.quantDOFs4[:] = self.xGradRHS
+        #self.quantDOFs4[:] = self.xGradRHS
         #self.quantDOFs5[:] = self.yGradRHS
-        self.quantDOFs5[:] = 1.0 - self.qNorm
+        self.quantDOFs5[:] = self.qNorm
         #import pdb; pdb.set_trace()
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
