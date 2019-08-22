@@ -1285,10 +1285,8 @@ cdef class ProtChBody:
         hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
         if tCount == 0:
             f = h5py.File(hdfFileName, 'w', libver='latest')
-            # f = h5py.File(hdfFileName, 'w')
         else:
             f = h5py.File(hdfFileName, 'a', libver='latest')
-            # f = h5py.File(hdfFileName, 'a')
         poss, element_connection = self.getTriangleMeshInfo()
         pos = np.zeros_like(poss)
         self.thisptr.updateTriangleMeshVisualisationPos()
@@ -1368,7 +1366,6 @@ cdef class ProtChBody:
         # dump xml str in h5 file
         hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
         f = h5py.File(hdfFileName, 'a', libver='latest')
-        # f = h5py.File(hdfFileName, 'a')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
                                 (1,),
@@ -2065,10 +2062,8 @@ cdef class ProtChMoorings:
         hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         if tCount == 0:
             f = h5py.File(hdfFileName, 'w', libver='latest')
-            # f = h5py.File(hdfFileName, 'w')
         else:
             f = h5py.File(hdfFileName, 'a', libver='latest')
-            # f = h5py.File(hdfFileName, 'a')
         pos = self.getNodesPosition()
         element_connection = np.array([[i, i+1] for i in range(len(pos)-1)])
         dset = f.create_dataset('nodesSpatial_Domain'+str(tCount), pos.shape)
@@ -2233,9 +2228,8 @@ cdef class ProtChMoorings:
             tree.write(f)
 
         # dump xml str in h5 file
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
         f = h5py.File(hdfFileName, 'a', libver='latest')
-        # f = h5py.File(hdfFileName, 'a')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_{0:d}'.format(tCount),
                                 (1,),
