@@ -39,21 +39,20 @@ methods, both of which are described in more detail below
 Obtaining and Installing Proteus
 ================================
 
-For learning and experimenting there is an anonymous temporary Jupyter
-notebook server at `try.proteustoolkit.org:8000
-<http://try.proteustoolkit.org:8000>`_.
+For learning and experimenting there is an `Docker image <https://cloud.docker.com/u/erdc/repository/docker/erdc/proteus>`_.
+
 
 Proteus is available as source from our public `GitHub
-<https://github.com/erdc-cm/proteus>`_ repository.  If you already
+<https://github.com/erdc/proteus>`_ repository.  If you already
 have compilers (C,C++, and Fortran!) and Git installed on your system,
 you can install Proteus with the following commands.::
 
-  % git clone https://github.com/erdc-cm/proteus
+  % git clone https://github.com/erdc/proteus
   % cd proteus
   % make develop
   % make test
 
-More information is available on our `Wiki <https://github.com/erdc-cm/proteus/wiki>`_, and you can ask for help on
+More information is available on our `Wiki <https://github.com/erdc/proteus/wiki>`_, and you can ask for help on
 the `Developers' Mailing List <https://groups.google.com/forum/#!forum/proteus-dev>`_.
 
 .. _running-sec:
@@ -98,7 +97,7 @@ meshes can be generated with tools included with Proteus, and more
 complex meshes can by imported from other mesh generators. The finite
 elements implemented are
 
-Classical and vartiational multiscale methods
+Classical methods with various types of stabilization (entropy viscosity, variational multiscale, and algebraic methods)
 
 * :math:`C_0 P_1`
 * :math:`C_0 P_2`
@@ -207,7 +206,10 @@ References
   <https://doi.org/10.1016/j.jcp.2017.10.047>`_ (2018) G. Wang, G. Scovazzi, L. Nouveau,
   C.E. Kees, Simone Rossi, O. Colomes, and A. Main (2018) *Journal of
   Computational Physics* 354, 111-134.
-* `Implementation details of the level set two-phase Navier-Stokes equations in Proteus <https://www.clemson.edu/science/departments/math-stat/documents/technical-reports/TR2017_10_ab.nb.aw.ck.pdf>`_ (2017) A. Bentley, N. Bootland, A. Wathen, C. Kees, *Technical-Report-TR2017-10-ab.nb.aw.ck*.
+* `Implementation details of the level set two-phase Navier-Stokes
+  equations in Proteus
+  <https://www.clemson.edu/science/departments/math-stat/documents/technical-reports/TR2017_10_ab.nb.aw.ck.pdf>`_ (2017) A. Bentley, N. Bootland, A. Wathen, C. Kees,
+  *Technical-Report-TR2017-10-ab.nb.aw.ck*.
 * `Evaluation of Galerkin and Petrov-Galerkin Model Reduction for
   Finite Element Approximations of the Shallow Water Equations
   <https://doi.org/10.1016/j.cma.2017.01.027>`_ (2017) A. Lozovsky, M. W. Farthing,
