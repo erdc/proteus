@@ -1282,7 +1282,7 @@ cdef class ProtChBody:
         Profiling.logEvent('recording h5 file of '+str(self.name))
         tCount = self.ProtChSystem.tCount
         self.hdfFileName = self.name
-        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         if tCount == 0:
             f = h5py.File(hdfFileName, 'w', libver='latest')
         else:
@@ -1364,7 +1364,7 @@ cdef class ProtChBody:
             tree.write(f)
 
         # dump xml str in h5 file
-        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         f = h5py.File(hdfFileName, 'a', libver='latest')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
@@ -2228,7 +2228,7 @@ cdef class ProtChMoorings:
             tree.write(f)
 
         # dump xml str in h5 file
-        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         f = h5py.File(hdfFileName, 'a', libver='latest')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_{0:d}'.format(tCount),
