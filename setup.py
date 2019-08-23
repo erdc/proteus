@@ -65,7 +65,7 @@ EXTENSIONS_TO_BUILD = [
     #           library_dirs=PROTEUS_SCOREC_LIB_DIRS,
     #           libraries=PROTEUS_SCOREC_LIBS,
     #           extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
-    #           extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS),#+PROTEUS_EXTRA_LINK_ARGS),
+    #           extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
     Extension("mprans.cPres",['proteus/mprans/cPres.pyx'],
               depends=['proteus/mprans/Pres.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
@@ -630,7 +630,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.6.1.dev0',
+          version='1.7.0',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
@@ -692,6 +692,9 @@ def setup_given_extensions(extensions):
                       'proteus.tests.SWEs.test_reflecting_BCs',
                       'proteus.tests.matrix_constructor',
                       'proteus.tests.matrix_constructor.import_modules',
+                      'proteus.SWFlow',
+                      'proteus.SWFlow.utils',
+                      'proteus.MeshAdaptPUMI',
                       'proteus.MeshAdaptPUMI',
                       'proteus.tests.MeshAdaptPUMI',
                       'proteus.tests.MeshAdaptPUMI.gauge_compare.dambreak_Colagrossi_2D',
