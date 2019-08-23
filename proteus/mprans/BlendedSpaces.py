@@ -199,9 +199,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  outputQuantDOFs=False,
                  PROBLEM_TYPE=0,
                  ONE_DIM_PROBLEM=0,
+                 PROJECT_INIT_CONDITION=0,
                  METHOD=4,
                  updateVelocityInTime=False):
 
+        self.PROJECT_INIT_CONDITION=PROJECT_INIT_CONDITION
         self.METHOD=METHOD
         self.ONE_DIM_PROBLEM=ONE_DIM_PROBLEM
         # METHOD 4
@@ -258,19 +260,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # SAVE OLD SOLUTION #
         self.model.u_dof_old[:] = self.model.u[0].dof
 
+        time = self.model.timeIntegration.tLast
         if self.model.hasInletFunction:
-            self.model.update_uInlet_at_quad_points()
+            self.model.update_uInlet_at_quad_points(time)
         #
         
-        # COMPUTE BLENDING FUNCTION (if given by user)
-        #if self.model.hasBlendingFunction:
-        #    self.model.updateBlendingFunction()
-
         # COMPUTE NEW VELOCITY (if given by user) #        
         if self.model.hasVelocityFieldAsFunction:
             if firstStep == True or self.updateVelocityInTime == True:
-                self.model.updateVelocityFieldAsFunction()
-                self.model.updateVelocityAtDOFs()
+                self.model.updateVelocityFieldAsFunction(time)
+                self.model.updateVelocityAtDOFs(time)
         #
         
         copyInstructions = {}
@@ -662,6 +661,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.Q2mesh_dof[gi][2] = self.u[0].femSpace.interpolationPoints[eN,i,2]
 
         # mql. METRICS #
+        self.hasInitialCondition = False
+        self.uInitial = None
+        if ('uInitial') in dir (options):
+            self.hasInitialCondition = True
+            self.uInitial = options.uInitial
+        #
+            
         self.hasExactSolution = False
         self.exactSolution = None
         self.exactGrad = None
@@ -675,9 +681,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_LInf = 0.0
         self.global_H1 = 0.0
         self.metricsAtEOS = open(self.name+"_metricsAtEOS.csv","w")
-        self.metricsAtEOS.write('global_L1'+","+
-                                'global_L2'+","+
-                                'global_Linf'+","
+        self.metricsAtEOS.write('global_L1'+"\t"+
+                                'global_L2'+"\t"+
+                                'global_Linf'+"\t"
                                 'global_H1'+"\n")
 
         self.cterm_global = None
@@ -713,21 +719,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.QL_NNZ = 0
         self.Q1_sparsity=None
         self.uInlet_at_quad_points=None
+        self.q_uInitial=None
+        self.INIT_CONDITION_PROJECTED=False
     #
 
     def getMetricsAtEOS(self):
         """
         Calculate some metrics at EOS (End Of Simulation)
         """
+        time = self.timeIntegration.tLast
         u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
         gradx_u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
         grady_u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
         X = {0:self.q[('x')][:,:,0],
              1:self.q[('x')][:,:,1],
              2:self.q[('x')][:,:,2]}
-        u_exact[:] = self.exactSolution[0](X,self.timeIntegration.t)
-        gradx_u_exact[:] = self.exactGrad[0](X,self.timeIntegration.t)
-        grady_u_exact[:] = self.exactGrad[1](X,self.timeIntegration.t)
+        u_exact[:] = self.exactSolution[0](X,time)
+        gradx_u_exact[:] = self.exactGrad[0](X,time)
+        grady_u_exact[:] = self.exactGrad[1](X,time)
         
         (global_L1,
          global_L2,
@@ -765,9 +774,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # COMPUTE NORMS #
         if self.hasExactSolution:
             self.getMetricsAtEOS()
-            self.metricsAtEOS.write(repr(self.global_L1)+","+
-                                    repr(np.sqrt(self.global_L2))+","+
-                                    repr(self.global_LInf)+","+
+            self.metricsAtEOS.write(repr(self.global_L1)+"\t"+
+                                    repr(np.sqrt(self.global_L2))+"\t"+
+                                    repr(self.global_LInf)+"\t"+
                                     repr(np.sqrt(self.global_H1))+"\n")
             self.metricsAtEOS.flush()
         #
@@ -776,7 +785,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateCoefficients(self):
         pass
 
-    def updateVelocityAtDOFs(self):
+    def updateVelocityAtDOFs(self,time):
         if self.x is None:
             self.x = numpy.zeros(self.u[0].dof.shape,'d')
             self.y = numpy.zeros(self.u[0].dof.shape,'d')
@@ -795,10 +804,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         X = {0:self.x,
              1:self.y,
              2:self.z}
-        t = self.timeIntegration.t
         
-        self.u_vel_dofs[:] = self.velocityFieldAsFunction[0](X,t)
-        self.v_vel_dofs[:] = self.velocityFieldAsFunction[1](X,t)
+        self.u_vel_dofs[:] = self.velocityFieldAsFunction[0](X,time)
+        self.v_vel_dofs[:] = self.velocityFieldAsFunction[1](X,time)
     #
 
     def getIntBernMat(self):
@@ -901,7 +909,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
     #
     
-    def update_uInlet_at_quad_points(self):        
+    def update_uInlet_at_quad_points(self,time):
         # DO FINITE ELEMENT INTERPOLATION #
         logEvent("Computing boundary data at quad points", level=2)
         nElements = self.ebqe['x'][:,:,0].shape[0]
@@ -910,9 +918,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         ebqe_X = {0: self.ebqe['x'][:, :, 0].ravel(),
                   1: self.ebqe['x'][:, :, 1].ravel(),
                   2: self.ebqe['x'][:, :, 2].ravel()}
-        t = self.timeIntegration.t
         
-        self.uInlet_at_quad_points[:] = np.reshape(self.uInletFunction[0](ebqe_X,t),(nElements,nQuad))
+        self.uInlet_at_quad_points[:] = np.reshape(self.uInletFunction[0](ebqe_X,time),(nElements,nQuad))
     #
     
     def updateBlendingFunction(self):
@@ -959,24 +966,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.blendingFunctionDOFs[:] = self.blendingFunction[0](X,t)
             self.quantDOFs[:] = self.blendingFunctionDOFs
 
-    def updateVelocityFieldAsFunction(self):
+    def updateVelocityFieldAsFunction(self,time):
         X = {0: self.q[('x')][:, :, 0],
              1: self.q[('x')][:, :, 1],
              2: self.q[('x')][:, :, 2]}
-        t = self.timeIntegration.t
-        self.coefficients.q_v[..., 0] = self.velocityFieldAsFunction[0](X, t)
-        self.coefficients.q_v[..., 1] = self.velocityFieldAsFunction[1](X, t)
+        self.coefficients.q_v[..., 0] = self.velocityFieldAsFunction[0](X, time)
+        self.coefficients.q_v[..., 1] = self.velocityFieldAsFunction[1](X, time)
         if (self.nSpace_global == 3):
-            self.coefficients.q_v[..., 2] = self.velocityFieldAsFunction[2](X, t)
+            self.coefficients.q_v[..., 2] = self.velocityFieldAsFunction[2](X, time)
 
         # BOUNDARY
         ebqe_X = {0: self.ebqe['x'][:, :, 0],
                   1: self.ebqe['x'][:, :, 1],
                   2: self.ebqe['x'][:, :, 2]}
-        self.coefficients.ebqe_v[..., 0] = self.velocityFieldAsFunction[0](ebqe_X, t)
-        self.coefficients.ebqe_v[..., 1] = self.velocityFieldAsFunction[1](ebqe_X, t)
+        self.coefficients.ebqe_v[..., 0] = self.velocityFieldAsFunction[0](ebqe_X, time)
+        self.coefficients.ebqe_v[..., 1] = self.velocityFieldAsFunction[1](ebqe_X, time)
         if (self.nSpace_global == 3):
-            self.coefficients.ebqe_v[..., 2] = self.velocityFieldAsFunction[2](ebqe_X, t)
+            self.coefficients.ebqe_v[..., 2] = self.velocityFieldAsFunction[2](ebqe_X, time)
 
     def updateForceFieldAsFunction(self):
         X = {0:self.q[('x')][:,:,0],
@@ -1431,9 +1437,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             if self.coefficients.GET_POINT_VALUES==1:
                 self.getIntBernMat()
             #
+            self.uInlet_at_quad_points=numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                                    self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+            if self.hasInletFunction:
+                self.update_uInlet_at_quad_points(time=0)
+            #
             if self.hasVelocityFieldAsFunction:
-                self.updateVelocityFieldAsFunction()
-                self.updateVelocityAtDOFs()
+                self.updateVelocityFieldAsFunction(time=0)
+                self.updateVelocityAtDOFs(time=0)
             else:
                 self.u_vel_dofs = np.zeros(self.u[0].dof.shape,'d')
                 self.v_vel_dofs = np.zeros(self.u[0].dof.shape,'d')
@@ -1460,8 +1471,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
             self.calculateJacobian = self.blendedSpaces.calculateMassMatrix
 
-            self.uInlet_at_quad_points=numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
-                                                    self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+            self.q_uInitial=numpy.zeros(self.q[('u',0)].shape,'d')
             self.getAdjacent_DoFs_to_middle_dof()
             
             ## FOR DEBUGGING ##
@@ -1550,7 +1560,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.flux_qij.fill(0.0)
         self.element_flux_i.fill(0.0)
         self.edge_based_cfl.fill(0.0)
-        
+
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1621,6 +1631,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.quantDOFs4,
             self.quantDOFs5,
             # For highOrderLim
+            self.q_uInitial,
             self.uInlet_at_quad_points,
             self.coefficients.GET_POINT_VALUES,
             self.flux_qij,
@@ -1662,10 +1673,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.cterm[1], #CyElem
             self.cterm_transpose[0], #CTxElem
             self.cterm_transpose[1], #CTyElem
-            self.prCxElem, 
-            self.prCyElem, 
-            self.prCTxElem,
-            self.prCTyElem,
+            self.pr_cterm[0], #prCxElem
+            self.pr_cterm[1], #prCyElem
+            self.pr_cterm_transpose[0], #prCTxElem
+            self.pr_cterm_transpose[1], #prCTyElem
             self.dLowElem,
             self.Q1_sparsity,
             self.qNorm,

@@ -1108,6 +1108,29 @@ class NewtonWithL2ProjectionForMassCorrection(Newton):
 
 class highOrderLimSolver(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        #############################
+        # PROJECT INITIAL CONDITION #
+        #############################
+        if self.F.coefficients.PROJECT_INIT_CONDITION and not self.F.INIT_CONDITION_PROJECTED:
+            # make sure that an initial condition is provided as a function
+            assert self.F.hasInitialCondition == True, "Provide uInitial"
+            X = {0:self.F.q[('x')][:,:,0],
+                 1:self.F.q[('x')][:,:,1],
+                 2:self.F.q[('x')][:,:,2]}
+            self.F.q_uInitial[:] = self.F.uInitial[0](X)
+            # change calculateResidual to point to calculateResidualProjection
+            self.F.calculateResidual = self.F.blendedSpaces.calculateResidualProjection
+            # Solve the linear system
+            Newton.solve(self,u,r,b,par_u,par_r,linear=False)
+            # assign the projected solution to u_dof_old
+            self.F.timeIntegration.u_dof_last[0][:] = u
+            self.F.u_dof_old[:] = u
+            self.F.u[0].dof[:] = u
+            
+            # make sure we don't do this process again
+            self.F.INIT_CONDITION_PROJECTED = True
+        #
+            
         #################
         # COMPUTE uHDot # using consistent mass matrix (and no stabilization)
         #################
@@ -1123,7 +1146,6 @@ class highOrderLimSolver(Newton):
         self.computeResidual(u,r,b)
         u[:] = r
         self.F.u[0].dof[:]=u
-        #self.computeResidual(u,r,b)
 #
     
 class myLinearSolver(Newton):

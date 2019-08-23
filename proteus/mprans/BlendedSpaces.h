@@ -208,7 +208,7 @@ namespace proteus
 				   double* quantDOFs4,
 				   double* quantDOFs5,
 				   // FOR highOrderLim
-				   // for boundary
+				   double* q_uInitial,
 				   double* ebqe_uInlet,
 				   int GET_POINT_VALUES,
 				   double* flux_qij,
@@ -329,6 +329,7 @@ namespace proteus
 				   double* quantDOFs4,
 				   double* quantDOFs5,
 				   // FOR highOrderLim
+				   double* q_uInitial,
 				   double* ebqe_uInlet,
 				   int GET_POINT_VALUES,
 				   double* flux_qij,
@@ -379,6 +380,127 @@ namespace proteus
 				   double* qNorm,
 				   double* xGradRHS,
 				   double* yGradRHS)=0;
+    virtual void calculateResidualProjection(//element
+                                   double dt,
+                                   double* mesh_trial_ref,
+                                   double* mesh_grad_trial_ref,
+                                   double* mesh_dof,
+                                   int* mesh_l2g,
+                                   double* dV_ref,
+                                   double* u_trial_ref,
+                                   double* u_grad_trial_ref,
+                                   double* u_test_ref,
+                                   double* u_grad_test_ref,
+				   double* u_hess_trial_ref,
+                                   //element boundary
+                                   double* mesh_trial_trace_ref,
+                                   double* mesh_grad_trial_trace_ref,
+                                   double* dS_ref,
+                                   double* u_trial_trace_ref,
+                                   double* u_grad_trial_trace_ref,
+                                   double* u_test_trace_ref,
+                                   double* u_grad_test_trace_ref,
+                                   double* normal_ref,
+                                   double* boundaryJac_ref,
+                                   //physics
+                                   int nElements_global,
+                                   int* u_l2g,
+                                   int* r_l2g,
+                                   double* elementDiameter,
+                                   double* u_dof,
+                                   double* u_dof_old,
+                                   double* velocity,
+                                   double* q_u,
+				   double* q_grad_u,
+                                   int offset_u, int stride_u,
+                                   double* globalResidual,
+                                   int nExteriorElementBoundaries_global,
+                                   int* exteriorElementBoundariesArray,
+                                   int* elementBoundaryElementsArray,
+                                   int* elementBoundaryLocalElementBoundariesArray,
+                                   double* ebqe_velocity_ext,
+                                   int* isDOFBoundary_u,
+                                   double* ebqe_bc_u_ext,
+                                   int* isFluxBoundary_u,
+                                   double* ebqe_bc_flux_u_ext,
+                                   double* ebqe_phi,double epsFact,
+                                   double* ebqe_u,
+                                   double* ebqe_flux,
+                                   // PARAMETERS FOR EDGE VISCOSITY
+                                   int numDOFs,
+                                   int NNZ,
+                                   int* rowptr,
+                                   int* colind,
+                                   int* csrRowIndeces_CellLoops,
+                                   int* csrColumnOffsets_CellLoops,
+                                   int* csrColumnOffsets_eb_CellLoops,
+				   // FOR BLENDING SPACES
+				   double* force,
+				   double* alpha_dof,
+				   double* aux_test_ref,
+				   double* aux_grad_test_ref,
+				   double* aux_test_trace_ref,
+				   double* dLow,
+				   // Type of problem to solve
+				   int PROBLEM_TYPE,
+				   int ONE_DIM_PROBLEM,
+				   int METHOD,
+                                   // AUX QUANTITIES OF INTEREST
+                                   double* quantDOFs,
+				   double* quantDOFs4,
+				   double* quantDOFs5,
+				   // FOR highOrderLim
+				   double* q_uInitial,
+				   double* ebqe_uInlet,
+				   int GET_POINT_VALUES,
+				   double* flux_qij,
+				   double* element_flux_qij,
+				   double* element_MC,
+				   double* vVector,
+				   double* element_flux_i,
+				   double* intBernMat,
+				   double* edge_based_cfl,
+				   // velocity at dofs
+				   double* u_vel_dofs,
+				   double* v_vel_dofs,
+				   // lumped mass matrices
+				   double* QH_ML,
+				   // inverse of dissipative mass matrix
+				   double* inv_element_ML_minus_MC,
+				   // high order stab
+				   double umaxG,
+				   double uminG,
+				   double* uHDot,
+				   double* EntVisc,
+				   // for smoothness indicator
+				   double* gamma_dof,
+				   int* first_adjacent_dof_to_middle_dof,
+				   int* second_adjacent_dof_to_middle_dof,
+				   double* is_dof_external,
+				   double* is_dof_internal,
+				   double* den_hi,
+				   // C-matrices
+				   double* Cx,
+				   double* Cy,
+				   double* CTx,
+				   double* CTy,
+				   double* PrCx,
+				   double* PrCy,
+				   double* PrCTx,
+				   double* PrCTy,
+				   double* CxElem,
+				   double* CyElem,				   
+				   double* CTxElem,
+				   double* CTyElem,
+				   double* PrCxElem,
+				   double* PrCyElem,
+				   double* PrCTxElem,
+				   double* PrCTyElem,
+				   double* dLowElem,
+				   double* Q1_sparsity,
+				   double* qNorm,
+				   double* xGradRHS,
+				   double* yGradRHS)=0;    
     virtual void calculateMassMatrix(//element
                                    double dt,
                                    double* mesh_trial_ref,
@@ -619,6 +741,7 @@ namespace proteus
 			     double* quantDOFs4,
 			     double* quantDOFs5,
 			     // For highOrderLim
+			     double* q_uInitial,
 			     double* ebqe_uInlet,
 			     int GET_POINT_VALUES,
 			     double* flux_qij,
@@ -1112,7 +1235,7 @@ namespace proteus
 		    
 		    if (i!=j)
 		      {
-			double gammaij = fmin(gamma_dof[i], gamma_dof[j]);
+			double gammaij = fmax(gamma_dof[i], gamma_dof[j]);
 			if (METHOD==4)
 			  gammaij = fmax(qNorm[i], qNorm[j]);
 			if (fij > 0)
@@ -1128,6 +1251,7 @@ namespace proteus
 				double fijStarLoc=fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
 				double fijStarGlob=fmin(fij,fmin(2*dij*umaxG-wij,wji-2*dij*uminG));
 				fluxStar[gi] += fmin(fijStarGlob, fmax(fijStarLoc,gammaij*fij));
+				//fluxStar[gi] += fmax(fijStarLoc,gammaij*fij);
 			      }
 			  }
 			else
@@ -1143,6 +1267,7 @@ namespace proteus
 				double fijStarLoc =fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
 				double fijStarGlob=fmax(fij,fmax(2*dij*uminG-wij,wji-2*dij*umaxG));
 				fluxStar[gi] += fmax(fijStarGlob, fmin(fijStarLoc,gammaij*fij));
+				//fluxStar[gi] += fmin(fijStarLoc,gammaij*fij);
 			      }
 			  }
 		      }
@@ -1250,6 +1375,7 @@ namespace proteus
 					double* quantDOFs4,
 					double* quantDOFs5,
 					// For highOrderLim
+					double* q_uInitial,
 					double* ebqe_uInlet,
 					int GET_POINT_VALUES,
 					double* flux_qij,
@@ -1634,7 +1760,6 @@ namespace proteus
 	      } //j
 	    ith_DenEntVisc = (fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
 	    EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0);
-	    EntVisc[i] = EntVisc[i];	    
 	    // ***** End of entropy viscosity ***** //
 	  }
 	
@@ -1650,8 +1775,8 @@ namespace proteus
 		  {
 		    double eps = 1E-10;
 		    double hi2 = global_hi[i] * global_hi[i];
-		    gamma_dof[i] = fmax(0, fmin(hi2,C_GAMMA*min_hiHe[i]))/(hi2+eps);
-		    //gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
+		    //gamma_dof[i] = fmax(0, fmin(hi2,C_GAMMA*min_hiHe[i]))/(hi2+eps);
+		    gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
 		    //gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/hi2;
 		  }// i
 		else
@@ -1693,8 +1818,8 @@ namespace proteus
 	      {
 		double eps = 1E-10;
 		double hi2 = global_hi[i] * global_hi[i];
-		gamma_dof[i] = fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/(hi2+eps);
-		//gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
+		//gamma_dof[i] = fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/(hi2+eps);
+		gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
 		//gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/hi2;
 	      }
 	  }
@@ -1753,6 +1878,191 @@ namespace proteus
 		  }//i
 	      }//elements
 	  }
+      }
+
+      void calculateResidualProjection(//element
+					double dt,
+					double* mesh_trial_ref,
+					double* mesh_grad_trial_ref,
+					double* mesh_dof,
+					int* mesh_l2g,
+					double* dV_ref,
+					double* u_trial_ref,
+					double* u_grad_trial_ref,
+					double* u_test_ref,
+					double* u_grad_test_ref,
+					double* u_hess_trial_ref,
+					//element boundary
+					double* mesh_trial_trace_ref,
+					double* mesh_grad_trial_trace_ref,
+					double* dS_ref,
+					double* u_trial_trace_ref,
+					double* u_grad_trial_trace_ref,
+					double* u_test_trace_ref,
+					double* u_grad_test_trace_ref,
+					double* normal_ref,
+					double* boundaryJac_ref,
+					//physics
+					int nElements_global,
+					int* u_l2g,
+					int* r_l2g,
+					double* elementDiameter,
+					double* u_dof,
+					double* u_dof_old,
+					double* velocity,
+					double* q_u,
+					double* q_grad_u,
+					int offset_u, int stride_u,
+					double* globalResidual,
+					int nExteriorElementBoundaries_global,
+					int* exteriorElementBoundariesArray,
+					int* elementBoundaryElementsArray,
+					int* elementBoundaryLocalElementBoundariesArray,
+					double* ebqe_velocity_ext,
+					int* isDOFBoundary_u,
+					double* ebqe_bc_u_ext,
+					int* isFluxBoundary_u,
+					double* ebqe_bc_flux_u_ext,
+					double* ebqe_phi,double epsFact,
+					double* ebqe_u,
+					double* ebqe_flux,
+					// PARAMETERS FOR EDGE VISCOSITY
+					int numDOFs,
+					int NNZ,
+					int* rowptr,
+					int* colind,
+					int* csrRowIndeces_CellLoops,
+					int* csrColumnOffsets_CellLoops,
+					int* csrColumnOffsets_eb_CellLoops,
+					// FOR BLENDING SPACES
+					double* force,
+					double* alpha_dof,
+					double* aux_test_ref,
+					double* aux_grad_test_ref,
+					double* aux_test_trace_ref,
+					double* dLow,
+					// Type of problem to solve
+					int PROBLEM_TYPE,
+					int ONE_DIM_PROBLEM,
+					int METHOD,
+					// AUX QUANTITIES OF INTEREST			     
+					double* quantDOFs,
+					double* quantDOFs4,
+					double* quantDOFs5,
+					// For highOrderLim
+					double* q_uInitial,
+					double* ebqe_uInlet,
+					int GET_POINT_VALUES,
+					double* flux_qij,
+					double* element_flux_qij,
+					double* element_MC,
+					double* vVector,
+					double* element_flux_i,
+					double* intBernMat,
+					double* edge_based_cfl,
+					// velocity at dofs
+					double* u_vel_dofs,
+					double* v_vel_dofs,
+					// lumped mass matrices
+					double* QH_ML,
+					// inverse of dissipative mass matrix
+					double* inv_element_ML_minus_MC,
+					// high order stab
+					double umaxG,
+					double uminG,
+					double* uHDot,
+					double* EntVisc,
+					// for smoothness indicator
+					double* gamma_dof,
+					int* first_adjacent_dof_to_middle_dof,
+					int* second_adjacent_dof_to_middle_dof,
+					double* is_dof_external,
+					double* is_dof_internal,
+					double* den_hi,
+					// C-matrices
+					double* Cx,
+					double* Cy,
+					double* CTx,
+					double* CTy,
+					double* PrCx,
+					double* PrCy,
+					double* PrCTx,
+					double* PrCTy,
+					double* CxElem,
+					double* CyElem,
+					double* CTxElem,
+					double* CTyElem,
+					double* PrCxElem,
+					double* PrCyElem,
+					double* PrCTxElem,
+					double* PrCTyElem,
+					double* dLowElem,
+					double* Q1_sparsity,
+					double* qNorm,
+					double* xGradRHS,
+					double* yGradRHS)
+      {
+	///////////////////////
+	// LOOP ON INTEGRALS //
+	///////////////////////
+	for(int eN=0;eN<nElements_global;eN++) //loop in cells
+	  {
+	    //declare local storage for element residual and initialize
+	    register double elementResidual[nDOF_test_element];
+	    for (int i=0;i<nDOF_test_element;i++)
+	      elementResidual[i]=0.0;
+	    
+	    //loop over quadrature points and compute integrands
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace,
+		  eN_nDOF_trial_element = eN*nDOF_trial_element;
+		register double
+		  uh=0.0, uInitial=0.0,
+		  jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  u_test_dV[nDOF_test_element],
+		  dV,x,y,z;
+		ck.calculateMapping_element(eN,
+					    k,
+					    mesh_dof,
+					    mesh_l2g,
+					    mesh_trial_ref,
+					    mesh_grad_trial_ref,
+					    jac,
+					    jacDet,
+					    jacInv,
+					    x,y,z);
+		//get the physical integration weight
+		dV = fabs(jacDet)*dV_ref[k];
+		//get the solution based on the blended functions
+		ck.valFromDOF(u_dof,
+			      &u_l2g[eN_nDOF_trial_element],
+			      &u_trial_ref[k*nDOF_trial_element],
+			      uh); // from high-order space
+		uInitial = q_uInitial[eN_k];
+		//precalculate test function products with integration weights
+		for (int j=0;j<nDOF_trial_element;j++)
+		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+		for(int i=0;i<nDOF_test_element;i++)
+		  {
+		    elementResidual[i] += (uh-uInitial)*u_test_dV[i]; 
+		  }//i
+	      }//kb
+	    //
+	    //load element into global residual and save element residual
+	    //
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {		
+		register int eN_i=eN*nDOF_test_element+i;
+		int gi = offset_u+stride_u*r_l2g[eN_i];
+		globalResidual[gi] += elementResidual[i];
+	      } //i
+	  } //elements
       }
       
       void calculateMassMatrix(//element
@@ -1961,9 +2271,9 @@ namespace proteus
 		    cell_L1 += fabs(u-uh)*dV;
 		    error_LInf = fmax(fabs(u-uh), error_LInf);
                   }
+		*global_L1 += cell_L1;
 		*global_L2 += cell_L2;
 		*global_H1 += cell_H1;
-		*global_L1 += cell_L1;		
               }//elements
           }
 	*global_LInf = error_LInf;
