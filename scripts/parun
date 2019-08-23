@@ -21,7 +21,7 @@ import os
 import proteus
 
 #remove blanket import statements until after Comm initialized for petsc4py
-from proteus import Profiling, Comm, version, Context
+from proteus import Profiling, Comm, Context
 from warnings import *
 import optparse
 import sys
@@ -239,8 +239,6 @@ if opts.debug:
 log = Profiling.logEvent
 
 log("Initializing Proteus")
-log("Stack Commit: {0}".format(version.stack),0)
-log("Proteus Commit: {0}".format(version.proteus),0)
 
 log("Initializing MPI")
 if opts.petscOptions != None:
