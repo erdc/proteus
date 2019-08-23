@@ -542,7 +542,7 @@ cdef class ProtChBody:
         cdef ch.ChMatrix33 rotchT
         cdef np.ndarray rotMarr_big
         cdef np.ndarray rotMarrT_big
-        if self.Aij_updated_global is True:
+        if self.Aij_updated_global is True and self.Aij_transform_local is True:
             # converting from global to local: Rot*Aij*RotT*v
             rot = deref(self.thisptr.body).GetRot()
             rotch = ch.ChMatrix33[double](rot)
