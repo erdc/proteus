@@ -11,13 +11,21 @@ ENV CXX mpicxx
 ENV F77 mpif77
 ENV F90 mpif90
 
-RUN cd proteus && git checkout 1.7.x && git pull && make N=4 develop
-RUN cd proteus && CC=gcc CXX=g++ ./linux/bin/pip install matplotlib
+RUN rm -rf proteus && \
+    git clone https://github.com/erdc/proteus && \
+    cd proteus && \
+    git checkout master && \
+    make N=4 develop && \
+    CC=gcc CXX=g++ ./linux/bin/pip3 install matplotlib && \
+    PATH=/home/$NB_USER/proteus/linux/bin:$PATH make jupyter && \
+    ./linux/bin/pip3 install jupyterhub && \
+    rm -rf build && \
+    rm -rf air-water-vv && \
+    rm -rf .git && \
+    rm -rf stack/.git && \
+    rm -rf /home/$NB_USER/.cache 
 
 ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
-
-RUN cd proteus && PATH=/usr/bin:/usr/local/bin:$PATH make jupyter
-
 ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
 USER root
