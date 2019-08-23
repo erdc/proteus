@@ -1230,6 +1230,7 @@ cdef class ProtChBody:
     def _recordValues(self):
         """Records values of body attributes in a csv file.
         """
+        Profiling.logEvent('recording values file of '+str(self.name))
         record_file = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name),'utf-8')
         t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
@@ -1275,15 +1276,17 @@ cdef class ProtChBody:
             with open(record_file+'_Aij.csv', 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(values_towrite)
+        Profiling.logEvent('finished recording values file of '+str(self.name))
 
     def _recordH5(self):
+        Profiling.logEvent('recording h5 file of '+str(self.name))
         tCount = self.ProtChSystem.tCount
         self.hdfFileName = self.name
-        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         if tCount == 0:
-            f = h5py.File(hdfFileName, 'w')
+            f = h5py.File(hdfFileName, 'w', libver='latest')
         else:
-            f = h5py.File(hdfFileName, 'a')
+            f = h5py.File(hdfFileName, 'a', libver='latest')
         poss, element_connection = self.getTriangleMeshInfo()
         pos = np.zeros_like(poss)
         self.thisptr.updateTriangleMeshVisualisationPos()
@@ -1295,8 +1298,10 @@ cdef class ProtChBody:
         dset[...] = pos
         dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')
         dset[...] = element_connection
+        Profiling.logEvent('finished recording h5 file of '+str(self.name))
 
     def _recordXML(self):
+        Profiling.logEvent('recording xml file of '+str(self.name))
         tCount = self.ProtChSystem.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
         xmlFile = os.path.join(bytes(Profiling.logDir,'utf-8'), self.name)+'.xmf'
@@ -1359,8 +1364,8 @@ cdef class ProtChBody:
             tree.write(f)
 
         # dump xml str in h5 file
-        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+'.h5'
-        f = h5py.File(hdfFileName, 'a')
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
+        f = h5py.File(hdfFileName, 'a', libver='latest')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
                                 (1,),
@@ -1368,6 +1373,7 @@ cdef class ProtChBody:
         dset[0] = datav
         # close file
         f.close()
+        Profiling.logEvent('finished recording xml file of '+str(self.name))
 
 
     def addPrismaticLinksWithSpring(self, np.ndarray pris1,
@@ -1586,6 +1592,7 @@ cdef class ProtChSystem:
         self.record_values = False
         self.first_step = False  # first step passed
         self.tCount += 1
+        Profiling.logEvent("Chrono poststep finished")
 
     def calculate_init(self):
         """Does chrono system initialisation
@@ -2048,14 +2055,15 @@ cdef class ProtChMoorings:
                                         'sz'+str(eta)]
 
     def _recordH5(self):
+        Profiling.logEvent('recording h5 file of '+str(self.name))
         tCount = self.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
         self.hdfFileName = self.name
         hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         if tCount == 0:
-            f = h5py.File(hdfFileName, 'w')
+            f = h5py.File(hdfFileName, 'w', libver='latest')
         else:
-            f = h5py.File(hdfFileName, 'a')
+            f = h5py.File(hdfFileName, 'a', libver='latest')
         pos = self.getNodesPosition()
         element_connection = np.array([[i, i+1] for i in range(len(pos)-1)])
         dset = f.create_dataset('nodesSpatial_Domain'+str(tCount), pos.shape)
@@ -2140,8 +2148,10 @@ cdef class ProtChMoorings:
         dset[...] = datav[:,2]
         # close file
         f.close()
+        Profiling.logEvent('finished recording h5 file of '+str(self.name))
 
     def _recordXML(self):
+        Profiling.logEvent('recording xml file of '+str(self.name))
         tCount = self.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
         xmlFile = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name)+b'.xmf','utf-8')
@@ -2219,7 +2229,7 @@ cdef class ProtChMoorings:
 
         # dump xml str in h5 file
         hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
-        f = h5py.File(hdfFileName, 'a')
+        f = h5py.File(hdfFileName, 'a', libver='latest')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_{0:d}'.format(tCount),
                                 (1,),
@@ -2227,10 +2237,12 @@ cdef class ProtChMoorings:
         dset[...] = datav
         # close file
         f.close()
+        Profiling.logEvent('finished recording xmf file of '+str(self.name))
 
     def _recordValues(self):
         """Records values in csv files
         """
+        Profiling.logEvent('recording values file of '+str(self.name))
         self.record_file = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name),'utf-8')
         def record(record_file, row, mode='a'):
             with open(record_file, mode) as csvfile:
@@ -2325,6 +2337,7 @@ cdef class ProtChMoorings:
         # accelerations = self.fluid_acceleration_array
         # row = (accelerations.flatten('C')).tolist()
         # record(self.record_file+file_name, row)
+        Profiling.logEvent('finished recording values file of '+str(self.name))
 
     def getTensionBack(self):
         """
@@ -2619,7 +2632,7 @@ cdef class ProtChMoorings:
         # get pointers to access elements in python
         cdef int elemN
         self.elements = []
-        for elemN in range(self.thisptr.nb_elems_tot-1):
+        for elemN in range(self.thisptr.nb_elems_tot):
             if self.beam_type == "BeamEuler":
                 elem = chrono_fea.ChElementBeamEuler()
             elif self.beam_type == "CableANCF":
@@ -2832,7 +2845,6 @@ cdef class ProtChMoorings:
                     vel_arr[:] = 0
             self.fluid_velocity_array[i] = vel_arr
             vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
-            fluid_velocity.push_back(vel)
             if self.fluid_velocity_function is not None and fluid_velocity_array is None:
                 vel_arr = self.fluid_velocity_function(coords, self.ProtChSystem.t)
                 vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
