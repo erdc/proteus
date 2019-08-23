@@ -107,7 +107,7 @@ cdef class ProtChBody:
         self.useIBM = False
         self.Aij_factor = 1.
         self.Aij_updated_global = False
-        self.Aij_transform_local = True
+        self.Aij_transform_local = False
         self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
