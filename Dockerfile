@@ -18,7 +18,7 @@ RUN rm -rf proteus && \
     make N=4 develop && \
     CC=gcc CXX=g++ ./linux/bin/pip3 install matplotlib && \
     PATH=/home/$NB_USER/proteus/linux/bin:$PATH make jupyter && \
-    ./linux/bin/pip3 install jupyterhub && \
+    CC=gcc CXX=g++ PATH=/home/$NB_USER/proteus/linux/bin:$PATH ./linux/bin/pip3 install jupyterhub && \
     rm -rf build && \
     rm -rf air-water-vv && \
     rm -rf .git && \
