@@ -700,7 +700,7 @@ class AddedMassNewton(Newton):
                 self.F.added_mass_i=i
                 Newton.solve(self,u,r,b,par_u,par_r)
         else:
-            self.F.updated_global = False
+            self.F.coefficients.updated_global = False
             logEvent("Skipping model AddedMass; next solve at t={t}".format(t=self.F.coefficients.solve_rate))
 
 class MoveMeshMonitorNewton(Newton):

@@ -107,6 +107,7 @@ cdef class ProtChBody:
         self.useIBM = False
         self.Aij_factor = 1.
         self.Aij_updated_global = False
+        self.Aij_transform_local = False
         self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
@@ -527,16 +528,6 @@ cdef class ProtChBody:
             Added mass matrix (must be 6x6 array!)
         """
 
-        Aij[0, 1:] *= self.thisptr.free_x.x()
-        Aij[1, 0] *= self.thisptr.free_x.y()
-        Aij[1, 2:] *= self.thisptr.free_x.y()
-        Aij[2, :2] *= self.thisptr.free_x.z()
-        Aij[2, 3:] *= self.thisptr.free_x.z()
-        Aij[3, :3] *= self.thisptr.free_r.x()
-        Aij[3, 4:] *= self.thisptr.free_r.x()
-        Aij[4, :4] *= self.thisptr.free_r.y()
-        Aij[4, 5] *= self.thisptr.free_r.y()
-        Aij[5, :5] *= self.thisptr.free_r.z()
         assert Aij.shape[0] == Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         cdef double mass = self.ChBody.GetMass()
         cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
@@ -551,7 +542,11 @@ cdef class ProtChBody:
         cdef ch.ChMatrix33 rotchT
         cdef np.ndarray rotMarr_big
         cdef np.ndarray rotMarrT_big
-        if self.Aij_updated_global is True:
+        # store Aij in global frame
+        cdef np.ndarray Aij_global = np.zeros((6, 6))
+        Aij_global[:] = Aij[:]
+        # transform Aij in local frame
+        if self.Aij_updated_global is True and self.Aij_transform_local is True:
             # converting from global to local: Rot*Aij*RotT*v
             rot = deref(self.thisptr.body).GetRot()
             rotch = ch.ChMatrix33[double](rot)
@@ -571,6 +566,17 @@ cdef class ProtChBody:
             self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
         else:
             self.Aij[:] = Aij
+        # remove terms from restrained DOFs
+        self.Aij[0, 1:] *= self.thisptr.free_x.x()
+        self.Aij[1, 0] *= self.thisptr.free_x.y()
+        self.Aij[1, 2:] *= self.thisptr.free_x.y()
+        self.Aij[2, :2] *= self.thisptr.free_x.z()
+        self.Aij[2, 3:] *= self.thisptr.free_x.z()
+        self.Aij[3, :3] *= self.thisptr.free_r.x()
+        self.Aij[3, 4:] *= self.thisptr.free_r.x()
+        self.Aij[4, :4] *= self.thisptr.free_r.y()
+        self.Aij[4, 5] *= self.thisptr.free_r.y()
+        self.Aij[5, :5] *= self.thisptr.free_r.z()
         # mass matrix
         MM[0,0] = mass
         MM[1,1] = mass
@@ -597,8 +603,8 @@ cdef class ProtChBody:
         aa = np.zeros(6)
 
         aa[:3] = pyvec2array(self.ChBody.GetPos_dtdt())
-        aa[3:] = pyvec2array(self.ChBody.GetWacc_loc())
-        Aija = np.dot(Aij, aa)
+        aa[3:] = pyvec2array(self.ChBody.GetWacc_par())
+        Aija = np.dot(Aij_global, aa)
         self.F_Aij = Aija[:3]
         self.M_Aij = Aija[3:]
 
