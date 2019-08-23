@@ -567,16 +567,16 @@ cdef class ProtChBody:
         else:
             self.Aij[:] = Aij
         # remove terms from restrained DOFs
-        Aij[0, 1:] *= self.thisptr.free_x.x()
-        Aij[1, 0] *= self.thisptr.free_x.y()
-        Aij[1, 2:] *= self.thisptr.free_x.y()
-        Aij[2, :2] *= self.thisptr.free_x.z()
-        Aij[2, 3:] *= self.thisptr.free_x.z()
-        Aij[3, :3] *= self.thisptr.free_r.x()
-        Aij[3, 4:] *= self.thisptr.free_r.x()
-        Aij[4, :4] *= self.thisptr.free_r.y()
-        Aij[4, 5] *= self.thisptr.free_r.y()
-        Aij[5, :5] *= self.thisptr.free_r.z()
+        self.Aij[0, 1:] *= self.thisptr.free_x.x()
+        self.Aij[1, 0] *= self.thisptr.free_x.y()
+        self.Aij[1, 2:] *= self.thisptr.free_x.y()
+        self.Aij[2, :2] *= self.thisptr.free_x.z()
+        self.Aij[2, 3:] *= self.thisptr.free_x.z()
+        self.Aij[3, :3] *= self.thisptr.free_r.x()
+        self.Aij[3, 4:] *= self.thisptr.free_r.x()
+        self.Aij[4, :4] *= self.thisptr.free_r.y()
+        self.Aij[4, 5] *= self.thisptr.free_r.y()
+        self.Aij[5, :5] *= self.thisptr.free_r.z()
         # mass matrix
         MM[0,0] = mass
         MM[1,1] = mass
