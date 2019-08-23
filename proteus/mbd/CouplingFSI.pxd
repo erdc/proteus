@@ -243,6 +243,7 @@ cdef class ProtChBody:
       np.ndarray Aij  # added mass array
       bool applyAddedMass  # will apply added mass if True (default)
       bool Aij_updated_global  # True if added-mass was updated in global coords
+      bool Aij_transform_local  # True for transforming global Aij to local
       bool useIBM
       double radiusIBM
       string hdfFileName
